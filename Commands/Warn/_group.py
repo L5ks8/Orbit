@@ -87,9 +87,22 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
 
 @commands.hybrid_group(name="warn", description="Warning management system.")
 @commands.has_permissions(moderate_members=True)
-async def warn_group(ctx: commands.Context):
-    view = WarnHubLayout()
-    await ctx.send(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+async def warn_group(ctx: commands.Context, user: discord.Member = None, *, reason: str = "No reason provided."):
+    if user is not None:
+        await _do_warn_add(ctx, user, reason)
+    else:
+        view = WarnHubLayout()
+        await ctx.send(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+
+warn_group.invoke_without_command = True
+
+
+@warn_group.error
+async def warn_group_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Moderate Members permission to issue warnings.", ephemeral=True)
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send("Could not find that member. Usage: `-warn @user [reason]`", ephemeral=True)
 
 
 async def setup(bot: commands.Bot):
