@@ -111,24 +111,32 @@ class AutoBackupCommand(commands.Cog):
         if not channel_id:
             return
 
-        json_count = 0
-        if STORAGE_DIR.exists():
-            for root, dirs, files in os.walk(STORAGE_DIR):
-                json_count += len([f for f in files if f.endswith(".json")])
+        channel = self.bot.get_channel(channel_id)
+        if not channel:
+            try:
+                channel = await self.bot.fetch_channel(channel_id)
+            except Exception:
+                return
 
-        if json_count <= 2:
-            channel = self.bot.get_channel(channel_id)
-            if not channel:
+        if channel:
+            success, msg = await self._run_restore(channel)
+            if success:
+                print(f"AUTOMATIC CLOUD RECOVERY: {msg}")
                 try:
-                    channel = await self.bot.fetch_channel(channel_id)
-                except Exception:
-                    pass
-            if channel:
-                success, msg = await self._run_restore(channel)
-                if success:
-                    print(f"AUTOMATIC CLOUD RECOVERY: {msg}")
-                else:
-                    print(f"AUTOMATIC CLOUD RECOVERY FAILED: {msg}")
+                    from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
+                    data = _load_status()
+                    if data and isinstance(data, dict):
+                        act_type = data.get("type", "clear")
+                        text = data.get("text", "")
+                        status_str = data.get("status", "online")
+                        act = _build_activity(act_type, text)
+                        discord_status = _parse_discord_status(status_str)
+                        await self.bot.change_presence(activity=act, status=discord_status)
+                        print(f"Restored Live Presence from Cloud: {status_str.upper()} -> {act_type.upper()} {text}")
+                except Exception as e:
+                    print(f"Failed to reapply presence after cloud restore: {e}")
+            else:
+                print(f"AUTOMATIC CLOUD RECOVERY FAILED OR SKIPPED: {msg}")
 
     async def _run_upload(self, channel: discord.abc.Messageable, is_automated: bool = False) -> tuple[bool, str]:
         buffer, size_kb = _create_zip_buffer()
@@ -243,6 +251,19 @@ class AutoBackupCommand(commands.Cog):
                 return await ctx.send(f"Could not access configured backup channel (`{channel_id}`).", allowed_mentions=discord.AllowedMentions.none())
 
         success, info = await self._run_restore(channel)
+        if success:
+            try:
+                from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
+                data = _load_status()
+                if data and isinstance(data, dict):
+                    act_type = data.get("type", "clear")
+                    text = data.get("text", "")
+                    status_str = data.get("status", "online")
+                    act = _build_activity(act_type, text)
+                    discord_status = _parse_discord_status(status_str)
+                    await self.bot.change_presence(activity=act, status=discord_status)
+            except Exception:
+                pass
         view = BackupNoticeLayout("Orbit Cloud Restore Status", f"**Status:** `{'SUCCESS' if success else 'FAILED'}`\n**Details:** {info}")
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
