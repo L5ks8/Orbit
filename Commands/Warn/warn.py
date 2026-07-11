@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Warn._storage import add_warning, get_user_warnings
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Warn._group import warn_group
@@ -21,6 +21,17 @@ class WarnIssuedLayout(LayoutView):
             TextDisplay(content=info_str)
         )
         self.add_item(self.container)
+
+        btn_close = Button(label="Close Notice", style=discord.ButtonStyle.secondary)
+
+        async def _close_cb(interaction: discord.Interaction):
+            try:
+                await interaction.message.delete()
+            except Exception:
+                pass
+
+        btn_close.callback = _close_cb
+        self.add_item(ActionRow(btn_close))
 
 async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str):
     await ctx.defer()
@@ -64,7 +75,7 @@ class WarnPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="warn add", aliases=["warnadd"], hidden=True)
+    @commands.command(name="warnadd", aliases=["wadd"], hidden=True)
     @commands.has_permissions(moderate_members=True)
     async def warn_add_prefix(self, ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided."):
         await _do_warn_add(ctx, user, reason)
