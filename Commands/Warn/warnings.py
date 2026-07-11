@@ -5,6 +5,7 @@ from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, Ac
 from Commands.Warn._storage import get_user_warnings
 from Commands.Warn._group import warn_group
 
+
 class WarningsListLayout(LayoutView):
     def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
         super().__init__()
@@ -28,16 +29,11 @@ class WarningsListLayout(LayoutView):
                 f"**ID:** `{w['warn_id']}` | **Mod:** <@{w['moderator_id']}>\n"
                 f"**Reason:** {w['reason']} (<t:{w['timestamp']}:R>)"
             )
-
         warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
-        header_content = f"### Warning History: {self.member.mention} (Page {self.page} of {self.total_pages})\n**Total Warnings:** `{len(self.warnings)}` on **{self.member.guild.name}**"
-
-        items = [
-            TextDisplay(content=header_content),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=warns_text)
-        ]
-
+        header_content = (
+            f"### Warning History: {self.member.mention} (Page {self.page} of {self.total_pages})\n"
+            f"**Total Warnings:** `{len(self.warnings)}`"
+        )
         btn_close = Button(label="Close ✖", style=discord.ButtonStyle.danger)
 
         async def close_cb(interaction: discord.Interaction):
@@ -46,10 +42,7 @@ class WarningsListLayout(LayoutView):
             try:
                 await interaction.message.delete()
             except Exception:
-                self.clear_items()
-                self.add_item(Container(TextDisplay(content="### Warning log closed.")))
-                await interaction.response.edit_message(view=self)
-                self.stop()
+                pass
 
         btn_close.callback = close_cb
 
@@ -73,48 +66,55 @@ class WarningsListLayout(LayoutView):
 
             btn_prev.callback = prev_cb
             btn_next.callback = next_cb
-
-            row = ActionRow(btn_prev, btn_next, btn_close)
-            items.extend([Separator(spacing=discord.SeparatorSpacing.small), row])
+            self.container = Container(
+                TextDisplay(content=header_content),
+                Separator(spacing=discord.SeparatorSpacing.small),
+                TextDisplay(content=warns_text),
+                Separator(spacing=discord.SeparatorSpacing.small),
+                ActionRow(btn_prev, btn_next, btn_close)
+            )
         else:
-            items.extend([Separator(spacing=discord.SeparatorSpacing.small), ActionRow(btn_close)])
-
-        self.container = Container(*items)
+            self.container = Container(
+                TextDisplay(content=header_content),
+                Separator(spacing=discord.SeparatorSpacing.small),
+                TextDisplay(content=warns_text),
+                Separator(spacing=discord.SeparatorSpacing.small),
+                ActionRow(btn_close)
+            )
         self.add_item(self.container)
 
-async def _do_warn_list(ctx: commands.Context, user: discord.Member | None):
+
+async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
-
     target = user or ctx.author
     warns = get_user_warnings(ctx.guild.id, target.id)
     if not warns:
         return await ctx.send(f"`{target.display_name}` has 0 formal warnings on this server.", ephemeral=True)
-
     view = WarningsListLayout(target, warns, ctx.author.id)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-@warn_group.command(name="list", description="Displays all formal warnings issued to a user (`/warn list`).")
-async def warn_list_cmd(ctx: commands.Context, user: discord.Member = None):
-    await _do_warn_list(ctx, user)
 
-class WarningsCommand(commands.Cog):
+@warn_group.command(name="list", description="Displays all formal warnings issued to a user.")
+async def warn_list_cmd(ctx: commands.Context, user: discord.Member = None):
+    await _do_warnings(ctx, user)
+
+
+class WarningsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    @commands.command(name="warnings", aliases=["warnlist", "warnhistory"], hidden=True)
+    async def warnings_prefix(self, ctx: commands.Context, user: discord.Member = None):
+        await _do_warnings(ctx, user)
 
     @warn_list_cmd.error
+    @warnings_prefix.error
     async def warnings_error(self, ctx: commands.Context, error):
-        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Could not find that member. Usage: `-warnings @user`", ephemeral=True)
 
-class WarningsPrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="warn list", aliases=["warnlist", "warnings"], hidden=True)
-    async def warn_list_prefix(self, ctx: commands.Context, user: discord.Member = None):
-        await _do_warn_list(ctx, user)
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(WarningsCommand(bot))
-    await bot.add_cog(WarningsPrefixFallback(bot))
+    await bot.add_cog(WarningsCog(bot))
