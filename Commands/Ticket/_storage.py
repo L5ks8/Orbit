@@ -3,6 +3,7 @@ import json
 import pathlib
 import time
 from typing import Dict, Any, Optional
+from Commands.StorageEngine import get_json, save_json
 
 STORAGE_ROOT = pathlib.Path("Storage")
 
@@ -10,79 +11,42 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
     folder = STORAGE_ROOT / str(guild_id)
     if not folder.exists():
         folder.mkdir(parents=True, exist_ok=True)
-    try:
-        os.chmod(STORAGE_ROOT, 0o777)
-    except Exception:
-        pass
-    try:
-        os.chmod(folder, 0o777)
-    except Exception:
-        pass
     return folder / "ticket.json"
 
 def load_ticket_config(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
-    if not path.exists():
-        return {
-            "enabled": False,
-            "panel_channel_id": None,
-            "category_id": None,
-            "support_role_id": None,
-            "log_channel_id": None,
-            "panel_title": "Support Ticket Desk",
-            "panel_description": "Click the button below to open a direct support channel with our team.",
-            "options": [],
-            "options_slots": [],
-            "ticket_counter": 0,
-            "active_tickets": {}
-        }
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if "active_tickets" not in data:
-                data["active_tickets"] = {}
-            if "ticket_counter" not in data:
-                data["ticket_counter"] = 0
-            if "log_channel_id" not in data:
-                data["log_channel_id"] = None
-            if "options" not in data or not isinstance(data["options"], list):
-                data["options"] = []
-            if "options_slots" not in data or not isinstance(data["options_slots"], list):
-                data["options_slots"] = []
-            return data
-    except Exception:
-        return {
-            "enabled": False,
-            "panel_channel_id": None,
-            "category_id": None,
-            "support_role_id": None,
-            "log_channel_id": None,
-            "panel_title": "Support Ticket Desk",
-            "panel_description": "Click the button below to open a direct support channel with our team.",
-            "options": [],
-            "options_slots": [],
-            "ticket_counter": 0,
-            "active_tickets": {}
-        }
+    default_cfg = {
+        "enabled": False,
+        "panel_channel_id": None,
+        "category_id": None,
+        "support_role_id": None,
+        "log_channel_id": None,
+        "panel_title": "Support Ticket Desk",
+        "panel_description": "Click the button below to open a direct support channel with our team.",
+        "options": [],
+        "options_slots": [],
+        "ticket_counter": 0,
+        "active_tickets": {}
+    }
+    data = get_json(path, default=default_cfg)
+    if not isinstance(data, dict):
+        data = default_cfg
+
+    if "active_tickets" not in data:
+        data["active_tickets"] = {}
+    if "ticket_counter" not in data:
+        data["ticket_counter"] = 0
+    if "log_channel_id" not in data:
+        data["log_channel_id"] = None
+    if "options" not in data or not isinstance(data["options"], list):
+        data["options"] = []
+    if "options_slots" not in data or not isinstance(data["options_slots"], list):
+        data["options_slots"] = []
+    return data
 
 def save_ticket_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    if path.exists():
-        try:
-            os.chmod(path, 0o666)
-        except Exception:
-            pass
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=4)
-    except PermissionError:
-        try:
-            path.unlink(missing_ok=True)
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(config, f, indent=4)
-        except Exception as e:
-            print(f"[STORAGE ERROR] Permission denied saving {path}: {e}")
-            raise e
+    save_json(path, config)
 
 def setup_ticket_config(
     guild_id: int,

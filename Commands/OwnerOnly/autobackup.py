@@ -36,6 +36,12 @@ def _set_backup_channel_id(channel_id: int):
         pass
 
 def _create_zip_buffer() -> tuple[io.BytesIO | None, float]:
+    try:
+        from Commands.StorageEngine import flush_dirty_files_sync
+        flush_dirty_files_sync()
+    except Exception:
+        pass
+
     if not STORAGE_DIR.exists():
         return None, 0.0
 
@@ -223,6 +229,12 @@ class AutoBackupCommand(commands.Cog):
                         count += 1
                     except Exception:
                         pass
+
+            try:
+                from Commands.StorageEngine import clear_ram_cache
+                clear_ram_cache()
+            except Exception:
+                pass
 
             return True, f"Successfully restored `{count}` files from `{target_msg.filename}` into local `Storage/`."
         except Exception as e:
