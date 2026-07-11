@@ -64,6 +64,8 @@ async def warn_group(ctx: commands.Context, user: discord.Member = None, *, reas
             return await ctx.send("Please specify a member to warn: `-warn @user [reason]` or `/warn <user> [reason]`", ephemeral=True)
         await _do_warn_add(ctx, user, reason)
 
+warn_group.invoke_without_command = True
+
 @warn_group.command(name="add", description="Issues a formal warning to a server member (`/warn add`).")
 @commands.has_permissions(moderate_members=True)
 async def warn_add_cmd(ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided."):
