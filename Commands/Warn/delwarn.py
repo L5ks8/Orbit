@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import delete_warning, get_user_warnings
 from Commands.Warn._group import warn_group
 
@@ -16,14 +16,6 @@ class DelWarnLayout(LayoutView):
             TextDisplay(content=content_str)
         )
         self.add_item(self.container)
-        btn_close = Button(label="Close", style=discord.ButtonStyle.secondary)
-        async def _close_cb(interaction: discord.Interaction):
-            try:
-                await interaction.message.delete()
-            except Exception:
-                pass
-        btn_close.callback = _close_cb
-        self.add_item(ActionRow(btn_close))
 
 
 async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str):
@@ -34,8 +26,12 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
     if not success:
         return await ctx.send(f"Could not find warning ID `{warn_id}` for **{user.display_name}**.", ephemeral=True)
     remaining = len(get_user_warnings(ctx.guild.id, user.id))
+    try:
+        await ctx.message.delete()
+    except Exception:
+        pass
     view = DelWarnLayout(user, warn_id, remaining)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 
 @warn_group.command(name="remove", description="Removes a specific warning from a user by ID.")

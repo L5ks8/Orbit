@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import add_warning, get_user_warnings
 from Commands.Whitelist._storage import is_whitelisted
 
@@ -23,14 +23,6 @@ class WarnIssuedLayout(LayoutView):
             TextDisplay(content=info_str)
         )
         self.add_item(self.container)
-        btn_close = Button(label="Close Notice", style=discord.ButtonStyle.secondary)
-        async def _close_cb(interaction: discord.Interaction):
-            try:
-                await interaction.message.delete()
-            except Exception:
-                pass
-        btn_close.callback = _close_cb
-        self.add_item(ActionRow(btn_close))
 
 
 class WarnHubLayout(LayoutView):
@@ -52,14 +44,6 @@ class WarnHubLayout(LayoutView):
             TextDisplay(content=content_str)
         )
         self.add_item(self.container)
-        btn_close = Button(label="Close", style=discord.ButtonStyle.secondary)
-        async def _close_cb(interaction: discord.Interaction):
-            try:
-                await interaction.message.delete()
-            except Exception:
-                pass
-        btn_close.callback = _close_cb
-        self.add_item(ActionRow(btn_close))
 
 
 async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str):
@@ -81,8 +65,12 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
         )
     except Exception:
         pass
+    try:
+        await ctx.message.delete()
+    except Exception:
+        pass
     view = WarnIssuedLayout(user, warn_entry, total_warns)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 
 @commands.hybrid_group(name="warn", description="Warning management system.")

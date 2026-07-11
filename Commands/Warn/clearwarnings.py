@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import clear_user_warnings
 from Commands.Warn._group import warn_group
 
@@ -16,14 +16,6 @@ class ClearWarningsLayout(LayoutView):
             TextDisplay(content=content_str)
         )
         self.add_item(self.container)
-        btn_close = Button(label="Close", style=discord.ButtonStyle.secondary)
-        async def _close_cb(interaction: discord.Interaction):
-            try:
-                await interaction.message.delete()
-            except Exception:
-                pass
-        btn_close.callback = _close_cb
-        self.add_item(ActionRow(btn_close))
 
 
 async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
@@ -33,8 +25,12 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     cleared_count = clear_user_warnings(ctx.guild.id, user.id)
     if cleared_count == 0:
         return await ctx.send(f"**{user.display_name}** has no formal warnings on this server.", ephemeral=True)
+    try:
+        await ctx.message.delete()
+    except Exception:
+        pass
     view = ClearWarningsLayout(user, cleared_count)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 
 @warn_group.command(name="clear", description="Clears all formal warnings for a specific member.")
