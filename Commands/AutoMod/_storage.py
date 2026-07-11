@@ -1,0 +1,89 @@
+import json
+import pathlib
+import os
+import threading
+from typing import Dict, Any
+
+STORAGE_ROOT = pathlib.Path("Storage")
+_automod_cache: Dict[int, Dict[str, Any]] = {}
+_automod_lock = threading.Lock()
+
+DEFAULT_AUTOMOD_CONFIG = {
+    "enabled": True,
+    "anti_link": {
+        "enabled": True,
+        "delete_msg": True,
+        "action": "warn",
+        "whitelist_roles": []
+    },
+    "anti_spam": {
+        "enabled": True,
+        "max_messages": 5,
+        "time_window_sec": 3,
+        "max_mentions": 4,
+        "action": "warn",
+        "timeout_duration_sec": 300
+    },
+    "anti_alt": {
+        "enabled": True,
+        "min_age_days": 3,
+        "action": "kick"
+    }
+}
+
+def _get_file_path(guild_id: int) -> pathlib.Path:
+    folder = STORAGE_ROOT / str(guild_id)
+    if not folder.exists():
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+            os.chmod(folder, 0o777)
+        except Exception:
+            pass
+    return folder / "automod.json"
+
+def load_automod_config(guild_id: int) -> Dict[str, Any]:
+    with _automod_lock:
+        if guild_id in _automod_cache:
+            return _automod_cache[guild_id]
+        path = _get_file_path(guild_id)
+        if not path.exists():
+            cfg = json.loads(json.dumps(DEFAULT_AUTOMOD_CONFIG))
+            _automod_cache[guild_id] = cfg
+            return cfg
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for key, val in DEFAULT_AUTOMOD_CONFIG.items():
+                if key not in data:
+                    data[key] = val
+                elif isinstance(val, dict) and isinstance(data[key], dict):
+                    for subkey, subval in val.items():
+                        if subkey not in data[key]:
+                            data[key][subkey] = subval
+            _automod_cache[guild_id] = data
+            return data
+        except Exception:
+            cfg = json.loads(json.dumps(DEFAULT_AUTOMOD_CONFIG))
+            _automod_cache[guild_id] = cfg
+            return cfg
+
+def save_automod_config(guild_id: int, config: Dict[str, Any]) -> None:
+    with _automod_lock:
+        _automod_cache[guild_id] = config
+        path = _get_file_path(guild_id)
+        if path.exists():
+            try:
+                os.chmod(path, 0o666)
+            except Exception:
+                pass
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=4)
+        except PermissionError:
+            try:
+                path.unlink(missing_ok=True)
+                with open(path, "w", encoding="utf-8") as f:
+                    json.dump(config, f, indent=4)
+            except Exception as e:
+                print(f"[AUTOMOD STORAGE ERROR] Permission denied saving {path}: {e}")
+                raise e
