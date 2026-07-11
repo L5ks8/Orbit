@@ -28,7 +28,7 @@ async def _do_create(ctx: commands.Context, name: str, channel_type: str, catego
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    name_clean = name.replace(" ", "-").lower()
+    name_clean = name.replace(" ", "-")
     ch_type_lower = channel_type.lower() if channel_type else "text"
 
     try:
