@@ -10,6 +10,8 @@ class OwnerOverviewLayout(LayoutView):
         commands_str = (
             "**`-owner` (Central Hub Overview)**\n"
             "> Displays this primary overview of all exclusive developer and diagnostic commands.\n\n"
+            "**`-setbackupchannel <#channel/id>` | `-cloudbackup` | `-cloudrestore` (Auto-Cloud Recovery)**\n"
+            "> Configures and manually triggers the automated 12-hour Discord channel database backup and restore loop.\n\n"
             "**`-status` [type] [text] (Activity & Presence Hub)**\n"
             "> Interactive V2 control panel or command to set activity (`playing`, `watching`, `listening`, `streaming`, `competing`) and bot status (`online`, `idle`, `dnd`, `invisible`).\n\n"
             "**`-presence <online/idle/dnd/invisible>` (Bot Presence Changer)**\n"
