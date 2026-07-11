@@ -59,6 +59,23 @@ def _create_zip_buffer() -> tuple[io.BytesIO | None, float]:
     buffer.seek(0)
     return buffer, size_kb
 
+def _get_latest_storage_mtime() -> float:
+    latest = 0.0
+    if not STORAGE_DIR.exists():
+        return latest
+    for root, dirs, files in os.walk(STORAGE_DIR):
+        for file in files:
+            if file.endswith(".zip"):
+                continue
+            file_path = pathlib.Path(root) / file
+            try:
+                mtime = file_path.stat().st_mtime
+                if mtime > latest:
+                    latest = mtime
+            except Exception:
+                pass
+    return latest
+
 
 class BackupNoticeLayout(LayoutView):
     def __init__(self, title: str, content: str):
@@ -85,25 +102,35 @@ class BackupNoticeLayout(LayoutView):
 class AutoBackupCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.auto_backup_loop.start()
+        self.last_backed_up_mtime = _get_latest_storage_mtime()
+        self.smart_backup_watchdog.start()
 
     def cog_unload(self):
-        self.auto_backup_loop.cancel()
+        self.smart_backup_watchdog.cancel()
 
-    @tasks.loop(hours=12)
-    async def auto_backup_loop(self):
+    @tasks.loop(minutes=5)
+    async def smart_backup_watchdog(self):
         await self.bot.wait_until_ready()
         channel_id = _get_backup_channel_id()
         if not channel_id:
             return
+
+        current_mtime = _get_latest_storage_mtime()
+        if current_mtime <= self.last_backed_up_mtime:
+            return
+
         channel = self.bot.get_channel(channel_id)
         if not channel:
             try:
                 channel = await self.bot.fetch_channel(channel_id)
             except Exception:
                 return
+
         if channel:
-            await self._run_upload(channel, is_automated=True)
+            success, info = await self._run_upload(channel, is_automated=True)
+            if success:
+                self.last_backed_up_mtime = current_mtime
+                print(f"SMART STORAGE WATCHDOG: Uploaded new change snapshot to channel {channel_id}.")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -121,6 +148,7 @@ class AutoBackupCommand(commands.Cog):
         if channel:
             success, msg = await self._run_restore(channel)
             if success:
+                self.last_backed_up_mtime = _get_latest_storage_mtime()
                 print(f"AUTOMATIC CLOUD RECOVERY: {msg}")
                 try:
                     from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
@@ -148,7 +176,7 @@ class AutoBackupCommand(commands.Cog):
         buffer.seek(0)
         file_obj = discord.File(buffer, filename=file_name)
 
-        mode_str = "Automated 12-Hour Loop" if is_automated else "Manual Developer Command"
+        mode_str = "Smart 5-Minute Change Watchdog" if is_automated else "Manual Developer Command"
         content_text = (
             f"**[ORBIT_CLOUD_BACKUP_V1] Persistent Storage Snapshot**\n"
             f"**Archive Size:** `{size_kb:.2f} KB`\n"
@@ -233,6 +261,8 @@ class AutoBackupCommand(commands.Cog):
                 return await ctx.send(f"Could not access configured backup channel (`{channel_id}`).", allowed_mentions=discord.AllowedMentions.none())
 
         success, info = await self._run_upload(channel, is_automated=False)
+        if success:
+            self.last_backed_up_mtime = _get_latest_storage_mtime()
         view = BackupNoticeLayout("Orbit Cloud Backup Status", f"**Status:** `{'SUCCESS' if success else 'FAILED'}`\n**Details:** {info}")
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
@@ -252,6 +282,7 @@ class AutoBackupCommand(commands.Cog):
 
         success, info = await self._run_restore(channel)
         if success:
+            self.last_backed_up_mtime = _get_latest_storage_mtime()
             try:
                 from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
                 data = _load_status()
