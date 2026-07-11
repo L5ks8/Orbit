@@ -6,8 +6,14 @@ from Commands.OwnerOnly._monitor import get_live_logs, record_command
 class LiveLogsLayoutView(LayoutView):
     def __init__(self, owner: discord.abc.User):
         super().__init__(timeout=None)
-        logs = get_live_logs(20)
-        logs_str = "\n".join(logs) if logs else "`[System]` Zero log events recorded yet."
+        raw_logs = get_live_logs(12)
+        if not raw_logs:
+            logs_str = "`[System]` Zero log events recorded yet."
+        else:
+            clean_lines = [line[:130] for line in raw_logs]
+            logs_str = "\n".join(clean_lines)
+            if len(logs_str) > 1600:
+                logs_str = logs_str[:1600] + "\n...(truncated for Discord limits)"
 
         header_str = f"### Orbit Live System Event Stream\n**Authorized Developer:** {owner.mention}"
         self.container = Container(
@@ -47,7 +53,8 @@ class LiveLogsCommand(commands.Cog):
 
     @livelogs_cmd.error
     async def livelogs_error(self, ctx: commands.Context, error):
-        pass
+        if not isinstance(error, commands.NotOwner):
+            await ctx.send(f"Livelogs error: {error}", allowed_mentions=discord.AllowedMentions.none())
 
 
 async def setup(bot: commands.Bot):

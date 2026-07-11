@@ -17,11 +17,17 @@ class ErrorsLayoutView(LayoutView):
             err_text = "**Zero System Errors Caught!** All background tasks, command handlers, and storage loops are operating smoothly."
         else:
             lines = []
-            for e in errs[:8]:
-                lines.append(f"`[{e['timestamp']}]` **[{e['source']}]** — `{e['message'][:90]}`")
+            for e in errs[:5]:
+                clean_msg = str(e.get("message", ""))[:65]
+                lines.append(f"`[{e.get('timestamp', '')}]` **[{e.get('source', '')}]** — `{clean_msg}`")
             err_text = f"**Caught Error Ring Buffer ({len(errs)} stored):**\n" + "\n".join(lines)
-            if errs[0].get("traceback"):
-                err_text += f"\n\n**Latest Traceback Detail ({errs[0]['source']}):**\n```python\n{errs[0]['traceback'][:800]}\n```"
+            
+            latest_tb = errs[0].get("traceback", "")
+            if latest_tb:
+                err_text += f"\n\n**Latest Traceback ({errs[0].get('source', '')}):**\n```python\n{latest_tb[:450]}\n```"
+
+            if len(err_text) > 1700:
+                err_text = err_text[:1700] + "\n``` (truncated)"
 
         self.container = Container(
             TextDisplay(content=f"### Orbit System Error Inspector\n**Authorized Developer:** {self.owner.mention}"),
@@ -67,7 +73,8 @@ class ErrorsCommand(commands.Cog):
 
     @errors_cmd.error
     async def errors_error(self, ctx: commands.Context, error):
-        pass
+        if not isinstance(error, commands.NotOwner):
+            await ctx.send(f"Errors command exception: {error}", allowed_mentions=discord.AllowedMentions.none())
 
 
 async def setup(bot: commands.Bot):
