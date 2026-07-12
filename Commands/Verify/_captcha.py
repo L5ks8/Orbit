@@ -37,78 +37,90 @@ FONT_GRID = {
     '9': [" ### ", "#   #", "#   #", " ####", "    #", "    #", " ### "]
 }
 
+BRIGHT_COLORS_RGB = [
+    [87, 242, 135],   # Neon Green
+    [0, 255, 127],    # Spring Green
+    [254, 231, 92],   # Bright Yellow
+    [255, 215, 0],    # Gold
+    [0, 210, 255],    # Cyan
+    [88, 101, 242],   # Blurple / Bright Blue
+    [235, 69, 158],   # Hot Pink / Magenta
+    [255, 20, 147],   # Deep Pink
+    [255, 140, 0],    # Bright Orange
+    [255, 99, 71],    # Tomato Red
+    [186, 85, 211],   # Medium Orchid
+    [237, 66, 69]     # Bright Red
+]
+
+BRIGHT_COLORS_TUPLE = [tuple(c) for c in BRIGHT_COLORS_RGB]
+
 def _draw_bmp_line(pixels: List[List[List[int]]], x0: int, y0: int, x1: int, y1: int, color: List[int], width: int, height: int) -> None:
     dist = max(abs(x1 - x0), abs(y1 - y0), 1)
     for i in range(dist + 1):
         t = i / float(dist)
         px = int(x0 + (x1 - x0) * t)
         py = int(y0 + (y1 - y0) * t)
-        for dy in range(-1, 2):
-            for dx in range(-1, 2):
+        for dy in range(-2, 3):
+            for dx in range(-2, 3):
                 ny, nx = py + dy, px + dx
                 if 0 <= ny < height and 0 <= nx < width:
                     pixels[ny][nx] = color
 
 def _generate_fallback_bmp(code: str) -> bytes:
-    width = 340
-    height = 160
+    width = 400
+    height = 180
     
-    pixels = [[[30, 31, 34] for _ in range(width)] for _ in range(height)]
+    # Pure black background
+    pixels = [[[0, 0, 0] for _ in range(width)] for _ in range(height)]
     chars = list(FONT_GRID.keys())
     
-    decoy_colors = [[80, 85, 95], [100, 105, 115], [90, 110, 125]]
-    for _ in range(25):
+    # Dark gray decoys
+    decoy_colors = [[35, 35, 35], [45, 45, 45], [55, 55, 55]]
+    for _ in range(20):
         char = random.choice(chars)
         grid = FONT_GRID[char]
-        dx = random.randint(10, width - 30)
-        dy = random.randint(10, height - 35)
+        dx = random.randint(10, width - 40)
+        dy = random.randint(10, height - 40)
         color = random.choice(decoy_colors)
-        
-        for r_idx, row in enumerate(grid):
-            for c_idx, col in enumerate(row):
-                if col == '#':
-                    for y_off in range(3):
-                        for x_off in range(3):
-                            py = dy + r_idx * 3 + y_off
-                            px = dx + c_idx * 3 + x_off
-                            if 0 <= py < height and 0 <= px < width:
-                                pixels[py][px] = color
-
-    targets = []
-    step = (width - 40) // 5
-    for idx in range(5):
-        tx = 20 + idx * step + random.randint(-4, 4)
-        ty = random.randint(25, height - 55)
-        targets.append((tx, ty))
-
-    cord_color = [255, 204, 0]
-    for idx in range(len(targets) - 1):
-        x0, y0 = targets[idx]
-        x1, y1 = targets[idx + 1]
-        cx0, cy0 = x0 + 10, y0 + 10
-        cx1, cy1 = x1 + 10, y1 + 10
-        _draw_bmp_line(pixels, cx0, cy0, cx1, cy1, cord_color, width, height)
-
-    target_colors = [
-        [255, 255, 255],
-        [87, 242, 135],
-        [254, 231, 92],
-        [88, 101, 242],
-        [235, 69, 158]
-    ]
-    
-    for idx, char in enumerate(code):
-        tx, ty = targets[idx]
-        grid = FONT_GRID[char]
-        color = target_colors[idx % len(target_colors)]
         
         for r_idx, row in enumerate(grid):
             for c_idx, col in enumerate(row):
                 if col == '#':
                     for y_off in range(4):
                         for x_off in range(4):
-                            py = ty + r_idx * 4 + y_off
-                            px = tx + c_idx * 4 + x_off
+                            py = dy + r_idx * 4 + y_off
+                            px = dx + c_idx * 4 + x_off
+                            if 0 <= py < height and 0 <= px < width:
+                                pixels[py][px] = color
+
+    targets = []
+    step = (width - 60) // 5
+    for idx in range(5):
+        tx = 30 + idx * step + random.randint(-4, 4)
+        ty = random.randint(30, height - 70)
+        targets.append((tx, ty))
+
+    # White connecting lines
+    cord_color = [255, 255, 255]
+    for idx in range(len(targets) - 1):
+        x0, y0 = targets[idx]
+        x1, y1 = targets[idx + 1]
+        cx0, cy0 = x0 + 17, y0 + 24
+        cx1, cy1 = x1 + 17, y1 + 24
+        _draw_bmp_line(pixels, cx0, cy0, cx1, cy1, cord_color, width, height)
+
+    for idx, char in enumerate(code):
+        tx, ty = targets[idx]
+        grid = FONT_GRID[char]
+        color = random.choice(BRIGHT_COLORS_RGB)
+        
+        for r_idx, row in enumerate(grid):
+            for c_idx, col in enumerate(row):
+                if col == '#':
+                    for y_off in range(7):
+                        for x_off in range(7):
+                            py = ty + r_idx * 7 + y_off
+                            px = tx + c_idx * 7 + x_off
                             if 0 <= py < height and 0 <= px < width:
                                 pixels[py][px] = color
 
@@ -129,57 +141,68 @@ def _generate_fallback_bmp(code: str) -> bytes:
         
     return bmp_header + bytes(pixel_data)
 
+def _get_truetype_font(ImageFont, size: int):
+    font_paths = [
+        "arial.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+        "C:/Windows/Fonts/calibri.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"
+    ]
+    for path in font_paths:
+        try:
+            return ImageFont.truetype(path, size)
+        except Exception:
+            pass
+    try:
+        return ImageFont.load_default(size=size)
+    except Exception:
+        return ImageFont.load_default()
+
 def generate_captcha() -> Tuple[str, bytes]:
     chars = list(FONT_GRID.keys())
     code = "".join(random.choices(chars, k=5))
     
     try:
         from PIL import Image, ImageDraw, ImageFont
-        width = 380
-        height = 180
-        img = Image.new("RGB", (width, height), color=(30, 31, 34))
+        width = 420
+        height = 190
+        # Pure black background
+        img = Image.new("RGB", (width, height), color=(0, 0, 0))
         draw = ImageDraw.Draw(img)
         
-        try:
-            decoy_font = ImageFont.truetype("arial.ttf", 28)
-            target_font = ImageFont.truetype("arial.ttf", 40)
-        except Exception:
-            decoy_font = ImageFont.load_default()
-            target_font = ImageFont.load_default()
+        decoy_font = _get_truetype_font(ImageFont, 32)
+        target_font = _get_truetype_font(ImageFont, 56)  # Huge 56px letters!
 
-        decoy_colors = [(75, 80, 90), (95, 100, 110), (85, 105, 120), (105, 90, 80)]
-        for _ in range(26):
+        decoy_colors = [(40, 40, 40), (50, 50, 50), (60, 60, 60)]
+        for _ in range(20):
             char = random.choice(chars)
-            dx = random.randint(10, width - 35)
-            dy = random.randint(10, height - 35)
+            dx = random.randint(10, width - 40)
+            dy = random.randint(10, height - 40)
             draw.text((dx, dy), char, fill=random.choice(decoy_colors), font=decoy_font)
 
         targets = []
-        step = (width - 50) // 5
+        step = (width - 60) // 5
         for idx in range(5):
-            tx = 25 + idx * step + random.randint(-6, 6)
-            ty = random.randint(25, height - 65)
+            tx = 30 + idx * step + random.randint(-6, 6)
+            ty = random.randint(30, height - 85)
             targets.append((tx, ty))
 
         cord_points = []
         for tx, ty in targets:
-            cord_points.append((tx + 14, ty + 20))
+            cord_points.append((tx + 20, ty + 28))
             
-        draw.line(cord_points, fill=(255, 204, 0), width=4)
+        # White connecting line
+        draw.line(cord_points, fill=(255, 255, 255), width=5)
         for cx, cy in cord_points:
-            draw.ellipse((cx - 5, cy - 5, cx + 5, cy + 5), fill=(235, 69, 158), outline=(255, 255, 255), width=2)
+            draw.ellipse((cx - 6, cy - 6, cx + 6, cy + 6), fill=(255, 255, 255), outline=(0, 0, 0), width=2)
 
-        target_colors = [
-            (255, 255, 255),
-            (87, 242, 135),
-            (254, 231, 92),
-            (88, 101, 242),
-            (235, 69, 158)
-        ]
-        
         for idx, char in enumerate(code):
             tx, ty = targets[idx]
-            color = target_colors[idx % len(target_colors)]
+            color = random.choice(BRIGHT_COLORS_TUPLE)
             draw.text((tx, ty), char, fill=color, font=target_font)
             
         buffer = io.BytesIO()
