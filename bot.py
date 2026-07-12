@@ -121,6 +121,10 @@ class OrbitBot(commands.Bot):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print(f"Prefix: '{PREFIX}'")
         print(f"Loaded cogs: {len(self.cogs)}")
+        try:
+            await self.change_presence(activity=discord.CustomActivity(name="/help • Orbit Security"))
+        except Exception as e:
+            print(f"Failed to set presence: {e}")
 
     async def on_message(self, message: discord.Message):
         if not message.author.bot:
