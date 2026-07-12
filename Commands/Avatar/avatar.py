@@ -5,11 +5,11 @@ from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow,
 class AvatarLayout(LayoutView):
     def __init__(self, member: discord.Member, avatar_url: str, guild_avatar_url: str = None):
         super().__init__()
-        header_str = f"### 🖼️ Profile Avatar: **{member.display_name}**\n**User ID:** `{member.id}`"
+        header_str = f"### Profile Avatar: **{member.display_name}**\n**User ID:** `{member.id}`"
         
-        links_str = f"**Global Avatar:** [🔗 Download High-Res (`4096px`)]({avatar_url})"
+        links_str = f"**Global Avatar:** [Download High-Res (`4096px`)]({avatar_url})"
         if guild_avatar_url:
-            links_str += f"\n**Server Avatar:** [🔗 Download Server Profile Avatar (`4096px`)]({guild_avatar_url})"
+            links_str += f"\n**Server Avatar:** [Download Server Profile Avatar (`4096px`)]({guild_avatar_url})"
 
         self.container = Container(
             TextDisplay(content=header_str),

@@ -1,142 +1,119 @@
+import re
 import discord
+from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
 from Commands.Whitelist._storage import load_whitelist, add_to_whitelist, remove_from_whitelist
 
-class AddWhitelistModal(Modal, title="Add User to Global Whitelist"):
-    user_id_input = TextInput(
-        label="User ID",
-        placeholder="Enter numeric ID",
-        required=True,
-        max_length=20
-    )
-    reason_input = TextInput(
-        label="Reason",
-        placeholder="Why should this user be immune to moderation actions?",
-        required=False,
-        max_length=150
-    )
-
-    def __init__(self, view: "WhitelistDashboardLayout"):
+class AddWhitelistModal(Modal, title="Add ID to Whitelist"):
+    def __init__(self, parent_view: "WhitelistListLayout"):
         super().__init__()
-        self.dashboard_view = view
+        self.parent_view = parent_view
+        self.target_id = TextInput(label="User ID", placeholder="e.g. 123456789012345678", required=True)
+        self.reason = TextInput(label="Reason", placeholder="Why is this user whitelisted?", required=False)
+        self.add_item(self.target_id)
+        self.add_item(self.reason)
 
     async def on_submit(self, interaction: discord.Interaction):
-        try:
-            uid = int(self.user_id_input.value.strip())
-        except ValueError:
-            return await interaction.response.send_message("Invalid numeric User ID provided.", ephemeral=True)
+        clean_id_str = re.sub(r"\D", "", self.target_id.value)
+        if not clean_id_str:
+            return await interaction.response.send_message("Please provide a valid numeric ID.", ephemeral=True)
+        user_id = int(clean_id_str)
 
-        reason = self.reason_input.value.strip() or "Global Immunity Whitelist"
-        success = add_to_whitelist(interaction.guild.id, uid, reason, interaction.user.id)
-
+        reason_str = self.reason.value or "Whitelisted via panel"
+        success = add_to_whitelist(interaction.guild_id, user_id, reason_str, interaction.user.id)
         if not success:
-            return await interaction.response.send_message("User is already on the global whitelist for this server.", ephemeral=True)
+            return await interaction.response.send_message(f"ID `{user_id}` is already on the server moderation whitelist.", ephemeral=True)
 
-        self.dashboard_view.refresh_content(interaction.guild.id)
-        await interaction.response.edit_message(view=self.dashboard_view)
-        await interaction.followup.send(f"Added <@{uid}> (`{uid}`) to the global moderation whitelist.", ephemeral=True)
+        data = load_whitelist(interaction.guild_id)
+        self.parent_view.update_view(data)
+        await interaction.response.edit_message(view=self.parent_view)
+        await interaction.followup.send(f"Added ID `{user_id}` to the server moderation whitelist.", ephemeral=True)
 
-
-class RemoveWhitelistModal(Modal, title="Remove User from Whitelist"):
-    user_id_input = TextInput(
-        label="User ID",
-        placeholder="Enter numeric ID",
-        required=True,
-        max_length=20
-    )
-
-    def __init__(self, view: "WhitelistDashboardLayout"):
+class RemoveWhitelistModal(Modal, title="Remove ID from Whitelist"):
+    def __init__(self, parent_view: "WhitelistListLayout"):
         super().__init__()
-        self.dashboard_view = view
+        self.parent_view = parent_view
+        self.target_id = TextInput(label="User ID to Remove", placeholder="e.g. 123456789012345678", required=True)
+        self.add_item(self.target_id)
 
     async def on_submit(self, interaction: discord.Interaction):
-        try:
-            uid = int(self.user_id_input.value.strip())
-        except ValueError:
-            return await interaction.response.send_message("Invalid numeric User ID provided.", ephemeral=True)
+        clean_id_str = re.sub(r"\D", "", self.target_id.value)
+        if not clean_id_str:
+            return await interaction.response.send_message("Please provide a valid numeric ID.", ephemeral=True)
+        user_id = int(clean_id_str)
 
-        success = remove_from_whitelist(interaction.guild.id, uid)
+        success = remove_from_whitelist(interaction.guild_id, user_id)
         if not success:
-            return await interaction.response.send_message("User is not on the whitelist.", ephemeral=True)
+            return await interaction.response.send_message(f"ID `{user_id}` is not currently on the server moderation whitelist.", ephemeral=True)
 
-        self.dashboard_view.refresh_content(interaction.guild.id)
-        await interaction.response.edit_message(view=self.dashboard_view)
-        await interaction.followup.send(f"Removed <@{uid}> (`{uid}`) from the global moderation whitelist.", ephemeral=True)
+        data = load_whitelist(interaction.guild_id)
+        self.parent_view.update_view(data)
+        await interaction.response.edit_message(view=self.parent_view)
+        await interaction.followup.send(f"Removed ID `{user_id}` from the server moderation whitelist.", ephemeral=True)
 
-
-class WhitelistDashboardLayout(LayoutView):
-    def __init__(self, guild_id: int, author_id: int):
-        super().__init__(timeout=300.0)
-        self.guild_id = guild_id
+class WhitelistListLayout(LayoutView):
+    def __init__(self, guild: discord.Guild, bot: commands.Bot, author_id: int):
+        super().__init__(timeout=300)
+        self.guild = guild
+        self.bot = bot
         self.author_id = author_id
-        self.refresh_content(guild_id)
+        self.data = load_whitelist(guild.id)
+        self.build_ui()
 
-    def refresh_content(self, guild_id: int):
-        data = load_whitelist(guild_id)
-        count = len(data)
+    def update_view(self, data: dict):
+        self.data = data
+        self.build_ui()
 
-        header_text = f"### Orbit Global Whitelist Manager\n**Status:** ACTIVE (`{count}` Protected Users)"
+    def build_ui(self):
+        self.clear_items()
+        count = len(self.data)
         if count == 0:
-            list_text = "No users currently whitelisted.\n*Whitelisted members are 100% immune to AutoMod, Bans, Kicks, Timeouts, Mutes, and Warnings.*"
+            content_text = "The moderation whitelist is currently empty for this server."
         else:
             lines = []
-            for uid_str, info in list(data.items())[:10]:
-                reason = info.get("reason", "Immunity")
-                lines.append(f"• <@{uid_str}> (`{uid_str}`) - **Reason:** {reason}")
-            list_text = "\n".join(lines)
-            if count > 10:
-                list_text += f"\n\n*And {count - 10} more protected users...*"
+            for uid_str, info in list(self.data.items())[:15]:
+                reason = info.get("reason", "No reason")
+                user = self.guild.get_member(int(uid_str)) or self.bot.get_user(int(uid_str))
+                mention_display = f"<@{uid_str}>" + (f" (`@{user.name}`)" if user and hasattr(user, "name") else "")
+                lines.append(f"• {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
+            content_text = "\n".join(lines)
+            if count > 15:
+                content_text += f"\n\n*And {count - 15} more users...*"
 
-        self.clear_items()
+        self.container = Container(
+            TextDisplay(content=f"### Whitelist Overview ({count} Users)"),
+            Separator(spacing=discord.SeparatorSpacing.small),
+            TextDisplay(content=content_text)
+        )
+        self.add_item(self.container)
 
-        btn_add = Button(label="Add to Whitelist", style=discord.ButtonStyle.success, custom_id="wl_btn_add")
-        btn_remove = Button(label="Remove User", style=discord.ButtonStyle.danger, custom_id="wl_btn_remove")
-        btn_view = Button(label="View Full List", style=discord.ButtonStyle.secondary, custom_id="wl_btn_view")
-        btn_close = Button(label="Close Dashboard", style=discord.ButtonStyle.danger, custom_id="wl_btn_close")
+        btn_add = Button(label="Add ID", style=discord.ButtonStyle.success)
+        btn_remove = Button(label="Remove ID", style=discord.ButtonStyle.secondary)
+        btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def add_cb(interaction: discord.Interaction):
-            if interaction.user.id != interaction.guild.owner_id:
-                return await interaction.response.send_message("Only the Server Owner can manage the whitelist.", ephemeral=True)
-            modal = AddWhitelistModal(self)
-            await interaction.response.send_modal(modal)
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+            await interaction.response.send_modal(AddWhitelistModal(self))
 
         async def remove_cb(interaction: discord.Interaction):
-            if interaction.user.id != interaction.guild.owner_id:
-                return await interaction.response.send_message("Only the Server Owner can manage the whitelist.", ephemeral=True)
-            modal = RemoveWhitelistModal(self)
-            await interaction.response.send_modal(modal)
-
-        async def view_cb(interaction: discord.Interaction):
-            if interaction.user.id != interaction.guild.owner_id:
-                return await interaction.response.send_message("Only the Server Owner can view the whitelist.", ephemeral=True)
-            from Commands.Whitelist.wl_list import _do_wl_list
-            ctx = await interaction.client.get_context(interaction.message)
-            ctx.guild = interaction.guild
-            ctx.author = interaction.user
-            await interaction.response.defer(ephemeral=True)
-            data = load_whitelist(interaction.guild.id)
-            from Commands.Whitelist.wl_list import WhitelistListLayout
-            view = WhitelistListLayout(interaction.guild, interaction.client, data)
-            await interaction.followup.send(view=view, ephemeral=True)
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+            await interaction.response.send_modal(RemoveWhitelistModal(self))
 
         async def close_cb(interaction: discord.Interaction):
-            if interaction.user.id != interaction.guild.owner_id:
-                return await interaction.response.send_message("Only the Server Owner can close the whitelist dashboard.", ephemeral=True)
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
-                await interaction.response.send_message("Dashboard closed.", ephemeral=True)
+                self.clear_items()
+                self.add_item(Container(TextDisplay(content="### Whitelist overview closed.")))
+                await interaction.response.edit_message(view=self)
+                self.stop()
 
         btn_add.callback = add_cb
         btn_remove.callback = remove_cb
-        btn_view.callback = view_cb
         btn_close.callback = close_cb
 
-        self.container = Container(
-            TextDisplay(content=header_text),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=list_text),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            ActionRow(btn_add, btn_remove, btn_view, btn_close)
-        )
-        self.add_item(self.container)
+        self.add_item(ActionRow(btn_add, btn_remove, btn_close))

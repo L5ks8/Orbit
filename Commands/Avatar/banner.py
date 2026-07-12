@@ -5,8 +5,8 @@ from discord.ui import LayoutView, Container, TextDisplay, Separator
 class BannerLayout(LayoutView):
     def __init__(self, user: discord.User, banner_url: str):
         super().__init__()
-        header_str = f"### 🎨 Profile Banner: **{user.display_name}**\n**User ID:** `{user.id}`"
-        links_str = f"**Banner Link:** [🔗 Download High-Res (`4096px`)]({banner_url})"
+        header_str = f"### Profile Banner: **{user.display_name}**\n**User ID:** `{user.id}`"
+        links_str = f"**Banner Link:** [Download High-Res (`4096px`)]({banner_url})"
 
         self.container = Container(
             TextDisplay(content=header_str),

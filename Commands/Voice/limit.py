@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Voice._group import voice_group
+from Commands.Voice.voice import voice_group
 
 class VcLimitSuccessLayout(LayoutView):
     def __init__(self, channel: discord.VoiceChannel, limit: int, author: discord.Member):
@@ -32,7 +32,7 @@ async def _do_vc_limit(ctx: commands.Context, limit: int, channel: discord.Voice
     except Exception as e:
         await ctx.send(f"Error setting voice limit: {e}", ephemeral=True)
 
-@voice_group.command(name="limit", description="Sets the user limit for a voice channel (`/voice limit`).")
+@voice_group.command(name="limit", description="Set the user limit for a voice channel.")
 @commands.has_permissions(manage_channels=True)
 @commands.bot_has_permissions(manage_channels=True)
 async def vc_limit_cmd(ctx: commands.Context, limit: int, channel: discord.VoiceChannel = None):
@@ -53,11 +53,14 @@ class VcLimitPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="voice limit", aliases=["vclimit"], hidden=True)
+    @commands.command(name="vc_limit", aliases=["vclimit"], hidden=True)
     @commands.has_permissions(manage_channels=True)
     async def vc_limit_prefix(self, ctx: commands.Context, limit: int, channel: discord.VoiceChannel = None):
         await _do_vc_limit(ctx, limit, channel)
 
 async def setup(bot: commands.Bot):
+    from Commands.Voice.voice import voice_group
+    if "voice" not in bot.all_commands:
+        bot.add_command(voice_group)
     await bot.add_cog(VcLimitCommand(bot))
     await bot.add_cog(VcLimitPrefixFallback(bot))

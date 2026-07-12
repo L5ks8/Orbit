@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Voice._group import voice_group
+from Commands.Voice.voice import voice_group
 
 class VcUnlockSuccessLayout(LayoutView):
     def __init__(self, channel: discord.VoiceChannel, reason: str, author: discord.Member):
@@ -33,7 +33,7 @@ async def _do_vc_unlock(ctx: commands.Context, channel: discord.VoiceChannel | N
     except Exception as e:
         await ctx.send(f"Error unlocking voice channel: {e}", ephemeral=True)
 
-@voice_group.command(name="unlock", description="Unlocks a voice channel so regular members can connect (`/voice unlock`).")
+@voice_group.command(name="unlock", description="Unlock a voice channel so regular members can connect.")
 @commands.has_permissions(manage_channels=True)
 @commands.bot_has_permissions(manage_channels=True)
 async def vc_unlock_cmd(ctx: commands.Context, channel: discord.VoiceChannel = None, *, reason: str = "No reason provided"):
@@ -54,11 +54,14 @@ class VcUnlockPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="voice unlock", aliases=["vcunlock"], hidden=True)
+    @commands.command(name="vc_unlock", aliases=["vcunlock"], hidden=True)
     @commands.has_permissions(manage_channels=True)
     async def vc_unlock_prefix(self, ctx: commands.Context, channel: discord.VoiceChannel = None, *, reason: str = "No reason provided"):
         await _do_vc_unlock(ctx, channel, reason)
 
 async def setup(bot: commands.Bot):
+    from Commands.Voice.voice import voice_group
+    if "voice" not in bot.all_commands:
+        bot.add_command(voice_group)
     await bot.add_cog(VcUnlockCommand(bot))
     await bot.add_cog(VcUnlockPrefixFallback(bot))

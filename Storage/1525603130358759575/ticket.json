@@ -1,0 +1,27 @@
+{
+    "enabled": true,
+    "panel_channel_id": 1525662027350147102,
+    "category_id": 1525656233200189582,
+    "support_role_id": 1525656415480447227,
+    "log_channel_id": 1525663988287930549,
+    "panel_title": "Support Ticket Desk",
+    "panel_description": "Click the button below to open a direct support channel with our team.",
+    "options": [
+        "Support",
+        "Bug-Report"
+    ],
+    "ticket_counter": 1,
+    "active_tickets": {},
+    "options_slots": [
+        {
+            "name": "Support",
+            "role_id": 1525656415480447227,
+            "category_id": 1525656233200189582
+        },
+        {
+            "name": "Bug-Report",
+            "role_id": 1525656415480447227,
+            "category_id": 1525656233200189582
+        }
+    ]
+}

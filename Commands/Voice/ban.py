@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice._storage import add_to_vcban, is_vcbanned
 from Commands.Whitelist._storage import is_whitelisted
-from Commands.Voice._group import voice_group
+from Commands.Voice.voice import voice_group
 
 class VcBanSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
@@ -37,7 +37,7 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     view = VcBanSuccessLayout(user, reason, ctx.author)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-@voice_group.command(name="ban", description="Bans a user from joining any voice channels on this server (`/voice ban`).")
+@voice_group.command(name="ban", description="Ban a member from joining voice channels.")
 @commands.has_permissions(move_members=True)
 @commands.bot_has_permissions(move_members=True)
 async def vc_ban_cmd(ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided"):
@@ -58,15 +58,27 @@ class VcBanCommand(commands.Cog):
             except Exception:
                 pass
 
+    @vc_ban_cmd.error
+    async def vc_ban_error(self, ctx: commands.Context, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("You need Move Members permission to voice ban users.", ephemeral=True)
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Usage: `-voice ban <@member> [reason]`", ephemeral=True)
+        else:
+            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+
 class VcBanPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="voice ban", aliases=["vcban"], hidden=True)
+    @commands.command(name="vc_ban", aliases=["vcban"], hidden=True)
     @commands.has_permissions(move_members=True)
     async def vc_ban_prefix(self, ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided"):
         await _do_vc_ban(ctx, user, reason)
 
 async def setup(bot: commands.Bot):
+    from Commands.Voice.voice import voice_group
+    if "voice" not in bot.all_commands:
+        bot.add_command(voice_group)
     await bot.add_cog(VcBanCommand(bot))
     await bot.add_cog(VcBanPrefixFallback(bot))

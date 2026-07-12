@@ -22,15 +22,15 @@ class SlotsSession:
         s1, s2, s3 = center[0], center[1], center[2]
 
         if s1 == s2 == s3 == "7️⃣":
-            self.outcome_text = "🎉 **JACKPOT 777!** Mega Casino Payout (`10x Win`)!"
+            self.outcome_text = "**JACKPOT 777!** Mega Casino Payout (`10x Win`)!"
         elif s1 == s2 == s3 == "💎":
-            self.outcome_text = "💎 **DIAMOND TRIPLE!** High Roller Payout (`5x Win`)!"
+            self.outcome_text = "**DIAMOND TRIPLE!** High Roller Payout (`5x Win`)!"
         elif s1 == s2 == s3:
-            self.outcome_text = f"🍒 **TRIPLE MATCH (`{s1}`)!** Classic Payout (`3x Win`)!"
+            self.outcome_text = f"**TRIPLE MATCH (`{s1}`)!** Classic Payout (`3x Win`)!"
         elif s1 == s2 or s2 == s3 or s1 == s3:
-            self.outcome_text = "🪙 **DOUBLE MATCH!** Small Payout (`1.5x Win`)!"
+            self.outcome_text = "**DOUBLE MATCH!** Small Payout (`1.5x Win`)!"
         else:
-            self.outcome_text = "💨 **NO MATCH!** Better luck on the next spin!"
+            self.outcome_text = "**NO MATCH!** Better luck on the next spin!"
 
 
 class SlotsLayoutView(LayoutView):
@@ -46,13 +46,13 @@ class SlotsLayoutView(LayoutView):
         r3 = " | ".join(self.session.grid[2])
 
         reels_str = (
-            f"▫️ [ {r1} ] ▫️\n"
-            f"👉 **[ {r2} ]** 👈 *(Center Payline)*\n"
-            f"▫️ [ {r3} ] ▫️"
+            f"  [ {r1} ]\n"
+            f"> **[ {r2} ]** *(Center Payline)*\n"
+            f"  [ {r3} ]"
         )
 
         self.container = Container(
-            TextDisplay(content=f"### 🎰 Orbit V2 Casino: Slot Machine\n**Player:** {self.session.player.mention}"),
+            TextDisplay(content=f"### Orbit V2 Casino: Slot Machine\n**Player:** {self.session.player.mention}"),
             Separator(spacing=discord.SeparatorSpacing.small),
             TextDisplay(content=f"**Machine Reels:**\n{reels_str}"),
             Separator(spacing=discord.SeparatorSpacing.small),
@@ -60,24 +60,24 @@ class SlotsLayoutView(LayoutView):
         )
         self.add_item(self.container)
 
-        btn_spin = Button(label="Spin Again", style=discord.ButtonStyle.primary, emoji="🎰")
-        btn_exit = Button(label="Exit Machine", style=discord.ButtonStyle.secondary, emoji="🛑")
+        btn_spin = Button(label="Spin Again", style=discord.ButtonStyle.primary)
+        btn_exit = Button(label="Exit Machine", style=discord.ButtonStyle.secondary)
 
         async def _spin_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("⚠️ This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
+                return await interaction.response.send_message("This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
             self.session.spin()
             self.build_ui()
             await interaction.response.edit_message(view=self)
 
         async def _exit_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("⚠️ This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
+                return await interaction.response.send_message("This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
             self.clear_items()
             self.container = Container(
-                TextDisplay(content=f"### 🎰 Orbit V2 Casino: Slot Machine\n**Player:** {self.session.player.mention}"),
+                TextDisplay(content=f"### Orbit V2 Casino: Slot Machine\n**Player:** {self.session.player.mention}"),
                 Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content="👋 **Thanks for playing at the Orbit V2 Casino!** Machine closed.")
+                TextDisplay(content="**Thanks for playing at the Orbit V2 Casino!** Machine closed.")
             )
             self.add_item(self.container)
             await interaction.response.edit_message(view=self)

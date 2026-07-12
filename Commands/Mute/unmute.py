@@ -20,7 +20,7 @@ class UnmuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="unmute", description="Removes the Muted role from a user and restores their channel permissions.")
+    @commands.hybrid_command(name="unmute", description="Removes the Muted role from a user.")
     @commands.has_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True, manage_channels=True)
     async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):

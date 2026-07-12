@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Voice._group import voice_group
+from Commands.Voice.voice import voice_group
 
 class MoveSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member, channel: discord.VoiceChannel, reason: str, author: discord.Member):
@@ -29,7 +29,7 @@ async def _do_vc_move(ctx: commands.Context, target: discord.Member, channel: di
     except Exception as e:
         await ctx.send(f"Error moving user: {e}", ephemeral=True)
 
-@voice_group.command(name="move", description="Moves a user into another voice channel (`/voice move`).")
+@voice_group.command(name="move", description="Move a member into another voice channel.")
 @commands.has_permissions(move_members=True)
 @commands.bot_has_permissions(move_members=True)
 async def vc_move_cmd(ctx: commands.Context, target: discord.Member, channel: discord.VoiceChannel, *, reason: str = "No reason provided"):
@@ -43,6 +43,8 @@ class MoveCommand(commands.Cog):
     async def move_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Move Members permission to move users.", ephemeral=True)
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Usage: `-voice move <@member> <#channel> [reason]`", ephemeral=True)
         else:
             await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
@@ -50,11 +52,14 @@ class MovePrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="voice move", aliases=["vcmove", "move"], hidden=True)
+    @commands.command(name="vc_move", aliases=["vcmove"], hidden=True)
     @commands.has_permissions(move_members=True)
     async def vc_move_prefix(self, ctx: commands.Context, target: discord.Member, channel: discord.VoiceChannel, *, reason: str = "No reason provided"):
         await _do_vc_move(ctx, target, channel, reason)
 
 async def setup(bot: commands.Bot):
+    from Commands.Voice.voice import voice_group
+    if "voice" not in bot.all_commands:
+        bot.add_command(voice_group)
     await bot.add_cog(MoveCommand(bot))
     await bot.add_cog(MovePrefixFallback(bot))

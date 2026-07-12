@@ -20,20 +20,18 @@ def _create_thumbnail(url: str):
 
 PAGES = [
     {
-        "title": "🏠 Overview & Navigation",
-        "emoji": "🏠",
+        "title": "Overview & Navigation",
         "description": (
             "**Welcome to Orbit Help!** Orbit is your all-in-one Discord moderation, voice, and engagement bot.\n\n"
             "**Command Prefixes:**\n"
             "> • **Slash Commands:** Type `/` to see all available slash commands with auto-completion.\n"
             "> • **Prefix Commands:** Use `-command` (or `@Orbit command`).\n\n"
             "**Navigation:**\n"
-            "Use the `◀️ Previous` and `Next ▶️` buttons below, or pick a specific command category from the dropdown selector to jump directly to that page!"
+            "Use the `Previous` and `Next` buttons below, or pick a specific command category from the dropdown selector to jump directly to that page!"
         )
     },
     {
-        "title": "🛡️ Moderation & Punishments",
-        "emoji": "🛡️",
+        "title": "Moderation & Punishments",
         "description": (
             "**Server Moderation & Enforcement Commands:**\n\n"
             "• `/ban <user> [reason]` — Permanently ban a member (`-ban @user Spam`).\n"
@@ -47,8 +45,7 @@ PAGES = [
         )
     },
     {
-        "title": "⚠️ Warning & Infraction System",
-        "emoji": "⚠️",
+        "title": "Warning & Infraction System",
         "description": (
             "**Persistent Warning & Blacklist Management:**\n\n"
             "• `/warn <user> <reason>` — Issue a permanent warning (`-warn @user Rule 3 violation`).\n"
@@ -60,8 +57,7 @@ PAGES = [
         )
     },
     {
-        "title": "🔒 Channel & Voice Management",
-        "emoji": "🔒",
+        "title": "Channel & Voice Management",
         "description": (
             "**Text & Voice Channel Controls:**\n\n"
             "• `/lock [channel] [reason]` — Lock a text channel (`-lock #general`).\n"
@@ -76,8 +72,7 @@ PAGES = [
         )
     },
     {
-        "title": "🎭 Role & Auto-Join Systems",
-        "emoji": "🎭",
+        "title": "Role & Auto-Join Systems",
         "description": (
             "**Server Role & AutoRole Configuration:**\n\n"
             "• `/addrole <user> <role>` — Grant a role to a member (`-addrole @user @Member`).\n"
@@ -90,8 +85,7 @@ PAGES = [
         )
     },
     {
-        "title": "🎉 Giveaways, Polls & Welcome",
-        "emoji": "🎉",
+        "title": "Giveaways, Polls & Welcome",
         "description": (
             "**Community Engagement & Greetings:**\n\n"
             "• `/giveaway <duration> <winners> <prize>` — Start an interactive giveaway (`-giveaway 1d 1 Nitro`).\n"
@@ -105,8 +99,7 @@ PAGES = [
         )
     },
     {
-        "title": "ℹ️ Utility, Info & Media",
-        "emoji": "ℹ️",
+        "title": "Utility, Info & Media",
         "description": (
             "**Server Stats, User Info & Tools:**\n\n"
             "• `/serverinfo` — Display complete server statistics and creation details (`-serverinfo`).\n"
@@ -132,7 +125,7 @@ class HelpCategorySelect(Select):
             )
             for idx, page in enumerate(PAGES)
         ]
-        super().__init__(placeholder="📑 Jump directly to a category...", options=options)
+        super().__init__(placeholder="Jump directly to a category...", options=options)
 
     async def callback(self, interaction: discord.Interaction):
         if interaction.user.id != self.parent_view.author_id:
@@ -155,7 +148,7 @@ class HelpLayout(LayoutView):
         self.clear_items()
         page = PAGES[self.current_page]
         
-        header_str = f"### 📚 Orbit Command Guide: **{page['title']}**\n**Page:** `{self.current_page + 1} / {len(PAGES)}`"
+        header_str = f"### Orbit Command Guide: **{page['title']}**\n**Page:** `{self.current_page + 1} / {len(PAGES)}`"
         info_str = page["description"]
 
         icon_url = self.bot.user.avatar.with_size(256).url if (self.bot.user and self.bot.user.avatar) else None
@@ -189,10 +182,10 @@ class HelpLayout(LayoutView):
         select_menu = HelpCategorySelect(self)
         items.append(ActionRow(select_menu))
 
-        btn_prev = Button(label="◀️ Previous", style=discord.ButtonStyle.secondary, disabled=(self.current_page == 0))
+        btn_prev = Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=(self.current_page == 0))
         btn_page = Button(label=f"Page {self.current_page + 1}/{len(PAGES)}", style=discord.ButtonStyle.primary, disabled=True)
-        btn_next = Button(label="Next ▶️", style=discord.ButtonStyle.secondary, disabled=(self.current_page == len(PAGES) - 1))
-        btn_close = Button(label="Close ✖", style=discord.ButtonStyle.danger)
+        btn_next = Button(label="Next", style=discord.ButtonStyle.secondary, disabled=(self.current_page == len(PAGES) - 1))
+        btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def prev_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:

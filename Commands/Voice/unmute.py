@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Voice._group import voice_group
+from Commands.Voice.voice import voice_group
 
 class VcUnmuteSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member, reason: str, author: discord.Member):
@@ -29,7 +29,7 @@ async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: s
     except Exception as e:
         await ctx.send(f"Error voice unmuting user: {e}", ephemeral=True)
 
-@voice_group.command(name="unmute", description="Removes a voice mute from a user (`/voice unmute`).")
+@voice_group.command(name="unmute", description="Remove a voice mute from a member.")
 @commands.has_permissions(mute_members=True)
 @commands.bot_has_permissions(mute_members=True)
 async def vc_unmute_cmd(ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
@@ -43,6 +43,8 @@ class VcUnmuteCommand(commands.Cog):
     async def vcunmute_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Mute Members permission to voice unmute users.", ephemeral=True)
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Usage: `-voice unmute <@member> [reason]`", ephemeral=True)
         else:
             await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
@@ -50,11 +52,14 @@ class VcUnmutePrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="voice unmute", aliases=["vcunmute"], hidden=True)
+    @commands.command(name="vc_unmute", aliases=["vcunmute"], hidden=True)
     @commands.has_permissions(mute_members=True)
     async def vc_unmute_prefix(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
         await _do_vc_unmute(ctx, target, reason)
 
 async def setup(bot: commands.Bot):
+    from Commands.Voice.voice import voice_group
+    if "voice" not in bot.all_commands:
+        bot.add_command(voice_group)
     await bot.add_cog(VcUnmuteCommand(bot))
     await bot.add_cog(VcUnmutePrefixFallback(bot))

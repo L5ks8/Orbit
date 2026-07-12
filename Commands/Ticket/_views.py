@@ -430,7 +430,7 @@ class TicketConfigDynamicView(LayoutView):
             cid = slot.get("category_id") if isinstance(slot, dict) else None
             role_display = f"<@&{rid}>" if rid else "`Role Not Set`"
             cat_display = f"<#{cid}>" if cid else "`Category Not Set`"
-            marker = "👉 " if idx == self.selected_slot else ""
+            marker = "> " if idx == self.selected_slot else ""
             slot_lines.append(f"{marker}`{idx+1}.` **{name}** — Staff: {role_display} | Category: {cat_display}")
 
         slots_display = "\n".join(slot_lines)
@@ -539,7 +539,7 @@ class TicketConfigDynamicView(LayoutView):
                     missing_cfg = True
                     break
             if missing_cfg:
-                return await interaction.response.send_message("⚠️ Every option slot must have both an assigned Staff Role AND Ticket Category before publishing! Use Row 2 and Row 3 above.", ephemeral=True)
+                return await interaction.response.send_message("Every option slot must have both an assigned Staff Role AND Ticket Category before publishing! Use Row 2 and Row 3 above.", ephemeral=True)
 
             opt_names = [s.get("name", f"Option {idx+1}") for idx, s in enumerate(slots) if isinstance(s, dict)]
             config["options"] = opt_names
@@ -550,7 +550,7 @@ class TicketConfigDynamicView(LayoutView):
                 options_slots=slots
             )
             await panel_ch.send(view=live_view, allowed_mentions=discord.AllowedMentions.none())
-            await interaction.response.send_message(f"✅ Ticket Desk successfully sent to {panel_ch.mention} featuring {len(slots)} custom category buttons!", ephemeral=True)
+            await interaction.response.send_message(f"Ticket Desk successfully sent to {panel_ch.mention} featuring {len(slots)} custom category buttons!", ephemeral=True)
 
         btn_publish.callback = publish_cb
 
@@ -616,7 +616,7 @@ class PersistentTicketPanelLayout(LayoutView):
                 if len(slots) == 1:
                     selected_opt = slots[0].get("name", "Support") if isinstance(slots[0], dict) else str(slots[0])
                 elif len(slots) > 1:
-                    return await interaction.response.send_message("⚠️ Please choose a category option from the dropdown menu above first!", ephemeral=True)
+                    return await interaction.response.send_message("Please choose a category option from the dropdown menu above first!", ephemeral=True)
             if not selected_opt:
                 selected_opt = "General Support"
             modal = TicketOpenModal(category_option=selected_opt)

@@ -40,6 +40,18 @@ class DevmodeNoticeLayout(discord.ui.LayoutView):
 
 class OrbitCommandTree(discord.app_commands.CommandTree):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.guild:
+            from Commands.Blacklist._storage import is_blacklisted
+            if is_blacklisted(interaction.guild.id, interaction.user.id):
+                try:
+                    if interaction.response.is_done():
+                        await interaction.followup.send("You are blacklisted from using bot commands on this server.", ephemeral=True)
+                    else:
+                        await interaction.response.send_message("You are blacklisted from using bot commands on this server.", ephemeral=True)
+                except Exception:
+                    pass
+                return False
+
         from Commands.OwnerOnly._storage import is_devmode_enabled
         enabled, reason = is_devmode_enabled()
         if not enabled:
@@ -65,7 +77,7 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             pass
         try:
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"❌ An error occurred: `{error}`", ephemeral=True)
+                await interaction.response.send_message(f"An error occurred: `{error}`", ephemeral=True)
         except Exception:
             pass
 
@@ -83,18 +95,24 @@ class OrbitBot(commands.Bot):
         if not commands_dir.exists():
             commands_dir.mkdir(parents=True, exist_ok=True)
 
-        for file_path in commands_dir.rglob("_group.py"):
-            extension = ".".join(file_path.with_suffix("").parts)
-            try:
-                await self.load_extension(extension)
-                print(f"Loaded Group: {extension}")
-            except Exception as e:
-                print(f"Failed to load group {extension}: {e}")
-
+        # Load root command group modules first (e.g. Commands/Role/role.py, Commands/Ticket/ticket.py)
         for file_path in commands_dir.rglob("*.py"):
             if file_path.name.startswith("_"):
                 continue
+            if file_path.stem.lower() == file_path.parent.name.lower():
+                extension = ".".join(file_path.with_suffix("").parts)
+                try:
+                    await self.load_extension(extension)
+                    print(f"Loaded Root Group: {extension}")
+                except Exception as e:
+                    print(f"Failed to load root group {extension}: {e}")
 
+        # Load subcommands and remaining modules
+        for file_path in commands_dir.rglob("*.py"):
+            if file_path.name.startswith("_"):
+                continue
+            if file_path.stem.lower() == file_path.parent.name.lower():
+                continue
             extension = ".".join(file_path.with_suffix("").parts)
             try:
                 await self.load_extension(extension)
@@ -192,6 +210,19 @@ class OrbitBot(commands.Bot):
         raise error
 
 bot = OrbitBot()
+
+@bot.check
+async def global_blacklist_prefix_check(ctx: commands.Context):
+    if not ctx.guild:
+        return True
+    from Commands.Blacklist._storage import is_blacklisted
+    if is_blacklisted(ctx.guild.id, ctx.author.id):
+        try:
+            await ctx.send("You are blacklisted from using bot commands on this server.", delete_after=5.0)
+        except Exception:
+            pass
+        return False
+    return True
 
 @bot.check
 async def global_devmode_prefix_check(ctx: commands.Context):

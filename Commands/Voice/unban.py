@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice._storage import remove_from_vcban
-from Commands.Voice._group import voice_group
+from Commands.Voice.voice import voice_group
 
 class VcUnbanSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
@@ -26,7 +26,7 @@ async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     view = VcUnbanSuccessLayout(user, reason, ctx.author)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-@voice_group.command(name="unban", description="Removes a voice ban from a user (`/voice unban`).")
+@voice_group.command(name="unban", description="Remove a voice ban from a user.")
 @commands.has_permissions(move_members=True)
 async def vc_unban_cmd(ctx: commands.Context, user: discord.User, *, reason: str = "No reason provided"):
     await _do_vc_unban(ctx, user, reason)
@@ -39,6 +39,8 @@ class VcUnbanCommand(commands.Cog):
     async def vcunban_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Move Members permission to voice unban users.", ephemeral=True)
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Usage: `-voice unban <@user> [reason]`", ephemeral=True)
         else:
             await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
@@ -46,11 +48,14 @@ class VcUnbanPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="voice unban", aliases=["vcunban"], hidden=True)
+    @commands.command(name="vc_unban", aliases=["vcunban"], hidden=True)
     @commands.has_permissions(move_members=True)
     async def vc_unban_prefix(self, ctx: commands.Context, user: discord.User, *, reason: str = "No reason provided"):
         await _do_vc_unban(ctx, user, reason)
 
 async def setup(bot: commands.Bot):
+    from Commands.Voice.voice import voice_group
+    if "voice" not in bot.all_commands:
+        bot.add_command(voice_group)
     await bot.add_cog(VcUnbanCommand(bot))
     await bot.add_cog(VcUnbanPrefixFallback(bot))

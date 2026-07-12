@@ -8,7 +8,7 @@ class ClosedPollLayout(LayoutView):
     def __init__(self, poll_id: str, question: str, closer: discord.Member):
         super().__init__()
         self.container = Container(
-            TextDisplay(content=f"### 🔒 Community Poll Closed (ID: `{poll_id}`)\n**Question:** {question}"),
+            TextDisplay(content=f"### Community Poll Closed (ID: `{poll_id}`)\n**Question:** {question}"),
             Separator(spacing=discord.SeparatorSpacing.small),
             TextDisplay(content=f"**Status:** Voting session has ended. Results locked.\n**Closed By:** {closer.mention}")
         )

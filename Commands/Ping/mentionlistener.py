@@ -8,11 +8,11 @@ class MentionOverviewLayout(LayoutView):
         self.bot = bot
         ms = round(bot.latency * 1000)
 
-        header_str = "### 👋 Hello! I am Orbit\n**Your advanced utility & moderation assistant for Discord.**"
+        header_str = "### Hello! I am Orbit\n**Your advanced utility & moderation assistant for Discord.**"
         info_str = (
             f"> **Prefix on this server:** `{prefix}` *(Slash commands `/` also active)*\n"
             f"> **Current Latency:** `{ms} ms`\n\n"
-            f"**💡 Quick Navigation:**\n"
+            f"**Quick Navigation:**\n"
             f"• Use `/help` or `{prefix}help` to view all available commands across all systems.\n"
             f"• Use `/ticket setup` to deploy an interactive support ticket desk.\n"
             f"• Use `/verify setup` to enable automated server member verification.\n"
@@ -24,13 +24,13 @@ class MentionOverviewLayout(LayoutView):
 
         async def help_cb(interaction: discord.Interaction):
             await interaction.response.send_message(
-                f"### 📖 Orbit Command Center\nYou can access all commands by typing `/` in the chat bar and selecting **Orbit**, or by running `{prefix}help`.\n\n**Main Systems:**\n`/ticket`, `/verify`, `/role`, `/blacklist`, `/afk`, `/ping`.",
+                f"### Orbit Command Center\nYou can access all commands by typing `/` in the chat bar and selecting **Orbit**, or by running `{prefix}help`.\n\n**Main Systems:**\n`/ticket`, `/verify`, `/role`, `/blacklist`, `/afk`, `/ping`.",
                 ephemeral=True
             )
 
         async def ping_cb(interaction: discord.Interaction):
             current_ms = round(self.bot.latency * 1000)
-            await interaction.response.send_message(f"⚡ **Current Bot Latency:** `{current_ms} ms`", ephemeral=True)
+            await interaction.response.send_message(f"**Current Bot Latency:** `{current_ms} ms`", ephemeral=True)
 
         btn_help.callback = help_cb
         btn_ping.callback = ping_cb

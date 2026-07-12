@@ -21,17 +21,17 @@ def build_ended_giveaway_container(entry: dict, winners_display: str) -> Contain
     reqs = []
     if entry.get("required_role_id"):
         reqs.append(f"Role: <@&{entry['required_role_id']}>")
-    req_text = f"\n**🛡️ Requirements:** {' | '.join(reqs)}" if reqs else ""
+    req_text = f"\n**Requirements:** {' | '.join(reqs)}" if reqs else ""
 
-    header = f"### 🎊 GIVEAWAY ENDED: **{entry['prize']}**"
+    header = f"### GIVEAWAY ENDED: **{entry['prize']}**"
     info = (
-        f"**🎁 Prize:** {entry['prize']}\n"
-        f"**🏆 Winner(s):** {winners_display}\n"
-        f"**📅 Ended On:** <t:{entry['end_timestamp']}:f>\n"
-        f"**👤 Hosted By:** <@{entry['author_id']}>{req_text}\n\n"
-        f"**🎟️ Total Entries:** `{len(entry['entries'])}`"
+        f"**Prize:** {entry['prize']}\n"
+        f"**Winner(s):** {winners_display}\n"
+        f"**Ended On:** <t:{entry['end_timestamp']}:f>\n"
+        f"**Hosted By:** <@{entry['author_id']}>{req_text}\n\n"
+        f"**Total Entries:** `{len(entry['entries'])}`"
     )
-    btn_ended = Button(label="🎉 Giveaway Ended", style=discord.ButtonStyle.secondary, disabled=True, custom_id="orbit:giveaway_ended")
+    btn_ended = Button(label="Giveaway Ended", style=discord.ButtonStyle.secondary, disabled=True, custom_id="orbit:giveaway_ended")
     return Container(
         TextDisplay(content=header),
         Separator(spacing=discord.SeparatorSpacing.small),
@@ -51,24 +51,24 @@ class PersistentGiveawayLayout(LayoutView):
     def build_ui(self):
         self.clear_items()
         
-        btn_enter = Button(label="🎉 Enter Giveaway", style=discord.ButtonStyle.success, custom_id="orbit:giveaway_enter")
+        btn_enter = Button(label="Enter Giveaway", style=discord.ButtonStyle.success, custom_id="orbit:giveaway_enter")
         btn_enter.callback = self.enter_callback
 
         if not self.entry:
-            self.add_item(Container(TextDisplay(content="🎉 Interactive Giveaway"), ActionRow(btn_enter)))
+            self.add_item(Container(TextDisplay(content="Interactive Giveaway"), ActionRow(btn_enter)))
             return
 
-        header = f"### 🎉 GIVEAWAY: **{self.entry['prize']}**\n**Winners:** `{self.entry['winners']}`"
+        header = f"### GIVEAWAY: **{self.entry['prize']}**\n**Winners:** `{self.entry['winners']}`"
         reqs = []
         if self.entry.get("required_role_id"):
             reqs.append(f"Role: <@&{self.entry['required_role_id']}>")
-        req_text = f"\n**🛡️ Requirements:** {' | '.join(reqs)}" if reqs else ""
+        req_text = f"\n**Requirements:** {' | '.join(reqs)}" if reqs else ""
 
         info = (
-            f"**🎁 Prize:** {self.entry['prize']}\n"
-            f"**⏳ Ends:** <t:{self.entry['end_timestamp']}:R> (<t:{self.entry['end_timestamp']}:f>)\n"
-            f"**👤 Hosted By:** <@{self.entry['author_id']}>{req_text}\n\n"
-            f"**🎟️ Total Entries:** `{len(self.entry['entries'])}`"
+            f"**Prize:** {self.entry['prize']}\n"
+            f"**Ends:** <t:{self.entry['end_timestamp']}:R> (<t:{self.entry['end_timestamp']}:f>)\n"
+            f"**Hosted By:** <@{self.entry['author_id']}>{req_text}\n\n"
+            f"**Total Entries:** `{len(self.entry['entries'])}`"
         )
 
         container = Container(
@@ -104,13 +104,13 @@ class PersistentGiveawayLayout(LayoutView):
                 role = interaction.guild.get_role(req_role_id)
                 if role and role not in interaction.user.roles:
                     return await interaction.response.send_message(
-                        f"❌ You need the {role.mention} role to enter this giveaway!", ephemeral=True
+                        f"You need the {role.mention} role to enter this giveaway!", ephemeral=True
                     )
 
 
             entry["entries"].append(uid)
             update_giveaway_entry(interaction.guild.id, entry)
-            await interaction.response.send_message("🎉 You have successfully entered the giveaway! Good luck!", ephemeral=True)
+            await interaction.response.send_message("You have successfully entered the giveaway! Good luck!", ephemeral=True)
 
         try:
             self.entry = entry
@@ -178,9 +178,9 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
 
     try:
         if picked_winners:
-            await channel.send(content=f"🎉 **GIVEAWAY ENDED!** Congratulations {winners_display}! You won **{entry['prize']}**! (`Giveaway ID: #`{entry['giveaway_id']})")
+            await channel.send(content=f"**GIVEAWAY ENDED!** Congratulations {winners_display}! You won **{entry['prize']}**! (`Giveaway ID: #`{entry['giveaway_id']})")
         else:
-            await channel.send(content=f"ℹ️ Giveaway **{entry['prize']}** (`#{entry['giveaway_id']}`) ended with no valid entries.")
+            await channel.send(content=f"Giveaway **{entry['prize']}** (`#{entry['giveaway_id']}`) ended with no valid entries.")
     except Exception:
         pass
 

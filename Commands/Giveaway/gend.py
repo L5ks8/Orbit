@@ -25,7 +25,7 @@ class GiveawayEndCommand(commands.Cog):
 
         success = await end_giveaway_logic(self.bot, ctx.guild.id, entry)
         if success:
-            await ctx.send(f"✅ Successfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!")
+            await ctx.send(f"Successfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!")
         else:
             await ctx.send(f"Failed to end or pick winners for Giveaway `{entry['giveaway_id']}`.", ephemeral=True)
 

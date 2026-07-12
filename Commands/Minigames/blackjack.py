@@ -55,18 +55,18 @@ class BlackjackSession:
             self.game_over = True
             self.can_double = False
             if p_score == 21 and d_score == 21:
-                self.outcome_text = "🤝 **Push!** Both you and the dealer hit natural Blackjack (21). It's a draw!"
+                self.outcome_text = "**Push!** Both you and the dealer hit natural Blackjack (21). It's a draw!"
             elif p_score == 21:
-                self.outcome_text = "🏆 **BLACKJACK!** You dealt 21 right out of the gate! You win!"
+                self.outcome_text = "**BLACKJACK!** You dealt 21 right out of the gate! You win!"
             else:
-                self.outcome_text = "💥 **Dealer Blackjack!** The dealer opened with 21. Dealer wins!"
+                self.outcome_text = "**Dealer Blackjack!** The dealer opened with 21. Dealer wins!"
 
     def hit_player(self):
         self.player_hand.append(self.deck.pop())
         self.can_double = False
         if calculate_score(self.player_hand) > 21:
             self.game_over = True
-            self.outcome_text = "💥 **BUST!** Your hand exceeded 21. Dealer wins!"
+            self.outcome_text = "**BUST!** Your hand exceeded 21. Dealer wins!"
         elif calculate_score(self.player_hand) == 21:
             self.stand_player()
 
@@ -80,20 +80,20 @@ class BlackjackSession:
         d_score = calculate_score(self.dealer_hand)
 
         if d_score > 21:
-            self.outcome_text = f"🎉 **Dealer BUST (`{d_score}`)!** You win the hand!"
+            self.outcome_text = f"**Dealer BUST (`{d_score}`)!** You win the hand!"
         elif p_score > d_score:
-            self.outcome_text = f"🏆 **YOU WIN!** Your hand (`{p_score}`) beat the dealer's (`{d_score}`)!"
+            self.outcome_text = f"**YOU WIN!** Your hand (`{p_score}`) beat the dealer's (`{d_score}`)!"
         elif d_score > p_score:
-            self.outcome_text = f"🛑 **DEALER WINS!** Dealer's (`{d_score}`) beat your hand (`{p_score}`)!"
+            self.outcome_text = f"**DEALER WINS!** Dealer's (`{d_score}`) beat your hand (`{p_score}`)!"
         else:
-            self.outcome_text = f"🤝 **PUSH!** Both hands tied at `{p_score}`. It's a draw!"
+            self.outcome_text = f"**PUSH!** Both hands tied at `{p_score}`. It's a draw!"
 
     def double_down(self):
         self.player_hand.append(self.deck.pop())
         self.can_double = False
         if calculate_score(self.player_hand) > 21:
             self.game_over = True
-            self.outcome_text = "💥 **DOUBLE DOWN BUST!** You drew one card and went over 21. Dealer wins!"
+            self.outcome_text = "**DOUBLE DOWN BUST!** You drew one card and went over 21. Dealer wins!"
         else:
             self.stand_player()
 
@@ -111,7 +111,7 @@ class BlackjackLayoutView(LayoutView):
 
         p_cards_str = " ".join(str(c) for c in self.session.player_hand)
         if not self.session.game_over:
-            d_cards_str = f"{self.session.dealer_hand[0]} `🎴 (?)`"
+            d_cards_str = f"{self.session.dealer_hand[0]} `[ ? ]`"
             d_visible_score = self.session.dealer_hand[0].get_value()
             d_info = f"**Dealer Hand (`Score: {d_visible_score}+?`):**\n> {d_cards_str}"
         else:
@@ -121,12 +121,12 @@ class BlackjackLayoutView(LayoutView):
         p_info = f"**Your Hand (`Score: {p_score}`):**\n> {p_cards_str}"
 
         if not self.session.game_over:
-            status_text = "⏳ **Your Turn!** Choose whether to Hit, Stand, or Double Down below."
+            status_text = "**Your Turn!** Choose whether to Hit, Stand, or Double Down below."
         else:
             status_text = self.session.outcome_text
 
         self.container = Container(
-            TextDisplay(content=f"### ♠️ Orbit V2 Casino: Blackjack Table\n**Player:** {self.session.player.mention}"),
+            TextDisplay(content=f"### Orbit V2 Casino: Blackjack Table\n**Player:** {self.session.player.mention}"),
             Separator(spacing=discord.SeparatorSpacing.small),
             TextDisplay(content=f"{d_info}\n\n{p_info}"),
             Separator(spacing=discord.SeparatorSpacing.small),
@@ -134,35 +134,35 @@ class BlackjackLayoutView(LayoutView):
         )
         self.add_item(self.container)
 
-        btn_hit = Button(label="Hit", style=discord.ButtonStyle.primary, emoji="🎯", disabled=self.session.game_over)
-        btn_stand = Button(label="Stand", style=discord.ButtonStyle.secondary, emoji="🛑", disabled=self.session.game_over)
-        btn_double = Button(label="Double Down", style=discord.ButtonStyle.success, emoji="💥", disabled=(self.session.game_over or not self.session.can_double))
-        btn_new = Button(label="Play Again", style=discord.ButtonStyle.primary, emoji="🔄", disabled=not self.session.game_over)
+        btn_hit = Button(label="Hit", style=discord.ButtonStyle.primary, disabled=self.session.game_over)
+        btn_stand = Button(label="Stand", style=discord.ButtonStyle.secondary, disabled=self.session.game_over)
+        btn_double = Button(label="Double Down", style=discord.ButtonStyle.success, disabled=(self.session.game_over or not self.session.can_double))
+        btn_new = Button(label="Play Again", style=discord.ButtonStyle.primary, disabled=not self.session.game_over)
 
         async def _hit_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("⚠️ This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+                return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.hit_player()
             self.build_ui()
             await interaction.response.edit_message(view=self)
 
         async def _stand_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("⚠️ This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+                return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.stand_player()
             self.build_ui()
             await interaction.response.edit_message(view=self)
 
         async def _double_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("⚠️ This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+                return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.double_down()
             self.build_ui()
             await interaction.response.edit_message(view=self)
 
         async def _new_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("⚠️ This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+                return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             new_session = BlackjackSession(self.session.player)
             self.session = new_session
             self.build_ui()
