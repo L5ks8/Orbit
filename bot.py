@@ -56,6 +56,19 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             pass
         return False
 
+    async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        try:
+            from Commands.OwnerOnly._monitor import record_error
+            cmd_name = interaction.command.name if interaction.command else "Component/Modal"
+            record_error(f"AppCommand/UI Error [{cmd_name}]", getattr(error, "original", error))
+        except Exception:
+            pass
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"❌ An error occurred: `{error}`", ephemeral=True)
+        except Exception:
+            pass
+
 class OrbitBot(commands.Bot):
     def __init__(self):
         super().__init__(
@@ -101,6 +114,26 @@ class OrbitBot(commands.Bot):
         except Exception as e:
             print(f"Failed to sync commands: {e}")
 
+        _old_view_error = discord.ui.View.on_error
+        async def _global_view_error(view_self, error, item, interaction: discord.Interaction):
+            try:
+                from Commands.OwnerOnly._monitor import record_error
+                record_error(f"UI View Error [{view_self.__class__.__name__} -> {item.__class__.__name__}]", error)
+            except Exception:
+                pass
+            await _old_view_error(view_self, error, item, interaction)
+        discord.ui.View.on_error = _global_view_error
+
+        _old_modal_error = discord.ui.Modal.on_error
+        async def _global_modal_error(modal_self, error, interaction: discord.Interaction):
+            try:
+                from Commands.OwnerOnly._monitor import record_error
+                record_error(f"UI Modal Error [{modal_self.__class__.__name__}]", error)
+            except Exception:
+                pass
+            await _old_modal_error(modal_self, error, interaction)
+        discord.ui.Modal.on_error = _global_modal_error
+
         if os.environ.get("RENDER") or os.environ.get("PORT"):
             try:
                 from aiohttp import web
@@ -116,6 +149,17 @@ class OrbitBot(commands.Bot):
                 print(f"Render Web Service bound to 0.0.0.0:{port}")
             except Exception as e:
                 print(f"Failed to bind Render port: {e}")
+
+    async def on_error(self, event_method: str, *args, **kwargs):
+        try:
+            from Commands.OwnerOnly._monitor import record_error
+            import sys
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            if exc_value:
+                record_error(f"Event Error [{event_method}]", exc_value)
+        except Exception:
+            pass
+        await super().on_error(event_method, *args, **kwargs)
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
