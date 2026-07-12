@@ -8,7 +8,7 @@ from Commands.Warn._group import warn_group
 
 class WarningsListLayout(LayoutView):
     def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
-        super().__init__()
+        super().__init__(timeout=300)
         self.member = member
         self.warnings = warnings
         self.author_id = author_id
@@ -34,7 +34,7 @@ class WarningsListLayout(LayoutView):
             f"### Warning History: {self.member.mention} (Page {self.page} of {self.total_pages})\n"
             f"**Total Warnings:** `{len(self.warnings)}`"
         )
-        btn_close = Button(label="Close ✖", style=discord.ButtonStyle.danger)
+        btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
@@ -96,25 +96,36 @@ async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
 
-@warn_group.command(name="list", description="Displays all formal warnings issued to a user.")
-async def warn_list_cmd(ctx: commands.Context, user: discord.Member = None):
+@warn_group.command(name="checkwarns", aliases=["list", "check"], description="Displays all formal warnings issued to a user.")
+async def warn_checkwarns_cmd(ctx: commands.Context, user: discord.Member = None):
     await _do_warnings(ctx, user)
 
 
-class WarningsCog(commands.Cog):
+class CheckWarnsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="warnings", aliases=["warnlist", "warnhistory"], hidden=True)
-    async def warnings_prefix(self, ctx: commands.Context, user: discord.Member = None):
+    @commands.command(name="checkwarns", aliases=["checkwarn", "warnings", "warnlist", "warnhistory"], description="Displays all formal warnings issued to a user.")
+    async def checkwarns_prefix(self, ctx: commands.Context, user: discord.Member = None):
         await _do_warnings(ctx, user)
 
-    @warn_list_cmd.error
-    @warnings_prefix.error
-    async def warnings_error(self, ctx: commands.Context, error):
+    @discord.app_commands.command(name="checkwarns", description="Displays all formal warnings issued to a user.")
+    async def checkwarns_slash(self, interaction: discord.Interaction, user: discord.Member = None):
+        target = user or interaction.user
+        if not interaction.guild:
+            return await interaction.response.send_message("This command must be run inside a server.", ephemeral=True)
+        warns = get_user_warnings(interaction.guild.id, target.id)
+        if not warns:
+            return await interaction.response.send_message(f"`{target.display_name}` has 0 formal warnings on this server.", ephemeral=True)
+        view = WarningsListLayout(target, warns, interaction.user.id)
+        await interaction.response.send_message(view=view, allowed_mentions=discord.AllowedMentions.none())
+
+    @warn_checkwarns_cmd.error
+    @checkwarns_prefix.error
+    async def checkwarns_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Could not find that member. Usage: `-warnings @user`", ephemeral=True)
+            await ctx.send("Could not find that member. Usage: `-checkwarns @user`", ephemeral=True)
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(WarningsCog(bot))
+    await bot.add_cog(CheckWarnsCog(bot))

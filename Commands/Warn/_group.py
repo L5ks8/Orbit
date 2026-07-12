@@ -32,7 +32,7 @@ class WarnHubLayout(LayoutView):
             "**Warn a member:**\n"
             "> `-warn @user [reason]` — Issues a warning\n\n"
             "**View warnings:**\n"
-            "> `-warnings @user` — List all warnings for a member\n\n"
+            "> `-checkwarns @user` — List all warnings for a member\n\n"
             "**Remove a warning:**\n"
             "> `-delwarn @user <warn_id>` — Delete a specific warning\n\n"
             "**Clear all warnings:**\n"
