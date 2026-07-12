@@ -156,8 +156,19 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
         else:
             return
 
-    channel = guild.get_channel(int(target_ch_id))
-    if not channel or not isinstance(channel, discord.TextChannel):
+    try:
+        ch_int = int(target_ch_id)
+    except Exception:
+        return
+
+    channel = guild.get_channel(ch_int)
+    if not channel:
+        try:
+            channel = await guild.fetch_channel(ch_int)
+        except Exception:
+            pass
+
+    if not channel or not isinstance(channel, (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel, discord.Thread)):
         return
 
     container = Container(
@@ -171,4 +182,17 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
     try:
         await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
     except Exception:
-        pass
+        try:
+            embed = discord.Embed(
+                title=title,
+                description=description,
+                color=0x2b2d31,
+                timestamp=discord.utils.utcnow()
+            )
+            await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+        except Exception as e:
+            try:
+                from Storage._error_recorder import log_error_event
+                log_error_event("Log Event Send Error", e, {"guild_id": guild.id, "category": category, "channel_id": ch_int})
+            except Exception:
+                pass

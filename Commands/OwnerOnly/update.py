@@ -162,7 +162,12 @@ class UpdateCommand(commands.Cog):
                 return
             if not await interaction.client.is_owner(interaction.user):
                 return await interaction.response.send_message("You are not authorized to post updates.", ephemeral=True)
-            await interaction.response.send_modal(UpdatePostModal())
+            if interaction.response.is_done():
+                return
+            try:
+                await interaction.response.send_modal(UpdatePostModal())
+            except Exception:
+                pass
 
 
 async def setup(bot: commands.Bot):
