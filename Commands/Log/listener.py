@@ -49,38 +49,83 @@ class LogListener(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User | discord.Member):
+        try:
+            async for entry in guild.audit_logs(limit=3, action=discord.AuditLogAction.ban):
+                if entry.target.id == user.id:
+                    if entry.user.id == self.bot.user.id:
+                        return
+                    moderator = f"{entry.user.mention} (`{entry.user.id}`)"
+                    reason = entry.reason or "No reason provided"
+                    break
+            else:
+                moderator = "Unknown"
+                reason = "No reason provided"
+        except Exception:
+            moderator = "Unknown"
+            reason = "No reason provided"
+
         await log_event(
             guild,
             "moderation",
-            "Member Banned",
-            f"**User:** {user.mention} (`{user.id}`)"
+            "Member Banned (via Discord UI)",
+            f"**User:** {user.mention} (`{user.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}"
         )
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
+        try:
+            async for entry in guild.audit_logs(limit=3, action=discord.AuditLogAction.unban):
+                if entry.target.id == user.id:
+                    if entry.user.id == self.bot.user.id:
+                        return
+                    moderator = f"{entry.user.mention} (`{entry.user.id}`)"
+                    reason = entry.reason or "No reason provided"
+                    break
+            else:
+                moderator = "Unknown"
+                reason = "No reason provided"
+        except Exception:
+            moderator = "Unknown"
+            reason = "No reason provided"
+
         await log_event(
             guild,
             "moderation",
-            "Member Unbanned",
-            f"**User:** {user.mention} (`{user.id}`)"
+            "Member Unbanned (via Discord UI)",
+            f"**User:** {user.mention} (`{user.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}"
         )
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.timed_out_until != after.timed_out_until:
+            try:
+                async for entry in after.guild.audit_logs(limit=3, action=discord.AuditLogAction.member_update):
+                    if entry.target.id == after.id and hasattr(entry.after, "timed_out_until"):
+                        if entry.user.id == self.bot.user.id:
+                            return
+                        moderator = f"{entry.user.mention} (`{entry.user.id}`)"
+                        reason = entry.reason or "No reason provided"
+                        break
+                else:
+                    moderator = "Unknown"
+                    reason = "No reason provided"
+            except Exception:
+                moderator = "Unknown"
+                reason = "No reason provided"
+
             if after.is_timed_out():
                 await log_event(
                     after.guild,
                     "moderation",
-                    "Member Timed Out / Muted",
-                    f"**User:** {after.mention} (`{after.id}`)\n**Until:** <t:{int(after.timed_out_until.timestamp())}:f>"
+                    "Member Timed Out (via Discord UI)",
+                    f"**User:** {after.mention} (`{after.id}`)\n**Until:** <t:{int(after.timed_out_until.timestamp())}:f>\n**Moderator:** {moderator}\n**Reason:** {reason}"
                 )
             else:
                 await log_event(
                     after.guild,
                     "moderation",
-                    "Member Timeout Removed",
-                    f"**User:** {after.mention} (`{after.id}`)"
+                    "Member Timeout Removed (via Discord UI)",
+                    f"**User:** {after.mention} (`{after.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}"
                 )
         if before.nick != after.nick:
             await log_event(

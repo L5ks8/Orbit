@@ -2,6 +2,7 @@ import re
 import discord
 from discord.ext import commands
 from Commands.Whitelist._storage import add_to_whitelist
+from Commands.Log._storage import log_event
 
 async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
     await ctx.defer()
@@ -19,6 +20,12 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     if not success:
         return await ctx.send(f"ID `{user_id}` is already on the server moderation whitelist.", ephemeral=True)
 
+    await log_event(
+        ctx.guild,
+        "moderation",
+        "User Whitelisted (`-whitelist add`)",
+        f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
+    )
     await ctx.send(f"Added ID `{user_id}` to the server moderation whitelist.", ephemeral=True)
 
 @commands.hybrid_group(

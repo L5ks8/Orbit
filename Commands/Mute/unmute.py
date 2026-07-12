@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Mute._storage import get_muted_role_id
 from Commands.Mute.mute import get_or_create_muted_role
+from Commands.Log._storage import log_event
 
 
 class UnmuteSuccessLayout(LayoutView):
@@ -50,6 +51,12 @@ class UnmuteCommand(commands.Cog):
                 pass
 
         view = UnmuteSuccessLayout(target, reason, ctx.author, channels_restored)
+        await log_event(
+            ctx.guild,
+            "moderation",
+            "User Unmuted (`-unmute`)",
+            f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Channels Restored:** `{channels_restored}`"
+        )
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
     @unmute.error

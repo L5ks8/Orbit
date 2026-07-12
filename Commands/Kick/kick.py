@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
+from Commands.Log._storage import log_event
 
 class KickSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
@@ -33,6 +34,12 @@ class KickCommand(commands.Cog):
         try:
             await ctx.guild.kick(target, reason=f"Kicked by {ctx.author} | Reason: {reason}")
             view = KickSuccessLayout(target, reason, ctx.author)
+            await log_event(
+                ctx.guild,
+                "moderation",
+                "User Kicked (`-kick`)",
+                f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
+            )
             await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to kick this user.", ephemeral=True)

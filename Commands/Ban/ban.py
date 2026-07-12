@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
+from Commands.Log._storage import log_event
 
 class BanSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
@@ -33,6 +34,12 @@ class BanCommand(commands.Cog):
         try:
             await ctx.guild.ban(target, reason=f"Banned by {ctx.author} | Reason: {reason}")
             view = BanSuccessLayout(target, reason, ctx.author)
+            await log_event(
+                ctx.guild,
+                "moderation",
+                "User Banned (`-ban`)",
+                f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
+            )
             await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to ban this user.", ephemeral=True)

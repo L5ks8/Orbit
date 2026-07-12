@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import add_warning, get_user_warnings
 from Commands.Whitelist._storage import is_whitelisted
+from Commands.Log._storage import log_event
 
 class WarnIssuedLayout(LayoutView):
     def __init__(self, member: discord.Member, warn_entry: dict, total_warns: int):
@@ -47,6 +48,12 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
     except Exception:
         pass
     view = WarnIssuedLayout(user, warn_entry, total_warns)
+    await log_event(
+        ctx.guild,
+        "moderation",
+        "User Warned (`-warn`)",
+        f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}"
+    )
     await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 @commands.hybrid_command(

@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from Commands.Blacklist._storage import add_to_blacklist
 from Commands.Whitelist._storage import is_whitelisted
+from Commands.Log._storage import log_event
 
 async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
     await ctx.defer()
@@ -32,6 +33,12 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
         except Exception:
             pass
 
+    await log_event(
+        ctx.guild,
+        "moderation",
+        "User Blacklisted (`-blacklist add`)",
+        f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}{ban_msg}"
+    )
     await ctx.send(f"Added ID `{user_id}` to the command blacklist.{ban_msg}", ephemeral=True)
 
 @commands.hybrid_group(

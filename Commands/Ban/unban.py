@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from Commands.Log._storage import log_event
 
 class UnbanConfirmLayout(LayoutView):
     def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member):
@@ -18,6 +19,12 @@ class UnbanConfirmLayout(LayoutView):
             
             try:
                 await interaction.guild.unban(self.ban_entry.user, reason=f"Unbanned by {self.author} | Reason: {self.reason}")
+                await log_event(
+                    interaction.guild,
+                    "moderation",
+                    "User Unbanned (`-unban`)",
+                    f"**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Reason:** {self.reason}"
+                )
                 
                 success_container = Container(
                     TextDisplay(content=f"### User unbanned\n**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)"),

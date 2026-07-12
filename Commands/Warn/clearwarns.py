@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import clear_user_warnings
+from Commands.Log._storage import log_event
 
 class ClearWarningsLayout(LayoutView):
     def __init__(self, member: discord.Member, cleared_count: int):
@@ -27,6 +28,12 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     except Exception:
         pass
     view = ClearWarningsLayout(user, cleared_count)
+    await log_event(
+        ctx.guild,
+        "moderation",
+        "All Warnings Cleared (`-clearwarns`)",
+        f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Total Cleared:** `{cleared_count}` warnings"
+    )
     await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 class ClearWarnsCog(commands.Cog):

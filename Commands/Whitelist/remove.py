@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from Commands.Whitelist._storage import remove_from_whitelist
 from Commands.Whitelist.whitelist import whitelist_group
+from Commands.Log._storage import log_event
 
 async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
     await ctx.defer()
@@ -20,6 +21,12 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
     if not success:
         return await ctx.send(f"ID `{user_id}` is not currently on the server moderation whitelist.", ephemeral=True)
 
+    await log_event(
+        ctx.guild,
+        "moderation",
+        "User Removed from Whitelist (`-whitelist remove`)",
+        f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)"
+    )
     await ctx.send(f"Removed ID `{user_id}` from the server moderation whitelist.", ephemeral=True)
 
 @whitelist_group.command(name="remove", description="Remove a user ID from the server moderation whitelist.")

@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
+from Commands.Log._storage import log_event
 
 class TimeoutSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member, minutes: int, reason: str, author: discord.Member):
@@ -36,6 +37,12 @@ class TimeoutCommand(commands.Cog):
             duration = datetime.timedelta(minutes=minutes)
             await target.timeout(duration, reason=f"Timeout by {ctx.author} | Reason: {reason}")
             view = TimeoutSuccessLayout(target, minutes, reason, ctx.author)
+            await log_event(
+                ctx.guild,
+                "moderation",
+                "User Timed Out (`-timeout`)",
+                f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Duration:** `{minutes} minutes`\n**Reason:** {reason}"
+            )
             await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to time out this user.", ephemeral=True)
