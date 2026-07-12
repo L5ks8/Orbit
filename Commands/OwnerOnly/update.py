@@ -20,7 +20,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
     )
     content_input = discord.ui.TextInput(
         label="Update Content",
-        placeholder="Detail all changes, new commands, bug fixes, and improvements here...\n\nSupports full Markdown bullet points and headings.",
+        placeholder="Detail all changes, bug fixes, and improvements here. Supports full Markdown format.",
         style=discord.TextStyle.paragraph,
         max_length=4000,
         required=True
