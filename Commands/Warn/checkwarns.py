@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
 from Commands.Warn._storage import get_user_warnings
-from Commands.Warn.warn import warn_group
 
 class WarningsListLayout(LayoutView):
     def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
@@ -93,26 +92,18 @@ async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
     view = WarningsListLayout(target, warns, ctx.author.id)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-@warn_group.command(name="checkwarns", aliases=["list", "check"], description="Check all warnings issued to a member.")
-async def warn_checkwarns_cmd(ctx: commands.Context, user: discord.Member = None):
-    await _do_warnings(ctx, user)
-
 class CheckWarnsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="checkwarn", aliases=["checkwarns", "warnings", "warnlist", "warnhistory"], description="Check all warnings issued to a member.")
+    @commands.hybrid_command(name="checkwarns", aliases=["checkwarn", "warnings", "warnlist", "warnhistory"], description="Check all warnings issued to a member.")
     async def checkwarn_cmd(self, ctx: commands.Context, user: discord.Member = None):
         await _do_warnings(ctx, user)
 
     @checkwarn_cmd.error
-    @warn_checkwarns_cmd.error
     async def checkwarns_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Could not find that member. Usage: `-checkwarn @user` or `/checkwarn user:@user`", ephemeral=True)
+            await ctx.send("Could not find that member. Usage: `-checkwarns @user` or `/checkwarns user:@user`", ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Commands.Warn.warn import warn_group
-    if "warn" not in bot.all_commands:
-        bot.add_command(warn_group)
     await bot.add_cog(CheckWarnsCog(bot))

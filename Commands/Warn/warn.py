@@ -49,26 +49,23 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
     view = WarnIssuedLayout(user, warn_entry, total_warns)
     await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
-@commands.hybrid_group(
+@commands.hybrid_command(
     name="warn",
-    fallback="add",
-    description="Issue a formal warning to a member (`/warn <user> [reason]`) or remove (`remove`)."
+    description="Issue a formal warning to a member."
 )
 @commands.has_permissions(moderate_members=True)
-async def warn_group(ctx: commands.Context, user: discord.Member = None, *, reason: str = "No reason provided."):
-    if ctx.invoked_subcommand is None:
-        if user is not None:
-            await _do_warn_add(ctx, user, reason)
-        else:
-            await ctx.send("Usage: `-warn @user [reason]` or `/warn add user:@user`", ephemeral=True)
+async def warn_cmd(ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided."):
+    await _do_warn_add(ctx, user, reason)
 
-@warn_group.error
-async def warn_group_error(ctx: commands.Context, error):
+@warn_cmd.error
+async def warn_cmd_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("You need Moderate Members permission to issue warnings.", ephemeral=True)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Usage: `-warn @user [reason]` or `/warn user:@user`", ephemeral=True)
     elif isinstance(error, commands.BadArgument):
         await ctx.send("Could not find that member. Usage: `-warn @user [reason]`", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     if "warn" not in bot.all_commands:
-        bot.add_command(warn_group)
+        bot.add_command(warn_cmd)
