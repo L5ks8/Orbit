@@ -114,7 +114,7 @@ def _generate_fallback_bmp(code: str) -> bytes:
 
     filesize = 54 + (width * height * 3)
     bmp_header = struct.pack(
-        "<2sIHHI IIHHIIIIII",
+        "<2sIHHI IiiHHIIiiII",
         b"BM", filesize, 0, 0, 54,
         40, width, height, 1, 24, 0, width * height * 3, 2835, 2835, 0, 0
     )
