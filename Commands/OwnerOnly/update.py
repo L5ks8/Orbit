@@ -96,6 +96,11 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
                 view=view,
                 allowed_mentions=discord.AllowedMentions(everyone=True)
             )
+            try:
+                if interaction.message:
+                    await interaction.message.delete()
+            except Exception:
+                pass
             await interaction.followup.send(
                 f"✅ **Update successfully published to <#{UPDATE_CHANNEL_ID}>!**\n> **Jump link:** {msg.jump_url}",
                 ephemeral=True
@@ -106,7 +111,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
 
 class UpdateLaunchLayout(LayoutView):
     def __init__(self, author_id: int):
-        super().__init__(timeout=120)
+        super().__init__(timeout=60)
         self.author_id = author_id
 
         btn_open = Button(
@@ -136,25 +141,27 @@ class UpdateCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="update", aliases=["changelog", "postupdate"], description="Owner Only: Open the live update announcement creator modal.")
+    @commands.command(name="update", aliases=["changelog", "postupdate"], hidden=True)
     @commands.is_owner()
     async def update_prefix_cmd(self, ctx: commands.Context):
+        try:
+            await ctx.message.delete()
+        except Exception:
+            pass
         view = UpdateLaunchLayout(ctx.author.id)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(view=view, delete_after=60.0, allowed_mentions=discord.AllowedMentions.none())
 
     @update_prefix_cmd.error
     async def update_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.NotOwner):
-            await ctx.send("❌ Only the bot developer can post official updates.", delete_after=10.0)
+            pass
         else:
-            await ctx.send(f"❌ Update command error: `{error}`", delete_after=15.0)
-
-    @discord.app_commands.command(name="update", description="[Owner Only] Open the live update announcement creator modal.")
-    async def update_slash_cmd(self, interaction: discord.Interaction):
-        if not await interaction.client.is_owner(interaction.user):
-            return await interaction.response.send_message("❌ Only the bot developer can post official updates.", ephemeral=True)
-        await interaction.response.send_modal(UpdatePostModal())
+            try:
+                await ctx.send(f"❌ Update command error: `{error}`", delete_after=10.0)
+            except Exception:
+                pass
 
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UpdateCommand(bot))
+
