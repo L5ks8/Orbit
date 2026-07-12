@@ -114,13 +114,6 @@ class UpdateLaunchLayout(LayoutView):
             style=discord.ButtonStyle.primary,
             custom_id="orbit:owner_update_open"
         )
-
-        async def _open_cb(interaction: discord.Interaction):
-            if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You are not authorized to post updates.", ephemeral=True)
-            await interaction.response.send_modal(UpdatePostModal())
-
-        btn_open.callback = _open_cb
         self.add_item(
             Container(
                 TextDisplay(content="### Orbit Update Studio"),
