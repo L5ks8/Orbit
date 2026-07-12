@@ -39,23 +39,35 @@ def save_log_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
     save_json(path, config)
 
-def setup_log(guild_id: int, channel_id: int) -> Dict[str, Any]:
+def setup_log(guild_id: int, channel_id: int = None, categories: Dict[str, bool] = None, enabled: bool = True) -> Dict[str, Any]:
     config = load_log_config(guild_id)
-    config["enabled"] = True
-    config["channel_id"] = channel_id
+    config["enabled"] = enabled
+    if channel_id is not None:
+        config["channel_id"] = channel_id
+    if categories is not None:
+        for cat, state in categories.items():
+            if cat in config["categories"] and state is not None:
+                config["categories"][cat] = bool(state)
     save_log_config(guild_id, config)
     return config
 
 def toggle_log_category(guild_id: int, category: str) -> Dict[str, Any]:
     config = load_log_config(guild_id)
     if category.lower() == "all":
-        config["enabled"] = not config.get("enabled", False)
+        cats = config.get("categories", {})
+        all_on = config.get("enabled", False) and all(cats.values())
+        new_state = not all_on
+        config["enabled"] = new_state
+        for k in cats:
+            cats[k] = new_state
         save_log_config(guild_id, config)
         return config
 
     cat = category.lower()
     if cat in config["categories"]:
         config["categories"][cat] = not config["categories"][cat]
+        if config["categories"][cat]:
+            config["enabled"] = True
         save_log_config(guild_id, config)
     return config
 
