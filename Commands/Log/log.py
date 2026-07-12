@@ -23,49 +23,53 @@ class LogToggleDashboard(LayoutView):
         enabled = self.config.get("enabled", False)
         ch_id = self.config.get("channel_id")
         ch_text = f"<#{ch_id}>" if ch_id else "`Not Set`"
-        status_text = "`Active (ON)`" if enabled and ch_id else "`Inactive (Disabled / No Channel)`"
+        status_text = "`Active (ON)`" if enabled and any(self.config.get("channels", {}).values()) else "`Inactive (Disabled)`"
 
-        cats = self.config.get("categories", {})
+        cats_map = self.config.get("channels", {})
         cats_lines = []
-        for cat, state in cats.items():
-            state_str = "`ON`" if state and enabled else "`OFF`"
+        for cat in ["moderation", "messages", "members", "channels", "roles", "voice"]:
+            assigned_ch = cats_map.get(cat)
+            if assigned_ch and enabled:
+                state_str = f"`Active` -> <#{assigned_ch}>"
+            else:
+                state_str = "`OFF (Disabled)`"
             cats_lines.append(f"- **{cat.capitalize()}:** {state_str}")
         cats_display = "\n".join(cats_lines) if cats_lines else "No categories configured."
 
         container = Container(
-            TextDisplay(content=f"### Interactive Log Control Panel: **{self.guild.name}**\n**System Status:** {status_text} | **Log Channel:** {ch_text}"),
+            TextDisplay(content=f"### Interactive Log Control Panel: **{self.guild.name}**\n**System Status:** {status_text} | **Master Channel:** {ch_text}"),
             Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Category States:**\n{cats_display}\n\n*Click the buttons below to toggle individual log categories or the master switch instantly.*")
+            TextDisplay(content=f"**Category Channels & States:**\n{cats_display}\n\n*Click the buttons below to toggle individual log categories ON/OFF right now.*")
         )
         self.add_item(container)
 
         btn_mod = Button(
             label="Moderation",
-            style=discord.ButtonStyle.success if cats.get("moderation", False) and enabled else discord.ButtonStyle.secondary
+            style=discord.ButtonStyle.success if cats_map.get("moderation") and enabled else discord.ButtonStyle.secondary
         )
         btn_msg = Button(
             label="Messages",
-            style=discord.ButtonStyle.success if cats.get("messages", False) and enabled else discord.ButtonStyle.secondary
+            style=discord.ButtonStyle.success if cats_map.get("messages") and enabled else discord.ButtonStyle.secondary
         )
         btn_mem = Button(
             label="Members",
-            style=discord.ButtonStyle.success if cats.get("members", False) and enabled else discord.ButtonStyle.secondary
+            style=discord.ButtonStyle.success if cats_map.get("members") and enabled else discord.ButtonStyle.secondary
         )
 
         btn_ch = Button(
             label="Channels",
-            style=discord.ButtonStyle.success if cats.get("channels", False) and enabled else discord.ButtonStyle.secondary
+            style=discord.ButtonStyle.success if cats_map.get("channels") and enabled else discord.ButtonStyle.secondary
         )
         btn_role = Button(
             label="Roles",
-            style=discord.ButtonStyle.success if cats.get("roles", False) and enabled else discord.ButtonStyle.secondary
+            style=discord.ButtonStyle.success if cats_map.get("roles") and enabled else discord.ButtonStyle.secondary
         )
         btn_vc = Button(
             label="Voice",
-            style=discord.ButtonStyle.success if cats.get("voice", False) and enabled else discord.ButtonStyle.secondary
+            style=discord.ButtonStyle.success if cats_map.get("voice") and enabled else discord.ButtonStyle.secondary
         )
 
-        all_on = enabled and all(cats.values())
+        all_on = enabled and any(v is not None for v in cats_map.values())
         btn_all = Button(
             label="Disable All" if all_on else "Enable All",
             style=discord.ButtonStyle.danger if all_on else discord.ButtonStyle.primary
@@ -96,19 +100,23 @@ class LogStatusLayout(LayoutView):
         enabled = config.get("enabled", False)
         ch_id = config.get("channel_id")
         ch_text = f"<#{ch_id}>" if ch_id else "`Not Set`"
-        status_text = "`Active (Enabled)`" if enabled and ch_id else "`Inactive (Disabled)`"
+        status_text = "`Active (Enabled)`" if enabled and any(config.get("channels", {}).values()) else "`Inactive (Disabled)`"
 
-        cats = config.get("categories", {})
+        cats_map = config.get("channels", {})
         cats_lines = []
-        for cat, state in cats.items():
-            state_str = "`ON`" if state else "`OFF`"
+        for cat in ["moderation", "messages", "members", "channels", "roles", "voice"]:
+            assigned_ch = cats_map.get(cat)
+            if assigned_ch and enabled:
+                state_str = f"`Active` -> <#{assigned_ch}>"
+            else:
+                state_str = "`OFF (Disabled)`"
             cats_lines.append(f"- **{cat.capitalize()}:** {state_str}")
         cats_display = "\n".join(cats_lines) if cats_lines else "No categories configured."
 
         self.container = Container(
-            TextDisplay(content=f"### Logging System Status: **{guild.name}**\n**Status:** {status_text} | **Channel:** {ch_text}"),
+            TextDisplay(content=f"### Logging System Status: **{guild.name}**\n**Status:** {status_text} | **Master Channel:** {ch_text}"),
             Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Log Categories:**\n{cats_display}")
+            TextDisplay(content=f"**Category Channels:**\n{cats_display}")
         )
         self.add_item(self.container)
 
@@ -125,31 +133,31 @@ class LogResetLayout(LayoutView):
 async def _do_log_setup(
     ctx: commands.Context,
     channel: discord.TextChannel = None,
-    moderation: bool = None,
-    messages: bool = None,
-    members: bool = None,
-    channels: bool = None,
-    roles: bool = None,
-    voice: bool = None
+    moderation: discord.TextChannel = None,
+    messages: discord.TextChannel = None,
+    members: discord.TextChannel = None,
+    channels: discord.TextChannel = None,
+    roles: discord.TextChannel = None,
+    voice: discord.TextChannel = None
 ):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    if channel is None:
+    default_ch_id = channel.id if channel else None
+    if default_ch_id is None and all(ch is None for ch in [moderation, messages, members, channels, roles, voice]):
         if isinstance(ctx.channel, discord.TextChannel):
-            channel = ctx.channel
+            default_ch_id = ctx.channel.id
 
-    channel_id = channel.id if channel else None
-    categories = {
-        "moderation": moderation,
-        "messages": messages,
-        "members": members,
-        "channels": channels,
-        "roles": roles,
-        "voice": voice
-    }
-    config = setup_log(ctx.guild.id, channel_id, categories, enabled=True)
+    overrides = {}
+    if moderation: overrides["moderation"] = moderation.id
+    if messages: overrides["messages"] = messages.id
+    if members: overrides["members"] = members.id
+    if channels: overrides["channels"] = channels.id
+    if roles: overrides["roles"] = roles.id
+    if voice: overrides["voice"] = voice.id
+
+    config = setup_log(ctx.guild.id, default_channel_id=default_ch_id, channel_overrides=overrides)
     view = LogToggleDashboard(ctx.guild, config)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
@@ -182,26 +190,26 @@ async def log_group(ctx: commands.Context):
         view = LogToggleDashboard(ctx.guild, config)
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-@log_group.command(name="setup", description="Configure and enable the server log channel.")
+@log_group.command(name="setup", description="Assign specific or shared channels to server log categories.")
 @commands.has_permissions(manage_guild=True)
 @app_commands.describe(
-    channel="Optional: Channel where logs will be posted (defaults to current channel)",
-    moderation="Optional: Log bans, unbans, timeouts (default: True)",
-    messages="Optional: Log message edits & deletions (default: True)",
-    members="Optional: Log joins, leaves, nickname changes (default: True)",
-    channels="Optional: Log channel creation & deletion (default: True)",
-    roles="Optional: Log role creation & deletion (default: True)",
-    voice="Optional: Log voice channel joins, leaves, moves (default: True)"
+    channel="Optional: Master channel for all categories not specified below",
+    moderation="Optional: Specific channel for moderation logs (bans, timeouts)",
+    messages="Optional: Specific channel for message edits/deletions",
+    members="Optional: Specific channel for member joins/leaves/nicks",
+    channels="Optional: Specific channel for channel creation/deletion",
+    roles="Optional: Specific channel for role changes",
+    voice="Optional: Specific channel for voice activity"
 )
 async def log_setup_cmd(
     ctx: commands.Context,
     channel: discord.TextChannel = None,
-    moderation: bool = None,
-    messages: bool = None,
-    members: bool = None,
-    channels: bool = None,
-    roles: bool = None,
-    voice: bool = None
+    moderation: discord.TextChannel = None,
+    messages: discord.TextChannel = None,
+    members: discord.TextChannel = None,
+    channels: discord.TextChannel = None,
+    roles: discord.TextChannel = None,
+    voice: discord.TextChannel = None
 ):
     await _do_log_setup(ctx, channel, moderation, messages, members, channels, roles, voice)
 
