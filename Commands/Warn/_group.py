@@ -30,13 +30,13 @@ class WarnHubLayout(LayoutView):
         super().__init__()
         content_str = (
             "**Warn a member:**\n"
-            "> `-warn @user [reason]` — Issues a warning\n\n"
+            "> `-warn @user [reason]` | `/warn user: @user` — Issues a warning\n\n"
             "**View warnings:**\n"
-            "> `-checkwarns @user` — List all warnings for a member\n\n"
+            "> `-checkwarns @user` | `/checkwarns user: @user` — List all warnings for a member\n\n"
             "**Remove a warning:**\n"
-            "> `-delwarn @user <warn_id>` — Delete a specific warning\n\n"
+            "> `-delwarn @user <warn_id>` | `/delwarn user: @user` — Delete a specific warning\n\n"
             "**Clear all warnings:**\n"
-            "> `-clearwarnings @user` — Remove all warnings from a member"
+            "> `-clearwarnings @user` | `/clearwarnings user: @user` — Remove all warnings from a member"
         )
         self.container = Container(
             TextDisplay(content="### Warning Management"),
