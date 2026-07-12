@@ -19,7 +19,7 @@ class SetMuteRoleCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="setmuterole", aliases=["muterole"], description="Sets or updates the Muted role saved for this server.")
+    @commands.hybrid_command(name="setmuterole", aliases=["muterole"], description="Sets the Muted role for this server.")
     @commands.has_permissions(manage_roles=True)
     async def setmuterole(self, ctx: commands.Context, role: discord.Role = None):
         if role is None:

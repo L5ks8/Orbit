@@ -35,7 +35,7 @@ class MuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="mute", description="Mutes a user by assigning Muted role and disabling their permissions in every channel.")
+    @commands.hybrid_command(name="mute", description="Mutes a user.")
     @commands.has_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True, manage_channels=True)
     async def mute(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
