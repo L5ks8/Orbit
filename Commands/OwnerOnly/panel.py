@@ -133,8 +133,8 @@ class MasterPanelLayoutView(LayoutView):
             f"> **Active OS Python Threads:** `{metrics['threads']}`\n"
             f"> **Connected Cluster Shards:** `{metrics['shards']}` (`{metrics['ping_ms']} ms avg`)\n\n"
             f"**Hardware & OS:**\n"
-            f"> **RAM Usage:** `{metrics['ram_mb']} MB` (`{metrics['total_ram']} GB OS Total`)\n"
-            f"> **CPU Load:** `{metrics['cpu_pct']}%` (`{metrics['sys_cpu']}% OS Total`)"
+            f"> **RAM Usage:** `{metrics['ram_mb']} MB` (`{metrics.get('total_ram_gb', '0')} GB OS Total`)\n"
+            f"> **CPU Load:** `{metrics['cpu_pct']}%` (`{metrics.get('sys_cpu_pct', '0')}% OS Total`)"
         )
         return Container(
             TextDisplay(content=header_str),
