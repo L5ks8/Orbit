@@ -28,15 +28,13 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     )
     await ctx.send(f"Added ID `{user_id}` to the server moderation whitelist.", ephemeral=True)
 
-@commands.hybrid_group(
+@commands.hybrid_command(
     name="whitelist",
-    fallback="add",
-    description="Add an ID to the server moderation whitelist (`/whitelist <id>`), or manage (`remove`, `view`)."
+    description="Add an ID to the server moderation whitelist."
 )
 @commands.has_permissions(administrator=True)
-async def whitelist_group(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
-    if ctx.invoked_subcommand is None:
-        await _do_wl_add(ctx, target_id, reason)
+async def whitelist_cmd(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
+    await _do_wl_add(ctx, target_id, reason)
 
 class WhitelistCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -49,5 +47,5 @@ class WhitelistCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     if "whitelist" not in bot.all_commands:
-        bot.add_command(whitelist_group)
+        bot.add_command(whitelist_cmd)
     await bot.add_cog(WhitelistCog(bot))

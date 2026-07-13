@@ -2,7 +2,6 @@ import re
 import discord
 from discord.ext import commands
 from Commands.Whitelist._storage import remove_from_whitelist
-from Commands.Whitelist.whitelist import whitelist_group
 from Commands.Log._storage import log_event
 
 async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
@@ -24,14 +23,14 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
     await log_event(
         ctx.guild,
         "moderation",
-        "User Removed from Whitelist (`-whitelist remove`)",
+        "User Removed from Whitelist (`-unwhitelist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)"
     )
     await ctx.send(f"Removed ID `{user_id}` from the server moderation whitelist.", ephemeral=True)
 
-@whitelist_group.command(name="remove", description="Remove a user ID from the server moderation whitelist.")
+@commands.hybrid_command(name="unwhitelist", description="Remove a user ID from the server moderation whitelist.")
 @commands.has_permissions(administrator=True)
-async def wl_remove_cmd(ctx: commands.Context, target_id: str):
+async def unwhitelist_cmd(ctx: commands.Context, target_id: str):
     await _do_wl_remove(ctx, target_id)
 
 class WhitelistRemoveCog(commands.Cog):
@@ -44,7 +43,6 @@ class WhitelistRemoveCog(commands.Cog):
         await _do_wl_remove(ctx, target_id)
 
 async def setup(bot: commands.Bot):
-    from Commands.Whitelist.whitelist import whitelist_group
-    if "whitelist" not in bot.all_commands:
-        bot.add_command(whitelist_group)
+    if "unwhitelist" not in bot.all_commands:
+        bot.add_command(unwhitelist_cmd)
     await bot.add_cog(WhitelistRemoveCog(bot))

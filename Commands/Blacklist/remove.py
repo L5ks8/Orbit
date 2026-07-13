@@ -2,7 +2,6 @@ import re
 import discord
 from discord.ext import commands
 from Commands.Blacklist._storage import remove_from_blacklist
-from Commands.Blacklist.blacklist import blacklist_group
 from Commands.Log._storage import log_event
 
 async def _do_bl_remove(ctx: commands.Context, target_id_str: str = None):
@@ -24,14 +23,14 @@ async def _do_bl_remove(ctx: commands.Context, target_id_str: str = None):
     await log_event(
         ctx.guild,
         "moderation",
-        "User Removed from Blacklist (`-blacklist remove`)",
+        "User Removed from Blacklist (`-unblacklist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)"
     )
     await ctx.send(f"Removed ID `{user_id}` from the command blacklist.", ephemeral=True)
 
-@blacklist_group.command(name="remove", description="Remove a user ID from the server command blacklist.")
+@commands.hybrid_command(name="unblacklist", description="Remove a user ID from the server command blacklist.")
 @commands.has_permissions(administrator=True)
-async def bl_remove_cmd(ctx: commands.Context, target_id: str):
+async def unblacklist_cmd(ctx: commands.Context, target_id: str):
     await _do_bl_remove(ctx, target_id)
 
 class BlacklistRemoveCog(commands.Cog):
@@ -44,7 +43,6 @@ class BlacklistRemoveCog(commands.Cog):
         await _do_bl_remove(ctx, target_id)
 
 async def setup(bot: commands.Bot):
-    from Commands.Blacklist.blacklist import blacklist_group
-    if "blacklist" not in bot.all_commands:
-        bot.add_command(blacklist_group)
+    if "unblacklist" not in bot.all_commands:
+        bot.add_command(unblacklist_cmd)
     await bot.add_cog(BlacklistRemoveCog(bot))

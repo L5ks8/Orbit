@@ -41,15 +41,13 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     )
     await ctx.send(f"Added ID `{user_id}` to the command blacklist.{ban_msg}", ephemeral=True)
 
-@commands.hybrid_group(
+@commands.hybrid_command(
     name="blacklist",
-    fallback="add",
-    description="Add an ID to the command blacklist (`/blacklist <id>`), or manage (`remove`, `view`)."
+    description="Add an ID to the command blacklist."
 )
 @commands.has_permissions(administrator=True)
-async def blacklist_group(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
-    if ctx.invoked_subcommand is None:
-        await _do_bl_add(ctx, target_id, reason)
+async def blacklist_cmd(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
+    await _do_bl_add(ctx, target_id, reason)
 
 class BlacklistCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -62,5 +60,5 @@ class BlacklistCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     if "blacklist" not in bot.all_commands:
-        bot.add_command(blacklist_group)
+        bot.add_command(blacklist_cmd)
     await bot.add_cog(BlacklistCog(bot))
