@@ -119,7 +119,7 @@ class MasterPanelLayoutView(LayoutView):
 
     def _build_dashboard_container(self) -> Container:
         metrics = get_system_metrics(self.bot)
-        header_str = f"### Orbit Performance Dashboard\n**Authorized Developer:** {self.owner.mention} | **RAM Hit Rate:** `{metrics['cache_hit_rate']}%`"
+        header_str = f"**RAM Hit Rate:** `{metrics['cache_hit_rate']}%`"
         content_str = (
             f"**In-Memory RAM Cache Statistics:**\n"
             f"> **Cache Hits (Zero Disk Read):** `{metrics['cache_hits']}`\n"
@@ -144,10 +144,10 @@ class MasterPanelLayoutView(LayoutView):
 
     def _build_errors_container(self) -> Container:
         errs = get_error_log()
-        header_str = f"### Orbit System Error Inspector\n**Authorized Developer:** {self.owner.mention}"
+        header_str = "**System Errors:**"
         
         if not errs:
-            content_str = "**Zero System Errors Caught!** All background tasks and command handlers are operating smoothly."
+            content_str = "0 Errors."
         else:
             lines = []
             for e in errs[:5]:
@@ -171,9 +171,8 @@ class MasterPanelLayoutView(LayoutView):
     def _build_servers_container(self) -> Container:
         total_members = sum(g.member_count or 0 for g in self.guilds_list)
         header_str = (
-            f"### Orbit Connected Server Empire\n"
-            f"**Total Connected Guilds:** `{len(self.guilds_list)}` | **Combined Members:** `{total_members:,}`\n"
-            f"**Current Page:** `{self.servers_page + 1} / {self.total_server_pages}`"
+            f"**Guilds:** `{len(self.guilds_list)}` | **Members:** `{total_members:,}` | "
+            f"**Page:** `{self.servers_page + 1} / {self.total_server_pages}`"
         )
 
         start_idx = self.servers_page * self.per_page
@@ -181,7 +180,7 @@ class MasterPanelLayoutView(LayoutView):
         page_guilds = self.guilds_list[start_idx:end_idx]
 
         if not page_guilds:
-            content_str = "*No servers found.*"
+            content_str = "None."
         else:
             lines = []
             for idx, g in enumerate(page_guilds, start=start_idx + 1):
@@ -200,7 +199,7 @@ class MasterPanelLayoutView(LayoutView):
         )
 
     def _build_storage_container(self) -> Container:
-        header_str = f"### Orbit JSON Storage Browser\n**Authorized Developer:** {self.owner.mention}"
+        header_str = "**JSON Storage Browser:**"
         
         file_str = "No file selected."
         if self.selected_storage_path and pathlib.Path(self.selected_storage_path).exists():
@@ -210,7 +209,7 @@ class MasterPanelLayoutView(LayoutView):
                 raw_dump = json.dumps(data_content, indent=2)[:1300]
                 file_str = f"**Viewing Path:** `{self.selected_storage_path}`\n```json\n{raw_dump}\n```"
             except Exception as e:
-                file_str = f"**Viewing Path:** `{self.selected_storage_path}`\n*(Error reading JSON: {e})*"
+                file_str = f"`{self.selected_storage_path}`\n*(Error: {e})*"
 
         return Container(
             TextDisplay(content=header_str),
