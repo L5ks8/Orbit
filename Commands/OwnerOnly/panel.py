@@ -28,10 +28,10 @@ class MasterPanelLayoutView(LayoutView):
         
         # Tab selector
         options = [
-            discord.SelectOption(label="Performance Dashboard", value="dashboard", description="RAM, CPU, Cache Hits, Throughput", emoji="📈"),
-            discord.SelectOption(label="System Error Inspector", value="errors", description="View internal system ring buffer", emoji="⚠️"),
-            discord.SelectOption(label="Server Directory", value="servers", description="List all connected Discord guilds", emoji="🌐"),
-            discord.SelectOption(label="Storage Explorer", value="storage", description="Browse internal JSON databases", emoji="📦")
+            discord.SelectOption(label="Performance Dashboard", value="dashboard", description="RAM, CPU, Cache Hits, Throughput"),
+            discord.SelectOption(label="System Error Inspector", value="errors", description="View internal system ring buffer"),
+            discord.SelectOption(label="Server Directory", value="servers", description="List all connected Discord guilds"),
+            discord.SelectOption(label="Storage Explorer", value="storage", description="Browse internal JSON databases")
         ]
         
         tab_select = Select(placeholder="Select Control Panel Module...", options=options, min_values=1, max_values=1)
@@ -119,7 +119,7 @@ class MasterPanelLayoutView(LayoutView):
 
     def _build_dashboard_container(self) -> Container:
         metrics = get_system_metrics(self.bot)
-        header_str = f"### 📈 Orbit Performance Dashboard\n**Authorized Developer:** {self.owner.mention} | **RAM Hit Rate:** `{metrics['cache_hit_rate']}%`"
+        header_str = f"### Orbit Performance Dashboard\n**Authorized Developer:** {self.owner.mention} | **RAM Hit Rate:** `{metrics['cache_hit_rate']}%`"
         content_str = (
             f"**In-Memory RAM Cache Statistics:**\n"
             f"> **Cache Hits (Zero Disk Read):** `{metrics['cache_hits']}`\n"
@@ -144,7 +144,7 @@ class MasterPanelLayoutView(LayoutView):
 
     def _build_errors_container(self) -> Container:
         errs = get_error_log()
-        header_str = f"### ⚠️ Orbit System Error Inspector\n**Authorized Developer:** {self.owner.mention}"
+        header_str = f"### Orbit System Error Inspector\n**Authorized Developer:** {self.owner.mention}"
         
         if not errs:
             content_str = "**Zero System Errors Caught!** All background tasks and command handlers are operating smoothly."
@@ -171,7 +171,7 @@ class MasterPanelLayoutView(LayoutView):
     def _build_servers_container(self) -> Container:
         total_members = sum(g.member_count or 0 for g in self.guilds_list)
         header_str = (
-            f"### 🌐 Orbit Connected Server Empire\n"
+            f"### Orbit Connected Server Empire\n"
             f"**Total Connected Guilds:** `{len(self.guilds_list)}` | **Combined Members:** `{total_members:,}`\n"
             f"**Current Page:** `{self.servers_page + 1} / {self.total_server_pages}`"
         )
@@ -200,7 +200,7 @@ class MasterPanelLayoutView(LayoutView):
         )
 
     def _build_storage_container(self) -> Container:
-        header_str = f"### 📦 Orbit JSON Storage Browser\n**Authorized Developer:** {self.owner.mention}"
+        header_str = f"### Orbit JSON Storage Browser\n**Authorized Developer:** {self.owner.mention}"
         
         file_str = "No file selected."
         if self.selected_storage_path and pathlib.Path(self.selected_storage_path).exists():

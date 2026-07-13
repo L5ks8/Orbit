@@ -37,11 +37,11 @@ class GlobalBlacklistCommand(commands.Cog):
         record_command("gblacklist", str(ctx.author))
         bl = _load_gblacklist()
         if target.id in bl:
-            return await ctx.send(f"❌ User `{target.id}` is already globally blacklisted.", ephemeral=True)
+            return await ctx.send(f"User `{target.id}` is already globally blacklisted.", ephemeral=True)
         
         bl.append(target.id)
         _save_gblacklist(bl)
-        await ctx.send(f"✅ User `{target.id}` (`{target.name}`) has been added to the global bot blacklist.\n**Reason:** {reason}", allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(f"User `{target.id}` (`{target.name}`) has been added to the global bot blacklist.\n**Reason:** {reason}", allowed_mentions=discord.AllowedMentions.none())
 
     @commands.command(name="gunblacklist", hidden=True)
     @commands.is_owner()
@@ -49,11 +49,11 @@ class GlobalBlacklistCommand(commands.Cog):
         record_command("gunblacklist", str(ctx.author))
         bl = _load_gblacklist()
         if target.id not in bl:
-            return await ctx.send(f"❌ User `{target.id}` is not globally blacklisted.", ephemeral=True)
+            return await ctx.send(f"User `{target.id}` is not globally blacklisted.", ephemeral=True)
         
         bl.remove(target.id)
         _save_gblacklist(bl)
-        await ctx.send(f"✅ User `{target.id}` (`{target.name}`) has been removed from the global bot blacklist.", allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(f"User `{target.id}` (`{target.name}`) has been removed from the global bot blacklist.", allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GlobalBlacklistCommand(bot))
