@@ -33,9 +33,16 @@ class GlobalBlacklistCommand(commands.Cog):
 
     @commands.command(name="gblacklist", hidden=True)
     @commands.is_owner()
-    async def gblacklist_cmd(self, ctx: commands.Context, target: discord.User, *, reason: str = "No reason provided"):
+    async def gblacklist_cmd(self, ctx: commands.Context, target: discord.User = None, *, reason: str = "No reason provided"):
         record_command("gblacklist", str(ctx.author))
         bl = _load_gblacklist()
+        
+        if target is None:
+            if not bl:
+                return await ctx.send("The global blacklist is currently empty.")
+            bl_str = ", ".join([f"`{uid}`" for uid in bl])
+            return await ctx.send(f"**Globally Blacklisted Users ({len(bl)}):**\n{bl_str}")
+            
         if target.id in bl:
             return await ctx.send(f"User `{target.id}` is already globally blacklisted.", ephemeral=True)
         
