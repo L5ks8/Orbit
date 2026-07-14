@@ -12,6 +12,22 @@ from contextlib import redirect_stdout
 from Commands.OwnerOnly._monitor import get_system_metrics, get_error_log, clear_errors, record_command, get_live_logs
 from Commands.OwnerOnly._storage import load_devmode_config, save_devmode_config
 
+STATUS_FILE = pathlib.Path("Storage/status.json")
+
+def _load_status() -> dict:
+    if not STATUS_FILE.exists(): return {}
+    try:
+        with open(STATUS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except: return {}
+
+def _save_status(act_type: str, text: str, status_str: str):
+    STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(STATUS_FILE, "w", encoding="utf-8") as f:
+            json.dump({"type": act_type, "text": text, "status": status_str}, f)
+    except: pass
+
 class GetInviteModal(Modal, title="Generate Server Invite"):
     guild_id_input = TextInput(label="Target Guild ID", required=True)
     def __init__(self, view: "MasterPanelLayoutView"):
@@ -102,7 +118,8 @@ class StatusModal(Modal, title="Update Bot Presence"):
         else: act = discord.CustomActivity(name=f"{act_type} {text}".strip())
 
         await self.view.bot.change_presence(activity=act, status=discord_stat)
-        await interaction.response.send_message("Presence updated.", ephemeral=True)
+        _save_status(act_type, text, stat)
+        await interaction.response.send_message("Presence updated and saved.", ephemeral=True)
 
 class GBlacklistModal(Modal):
     user_id_input = TextInput(label="User ID", required=True)
@@ -477,6 +494,29 @@ class MasterPanelLayoutView(LayoutView):
 class PanelCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        data = _load_status()
+        if data:
+            act_type = data.get("type", "clear")
+            text = data.get("text", "")
+            stat = data.get("status", "online")
+            
+            discord_stat = discord.Status.online
+            if stat in ["dnd", "do_not_disturb"]: discord_stat = discord.Status.dnd
+            elif stat in ["idle", "abwesend"]: discord_stat = discord.Status.idle
+            elif stat in ["invisible", "offline"]: discord_stat = discord.Status.invisible
+
+            act = None
+            if act_type in ["play", "playing"]: act = discord.Game(name=text)
+            elif act_type in ["watch", "watching"]: act = discord.Activity(type=discord.ActivityType.watching, name=text)
+            elif act_type in ["listen", "listening"]: act = discord.Activity(type=discord.ActivityType.listening, name=text)
+            elif act_type in ["stream", "streaming"]: act = discord.Streaming(name=text, url="https://twitch.tv/discord")
+            elif act_type in ["compete", "competing"]: act = discord.Activity(type=discord.ActivityType.competing, name=text)
+            elif act_type not in ["clear", "none"]: act = discord.CustomActivity(name=f"{act_type} {text}".strip())
+
+            await self.bot.change_presence(activity=act, status=discord_stat)
 
     @commands.command(name="panel", aliases=["hub", "dashboard", "errors", "servers", "owner", "devmode", "shards", "livelogs", "autobackup", "getstorage", "sync", "status", "restart", "reload", "getinvite", "console", "gblacklist"], hidden=True)
     @commands.is_owner()
