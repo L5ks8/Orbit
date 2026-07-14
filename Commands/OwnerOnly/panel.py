@@ -104,6 +104,45 @@ class StatusModal(Modal, title="Update Bot Presence"):
         await self.view.bot.change_presence(activity=act, status=discord_stat)
         await interaction.response.send_message("Presence updated.", ephemeral=True)
 
+class GBlacklistModal(Modal):
+    user_id_input = TextInput(label="User ID", required=True)
+    reason_input = TextInput(label="Reason (only for add)", required=False)
+    
+    def __init__(self, view: "MasterPanelLayoutView", mode: str):
+        super().__init__(title="Blacklist User" if mode == "add" else "Unblacklist User")
+        self.view = view
+        self.mode = mode
+        
+    async def on_submit(self, interaction: discord.Interaction):
+        from Commands.OwnerOnly.gblacklist import _load_gblacklist, _save_gblacklist
+        await interaction.response.defer(ephemeral=True)
+        try:
+            target_id = int(self.user_id_input.value.strip())
+        except ValueError:
+            return await interaction.followup.send("Invalid User ID.")
+            
+        bl = _load_gblacklist()
+        if self.mode == "add":
+            if target_id in bl:
+                return await interaction.followup.send(f"User `{target_id}` is already blacklisted.")
+            bl.append(target_id)
+            _save_gblacklist(bl)
+            reason = self.reason_input.value.strip() or "No reason provided"
+            await interaction.followup.send(f"User `{target_id}` globally blacklisted.\n**Reason:** {reason}")
+        else:
+            if target_id not in bl:
+                return await interaction.followup.send(f"User `{target_id}` is not blacklisted.")
+            bl.remove(target_id)
+            _save_gblacklist(bl)
+            await interaction.followup.send(f"User `{target_id}` removed from global blacklist.")
+            
+        self.view.build_ui()
+        try:
+            msg = await interaction.original_response()
+            await msg.edit(view=self.view)
+        except Exception:
+            pass
+
 
 class MasterPanelLayoutView(LayoutView):
     def __init__(self, bot: commands.Bot, owner: discord.abc.User):
@@ -133,11 +172,10 @@ class MasterPanelLayoutView(LayoutView):
             discord.SelectOption(label="Global Devmode", value="devmode", description="Toggle maintenance mode lock"),
             discord.SelectOption(label="DM History Purge", value="dmclear", description="Clear bot's DM history with you"),
             discord.SelectOption(label="Export Storage ZIP", value="getstorage", description="Receive all databases in a ZIP"),
+            discord.SelectOption(label="Global Blacklist", value="gblacklist", description="Manage global user bans"),
             discord.SelectOption(label="Command Sync", value="sync", description="Sync slash commands globally or locally"),
             discord.SelectOption(label="Restart / Reboot", value="restart", description="Cleanly restart the bot process"),
-            
             discord.SelectOption(label="Live Console", value="console", description="Interactive execution terminal"),
-            # Popups (Modals)
             discord.SelectOption(label="Eval", value="eval", description="Execute raw python bytecode"),
             discord.SelectOption(label="Server Invite Generator", value="getinvite", description="Generate an invite to any guild"),
             discord.SelectOption(label="Bot Status & Activity", value="status", description="Change playing/watching status"),
@@ -173,6 +211,7 @@ class MasterPanelLayoutView(LayoutView):
         elif self.current_tab == "devmode": self.container = self._build_devmode_container()
         elif self.current_tab == "dmclear": self.container = self._build_dmclear_container()
         elif self.current_tab == "getstorage": self.container = self._build_getstorage_container()
+        elif self.current_tab == "gblacklist": self.container = self._build_gblacklist_container()
         elif self.current_tab == "sync": self.container = self._build_sync_container()
         elif self.current_tab == "restart": self.container = self._build_restart_container()
 
@@ -310,6 +349,22 @@ class MasterPanelLayoutView(LayoutView):
                 await interaction.response.send_modal(EvalModal(self))
             btn_eval.callback = _eval_btn_cb
             self.add_item(ActionRow(btn_eval))
+            
+        elif self.current_tab == "gblacklist":
+            btn_add = Button(label="Add to Blacklist", style=discord.ButtonStyle.danger)
+            btn_remove = Button(label="Remove from Blacklist", style=discord.ButtonStyle.success)
+
+            async def _add_gbl_cb(interaction: discord.Interaction):
+                if interaction.user.id != self.owner.id: return
+                await interaction.response.send_modal(GBlacklistModal(self, mode="add"))
+                
+            async def _rem_gbl_cb(interaction: discord.Interaction):
+                if interaction.user.id != self.owner.id: return
+                await interaction.response.send_modal(GBlacklistModal(self, mode="remove"))
+
+            btn_add.callback = _add_gbl_cb
+            btn_remove.callback = _rem_gbl_cb
+            self.add_item(ActionRow(btn_add, btn_remove))
 
 
     # ---------------- UI BUILDERS ----------------
@@ -400,6 +455,17 @@ class MasterPanelLayoutView(LayoutView):
 
     def _build_getstorage_container(self) -> Container:
         return Container(TextDisplay(content="**Export Storage:**"), Separator(spacing=discord.SeparatorSpacing.small), TextDisplay(content="Click the button to receive a ZIP of all Storage/ files in your DMs."))
+
+    def _build_gblacklist_container(self) -> Container:
+        from Commands.OwnerOnly.gblacklist import _load_gblacklist
+        bl = _load_gblacklist()
+        header_str = "**Global Blacklist:**"
+        if not bl:
+            content_str = "The global blacklist is currently empty."
+        else:
+            bl_str = ", ".join([f"`{uid}`" for uid in bl])
+            content_str = f"**Globally Blacklisted Users ({len(bl)}):**\n{bl_str}"
+        return Container(TextDisplay(content=header_str), Separator(spacing=discord.SeparatorSpacing.small), TextDisplay(content=content_str))
 
     def _build_sync_container(self) -> Container:
         return Container(TextDisplay(content="**Command Sync:**"), Separator(spacing=discord.SeparatorSpacing.small), TextDisplay(content="Click the button to sync the application commands globally."))
