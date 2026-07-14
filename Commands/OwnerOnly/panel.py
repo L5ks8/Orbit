@@ -145,11 +145,11 @@ class GBlacklistModal(Modal):
 
 
 class MasterPanelLayoutView(LayoutView):
-    def __init__(self, bot: commands.Bot, owner: discord.abc.User):
+    def __init__(self, bot: commands.Bot, owner: discord.abc.User, default_tab: str = "dashboard"):
         super().__init__(timeout=None)
         self.bot = bot
         self.owner = owner
-        self.current_tab = "dashboard"
+        self.current_tab = default_tab
         
         self.servers_page = 0
         self.per_page = 5
@@ -478,16 +478,27 @@ class PanelCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="panel", aliases=["hub", "dashboard", "errors", "servers", "owner", "devmode", "shards", "livelogs", "autobackup", "getstorage", "sync", "status", "restart", "reload", "getinvite", "console"], hidden=True)
+    @commands.command(name="panel", aliases=["hub", "dashboard", "errors", "servers", "owner", "devmode", "shards", "livelogs", "autobackup", "getstorage", "sync", "status", "restart", "reload", "getinvite", "console", "gblacklist"], hidden=True)
     @commands.is_owner()
-    async def panel_cmd(self, ctx: commands.Context):
+    async def panel_cmd(self, ctx: commands.Context, tab: str = None):
         record_command("panel", str(ctx.author))
         if ctx.guild is not None:
             try:
                 await ctx.message.delete()
             except Exception:
                 pass
-        view = MasterPanelLayoutView(self.bot, ctx.author)
+                
+        valid_tabs = ["dashboard", "errors", "servers", "storage", "owner", "livelogs", "devmode", "dmclear", "getstorage", "gblacklist", "sync", "restart", "console"]
+        
+        target_tab = "dashboard"
+        if tab and tab.lower() in valid_tabs:
+            target_tab = tab.lower()
+        elif tab and tab.lower() in ["eval", "status", "getinvite", "reload"]:
+            target_tab = "console" if tab.lower() == "eval" else "dashboard" 
+        elif ctx.invoked_with.lower() in valid_tabs:
+            target_tab = ctx.invoked_with.lower()
+            
+        view = MasterPanelLayoutView(self.bot, ctx.author, default_tab=target_tab)
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
