@@ -212,16 +212,6 @@ class OrbitBot(commands.Bot):
 bot = OrbitBot()
 
 @bot.check
-async def global_bot_blacklist_check(ctx: commands.Context):
-    try:
-        from Commands.OwnerOnly.gblacklist import is_globally_blacklisted
-        if is_globally_blacklisted(ctx.author.id):
-            return False
-    except Exception:
-        pass
-    return True
-
-@bot.check
 async def global_blacklist_prefix_check(ctx: commands.Context):
     if not ctx.guild:
         return True

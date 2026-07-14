@@ -9,7 +9,7 @@
     "anti_spam": {
         "enabled": true,
         "max_messages": 5,
-        "time_window_sec": 3,
+        "time_window_sec": 5,
         "max_mentions": 4,
         "action": "warn",
         "timeout_duration_sec": 300
