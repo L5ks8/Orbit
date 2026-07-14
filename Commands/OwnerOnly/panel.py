@@ -113,7 +113,7 @@ class StatusModal(Modal, title="Update Bot Presence"):
         if act_type in ["play", "playing"]: act = discord.Game(name=text)
         elif act_type in ["watch", "watching"]: act = discord.Activity(type=discord.ActivityType.watching, name=text)
         elif act_type in ["listen", "listening"]: act = discord.Activity(type=discord.ActivityType.listening, name=text)
-        elif act_type in ["stream", "streaming"]: act = discord.Streaming(name=text, url="https://twitch.tv/discord")
+        elif act_type in ["stream", "streaming"]: act = discord.Streaming(name=text, url="https://discord.gg/EqePAhgEp")
         elif act_type in ["compete", "competing"]: act = discord.Activity(type=discord.ActivityType.competing, name=text)
         else: act = discord.CustomActivity(name=f"{act_type} {text}".strip())
 
@@ -537,7 +537,7 @@ class PanelCommand(commands.Cog):
             if act_type in ["play", "playing"]: act = discord.Game(name=text)
             elif act_type in ["watch", "watching"]: act = discord.Activity(type=discord.ActivityType.watching, name=text)
             elif act_type in ["listen", "listening"]: act = discord.Activity(type=discord.ActivityType.listening, name=text)
-            elif act_type in ["stream", "streaming"]: act = discord.Streaming(name=text, url="https://twitch.tv/discord")
+            elif act_type in ["stream", "streaming"]: act = discord.Streaming(name=text, url="https://discord.gg/EqePAhgEp")
             elif act_type in ["compete", "competing"]: act = discord.Activity(type=discord.ActivityType.competing, name=text)
             elif act_type not in ["clear", "none"]: act = discord.CustomActivity(name=f"{act_type} {text}".strip())
 
