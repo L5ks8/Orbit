@@ -351,11 +351,36 @@ class MasterPanelLayoutView(LayoutView):
             self.add_item(ActionRow(btn_sync))
             
         elif self.current_tab == "restart":
-            btn_restart = Button(label="Confirm Restart", style=discord.ButtonStyle.danger)
+            btn_restart = Button(label="Cloud Backup & Restart", style=discord.ButtonStyle.danger)
             async def _restart_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.owner.id: return
-                await interaction.response.send_message("Restarting...", ephemeral=True)
-                os.execv(os.sys.executable, ['python'] + os.sys.argv)
+                await interaction.response.send_message("Initiating cloud backup & restart...", ephemeral=True)
+                
+                try:
+                    from Commands.OwnerOnly.autobackup import AutoBackupCommand, _get_backup_channel_id
+                    channel_id = _get_backup_channel_id()
+                    if channel_id:
+                        channel = self.bot.get_channel(channel_id)
+                        if not channel:
+                            try:
+                                channel = await self.bot.fetch_channel(channel_id)
+                            except: pass
+                        if channel:
+                            cog = self.bot.get_cog("AutoBackupCommand")
+                            if cog:
+                                await cog._run_upload(channel, is_automated=False)
+                except Exception as e:
+                    print(f"Pre-restart backup failed: {e}")
+                
+                import asyncio
+                import os
+                try:
+                    await self.bot.close()
+                except: pass
+                finally:
+                    await asyncio.sleep(1)
+                    os._exit(0)
+
             btn_restart.callback = _restart_cb
             self.add_item(ActionRow(btn_restart))
             

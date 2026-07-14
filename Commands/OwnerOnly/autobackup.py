@@ -157,16 +157,33 @@ class AutoBackupCommand(commands.Cog):
                 self.last_backed_up_mtime = _get_latest_storage_mtime()
                 print(f"AUTOMATIC CLOUD RECOVERY: {msg}")
                 try:
-                    from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
-                    data = _load_status()
-                    if data and isinstance(data, dict):
-                        act_type = data.get("type", "clear")
-                        text = data.get("text", "")
-                        status_str = data.get("status", "online")
-                        act = _build_activity(act_type, text)
-                        discord_status = _parse_discord_status(status_str)
-                        await self.bot.change_presence(activity=act, status=discord_status)
-                        print(f"Restored Live Presence from Cloud: {status_str.upper()} -> {act_type.upper()} {text}")
+                    import json
+                    import pathlib
+                    import discord
+                    status_file = pathlib.Path("Storage/status.json")
+                    if status_file.exists():
+                        with open(status_file, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                        if data and isinstance(data, dict):
+                            act_type = data.get("type", "clear")
+                            text = data.get("text", "")
+                            stat = data.get("status", "online")
+                            
+                            discord_stat = discord.Status.online
+                            if stat in ["dnd", "do_not_disturb"]: discord_stat = discord.Status.dnd
+                            elif stat in ["idle", "abwesend"]: discord_stat = discord.Status.idle
+                            elif stat in ["invisible", "offline"]: discord_stat = discord.Status.invisible
+
+                            act = None
+                            if act_type in ["play", "playing"]: act = discord.Game(name=text)
+                            elif act_type in ["watch", "watching"]: act = discord.Activity(type=discord.ActivityType.watching, name=text)
+                            elif act_type in ["listen", "listening"]: act = discord.Activity(type=discord.ActivityType.listening, name=text)
+                            elif act_type in ["stream", "streaming"]: act = discord.Streaming(name=text, url="https://twitch.tv/discord")
+                            elif act_type in ["compete", "competing"]: act = discord.Activity(type=discord.ActivityType.competing, name=text)
+                            elif act_type not in ["clear", "none"]: act = discord.CustomActivity(name=f"{act_type} {text}".strip())
+
+                            await self.bot.change_presence(activity=act, status=discord_stat)
+                            print(f"Restored Live Presence from Cloud: {stat.upper()} -> {act_type.upper()} {text}")
                 except Exception as e:
                     print(f"Failed to reapply presence after cloud restore: {e}")
             else:
