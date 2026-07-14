@@ -136,9 +136,10 @@ class MasterPanelLayoutView(LayoutView):
             discord.SelectOption(label="Command Sync", value="sync", description="Sync slash commands globally or locally"),
             discord.SelectOption(label="Restart / Reboot", value="restart", description="Cleanly restart the bot process"),
             
+            discord.SelectOption(label="Live Console", value="console", description="Interactive execution terminal"),
             # Popups (Modals)
+            discord.SelectOption(label="Eval", value="eval", description="[POPUP] Execute raw python bytecode"),
             discord.SelectOption(label="Server Invite Generator", value="getinvite", description="[POPUP] Generate an invite to any guild"),
-            discord.SelectOption(label="Live Console & Eval", value="console", description="[POPUP] Execute raw python bytecode"),
             discord.SelectOption(label="Bot Status & Activity", value="status", description="[POPUP] Change playing/watching status"),
             discord.SelectOption(label="Reload Modules", value="reload", description="[POPUP] Hot-reload python extensions")
         ]
@@ -152,7 +153,7 @@ class MasterPanelLayoutView(LayoutView):
             sel = tab_select.values[0]
             
             if sel == "getinvite": return await interaction.response.send_modal(GetInviteModal(self))
-            if sel == "console": return await interaction.response.send_modal(EvalModal(self))
+            if sel == "eval": return await interaction.response.send_modal(EvalModal(self))
             if sel == "status": return await interaction.response.send_modal(StatusModal(self))
             if sel == "reload": return await interaction.response.send_modal(ReloadModal(self))
                 
@@ -168,6 +169,7 @@ class MasterPanelLayoutView(LayoutView):
         elif self.current_tab == "storage": self.container = self._build_storage_container()
         elif self.current_tab == "owner": self.container = self._build_owner_container()
         elif self.current_tab == "livelogs": self.container = self._build_livelogs_container()
+        elif self.current_tab == "console": self.container = self._build_console_container()
         elif self.current_tab == "devmode": self.container = self._build_devmode_container()
         elif self.current_tab == "dmclear": self.container = self._build_dmclear_container()
         elif self.current_tab == "getstorage": self.container = self._build_getstorage_container()
@@ -300,6 +302,14 @@ class MasterPanelLayoutView(LayoutView):
                 os.execv(os.sys.executable, ['python'] + os.sys.argv)
             btn_restart.callback = _restart_cb
             self.add_item(ActionRow(btn_restart))
+            
+        elif self.current_tab == "console":
+            btn_eval = Button(label="Launch Eval", style=discord.ButtonStyle.primary)
+            async def _eval_btn_cb(interaction: discord.Interaction):
+                if interaction.user.id != self.owner.id: return
+                await interaction.response.send_modal(EvalModal(self))
+            btn_eval.callback = _eval_btn_cb
+            self.add_item(ActionRow(btn_eval))
 
 
     # ---------------- UI BUILDERS ----------------
@@ -376,6 +386,9 @@ class MasterPanelLayoutView(LayoutView):
         logs = get_live_logs(15)
         content = "\n".join(logs) if logs else "No events."
         return Container(TextDisplay(content="**Live Event Logs:**"), Separator(spacing=discord.SeparatorSpacing.small), TextDisplay(content=content))
+
+    def _build_console_container(self) -> Container:
+        return Container(TextDisplay(content="**Live Terminal Console:**"), Separator(spacing=discord.SeparatorSpacing.small), TextDisplay(content="The console is ready. Click the button below or use the 'Eval' dropdown option to execute Python code."))
 
     def _build_devmode_container(self) -> Container:
         dev_cfg = load_devmode_config()
