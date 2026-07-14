@@ -12,7 +12,7 @@ from contextlib import redirect_stdout
 from Commands.OwnerOnly._monitor import get_system_metrics, get_error_log, clear_errors, record_command, get_live_logs
 from Commands.OwnerOnly._storage import load_devmode_config, save_devmode_config
 
-STATUS_FILE = pathlib.Path("Storage/status.json")
+STATUS_FILE = pathlib.Path("Storage/bot_status.json")
 
 def _load_status() -> dict:
     if not STATUS_FILE.exists(): return {}
