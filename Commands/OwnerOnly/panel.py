@@ -138,10 +138,10 @@ class MasterPanelLayoutView(LayoutView):
             
             discord.SelectOption(label="Live Console", value="console", description="Interactive execution terminal"),
             # Popups (Modals)
-            discord.SelectOption(label="Eval", value="eval", description="[POPUP] Execute raw python bytecode"),
-            discord.SelectOption(label="Server Invite Generator", value="getinvite", description="[POPUP] Generate an invite to any guild"),
-            discord.SelectOption(label="Bot Status & Activity", value="status", description="[POPUP] Change playing/watching status"),
-            discord.SelectOption(label="Reload Modules", value="reload", description="[POPUP] Hot-reload python extensions")
+            discord.SelectOption(label="Eval", value="eval", description="Execute raw python bytecode"),
+            discord.SelectOption(label="Server Invite Generator", value="getinvite", description="Generate an invite to any guild"),
+            discord.SelectOption(label="Bot Status & Activity", value="status", description="Change playing/watching status"),
+            discord.SelectOption(label="Reload Modules", value="reload", description="Hot-reload python extensions")
         ]
         
         tab_select = Select(placeholder="Select Control Panel Module...", options=options, min_values=1, max_values=1)
