@@ -313,15 +313,31 @@ class AutoBackupCommand(commands.Cog):
         if success:
             self.last_backed_up_mtime = _get_latest_storage_mtime()
             try:
-                from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
-                data = _load_status()
-                if data and isinstance(data, dict):
-                    act_type = data.get("type", "clear")
-                    text = data.get("text", "")
-                    status_str = data.get("status", "online")
-                    act = _build_activity(act_type, text)
-                    discord_status = _parse_discord_status(status_str)
-                    await self.bot.change_presence(activity=act, status=discord_status)
+                import json as _json
+                import pathlib as _pl
+                _sf = _pl.Path("Storage/bot_status.json")
+                if _sf.exists():
+                    with open(_sf, "r", encoding="utf-8") as _f:
+                        data = _json.load(_f)
+                    if data and isinstance(data, dict):
+                        act_type = data.get("type", "clear")
+                        text = data.get("text", "")
+                        stat = data.get("status", "online")
+
+                        discord_stat = discord.Status.online
+                        if stat in ["dnd", "do_not_disturb"]: discord_stat = discord.Status.dnd
+                        elif stat in ["idle", "abwesend"]: discord_stat = discord.Status.idle
+                        elif stat in ["invisible", "offline"]: discord_stat = discord.Status.invisible
+
+                        act = None
+                        if act_type in ["play", "playing"]: act = discord.Game(name=text)
+                        elif act_type in ["watch", "watching"]: act = discord.Activity(type=discord.ActivityType.watching, name=text)
+                        elif act_type in ["listen", "listening"]: act = discord.Activity(type=discord.ActivityType.listening, name=text)
+                        elif act_type in ["stream", "streaming"]: act = discord.Streaming(name=text, url="https://twitch.tv/discord")
+                        elif act_type in ["compete", "competing"]: act = discord.Activity(type=discord.ActivityType.competing, name=text)
+                        elif act_type not in ["clear", "none"]: act = discord.CustomActivity(name=f"{act_type} {text}".strip())
+
+                        await self.bot.change_presence(activity=act, status=discord_stat)
             except Exception:
                 pass
         view = BackupNoticeLayout("Orbit Cloud Restore Status", f"**Status:** `{'SUCCESS' if success else 'FAILED'}`\n**Details:** {info}")
