@@ -2,10 +2,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.Purge._views import PurgeSuccessLayout
+from Commands._utils import MemberOrIDConverter, format_usage
 
-async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member | None):
+async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member | str | None):
     if not isinstance(ctx.channel, (discord.TextChannel, discord.VoiceChannel, discord.Thread)):
         return await ctx.send("This command can only be used in server channels.", ephemeral=True)
+
+    if user is not None and not isinstance(user, discord.Member):
+        user = await MemberOrIDConverter().convert(ctx, str(user))
 
     clean_str = count_str.strip().lower()
     is_all = (clean_str == "all")
@@ -45,7 +49,7 @@ async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member 
     count="Number of messages to delete (1-100) or 'all'",
     user="Optional member to filter deleted messages by"
 )
-async def purge_cmd(ctx: commands.Context, count: str, user: discord.Member = None):
+async def purge_cmd(ctx: commands.Context, count: str, user: str = None):
     await ctx.defer(ephemeral=True)
     await _do_purge(ctx, count, user)
 
@@ -66,9 +70,9 @@ class PurgePrefixFallback(commands.Cog):
 
     @commands.command(name="purge_prefix_helper", hidden=True)
     @commands.has_permissions(manage_messages=True)
-    async def purge_prefix(self, ctx: commands.Context, count: str = None, user: discord.Member = None):
+    async def purge_prefix(self, ctx: commands.Context, count: str = None, user: str = None):
         if not count:
-            return await ctx.send("Usage: `-purge <number|all> [@user]` (`-purge 20` or `-purge all`)", ephemeral=True)
+            return await ctx.send(format_usage("-purge", "<number|all>", "[user_id]"), ephemeral=True)
         await _do_purge(ctx, count, user)
 
 async def setup(bot: commands.Bot):

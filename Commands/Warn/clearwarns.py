@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import clear_user_warnings
 from Commands.Log._storage import log_event
+from Commands._utils import MemberOrIDConverter, format_usage
 
 class ClearWarningsLayout(LayoutView):
     def __init__(self, member: discord.Member, cleared_count: int):
@@ -42,7 +43,11 @@ class ClearWarnsCog(commands.Cog):
 
     @commands.hybrid_command(name="clearwarns", aliases=["clearwarn", "warnclear", "warnreset"], description="Clear all warnings for a member.")
     @commands.has_permissions(moderate_members=True)
-    async def clearwarns_cmd(self, ctx: commands.Context, user: discord.Member):
+    async def clearwarns_cmd(self, ctx: commands.Context, user: str = None):
+        if user is None:
+            return await ctx.send(format_usage("-clearwarns", "<user_id>"), ephemeral=True)
+        if not isinstance(user, discord.Member):
+            user = await MemberOrIDConverter().convert(ctx, str(user))
         await _do_clearwarnings(ctx, user)
 
     @clearwarns_cmd.error
@@ -50,9 +55,9 @@ class ClearWarnsCog(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Moderate Members permission to manage warnings.", ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `/clearwarns user:@user` or `-clearwarns @user`", ephemeral=True)
+            await ctx.send(format_usage("-clearwarns", "<user_id>"), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send("Could not find that member. Usage: `/clearwarns user:@user` or `-clearwarns @user`", ephemeral=True)
+            await ctx.send(f"{format_usage('-clearwarns', '<user_id>')}", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ClearWarnsCog(bot))

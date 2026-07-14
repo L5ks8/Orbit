@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
+from Commands._utils import MemberOrIDConverter, format_usage
 
 class KickSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
@@ -22,23 +23,26 @@ class KickCommand(commands.Cog):
     @commands.hybrid_command(name="kick", description="Kicks a user immediately without confirmation using Components V2.")
     @commands.has_permissions(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
-    async def kick(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+    async def kick(self, ctx: commands.Context, target: str = None, *, reason: str = "No reason provided"):
+        if target is None:
+            return await ctx.send(format_usage("-kick", "<user_id>", "[reason]"), ephemeral=True)
+        target_member = target if isinstance(target, discord.Member) else await MemberOrIDConverter().convert(ctx, str(target))
         await ctx.defer()
-        if target.id == ctx.author.id:
+        if target_member.id == ctx.author.id:
             return await ctx.send("You cannot kick yourself.", ephemeral=True)
-        if is_whitelisted(ctx.guild.id, target.id):
+        if is_whitelisted(ctx.guild.id, target_member.id):
             return await ctx.send("This user is on the global moderation whitelist (`Immune to Kick`).", ephemeral=True)
-        if target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+        if target_member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
             return await ctx.send("You cannot kick a user with an equal or higher role.", ephemeral=True)
 
         try:
-            await ctx.guild.kick(target, reason=f"Kicked by {ctx.author} | Reason: {reason}")
-            view = KickSuccessLayout(target, reason, ctx.author)
+            await ctx.guild.kick(target_member, reason=f"Kicked by {ctx.author} | Reason: {reason}")
+            view = KickSuccessLayout(target_member, reason, ctx.author)
             await log_event(
                 ctx.guild,
                 "moderation",
                 "User Kicked (`-kick`)",
-                f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
+                f"**Target:** {target_member.mention} (`{target_member.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
@@ -53,7 +57,7 @@ class KickCommand(commands.Cog):
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send("I am missing the Kick Members permission.", ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -kick <@user/ID> [reason]", ephemeral=True)
+            await ctx.send(format_usage("-kick", "<user_id>", "[reason]"), ephemeral=True)
         else:
             await ctx.send(f"An error occurred: {error}", ephemeral=True)
 

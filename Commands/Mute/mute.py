@@ -4,6 +4,7 @@ from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Mute._storage import get_muted_role_id, set_muted_role_id
 from Commands.Log._storage import log_event
+from Commands._utils import MemberOrIDConverter, format_usage
 
 
 async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
@@ -39,21 +40,24 @@ class MuteCommand(commands.Cog):
     @commands.hybrid_command(name="mute", description="Mutes a user.")
     @commands.has_permissions(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True, manage_channels=True)
-    async def mute(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+    async def mute(self, ctx: commands.Context, target: str = None, *, reason: str = "No reason provided"):
+        if target is None:
+            return await ctx.send(format_usage("-mute", "<user_id>", "[reason]"), ephemeral=True)
+        target_member = target if isinstance(target, discord.Member) else await MemberOrIDConverter().convert(ctx, str(target))
         await ctx.defer()
-        if target.id == ctx.author.id:
+        if target_member.id == ctx.author.id:
             return await ctx.send("You cannot mute yourself.", ephemeral=True)
-        if is_whitelisted(ctx.guild.id, target.id):
+        if is_whitelisted(ctx.guild.id, target_member.id):
             return await ctx.send("This user is on the global moderation whitelist (`Immune to Mute`).", ephemeral=True)
-        if target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+        if target_member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
             return await ctx.send("You cannot mute a user with an equal or higher role.", ephemeral=True)
 
         role = await get_or_create_muted_role(ctx.guild)
-        if role in target.roles:
+        if role in target_member.roles:
             return await ctx.send("This user is already muted.", ephemeral=True)
 
         try:
-            await target.add_roles(role, reason=f"Muted by {ctx.author} | Reason: {reason}")
+            await target_member.add_roles(role, reason=f"Muted by {ctx.author} | Reason: {reason}")
         except discord.Forbidden:
             return await ctx.send("I do not have permissions to manage roles or my role is lower than the Muted role.", ephemeral=True)
         except Exception as e:
@@ -64,7 +68,7 @@ class MuteCommand(commands.Cog):
             try:
                 if isinstance(channel, (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel)):
                     await channel.set_permissions(
-                        target,
+                        target_member,
                         send_messages=False,
                         send_messages_in_threads=False,
                         create_public_threads=False,
@@ -78,12 +82,12 @@ class MuteCommand(commands.Cog):
             except Exception:
                 pass
 
-        view = MuteSuccessLayout(target, reason, ctx.author, channels_affected)
+        view = MuteSuccessLayout(target_member, reason, ctx.author, channels_affected)
         await log_event(
             ctx.guild,
             "moderation",
             "User Muted (`-mute`)",
-            f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Affected Channels:** `{channels_affected}`"
+            f"**Target:** {target_member.mention} (`{target_member.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Affected Channels:** `{channels_affected}`"
         )
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
@@ -92,7 +96,7 @@ class MuteCommand(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Manage Roles permission to mute users.", ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -mute <@user/ID> [reason]", ephemeral=True)
+            await ctx.send(format_usage("-mute", "<user_id>", "[reason]"), ephemeral=True)
         else:
             await ctx.send(f"An error occurred: {error}", ephemeral=True)
 

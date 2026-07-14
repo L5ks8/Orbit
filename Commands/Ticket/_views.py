@@ -204,14 +204,12 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
 
         create_active_ticket(interaction.guild.id, ticket_channel.id, interaction.user.id, subject, description, self.category_option)
 
-        header_str = f"### Support Ticket: **#{ticket_channel.name}**\n**Category Option:** `{self.category_option}`\n**Status:** Open (`Unclaimed`)"
+        header_str = f"### Ticket Opened\n**Channel:** #{ticket_channel.name}\n**Category:** {self.category_option}"
         info_str = (
-            f"**Creator:** {interaction.user.mention} (`{interaction.user.id}`)\n"
-            f"**Selected Option:** `{self.category_option}`\n"
+            f"**Creator:** {interaction.user.mention}\n"
             f"**Assigned Team:** {support_role.mention}\n\n"
             f"**Subject:** {subject}\n"
-            f"**Description:**\n> {description.replace(chr(10), chr(10) + '> ')}\n\n"
-            f"-# Click **Claim Ticket** to take ownership of this inquiry, or **Close Ticket** when the matter is resolved."
+            f"**Description:**\n> {description.replace(chr(10), chr(10) + '> ')}"
         )
 
         container = Container(
@@ -277,13 +275,10 @@ class TicketControlLayout(LayoutView):
 
             claim_ticket(interaction.guild.id, interaction.channel.id, interaction.user.id)
 
-            header_str = f"### Support Ticket: **#{interaction.channel.name}**\n**Status:** Claimed by {interaction.user.display_name}"
+            header_str = f"### Ticket Claimed\n**Channel:** #{interaction.channel.name}"
             info_str = (
-                f"**Creator:** <@{ticket_data.get('creator_id')}> (`{ticket_data.get('creator_id')}`)\n"
-                f"**Assigned Staff:** {interaction.user.mention}\n\n"
-                f"**Subject:** {ticket_data.get('subject', 'Unknown')}\n"
-                f"**Description:**\n> {str(ticket_data.get('description', '')).replace(chr(10), chr(10) + '> ')}\n\n"
-                f"-# Click **Close Ticket** below when this inquiry has been resolved."
+                f"**Assigned Staff:** {interaction.user.mention}\n"
+                f"**Subject:** {ticket_data.get('subject', 'Unknown')}"
             )
             updated_container = Container(
                 TextDisplay(content=header_str),
@@ -296,8 +291,8 @@ class TicketControlLayout(LayoutView):
             except Exception:
                 pass
 
-            claim_header = f"### Ticket Claimed: **#{interaction.channel.name}**\n**Assigned Staff:** {interaction.user.mention}"
-            claim_info = "-# All further staff assistance will be coordinated by this representative."
+            claim_header = f"### Ticket Claimed\n**Channel:** #{interaction.channel.name}"
+            claim_info = "A staff member is handling this ticket now."
             status_container = Container(
                 TextDisplay(content=claim_header),
                 Separator(spacing=discord.SeparatorSpacing.small),
@@ -434,10 +429,10 @@ class TicketConfigDynamicView(LayoutView):
             slot_lines.append(f"{marker}`{idx+1}.` **{name}** — Staff: {role_display} | Category: {cat_display}")
 
         slots_display = "\n".join(slot_lines)
-        header_str = f"### Orbit Ticket Desk Options Builder ({len(slots)} Options)\n**Panel Channel:** {panel_str} | **Log Channel:** {log_str}"
+        header_str = f"### Ticket Desk Builder ({len(slots)} options)\n**Panel:** {panel_str} | **Log:** {log_str}"
         info_str = (
-            f"**Configured Ticket Options, Roles & Categories:**\n{slots_display}\n\n"
-            f"-# Select a slot in Row 1 below, then choose a Staff Role in Row 2 and a Ticket Category in Row 3! You can assign the same role or category across multiple options."
+            f"{slots_display}\n\n"
+            f"Select a slot, then assign a role and category."
         )
 
         select_options = []
@@ -578,7 +573,7 @@ class PersistentTicketPanelLayout(LayoutView):
     def build_ui(self):
         self.clear_items()
         header_str = f"### {self.panel_title}\n{self.panel_desc}"
-        info_str = "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."
+        info_str = "Choose a category, then click Create Ticket."
 
         select_opts = []
         slots_to_render = self.options_slots if self.options_slots else self.panel_options
@@ -591,7 +586,7 @@ class PersistentTicketPanelLayout(LayoutView):
         if not select_opts:
             select_opts.append(discord.SelectOption(label="General Support", value="General Support"))
 
-        panel_dropdown = Select(placeholder="1. Select Ticket Category Option...", options=select_opts, min_values=1, max_values=1, custom_id="orbit:ticket_panel_dropdown")
+        panel_dropdown = Select(placeholder="Select a category...", options=select_opts, min_values=1, max_values=1, custom_id="orbit:ticket_panel_dropdown")
         
         async def _panel_dropdown_cb(interaction: discord.Interaction):
             val = interaction.data.get("values", ["General Support"])[0]

@@ -269,13 +269,13 @@ async def _do_ticket_transcript(ctx: commands.Context):
     await ctx.send(view=view, file=file, allowed_mentions=discord.AllowedMentions.none())
 
 
-@commands.hybrid_group(name="ticket", description="Support ticket system commands.")
+@commands.hybrid_group(name="ticket", description="Support ticket tools.")
 @commands.has_permissions(manage_channels=True)
 async def ticket_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
-        await ctx.send("Please specify a subcommand: `setup`, `add`, `remove`, `close`, `reset`, or `transcript`.", ephemeral=True)
+        await ctx.send("Use: `setup`, `add`, `remove`, `close`, `reset`, or `transcript`.", ephemeral=True)
 
-@ticket_group.command(name="setup", description="Configure the ticket system options and panel.")
+@ticket_group.command(name="setup", description="Configure the ticket panel")
 @commands.has_permissions(manage_guild=True)
 @app_commands.describe(
     options="Number of ticket category option slots to configure (1 to 10)",
@@ -294,27 +294,27 @@ async def ticket_setup_cmd(
 ):
     await _do_ticket_setup(ctx, options, panel_channel, log_channel, title, description)
 
-@ticket_group.command(name="add", description="Add a member to the ticket.")
+@ticket_group.command(name="add", description="Add a member to a ticket")
 @app_commands.describe(member="The member to grant access to this ticket")
 async def ticket_add_cmd(ctx: commands.Context, member: discord.Member):
     await _do_ticket_add(ctx, member)
 
-@ticket_group.command(name="remove", description="Remove a member from the ticket.")
+@ticket_group.command(name="remove", description="Remove a member from a ticket")
 @app_commands.describe(member="The member to remove from this ticket")
 async def ticket_remove_cmd(ctx: commands.Context, member: discord.Member):
     await _do_ticket_remove(ctx, member)
 
-@ticket_group.command(name="close", description="Close the ticket and generate transcript.")
+@ticket_group.command(name="close", description="Close the current ticket")
 @app_commands.describe(reason="Optional explanation for why the ticket is being closed")
 async def ticket_close_cmd(ctx: commands.Context, reason: str = "Closed via command"):
     await _do_ticket_close(ctx, reason)
 
-@ticket_group.command(name="reset", description="Reset the server ticket system.")
+@ticket_group.command(name="reset", description="Reset the ticket system")
 @commands.has_permissions(manage_guild=True)
 async def ticket_reset_cmd(ctx: commands.Context):
     await _do_ticket_reset(ctx)
 
-@ticket_group.command(name="transcript", description="Export a transcript of this ticket.")
+@ticket_group.command(name="transcript", description="Export this ticket transcript")
 async def ticket_transcript_cmd(ctx: commands.Context):
     await _do_ticket_transcript(ctx)
 
@@ -354,27 +354,27 @@ class TicketCog(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Manage Server permission to configure tickets.", ephemeral=True)
         else:
-            await ctx.send(f"An error occurred in `/ticket setup`: {error}", ephemeral=True)
+            await ctx.send(f"Ticket setup failed: {error}", ephemeral=True)
 
     @ticket_add_cmd.error
     async def add_error(self, ctx: commands.Context, error):
-        await ctx.send(f"An error occurred in `/ticket add`: {error}", ephemeral=True)
+        await ctx.send(f"Ticket add failed: {error}", ephemeral=True)
 
     @ticket_remove_cmd.error
     async def remove_error(self, ctx: commands.Context, error):
-        await ctx.send(f"An error occurred in `/ticket remove`: {error}", ephemeral=True)
+        await ctx.send(f"Ticket remove failed: {error}", ephemeral=True)
 
     @ticket_close_cmd.error
     async def close_error(self, ctx: commands.Context, error):
-        await ctx.send(f"An error occurred in `/ticket close`: {error}", ephemeral=True)
+        await ctx.send(f"Ticket close failed: {error}", ephemeral=True)
 
     @ticket_reset_cmd.error
     async def reset_error(self, ctx: commands.Context, error):
-        await ctx.send(f"An error occurred in `/ticket reset`: {error}", ephemeral=True)
+        await ctx.send(f"Ticket reset failed: {error}", ephemeral=True)
 
     @ticket_transcript_cmd.error
     async def transcript_error(self, ctx: commands.Context, error):
-        await ctx.send(f"An error occurred in `/ticket transcript`: {error}", ephemeral=True)
+        await ctx.send(f"Ticket transcript failed: {error}", ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

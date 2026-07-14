@@ -37,7 +37,7 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     view = VcBanSuccessLayout(user, reason, ctx.author)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-@voice_group.command(name="ban", description="Ban a member from joining voice channels.")
+@voice_group.command(name="ban", description="Ban a member from voice channels")
 @commands.has_permissions(move_members=True)
 @commands.bot_has_permissions(move_members=True)
 async def vc_ban_cmd(ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided"):
@@ -63,9 +63,9 @@ class VcBanCommand(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Move Members permission to voice ban users.", ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-voice ban <@member> [reason]`", ephemeral=True)
+            await ctx.send("Use: `-voice ban <member> [reason]`", ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(f"Voice ban failed: {error}", ephemeral=True)
 
 class VcBanPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):

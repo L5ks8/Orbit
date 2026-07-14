@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
 from Commands.Warn._storage import get_user_warnings
+from Commands._utils import MemberOrIDConverter, format_usage
 
 class WarningsListLayout(LayoutView):
     def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
@@ -97,13 +98,15 @@ class CheckWarnsCog(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="checkwarns", aliases=["checkwarn", "warnings", "warnlist", "warnhistory"], description="Check all warnings issued to a member.")
-    async def checkwarn_cmd(self, ctx: commands.Context, user: discord.Member = None):
+    async def checkwarn_cmd(self, ctx: commands.Context, user: str = None):
+        if user is not None and not isinstance(user, discord.Member):
+            user = await MemberOrIDConverter().convert(ctx, str(user))
         await _do_warnings(ctx, user)
 
     @checkwarn_cmd.error
     async def checkwarns_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Could not find that member. Usage: `-checkwarns @user` or `/checkwarns user:@user`", ephemeral=True)
+            await ctx.send(f"{format_usage('-checkwarns', '<user_id>')}", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CheckWarnsCog(bot))
