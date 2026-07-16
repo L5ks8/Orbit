@@ -90,6 +90,13 @@ class AutoModListener(commands.Cog):
         if not config.get("enabled", False):
             return
 
+        global_channels = config.get("exempt_channels", [])
+        global_roles = config.get("exempt_roles", [])
+        if str(message.channel.id) in global_channels:
+            return
+        if any(str(r.id) in global_roles for r in message.author.roles):
+            return
+
         content_lower = message.content.lower()
         
         def is_exempt(cfg):

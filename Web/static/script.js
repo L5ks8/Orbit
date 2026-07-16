@@ -675,6 +675,9 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('automod_mention_spam_enabled').checked = currentAutomodConfig.mention_spam?.enabled || false;
         document.getElementById('automod_anti_alt_enabled').checked = currentAutomodConfig.anti_alt?.enabled || false;
 
+        new CustomMultiSelect(document.getElementById('automod_global_channels'), globalChannels, "Auswählen...", (item) => "# " + item.name).setValue(currentAutomodConfig.exempt_channels || []);
+        new CustomMultiSelect(document.getElementById('automod_global_roles'), globalRoles, "Auswählen...", (item) => "@ " + item.name).setValue(currentAutomodConfig.exempt_roles || []);
+
         // Verify
         if (!currentPermissions.can_roles) lockSection('section-verify', 'Manage Roles');
         document.getElementById('verify_enabled').checked = config.verify?.enabled || false;
@@ -1192,6 +1195,10 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     const btn = document.getElementById('btn-save');
     btn.innerText = 'Saving...';
     btn.disabled = true;
+
+    // Update AutoMod global options
+    currentAutomodConfig.exempt_channels = Array.from(document.getElementById('automod_global_channels').selectedOptions).map(o => o.value);
+    currentAutomodConfig.exempt_roles = Array.from(document.getElementById('automod_global_roles').selectedOptions).map(o => o.value);
 
     // Collect AutoResponder Data
     const localAutoresponder = {};
