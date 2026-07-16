@@ -210,7 +210,14 @@ class WebDashboard:
                 "enabled": ticket_cfg.get("enabled", False),
                 "panel_channel_id": str(ticket_cfg.get("panel_channel_id")) if ticket_cfg.get("panel_channel_id") else "",
                 "log_channel_id": str(ticket_cfg.get("log_channel_id")) if ticket_cfg.get("log_channel_id") else "",
-                "options_slots": ticket_cfg.get("options_slots", [])
+                "options_slots": [
+                    {
+                        "name": slot.get("name", ""),
+                        "role_id": str(slot.get("role_id")) if slot.get("role_id") else "",
+                        "category_id": str(slot.get("category_id")) if slot.get("category_id") else ""
+                    }
+                    for slot in ticket_cfg.get("options_slots", []) if isinstance(slot, dict)
+                ]
             }
         }
         
@@ -293,11 +300,43 @@ class WebDashboard:
                 ticket_cfg["log_channel_id"] = int(tlid) if tlid else None
                 
                 if "options_slots" in data["ticket"]:
-                    ticket_cfg["options_slots"] = data["ticket"]["options_slots"]
+                    parsed_slots = []
+                    for slot in data["ticket"]["options_slots"]:
+                        rid = slot.get("role_id")
+                        cid = slot.get("category_id")
+                        parsed_slots.append({
+                            "name": slot.get("name", "Option"),
+                            "role_id": int(rid) if rid else None,
+                            "category_id": int(cid) if cid else None
+                        })
+                    ticket_cfg["options_slots"] = parsed_slots
                     # Update 'options' list as well to keep backwards compatibility
-                    ticket_cfg["options"] = [s.get("name", "Option") for s in data["ticket"]["options_slots"] if isinstance(s, dict)]
+                    ticket_cfg["options"] = [s.get("name", "Option") for s in parsed_slots]
                 
                 save_ticket_config(guild_id, ticket_cfg)
+                
+                # Attempt to update the existing panel message dynamically
+                pid = ticket_cfg.get("panel_channel_id")
+                mid = ticket_cfg.get("panel_message_id")
+                if pid and mid:
+                    ch = guild.get_channel(pid)
+                    if ch:
+                        try:
+                            msg = await ch.fetch_message(mid)
+                            from Commands.Ticket._views import PersistentTicketPanelLayout
+                            view = PersistentTicketPanelLayout(
+                                title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
+                                description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
+                                options_slots=ticket_cfg.get("options_slots", [])
+                            )
+                            embed = discord.Embed(
+                                title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
+                                description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
+                                color=0x2b2d31
+                            )
+                            await msg.edit(embed=embed, view=view)
+                        except Exception:
+                            pass
             
             return web.json_response({"success": True})
         except Exception as e:
@@ -356,21 +395,26 @@ class WebDashboard:
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
                 
-            from Commands.Ticket._views import PersistentTicketLayout
+            from Commands.Ticket._views import PersistentTicketPanelLayout
             from Commands.Ticket._storage import load_ticket_config, save_ticket_config
             
             ticket_cfg = load_ticket_config(guild_id)
-            view = PersistentTicketLayout(guild_id)
+            view = PersistentTicketPanelLayout(
+                title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
+                description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
+                options_slots=ticket_cfg.get("options_slots", [])
+            )
             
             embed = discord.Embed(
                 title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
                 description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
                 color=0x2b2d31
             )
-            await channel.send(embed=embed, view=view)
+            msg = await channel.send(embed=embed, view=view)
             
             # Update storage
             ticket_cfg["panel_channel_id"] = channel.id
+            ticket_cfg["panel_message_id"] = msg.id
             save_ticket_config(guild_id, ticket_cfg)
             
             return web.json_response({"success": True})
