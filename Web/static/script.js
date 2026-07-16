@@ -779,6 +779,12 @@ async function loadConfig(guildId, guildName) {
         document.querySelectorAll('.custom-select').forEach(el => el.remove());
         document.querySelectorAll('.custom-multiselect').forEach(el => el.remove());
 
+        // Initialize Custom Selects for Logs
+        LOGS_CATEGORIES.forEach(cat => {
+            const selectedCh = config.logs?.channels?.[cat.id] || '';
+            new CustomSelect(document.getElementById(`log_cat_${cat.id}_channel`), globalChannels, selectedCh, '-- Disabled --', false);
+        });
+
         // Initialize Custom Selects for Roles
         new CustomSelect(document.getElementById('verify_role_id'), globalRoles, config.verify?.role_id || '', 'Select Verified Role...');
         new CustomSelect(document.getElementById('verify_remove_role_id'), globalRoles, config.verify?.remove_role_id || '', 'Select Unverified Role...');
