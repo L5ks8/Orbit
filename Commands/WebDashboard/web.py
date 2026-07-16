@@ -496,13 +496,14 @@ class WebDashboard:
                 l_cfg["global_exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
                 l_cfg["global_exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
                 
+                from Commands.Log._storage import DEFAULT_CATEGORIES
                 if "channels" in l_data and isinstance(l_data["channels"], dict):
-                    for k in l_cfg["channels"]:
+                    for k in DEFAULT_CATEGORIES:
                         c = l_data["channels"].get(k)
                         l_cfg["channels"][k] = int(c) if c else None
                 
                 if "categories" in l_data and isinstance(l_data["categories"], dict):
-                    for k in l_cfg["categories"]:
+                    for k in DEFAULT_CATEGORIES:
                         l_cfg["categories"][k] = bool(l_data["categories"].get(k, False))
                 
                 save_log_config(guild_id, l_cfg)
