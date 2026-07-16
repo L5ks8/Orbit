@@ -1160,3 +1160,11 @@ function showToast(msg) {
 }
 
 init();
+// Workaround for multiple selects on Windows to behave like toggles
+document.addEventListener('mousedown', function(e) {
+    if (e.target.tagName === 'OPTION' && e.target.parentElement.hasAttribute('multiple')) {
+        e.preventDefault();
+        e.target.selected = !e.target.selected;
+        e.target.parentElement.dispatchEvent(new Event('change'));
+    }
+});

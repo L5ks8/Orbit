@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
     --bg-color: #050505;
@@ -35,7 +35,7 @@ body {
     display: none;
 }
 
-/* ⚡ AutoMod Grid & Cards ⚡ */
+/* âš¡ AutoMod Grid & Cards âš¡ */
 .automod-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -82,7 +82,7 @@ body {
 
 .btn-edit-rule {
     background: var(--accent-color);
-    color: #fff;
+    color: var(--accent-color-text);
     border: none;
     border-radius: 6px;
     padding: 10px;
@@ -97,7 +97,7 @@ body {
     filter: brightness(1.1);
 }
 
-/* ⚡ Modal ⚡ */
+/* âš¡ Modal âš¡ */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -412,7 +412,6 @@ body {
     border: 1px solid rgba(255,255,255,0.1);
     padding: 13px 28px;
     border-radius: 8px;
-    font-weight: 600;
     font-size: 16px;
     display: inline-flex;
     align-items: center;
@@ -826,7 +825,7 @@ body {
     margin-bottom: 10px;
 }
 
-select, input[type="text"] {
+select, input[type="text"], input[type="number"] {
     width: 100%;
     background: #000000;
     border: 1px solid var(--border-color);
@@ -838,7 +837,7 @@ select, input[type="text"] {
     transition: border-color 0.2s;
 }
 
-select:focus, input[type="text"]:focus {
+select:focus, input[type="text"]:focus, input[type="number"]:focus {
     border-color: var(--text-primary);
 }
 
@@ -2313,7 +2312,7 @@ textarea:focus {
             }
         }
 
-/* ── AutoMod Cards ─────────────────────────────────── */
+/* â”€â”€ AutoMod Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .automod-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -2337,7 +2336,7 @@ textarea:focus {
     gap: 14px;
 }
 
-/* ── Image Dropzone ─────────────────────────────────── */
+/* â”€â”€ Image Dropzone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .image-dropzone {
     border: 2px dashed var(--border-color);
     border-radius: 8px;
@@ -2360,8 +2359,22 @@ textarea:focus {
     gap: 4px;
 }
 
-/* ── Channel Mention in Inputs ──────────────────────── */
+/* â”€â”€ Channel Mention in Inputs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .channel-mention-preview {
     color: #5865F2;
     font-weight: 500;
+}
+select[multiple] {
+    padding: 6px;
+    min-height: 120px;
+}
+select[multiple] option {
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    cursor: pointer;
+}
+select[multiple] option:checked {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
 }
