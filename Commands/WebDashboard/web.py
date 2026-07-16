@@ -209,9 +209,8 @@ class WebDashboard:
             "ticket": {
                 "enabled": ticket_cfg.get("enabled", False),
                 "panel_channel_id": str(ticket_cfg.get("panel_channel_id")) if ticket_cfg.get("panel_channel_id") else "",
-                "category_id": str(ticket_cfg.get("category_id")) if ticket_cfg.get("category_id") else "",
-                "support_role_id": str(ticket_cfg.get("support_role_id")) if ticket_cfg.get("support_role_id") else "",
-                "log_channel_id": str(ticket_cfg.get("log_channel_id")) if ticket_cfg.get("log_channel_id") else ""
+                "log_channel_id": str(ticket_cfg.get("log_channel_id")) if ticket_cfg.get("log_channel_id") else "",
+                "options_slots": ticket_cfg.get("options_slots", [])
             }
         }
         
@@ -290,14 +289,13 @@ class WebDashboard:
                 tid = data["ticket"].get("panel_channel_id")
                 ticket_cfg["panel_channel_id"] = int(tid) if tid else None
                 
-                tcid = data["ticket"].get("category_id")
-                ticket_cfg["category_id"] = int(tcid) if tcid else None
-                
-                trid = data["ticket"].get("support_role_id")
-                ticket_cfg["support_role_id"] = int(trid) if trid else None
-                
                 tlid = data["ticket"].get("log_channel_id")
                 ticket_cfg["log_channel_id"] = int(tlid) if tlid else None
+                
+                if "options_slots" in data["ticket"]:
+                    ticket_cfg["options_slots"] = data["ticket"]["options_slots"]
+                    # Update 'options' list as well to keep backwards compatibility
+                    ticket_cfg["options"] = [s.get("name", "Option") for s in data["ticket"]["options_slots"] if isinstance(s, dict)]
                 
                 save_ticket_config(guild_id, ticket_cfg)
             

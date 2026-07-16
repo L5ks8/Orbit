@@ -192,59 +192,30 @@ class CustomSelect {
 }
 
 let globalRoles = [];
+let globalCategories = [];
 
 function renderAutoReplies(replies) {
     const list = document.getElementById('autoreply-list');
     list.innerHTML = '';
     if (Object.keys(replies).length === 0) {
-        list.innerHTML = '<p style="color:var(--text-secondary);font-size:13px;">No auto-replies configured.</p>';
+        list.innerHTML = '<p style="color:var(--text-secondary); font-size:14px; margin:0;">No auto-replies configured.</p>';
         return;
     }
-    for (const [trigger, config] of Object.entries(replies)) {
-        addAutoReplyRow(trigger, config.response);
+
+    for (const [trigger, data] of Object.entries(replies)) {
+        addAutoReplyRow(trigger, data.response);
     }
 }
 
-function addAutoReplyRow(trigger = '', response = '') {
+function addAutoReplyRow(triggerText = '', responseText = '') {
     const list = document.getElementById('autoreply-list');
-    if (list.innerHTML.includes('No auto-replies')) list.innerHTML = '';
-    
+    if (list.querySelector('p')) list.innerHTML = ''; // Clear empty message
+
     const row = document.createElement('div');
     row.className = 'autoreply-row';
-    row.style = 'display:flex; gap:10px; align-items:center; background:#151515; padding:10px; border-radius:6px; border:1px solid var(--border-color)';
+    row.style.cssText = 'display: flex; gap: 10px; background: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);';
+    
     row.innerHTML = `
-        <input type="text" placeholder="Trigger word (e.g. !ip)" value="${trigger.replace(/"/g, '&quot;')}" class="ar-trigger" style="flex:1" required>
-        <input type="text" placeholder="Bot response" value="${response.replace(/"/g, '&quot;')}" class="ar-response" style="flex:2" required>
-        <button type="button" class="btn-secondary" style="padding:12px; color:#ff4444; border-color:#ff4444" onclick="this.parentElement.remove()">X</button>
-    `;
-    list.appendChild(row);
-}
-
-function renderJoinRoles(rolesList) {
-    const list = document.getElementById('joinrole-list');
-    list.innerHTML = '';
-    if (rolesList.length === 0) {
-        list.innerHTML = '<p style="color:var(--text-secondary);font-size:13px;">No join roles configured.</p>';
-        return;
-    }
-    rolesList.forEach(r => addJoinRoleRow(r));
-}
-
-function addJoinRoleRow(selectedRoleId = '') {
-    const list = document.getElementById('joinrole-list');
-    if (list.innerHTML.includes('No join roles')) list.innerHTML = '';
-    
-    const row = document.createElement('div');
-    row.style = 'display:flex; gap:10px; align-items:center;';
-    
-    const select = document.createElement('select');
-    select.className = 'jr-select';
-    select.style.flex = '1';
-    select.required = true;
-    
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn-secondary';
     btn.style = 'padding:12px; color:#ff4444; border-color:#ff4444';
     btn.innerText = 'X';
     btn.onclick = () => row.remove();
@@ -257,8 +228,92 @@ function addJoinRoleRow(selectedRoleId = '') {
 }
 
 document.getElementById('btn-add-autoreply').addEventListener('click', () => addAutoReplyRow());
-document.getElementById('btn-add-joinrole').addEventListener('click', () => addJoinRoleRow());
+document.getElementById('btn-add-joinrole').addEventListener('click', () => {
+    addJoinRoleRow();
+});
 
+function renderTicketOptions(optionsSlots) {
+    const list = document.getElementById('ticket-option-list');
+    list.innerHTML = '';
+    if (!optionsSlots || optionsSlots.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-secondary); font-size:14px; margin:0;">No ticket options configured.</p>';
+        return;
+    }
+
+    optionsSlots.forEach(slot => addTicketOptionRow(slot));
+}
+
+function addTicketOptionRow(slot = { name: '', role_id: '', category_id: '' }) {
+    const list = document.getElementById('ticket-option-list');
+    if (list.querySelector('p')) list.innerHTML = '';
+
+    const row = document.createElement('div');
+    row.className = 'ticket-option-row';
+    row.style.cssText = 'display: flex; gap: 10px; align-items: flex-end; background: var(--bg-color); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); flex-wrap: wrap;';
+    
+    // Name input
+    const nameGroup = document.createElement('div');
+    nameGroup.style.cssText = 'flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;';
+    nameGroup.innerHTML = `
+        <label style="font-size: 12px; color: var(--text-secondary);">Option Name</label>
+        <input type="text" class="to-name" value="${(slot.name || '').replace(/"/g, '&quot;')}" placeholder="e.g. Bug Report" style="background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none; height: 38px; box-sizing: border-box;">
+    `;
+    
+    // Role Select (Custom)
+    const roleGroup = document.createElement('div');
+    roleGroup.style.cssText = 'flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;';
+    const roleLabel = document.createElement('label');
+    roleLabel.style.cssText = 'font-size: 12px; color: var(--text-secondary);';
+    roleLabel.innerText = 'Support Role';
+    
+    const roleSelectContainer = document.createElement('div');
+    const roleHiddenInput = document.createElement('input');
+    roleHiddenInput.type = 'hidden';
+    roleHiddenInput.className = 'to-role';
+    roleSelectContainer.appendChild(roleHiddenInput);
+    
+    roleGroup.appendChild(roleLabel);
+    roleGroup.appendChild(roleSelectContainer);
+    
+    // Category Select (Native)
+    const catGroup = document.createElement('div');
+    catGroup.style.cssText = 'flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;';
+    let catOptionsHTML = '<option value="">Select Category...</option>';
+    globalCategories.forEach(c => {
+        const selected = (String(slot.category_id) === String(c.id)) ? 'selected' : '';
+        catOptionsHTML += `<option value="${c.id}" ${selected}>${c.name}</option>`;
+    });
+    
+    catGroup.innerHTML = `
+        <label style="font-size: 12px; color: var(--text-secondary);">Ticket Category</label>
+        <select class="to-category" style="background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none; height: 38px; box-sizing: border-box;">
+            ${catOptionsHTML}
+        </select>
+    `;
+    
+    // Remove Button
+    const btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.className = 'btn-danger';
+    btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
+    btnRemove.innerText = '×';
+    btnRemove.onclick = () => row.remove();
+    
+    row.appendChild(nameGroup);
+    row.appendChild(roleGroup);
+    row.appendChild(catGroup);
+    row.appendChild(btnRemove);
+    list.appendChild(row);
+    
+    // Initialize CustomSelect for the support role
+    new CustomSelect(roleHiddenInput, globalRoles, slot.role_id || '', 'Select Staff Role...');
+}
+
+document.getElementById('btn-add-ticket-option').addEventListener('click', () => {
+    addTicketOptionRow();
+});
+
+// LOAD CONFIGURATION
 async function loadConfig(guildId, guildName) {
     currentGuildId = guildId;
     document.getElementById('config-server-name').innerText = guildName;
@@ -271,8 +326,9 @@ async function loadConfig(guildId, guildName) {
         const res = await fetch(`/api/config/${guildId}`);
         const data = await res.json();
         globalRoles = data.roles;
+        globalCategories = data.categories || [];
 
-        // Populate normal selects (channels & categories)
+        // Populate normal selects (channels)
         const welcomeSelect = document.getElementById('welcome_channel_id');
         welcomeSelect.innerHTML = '<option value="">None</option>';
         const verifyPanelSelect = document.getElementById('verify_panel_channel');
@@ -286,12 +342,6 @@ async function loadConfig(guildId, guildName) {
             verifyPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
             ticketPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
             ticketLogSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
-        });
-
-        const ticketCategorySelect = document.getElementById('ticket_category_id');
-        ticketCategorySelect.innerHTML = '<option value="">None</option>';
-        data.categories.forEach(c => {
-            ticketCategorySelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
         });
 
         // Set values
@@ -315,7 +365,6 @@ async function loadConfig(guildId, guildName) {
         // Ticket
         document.getElementById('ticket_enabled').checked = config.ticket?.enabled || false;
         document.getElementById('ticket_panel_channel').value = config.ticket?.panel_channel_id || '';
-        document.getElementById('ticket_category_id').value = config.ticket?.category_id || '';
         document.getElementById('ticket_log_channel_id').value = config.ticket?.log_channel_id || '';
 
         // Clear existing custom selects
@@ -324,11 +373,11 @@ async function loadConfig(guildId, guildName) {
         // Initialize Custom Selects for Roles
         new CustomSelect(document.getElementById('verify_role_id'), globalRoles, config.verify?.role_id || '', 'Select Verified Role...');
         new CustomSelect(document.getElementById('verify_remove_role_id'), globalRoles, config.verify?.remove_role_id || '', 'Select Unverified Role...');
-        new CustomSelect(document.getElementById('ticket_support_role_id'), globalRoles, config.ticket?.support_role_id || '', 'Select Support Role...');
 
-        // AutoResponder & JoinRoles
+        // AutoResponder & JoinRoles & TicketOptions
         renderAutoReplies(config.autoresponder || {});
         renderJoinRoles(config.joinroles || []);
+        renderTicketOptions(config.ticket?.options_slots || []);
         
         // Initial Preview Update
         updateLivePreview();
@@ -488,6 +537,21 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         if (val) joinroles.push(val);
     });
 
+    // Collect Ticket Options Data
+    const ticketOptions = [];
+    document.querySelectorAll('.ticket-option-row').forEach(row => {
+        const name = row.querySelector('.to-name').value.trim();
+        const role_id = row.querySelector('.to-role').value;
+        const category_id = row.querySelector('.to-category').value;
+        if (name) {
+            ticketOptions.push({
+                name: name,
+                role_id: role_id ? Number(role_id) : null,
+                category_id: category_id ? Number(category_id) : null
+            });
+        }
+    });
+
     const payload = {
         welcome: {
             enabled: document.getElementById('welcome_enabled').checked,
@@ -509,9 +573,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         ticket: {
             enabled: document.getElementById('ticket_enabled').checked,
             panel_channel_id: document.getElementById('ticket_panel_channel').value,
-            category_id: document.getElementById('ticket_category_id').value,
-            support_role_id: document.getElementById('ticket_support_role_id').value,
-            log_channel_id: document.getElementById('ticket_log_channel_id').value
+            log_channel_id: document.getElementById('ticket_log_channel_id').value,
+            options_slots: ticketOptions
         },
         autoresponder: autoresponder,
         joinroles: joinroles

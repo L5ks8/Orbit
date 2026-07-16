@@ -295,21 +295,19 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Ticket Category</label>
-                                <span class="help-text">Under which category should new ticket channels be created?</span>
-                                <select id="ticket_category_id"></select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Support Role</label>
-                                <span class="help-text">Which role is allowed to view and manage tickets?</span>
-                                <select id="ticket_support_role_id"></select>
-                            </div>
-
-                            <div class="form-group">
                                 <label>Ticket Log Channel</label>
                                 <span class="help-text">Where should ticket transcripts and logs be saved when closed?</span>
                                 <select id="ticket_log_channel_id"></select>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 10px;">
+                                <h3>Ticket Options Builder</h3>
+                                <button type="button" id="btn-add-ticket-option" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">+ Add Option</button>
+                            </div>
+                            <p>Create multiple ticket categories (e.g. General Support, Bug Report). Users will choose from these before opening a ticket.</p>
+                            
+                            <div id="ticket-option-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                <!-- Populated by JS -->
                             </div>
                         </div>
 
