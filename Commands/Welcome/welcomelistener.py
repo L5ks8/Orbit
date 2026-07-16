@@ -47,11 +47,8 @@ class WelcomeListener(commands.Cog):
         image_url = config.get("image_url", "")
         if image_url:
             if image_url.startswith("/static/"):
-                # It's a locally uploaded file via the dashboard
                 bg_path = pathlib.Path("Web") / image_url.lstrip("/")
             elif image_url.startswith("http"):
-                # External URL, download it to a temp file or similar
-                # For simplicity in this bot, we'll try to download it to a temp path
                 import tempfile
                 try:
                     async with aiohttp.ClientSession() as session:
