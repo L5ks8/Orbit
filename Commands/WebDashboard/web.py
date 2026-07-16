@@ -662,6 +662,9 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application(client_max_size=10 * 1024 * 1024)  # 10 MB max upload
     
+    import pathlib
+    pathlib.Path("Storage/uploads").mkdir(parents=True, exist_ok=True)
+    
     app.router.add_get("/", dashboard.handle_index)
     app.router.add_static("/static", "Web/static")
     app.router.add_static("/api/uploads", "Storage/uploads")
