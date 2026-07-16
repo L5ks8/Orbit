@@ -566,27 +566,6 @@ function updateLivePreview() {
 document.getElementById('welcome_message').addEventListener('input', updateLivePreview);
 document.getElementById('welcome_image_url').addEventListener('input', updateLivePreview);
 
-document.getElementById('btn-send-verify').addEventListener('click', async () => {
-    if (!currentGuildId) return;
-    const channelId = document.getElementById('verify_panel_channel').value;
-    if (!channelId) {
-        showToast("Please select a channel to send the panel to.");
-        return;
-    }
-    
-    try {
-        const res = await fetch(`/api/action/${currentGuildId}/send_verify_panel`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ channel_id: channelId })
-        });
-        if (res.ok) showToast("Verify Panel sent successfully!");
-        else showToast("Failed to send Verify Panel.");
-    } catch (e) {
-        showToast("Error sending panel.");
-    }
-});
-
 document.getElementById('btn-send-ticket').addEventListener('click', async () => {
     if (!currentGuildId) return;
     const channelId = document.getElementById('ticket_panel_channel').value;
