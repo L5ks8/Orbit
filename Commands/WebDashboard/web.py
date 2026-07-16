@@ -530,6 +530,24 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 
+    async def api_support_invite(self, request: web.Request):
+        """Generate a fresh Discord invite for the support server."""
+        SUPPORT_GUILD_ID = 1525603130358759575
+        guild = self.bot.get_guild(SUPPORT_GUILD_ID)
+        if not guild:
+            return web.json_response({"error": "Support guild not found"}, status=404)
+        try:
+            # Find the first text channel we can create an invite in
+            for channel in guild.text_channels:
+                try:
+                    invite = await channel.create_invite(max_age=86400, max_uses=1, unique=True, reason="Website support invite")
+                    return web.json_response({"url": invite.url})
+                except Exception:
+                    continue
+            return web.json_response({"error": "No suitable channel found"}, status=500)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application(client_max_size=10 * 1024 * 1024)  # 10 MB max upload
@@ -549,5 +567,6 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
     app.router.add_post("/api/upload/image", dashboard.api_upload_image)
+    app.router.add_get("/api/support-invite", dashboard.api_support_invite)
     
     return app

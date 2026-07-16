@@ -35,14 +35,37 @@ async function init() {
                 <span style="font-weight:600">${currentUser.username}</span>
                 <a href="/auth/logout" class="btn-secondary" style="padding: 6px 12px; margin-left: 10px;">Logout</a>
             `;
-            document.getElementById('btn-hero-login').innerText = "Go to Dashboard";
-            document.getElementById('btn-hero-login').onclick = loadDashboard;
+            const heroBtn = document.getElementById('btn-hero-login');
+            if (heroBtn) { heroBtn.innerHTML = 'Go to Dashboard <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; heroBtn.onclick = loadDashboard; }
         } else {
-            document.getElementById('btn-hero-login').onclick = () => window.location.href = '/auth/login';
-            document.getElementById('btn-login').onclick = () => window.location.href = '/auth/login';
+            const heroBtn = document.getElementById('btn-hero-login');
+            if (heroBtn) heroBtn.onclick = () => window.location.href = '/auth/login';
+            const loginBtn = document.getElementById('btn-login');
+            if (loginBtn) loginBtn.onclick = () => window.location.href = '/auth/login';
         }
+        // Footer login button
+        const footerLogin = document.getElementById('btn-footer-login');
+        if (footerLogin) footerLogin.onclick = currentUser ? loadDashboard : () => window.location.href = '/auth/login';
     } catch (e) {
         console.error("Init error", e);
+    }
+}
+
+async function openSupportInvite() {
+    const btn = document.getElementById('btn-support-invite');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    try {
+        const res = await fetch('/api/support-invite');
+        const data = await res.json();
+        if (data.url) {
+            window.open(data.url, '_blank', 'noopener');
+        } else {
+            showToast('Could not generate invite link.');
+        }
+    } catch (e) {
+        showToast('Failed to connect to support server.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.style.opacity = ''; }
     }
 }
 
