@@ -102,6 +102,8 @@ class CustomSelect {
         
         this.items = items;
         this.value = selectedValue || '';
+        this.placeholder = placeholder || 'Select...';
+        this.select.value = this.value;
         
         this.container = document.createElement('div');
         this.container.className = 'custom-select';

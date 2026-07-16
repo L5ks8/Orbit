@@ -349,7 +349,7 @@ class WebDashboard:
                                 description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
                                 options_slots=ticket_cfg.get("options_slots", [])
                             )
-                            await msg.edit(view=view, embed=None)
+                            await msg.edit(view=view, allowed_mentions=discord.AllowedMentions.none())
                         except Exception:
                             pass
             

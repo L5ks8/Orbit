@@ -1339,8 +1339,8 @@ input:checked + .slider:before {
         /* Main Content */
         .dash-main {
             background: var(--bg-card);
-            padding: 32px;
-            overflow: hidden;
+            padding: 32px 32px 250px 32px;
+            overflow: visible;
         }
 
         .dash-main-header {
