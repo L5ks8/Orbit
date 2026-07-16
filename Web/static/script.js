@@ -458,6 +458,8 @@ async function loadConfig(guildId, guildName) {
         // Ticket
         if (!currentPermissions.can_channels) lockSection('section-ticket', 'Manage Channels');
         document.getElementById('ticket_enabled').checked = config.ticket?.enabled || false;
+        document.getElementById('ticket_panel_title').value = config.ticket?.panel_title || 'Support Ticket Desk';
+        document.getElementById('ticket_panel_description').value = config.ticket?.panel_description || 'Click the button below to open a direct support channel with our team.';
         document.getElementById('ticket_panel_channel').value = config.ticket?.panel_channel_id || '';
         document.getElementById('ticket_log_channel_id').value = config.ticket?.log_channel_id || '';
 
@@ -492,7 +494,7 @@ async function loadConfig(guildId, guildName) {
 document.getElementById('btn-send-verify').addEventListener('click', async () => {
     const channelId = document.getElementById('verify_panel_channel').value;
     if (!channelId) {
-        alert("Please select a channel first.");
+        showToast("Please select a channel first.");
         return;
     }
     
@@ -508,13 +510,13 @@ document.getElementById('btn-send-verify').addEventListener('click', async () =>
         });
         
         if (res.ok) {
-            alert('Verification Panel successfully sent to the channel!');
+            showToast('Verification Panel successfully sent to the channel!');
         } else {
             const data = await res.json();
-            alert('Failed: ' + (data.error || 'Unknown error'));
+            showToast('Failed: ' + (data.error || 'Unknown error'));
         }
     } catch (e) {
-        alert('An error occurred.');
+        showToast('An error occurred.');
     } finally {
         btn.innerText = 'Send Panel';
         btn.disabled = false;
@@ -567,7 +569,7 @@ document.getElementById('btn-send-verify').addEventListener('click', async () =>
     if (!currentGuildId) return;
     const channelId = document.getElementById('verify_panel_channel').value;
     if (!channelId) {
-        alert("Please select a channel to send the panel to.");
+        showToast("Please select a channel to send the panel to.");
         return;
     }
     
@@ -577,10 +579,10 @@ document.getElementById('btn-send-verify').addEventListener('click', async () =>
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ channel_id: channelId })
         });
-        if (res.ok) alert("Verify Panel sent successfully!");
-        else alert("Failed to send Verify Panel.");
+        if (res.ok) showToast("Verify Panel sent successfully!");
+        else showToast("Failed to send Verify Panel.");
     } catch (e) {
-        alert("Error sending panel.");
+        showToast("Error sending panel.");
     }
 });
 
@@ -588,7 +590,7 @@ document.getElementById('btn-send-ticket').addEventListener('click', async () =>
     if (!currentGuildId) return;
     const channelId = document.getElementById('ticket_panel_channel').value;
     if (!channelId) {
-        alert("Please select a channel to send the ticket panel to.");
+        showToast("Please select a channel to send the ticket panel to.");
         return;
     }
     
@@ -598,10 +600,10 @@ document.getElementById('btn-send-ticket').addEventListener('click', async () =>
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ channel_id: channelId })
         });
-        if (res.ok) alert("Ticket Panel sent successfully!");
-        else alert("Failed to send Ticket Panel.");
+        if (res.ok) showToast("Ticket Panel sent successfully!");
+        else showToast("Failed to send Ticket Panel.");
     } catch (e) {
-        alert("Error sending panel.");
+        showToast("Error sending panel.");
     }
 });
 
@@ -666,6 +668,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         },
         ticket: {
             enabled: document.getElementById('ticket_enabled').checked,
+            panel_title: document.getElementById('ticket_panel_title').value,
+            panel_description: document.getElementById('ticket_panel_description').value,
             panel_channel_id: document.getElementById('ticket_panel_channel').value,
             log_channel_id: document.getElementById('ticket_log_channel_id').value,
             options_slots: ticketOptions
@@ -682,21 +686,22 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         });
         
         if (res.ok) {
-            alert('Settings saved successfully!');
+            showToast('Settings saved successfully!');
         } else {
             const data = await res.json();
-            alert('Error: ' + (data.error || 'Unknown error'));
+            showToast('Error: ' + (data.error || 'Unknown error'));
         }
     } catch (e) {
-        alert('An error occurred while saving.');
+        showToast('An error occurred while saving.');
     } finally {
         btn.innerText = 'Save Changes';
         btn.disabled = false;
     }
 });
 
-function showToast() {
+function showToast(msg) {
     const toast = document.getElementById('toast');
+    if (msg) toast.innerText = msg;
     toast.classList.add('show');
     setTimeout(() => {
         toast.classList.remove('show');

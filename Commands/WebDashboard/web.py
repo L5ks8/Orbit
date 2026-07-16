@@ -224,6 +224,8 @@ class WebDashboard:
             "joinroles": [str(r) for r in joinroles_cfg],
             "ticket": {
                 "enabled": ticket_cfg.get("enabled", False),
+                "panel_title": ticket_cfg.get("panel_title", ""),
+                "panel_description": ticket_cfg.get("panel_description", ""),
                 "panel_channel_id": str(ticket_cfg.get("panel_channel_id")) if ticket_cfg.get("panel_channel_id") else "",
                 "log_channel_id": str(ticket_cfg.get("log_channel_id")) if ticket_cfg.get("log_channel_id") else "",
                 "options_slots": [
@@ -312,6 +314,13 @@ class WebDashboard:
                 from Commands.Ticket._storage import load_ticket_config, save_ticket_config
                 ticket_cfg = load_ticket_config(guild_id)
                 ticket_cfg["enabled"] = bool(data["ticket"].get("enabled"))
+                
+                title = data["ticket"].get("panel_title", "").strip()
+                if title:
+                    ticket_cfg["panel_title"] = title
+                desc = data["ticket"].get("panel_description", "").strip()
+                if desc:
+                    ticket_cfg["panel_description"] = desc
                 
                 tid = data["ticket"].get("panel_channel_id")
                 ticket_cfg["panel_channel_id"] = int(tid) if tid else None
