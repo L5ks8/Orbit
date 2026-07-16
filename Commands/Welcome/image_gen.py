@@ -5,6 +5,8 @@ import tempfile
 from PIL import Image, ImageDraw, ImageFont
 
 DEFAULT_BG_URL = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"
+FONT_BOLD_ITALIC_URL = "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-BlackItalic.ttf"
+FONT_REGULAR_URL = "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Medium.ttf"
 
 def _get_default_bg() -> Image.Image:
     temp_dir = pathlib.Path(tempfile.gettempdir())
@@ -21,8 +23,23 @@ def _get_default_bg() -> Image.Image:
     except Exception:
         return Image.new("RGBA", (800, 300), (43, 45, 49, 255))
 
+def _get_font(url: str, filename: str, size: int) -> ImageFont.FreeTypeFont:
+    temp_dir = pathlib.Path(tempfile.gettempdir())
+    font_path = temp_dir / filename
+    if not font_path.exists():
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as response, open(font_path, 'wb') as out_file:
+                out_file.write(response.read())
+        except Exception:
+            pass
+    try:
+        return ImageFont.truetype(str(font_path), size)
+    except Exception:
+        return ImageFont.load_default()
+
 def generate_welcome_image(avatar_bytes: bytes, background_path: pathlib.Path, username: str) -> io.BytesIO:
-    # 1. Load Background or use default unsplash image
+    # 1. Load Background
     if background_path.exists() and background_path.name != "nonexistent.png":
         try:
             bg = Image.open(background_path).convert("RGBA")
@@ -47,9 +64,9 @@ def generate_welcome_image(avatar_bytes: bytes, background_path: pathlib.Path, u
     try:
         avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
     except Exception:
-        avatar = Image.new("RGBA", (140, 140), (88, 101, 242, 255))
+        avatar = Image.new("RGBA", (160, 160), (88, 101, 242, 255))
         
-    avatar_size = 140
+    avatar_size = 160
     avatar = avatar.resize((avatar_size, avatar_size))
     
     # 4. Create Circle Mask for Avatar
@@ -68,31 +85,24 @@ def generate_welcome_image(avatar_bytes: bytes, background_path: pathlib.Path, u
     avatar_with_border.paste(circle_avatar, (border_size//2, border_size//2), circle_avatar)
     
     # 5. Paste Avatar onto Background
-    left_padding = 50
-    bg.paste(avatar_with_border, (left_padding, 35), avatar_with_border)
+    left_padding = 60
+    top_padding = 15
+    bg.paste(avatar_with_border, (left_padding, top_padding), avatar_with_border)
     
     # 6. Add Text
     draw = ImageDraw.Draw(bg)
-    try:
-        font_large = ImageFont.truetype("arialbi.ttf", 60) # Arial Bold Italic
-    except Exception:
-        try:
-            font_large = ImageFont.truetype("arial.ttf", 60)
-        except Exception:
-            font_large = ImageFont.load_default()
-            
-    try:
-        font_small = ImageFont.truetype("arial.ttf", 32)
-    except Exception:
-        font_small = ImageFont.load_default()
+    font_large = _get_font(FONT_BOLD_ITALIC_URL, "orbit_font_bold_italic.ttf", 48)
+    font_small = _get_font(FONT_REGULAR_URL, "orbit_font_regular.ttf", 32)
         
     # Draw "WELCOME"
     welcome_text = "WELCOME"
-    draw.text((left_padding, 190), welcome_text, fill=(255, 255, 255, 255), font=font_large)
+    welcome_top = top_padding + avatar_size + 20
+    draw.text((left_padding, welcome_top), welcome_text, fill=(255, 255, 255, 255), font=font_large)
     
     # Draw Username
     u_text = f"@{username}"
-    draw.text((left_padding + 5, 255), u_text, fill=(255, 255, 255, 200), font=font_small)
+    user_top = welcome_top + 48 + 5
+    draw.text((left_padding, user_top), u_text, fill=(255, 255, 255, 200), font=font_small)
     
     # 7. Save to BytesIO
     out = io.BytesIO()
