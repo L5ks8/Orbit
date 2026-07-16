@@ -1,18 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --bg-base: #060608;
-    --bg-surface: rgba(20, 20, 25, 0.4);
-    --bg-surface-hover: rgba(30, 30, 40, 0.6);
-    --bg-panel: rgba(15, 15, 20, 0.7);
+    --bg-base: #111111;
+    --bg-surface: rgba(255, 255, 255, 0.04);
+    --bg-surface-hover: rgba(255, 255, 255, 0.08);
+    --bg-panel: rgba(30, 30, 30, 0.8);
+    --bg-tertiary: #1f1f1f;
     
-    --border-subtle: rgba(255, 255, 255, 0.04);
-    --border-medium: rgba(255, 255, 255, 0.1);
-    --border-active: rgba(88, 101, 242, 0.5);
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-medium: rgba(255, 255, 255, 0.12);
+    --border-active: rgba(255, 255, 255, 0.3);
     
-    --text-primary: #ffffff;
-    --text-secondary: #a1a5ab;
-    --text-muted: #6b6f76;
+    --text-primary: #f0f0f0;
+    --text-secondary: #a0a0a0;
+    --text-muted: #6b6b6b;
     
     --accent-primary: #5865F2;
     --accent-hover: #4752c4;
@@ -28,8 +29,8 @@
     --radius-pill: 9999px;
     
     --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
     
     --transition-fast: 0.15s ease;
     --transition-smooth: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -61,17 +62,17 @@ body {
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-    background: radial-gradient(circle at 50% 0%, rgba(88, 101, 242, 0.05) 0%, transparent 60%);
+    background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.02) 0%, transparent 60%);
 }
 .ambient-orb {
     position: absolute;
     border-radius: 50%;
     filter: blur(140px);
-    opacity: 0.4;
+    opacity: 0.15;
     z-index: -1;
 }
-.orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #5865F2; animation: float1 20s infinite alternate; }
-.orb-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #9b59b6; animation: float2 25s infinite alternate; }
+.orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #ffffff; animation: float1 20s infinite alternate; }
+.orb-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #a0a0a0; animation: float2 25s infinite alternate; }
 
 @keyframes float1 { 0% { transform: translate(0, 0); } 100% { transform: translate(10%, 10%); } }
 @keyframes float2 { 0% { transform: translate(0, 0); } 100% { transform: translate(-10%, -10%); } }
