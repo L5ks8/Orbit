@@ -28,6 +28,35 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
+DEV_ERROR_CHANNEL_ID = 1527101969750167743
+
+async def send_dev_error(bot, source: str, error):
+    try:
+        channel = bot.get_channel(DEV_ERROR_CHANNEL_ID)
+        if not channel:
+            channel = await bot.fetch_channel(DEV_ERROR_CHANNEL_ID)
+        if not channel:
+            return
+        
+        import traceback
+        if isinstance(error, Exception):
+            tb_lines = traceback.format_exception(type(error), error, error.__traceback__)
+            err_str = "".join(tb_lines)[:1800]
+            msg = str(error)[:300]
+        else:
+            err_str = str(error)[:1800]
+            msg = str(error)[:300]
+            
+        embed = discord.Embed(
+            title="⚠️ System Error Captured", 
+            description=f"**Source:** {source}\n**Message:** {msg}", 
+            color=discord.Color.red()
+        )
+        embed.add_field(name="Traceback", value=f"```python\n{err_str}\n```", inline=False)
+        await channel.send(embed=embed)
+    except Exception:
+        pass
+
 class DevmodeNoticeLayout(discord.ui.LayoutView):
     def __init__(self, reason: str):
         super().__init__()
@@ -72,7 +101,9 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
         try:
             from Commands.OwnerOnly._monitor import record_error
             cmd_name = interaction.command.name if interaction.command else "Component/Modal"
-            record_error(f"AppCommand/UI Error [{cmd_name}]", getattr(error, "original", error))
+            error_val = getattr(error, "original", error)
+            record_error(f"AppCommand/UI Error [{cmd_name}]", error_val)
+            await send_dev_error(interaction.client, f"AppCommand/UI Error [{cmd_name}]", error_val)
         except Exception:
             pass
         try:
@@ -136,7 +167,9 @@ class OrbitBot(commands.Bot):
         async def _global_view_error(view_self, error, item, interaction: discord.Interaction):
             try:
                 from Commands.OwnerOnly._monitor import record_error
-                record_error(f"UI View Error [{view_self.__class__.__name__} -> {item.__class__.__name__}]", error)
+                source_name = f"UI View Error [{view_self.__class__.__name__} -> {item.__class__.__name__}]"
+                record_error(source_name, error)
+                await send_dev_error(interaction.client, source_name, error)
             except Exception:
                 pass
             await _old_view_error(view_self, error, item, interaction)
@@ -146,7 +179,9 @@ class OrbitBot(commands.Bot):
         async def _global_modal_error(modal_self, error, interaction: discord.Interaction):
             try:
                 from Commands.OwnerOnly._monitor import record_error
-                record_error(f"UI Modal Error [{modal_self.__class__.__name__}]", error)
+                source_name = f"UI Modal Error [{modal_self.__class__.__name__}]"
+                record_error(source_name, error)
+                await send_dev_error(interaction.client, source_name, error)
             except Exception:
                 pass
             await _old_modal_error(modal_self, error, interaction)
@@ -174,7 +209,9 @@ class OrbitBot(commands.Bot):
             import sys
             exc_type, exc_value, exc_tb = sys.exc_info()
             if exc_value:
-                record_error(f"Event Error [{event_method}]", exc_value)
+                source_name = f"Event Error [{event_method}]"
+                record_error(source_name, exc_value)
+                await send_dev_error(self, source_name, exc_value)
         except Exception:
             pass
         await super().on_error(event_method, *args, **kwargs)
@@ -204,7 +241,9 @@ class OrbitBot(commands.Bot):
             return
         try:
             from Commands.OwnerOnly._monitor import record_error
-            record_error("Command Error", getattr(error, "original", error))
+            error_val = getattr(error, "original", error)
+            record_error("Command Error", error_val)
+            await send_dev_error(ctx.bot, "Command Error", error_val)
         except Exception:
             pass
         raise error

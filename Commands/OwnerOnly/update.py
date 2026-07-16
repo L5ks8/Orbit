@@ -114,6 +114,14 @@ class UpdateLaunchLayout(LayoutView):
             style=discord.ButtonStyle.primary,
             custom_id="orbit:owner_update_open"
         )
+        
+        async def _open_modal(interaction: discord.Interaction):
+            if not await interaction.client.is_owner(interaction.user):
+                return await interaction.response.send_message("You are not authorized to post updates.", ephemeral=True)
+            await interaction.response.send_modal(UpdatePostModal())
+            
+        btn_open.callback = _open_modal
+        
         self.add_item(
             Container(
                 TextDisplay(content="### Orbit Update Studio"),
@@ -149,23 +157,6 @@ class UpdateCommand(commands.Cog):
         else:
             try:
                 await ctx.send(f"Update command error: `{error}`", delete_after=10.0)
-            except Exception:
-                pass
-
-    @commands.Cog.listener()
-    async def on_interaction(self, interaction: discord.Interaction):
-        if interaction.type != discord.InteractionType.component:
-            return
-        custom_id = interaction.data.get("custom_id", "")
-        if custom_id == "orbit:owner_update_open":
-            if interaction.response.is_done():
-                return
-            if not await interaction.client.is_owner(interaction.user):
-                return await interaction.response.send_message("You are not authorized to post updates.", ephemeral=True)
-            if interaction.response.is_done():
-                return
-            try:
-                await interaction.response.send_modal(UpdatePostModal())
             except Exception:
                 pass
 
