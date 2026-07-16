@@ -609,7 +609,7 @@ textarea {
     outline: none;
     transition: border-color 0.2s;
     font-family: inherit;
-    resize: vertical;
+    resize: none;
 }
 
 textarea:focus {
