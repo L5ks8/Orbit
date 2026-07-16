@@ -1,4 +1,4 @@
-let currentUser = null;
+﻿let currentUser = null;
 let currentGuildId = null;
 let currentAutomodConfig = {};
 let activeAutomodRule = null;
@@ -6,26 +6,26 @@ let autoresponder = {};
 let joinroles = [];
 
 const LOGS_CATEGORIES = [
-    { id: "moderation_action", title: "Moderationsaktion", icon: "🛡️" },
-    { id: "auto_moderation", title: "Auto Moderation", icon: "🤖" },
-    { id: "message_deleted", title: "Nachricht Gelöscht", icon: "🗑️" },
-    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "✏️" },
-    { id: "bulk_message_delete", title: "Massenlöschung", icon: "🧹" },
-    { id: "member_joined", title: "Mitglied Beigetreten", icon: "👋" },
-    { id: "member_left", title: "Mitglied Verlassen", icon: "🚶" },
-    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "🎤" },
-    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "🔇" },
-    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "🎧" },
-    { id: "role_created", title: "Rolle Erstellt", icon: "🎭" },
-    { id: "role_deleted", title: "Rolle Gelöscht", icon: "🔥" },
-    { id: "role_updated", title: "Rolle Aktualisiert", icon: "⚙️" },
-    { id: "channel_created", title: "Kanal Erstellt", icon: "📁" },
-    { id: "channel_deleted", title: "Kanal Gelöscht", icon: "❌" },
-    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "🔄" },
-    { id: "scheduled_event_created", title: "Event Erstellt", icon: "📅" },
-    { id: "scheduled_event_deleted", title: "Event Gelöscht", icon: "💥" },
-    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "📝" },
-    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "⌨️" }
+    { id: "moderation_action", title: "Moderationsaktion", icon: "ðŸ›¡ï¸" },
+    { id: "auto_moderation", title: "Auto Moderation", icon: "ðŸ¤–" },
+    { id: "message_deleted", title: "Nachricht GelÃ¶scht", icon: "ðŸ—‘ï¸" },
+    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "âœï¸" },
+    { id: "bulk_message_delete", title: "MassenlÃ¶schung", icon: "ðŸ§¹" },
+    { id: "member_joined", title: "Mitglied Beigetreten", icon: "ðŸ‘‹" },
+    { id: "member_left", title: "Mitglied Verlassen", icon: "ðŸš¶" },
+    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "ðŸŽ¤" },
+    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "ðŸ”‡" },
+    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "ðŸŽ§" },
+    { id: "role_created", title: "Rolle Erstellt", icon: "ðŸŽ­" },
+    { id: "role_deleted", title: "Rolle GelÃ¶scht", icon: "ðŸ”¥" },
+    { id: "role_updated", title: "Rolle Aktualisiert", icon: "âš™ï¸" },
+    { id: "channel_created", title: "Kanal Erstellt", icon: "ðŸ“" },
+    { id: "channel_deleted", title: "Kanal GelÃ¶scht", icon: "âŒ" },
+    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "ðŸ”„" },
+    { id: "scheduled_event_created", title: "Event Erstellt", icon: "ðŸ“…" },
+    { id: "scheduled_event_deleted", title: "Event GelÃ¶scht", icon: "ðŸ’¥" },
+    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "ðŸ“" },
+    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "âŒ¨ï¸" }
 ];
 
 // Views
@@ -209,9 +209,9 @@ class CustomSelect {
     updateTrigger(placeholder) {
         const item = this.items.find(i => i.id === this.value);
         if (item) {
-            this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <span style="font-size:10px">▼</span>`;
+            this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <span style="font-size:10px">â–¼</span>`;
         } else {
-            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <span style="font-size:10px">▼</span>`;
+            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <span style="font-size:10px">â–¼</span>`;
         }
         this.select.value = this.value;
     }
@@ -240,6 +240,136 @@ class CustomSelect {
             });
             this.optionsContainer.appendChild(opt);
         });
+    }
+}
+
+class CustomMultiSelect {
+    constructor(selectElement, items, placeholder, renderTag) {
+        this.select = selectElement;
+        this.select.style.display = 'none';
+        
+        this.items = items;
+        this.placeholder = placeholder || 'Auswählen...';
+        this.renderTag = renderTag || ((item) => item.name);
+        
+        this.container = document.createElement('div');
+        this.container.className = 'custom-multiselect';
+        
+        this.trigger = document.createElement('div');
+        this.trigger.className = 'custom-multiselect-trigger';
+        
+        this.tagsContainer = document.createElement('div');
+        this.tagsContainer.className = 'custom-multiselect-tags';
+        
+        this.searchInput = document.createElement('input');
+        this.searchInput.type = 'text';
+        this.searchInput.placeholder = this.placeholder;
+        this.searchInput.className = 'custom-multiselect-input';
+        
+        this.trigger.appendChild(this.tagsContainer);
+        this.trigger.appendChild(this.searchInput);
+        
+        this.dropdown = document.createElement('div');
+        this.dropdown.className = 'custom-select-dropdown';
+        
+        this.optionsContainer = document.createElement('div');
+        this.optionsContainer.className = 'custom-select-options';
+        this.dropdown.appendChild(this.optionsContainer);
+        
+        this.container.appendChild(this.trigger);
+        this.container.appendChild(this.dropdown);
+        this.select.parentNode.insertBefore(this.container, this.select.nextSibling);
+        
+        this.renderTags();
+        this.renderOptions('');
+        
+        this.container.addEventListener('click', (e) => {
+            if (e.target.closest('.cm-tag-remove')) return;
+            const isOpen = this.container.classList.contains('open');
+            document.querySelectorAll('.custom-multiselect').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
+            if (!isOpen) {
+                this.container.classList.add('open');
+                this.searchInput.focus();
+            }
+        });
+        
+        this.searchInput.addEventListener('input', (e) => {
+            this.renderOptions(e.target.value.toLowerCase());
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!this.container.contains(e.target)) {
+                this.container.classList.remove('open');
+                this.searchInput.value = '';
+                this.renderOptions('');
+            }
+        });
+    }
+    
+    renderTags() {
+        this.tagsContainer.innerHTML = '';
+        const selectedValues = Array.from(this.select.selectedOptions).map(o => o.value);
+        
+        if (selectedValues.length > 0) {
+            this.searchInput.placeholder = '';
+        } else {
+            this.searchInput.placeholder = this.placeholder;
+        }
+
+        selectedValues.forEach(val => {
+            const item = this.items.find(i => i.id === val);
+            if (!item) return;
+            
+            const tag = document.createElement('div');
+            tag.className = 'cm-tag';
+            tag.innerHTML = this.renderTag(item) + ' <span class="cm-tag-remove" data-id="' + item.id + '">&times;</span>';
+            this.tagsContainer.appendChild(tag);
+            
+            tag.querySelector('.cm-tag-remove').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleOption(item.id, false);
+            });
+        });
+    }
+    
+    renderOptions(filter) {
+        this.optionsContainer.innerHTML = '';
+        const selectedValues = Array.from(this.select.selectedOptions).map(o => o.value);
+        
+        let count = 0;
+        this.items.forEach(item => {
+            if (selectedValues.includes(item.id)) return;
+            if (filter && !item.name.toLowerCase().includes(filter)) return;
+            
+            const optEl = document.createElement('div');
+            optEl.className = 'custom-select-option';
+            optEl.innerHTML = this.renderTag(item);
+            
+            optEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleOption(item.id, true);
+                this.searchInput.value = '';
+                this.renderOptions('');
+                this.searchInput.focus();
+            });
+            this.optionsContainer.appendChild(optEl);
+            count++;
+        });
+        
+        if (count === 0) {
+            this.optionsContainer.innerHTML = '<div class="custom-select-option" style="color:var(--text-muted); cursor:default;">No results</div>';
+        }
+    }
+    
+    toggleOption(id, selectIt) {
+        const option = Array.from(this.select.options).find(o => o.value === id);
+        if (option) {
+            option.selected = selectIt;
+            this.renderTags();
+            this.renderOptions(this.searchInput.value.toLowerCase());
+            this.select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 }
 
@@ -319,7 +449,7 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
     topRow.innerHTML = `
         <input type="text" class="ar-trigger" value="${triggerText.replace(/"/g, '&quot;')}" placeholder="Trigger (e.g. !help)" style="flex: 1; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
         <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response (use #channel-name for mentions)" style="flex: 2; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
-        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px; flex-shrink:0;" onclick="this.closest('.autoreply-row').remove()">×</button>
+        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px; flex-shrink:0;" onclick="this.closest('.autoreply-row').remove()">Ã—</button>
     `;
 
     // Bottom row: channel select
@@ -367,7 +497,7 @@ function addJoinRoleRow(roleId = '') {
     btnRemove.type = 'button';
     btnRemove.className = 'btn-danger';
     btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
-    btnRemove.innerText = '×';
+    btnRemove.innerText = 'Ã—';
     btnRemove.onclick = () => row.remove();
 
     row.appendChild(selectContainer);
@@ -451,7 +581,7 @@ function addTicketOptionRow(slot = { name: '', role_id: '', category_id: '' }) {
     btnRemove.type = 'button';
     btnRemove.className = 'btn-danger';
     btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
-    btnRemove.innerText = '×';
+    btnRemove.innerText = 'Ã—';
     btnRemove.onclick = () => row.remove();
     
     row.appendChild(nameGroup);
@@ -543,7 +673,6 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('automod_anti_link_enabled').checked = currentAutomodConfig.anti_link?.enabled || false;
         document.getElementById('automod_anti_caps_enabled').checked = currentAutomodConfig.anti_caps?.enabled || false;
         document.getElementById('automod_mention_spam_enabled').checked = currentAutomodConfig.mention_spam?.enabled || false;
-        document.getElementById('automod_anti_scam_enabled').checked = currentAutomodConfig.anti_scam?.enabled || false;
         document.getElementById('automod_anti_alt_enabled').checked = currentAutomodConfig.anti_alt?.enabled || false;
 
         // Verify
@@ -605,6 +734,7 @@ async function loadConfig(guildId, guildName) {
 
         // Clear existing custom selects
         document.querySelectorAll('.custom-select').forEach(el => el.remove());
+        document.querySelectorAll('.custom-multiselect').forEach(el => el.remove());
 
         // Initialize Custom Selects for Roles
         new CustomSelect(document.getElementById('verify_role_id'), globalRoles, config.verify?.role_id || '', 'Select Verified Role...');
@@ -612,44 +742,45 @@ async function loadConfig(guildId, guildName) {
 
         // Populate Global Channels and Roles Multi-Selects
         const amChannelsEl = document.getElementById('automod_global_channels');
-        amChannelsEl.innerHTML = '';
+        amChannelsEl.innerHTML = "";
         globalChannels.forEach(c => {
-            const opt = document.createElement('option');
+            const opt = document.createElement("option");
             opt.value = c.id;
-            opt.textContent = '#' + c.name;
             if (currentAutomodConfig.global_exempt_channels?.includes(c.id)) opt.selected = true;
             amChannelsEl.appendChild(opt);
         });
 
         const amRolesEl = document.getElementById('automod_global_roles');
-        amRolesEl.innerHTML = '';
+        amRolesEl.innerHTML = "";
         globalRoles.forEach(r => {
-            const opt = document.createElement('option');
+            const opt = document.createElement("option");
             opt.value = r.id;
-            opt.textContent = '@' + r.name;
             if (currentAutomodConfig.global_exempt_roles?.includes(r.id)) opt.selected = true;
             amRolesEl.appendChild(opt);
         });
         
         const logsChannelsEl = document.getElementById('logs_global_channels');
-        logsChannelsEl.innerHTML = '';
+        logsChannelsEl.innerHTML = "";
         globalChannels.forEach(c => {
-            const opt = document.createElement('option');
+            const opt = document.createElement("option");
             opt.value = c.id;
-            opt.textContent = '#' + c.name;
             if (config.logs?.global_exempt_channels?.includes(c.id)) opt.selected = true;
             logsChannelsEl.appendChild(opt);
         });
 
         const logsRolesEl = document.getElementById('logs_global_roles');
-        logsRolesEl.innerHTML = '';
+        logsRolesEl.innerHTML = "";
         globalRoles.forEach(r => {
-            const opt = document.createElement('option');
+            const opt = document.createElement("option");
             opt.value = r.id;
-            opt.textContent = '@' + r.name;
             if (config.logs?.global_exempt_roles?.includes(r.id)) opt.selected = true;
             logsRolesEl.appendChild(opt);
         });
+
+        new CustomMultiSelect(amChannelsEl, globalChannels, "Auswählen...", (item) => "# " + item.name);
+        new CustomMultiSelect(amRolesEl, globalRoles, "Auswählen...", (item) => "@ " + item.name);
+        new CustomMultiSelect(logsChannelsEl, globalChannels, "Auswählen...", (item) => "# " + item.name);
+        new CustomMultiSelect(logsRolesEl, globalRoles, "Auswählen...", (item) => "@ " + item.name);
 
         // AutoResponder & JoinRoles & TicketOptions
         if (!currentPermissions.can_messages) lockSection('section-autoresponder', 'Manage Messages');
@@ -949,9 +1080,6 @@ function openAutoModModal(ruleId) {
             </div>
             ${actionSelect}
         `;
-    } else if (ruleId === 'anti_scam') {
-        title = 'Edit Anti-Scam Rule';
-        html = actionSelect;
     } else if (ruleId === 'anti_alt') {
         title = 'Edit Anti-Alt Account Rule';
         html = `
@@ -1073,8 +1201,6 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     currentAutomodConfig.anti_caps.enabled = document.getElementById('automod_anti_caps_enabled').checked;
     if(!currentAutomodConfig.mention_spam) currentAutomodConfig.mention_spam = {};
     currentAutomodConfig.mention_spam.enabled = document.getElementById('automod_mention_spam_enabled').checked;
-    if(!currentAutomodConfig.anti_scam) currentAutomodConfig.anti_scam = {};
-    currentAutomodConfig.anti_scam.enabled = document.getElementById('automod_anti_scam_enabled').checked;
     if(!currentAutomodConfig.anti_alt) currentAutomodConfig.anti_alt = {};
     currentAutomodConfig.anti_alt.enabled = document.getElementById('automod_anti_alt_enabled').checked;
     
@@ -1168,3 +1294,6 @@ document.addEventListener('mousedown', function(e) {
         e.target.parentElement.dispatchEvent(new Event('change'));
     }
 });
+
+
+
