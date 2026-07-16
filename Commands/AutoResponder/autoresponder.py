@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from Commands.AutoResponder._storage import add_response, remove_response, load_responses, get_response
+from Commands.AutoResponder._storage import add_response, remove_response, load_responses, get_response_entry
 from Commands._utils import format_usage
 
 class AutoResponderCommand(commands.Cog):
@@ -12,18 +12,22 @@ class AutoResponderCommand(commands.Cog):
     @commands.has_permissions(manage_guild=True)
     @app_commands.describe(
         trigger="The exact word or phrase to trigger the response",
-        response="The message the bot should reply with"
+        response="The message the bot should reply with",
+        channel="Optional channel to restrict this auto-response to"
     )
-    async def addreply(self, ctx: commands.Context, trigger: str = None, *, response: str = None):
+    async def addreply(self, ctx: commands.Context, channel: discord.TextChannel = None, trigger: str = None, *, response: str = None):
         if not trigger or not response:
-            return await ctx.send(format_usage("-addreply", "<trigger_word>", "<response_message>"), ephemeral=True)
+            return await ctx.send(format_usage("-addreply", "[#channel]", "<trigger_word>", "<response_message>"), ephemeral=True)
         
         await ctx.defer()
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.", ephemeral=True)
         
-        add_response(ctx.guild.id, trigger, response)
-        await ctx.send(f"✅ Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Response:** {response}")
+        channel_id = channel.id if channel else None
+        add_response(ctx.guild.id, trigger, response, channel_id)
+        
+        chan_text = f"<#{channel.id}>" if channel else "All Channels"
+        await ctx.send(f"✅ Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Channel:** {chan_text}\n**Response:** {response}")
 
     @commands.hybrid_command(name="delreply", aliases=["removereply"], description="Removes an auto-response.")
     @commands.has_permissions(manage_guild=True)
@@ -54,8 +58,9 @@ class AutoResponderCommand(commands.Cog):
             return await ctx.send("This server has no auto-responses set up yet.", ephemeral=True)
             
         lines = []
-        for trigger, response in data.items():
-            lines.append(f"**Trigger:** `{trigger}`\n**Response:** {response}")
+        for trigger, entry in data.items():
+            chan = f"<#{entry['channel_id']}>" if entry.get("channel_id") else "All Channels"
+            lines.append(f"**Trigger:** `{trigger}`\n**Channel:** {chan}\n**Response:** {entry['response']}")
             
         content = "### Active Auto-Responses\n" + "\n\n".join(lines)
         if len(content) > 2000:
@@ -72,26 +77,30 @@ class AutoResponderCommand(commands.Cog):
         if not content:
             return
             
+        # Helper to check if we can respond in this channel
+        def can_respond(entry_data: dict) -> bool:
+            cid = entry_data.get("channel_id")
+            return cid is None or cid == message.channel.id
+
         # Check if the message exactly matches a trigger
-        response = get_response(message.guild.id, content)
-        if response:
+        entry = get_response_entry(message.guild.id, content)
+        if entry and can_respond(entry):
             try:
-                await message.reply(content=response, mention_author=False)
+                return await message.reply(content=entry["response"], mention_author=False)
             except Exception:
                 pass
                 
         # Also check if a trigger is an exact word inside the message
         # We only want to do this if the exact match failed to avoid double responses
-        if not response:
-            words = content.split()
-            data = load_responses(message.guild.id)
-            for trigger, res in data.items():
-                if trigger in words:
-                    try:
-                        await message.reply(content=res, mention_author=False)
-                    except Exception:
-                        pass
-                    break # Only reply to the first matching trigger to avoid spam
+        words = content.split()
+        data = load_responses(message.guild.id)
+        for trigger, entry_data in data.items():
+            if trigger in words and can_respond(entry_data):
+                try:
+                    await message.reply(content=entry_data["response"], mention_author=False)
+                except Exception:
+                    pass
+                break # Only reply to the first matching trigger to avoid spam
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoResponderCommand(bot))
