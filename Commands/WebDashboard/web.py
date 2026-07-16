@@ -357,8 +357,10 @@ class WebDashboard:
                 
                 gec = am.get("global_exempt_channels", [])
                 ger = am.get("global_exempt_roles", [])
-                automod_cfg["global_exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
-                automod_cfg["global_exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
+                if "global_exempt_channels" in automod_cfg:
+                    del automod_cfg["global_exempt_channels"]
+                if "global_exempt_roles" in automod_cfg:
+                    del automod_cfg["global_exempt_roles"]
 
                 def save_submodule(key: str, defaults: dict, extra_fields: list = None):
                     if key not in automod_cfg:
@@ -367,6 +369,12 @@ class WebDashboard:
                     automod_cfg[key]["enabled"] = bool(src.get("enabled"))
                     automod_cfg[key]["action"] = src.get("action", defaults.get("action", "warn"))
                     automod_cfg[key]["timeout_duration_min"] = int(src.get("timeout_duration_min", defaults.get("timeout_duration_min", 5)))
+                    
+                    ec = src.get("exempt_channels", [])
+                    er = src.get("exempt_roles", [])
+                    automod_cfg[key]["exempt_channels"] = [str(c) for c in ec] if isinstance(ec, list) else []
+                    automod_cfg[key]["exempt_roles"] = [str(r) for r in er] if isinstance(er, list) else []
+
                     if extra_fields:
                         for ef in extra_fields:
                             field_name = ef["name"]
@@ -388,7 +396,6 @@ class WebDashboard:
                 save_submodule("anti_link", {}, [{"name": "blocked_domains", "type": list, "default": []}])
                 save_submodule("anti_caps", {}, [])
                 save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
-                save_submodule("anti_scam", {}, [])
 
                 # Anti-Alt (Special structure)
                 if "anti_alt" not in automod_cfg:

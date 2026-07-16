@@ -90,13 +90,14 @@ class AutoModListener(commands.Cog):
         if not config.get("enabled", False):
             return
 
-        # Check Global Exemptions
-        if str(message.channel.id) in config.get("global_exempt_channels", []):
-            return
-        if any(str(r.id) in config.get("global_exempt_roles", []) for r in message.author.roles):
-            return
-
         content_lower = message.content.lower()
+        
+        def is_exempt(cfg):
+            if str(message.channel.id) in cfg.get("exempt_channels", []):
+                return True
+            if any(str(r.id) in cfg.get("exempt_roles", []) for r in message.author.roles):
+                return True
+            return False
         
         async def do_action(cfg, reason, delete_msg=True):
             if delete_msg:
@@ -115,7 +116,7 @@ class AutoModListener(commands.Cog):
 
         # 1. Banned Words
         banned_cfg = config.get("banned_words", {})
-        if banned_cfg.get("enabled", False):
+        if banned_cfg.get("enabled", False) and not is_exempt(banned_cfg):
             words = banned_cfg.get("words", [])
             if any(w in content_lower for w in words if w):
                 await do_action(banned_cfg, "AutoMod: Banned word detected")
@@ -123,7 +124,7 @@ class AutoModListener(commands.Cog):
 
         # 2. Anti-Invites
         invites_cfg = config.get("anti_invites", {})
-        if invites_cfg.get("enabled", False):
+        if invites_cfg.get("enabled", False) and not is_exempt(invites_cfg):
             invite_links = ["discord.gg/", "discord.com/invite/", "dsc.gg/", "invite.gg/"]
             if any(inv in content_lower for inv in invite_links):
                 await do_action(invites_cfg, "AutoMod: Discord invite detected")
@@ -131,7 +132,7 @@ class AutoModListener(commands.Cog):
 
         # 3. Anti-Link (Blocked Domains)
         link_cfg = config.get("anti_link", {})
-        if link_cfg.get("enabled", False):
+        if link_cfg.get("enabled", False) and not is_exempt(link_cfg):
             blocked = link_cfg.get("blocked_domains", [])
             # If no specific domains are listed, we block all http/https if they want? 
             # Or just block the listed ones. Let's block listed ones.
@@ -147,7 +148,7 @@ class AutoModListener(commands.Cog):
 
         # 4. Anti-Caps
         caps_cfg = config.get("anti_caps", {})
-        if caps_cfg.get("enabled", False):
+        if caps_cfg.get("enabled", False) and not is_exempt(caps_cfg):
             content_alpha = [c for c in message.content if c.isalpha()]
             if len(content_alpha) > 8:
                 upper_count = sum(1 for c in content_alpha if c.isupper())
@@ -157,23 +158,15 @@ class AutoModListener(commands.Cog):
 
         # 5. Mention Spam
         mention_cfg = config.get("mention_spam", {})
-        if mention_cfg.get("enabled", False):
+        if mention_cfg.get("enabled", False) and not is_exempt(mention_cfg):
             max_mentions = mention_cfg.get("max_mentions", 4)
             if len(message.mentions) >= max_mentions:
                 await do_action(mention_cfg, f"AutoMod: Mass mentions detected ({len(message.mentions)})")
                 return
 
-        # 6. Anti-Scam
-        scam_cfg = config.get("anti_scam", {})
-        if scam_cfg.get("enabled", False):
-            scam_patterns = ["free nitro", "steam 50$", "discord nitro free", "discord.gift/", "free robux"]
-            if any(p in content_lower for p in scam_patterns):
-                await do_action(scam_cfg, "AutoMod: Scam link/phrase detected")
-                return
-
-        # 7. Anti-Spam (Message Flood)
+        # 6. Anti-Spam (Message Flood)
         spam_cfg = config.get("anti_spam", {})
-        if spam_cfg.get("enabled", False):
+        if spam_cfg.get("enabled", False) and not is_exempt(spam_cfg):
             m_msgs = spam_cfg.get("max_messages", 5)
             t_win = spam_cfg.get("time_window_sec", 3)
 

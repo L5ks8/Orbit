@@ -6,26 +6,26 @@ let autoresponder = {};
 let joinroles = [];
 
 const LOGS_CATEGORIES = [
-    { id: "moderation_action", title: "Moderationsaktion", icon: "ðŸ›¡ï¸" },
-    { id: "auto_moderation", title: "Auto Moderation", icon: "ðŸ¤–" },
-    { id: "message_deleted", title: "Nachricht GelÃ¶scht", icon: "ðŸ—‘ï¸" },
-    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "âœï¸" },
-    { id: "bulk_message_delete", title: "MassenlÃ¶schung", icon: "ðŸ§¹" },
-    { id: "member_joined", title: "Mitglied Beigetreten", icon: "ðŸ‘‹" },
-    { id: "member_left", title: "Mitglied Verlassen", icon: "ðŸš¶" },
-    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "ðŸŽ¤" },
-    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "ðŸ”‡" },
-    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "ðŸŽ§" },
-    { id: "role_created", title: "Rolle Erstellt", icon: "ðŸŽ­" },
-    { id: "role_deleted", title: "Rolle GelÃ¶scht", icon: "ðŸ”¥" },
-    { id: "role_updated", title: "Rolle Aktualisiert", icon: "âš™ï¸" },
-    { id: "channel_created", title: "Kanal Erstellt", icon: "ðŸ“" },
-    { id: "channel_deleted", title: "Kanal GelÃ¶scht", icon: "âŒ" },
-    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "ðŸ”„" },
-    { id: "scheduled_event_created", title: "Event Erstellt", icon: "ðŸ“…" },
-    { id: "scheduled_event_deleted", title: "Event GelÃ¶scht", icon: "ðŸ’¥" },
-    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "ðŸ“" },
-    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "âŒ¨ï¸" }
+    { id: "moderation_action", title: "Moderationsaktion", icon: "Ã°Å¸â€ºÂ¡Ã¯Â¸Â" },
+    { id: "auto_moderation", title: "Auto Moderation", icon: "Ã°Å¸Â¤â€“" },
+    { id: "message_deleted", title: "Nachricht GelÃƒÂ¶scht", icon: "Ã°Å¸â€”â€˜Ã¯Â¸Â" },
+    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "Ã¢Å“ÂÃ¯Â¸Â" },
+    { id: "bulk_message_delete", title: "MassenlÃƒÂ¶schung", icon: "Ã°Å¸Â§Â¹" },
+    { id: "member_joined", title: "Mitglied Beigetreten", icon: "Ã°Å¸â€˜â€¹" },
+    { id: "member_left", title: "Mitglied Verlassen", icon: "Ã°Å¸Å¡Â¶" },
+    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "Ã°Å¸Å½Â¤" },
+    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "Ã°Å¸â€â€¡" },
+    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "Ã°Å¸Å½Â§" },
+    { id: "role_created", title: "Rolle Erstellt", icon: "Ã°Å¸Å½Â­" },
+    { id: "role_deleted", title: "Rolle GelÃƒÂ¶scht", icon: "Ã°Å¸â€Â¥" },
+    { id: "role_updated", title: "Rolle Aktualisiert", icon: "Ã¢Å¡â„¢Ã¯Â¸Â" },
+    { id: "channel_created", title: "Kanal Erstellt", icon: "Ã°Å¸â€œÂ" },
+    { id: "channel_deleted", title: "Kanal GelÃƒÂ¶scht", icon: "Ã¢ÂÅ’" },
+    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "Ã°Å¸â€â€ž" },
+    { id: "scheduled_event_created", title: "Event Erstellt", icon: "Ã°Å¸â€œâ€¦" },
+    { id: "scheduled_event_deleted", title: "Event GelÃƒÂ¶scht", icon: "Ã°Å¸â€™Â¥" },
+    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "Ã°Å¸â€œÂ" },
+    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "Ã¢Å’Â¨Ã¯Â¸Â" }
 ];
 
 // Views
@@ -209,9 +209,9 @@ class CustomSelect {
     updateTrigger(placeholder) {
         const item = this.items.find(i => i.id === this.value);
         if (item) {
-            this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <span style="font-size:10px">â–¼</span>`;
+            this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <span style="font-size:10px">Ã¢â€“Â¼</span>`;
         } else {
-            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <span style="font-size:10px">â–¼</span>`;
+            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <span style="font-size:10px">Ã¢â€“Â¼</span>`;
         }
         this.select.value = this.value;
     }
@@ -249,7 +249,7 @@ class CustomMultiSelect {
         this.select.style.display = 'none';
         
         this.items = items;
-        this.placeholder = placeholder || 'Auswählen...';
+        this.placeholder = placeholder || 'AuswÃ¤hlen...';
         this.renderTag = renderTag || ((item) => item.name);
         
         this.container = document.createElement('div');
@@ -449,7 +449,7 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
     topRow.innerHTML = `
         <input type="text" class="ar-trigger" value="${triggerText.replace(/"/g, '&quot;')}" placeholder="Trigger (e.g. !help)" style="flex: 1; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
         <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response (use #channel-name for mentions)" style="flex: 2; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
-        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px; flex-shrink:0;" onclick="this.closest('.autoreply-row').remove()">Ã—</button>
+        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px; flex-shrink:0;" onclick="this.closest('.autoreply-row').remove()">Ãƒâ€”</button>
     `;
 
     // Bottom row: channel select
@@ -497,7 +497,7 @@ function addJoinRoleRow(roleId = '') {
     btnRemove.type = 'button';
     btnRemove.className = 'btn-danger';
     btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
-    btnRemove.innerText = 'Ã—';
+    btnRemove.innerText = 'Ãƒâ€”';
     btnRemove.onclick = () => row.remove();
 
     row.appendChild(selectContainer);
@@ -581,7 +581,7 @@ function addTicketOptionRow(slot = { name: '', role_id: '', category_id: '' }) {
     btnRemove.type = 'button';
     btnRemove.className = 'btn-danger';
     btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
-    btnRemove.innerText = 'Ã—';
+    btnRemove.innerText = 'Ãƒâ€”';
     btnRemove.onclick = () => row.remove();
     
     row.appendChild(nameGroup);
@@ -741,23 +741,7 @@ async function loadConfig(guildId, guildName) {
         new CustomSelect(document.getElementById('verify_remove_role_id'), globalRoles, config.verify?.remove_role_id || '', 'Select Unverified Role...');
 
         // Populate Global Channels and Roles Multi-Selects
-        const amChannelsEl = document.getElementById('automod_global_channels');
-        amChannelsEl.innerHTML = "";
-        globalChannels.forEach(c => {
-            const opt = document.createElement("option");
-            opt.value = c.id;
-            if (currentAutomodConfig.global_exempt_channels?.includes(c.id)) opt.selected = true;
-            amChannelsEl.appendChild(opt);
-        });
 
-        const amRolesEl = document.getElementById('automod_global_roles');
-        amRolesEl.innerHTML = "";
-        globalRoles.forEach(r => {
-            const opt = document.createElement("option");
-            opt.value = r.id;
-            if (currentAutomodConfig.global_exempt_roles?.includes(r.id)) opt.selected = true;
-            amRolesEl.appendChild(opt);
-        });
         
         const logsChannelsEl = document.getElementById('logs_global_channels');
         logsChannelsEl.innerHTML = "";
@@ -777,10 +761,9 @@ async function loadConfig(guildId, guildName) {
             logsRolesEl.appendChild(opt);
         });
 
-        new CustomMultiSelect(amChannelsEl, globalChannels, "Auswählen...", (item) => "# " + item.name);
-        new CustomMultiSelect(amRolesEl, globalRoles, "Auswählen...", (item) => "@ " + item.name);
-        new CustomMultiSelect(logsChannelsEl, globalChannels, "Auswählen...", (item) => "# " + item.name);
-        new CustomMultiSelect(logsRolesEl, globalRoles, "Auswählen...", (item) => "@ " + item.name);
+
+        new CustomMultiSelect(logsChannelsEl, globalChannels, "AuswÃ¤hlen...", (item) => "# " + item.name);
+        new CustomMultiSelect(logsRolesEl, globalRoles, "AuswÃ¤hlen...", (item) => "@ " + item.name);
 
         // AutoResponder & JoinRoles & TicketOptions
         if (!currentPermissions.can_messages) lockSection('section-autoresponder', 'Manage Messages');
@@ -1016,72 +999,114 @@ function openAutoModModal(ruleId) {
     
     const actionSelect = `
         <div class="form-group" style="margin-top: 15px;">
-            <label>Action on Violation</label>
+            <label>Bestrafung</label>
+            <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Strafe, die bei Auslösung der Regel angewendet wird.</span>
             <select id="am-modal-action">
-                <option value="warn" ${ruleCfg.action === 'warn' ? 'selected' : ''}>Warn</option>
+                <option value="warn" ${ruleCfg.action === 'warn' ? 'selected' : ''}>Warnung</option>
                 <option value="timeout" ${ruleCfg.action === 'timeout' ? 'selected' : ''}>Timeout</option>
                 <option value="kick" ${ruleCfg.action === 'kick' ? 'selected' : ''}>Kick</option>
                 <option value="ban" ${ruleCfg.action === 'ban' ? 'selected' : ''}>Ban</option>
             </select>
         </div>
         <div class="form-group" id="am-modal-timeout-group" style="margin-bottom: 0;">
-            <label>Timeout (minutes)</label>
+            <label>Timeout (Minuten)</label>
             <input type="number" id="am-modal-timeout" min="1" max="10080" value="${ruleCfg.timeout_duration_min || 5}">
         </div>
     `;
 
+    let exceptionsHtml = '';
+    if (ruleId !== 'anti_alt') {
+        const selCh = ruleCfg.exempt_channels || [];
+        const selRo = ruleCfg.exempt_roles || [];
+        
+        let chOptions = '';
+        globalChannels.forEach(c => {
+            const sel = selCh.includes(c.id) ? 'selected' : '';
+            chOptions += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
+        });
+        
+        let roOptions = '';
+        globalRoles.forEach(r => {
+            const sel = selRo.includes(r.id) ? 'selected' : '';
+            roOptions += `<option value="${r.id}" ${sel}>@${r.name}</option>`;
+        });
+
+        exceptionsHtml = `
+            <div class="form-group" style="margin-top:20px;">
+                <label>Kanäle Zulassen</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die von der Regel ausgeschlossene Kanäle.</span>
+                <select id="am-modal-channels" multiple>${chOptions}</select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Rollen Zulassen</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die von der Regel ausgeschlossene Rollen.</span>
+                <select id="am-modal-roles" multiple>${roOptions}</select>
+                <p style="color:var(--accent-color); font-size:11px; margin-top:8px; margin-bottom:0;">Mitglieder mit Administrator- oder Verwaltungsrechte werden immer ignoriert.</p>
+            </div>
+        `;
+    }
+
     if (ruleId === 'banned_words') {
-        title = 'Edit Banned Words Rule';
+        title = 'Verbotene Wörter';
         const words = ruleCfg.words || [];
         html = `
             <div class="form-group">
-                <label>Banned Words/Phrases (comma-separated)</label>
+                <label>Verbotene Wörter</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die Wörter oder Phrasen, die blockiert werden.</span>
                 <input type="text" id="am-modal-words" value="${words.join(', ')}" placeholder="badword1, badword2">
+                <p style="color:var(--accent-color); font-size:12px; margin-top:8px;">Verwende * am Anfang, Ende oder beides für Teilübereinstimmungen.</p>
             </div>
             ${actionSelect}
+            ${exceptionsHtml}
         `;
     } else if (ruleId === 'anti_spam') {
-        title = 'Edit Anti Spam Rule';
+        title = 'Anti Spam';
         html = `
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 <div class="form-group" style="flex:1;">
-                    <label>Max Messages</label>
+                    <label>Nachrichtenanzahl</label>
+                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die Anzahl der Nachrichten, die die Regel auslösen.</span>
                     <input type="number" id="am-modal-msgs" min="2" max="100" value="${ruleCfg.max_messages || 5}">
                 </div>
                 <div class="form-group" style="flex:1;">
-                    <label>Time Window (sec)</label>
+                    <label>Zeitfenster</label>
+                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Das Zeitfenster in Sekunden.</span>
                     <input type="number" id="am-modal-window" min="1" max="60" value="${ruleCfg.time_window_sec || 3}">
                 </div>
             </div>
             ${actionSelect}
+            ${exceptionsHtml}
         `;
     } else if (ruleId === 'anti_invites') {
-        title = 'Edit Anti Invites Rule';
-        html = actionSelect;
+        title = 'Anti Invites';
+        html = actionSelect + exceptionsHtml;
     } else if (ruleId === 'anti_link') {
-        title = 'Edit Anti Links Rule';
+        title = 'Anti Links';
         const domains = ruleCfg.blocked_domains || ["discord.gg/", "discord.com/invite/"];
         html = `
             <div class="form-group">
-                <label>Blocked Domains (comma-separated)</label>
+                <label>Blockierte Links</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die Domains, die blockiert werden.</span>
                 <input type="text" id="am-modal-domains" value="${domains.join(', ')}">
             </div>
             ${actionSelect}
+            ${exceptionsHtml}
         `;
     } else if (ruleId === 'anti_caps') {
-        title = 'Edit Anti Caps Rule';
-        html = actionSelect;
+        title = 'Anti Caps';
+        html = actionSelect + exceptionsHtml;
     } else if (ruleId === 'mention_spam') {
-        title = 'Edit Mention Spam Rule';
+        title = 'Mention Spam';
         html = `
             <div class="form-group">
                 <label>Max Mentions</label>
                 <input type="number" id="am-modal-mentions" min="2" max="50" value="${ruleCfg.max_mentions || 4}">
             </div>
             ${actionSelect}
+            ${exceptionsHtml}
         `;
     } else if (ruleId === 'anti_alt') {
-        title = 'Edit Anti-Alt Account Rule';
+        title = 'Anti-Alt Account';
         html = `
             <div class="form-group">
                 <label>Minimum Account Age (days)</label>
@@ -1101,6 +1126,11 @@ function openAutoModModal(ruleId) {
     document.getElementById('am-modal-title').innerText = title;
     document.getElementById('am-modal-body').innerHTML = html;
     
+    if (ruleId !== 'anti_alt') {
+        new CustomMultiSelect(document.getElementById('am-modal-channels'), globalChannels, "Auswählen...", (item) => "# " + item.name);
+        new CustomMultiSelect(document.getElementById('am-modal-roles'), globalRoles, "Auswählen...", (item) => "@ " + item.name);
+    }
+
     const actionEl = document.getElementById('am-modal-action');
     if (actionEl) {
         actionEl.addEventListener('change', (e) => {
@@ -1136,7 +1166,15 @@ function closeAutoModModal() {
             ruleCfg.max_mentions = parseInt(document.getElementById('am-modal-mentions').value) || 4;
         } else if (activeAutomodRule === 'anti_alt') {
             ruleCfg.min_age_days = parseInt(document.getElementById('am-modal-age').value) || 3;
-            ruleCfg.action = document.getElementById('am-modal-action-alt').value;
+            const act = document.getElementById('am-modal-action-alt');
+            if(act) ruleCfg.action = act.value;
+        }
+        
+        if (activeAutomodRule !== 'anti_alt') {
+            const chEl = document.getElementById('am-modal-channels');
+            if (chEl) ruleCfg.exempt_channels = Array.from(chEl.selectedOptions).map(o => o.value);
+            const roEl = document.getElementById('am-modal-roles');
+            if (roEl) ruleCfg.exempt_roles = Array.from(roEl.selectedOptions).map(o => o.value);
         }
     }
     
@@ -1204,8 +1242,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     if(!currentAutomodConfig.anti_alt) currentAutomodConfig.anti_alt = {};
     currentAutomodConfig.anti_alt.enabled = document.getElementById('automod_anti_alt_enabled').checked;
     
-    currentAutomodConfig.global_exempt_channels = Array.from(document.getElementById('automod_global_channels').selectedOptions).map(o => o.value);
-    currentAutomodConfig.global_exempt_roles = Array.from(document.getElementById('automod_global_roles').selectedOptions).map(o => o.value);
+
 
     const payload = {
         welcome: {
@@ -1294,6 +1331,7 @@ document.addEventListener('mousedown', function(e) {
         e.target.parentElement.dispatchEvent(new Event('change'));
     }
 });
+
 
 
 
