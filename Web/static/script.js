@@ -6,33 +6,33 @@ let autoresponder = {};
 let joinroles = [];
 
 const LOGS_CATEGORIES = [
-    { id: "moderation_action", title: "Moderationsaktion", icon: "🛡️" },
-    { id: "auto_moderation", title: "Auto Moderation", icon: "🤖" },
-    { id: "member_banned", title: "Mitglied Gebannt", icon: "🔨" },
-    { id: "member_unbanned", title: "Mitglied Entbannt", icon: "🕊️" },
-    { id: "member_kicked", title: "Mitglied Gekickt", icon: "🥾" },
-    { id: "message_deleted", title: "Nachricht Gelöscht", icon: "🗑️" },
-    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "✏️" },
-    { id: "bulk_message_delete", title: "Massenlöschung", icon: "🧹" },
-    { id: "member_joined", title: "Mitglied Beigetreten", icon: "👋" },
-    { id: "member_left", title: "Mitglied Verlassen", icon: "🚶" },
-    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "🎤" },
-    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "🔇" },
-    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "🎧" },
-    { id: "voice_mute", title: "Sprachkanal Gemutet", icon: "🤐" },
-    { id: "voice_unmute", title: "Sprachkanal Entmutet", icon: "🗣️" },
-    { id: "voice_deafen", title: "Server Taub", icon: "🙉" },
-    { id: "voice_undeafen", title: "Server Enttaubt", icon: "🐒" },
-    { id: "role_created", title: "Rolle Erstellt", icon: "🎭" },
-    { id: "role_deleted", title: "Rolle Gelöscht", icon: "🔥" },
-    { id: "role_updated", title: "Rolle Aktualisiert", icon: "⚙️" },
-    { id: "channel_created", title: "Kanal Erstellt", icon: "📁" },
-    { id: "channel_deleted", title: "Kanal Gelöscht", icon: "❌" },
-    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "🔄" },
-    { id: "scheduled_event_created", title: "Event Erstellt", icon: "📅" },
-    { id: "scheduled_event_deleted", title: "Event Gelöscht", icon: "💥" },
-    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "📝" },
-    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "⌨️" }
+    { id: "moderation_action", title: "Moderationsaktion", icon: '<i data-lucide="shield"></i>' },
+    { id: "auto_moderation", title: "Auto Moderation", icon: '<i data-lucide="bot"></i>' },
+    { id: "member_banned", title: "Mitglied Gebannt", icon: '<i data-lucide="hammer"></i>' },
+    { id: "member_unbanned", title: "Mitglied Entbannt", icon: '<i data-lucide="check-circle"></i>' },
+    { id: "member_kicked", title: "Mitglied Gekickt", icon: '<i data-lucide="user-minus"></i>' },
+    { id: "message_deleted", title: "Nachricht Gelöscht", icon: '<i data-lucide="trash-2"></i>' },
+    { id: "message_edited", title: "Nachricht Bearbeitet", icon: '<i data-lucide="edit-2"></i>' },
+    { id: "bulk_message_delete", title: "Massenlöschung", icon: '<i data-lucide="trash"></i>' },
+    { id: "member_joined", title: "Mitglied Beigetreten", icon: '<i data-lucide="user-plus"></i>' },
+    { id: "member_left", title: "Mitglied Verlassen", icon: '<i data-lucide="user-minus"></i>' },
+    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: '<i data-lucide="mic"></i>' },
+    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: '<i data-lucide="mic-off"></i>' },
+    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: '<i data-lucide="headphones"></i>' },
+    { id: "voice_mute", title: "Sprachkanal Gemutet", icon: '<i data-lucide="volume-x"></i>' },
+    { id: "voice_unmute", title: "Sprachkanal Entmutet", icon: '<i data-lucide="volume-2"></i>' },
+    { id: "voice_deafen", title: "Server Taub", icon: '<i data-lucide="ear-off"></i>' },
+    { id: "voice_undeafen", title: "Server Enttaubt", icon: '<i data-lucide="ear"></i>' },
+    { id: "role_created", title: "Rolle Erstellt", icon: '<i data-lucide="plus-circle"></i>' },
+    { id: "role_deleted", title: "Rolle Gelöscht", icon: '<i data-lucide="minus-circle"></i>' },
+    { id: "role_updated", title: "Rolle Aktualisiert", icon: '<i data-lucide="settings"></i>' },
+    { id: "channel_created", title: "Kanal Erstellt", icon: '<i data-lucide="folder-plus"></i>' },
+    { id: "channel_deleted", title: "Kanal Gelöscht", icon: '<i data-lucide="folder-minus"></i>' },
+    { id: "channel_updated", title: "Kanal Aktualisiert", icon: '<i data-lucide="refresh-cw"></i>' },
+    { id: "scheduled_event_created", title: "Event Erstellt", icon: '<i data-lucide="calendar-plus"></i>' },
+    { id: "scheduled_event_deleted", title: "Event Gelöscht", icon: '<i data-lucide="calendar-minus"></i>' },
+    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: '<i data-lucide="calendar"></i>' },
+    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: '<i data-lucide="terminal"></i>' }
 ];
 
 // Views
@@ -751,7 +751,7 @@ async function loadConfig(guildId, guildName) {
                 <div class="automod-rule-card">
                     <div class="am-card-header">
                         <div class="am-card-title">
-                            <span style="font-size: 18px; line-height: 1;">${cat.icon}</span>
+                            <span style="display: flex; align-items: center; justify-content: center; color: var(--accent-primary); width: 24px; height: 24px; margin-right: 8px;">${cat.icon}</span>
                             <h4>${cat.title}</h4>
                         </div>
                         <label class="switch">
@@ -768,6 +768,7 @@ async function loadConfig(guildId, guildName) {
                 </div>
             `;
         });
+        lucide.createIcons({ root: logsGrid });
 
         // Clear existing custom selects
         document.querySelectorAll('.custom-select').forEach(el => el.remove());
