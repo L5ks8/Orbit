@@ -195,6 +195,7 @@ class CustomSelect {
 
 let globalRoles = [];
 let globalCategories = [];
+let globalChannels = [];
 let currentPermissions = {};
 
 function lockSection(sectionId, requirementText) {
@@ -250,23 +251,44 @@ function renderAutoReplies(replies) {
     }
 
     for (const [trigger, data] of Object.entries(replies)) {
-        addAutoReplyRow(trigger, data.response);
+        addAutoReplyRow(trigger, data.response, data.channel_id || '');
     }
 }
 
-function addAutoReplyRow(triggerText = '', responseText = '') {
+function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
     const list = document.getElementById('autoreply-list');
     if (list.querySelector('p')) list.innerHTML = ''; // Clear empty message
 
     const row = document.createElement('div');
     row.className = 'autoreply-row';
-    row.style.cssText = 'display: flex; gap: 10px; background: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);';
-    
-    row.innerHTML = `
+    row.style.cssText = 'display: flex; flex-direction: column; gap: 8px; background: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);';
+
+    // Top row: trigger + response + delete
+    const topRow = document.createElement('div');
+    topRow.style.cssText = 'display: flex; gap: 10px; align-items: center;';
+    topRow.innerHTML = `
         <input type="text" class="ar-trigger" value="${triggerText.replace(/"/g, '&quot;')}" placeholder="Trigger (e.g. !help)" style="flex: 1; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
-        <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response" style="flex: 2; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
-        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px;" onclick="this.parentElement.remove()">×</button>
+        <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response (use #channel-name for mentions)" style="flex: 2; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
+        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px; flex-shrink:0;" onclick="this.closest('.autoreply-row').remove()">×</button>
     `;
+
+    // Bottom row: channel select
+    const botRow = document.createElement('div');
+    botRow.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+    let channelOptionsHTML = '<option value="">All Channels</option>';
+    globalChannels.forEach(c => {
+        const sel = String(channelId) === String(c.id) ? 'selected' : '';
+        channelOptionsHTML += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
+    });
+    botRow.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M4 9h16M4 15h16"/><path d="M10 3 8 21M16 3l-2 18"/></svg>
+        <select class="ar-channel" style="background: #000000; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; font-size: 13px; outline: none; flex:1; max-width: 260px;">
+            ${channelOptionsHTML}
+        </select>
+    `;
+
+    row.appendChild(topRow);
+    row.appendChild(botRow);
     list.appendChild(row);
 }
 
@@ -416,6 +438,7 @@ async function loadConfig(guildId, guildName) {
         const data = await res.json();
         globalRoles = data.roles;
         globalCategories = data.categories || [];
+        globalChannels = data.channels || [];
 
         // Populate normal selects (channels)
         const welcomeSelect = document.getElementById('welcome_channel_id');
@@ -690,8 +713,9 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     document.querySelectorAll('.autoreply-row').forEach(row => {
         const trigger = row.querySelector('.ar-trigger').value.trim();
         const response = row.querySelector('.ar-response').value.trim();
+        const channelVal = row.querySelector('.ar-channel')?.value || '';
         if (trigger && response) {
-            autoresponder[trigger] = { response: response, channel_id: null };
+            autoresponder[trigger] = { response: response, channel_id: channelVal ? channelVal : null };
         }
     });
 
