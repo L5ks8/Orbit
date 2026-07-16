@@ -597,10 +597,11 @@ class TicketConfigDynamicView(LayoutView):
         self.add_item(container)
 
 class PersistentTicketPanelLayout(LayoutView):
-    def __init__(self, title: str = "Support Ticket Desk", description: str = "Click the button below to open a direct support channel with our team.", options: list | None = None, options_slots: list | None = None):
+    def __init__(self, title: str = "Support Ticket Desk", description: str = "Click the button below to open a direct support channel with our team.", instructions: str = "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel.", options: list | None = None, options_slots: list | None = None):
         super().__init__(timeout=None)
         self.panel_title = title
         self.panel_desc = description
+        self.panel_instructions = instructions
         self.panel_options = options or []
         self.options_slots = options_slots or []
         self.build_ui()
@@ -608,7 +609,7 @@ class PersistentTicketPanelLayout(LayoutView):
     def build_ui(self):
         self.clear_items()
         header_str = f"### {self.panel_title}\n{self.panel_desc}"
-        info_str = "Choose a category, then click Create Ticket."
+        info_str = self.panel_instructions
 
         select_opts = []
         slots_to_render = self.options_slots if self.options_slots else self.panel_options

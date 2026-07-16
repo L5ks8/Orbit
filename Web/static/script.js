@@ -460,6 +460,7 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('ticket_enabled').checked = config.ticket?.enabled || false;
         document.getElementById('ticket_panel_title').value = config.ticket?.panel_title || 'Support Ticket Desk';
         document.getElementById('ticket_panel_description').value = config.ticket?.panel_description || 'Click the button below to open a direct support channel with our team.';
+        document.getElementById('ticket_panel_instructions').value = config.ticket?.panel_instructions || 'Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.';
         document.getElementById('ticket_panel_channel').value = config.ticket?.panel_channel_id || '';
         document.getElementById('ticket_log_channel_id').value = config.ticket?.log_channel_id || '';
 
@@ -642,8 +643,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         if (name) {
             ticketOptions.push({
                 name: name,
-                role_id: role_id ? Number(role_id) : null,
-                category_id: category_id ? Number(category_id) : null
+                role_id: role_id ? String(role_id) : null,
+                category_id: category_id ? String(category_id) : null
             });
         }
     });
@@ -670,6 +671,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('ticket_enabled').checked,
             panel_title: document.getElementById('ticket_panel_title').value,
             panel_description: document.getElementById('ticket_panel_description').value,
+            panel_instructions: document.getElementById('ticket_panel_instructions').value,
             panel_channel_id: document.getElementById('ticket_panel_channel').value,
             log_channel_id: document.getElementById('ticket_log_channel_id').value,
             options_slots: ticketOptions

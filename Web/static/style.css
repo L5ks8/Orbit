@@ -598,6 +598,24 @@ input:checked + .slider:before {
     font-size: 14px;
 }
 
+textarea {
+    width: 100%;
+    background: #000000;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+    resize: vertical;
+}
+
+textarea:focus {
+    border-color: var(--text-primary);
+}
+
 .custom-select-search input:focus {
     border-color: var(--text-primary);
 }

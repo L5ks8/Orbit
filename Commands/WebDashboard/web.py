@@ -226,6 +226,7 @@ class WebDashboard:
                 "enabled": ticket_cfg.get("enabled", False),
                 "panel_title": ticket_cfg.get("panel_title", ""),
                 "panel_description": ticket_cfg.get("panel_description", ""),
+                "panel_instructions": ticket_cfg.get("panel_instructions", ""),
                 "panel_channel_id": str(ticket_cfg.get("panel_channel_id")) if ticket_cfg.get("panel_channel_id") else "",
                 "log_channel_id": str(ticket_cfg.get("log_channel_id")) if ticket_cfg.get("log_channel_id") else "",
                 "options_slots": [
@@ -321,6 +322,9 @@ class WebDashboard:
                 desc = data["ticket"].get("panel_description", "").strip()
                 if desc:
                     ticket_cfg["panel_description"] = desc
+                instr = data["ticket"].get("panel_instructions", "").strip()
+                if instr:
+                    ticket_cfg["panel_instructions"] = instr
                 
                 tid = data["ticket"].get("panel_channel_id")
                 ticket_cfg["panel_channel_id"] = int(tid) if tid else None
@@ -356,6 +360,7 @@ class WebDashboard:
                             view = PersistentTicketPanelLayout(
                                 title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
                                 description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
+                                instructions=ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."),
                                 options_slots=ticket_cfg.get("options_slots", [])
                             )
                             await msg.edit(view=view, allowed_mentions=discord.AllowedMentions.none())
@@ -426,6 +431,7 @@ class WebDashboard:
             view = PersistentTicketPanelLayout(
                 title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
                 description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
+                instructions=ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."),
                 options_slots=ticket_cfg.get("options_slots", [])
             )
             
