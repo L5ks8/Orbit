@@ -207,7 +207,7 @@ class CustomSelect {
     }
     
     updateTrigger(placeholder) {
-        const item = this.items.find(i => i.id === this.value);
+        const item = this.items.find(i => String(i.id) === String(this.value));
         if (item) {
             this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <span style="font-size:10px">Ã¢â€“Â¼</span>`;
         } else {
@@ -231,7 +231,7 @@ class CustomSelect {
         
         this.items.filter(i => i.name.toLowerCase().includes(filter)).forEach(item => {
             const opt = document.createElement('div');
-            opt.className = `custom-select-option ${this.value === item.id ? 'selected' : ''}`;
+            opt.className = `custom-select-option ${String(this.value) === String(item.id) ? 'selected' : ''}`;
             opt.innerHTML = `<span class="color-dot" style="background:${item.color}"></span> @${item.name}`;
             opt.addEventListener('click', () => {
                 this.value = item.id;
@@ -318,7 +318,7 @@ class CustomMultiSelect {
         }
 
         selectedValues.forEach(val => {
-            const item = this.items.find(i => i.id === val);
+            const item = this.items.find(i => String(i.id) === String(val));
             if (!item) return;
             
             const tag = document.createElement('div');
@@ -363,7 +363,7 @@ class CustomMultiSelect {
     }
     
     toggleOption(id, selectIt) {
-        const option = Array.from(this.select.options).find(o => o.value === id);
+        const option = Array.from(this.select.options).find(o => String(o.value) === String(id));
         if (option) {
             option.selected = selectIt;
             this.renderTags();
@@ -1036,7 +1036,37 @@ function openAutoModModal(ruleId) {
         </div>
     `;
 
+    let exceptionsHtml = '';
+    if (ruleId !== 'anti_alt') {
+        const selCh = ruleCfg.exempt_channels || [];
+        const selRo = ruleCfg.exempt_roles || [];
+        
+        let chOptions = '';
+        globalChannels.forEach(c => {
+            const sel = selCh.includes(c.id) ? 'selected' : '';
+            chOptions += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
+        });
+        
+        let roOptions = '';
+        globalRoles.forEach(r => {
+            const sel = selRo.includes(r.id) ? 'selected' : '';
+            roOptions += `<option value="${r.id}" ${sel}>@${r.name}</option>`;
+        });
 
+        exceptionsHtml = `
+            <div class="form-group" style="margin-top:20px;">
+                <label>Allowed Channels</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Channels excluded from this rule.</span>
+                <select id="am-modal-channels" multiple>${chOptions}</select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Allowed Roles</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Roles excluded from this rule.</span>
+                <select id="am-modal-roles" multiple>${roOptions}</select>
+                <p style="color:var(--accent-color); font-size:11px; margin-top:8px; margin-bottom:0;">Members with Administrator or Manage Server permissions are always ignored.</p>
+            </div>
+        `;
+    }
 
     if (ruleId === 'banned_words') {
         title = 'Banned Words';
@@ -1049,6 +1079,7 @@ function openAutoModModal(ruleId) {
                 <p style="color:var(--accent-color); font-size:12px; margin-top:8px;">Use * at the start, end, or both for partial matches.</p>
             </div>
             ${actionSelect}
+            ${exceptionsHtml}
         `;
     } else if (ruleId === 'anti_spam') {
         title = 'Anti Spam';
@@ -1066,10 +1097,11 @@ function openAutoModModal(ruleId) {
                 </div>
             </div>
             ${actionSelect}
+            ${exceptionsHtml}
         `;
     } else if (ruleId === 'anti_invites') {
         title = 'Anti Invites';
-        html = actionSelect;
+        html = actionSelect + exceptionsHtml;
     } else if (ruleId === 'anti_link') {
         title = 'Anti Links';
         const domains = ruleCfg.blocked_domains || ["discord.gg/", "discord.com/invite/"];
@@ -1080,10 +1112,11 @@ function openAutoModModal(ruleId) {
                 <input type="text" id="am-modal-domains" value="${domains.join(', ')}">
             </div>
             ${actionSelect}
+            ${exceptionsHtml}
         `;
     } else if (ruleId === 'anti_caps') {
         title = 'Anti Caps';
-        html = actionSelect;
+        html = actionSelect + exceptionsHtml;
     } else if (ruleId === 'mention_spam') {
         title = 'Mention Spam';
         html = `
@@ -1092,6 +1125,7 @@ function openAutoModModal(ruleId) {
                 <input type="number" id="am-modal-mentions" min="2" max="50" value="${ruleCfg.max_mentions || 4}">
             </div>
             ${actionSelect}
+            ${exceptionsHtml}
         `;
     } else if (ruleId === 'anti_alt') {
         title = 'Anti-Alt Account';
@@ -1113,6 +1147,11 @@ function openAutoModModal(ruleId) {
 
     document.getElementById('am-modal-title').innerText = title;
     document.getElementById('am-modal-body').innerHTML = html;
+    
+    if (ruleId !== 'anti_alt') {
+        new CustomMultiSelect(document.getElementById('am-modal-channels'), globalChannels, "Auswählen...", (item) => "# " + item.name);
+        new CustomMultiSelect(document.getElementById('am-modal-roles'), globalRoles, "Auswählen...", (item) => "@ " + item.name);
+    }
 
     const actionEl = document.getElementById('am-modal-action');
     if (actionEl) {
@@ -1152,6 +1191,13 @@ function closeAutoModModal() {
             ruleCfg.min_age_days = parseInt(document.getElementById('am-modal-age').value) || 3;
             const act = document.getElementById('am-modal-action-alt');
             if(act) ruleCfg.action = act.value;
+        }
+        
+        if (activeAutomodRule !== 'anti_alt') {
+            const chEl = document.getElementById('am-modal-channels');
+            if (chEl) ruleCfg.exempt_channels = Array.from(chEl.selectedOptions).map(o => o.value);
+            const roEl = document.getElementById('am-modal-roles');
+            if (roEl) ruleCfg.exempt_roles = Array.from(roEl.selectedOptions).map(o => o.value);
         }
     }
     

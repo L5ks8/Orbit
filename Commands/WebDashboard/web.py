@@ -225,8 +225,8 @@ class WebDashboard:
             },
             "automod": {
                 "enabled": automod_cfg.get("enabled", False),
-                "global_exempt_channels": automod_cfg.get("global_exempt_channels", []),
-                "global_exempt_roles": automod_cfg.get("global_exempt_roles", []),
+                "global_exempt_channels": automod_cfg.get("exempt_channels", []),
+                "global_exempt_roles": automod_cfg.get("exempt_roles", []),
                 "banned_words": {
                     "enabled": automod_cfg.get("banned_words", {}).get("enabled", False),
                     "action": automod_cfg.get("banned_words", {}).get("action", "warn"),
@@ -361,6 +361,9 @@ class WebDashboard:
                     del automod_cfg["global_exempt_channels"]
                 if "global_exempt_roles" in automod_cfg:
                     del automod_cfg["global_exempt_roles"]
+                
+                automod_cfg["exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
+                automod_cfg["exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
 
                 def save_submodule(key: str, defaults: dict, extra_fields: list = None):
                     if key not in automod_cfg:
