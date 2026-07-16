@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 
-from Commands.Ticket._storage import (
+from Database.storagehandler import (
     load_ticket_config,
     setup_ticket_config,
     reset_ticket_config

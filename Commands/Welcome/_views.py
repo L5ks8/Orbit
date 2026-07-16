@@ -1,6 +1,6 @@
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Commands.Welcome._storage import set_welcome_status
+from Database.storagehandler import set_welcome_status
 
 def _create_thumbnail(url: str):
     Thumbnail = getattr(discord.ui, "Thumbnail", None)
@@ -118,7 +118,7 @@ class WelcomeStatusLayout(LayoutView):
             if interaction.user.id != self.author_id:
                 return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
             new_state = not config.get("enabled")
-            updated = set_welcome_status(self.guild.id, new_state)
+            updated = await set_welcome_status(self.guild.id, new_state)
             self.clear_items()
             self.__init__(self.guild, updated, self.author_id)
             await interaction.response.edit_message(view=self)

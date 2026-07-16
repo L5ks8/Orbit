@@ -1,6 +1,6 @@
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
-from Commands.AutoMod._storage import load_automod_config, save_automod_config
+from Database.storagehandler import load_automod_config, save_automod_config
 
 class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):
     max_msgs_input = TextInput(
@@ -26,7 +26,7 @@ class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):
         super().__init__()
         self.guild_id = guild_id
         self.dashboard_view = view
-        config = load_automod_config(guild_id)
+        config = await load_automod_config(guild_id)
         self.max_msgs_input.default = str(config["anti_spam"]["max_messages"])
         self.time_win_input.default = str(config["anti_spam"]["time_window_sec"])
         self.max_mentions_input.default = str(config["anti_spam"]["max_mentions"])
@@ -41,11 +41,11 @@ class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):
         except ValueError:
             return await interaction.response.send_message("Please enter valid positive numbers (Max messages >= 2, Time window >= 1).", ephemeral=True)
 
-        config = load_automod_config(self.guild_id)
+        config = await load_automod_config(self.guild_id)
         config["anti_spam"]["max_messages"] = m_msgs
         config["anti_spam"]["time_window_sec"] = t_win
         config["anti_spam"]["max_mentions"] = m_mentions
-        save_automod_config(self.guild_id, config)
+        await save_automod_config(self.guild_id, config)
 
         self.dashboard_view.refresh_content(self.guild_id)
         await interaction.response.edit_message(view=self.dashboard_view)
@@ -64,7 +64,7 @@ class AntiAltAgeModal(Modal, title="Configure Anti-Alt Minimum Age"):
         super().__init__()
         self.guild_id = guild_id
         self.dashboard_view = view
-        config = load_automod_config(guild_id)
+        config = await load_automod_config(guild_id)
         self.min_age_input.default = str(config["anti_alt"]["min_age_days"])
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -75,9 +75,9 @@ class AntiAltAgeModal(Modal, title="Configure Anti-Alt Minimum Age"):
         except ValueError:
             return await interaction.response.send_message("Please enter a valid number of days (>= 0).", ephemeral=True)
 
-        config = load_automod_config(self.guild_id)
+        config = await load_automod_config(self.guild_id)
         config["anti_alt"]["min_age_days"] = age
-        save_automod_config(self.guild_id, config)
+        await save_automod_config(self.guild_id, config)
 
         self.dashboard_view.refresh_content(self.guild_id)
         await interaction.response.edit_message(view=self.dashboard_view)
@@ -91,7 +91,7 @@ class AutoModDashboardLayout(LayoutView):
         self.refresh_content(guild_id)
 
     def refresh_content(self, guild_id: int):
-        config = load_automod_config(guild_id)
+        config = await load_automod_config(guild_id)
         is_enabled = config.get("enabled", False)
         status_badge = "ACTIVE" if is_enabled else "INACTIVE"
 
@@ -154,14 +154,14 @@ class AutoModDashboardLayout(LayoutView):
         )
 
         async def master_cb(interaction: discord.Interaction):
-            cfg = load_automod_config(self.guild_id)
+            cfg = await load_automod_config(self.guild_id)
             cfg["enabled"] = not cfg.get("enabled", False)
-            save_automod_config(self.guild_id, cfg)
+            await save_automod_config(self.guild_id, cfg)
             self.refresh_content(self.guild_id)
             await interaction.response.edit_message(view=self)
 
         async def link_cb(interaction: discord.Interaction):
-            cfg = load_automod_config(self.guild_id)
+            cfg = await load_automod_config(self.guild_id)
             if not cfg["anti_link"]["enabled"]:
                 cfg["anti_link"]["enabled"] = True
                 cfg["anti_link"]["action"] = "warn"
@@ -169,12 +169,12 @@ class AutoModDashboardLayout(LayoutView):
                 cfg["anti_link"]["action"] = "timeout"
             else:
                 cfg["anti_link"]["enabled"] = False
-            save_automod_config(self.guild_id, cfg)
+            await save_automod_config(self.guild_id, cfg)
             self.refresh_content(self.guild_id)
             await interaction.response.edit_message(view=self)
 
         async def spam_cb(interaction: discord.Interaction):
-            cfg = load_automod_config(self.guild_id)
+            cfg = await load_automod_config(self.guild_id)
             if not cfg["anti_spam"]["enabled"]:
                 cfg["anti_spam"]["enabled"] = True
                 cfg["anti_spam"]["action"] = "warn"
@@ -182,7 +182,7 @@ class AutoModDashboardLayout(LayoutView):
                 cfg["anti_spam"]["action"] = "timeout"
             else:
                 cfg["anti_spam"]["enabled"] = False
-            save_automod_config(self.guild_id, cfg)
+            await save_automod_config(self.guild_id, cfg)
             self.refresh_content(self.guild_id)
             await interaction.response.edit_message(view=self)
 
@@ -191,7 +191,7 @@ class AutoModDashboardLayout(LayoutView):
             await interaction.response.send_modal(modal)
 
         async def alt_cb(interaction: discord.Interaction):
-            cfg = load_automod_config(self.guild_id)
+            cfg = await load_automod_config(self.guild_id)
             if not cfg["anti_alt"]["enabled"]:
                 cfg["anti_alt"]["enabled"] = True
                 cfg["anti_alt"]["action"] = "kick"
@@ -199,7 +199,7 @@ class AutoModDashboardLayout(LayoutView):
                 cfg["anti_alt"]["action"] = "verify"
             else:
                 cfg["anti_alt"]["enabled"] = False
-            save_automod_config(self.guild_id, cfg)
+            await save_automod_config(self.guild_id, cfg)
             self.refresh_content(self.guild_id)
             await interaction.response.edit_message(view=self)
 

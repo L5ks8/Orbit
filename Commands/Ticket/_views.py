@@ -3,7 +3,7 @@ import time
 import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, ChannelSelect, RoleSelect
-from Commands.Ticket._storage import load_ticket_config, create_active_ticket, claim_ticket, close_active_ticket
+from Database.storagehandler import load_ticket_config, create_active_ticket, claim_ticket, close_active_ticket
 
 _user_ticket_selections = {}
 
@@ -386,7 +386,7 @@ class TicketSlotRenameModal(Modal, title="Rename Selected Option Slot"):
             slots[self.slot_index]["name"] = self.name_input.value.strip()
             config["options_slots"] = slots
             config["options"] = [s.get("name", "Option") for s in slots if isinstance(s, dict)]
-            from Commands.Ticket._storage import save_ticket_config
+            from Database.storagehandler import save_ticket_config
             await save_ticket_config(interaction.guild.id, config)
         self.dynamic_view.build_ui()
         try:
@@ -421,7 +421,7 @@ class TicketRenameAllModal(Modal, title="Rename All Ticket Option Names"):
                 slots[idx]["name"] = child.value.strip()
         config["options_slots"] = slots
         config["options"] = [s.get("name", "Option") for s in slots if isinstance(s, dict)]
-        from Commands.Ticket._storage import save_ticket_config
+        from Database.storagehandler import save_ticket_config
         await save_ticket_config(interaction.guild.id, config)
         self.dynamic_view.build_ui()
         try:
@@ -503,7 +503,7 @@ class TicketConfigDynamicView(LayoutView):
                 if not config.get("support_role_id"):
                     config["support_role_id"] = chosen_role_id
             config["options_slots"] = slots
-            from Commands.Ticket._storage import save_ticket_config
+            from Database.storagehandler import save_ticket_config
             await save_ticket_config(self.guild_id, config)
             self.build_ui()
             await interaction.response.edit_message(view=self)
@@ -526,7 +526,7 @@ class TicketConfigDynamicView(LayoutView):
                 if not config.get("category_id"):
                     config["category_id"] = chosen_cat_id
             config["options_slots"] = slots
-            from Commands.Ticket._storage import save_ticket_config
+            from Database.storagehandler import save_ticket_config
             await save_ticket_config(self.guild_id, config)
             self.build_ui()
             await interaction.response.edit_message(view=self)

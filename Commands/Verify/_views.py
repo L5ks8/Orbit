@@ -2,7 +2,7 @@ import time
 import io
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
-from Commands.Verify._storage import load_verify_config, remove_pending_kick
+from Database.storagehandler import load_verify_config, remove_pending_kick
 from Commands.Verify._captcha import generate_captcha
 
 CAPTCHA_SESSIONS = {}

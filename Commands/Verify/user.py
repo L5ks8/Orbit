@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Verify._storage import load_verify_config, remove_pending_kick
+from Database.storagehandler import load_verify_config, remove_pending_kick
 from Commands.Verify._views import CAPTCHA_SESSIONS
 from Commands.Verify.verify import verify_group
 

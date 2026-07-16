@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Afk._storage import remove_afk
+from Database.storagehandler import remove_afk
 
 class AfkRemoveLayout(LayoutView):
     def __init__(self, author: discord.Member | discord.User):
@@ -23,7 +23,7 @@ class AfkRemoveCommand(commands.Cog):
         if not ctx.guild:
             return await ctx.send("This command can only be used inside a server.", ephemeral=True)
 
-        success = remove_afk(ctx.guild.id, ctx.author.id)
+        success = await remove_afk(ctx.guild.id, ctx.author.id)
         if not success:
             return await ctx.send("You are not currently AFK on this server.", ephemeral=True)
 

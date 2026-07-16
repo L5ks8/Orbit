@@ -1,7 +1,7 @@
 import time
 import discord
 from discord.ext import commands, tasks
-from Commands.Verify._storage import load_verify_config, add_pending_kick, remove_pending_kick
+from Database.storagehandler import load_verify_config, add_pending_kick, remove_pending_kick
 
 class VerifyListenerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

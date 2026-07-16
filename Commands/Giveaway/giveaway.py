@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Commands.Giveaway._storage import (
+from Database.storagehandler import (
     generate_giveaway_id,
     create_giveaway_entry,
     get_giveaway,
@@ -86,7 +86,7 @@ class PersistentGiveawayLayout(LayoutView):
         if not interaction.guild:
             return await interaction.response.send_message("Giveaways only work inside servers.", ephemeral=True)
 
-        entry = get_giveaway_by_message_id(interaction.guild.id, interaction.message.id)
+        entry = await get_giveaway_by_message_id(interaction.guild.id, interaction.message.id)
         if not entry:
             return await interaction.response.send_message("Could not locate giveaway data for this message.", ephemeral=True)
 
@@ -96,7 +96,7 @@ class PersistentGiveawayLayout(LayoutView):
         uid = interaction.user.id
         if uid in entry["entries"]:
             entry["entries"].remove(uid)
-            update_giveaway_entry(interaction.guild.id, entry)
+            await update_giveaway_entry(interaction.guild.id, entry)
             await interaction.response.send_message("You have left the giveaway.", ephemeral=True)
         else:
             req_role_id = entry.get("required_role_id")
@@ -109,7 +109,7 @@ class PersistentGiveawayLayout(LayoutView):
 
 
             entry["entries"].append(uid)
-            update_giveaway_entry(interaction.guild.id, entry)
+            await update_giveaway_entry(interaction.guild.id, entry)
             await interaction.response.send_message("You have successfully entered the giveaway! Good luck!", ephemeral=True)
 
         try:
@@ -129,7 +129,7 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
         try:
             guild = await bot.fetch_guild(guild_id)
         except Exception:
-            update_giveaway_entry(guild_id, entry)
+            await update_giveaway_entry(guild_id, entry)
             return False
 
     channel = guild.get_channel(entry["channel_id"])
@@ -137,7 +137,7 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
         try:
             channel = await guild.fetch_channel(entry["channel_id"])
         except Exception:
-            update_giveaway_entry(guild_id, entry)
+            await update_giveaway_entry(guild_id, entry)
             return False
 
     valid_entries = []
@@ -165,7 +165,7 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
         winners_display = ", ".join(f"<@{u}>" for u in picked_winners)
 
     entry["picked_winners"] = picked_winners
-    update_giveaway_entry(guild_id, entry)
+    await update_giveaway_entry(guild_id, entry)
 
     try:
         msg = await channel.fetch_message(entry["message_id"])
@@ -200,7 +200,7 @@ class GiveawayCommand(commands.Cog):
     @tasks.loop(seconds=5)
     async def giveaway_check_loop(self):
         try:
-            active = get_all_active_giveaways()
+            active = await get_all_active_giveaways()
             now = int(time.time())
             for gid, entry in active:
                 if now >= entry.get("end_timestamp", 0):
@@ -237,10 +237,10 @@ class GiveawayCommand(commands.Cog):
         if duration < 1 or duration > 46080:
             duration = 60
 
-        gid = generate_giveaway_id(ctx.guild.id)
+        gid = await generate_giveaway_id(ctx.guild.id)
         end_time = int(time.time()) + (duration * 60)
 
-        entry = create_giveaway_entry(
+        entry = await create_giveaway_entry(
             guild_id=ctx.guild.id,
             giveaway_id=gid,
             channel_id=ctx.channel.id,
@@ -257,7 +257,7 @@ class GiveawayCommand(commands.Cog):
         if msg:
             entry["message_id"] = msg.id
             entry["channel_id"] = msg.channel.id
-            update_giveaway_entry(ctx.guild.id, entry)
+            await update_giveaway_entry(ctx.guild.id, entry)
 
     @giveaway.error
     async def giveaway_error(self, ctx: commands.Context, error):

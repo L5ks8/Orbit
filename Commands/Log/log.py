@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
 
-from Commands.Log._storage import (
+from Database.storagehandler import (
     load_log_config,
     setup_log,
     toggle_log_category,

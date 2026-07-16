@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Commands.Welcome.welcome import welcome_group
-from Commands.Welcome._storage import reset_welcome
+from Database.storagehandler import reset_welcome
 from Commands.Welcome._views import WelcomeStatusLayout
 
 async def _do_wl_reset(ctx: commands.Context):
@@ -9,7 +9,7 @@ async def _do_wl_reset(ctx: commands.Context):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    config = reset_welcome(ctx.guild.id)
+    config = await reset_welcome(ctx.guild.id)
     view = WelcomeStatusLayout(ctx.guild, config, ctx.author.id)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 

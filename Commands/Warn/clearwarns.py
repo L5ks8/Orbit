@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Warn._storage import clear_user_warnings
-from Commands.Log._storage import log_event
+from Database.storagehandler import clear_user_warnings
+from Database.storagehandler import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
 
 class ClearWarningsLayout(LayoutView):

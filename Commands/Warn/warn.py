@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Warn._storage import add_warning, get_user_warnings
-from Commands.Whitelist._storage import is_whitelisted
-from Commands.Log._storage import log_event
+from Database.storagehandler import add_warning, get_user_warnings
+from Database.storagehandler import is_whitelisted
+from Database.storagehandler import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
 
 class WarnIssuedLayout(LayoutView):
@@ -74,6 +74,10 @@ async def warn_cmd_error(ctx: commands.Context, error):
         await ctx.send(format_usage("-warn", "<@member>", "[reason]"), ephemeral=True)
     elif isinstance(error, commands.BadArgument):
         await ctx.send("Could not find that member. Usage: `-warn <@member> [reason]`", ephemeral=True)
+    else:
+        import traceback
+        err_str = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        await ctx.send(f"An unexpected error occurred:\n```py\n{err_str[:1900]}\n```")
 
 async def setup(bot: commands.Bot):
     if "warn" not in bot.all_commands:

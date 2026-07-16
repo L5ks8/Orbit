@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Verify._storage import setup_verify_config
+from Database.storagehandler import setup_verify_config
 from Commands.Verify._views import PersistentVerifyLayout
 from Commands.Verify.verify import verify_group
 

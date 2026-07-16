@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from Commands.AutoResponder._storage import add_response, remove_response, load_responses, get_response_entry
+from Database.storagehandler import add_response, remove_response, load_responses, get_response_entry
 from Commands._utils import format_usage
 
 class AutoResponderCommand(commands.Cog):
@@ -24,7 +24,7 @@ class AutoResponderCommand(commands.Cog):
             return await ctx.send("This command must be run inside a server.", ephemeral=True)
         
         channel_id = channel.id if channel else None
-        add_response(ctx.guild.id, trigger, response, channel_id)
+        await add_response(ctx.guild.id, trigger, response, channel_id)
         
         chan_text = f"<#{channel.id}>" if channel else "All Channels"
         await ctx.send(f"✅ Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Channel:** {chan_text}\n**Response:** {response}")
@@ -40,7 +40,7 @@ class AutoResponderCommand(commands.Cog):
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.", ephemeral=True)
             
-        success = remove_response(ctx.guild.id, trigger)
+        success = await remove_response(ctx.guild.id, trigger)
         if success:
             await ctx.send(f"✅ Successfully removed auto-response for trigger: `{trigger}`")
         else:
@@ -53,7 +53,7 @@ class AutoResponderCommand(commands.Cog):
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.", ephemeral=True)
             
-        data = load_responses(ctx.guild.id)
+        data = await load_responses(ctx.guild.id)
         if not data:
             return await ctx.send("This server has no auto-responses set up yet.", ephemeral=True)
             
@@ -83,7 +83,7 @@ class AutoResponderCommand(commands.Cog):
             return cid is None or cid == message.channel.id
 
         # Check if the message exactly matches a trigger
-        entry = get_response_entry(message.guild.id, content)
+        entry = await get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
             try:
                 return await message.reply(content=entry["response"], mention_author=False)
@@ -93,7 +93,7 @@ class AutoResponderCommand(commands.Cog):
         # Also check if a trigger is an exact word inside the message
         # We only want to do this if the exact match failed to avoid double responses
         words = content.split()
-        data = load_responses(message.guild.id)
+        data = await load_responses(message.guild.id)
         for trigger, entry_data in data.items():
             if trigger in words and can_respond(entry_data):
                 try:

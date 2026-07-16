@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Commands.Welcome._storage import load_welcome_config
+from Database.storagehandler import load_welcome_config
 from Commands.Welcome._views import format_welcome_string, WelcomeCardLayout
 
 class WelcomeListener(commands.Cog):
@@ -12,7 +12,7 @@ class WelcomeListener(commands.Cog):
         if member.bot:
             return
 
-        config = load_welcome_config(member.guild.id)
+        config = await load_welcome_config(member.guild.id)
         if not config.get("enabled") or not config.get("channel_id"):
             return
 
@@ -28,7 +28,7 @@ class WelcomeListener(commands.Cog):
 
         formatted = format_welcome_string(config.get("message", ""), member)
         
-        from Commands.Welcome._storage import get_welcome_bg_path
+        from Database.storagehandler import get_welcome_bg_path
         from Commands.Welcome.image_gen import generate_welcome_image
         import discord
 

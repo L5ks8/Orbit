@@ -2,7 +2,7 @@ import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
-from Commands.Warn._storage import get_user_warnings
+from Database.storagehandler import get_user_warnings
 from Commands._utils import MemberOrIDConverter, format_usage
 
 class WarningsListLayout(LayoutView):
