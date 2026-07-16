@@ -426,22 +426,7 @@
                                     <span class="slider"></span>
                                 </label>
                             </div>
-                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Globale Optionen</h4>
-                            <div class="config-card">
-                                <div class="form-group">
-                                    <label>Kanäle Zulassen</label>
-                                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die von den Regeln ausgeschlossenen Kanäle.</span>
-                                    <select id="automod_global_channels" multiple></select>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label>Rollen Zulassen</label>
-                                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die von den Regeln ausgeschlossenen Rollen.</span>
-                                    <select id="automod_global_roles" multiple></select>
-                                    <p style="color:var(--accent-color); font-size:11px; margin-top:8px; margin-bottom:0;">Mitglieder mit Administrator- oder Verwaltungsrechte werden immer ignoriert.</p>
-                                </div>
-                            </div>
-                            
-                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Regeln</h4>
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Rules</h4>
                             <div class="automod-grid">
                                 <!-- Banned Words -->
                                 <div class="automod-rule-card">
@@ -534,6 +519,21 @@
                                 </div>
                             </div>
 
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Global Options</h4>
+                            <div class="config-card">
+                                <div class="form-group">
+                                    <label>Allowed Channels</label>
+                                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Channels excluded from the rules.</span>
+                                    <select id="automod_global_channels" multiple></select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Allowed Roles</label>
+                                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Roles excluded from the rules.</span>
+                                    <select id="automod_global_roles" multiple></select>
+                                    <p style="color:var(--accent-color); font-size:11px; margin-top:8px; margin-bottom:0;">Members with Administrator or Manage Server permissions are always ignored.</p>
+                                </div>
+                            </div>
+
 
                         </div>
 
@@ -548,7 +548,7 @@
                                     <!-- Dynamic content goes here -->
                                 </div>
                                 <div class="modal-footer" style="padding-top: 15px; border-top: 1px solid var(--border-color); display: flex;">
-                                    <button type="button" class="btn-save" onclick="closeAutoModModal()" style="width: 100%; background: #23a559; color: #fff; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px;">Änderungen speichern</button>
+                                    <button type="button" class="btn-save" onclick="closeAutoModModal()" style="width: 100%; background: #23a559; color: #fff; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px;">Save Changes</button>
                                 </div>
                             </div>
                         </div>

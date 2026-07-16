@@ -1021,17 +1021,17 @@ function openAutoModModal(ruleId) {
     
     const actionSelect = `
         <div class="form-group" style="margin-top: 15px;">
-            <label>Bestrafung</label>
-            <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Strafe, die bei Auslösung der Regel angewendet wird.</span>
+            <label>Punishment</label>
+            <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Action applied when the rule is triggered.</span>
             <select id="am-modal-action">
-                <option value="warn" ${ruleCfg.action === 'warn' ? 'selected' : ''}>Warnung</option>
+                <option value="warn" ${ruleCfg.action === 'warn' ? 'selected' : ''}>Warning</option>
                 <option value="timeout" ${ruleCfg.action === 'timeout' ? 'selected' : ''}>Timeout</option>
                 <option value="kick" ${ruleCfg.action === 'kick' ? 'selected' : ''}>Kick</option>
                 <option value="ban" ${ruleCfg.action === 'ban' ? 'selected' : ''}>Ban</option>
             </select>
         </div>
         <div class="form-group" id="am-modal-timeout-group" style="margin-bottom: 0;">
-            <label>Timeout (Minuten)</label>
+            <label>Timeout (Minutes)</label>
             <input type="number" id="am-modal-timeout" min="1" max="10080" value="${ruleCfg.timeout_duration_min || 5}">
         </div>
     `;
@@ -1055,28 +1055,28 @@ function openAutoModModal(ruleId) {
 
         exceptionsHtml = `
             <div class="form-group" style="margin-top:20px;">
-                <label>Kanäle Zulassen</label>
-                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die von der Regel ausgeschlossene Kanäle.</span>
+                <label>Allowed Channels</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Channels excluded from this rule.</span>
                 <select id="am-modal-channels" multiple>${chOptions}</select>
             </div>
             <div class="form-group" style="margin-bottom:0;">
-                <label>Rollen Zulassen</label>
-                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die von der Regel ausgeschlossene Rollen.</span>
+                <label>Allowed Roles</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Roles excluded from this rule.</span>
                 <select id="am-modal-roles" multiple>${roOptions}</select>
-                <p style="color:var(--accent-color); font-size:11px; margin-top:8px; margin-bottom:0;">Mitglieder mit Administrator- oder Verwaltungsrechte werden immer ignoriert.</p>
+                <p style="color:var(--accent-color); font-size:11px; margin-top:8px; margin-bottom:0;">Members with Administrator or Manage Server permissions are always ignored.</p>
             </div>
         `;
     }
 
     if (ruleId === 'banned_words') {
-        title = 'Verbotene Wörter';
+        title = 'Banned Words';
         const words = ruleCfg.words || [];
         html = `
             <div class="form-group">
-                <label>Verbotene Wörter</label>
-                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die Wörter oder Phrasen, die blockiert werden.</span>
+                <label>Banned Words</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Words or phrases to block.</span>
                 <input type="text" id="am-modal-words" value="${words.join(', ')}" placeholder="badword1, badword2">
-                <p style="color:var(--accent-color); font-size:12px; margin-top:8px;">Verwende * am Anfang, Ende oder beides für Teilübereinstimmungen.</p>
+                <p style="color:var(--accent-color); font-size:12px; margin-top:8px;">Use * at the start, end, or both for partial matches.</p>
             </div>
             ${actionSelect}
             ${exceptionsHtml}
@@ -1086,13 +1086,13 @@ function openAutoModModal(ruleId) {
         html = `
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 <div class="form-group" style="flex:1;">
-                    <label>Nachrichtenanzahl</label>
-                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die Anzahl der Nachrichten, die die Regel auslösen.</span>
+                    <label>Message Count</label>
+                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">The number of messages to trigger the rule.</span>
                     <input type="number" id="am-modal-msgs" min="2" max="100" value="${ruleCfg.max_messages || 5}">
                 </div>
                 <div class="form-group" style="flex:1;">
-                    <label>Zeitfenster</label>
-                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Das Zeitfenster in Sekunden.</span>
+                    <label>Time Window</label>
+                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">The time window in seconds.</span>
                     <input type="number" id="am-modal-window" min="1" max="60" value="${ruleCfg.time_window_sec || 3}">
                 </div>
             </div>
@@ -1107,8 +1107,8 @@ function openAutoModModal(ruleId) {
         const domains = ruleCfg.blocked_domains || ["discord.gg/", "discord.com/invite/"];
         html = `
             <div class="form-group">
-                <label>Blockierte Links</label>
-                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die Domains, die blockiert werden.</span>
+                <label>Blocked Links</label>
+                <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">The domains to block.</span>
                 <input type="text" id="am-modal-domains" value="${domains.join(', ')}">
             </div>
             ${actionSelect}
