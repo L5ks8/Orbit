@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from Database.storagehandler import get_giveaway
+from Commands.Giveaway._storage import get_giveaway
 from Commands.Giveaway.giveaway import end_giveaway_logic
 
 class GiveawayEndCommand(commands.Cog):
@@ -16,7 +16,7 @@ class GiveawayEndCommand(commands.Cog):
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-        entry = await get_giveaway(ctx.guild.id, giveaway_id)
+        entry = get_giveaway(ctx.guild.id, giveaway_id)
         if not entry:
             return await ctx.send(f"Could not find giveaway with ID `{giveaway_id}` on this server.", ephemeral=True)
 

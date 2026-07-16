@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import load_verify_config, remove_pending_kick
+from Commands.Verify._storage import load_verify_config, remove_pending_kick
 from Commands.Verify._views import CAPTCHA_SESSIONS
 from Commands.Verify.verify import verify_group
 
@@ -11,7 +11,7 @@ async def _do_verify_user(ctx: commands.Context, member: discord.Member):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    config = await load_verify_config(ctx.guild.id)
+    config = load_verify_config(ctx.guild.id)
     role_id = config.get("role_id")
     remove_role_id = config.get("remove_role_id")
 

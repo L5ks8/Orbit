@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import log_event
+from Commands.Log._storage import log_event
 
 class UntimeoutSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member, reason: str, author: discord.Member):

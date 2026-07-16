@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import reset_verify_config
+from Commands.Verify._storage import reset_verify_config
 from Commands.Verify.verify import verify_group
 
 async def _do_verify_reset(ctx: commands.Context):
@@ -9,7 +9,7 @@ async def _do_verify_reset(ctx: commands.Context):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    await reset_verify_config(ctx.guild.id)
+    reset_verify_config(ctx.guild.id)
 
     header_str = f"### CAPTCHA Verification Reset: **{ctx.guild.name}**\n**Status:** Inactive (Reset to defaults)"
     info_str = "**Action:** All verification configurations, channels, and pending auto-kicks have been cleared."

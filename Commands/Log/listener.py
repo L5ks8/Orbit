@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Database.storagehandler import log_event
+from Commands.Log._storage import log_event
 
 class LogListener(commands.Cog):
     def __init__(self, bot: commands.Bot):

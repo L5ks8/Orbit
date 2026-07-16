@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import get_poll_entry, close_poll_entry
+from Commands.Poll._storage import get_poll_entry, close_poll_entry
 
 class ClosedPollLayout(LayoutView):
     def __init__(self, poll_id: str, question: str, closer: discord.Member):
@@ -31,7 +31,7 @@ class PollCloseCommand(commands.Cog):
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-        poll_data = await get_poll_entry(ctx.guild.id, poll_id)
+        poll_data = get_poll_entry(ctx.guild.id, poll_id)
         if not poll_data:
             return await ctx.send(f"Could not find an active poll with ID `{poll_id}` on this server.", ephemeral=True)
 
@@ -55,7 +55,7 @@ class PollCloseCommand(commands.Cog):
         except Exception:
             pass
 
-        await close_poll_entry(ctx.guild.id, clean_pid)
+        close_poll_entry(ctx.guild.id, clean_pid)
         await ctx.send(f"Successfully closed Poll `{clean_pid}` (`{poll_data['question']}`). No further votes can be submitted.")
 
     @pollclose.error

@@ -1,7 +1,7 @@
 import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, UserSelect
-from Database.storagehandler import get_active_channel, update_active_channel, remove_active_channel
+from Commands.JoinToCreate._storage import get_active_channel, update_active_channel, remove_active_channel
 
 def build_jtc_container(data: dict) -> Container:
     owner_id = data.get("owner_id", "Unknown")
@@ -82,7 +82,7 @@ class LimitVoiceModal(Modal, title="Set Voice User Limit"):
             await self.channel.edit(user_limit=val, reason=f"User limit set by owner {interaction.user}")
             self.data["limit"] = val
             if interaction.guild:
-                await update_active_channel(interaction.guild.id, self.channel.id, self.data)
+                update_active_channel(interaction.guild.id, self.channel.id, self.data)
             await interaction.followup.send(f"User limit set to **{'Unlimited' if val == 0 else val}**.", ephemeral=True)
         except discord.Forbidden:
             await interaction.followup.send("I do not have permission to change the limit of this channel.", ephemeral=True)
@@ -134,7 +134,7 @@ class PersistentJTCControlLayout(LayoutView):
         if not channel:
             return None, None
 
-        data = await get_active_channel(interaction.guild.id, channel.id)
+        data = get_active_channel(interaction.guild.id, channel.id)
         return channel, data
 
     async def _check_owner(self, interaction: discord.Interaction, data: dict) -> bool:
@@ -157,7 +157,7 @@ class PersistentJTCControlLayout(LayoutView):
 
         try:
             await channel.set_permissions(interaction.guild.default_role, connect=not new_locked, reason=f"Voice locked toggle by {interaction.user}")
-            await update_active_channel(interaction.guild.id, channel.id, data)
+            update_active_channel(interaction.guild.id, channel.id, data)
             updated_container = build_jtc_container(data)
             updated_view = PersistentJTCControlLayout(container=updated_container, data=data)
             await interaction.response.edit_message(view=updated_view, allowed_mentions=discord.AllowedMentions.none())
@@ -177,7 +177,7 @@ class PersistentJTCControlLayout(LayoutView):
 
         try:
             await channel.set_permissions(interaction.guild.default_role, view_channel=not new_hidden, reason=f"Voice hide toggle by {interaction.user}")
-            await update_active_channel(interaction.guild.id, channel.id, data)
+            update_active_channel(interaction.guild.id, channel.id, data)
             updated_container = build_jtc_container(data)
             updated_view = PersistentJTCControlLayout(container=updated_container, data=data)
             await interaction.response.edit_message(view=updated_view, allowed_mentions=discord.AllowedMentions.none())
@@ -268,7 +268,7 @@ class PersistentJTCControlLayout(LayoutView):
                         pass
 
             data["trusted_users"] = trusted_list
-            await update_active_channel(inter.guild.id, channel.id, data)
+            update_active_channel(inter.guild.id, channel.id, data)
 
             msg_id = data.get("message_id")
             if msg_id:
@@ -307,7 +307,7 @@ class PersistentJTCControlLayout(LayoutView):
             return await interaction.response.send_message(f"The current channel owner ({current_owner.display_name}) is still connected!", ephemeral=True)
 
         data["owner_id"] = interaction.user.id
-        await update_active_channel(interaction.guild.id, channel.id, data)
+        update_active_channel(interaction.guild.id, channel.id, data)
 
         try:
             await channel.set_permissions(interaction.user, read_messages=True, connect=True, view_channel=True, manage_channels=True, reason=f"Claimed by {interaction.user}")
@@ -325,7 +325,7 @@ class PersistentJTCControlLayout(LayoutView):
             return
 
         await interaction.response.send_message("Deleting temporary voice channel...", ephemeral=True)
-        await remove_active_channel(interaction.guild.id, channel.id)
+        remove_active_channel(interaction.guild.id, channel.id)
         try:
             await channel.delete(reason=f"Deleted by owner {interaction.user}")
         except Exception:

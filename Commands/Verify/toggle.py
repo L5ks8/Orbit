@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import toggle_verify_config
+from Commands.Verify._storage import toggle_verify_config
 from Commands.Verify.verify import verify_group
 
 async def _do_verify_toggle(ctx: commands.Context):
@@ -9,7 +9,7 @@ async def _do_verify_toggle(ctx: commands.Context):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    config = await toggle_verify_config(ctx.guild.id)
+    config = toggle_verify_config(ctx.guild.id)
     enabled = config["enabled"]
 
     header_str = f"### CAPTCHA Verification Toggled: **{ctx.guild.name}**\n**Status:** {'Active (Enabled)' if enabled else 'Inactive (Disabled)'}"

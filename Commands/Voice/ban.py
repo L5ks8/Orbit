@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import add_to_vcban, is_vcbanned
-from Database.storagehandler import is_whitelisted
+from Commands.Voice._storage import add_to_vcban, is_vcbanned
+from Commands.Whitelist._storage import is_whitelisted
 from Commands.Voice.voice import voice_group
 
 class VcBanSuccessLayout(LayoutView):
@@ -24,7 +24,7 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     if user.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
         return await ctx.send("You cannot voice ban a user with equal or higher role.", ephemeral=True)
 
-    success = await add_to_vcban(ctx.guild.id, user.id, reason, ctx.author.id)
+    success = add_to_vcban(ctx.guild.id, user.id, reason, ctx.author.id)
     if not success:
         return await ctx.send("This user is already voice banned on this server.", ephemeral=True)
 
@@ -52,7 +52,7 @@ class VcBanCommand(commands.Cog):
         if member.bot or not after.channel:
             return
 
-        if await is_vcbanned(member.guild.id, member.id):
+        if is_vcbanned(member.guild.id, member.id):
             try:
                 await member.edit(voice_channel=None, reason="User is Voice Banned on this server")
             except Exception:

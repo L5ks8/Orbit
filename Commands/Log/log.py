@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
 
-from Database.storagehandler import (
+from Commands.Log._storage import (
     load_log_config,
     setup_log,
     toggle_log_category,
@@ -90,7 +90,7 @@ class LogToggleDashboard(LayoutView):
     async def _handle_toggle(self, interaction: discord.Interaction, cat: str):
         if not interaction.user.guild_permissions.manage_guild:
             return await interaction.response.send_message("You need Manage Server permission to change log settings.", ephemeral=True)
-        self.config = await toggle_log_category(interaction.guild.id, cat)
+        self.config = toggle_log_category(interaction.guild.id, cat)
         self._build_items()
         await interaction.response.edit_message(view=self)
 
@@ -157,7 +157,7 @@ async def _do_log_setup(
     if roles: overrides["roles"] = roles.id
     if voice: overrides["voice"] = voice.id
 
-    config = await setup_log(ctx.guild.id, default_channel_id=default_ch_id, channel_overrides=overrides)
+    config = setup_log(ctx.guild.id, default_channel_id=default_ch_id, channel_overrides=overrides)
     view = LogToggleDashboard(ctx.guild, config)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
@@ -166,9 +166,9 @@ async def _do_log_toggle(ctx: commands.Context, category: str = None):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
     if category and category.lower() in ["moderation", "messages", "members", "channels", "roles", "voice", "all"]:
-        config = await toggle_log_category(ctx.guild.id, category.lower())
+        config = toggle_log_category(ctx.guild.id, category.lower())
     else:
-        config = await load_log_config(ctx.guild.id)
+        config = load_log_config(ctx.guild.id)
     view = LogToggleDashboard(ctx.guild, config)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
@@ -176,7 +176,7 @@ async def _do_log_reset(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
-    await reset_log_config(ctx.guild.id)
+    reset_log_config(ctx.guild.id)
     view = LogResetLayout(ctx.guild)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
@@ -186,7 +186,7 @@ async def log_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.", ephemeral=True)
-        config = await load_log_config(ctx.guild.id)
+        config = load_log_config(ctx.guild.id)
         view = LogToggleDashboard(ctx.guild, config)
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 

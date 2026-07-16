@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import remove_from_vcban
+from Commands.Voice._storage import remove_from_vcban
 from Commands.Voice.voice import voice_group
 
 class VcUnbanSuccessLayout(LayoutView):
@@ -19,7 +19,7 @@ async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    success = await remove_from_vcban(ctx.guild.id, user.id)
+    success = remove_from_vcban(ctx.guild.id, user.id)
     if not success:
         return await ctx.send("This user is not currently voice banned on this server.", ephemeral=True)
 

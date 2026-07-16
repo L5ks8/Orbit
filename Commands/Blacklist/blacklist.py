@@ -1,9 +1,9 @@
 import re
 import discord
 from discord.ext import commands
-from Database.storagehandler import add_to_blacklist
-from Database.storagehandler import is_whitelisted
-from Database.storagehandler import log_event
+from Commands.Blacklist._storage import add_to_blacklist
+from Commands.Whitelist._storage import is_whitelisted
+from Commands.Log._storage import log_event
 
 async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
     await ctx.defer()
@@ -20,7 +20,7 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     if is_whitelisted(ctx.guild.id, user_id):
         return await ctx.send("This user is on the global moderation whitelist (`Immune to Blacklist`).", ephemeral=True)
 
-    success = await add_to_blacklist(ctx.guild.id, user_id, reason, ctx.author.id)
+    success = add_to_blacklist(ctx.guild.id, user_id, reason, ctx.author.id)
     if not success:
         return await ctx.send(f"ID `{user_id}` is already on the command blacklist.", ephemeral=True)
 

@@ -1,0 +1,43 @@
+{
+    "enabled": true,
+    "panel_channel_id": 1524057847556603914,
+    "category_id": 1524938809291313242,
+    "support_role_id": 1524938465152729290,
+    "log_channel_id": 1524935810095255742,
+    "panel_title": "Tryout-War Request or Macro/Fast Flags",
+    "panel_description": "Select the Correct option Before Openign a ticket",
+    "ticket_counter": 4,
+    "active_tickets": {
+        "1525506112248348792": {
+            "creator_id": 1320395448388685855,
+            "claimed_by": null,
+            "created_at": 1783779399.8971446,
+            "subject": "War",
+            "description": "2v2 EU no out crew hikari",
+            "category_option": "War Request",
+            "number": 3
+        }
+    },
+    "options": [
+        "War Request",
+        "Tryout Request",
+        "Macro/Fast Flags"
+    ],
+    "options_slots": [
+        {
+            "name": "War Request",
+            "role_id": 1524938465152729290,
+            "category_id": 1524938809291313242
+        },
+        {
+            "name": "Tryout Request",
+            "role_id": 1524938938396184748,
+            "category_id": 1524938911774802090
+        },
+        {
+            "name": "Macro/Fast Flags",
+            "role_id": 1524789412607557772,
+            "category_id": 1524928380254814278
+        }
+    ]
+}

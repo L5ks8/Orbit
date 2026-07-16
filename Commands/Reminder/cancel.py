@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
 from Commands.Reminder.remind import remind_group
-from Database.storagehandler import remove_reminder
+from Commands.Reminder._storage import remove_reminder
 
 async def _do_remind_cancel(ctx: commands.Context, rem_id: str):
     await ctx.defer(ephemeral=True)
-    removed = await remove_reminder(rem_id, ctx.author.id)
+    removed = remove_reminder(rem_id, ctx.author.id)
     if not removed:
         return await ctx.send(f"No active reminder found with ID `{rem_id}` matching your account.", ephemeral=True)
     await ctx.send(f"Successfully cancelled and deleted reminder ID `{rem_id}`.", ephemeral=True)

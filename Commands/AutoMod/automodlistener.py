@@ -3,9 +3,9 @@ import time
 import datetime
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import load_automod_config
-from Database.storagehandler import add_warning, get_user_warnings
-from Database.storagehandler import is_whitelisted
+from Commands.AutoMod._storage import load_automod_config
+from Commands.Warn._storage import add_warning, get_user_warnings
+from Commands.Whitelist._storage import is_whitelisted
 
 class AutoModNoticeLayout(LayoutView):
     def __init__(self, user: discord.Member, reason: str, action_taken: str, warn_count: int, escalation_str: str = ""):
@@ -46,7 +46,7 @@ class AutoModListener(commands.Cog):
         if is_whitelisted(message.guild.id, message.author.id):
             return
 
-        config = await load_automod_config(message.guild.id)
+        config = load_automod_config(message.guild.id)
         if not config.get("enabled", False):
             return
 
@@ -156,7 +156,7 @@ class AutoModListener(commands.Cog):
         if is_whitelisted(member.guild.id, member.id):
             return
 
-        config = await load_automod_config(member.guild.id)
+        config = load_automod_config(member.guild.id)
         if not config.get("enabled", False):
             return
 
@@ -181,7 +181,7 @@ class AutoModListener(commands.Cog):
                     except Exception as e:
                         print(f"[AUTOMOD ERROR] Could not kick alt {member.id}: {e}")
                 elif action == "verify":
-                    from Database.storagehandler import load_verify_config
+                    from Commands.Verify._storage import load_verify_config
                     v_cfg = load_verify_config(member.guild.id)
                     unverified_role_id = v_cfg.get("unverified_role_id")
                     if unverified_role_id:

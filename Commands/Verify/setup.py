@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import setup_verify_config
+from Commands.Verify._storage import setup_verify_config
 from Commands.Verify._views import PersistentVerifyLayout
 from Commands.Verify.verify import verify_group
 
@@ -18,7 +18,7 @@ async def _do_verify_setup(
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
     remove_role_id = remove_role.id if remove_role else None
-    config = await setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
+    config = setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
     
     view = PersistentVerifyLayout()
     try:

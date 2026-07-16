@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
-from Database.storagehandler import add_join_role
+from Commands.JoinRole._storage import add_join_role
 from Commands.JoinRole._views import JoinRoleLayout
 
 async def _do_jr_add(ctx: commands.Context, role: discord.Role):
@@ -16,7 +16,7 @@ async def _do_jr_add(ctx: commands.Context, role: discord.Role):
     if ctx.guild.me.top_role <= role:
         return await ctx.send(f"I cannot assign {role.mention} because it is higher than or equal to my highest role (`{ctx.guild.me.top_role.name}`).", ephemeral=True)
 
-    added = await add_join_role(ctx.guild.id, role.id)
+    added = add_join_role(ctx.guild.id, role.id)
     summary = f"Added {role.mention}" if added else f"{role.mention} is already in the join roles list."
     view = JoinRoleLayout(ctx.guild, summary, ctx.author.id)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())

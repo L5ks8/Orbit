@@ -1,0 +1,21 @@
+{
+    "enabled": true,
+    "panel_channel_id": 1522305322620813496,
+    "category_id": 1522305308121370824,
+    "support_role_id": 1522305205331562667,
+    "log_channel_id": 1522305322620813496,
+    "panel_title": "Support Ticket Desk",
+    "panel_description": "Click the button below to open a direct support channel with our team.",
+    "options": [
+        "Option 1"
+    ],
+    "ticket_counter": 4,
+    "active_tickets": {},
+    "options_slots": [
+        {
+            "name": "Option 1",
+            "role_id": 1522305205331562667,
+            "category_id": 1522305308121370824
+        }
+    ]
+}

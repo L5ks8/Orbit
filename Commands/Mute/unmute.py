@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import get_muted_role_id
+from Commands.Mute._storage import get_muted_role_id
 from Commands.Mute.mute import get_or_create_muted_role
-from Database.storagehandler import log_event
+from Commands.Log._storage import log_event
 
 
 class UnmuteSuccessLayout(LayoutView):

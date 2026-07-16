@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Database.storagehandler import set_afk, get_afk
+from Commands.Afk._storage import set_afk, get_afk
 
 class AfkSetLayout(LayoutView):
     def __init__(self, author: discord.Member | discord.User, reason: str):
@@ -35,7 +35,7 @@ class AfkCommand(commands.Cog):
         if not ctx.guild:
             return await ctx.send("This command can only be used inside a server.", ephemeral=True)
 
-        await set_afk(ctx.guild.id, ctx.author.id, reason)
+        set_afk(ctx.guild.id, ctx.author.id, reason)
         view = AfkSetLayout(ctx.author, reason)
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
@@ -52,7 +52,7 @@ class AfkCommand(commands.Cog):
             if user.id == message.author.id or user.bot:
                 continue
 
-            afk_data = await get_afk(message.guild.id, user.id)
+            afk_data = get_afk(message.guild.id, user.id)
             if afk_data:
                 reason = afk_data.get("reason", "AFK")
                 ts = afk_data.get("timestamp", 0)

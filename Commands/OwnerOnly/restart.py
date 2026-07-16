@@ -26,7 +26,8 @@ class RestartCommand(commands.Cog):
 
     async def _trigger_pre_restart_backup(self) -> str:
         try:
-                        import datetime
+            from Commands.OwnerOnly.autobackup import _get_backup_channel_id, _create_zip_buffer
+            import datetime
 
             channel_id = _get_backup_channel_id()
             if not channel_id:

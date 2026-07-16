@@ -1,0 +1,24 @@
+{
+    "1506319800714924163": [
+        {
+            "warn_id": "W-1383",
+            "reason": "AutoMod: Unauthorized Discord invite link posted",
+            "moderator_id": 1480221897131299037,
+            "timestamp": 1783719546
+        },
+        {
+            "warn_id": "W-3312",
+            "reason": "AutoMod: Unauthorized Discord invite link posted",
+            "moderator_id": 1480221897131299037,
+            "timestamp": 1783719549
+        }
+    ],
+    "1397287814571233363": [
+        {
+            "warn_id": "W-3840",
+            "reason": "No reason provided.",
+            "moderator_id": 1195055294380781629,
+            "timestamp": 1783805179
+        }
+    ]
+}

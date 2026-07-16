@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Database.storagehandler import log_event
+from Commands.Log._storage import log_event
 
 class UnbanConfirmLayout(LayoutView):
     def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member):

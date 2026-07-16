@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 
-from Database.storagehandler import (
+from Commands.Ticket._storage import (
     load_ticket_config,
     setup_ticket_config,
     reset_ticket_config
@@ -34,9 +34,9 @@ async def _do_ticket_setup(
     opt_names = [s["name"] for s in options_slots]
 
     log_ch_id = log_channel.id if log_channel else None
-    await setup_ticket_config(ctx.guild.id, panel_channel.id, None, None, log_ch_id, title, description, opt_names, options_slots)
+    setup_ticket_config(ctx.guild.id, panel_channel.id, None, None, log_ch_id, title, description, opt_names, options_slots)
 
-    view = TicketConfigDynamicView(ctx.guild.id, config)
+    view = TicketConfigDynamicView(ctx.guild.id)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
 async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
@@ -44,7 +44,7 @@ async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
         return await ctx.send("This command must be run inside a server ticket channel.", ephemeral=True)
 
-    config = await load_ticket_config(ctx.guild.id)
+    config = load_ticket_config(ctx.guild.id)
     support_role_id = config.get("support_role_id")
     ticket_data = config.get("active_tickets", {}).get(str(ctx.channel.id))
 
@@ -91,7 +91,7 @@ async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
         return await ctx.send("This command must be run inside a server ticket channel.", ephemeral=True)
 
-    config = await load_ticket_config(ctx.guild.id)
+    config = load_ticket_config(ctx.guild.id)
     support_role_id = config.get("support_role_id")
     ticket_data = config.get("active_tickets", {}).get(str(ctx.channel.id))
 
@@ -134,7 +134,7 @@ async def _do_ticket_close(ctx: commands.Context, reason: str):
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
         return await ctx.send("This command must be run inside a server ticket channel.", ephemeral=True)
 
-    config = await load_ticket_config(ctx.guild.id)
+    config = load_ticket_config(ctx.guild.id)
     support_role_id = config.get("support_role_id")
     ticket_data = config.get("active_tickets", {}).get(str(ctx.channel.id))
 
@@ -175,7 +175,7 @@ async def _do_ticket_reset(ctx: commands.Context):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    config = await load_ticket_config(ctx.guild.id)
+    config = load_ticket_config(ctx.guild.id)
     active_tickets = config.get("active_tickets", {})
     deleted_channels = 0
 
@@ -189,7 +189,7 @@ async def _do_ticket_reset(ctx: commands.Context):
         except Exception:
             pass
 
-    await reset_ticket_config(ctx.guild.id)
+    reset_ticket_config(ctx.guild.id)
     view = TicketResetSuccessLayout(ctx.author, deleted_channels)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
@@ -198,7 +198,7 @@ async def _do_ticket_transcript(ctx: commands.Context):
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
         return await ctx.send("This command must be run inside a server ticket channel.", ephemeral=True)
 
-    config = await load_ticket_config(ctx.guild.id)
+    config = load_ticket_config(ctx.guild.id)
     support_role_id = config.get("support_role_id")
     ticket_data = config.get("active_tickets", {}).get(str(ctx.channel.id))
 

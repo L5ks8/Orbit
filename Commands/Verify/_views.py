@@ -2,7 +2,7 @@ import time
 import io
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
-from Database.storagehandler import load_verify_config, remove_pending_kick
+from Commands.Verify._storage import load_verify_config, remove_pending_kick
 from Commands.Verify._captcha import generate_captcha
 
 CAPTCHA_SESSIONS = {}
@@ -115,7 +115,7 @@ class PersistentVerifyLayout(LayoutView):
         btn_verify = Button(label="Verify Now", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
         
         async def verify_cb(interaction: discord.Interaction):
-            config = await load_verify_config(interaction.guild.id)
+            config = load_verify_config(interaction.guild.id)
             if not config.get("enabled", True):
                 return await interaction.response.send_message("Server verification is currently disabled (`Status: Inactive`).", ephemeral=True)
 
