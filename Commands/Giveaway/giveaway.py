@@ -197,7 +197,7 @@ class GiveawayCommand(commands.Cog):
     async def cog_load(self):
         self.bot.add_view(PersistentGiveawayLayout())
 
-    @tasks.loop(seconds=15)
+    @tasks.loop(seconds=5)
     async def giveaway_check_loop(self):
         try:
             active = get_all_active_giveaways()
