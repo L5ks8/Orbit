@@ -2507,6 +2507,7 @@ img {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 6px;
+    padding-right: 35px;
     min-height: 44px;
     display: flex;
     flex-wrap: wrap;
@@ -2515,8 +2516,24 @@ img {
     cursor: text;
     transition: border-color 0.2s;
 }
+.custom-multiselect-trigger::after {
+    content: '';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-70%) rotate(45deg);
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid var(--text-muted);
+    border-bottom: 2px solid var(--text-muted);
+    transition: transform 0.2s;
+    pointer-events: none;
+}
 .custom-multiselect.open .custom-multiselect-trigger {
     border-color: var(--text-primary);
+}
+.custom-multiselect.open .custom-multiselect-trigger::after {
+    transform: translateY(-30%) rotate(225deg);
 }
 .custom-multiselect-tags {
     display: flex;

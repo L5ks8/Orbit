@@ -355,8 +355,8 @@ class WebDashboard:
                 am = data.get("automod", {})
                 automod_cfg["enabled"] = bool(am.get("enabled"))
                 
-                gec = am.get("global_exempt_channels", [])
-                ger = am.get("global_exempt_roles", [])
+                gec = am.get("exempt_channels", [])
+                ger = am.get("exempt_roles", [])
                 if "global_exempt_channels" in automod_cfg:
                     del automod_cfg["global_exempt_channels"]
                 if "global_exempt_roles" in automod_cfg:
