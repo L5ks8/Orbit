@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Whitelist._storage import is_whitelisted
+from Database.storagehandler import is_whitelisted
 from Commands.Voice.voice import voice_group
 
 class VcMuteSuccessLayout(LayoutView):

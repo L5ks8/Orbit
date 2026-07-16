@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Whitelist._storage import is_whitelisted
+from Database.storagehandler import is_whitelisted
 
 class NickSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member, old_nick: str, new_nick: str, author: discord.Member):

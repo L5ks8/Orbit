@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Commands.Poll._storage import generate_poll_id, create_poll_entry, get_poll_entry
+from Database.storagehandler import generate_poll_id, create_poll_entry, get_poll_entry
 
 def make_bar(pct: int, length: int = 15) -> str:
     filled = int(round((pct / 100.0) * length))
@@ -44,7 +44,7 @@ class ComponentsPollView(LayoutView):
             btn = Button(label=f"Vote #{idx}", style=discord.ButtonStyle.primary)
 
             async def vote_cb(interaction: discord.Interaction, o=opt):
-                poll_info = get_poll_entry(interaction.guild.id, self.poll_id) if interaction.guild else None
+                poll_info = await get_poll_entry(interaction.guild.id, self.poll_id) if interaction.guild else None
                 if poll_info and poll_info.get("closed"):
                     return await interaction.response.send_message("This poll has been closed and no longer accepts votes.", ephemeral=True)
 
@@ -98,12 +98,12 @@ class PollCommand(commands.Cog):
         if duration < 1 or duration > 46080:
             duration = 60
 
-        poll_id = generate_poll_id(ctx.guild.id)
+        poll_id = await generate_poll_id(ctx.guild.id)
         view = ComponentsPollView(poll_id, question, opts, ctx.author, duration)
         msg = await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
         
         if msg:
-            create_poll_entry(
+            await create_poll_entry(
                 guild_id=ctx.guild.id,
                 poll_id=poll_id,
                 channel_id=msg.channel.id,

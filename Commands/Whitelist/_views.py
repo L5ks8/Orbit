@@ -2,7 +2,7 @@ import re
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
-from Commands.Whitelist._storage import load_whitelist, add_to_whitelist, remove_from_whitelist
+from Database.storagehandler import load_whitelist, add_to_whitelist, remove_from_whitelist
 
 class AddWhitelistModal(Modal, title="Add ID to Whitelist"):
     def __init__(self, parent_view: "WhitelistListLayout"):
@@ -20,11 +20,11 @@ class AddWhitelistModal(Modal, title="Add ID to Whitelist"):
         user_id = int(clean_id_str)
 
         reason_str = self.reason.value or "Whitelisted via panel"
-        success = add_to_whitelist(interaction.guild_id, user_id, reason_str, interaction.user.id)
+        success = await add_to_whitelist(interaction.guild_id, user_id, reason_str, interaction.user.id)
         if not success:
             return await interaction.response.send_message(f"ID `{user_id}` is already on the server moderation whitelist.", ephemeral=True)
 
-        data = load_whitelist(interaction.guild_id)
+        data = await load_whitelist(interaction.guild_id)
         self.parent_view.update_view(data)
         await interaction.response.edit_message(view=self.parent_view)
         await interaction.followup.send(f"Added ID `{user_id}` to the server moderation whitelist.", ephemeral=True)
@@ -42,11 +42,11 @@ class RemoveWhitelistModal(Modal, title="Remove ID from Whitelist"):
             return await interaction.response.send_message("Please provide a valid numeric ID.", ephemeral=True)
         user_id = int(clean_id_str)
 
-        success = remove_from_whitelist(interaction.guild_id, user_id)
+        success = await remove_from_whitelist(interaction.guild_id, user_id)
         if not success:
             return await interaction.response.send_message(f"ID `{user_id}` is not currently on the server moderation whitelist.", ephemeral=True)
 
-        data = load_whitelist(interaction.guild_id)
+        data = await load_whitelist(interaction.guild_id)
         self.parent_view.update_view(data)
         await interaction.response.edit_message(view=self.parent_view)
         await interaction.followup.send(f"Removed ID `{user_id}` from the server moderation whitelist.", ephemeral=True)
@@ -57,7 +57,7 @@ class WhitelistListLayout(LayoutView):
         self.guild = guild
         self.bot = bot
         self.author_id = author_id
-        self.data = load_whitelist(guild.id)
+        self.data = await load_whitelist(guild.id)
         self.build_ui()
 
     def update_view(self, data: dict):

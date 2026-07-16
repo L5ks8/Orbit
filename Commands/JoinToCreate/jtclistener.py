@@ -1,7 +1,7 @@
 import asyncio
 import discord
 from discord.ext import commands
-from Commands.JoinToCreate._storage import load_jtc_config, load_active_channels, create_active_channel, update_active_channel, remove_active_channel, get_active_channel
+from Database.storagehandler import load_jtc_config, load_active_channels, create_active_channel, update_active_channel, remove_active_channel, get_active_channel
 from Commands.JoinToCreate._views import build_jtc_container, PersistentJTCControlLayout
 
 class JTCListenerCog(commands.Cog):
@@ -14,7 +14,7 @@ class JTCListenerCog(commands.Cog):
             return
 
         guild = member.guild
-        config = load_jtc_config(guild.id)
+        config = await load_jtc_config(guild.id)
         if not config.get("enabled", False):
             return
 
@@ -52,7 +52,7 @@ class JTCListenerCog(commands.Cog):
             except Exception:
                 pass
 
-            data = create_active_channel(guild.id, temp_channel.id, member.id)
+            data = await create_active_channel(guild.id, temp_channel.id, member.id)
             if default_limit > 0:
                 data["limit"] = default_limit
 
@@ -66,16 +66,16 @@ class JTCListenerCog(commands.Cog):
                 )
                 if msg:
                     data["message_id"] = msg.id
-                    update_active_channel(guild.id, temp_channel.id, data)
+                    await update_active_channel(guild.id, temp_channel.id, data)
             except Exception as e:
                 print(f"Failed to send JTC control container: {e}")
 
         if before.channel and before.channel.id != hub_id:
-            active = get_active_channel(guild.id, before.channel.id)
+            active = await get_active_channel(guild.id, before.channel.id)
             if active:
                 remaining_members = [m for m in before.channel.members if not m.bot]
                 if len(remaining_members) == 0:
-                    remove_active_channel(guild.id, before.channel.id)
+                    await remove_active_channel(guild.id, before.channel.id)
                     try:
                         await before.channel.delete(reason="Join-to-Create channel empty")
                     except Exception:
@@ -84,7 +84,7 @@ class JTCListenerCog(commands.Cog):
                     if active.get("owner_id") == member.id:
                         new_owner = remaining_members[0]
                         active["owner_id"] = new_owner.id
-                        update_active_channel(guild.id, before.channel.id, active)
+                        await update_active_channel(guild.id, before.channel.id, active)
 
                         try:
                             await before.channel.set_permissions(

@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.JoinToCreate.tempvoice import tempvoice_group
-from Commands.JoinToCreate._storage import load_jtc_config, save_jtc_config
+from Database.storagehandler import load_jtc_config, save_jtc_config
 
 async def _do_jtc_setup(ctx: commands.Context, channel: discord.VoiceChannel, category: discord.CategoryChannel, default_user_limit: int = 0):
     await ctx.defer()
@@ -13,12 +13,12 @@ async def _do_jtc_setup(ctx: commands.Context, channel: discord.VoiceChannel, ca
     if default_user_limit < 0 or default_user_limit > 99:
         default_user_limit = 0
 
-    config = load_jtc_config(ctx.guild.id)
+    config = await load_jtc_config(ctx.guild.id)
     config["enabled"] = True
     config["hub_channel_id"] = channel.id
     config["category_id"] = category.id
     config["default_user_limit"] = default_user_limit
-    save_jtc_config(ctx.guild.id, config)
+    await save_jtc_config(ctx.guild.id, config)
 
     header_str = "### Temp Voice Setup Complete"
     info_str = (

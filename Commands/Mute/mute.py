@@ -1,14 +1,14 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Whitelist._storage import is_whitelisted
-from Commands.Mute._storage import get_muted_role_id, set_muted_role_id
-from Commands.Log._storage import log_event
+from Database.storagehandler import is_whitelisted
+from Database.storagehandler import get_muted_role_id, set_muted_role_id
+from Database.storagehandler import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
 
 
 async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
-    stored_id = get_muted_role_id(guild.id)
+    stored_id = await get_muted_role_id(guild.id)
     if stored_id:
         role = guild.get_role(stored_id)
         if role:
@@ -18,7 +18,7 @@ async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
     if not role:
         role = await guild.create_role(name="Muted", reason="Orbit Mute Role")
 
-    set_muted_role_id(guild.id, role.id)
+    await set_muted_role_id(guild.id, role.id)
     return role
 
 

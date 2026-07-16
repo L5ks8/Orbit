@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Commands.Reminder.remind import remind_group
-from Commands.Reminder._storage import add_reminder
+from Database.storagehandler import add_reminder
 from Commands.Reminder._views import parse_duration, ReminderSuccessLayout
 
 async def _do_remind_set(ctx: commands.Context, duration_str: str, text: str):
@@ -15,7 +15,7 @@ async def _do_remind_set(ctx: commands.Context, duration_str: str, text: str):
         return await ctx.send("Please specify the reminder message text.", ephemeral=True)
 
     guild_id = ctx.guild.id if ctx.guild else None
-    entry = add_reminder(ctx.author.id, ctx.channel.id, guild_id, text, seconds)
+    entry = await add_reminder(ctx.author.id, ctx.channel.id, guild_id, text, seconds)
     view = ReminderSuccessLayout(entry)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 

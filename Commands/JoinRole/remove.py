@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
-from Commands.JoinRole._storage import remove_join_role
+from Database.storagehandler import remove_join_role
 from Commands.JoinRole._views import JoinRoleLayout
 
 async def _do_jr_remove(ctx: commands.Context, role: discord.Role):
@@ -10,7 +10,7 @@ async def _do_jr_remove(ctx: commands.Context, role: discord.Role):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    removed = remove_join_role(ctx.guild.id, role.id)
+    removed = await remove_join_role(ctx.guild.id, role.id)
     summary = f"Removed {role.mention}" if removed else f"{role.mention} was not in the join roles list."
     view = JoinRoleLayout(ctx.guild, summary, ctx.author.id)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())

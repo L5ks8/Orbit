@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Commands.JoinRole._storage import load_join_roles
+from Database.storagehandler import load_join_roles
 
 class JoinRoleListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -11,7 +11,7 @@ class JoinRoleListener(commands.Cog):
         if member.bot:
             return
 
-        role_ids = load_join_roles(member.guild.id)
+        role_ids = await load_join_roles(member.guild.id)
         if not role_ids:
             return
 

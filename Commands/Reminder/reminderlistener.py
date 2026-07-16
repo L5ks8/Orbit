@@ -1,7 +1,7 @@
 import time
 import discord
 from discord.ext import commands, tasks
-from Commands.Reminder._storage import remove_reminder, load_reminders
+from Database.storagehandler import remove_reminder, load_reminders
 from Commands.Reminder._views import ReminderAlertLayout
 
 class ReminderListener(commands.Cog):
@@ -15,10 +15,10 @@ class ReminderListener(commands.Cog):
     @tasks.loop(seconds=10.0)
     async def reminder_loop(self):
         now = int(time.time())
-        all_rems = load_reminders()
+        all_rems = await load_reminders()
         for r in all_rems:
             if now >= r.get("expires_at", 0):
-                remove_reminder(r["id"])
+                await remove_reminder(r["id"])
                 await self._deliver_alert(r)
 
     @reminder_loop.before_loop

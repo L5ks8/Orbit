@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Commands.OwnerOnly._storage import load_devmode_config, save_devmode_config
+from Database.storagehandler import load_devmode_config, save_devmode_config
 
 class DevmodeStatusLayout(LayoutView):
     def __init__(self, enabled: bool, reason: str, owner: discord.abc.User):
@@ -42,7 +42,7 @@ class DevmodeCommand(commands.Cog):
     @commands.command(name="devmode", hidden=True)
     @commands.is_owner()
     async def devmode_cmd(self, ctx: commands.Context, state: str = None, *, reason: str = "System upgrades and developer testing"):
-        config = load_devmode_config()
+        config = await load_devmode_config()
         if state is None:
             view = DevmodeStatusLayout(config.get("enabled", False), config.get("reason", "System upgrades and developer testing"), ctx.author)
             return await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
@@ -59,7 +59,7 @@ class DevmodeCommand(commands.Cog):
         if reason and reason.strip():
             config["reason"] = reason.strip()
 
-        save_devmode_config(config)
+        await save_devmode_config(config)
         view = DevmodeStatusLayout(enabled, config["reason"], ctx.author)
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 

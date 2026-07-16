@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Poll.poll import ComponentsPollView
-from Commands.Poll._storage import generate_poll_id, create_poll_entry
+from Database.storagehandler import generate_poll_id, create_poll_entry
 
 class FastPollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -27,12 +27,12 @@ class FastPollCommand(commands.Cog):
             duration = 60
 
         opts = ["Yes", "No"]
-        poll_id = generate_poll_id(ctx.guild.id)
+        poll_id = await generate_poll_id(ctx.guild.id)
         view = ComponentsPollView(poll_id, question, opts, ctx.author, duration)
         msg = await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
         if msg:
-            create_poll_entry(
+            await create_poll_entry(
                 guild_id=ctx.guild.id,
                 poll_id=poll_id,
                 channel_id=msg.channel.id,

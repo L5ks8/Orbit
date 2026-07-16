@@ -1,8 +1,8 @@
 import re
 import discord
 from discord.ext import commands
-from Commands.Whitelist._storage import add_to_whitelist
-from Commands.Log._storage import log_event
+from Database.storagehandler import add_to_whitelist
+from Database.storagehandler import log_event
 
 async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
     await ctx.defer()
@@ -16,7 +16,7 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
         return await ctx.send("Please provide a valid numeric ID to whitelist.", ephemeral=True)
     user_id = int(clean_id_str)
 
-    success = add_to_whitelist(ctx.guild.id, user_id, reason, ctx.author.id)
+    success = await add_to_whitelist(ctx.guild.id, user_id, reason, ctx.author.id)
     if not success:
         return await ctx.send(f"ID `{user_id}` is already on the server moderation whitelist.", ephemeral=True)
 

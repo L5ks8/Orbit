@@ -2,8 +2,8 @@ import datetime
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.Whitelist._storage import is_whitelisted
-from Commands.Log._storage import log_event
+from Database.storagehandler import is_whitelisted
+from Database.storagehandler import log_event
 
 class TimeoutSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member, minutes: int, reason: str, author: discord.Member):

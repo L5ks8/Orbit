@@ -509,8 +509,7 @@ async def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
 async def load_responses(guild_id: int) -> Dict[str, dict]:
     doc = await get_config(guild_id, "autoresponders")
     data = {k: v for k, v in doc.items() if k != "_id"}
-    
-    # Migrate old string format to dict format
+
     for k, v in data.items():
         if isinstance(v, str):
             data[k] = {"response": v, "channel_id": None}
@@ -648,3 +647,312 @@ async def save_automod_config(guild_id: int, config: Dict[str, Any]) -> None:
     await save_config(guild_id, "automod", config)
 
 # --- Blacklist ---
+async def load_blacklist(guild_id: int) -> Dict[str, Dict[str, Any]]:
+    doc = await get_config(guild_id, "blacklist")
+    return {k: v for k, v in doc.items() if k != "_id"}
+
+async def save_blacklist(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
+    doc = {"_id": guild_id}
+    doc.update(data)
+    await save_config(guild_id, "blacklist", doc)
+
+async def add_to_blacklist(guild_id: int, user_id: int, reason: str, added_by: int) -> bool:
+    data = await load_blacklist(guild_id)
+    uid_str = str(user_id)
+    if uid_str in data:
+        return False
+    data[uid_str] = {
+        "reason": reason or "No reason provided",
+        "added_by": added_by
+    }
+    await save_blacklist(guild_id, data)
+    return True
+
+async def remove_from_blacklist(guild_id: int, user_id: int) -> bool:
+    data = await load_blacklist(guild_id)
+    uid_str = str(user_id)
+    if uid_str not in data:
+        return False
+    del data[uid_str]
+    await save_blacklist(guild_id, data)
+    return True
+
+async def is_blacklisted(guild_id: int, user_id: int) -> bool:
+    data = await load_blacklist(guild_id)
+    return str(user_id) in data
+
+# --- JoinRole ---
+async def load_join_roles(guild_id: int) -> List[int]:
+    doc = await get_config(guild_id, "joinroles")
+    return doc.get("roles", [])
+
+async def save_join_roles(guild_id: int, roles: List[int]) -> None:
+    await save_config(guild_id, "joinroles", {"roles": roles})
+
+async def add_join_role(guild_id: int, role_id: int) -> bool:
+    roles = await load_join_roles(guild_id)
+    if role_id in roles:
+        return False
+    roles.append(role_id)
+    await save_join_roles(guild_id, roles)
+    return True
+
+async def remove_join_role(guild_id: int, role_id: int) -> bool:
+    roles = await load_join_roles(guild_id)
+    if role_id not in roles:
+        return False
+    roles.remove(role_id)
+    await save_join_roles(guild_id, roles)
+    return True
+
+async def clear_join_roles(guild_id: int) -> int:
+    roles = await load_join_roles(guild_id)
+    count = len(roles)
+    if count > 0:
+        await save_join_roles(guild_id, [])
+    return count
+
+# --- JoinToCreate ---
+async def load_jtc_config(guild_id: int) -> Dict[str, Any]:
+    doc = await get_config(guild_id, "jtc_config")
+    if "enabled" not in doc:
+        doc["enabled"] = False
+    if "hub_channel_id" not in doc:
+        doc["hub_channel_id"] = None
+    if "category_id" not in doc:
+        doc["category_id"] = None
+    if "default_user_limit" not in doc:
+        doc["default_user_limit"] = 0
+    return doc
+
+async def save_jtc_config(guild_id: int, data: Dict[str, Any]) -> None:
+    await save_config(guild_id, "jtc_config", data)
+
+async def load_active_channels(guild_id: int) -> Dict[str, Dict[str, Any]]:
+    doc = await get_config(guild_id, "jtc_channels")
+    return {k: v for k, v in doc.items() if k != "_id"}
+
+async def save_active_channels(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
+    doc = {"_id": guild_id}
+    doc.update(data)
+    await save_config(guild_id, "jtc_channels", doc)
+
+async def get_active_channel(guild_id: int, channel_id: int) -> Dict[str, Any] | None:
+    data = await load_active_channels(guild_id)
+    return data.get(str(channel_id))
+
+async def create_active_channel(guild_id: int, channel_id: int, owner_id: int, message_id: int = 0) -> Dict[str, Any]:
+    data = await load_active_channels(guild_id)
+    entry = {
+        "channel_id": channel_id,
+        "owner_id": owner_id,
+        "locked": False,
+        "hidden": False,
+        "limit": 0,
+        "trusted_users": [],
+        "message_id": message_id
+    }
+    data[str(channel_id)] = entry
+    await save_active_channels(guild_id, data)
+    return entry
+
+async def update_active_channel(guild_id: int, channel_id: int, entry: Dict[str, Any]) -> None:
+    data = await load_active_channels(guild_id)
+    data[str(channel_id)] = entry
+    await save_active_channels(guild_id, data)
+
+async def remove_active_channel(guild_id: int, channel_id: int) -> None:
+    data = await load_active_channels(guild_id)
+    ch_str = str(channel_id)
+    if ch_str in data:
+        del data[ch_str]
+        await save_active_channels(guild_id, data)
+
+# --- Mute ---
+async def get_muted_role_id(guild_id: int) -> int | None:
+    doc = await get_config(guild_id, "mute")
+    return doc.get("role_id")
+
+async def set_muted_role_id(guild_id: int, role_id: int) -> None:
+    await save_config(guild_id, "mute", {"role_id": role_id})
+
+# --- Poll ---
+async def load_polls(guild_id: int) -> Dict[str, Dict[str, Any]]:
+    doc = await get_config(guild_id, "polls")
+    return {k: v for k, v in doc.items() if k != "_id"}
+
+async def save_polls(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
+    doc = {"_id": guild_id}
+    doc.update(data)
+    await save_config(guild_id, "polls", doc)
+
+async def generate_poll_id(guild_id: int) -> str:
+    data = await load_polls(guild_id)
+    while True:
+        pid = "P-" + "".join(random.choices(string.digits, k=6))
+        if pid not in data:
+            return pid
+
+async def create_poll_entry(guild_id: int, poll_id: str, channel_id: int, message_id: int, question: str, options: list[str], author_id: int) -> None:
+    data = await load_polls(guild_id)
+    data[poll_id] = {
+        "channel_id": channel_id,
+        "message_id": message_id,
+        "question": question,
+        "options": options,
+        "author_id": author_id,
+        "closed": False
+    }
+    await save_polls(guild_id, data)
+
+async def get_poll_entry(guild_id: int, poll_id: str) -> Dict[str, Any] | None:
+    data = await load_polls(guild_id)
+    pid_clean = poll_id.strip().upper()
+    if not pid_clean.startswith("P-"):
+        if f"P-{pid_clean}" in data:
+            return data[f"P-{pid_clean}"]
+    return data.get(pid_clean)
+
+async def close_poll_entry(guild_id: int, poll_id: str) -> bool:
+    data = await load_polls(guild_id)
+    pid_clean = poll_id.strip().upper()
+    if not pid_clean.startswith("P-"):
+        if f"P-{pid_clean}" in data:
+            pid_clean = f"P-{pid_clean}"
+            
+    if pid_clean not in data:
+        return False
+    data[pid_clean]["closed"] = True
+    await save_polls(guild_id, data)
+    return True
+
+# --- Reminder ---
+import uuid
+
+async def load_reminders() -> list[dict]:
+    doc = await get_config(0, "reminders")
+    return doc.get("reminders", [])
+
+async def save_reminders(data: list[dict]):
+    await save_config(0, "reminders", {"reminders": data})
+
+async def add_reminder(user_id: int, channel_id: int, guild_id: int | None, text: str, duration_sec: int) -> dict:
+    reminders = await load_reminders()
+    now = int(time.time())
+    rem_id = uuid.uuid4().hex[:6]
+    entry = {
+        "id": rem_id,
+        "user_id": user_id,
+        "channel_id": channel_id,
+        "guild_id": guild_id,
+        "text": text.strip(),
+        "created_at": now,
+        "expires_at": now + duration_sec
+    }
+    reminders.append(entry)
+    await save_reminders(reminders)
+    return entry
+
+async def remove_reminder(rem_id: str, user_id: int | None = None) -> bool:
+    reminders = await load_reminders()
+    initial_len = len(reminders)
+    if user_id is not None:
+        filtered = [r for r in reminders if not (r["id"].lower() == rem_id.lower() and r["user_id"] == user_id)]
+    else:
+        filtered = [r for r in reminders if r["id"].lower() != rem_id.lower()]
+    
+    if len(filtered) != initial_len:
+        await save_reminders(filtered)
+        return True
+    return False
+
+async def get_user_reminders(user_id: int) -> list[dict]:
+    reminders = await load_reminders()
+    return [r for r in reminders if r["user_id"] == user_id]
+
+# --- Voice ---
+async def load_vcban(guild_id: int) -> Dict[str, Dict[str, Any]]:
+    doc = await get_config(guild_id, "vcban")
+    return {k: v for k, v in doc.items() if k != "_id"}
+
+async def save_vcban(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
+    doc = {"_id": guild_id}
+    doc.update(data)
+    await save_config(guild_id, "vcban", doc)
+
+async def add_to_vcban(guild_id: int, user_id: int, reason: str, added_by: int) -> bool:
+    data = await load_vcban(guild_id)
+    uid_str = str(user_id)
+    if uid_str in data:
+        return False
+    data[uid_str] = {
+        "reason": reason or "No reason provided",
+        "added_by": added_by
+    }
+    await save_vcban(guild_id, data)
+    return True
+
+async def remove_from_vcban(guild_id: int, user_id: int) -> bool:
+    data = await load_vcban(guild_id)
+    uid_str = str(user_id)
+    if uid_str not in data:
+        return False
+    del data[uid_str]
+    await save_vcban(guild_id, data)
+    return True
+
+async def is_vcbanned(guild_id: int, user_id: int) -> bool:
+    data = await load_vcban(guild_id)
+    return str(user_id) in data
+
+# --- Whitelist ---
+async def load_whitelist(guild_id: int) -> Dict[str, Any]:
+    doc = await get_config(guild_id, "whitelist")
+    return {k: v for k, v in doc.items() if k != "_id"}
+
+async def save_whitelist(guild_id: int, data: Dict[str, Any]) -> None:
+    doc = {"_id": guild_id}
+    doc.update(data)
+    await save_config(guild_id, "whitelist", doc)
+
+async def is_whitelisted(guild_id: int, user_id: int) -> bool:
+    data = await load_whitelist(guild_id)
+    return str(user_id) in data
+
+async def add_to_whitelist(guild_id: int, user_id: int, reason: str, added_by: int) -> bool:
+    data = await load_whitelist(guild_id)
+    uid_str = str(user_id)
+    if uid_str in data:
+        return False
+    data[uid_str] = {
+        "reason": reason,
+        "added_by": added_by,
+        "timestamp": int(time.time())
+    }
+    await save_whitelist(guild_id, data)
+    return True
+
+async def remove_from_whitelist(guild_id: int, user_id: int) -> bool:
+    data = await load_whitelist(guild_id)
+    uid_str = str(user_id)
+    if uid_str not in data:
+        return False
+    del data[uid_str]
+    await save_whitelist(guild_id, data)
+    return True
+
+# --- OwnerOnly (DevMode) ---
+async def load_devmode_config() -> dict:
+    doc = await get_config(0, "devmode")
+    if "enabled" not in doc:
+        doc["enabled"] = False
+    if "reason" not in doc:
+        doc["reason"] = "System upgrades and developer testing"
+    return doc
+
+async def save_devmode_config(data: dict):
+    await save_config(0, "devmode", data)
+
+async def is_devmode_enabled() -> tuple[bool, str]:
+    data = await load_devmode_config()
+    return data.get("enabled", False), data.get("reason", "System upgrades and developer testing")

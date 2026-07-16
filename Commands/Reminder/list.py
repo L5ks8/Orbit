@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
 from Commands.Reminder.remind import remind_group
-from Commands.Reminder._storage import get_user_reminders
+from Database.storagehandler import get_user_reminders
 from Commands.Reminder._views import ReminderListLayout
 
 async def _do_remind_list(ctx: commands.Context):
     await ctx.defer(ephemeral=True)
-    user_rems = get_user_reminders(ctx.author.id)
+    user_rems = await get_user_reminders(ctx.author.id)
     view = ReminderListLayout(user_rems)
     await ctx.send(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 

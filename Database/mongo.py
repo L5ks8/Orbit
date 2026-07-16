@@ -31,3 +31,10 @@ async def save_config(guild_id: int, module_name: str, data: Dict[str, Any]):
     collection = db[module_name]
     data["_id"] = guild_id
     await collection.replace_one({"_id": guild_id}, data, upsert=True)
+
+async def get_all_configs(module_name: str) -> list[Dict[str, Any]]:
+    if db is None:
+        return []
+    collection = db[module_name]
+    cursor = collection.find({})
+    return await cursor.to_list(length=None)

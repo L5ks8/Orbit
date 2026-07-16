@@ -1,6 +1,6 @@
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Commands.JoinRole._storage import load_join_roles, clear_join_roles
+from Database.storagehandler import load_join_roles, clear_join_roles
 
 class JoinRoleLayout(LayoutView):
     def __init__(self, guild: discord.Guild, action_summary: str, author_id: int):
@@ -8,7 +8,7 @@ class JoinRoleLayout(LayoutView):
         self.guild = guild
         self.author_id = author_id
         
-        role_ids = load_join_roles(guild.id)
+        role_ids = await load_join_roles(guild.id)
         role_mentions = []
         for rid in role_ids:
             role = guild.get_role(rid)
@@ -47,7 +47,7 @@ class JoinRoleLayout(LayoutView):
             async def clear_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.author_id:
                     return await interaction.response.send_message("You cannot clear these roles.", ephemeral=True)
-                cleared = clear_join_roles(self.guild.id)
+                cleared = await clear_join_roles(self.guild.id)
                 self.clear_items()
                 self.add_item(Container(TextDisplay(content=f"### Cleared `{cleared}` automatic join roles."), ActionRow(btn_close)))
                 await interaction.response.edit_message(view=self)
