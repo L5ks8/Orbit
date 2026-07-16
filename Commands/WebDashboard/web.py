@@ -177,7 +177,7 @@ class WebDashboard:
             
         # Get actual channels and roles for dropdowns
         channels = [{"id": str(c.id), "name": c.name} for c in guild.text_channels]
-        roles = [{"id": str(r.id), "name": r.name} for r in guild.roles if not r.is_default()]
+        roles = [{"id": str(r.id), "name": r.name, "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe"} for r in guild.roles if not r.is_default()]
         
         # Load configs
         welcome_cfg = load_welcome_config(guild_id)

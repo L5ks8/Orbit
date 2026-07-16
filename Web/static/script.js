@@ -95,6 +95,102 @@ async function loadDashboard() {
     }
 }
 
+class CustomSelect {
+    constructor(selectElement, items, selectedValue, placeholder) {
+        this.select = selectElement;
+        this.select.style.display = 'none';
+        
+        this.items = items;
+        this.value = selectedValue || '';
+        
+        this.container = document.createElement('div');
+        this.container.className = 'custom-select';
+        
+        this.trigger = document.createElement('div');
+        this.trigger.className = 'custom-select-trigger';
+        
+        this.dropdown = document.createElement('div');
+        this.dropdown.className = 'custom-select-dropdown';
+        
+        this.searchContainer = document.createElement('div');
+        this.searchContainer.className = 'custom-select-search';
+        this.searchInput = document.createElement('input');
+        this.searchInput.type = 'text';
+        this.searchInput.placeholder = 'Search...';
+        this.searchContainer.appendChild(this.searchInput);
+        
+        this.optionsContainer = document.createElement('div');
+        this.optionsContainer.className = 'custom-select-options';
+        
+        this.dropdown.appendChild(this.searchContainer);
+        this.dropdown.appendChild(this.optionsContainer);
+        
+        this.container.appendChild(this.trigger);
+        this.container.appendChild(this.dropdown);
+        
+        this.select.parentNode.insertBefore(this.container, this.select.nextSibling);
+        
+        this.trigger.addEventListener('click', () => {
+            const isOpen = this.container.classList.contains('open');
+            document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
+            if (!isOpen) {
+                this.container.classList.add('open');
+                this.searchInput.value = '';
+                this.renderOptions('');
+                this.searchInput.focus();
+            }
+        });
+        
+        this.searchInput.addEventListener('input', (e) => {
+            this.renderOptions(e.target.value.toLowerCase());
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!this.container.contains(e.target)) {
+                this.container.classList.remove('open');
+            }
+        });
+        
+        this.updateTrigger(placeholder);
+    }
+    
+    updateTrigger(placeholder) {
+        const item = this.items.find(i => i.id === this.value);
+        if (item) {
+            this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <span style="font-size:10px">▼</span>`;
+        } else {
+            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary)">${placeholder}</div> <span style="font-size:10px">▼</span>`;
+        }
+        this.select.value = this.value;
+    }
+    
+    renderOptions(filter) {
+        this.optionsContainer.innerHTML = '';
+        
+        const noneOption = document.createElement('div');
+        noneOption.className = `custom-select-option ${this.value === '' ? 'selected' : ''}`;
+        noneOption.innerHTML = `<div class="content" style="color:var(--text-secondary)">None</div>`;
+        noneOption.addEventListener('click', () => {
+            this.value = '';
+            this.updateTrigger('None');
+            this.container.classList.remove('open');
+        });
+        this.optionsContainer.appendChild(noneOption);
+        
+        this.items.filter(i => i.name.toLowerCase().includes(filter)).forEach(item => {
+            const opt = document.createElement('div');
+            opt.className = `custom-select-option ${this.value === item.id ? 'selected' : ''}`;
+            opt.innerHTML = `<span class="color-dot" style="background:${item.color}"></span> @${item.name}`;
+            opt.addEventListener('click', () => {
+                this.value = item.id;
+                this.updateTrigger('Select Role...');
+                this.container.classList.remove('open');
+            });
+            this.optionsContainer.appendChild(opt);
+        });
+    }
+}
+
 let globalRoles = [];
 
 function renderAutoReplies(replies) {
@@ -141,16 +237,23 @@ function addJoinRoleRow(selectedRoleId = '') {
     const row = document.createElement('div');
     row.style = 'display:flex; gap:10px; align-items:center;';
     
-    let optionsHtml = '<option value="">Select Role...</option>';
-    globalRoles.forEach(r => {
-        optionsHtml += `<option value="${r.id}" ${r.id === selectedRoleId ? 'selected' : ''}>@${r.name}</option>`;
-    });
+    const select = document.createElement('select');
+    select.className = 'jr-select';
+    select.style.flex = '1';
+    select.required = true;
     
-    row.innerHTML = `
-        <select class="jr-select" style="flex:1" required>${optionsHtml}</select>
-        <button type="button" class="btn-secondary" style="padding:12px; color:#ff4444; border-color:#ff4444" onclick="this.parentElement.remove()">X</button>
-    `;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-secondary';
+    btn.style = 'padding:12px; color:#ff4444; border-color:#ff4444';
+    btn.innerText = 'X';
+    btn.onclick = () => row.remove();
+    
+    row.appendChild(select);
+    row.appendChild(btn);
     list.appendChild(row);
+    
+    new CustomSelect(select, globalRoles, selectedRoleId, 'Select Role...');
 }
 
 document.getElementById('btn-add-autoreply').addEventListener('click', () => addAutoReplyRow());
@@ -169,7 +272,7 @@ async function loadConfig(guildId, guildName) {
         const data = await res.json();
         globalRoles = data.roles;
 
-        // Populate selects
+        // Populate normal selects (channels)
         const welcomeSelect = document.getElementById('welcome_channel_id');
         welcomeSelect.innerHTML = '<option value="">None</option>';
         const verifyPanelSelect = document.getElementById('verify_panel_channel');
@@ -177,15 +280,6 @@ async function loadConfig(guildId, guildName) {
         data.channels.forEach(c => {
             welcomeSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
             verifyPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
-        });
-
-        const verifySelect = document.getElementById('verify_role_id');
-        verifySelect.innerHTML = '<option value="">None</option>';
-        const verifyRemoveSelect = document.getElementById('verify_remove_role_id');
-        verifyRemoveSelect.innerHTML = '<option value="">None</option>';
-        data.roles.forEach(r => {
-            verifySelect.innerHTML += `<option value="${r.id}">@${r.name}</option>`;
-            verifyRemoveSelect.innerHTML += `<option value="${r.id}">@${r.name}</option>`;
         });
 
         // Set values
@@ -202,13 +296,18 @@ async function loadConfig(guildId, guildName) {
 
         // Verify
         document.getElementById('verify_enabled').checked = config.verify?.enabled || false;
-        document.getElementById('verify_role_id').value = config.verify?.role_id || '';
-        document.getElementById('verify_remove_role_id').value = config.verify?.remove_role_id || '';
         document.getElementById('verify_type').value = config.verify?.verification_type || 'captcha';
 
+        // Clear existing custom selects
+        document.querySelectorAll('.custom-select').forEach(el => el.remove());
+
+        // Initialize Custom Selects for Roles
+        new CustomSelect(document.getElementById('verify_role_id'), globalRoles, config.verify?.role_id || '', 'Select Verified Role...');
+        new CustomSelect(document.getElementById('verify_remove_role_id'), globalRoles, config.verify?.remove_role_id || '', 'Select Unverified Role...');
+
         // AutoResponder & JoinRoles
-        renderAutoReplies(data.autoresponder || {});
-        renderJoinRoles(data.joinroles || []);
+        renderAutoReplies(config.autoresponder || {});
+        renderJoinRoles(config.joinroles || []);
 
         document.getElementById('config-loader').classList.add('hidden');
         document.getElementById('config-layout').style.display = 'grid';
