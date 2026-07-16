@@ -44,11 +44,7 @@ class DelWarnCog(commands.Cog):
 
     @commands.hybrid_command(name="delwarn", aliases=["removewarn", "warnremove"], description="Remove a specific warning from a member by ID.")
     @commands.has_permissions(moderate_members=True)
-    async def delwarn_cmd(self, ctx: commands.Context, user: str = None, warn_id: str = None):
-        if user is None or warn_id is None:
-            return await ctx.send(format_usage("-delwarn", "<user_id>", "<warn_id>"), ephemeral=True)
-        if not isinstance(user, discord.Member):
-            user = await MemberOrIDConverter().convert(ctx, str(user))
+    async def delwarn_cmd(self, ctx: commands.Context, user: discord.Member, warn_id: str):
         await _do_delwarn(ctx, user, warn_id)
 
     @delwarn_cmd.error
@@ -56,9 +52,9 @@ class DelWarnCog(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Moderate Members permission to manage warnings.", ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage("-delwarn", "<user_id>", "<warn_id>"), ephemeral=True)
+            await ctx.send(format_usage("-delwarn", "<@member>", "<warn_id>"), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-delwarn', '<user_id>', '<warn_id>')}", ephemeral=True)
+            await ctx.send(f"{format_usage('-delwarn', '<@member>', '<warn_id>')}", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DelWarnCog(bot))

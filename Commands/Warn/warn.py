@@ -62,20 +62,17 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
     description="Issue a formal warning to a member."
 )
 @commands.has_permissions(moderate_members=True)
-async def warn_cmd(ctx: commands.Context, user: str = None, *, reason: str = "No reason provided."):
-    if user is None:
-        return await ctx.send(format_usage("-warn", "<user_id>", "[reason]"), ephemeral=True)
-    target_member = user if isinstance(user, discord.Member) else await MemberOrIDConverter().convert(ctx, str(user))
-    await _do_warn_add(ctx, target_member, reason)
+async def warn_cmd(ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided."):
+    await _do_warn_add(ctx, user, reason)
 
 @warn_cmd.error
 async def warn_cmd_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("You need Moderate Members permission to issue warnings.", ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(format_usage("-warn", "<user_id>", "[reason]"), ephemeral=True)
+        await ctx.send(format_usage("-warn", "<@member>", "[reason]"), ephemeral=True)
     elif isinstance(error, commands.BadArgument):
-        await ctx.send("Could not find that member. Usage: `-warn <user_id> [reason]`", ephemeral=True)
+        await ctx.send("Could not find that member. Usage: `-warn <@member> [reason]`", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     if "warn" not in bot.all_commands:

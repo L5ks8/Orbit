@@ -43,11 +43,7 @@ class ClearWarnsCog(commands.Cog):
 
     @commands.hybrid_command(name="clearwarns", aliases=["clearwarn", "warnclear", "warnreset"], description="Clear all warnings for a member.")
     @commands.has_permissions(moderate_members=True)
-    async def clearwarns_cmd(self, ctx: commands.Context, user: str = None):
-        if user is None:
-            return await ctx.send(format_usage("-clearwarns", "<user_id>"), ephemeral=True)
-        if not isinstance(user, discord.Member):
-            user = await MemberOrIDConverter().convert(ctx, str(user))
+    async def clearwarns_cmd(self, ctx: commands.Context, user: discord.Member):
         await _do_clearwarnings(ctx, user)
 
     @clearwarns_cmd.error
@@ -55,9 +51,9 @@ class ClearWarnsCog(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Moderate Members permission to manage warnings.", ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage("-clearwarns", "<user_id>"), ephemeral=True)
+            await ctx.send(format_usage("-clearwarns", "<@member>"), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-clearwarns', '<user_id>')}", ephemeral=True)
+            await ctx.send(f"{format_usage('-clearwarns', '<@member>')}", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ClearWarnsCog(bot))

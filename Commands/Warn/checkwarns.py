@@ -98,15 +98,13 @@ class CheckWarnsCog(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="checkwarns", aliases=["checkwarn", "warnings", "warnlist", "warnhistory"], description="Check all warnings issued to a member.")
-    async def checkwarn_cmd(self, ctx: commands.Context, user: str = None):
-        if user is not None and not isinstance(user, discord.Member):
-            user = await MemberOrIDConverter().convert(ctx, str(user))
+    async def checkwarn_cmd(self, ctx: commands.Context, user: discord.Member = None):
         await _do_warnings(ctx, user)
 
     @checkwarn_cmd.error
     async def checkwarns_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-checkwarns', '<user_id>')}", ephemeral=True)
+            await ctx.send(f"{format_usage('-checkwarns', '<@member>')}", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CheckWarnsCog(bot))
