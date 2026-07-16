@@ -28,10 +28,10 @@ class WelcomeListener(commands.Cog):
 
         formatted = format_welcome_string(config.get("message", ""), member)
         
-        from Commands.Welcome._storage import get_welcome_bg_path
         from Commands.Welcome.image_gen import generate_welcome_image
         import discord
         import aiohttp
+        import pathlib
 
         # Download avatar bytes
         avatar_bytes = b""
@@ -41,20 +41,29 @@ class WelcomeListener(commands.Cog):
             except Exception:
                 pass
                 
-        bg_path = get_welcome_bg_path(member.guild.id)
+        bg_path = pathlib.Path("nonexistent.png")
         
-        # If config has an image_url, download it to be the background
+        # If config has an image_url, resolve it
         image_url = config.get("image_url", "")
         if image_url:
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(image_url) as resp:
-                        if resp.status == 200:
-                            bg_bytes = await resp.read()
-                            with open(bg_path, "wb") as f:
-                                f.write(bg_bytes)
-            except Exception:
-                pass
+            if image_url.startswith("/static/"):
+                # It's a locally uploaded file via the dashboard
+                bg_path = pathlib.Path("Web") / image_url.lstrip("/")
+            elif image_url.startswith("http"):
+                # External URL, download it to a temp file or similar
+                # For simplicity in this bot, we'll try to download it to a temp path
+                import tempfile
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(image_url) as resp:
+                            if resp.status == 200:
+                                bg_bytes = await resp.read()
+                                temp_path = pathlib.Path(tempfile.gettempdir()) / f"welcome_{member.guild.id}.png"
+                                with open(temp_path, "wb") as f:
+                                    f.write(bg_bytes)
+                                bg_path = temp_path
+                except Exception:
+                    pass
         
         # Run image generation in a separate thread to prevent blocking
         import asyncio
