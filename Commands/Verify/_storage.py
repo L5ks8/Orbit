@@ -13,7 +13,7 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_verify_config(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
-    default_cfg = {"enabled": False, "channel_id": None, "role_id": None, "remove_role_id": None, "auto_kick_minutes": 0, "pending_kicks": {}}
+    default_cfg = {"enabled": False, "channel_id": None, "role_id": None, "remove_role_id": None, "verification_type": "captcha", "auto_kick_minutes": 0, "pending_kicks": {}}
     
     if not path.exists():
         data = default_cfg.copy()
@@ -33,6 +33,8 @@ def load_verify_config(guild_id: int) -> Dict[str, Any]:
         data["pending_kicks"] = {}
     if "remove_role_id" not in data:
         data["remove_role_id"] = None
+    if "verification_type" not in data:
+        data["verification_type"] = "captcha"
     return data
 
 def save_verify_config(guild_id: int, config: Dict[str, Any]) -> None:
@@ -40,12 +42,13 @@ def save_verify_config(guild_id: int, config: Dict[str, Any]) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4)
 
-def setup_verify_config(guild_id: int, channel_id: int, role_id: int, remove_role_id: Optional[int] = None, auto_kick_minutes: int = 0) -> Dict[str, Any]:
+def setup_verify_config(guild_id: int, channel_id: int, role_id: int, remove_role_id: Optional[int] = None, verification_type: str = "captcha", auto_kick_minutes: int = 0) -> Dict[str, Any]:
     config = load_verify_config(guild_id)
     config["enabled"] = True
     config["channel_id"] = channel_id
     config["role_id"] = role_id
     config["remove_role_id"] = remove_role_id
+    config["verification_type"] = verification_type
     config["auto_kick_minutes"] = max(0, auto_kick_minutes)
     save_verify_config(guild_id, config)
     return config
@@ -62,6 +65,7 @@ def reset_verify_config(guild_id: int) -> Dict[str, Any]:
         "channel_id": None,
         "role_id": None,
         "remove_role_id": None,
+        "verification_type": "captcha",
         "auto_kick_minutes": 0,
         "pending_kicks": {}
     }

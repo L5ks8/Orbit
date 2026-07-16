@@ -128,6 +128,29 @@ class PersistentVerifyLayout(LayoutView):
             if isinstance(interaction.user, discord.Member) and any(r.id == role_id for r in getattr(interaction.user, 'roles', [])):
                 return await interaction.response.send_message("You are already verified on this server!", ephemeral=True)
 
+            verification_type = config.get("verification_type", "captcha")
+
+            if verification_type == "oneclick":
+                role = interaction.guild.get_role(role_id)
+                remove_role = interaction.guild.get_role(remove_role_id) if remove_role_id else None
+                try:
+                    await interaction.user.add_roles(role, reason="Completed automated One-Click verification")
+                    if remove_role and remove_role in interaction.user.roles:
+                        try:
+                            await interaction.user.remove_roles(remove_role, reason="Removed after One-Click verification")
+                        except Exception:
+                            pass
+                    remove_pending_kick(interaction.guild.id, interaction.user.id)
+                    msg = f"**Verification Successful!** You now have the {role.mention} role and full server access."
+                    if remove_role:
+                        msg += f" (`Removed: {remove_role.name}`)"
+                    await interaction.response.send_message(msg, ephemeral=True)
+                except discord.Forbidden:
+                    await interaction.response.send_message(f"I do not have permission to modify roles ({role.mention}). Please contact a server administrator.", ephemeral=True)
+                except Exception as e:
+                    await interaction.response.send_message(f"An error occurred assigning the verified role: {e}", ephemeral=True)
+                return
+
             code, img_bytes = generate_captcha()
             CAPTCHA_SESSIONS[interaction.user.id] = {"code": code, "timestamp": time.time()}
 

@@ -10,9 +10,9 @@ from typing import Dict, Any
 from Commands.Welcome._storage import load_welcome_config, save_welcome_config
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
 from Commands.Verify._storage import load_verify_config, save_verify_config
+from Commands.AutoResponder._storage import load_responses, save_responses
+from Commands.JoinRole._storage import load_join_roles, save_join_roles
 
-# In-memory session store
-# Map of session_id (cookie) -> {"id": user_id, "username": name, "avatar": hash, "access_token": token}
 SESSIONS: Dict[str, Any] = {}
 
 class WebDashboard:
@@ -183,6 +183,8 @@ class WebDashboard:
         welcome_cfg = load_welcome_config(guild_id)
         automod_cfg = load_automod_config(guild_id)
         verify_cfg = load_verify_config(guild_id)
+        autoresponder_cfg = load_responses(guild_id)
+        joinroles_cfg = load_join_roles(guild_id)
         
         config_data = {
             "welcome": {
@@ -196,8 +198,12 @@ class WebDashboard:
             },
             "verify": {
                 "enabled": verify_cfg.get("enabled", False),
-                "role_id": str(verify_cfg.get("role_id", "")) if verify_cfg.get("role_id") else ""
-            }
+                "role_id": str(verify_cfg.get("role_id", "")) if verify_cfg.get("role_id") else "",
+                "remove_role_id": str(verify_cfg.get("remove_role_id", "")) if verify_cfg.get("remove_role_id") else "",
+                "verification_type": verify_cfg.get("verification_type", "captcha")
+            },
+            "autoresponder": autoresponder_cfg,
+            "joinroles": [str(r) for r in joinroles_cfg]
         }
         
         return web.json_response({
@@ -240,6 +246,54 @@ class WebDashboard:
             verify_cfg["enabled"] = bool(data.get("verify", {}).get("enabled"))
             rid = data.get("verify", {}).get("role_id")
             verify_cfg["role_id"] = int(rid) if rid else None
+            rrid = data.get("verify", {}).get("remove_role_id")
+            verify_cfg["remove_role_id"] = int(rrid) if rrid else None
+            verify_cfg["verification_type"] = data.get("verify", {}).get("verification_type", "captcha")
+            save_verify_config(guild_id, verify_cfg)
+            
+            # AutoResponder
+            if "autoresponder" in data:
+                save_responses(guild_id, data["autoresponder"])
+                
+            # JoinRoles
+            if "joinroles" in data:
+                roles_to_save = []
+                for r in data["joinroles"]:
+                    if r:
+                        roles_to_save.append(int(r))
+                save_join_roles(guild_id, roles_to_save)
+            
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def api_action_send_verify(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        try:
+            data = await request.json()
+            channel_id = data.get("channel_id")
+            if not channel_id:
+                return web.json_response({"error": "No channel_id provided"}, status=400)
+                
+            channel = guild.get_channel(int(channel_id))
+            if not channel:
+                return web.json_response({"error": "Channel not found"}, status=400)
+                
+            from Commands.Verify._views import PersistentVerifyLayout
+            view = PersistentVerifyLayout()
+            await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            
+            # Update storage to set the panel channel
+            verify_cfg = load_verify_config(guild_id)
+            verify_cfg["channel_id"] = channel.id
             save_verify_config(guild_id, verify_cfg)
             
             return web.json_response({"success": True})
@@ -262,5 +316,6 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/api/guilds", dashboard.api_guilds)
     app.router.add_get("/api/config/{id}", dashboard.api_get_config)
     app.router.add_post("/api/config/{id}", dashboard.api_post_config)
+    app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     
     return app

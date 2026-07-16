@@ -80,6 +80,8 @@
                     <a href="#" class="nav-item active" data-target="section-welcome">Welcome System</a>
                     <a href="#" class="nav-item" data-target="section-automod">Auto Mod</a>
                     <a href="#" class="nav-item" data-target="section-verify">Verification</a>
+                    <a href="#" class="nav-item" data-target="section-autoresponder">Auto-Replies</a>
+                    <a href="#" class="nav-item" data-target="section-joinroles">Join Roles</a>
                 </div>
 
                 <div class="settings-panel">
@@ -153,11 +155,11 @@
                         <!-- VERIFY SECTION -->
                         <div id="section-verify" class="settings-section">
                             <h3>Verification</h3>
-                            <p>Require users to solve a CAPTCHA before accessing channels.</p>
+                            <p>Require users to solve a CAPTCHA or click to verify before accessing channels.</p>
                             
                             <div class="toggle-container">
                                 <div class="toggle-info">
-                                    <h4>Enable CAPTCHA</h4>
+                                    <h4>Enable Verification</h4>
                                     <p>Activate the verification gate.</p>
                                 </div>
                                 <label class="switch">
@@ -167,12 +169,67 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Verified Role</label>
-                                <span class="help-text">The role granted upon successful CAPTCHA completion.</span>
+                                <label>Verification Mode</label>
+                                <span class="help-text">Choose how users verify. One-Click is faster, CAPTCHA is more secure.</span>
+                                <select id="verify_type">
+                                    <option value="captcha">CAPTCHA (Solve Image)</option>
+                                    <option value="oneclick">One-Click (Instant Verify)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Verified Role (Add)</label>
+                                <span class="help-text">The role granted upon successful verification.</span>
                                 <select id="verify_role_id">
                                     <option value="">None</option>
                                     <!-- Populated by JS -->
                                 </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Unverified Role (Remove)</label>
+                                <span class="help-text">Optional: A role that is REMOVED when the user verifies (e.g. Quarantine role).</span>
+                                <select id="verify_remove_role_id">
+                                    <option value="">None</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                                <label>Send Verification Panel</label>
+                                <span class="help-text">Deploy the verification message to a channel so users can click it.</span>
+                                <div style="display: flex; gap: 10px;">
+                                    <select id="verify_panel_channel" style="flex: 1;">
+                                        <option value="">Select Channel...</option>
+                                    </select>
+                                    <button type="button" id="btn-send-verify" class="btn-secondary">Send Panel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AUTORESPONDER SECTION -->
+                        <div id="section-autoresponder" class="settings-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h3>Auto-Replies</h3>
+                                <button type="button" id="btn-add-autoreply" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">+ Add Trigger</button>
+                            </div>
+                            <p>Make the bot reply automatically to specific trigger words or phrases.</p>
+                            
+                            <div id="autoreply-list" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- JOIN ROLES SECTION -->
+                        <div id="section-joinroles" class="settings-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h3>Join Roles</h3>
+                                <button type="button" id="btn-add-joinrole" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">+ Add Role</button>
+                            </div>
+                            <p>Automatically assign these roles when a new user joins the server.</p>
+                            
+                            <div id="joinrole-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                <!-- Populated by JS -->
                             </div>
                         </div>
 
