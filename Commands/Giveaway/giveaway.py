@@ -178,9 +178,9 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
 
     try:
         if picked_winners:
-            await channel.send(content=f"**GIVEAWAY ENDED!** Congratulations {winners_display}! You won **{entry['prize']}**! (`Giveaway ID: #`{entry['giveaway_id']})")
+            await channel.send(content=f"🎉 **GIVEAWAY ENDED!** 🎉\nCongratulations {winners_display}! You won **{entry['prize']}**! 🎊 (`Giveaway ID: #`{entry['giveaway_id']})")
         else:
-            await channel.send(content=f"Giveaway **{entry['prize']}** (`#{entry['giveaway_id']}`) ended with no valid entries.")
+            await channel.send(content=f"Giveaway **{entry['prize']}** (`#{entry['giveaway_id']}`) ended with no valid entries. 😔")
     except Exception:
         pass
 
