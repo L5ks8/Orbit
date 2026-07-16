@@ -84,7 +84,7 @@ async function loadDashboard() {
                 <div class="server-icon">${iconHtml}</div>
                 <div class="server-info">
                     <h3>${g.name}</h3>
-                    <p>Manage Server</p>
+                    <p>Configurable</p>
                 </div>
             `;
             grid.appendChild(card);
@@ -193,6 +193,51 @@ class CustomSelect {
 
 let globalRoles = [];
 let globalCategories = [];
+let currentPermissions = {};
+
+function lockSection(sectionId, requirementText) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    
+    section.style.position = 'relative';
+    section.style.opacity = '0.6';
+    section.style.pointerEvents = 'none';
+    section.style.filter = 'grayscale(80%)';
+    
+    const overlay = document.createElement('div');
+    overlay.style.position = 'absolute';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'rgba(0,0,0,0.4)';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '10';
+    overlay.style.borderRadius = '8px';
+    
+    const icon = document.createElement('div');
+    icon.innerText = '🔒';
+    icon.style.fontSize = '48px';
+    icon.style.marginBottom = '10px';
+    
+    const text = document.createElement('div');
+    text.innerText = `Missing Permissions: ${requirementText}`;
+    text.style.color = '#fff';
+    text.style.fontWeight = 'bold';
+    text.style.background = 'rgba(0,0,0,0.8)';
+    text.style.padding = '8px 16px';
+    text.style.borderRadius = '4px';
+    
+    overlay.appendChild(icon);
+    overlay.appendChild(text);
+    section.appendChild(overlay);
+    
+    const inputs = section.querySelectorAll('input, select, button');
+    inputs.forEach(i => i.disabled = true);
+}
 
 function renderAutoReplies(replies) {
     const list = document.getElementById('autoreply-list');
@@ -382,23 +427,28 @@ async function loadConfig(guildId, guildName) {
 
         // Set values
         const config = data.config;
+        currentPermissions = data.permissions || {};
         
         // Welcome
+        if (!currentPermissions.can_channels) lockSection('section-welcome', 'Manage Channels');
         document.getElementById('welcome_enabled').checked = config.welcome?.enabled || false;
         document.getElementById('welcome_channel_id').value = config.welcome?.channel_id || '';
         document.getElementById('welcome_message').value = config.welcome?.message || 'Welcome {user} to {server}!';
         document.getElementById('welcome_image_url').value = config.welcome?.image_url || '';
 
         // AutoMod
+        if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
         document.getElementById('automod_enabled').checked = config.automod?.enabled || false;
         document.getElementById('automod_anti_link').checked = config.automod?.anti_link?.enabled || false;
         document.getElementById('automod_anti_spam').checked = config.automod?.anti_spam?.enabled || false;
 
         // Verify
+        if (!currentPermissions.can_roles) lockSection('section-verify', 'Manage Roles');
         document.getElementById('verify_enabled').checked = config.verify?.enabled || false;
         document.getElementById('verify_type').value = config.verify?.verification_type || 'captcha';
 
         // Ticket
+        if (!currentPermissions.can_channels) lockSection('section-ticket', 'Manage Channels');
         document.getElementById('ticket_enabled').checked = config.ticket?.enabled || false;
         document.getElementById('ticket_panel_channel').value = config.ticket?.panel_channel_id || '';
         document.getElementById('ticket_log_channel_id').value = config.ticket?.log_channel_id || '';
@@ -411,8 +461,12 @@ async function loadConfig(guildId, guildName) {
         new CustomSelect(document.getElementById('verify_remove_role_id'), globalRoles, config.verify?.remove_role_id || '', 'Select Unverified Role...');
 
         // AutoResponder & JoinRoles & TicketOptions
+        if (!currentPermissions.can_messages) lockSection('section-autoresponder', 'Manage Messages');
         renderAutoReplies(config.autoresponder || {});
+        
+        if (!currentPermissions.can_roles) lockSection('section-joinroles', 'Manage Roles');
         renderJoinRoles(config.joinroles || []);
+        
         renderTicketOptions(config.ticket?.options_slots || []);
         
         // Initial Preview Update

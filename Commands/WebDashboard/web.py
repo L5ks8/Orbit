@@ -133,9 +133,15 @@ class WebDashboard:
                 
         manageable_guilds = []
         for g in user_guilds:
-            # Check Manage Server (0x20) or Administrator (0x8)
+            # Permissions Check
             perms = int(g["permissions"])
-            if (perms & 0x20) == 0x20 or (perms & 0x8) == 0x8:
+            is_admin = (perms & 0x8) == 0x8
+            manage_guild = (perms & 0x20) == 0x20
+            manage_roles = (perms & 0x10000000) == 0x10000000
+            manage_channels = (perms & 0x10) == 0x10
+            manage_messages = (perms & 0x2000) == 0x2000
+            
+            if is_admin or manage_guild or manage_roles or manage_channels or manage_messages:
                 # Check if bot is in guild
                 bot_guild = self.bot.get_guild(int(g["id"]))
                 if bot_guild:
@@ -150,20 +156,30 @@ class WebDashboard:
     async def _check_guild_access(self, request: web.Request, guild_id: int):
         user = await self.get_user_session(request)
         if not user:
-            return None
+            return None, None
             
         bot_guild = self.bot.get_guild(guild_id)
         if not bot_guild:
-            return None
+            return None, None
             
         member = bot_guild.get_member(int(user["id"]))
         if not member:
-            return None
+            return None, None
             
-        if not member.guild_permissions.manage_guild and not member.guild_permissions.administrator:
-            return None
+        perms = member.guild_permissions
+        is_admin = perms.administrator or perms.manage_guild
+        
+        user_perms = {
+            "is_admin": is_admin,
+            "can_roles": is_admin or perms.manage_roles,
+            "can_channels": is_admin or perms.manage_channels,
+            "can_messages": is_admin or perms.manage_messages
+        }
+        
+        if not any(user_perms.values()):
+            return None, None
             
-        return bot_guild
+        return bot_guild, user_perms
 
     async def api_get_config(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
@@ -171,7 +187,7 @@ class WebDashboard:
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
         
-        guild = await self._check_guild_access(request, guild_id)
+        guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
             
@@ -222,6 +238,7 @@ class WebDashboard:
         }
         
         return web.json_response({
+            "permissions": user_perms,
             "channels": channels,
             "categories": categories,
             "roles": roles,
@@ -234,61 +251,64 @@ class WebDashboard:
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
         
-        guild = await self._check_guild_access(request, guild_id)
+        guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
             
         try:
             data = await request.json()
             
-            # Welcome
-            welcome_cfg = load_welcome_config(guild_id)
-            welcome_cfg["enabled"] = bool(data.get("welcome", {}).get("enabled"))
-            cid = data.get("welcome", {}).get("channel_id")
-            welcome_cfg["channel_id"] = int(cid) if cid else None
-            msg = data.get("welcome", {}).get("message", "")
-            if msg:
-                welcome_cfg["message"] = msg
-            img_url = data.get("welcome", {}).get("image_url", "")
-            if img_url is not None:
-                welcome_cfg["image_url"] = img_url
-            save_welcome_config(guild_id, welcome_cfg)
+            # Welcome (Requires can_channels)
+            if user_perms.get("can_channels") and "welcome" in data:
+                welcome_cfg = load_welcome_config(guild_id)
+                welcome_cfg["enabled"] = bool(data.get("welcome", {}).get("enabled"))
+                cid = data.get("welcome", {}).get("channel_id")
+                welcome_cfg["channel_id"] = int(cid) if cid else None
+                msg = data.get("welcome", {}).get("message", "")
+                if msg:
+                    welcome_cfg["message"] = msg
+                img_url = data.get("welcome", {}).get("image_url", "")
+                if img_url is not None:
+                    welcome_cfg["image_url"] = img_url
+                save_welcome_config(guild_id, welcome_cfg)
             
-            # AutoMod
-            automod_cfg = load_automod_config(guild_id)
-            automod_cfg["enabled"] = bool(data.get("automod", {}).get("enabled"))
-            if "anti_link" not in automod_cfg:
-                automod_cfg["anti_link"] = {}
-            if "anti_spam" not in automod_cfg:
-                automod_cfg["anti_spam"] = {}
-            automod_cfg["anti_link"]["enabled"] = bool(data.get("automod", {}).get("anti_link", {}).get("enabled"))
-            automod_cfg["anti_spam"]["enabled"] = bool(data.get("automod", {}).get("anti_spam", {}).get("enabled"))
-            save_automod_config(guild_id, automod_cfg)
+            # AutoMod (Requires can_messages)
+            if user_perms.get("can_messages") and "automod" in data:
+                automod_cfg = load_automod_config(guild_id)
+                automod_cfg["enabled"] = bool(data.get("automod", {}).get("enabled"))
+                if "anti_link" not in automod_cfg:
+                    automod_cfg["anti_link"] = {}
+                if "anti_spam" not in automod_cfg:
+                    automod_cfg["anti_spam"] = {}
+                automod_cfg["anti_link"]["enabled"] = bool(data.get("automod", {}).get("anti_link", {}).get("enabled"))
+                automod_cfg["anti_spam"]["enabled"] = bool(data.get("automod", {}).get("anti_spam", {}).get("enabled"))
+                save_automod_config(guild_id, automod_cfg)
             
-            # Verify
-            verify_cfg = load_verify_config(guild_id)
-            verify_cfg["enabled"] = bool(data.get("verify", {}).get("enabled"))
-            rid = data.get("verify", {}).get("role_id")
-            verify_cfg["role_id"] = int(rid) if rid else None
-            rrid = data.get("verify", {}).get("remove_role_id")
-            verify_cfg["remove_role_id"] = int(rrid) if rrid else None
-            verify_cfg["verification_type"] = data.get("verify", {}).get("verification_type", "captcha")
-            save_verify_config(guild_id, verify_cfg)
+            # Verify (Requires can_roles)
+            if user_perms.get("can_roles") and "verify" in data:
+                verify_cfg = load_verify_config(guild_id)
+                verify_cfg["enabled"] = bool(data.get("verify", {}).get("enabled"))
+                rid = data.get("verify", {}).get("role_id")
+                verify_cfg["role_id"] = int(rid) if rid else None
+                rrid = data.get("verify", {}).get("remove_role_id")
+                verify_cfg["remove_role_id"] = int(rrid) if rrid else None
+                verify_cfg["verification_type"] = data.get("verify", {}).get("verification_type", "captcha")
+                save_verify_config(guild_id, verify_cfg)
             
-            # AutoResponder
-            if "autoresponder" in data:
+            # AutoResponder (Requires can_messages)
+            if user_perms.get("can_messages") and "autoresponder" in data:
                 save_responses(guild_id, data["autoresponder"])
                 
-            # JoinRoles
-            if "joinroles" in data:
+            # JoinRoles (Requires can_roles)
+            if user_perms.get("can_roles") and "joinroles" in data:
                 roles_to_save = []
                 for r in data["joinroles"]:
                     if r:
                         roles_to_save.append(int(r))
                 save_join_roles(guild_id, roles_to_save)
                 
-            # Ticket
-            if "ticket" in data:
+            # Ticket (Requires can_channels)
+            if user_perms.get("can_channels") and "ticket" in data:
                 from Commands.Ticket._storage import load_ticket_config, save_ticket_config
                 ticket_cfg = load_ticket_config(guild_id)
                 ticket_cfg["enabled"] = bool(data["ticket"].get("enabled"))
@@ -348,9 +368,9 @@ class WebDashboard:
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
         
-        guild = await self._check_guild_access(request, guild_id)
-        if not guild:
-            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("can_roles"):
+            return web.json_response({"error": "Unauthorized or missing Manage Roles permission"}, status=403)
             
         try:
             data = await request.json()
@@ -381,9 +401,9 @@ class WebDashboard:
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
         
-        guild = await self._check_guild_access(request, guild_id)
-        if not guild:
-            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("can_channels"):
+            return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
             
         try:
             data = await request.json()
