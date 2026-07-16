@@ -629,3 +629,87 @@ input:checked + .slider:before { transform: translateX(22px); background-color: 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* END OF STYLES */
+
+/* MODAL STYLES */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.modal-overlay.show { display: flex; }
+.modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 500px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-header h3 { margin: 0; color: var(--text-primary); font-size: 20px; }
+.close-modal { cursor: pointer; font-size: 28px; line-height: 1; color: var(--text-muted); transition: var(--transition-fast); }
+.close-modal:hover { color: var(--text-primary); }
+.modal-footer { margin-top: 20px; }
+
+/* CUSTOM SELECT DROPDOWN STYLES */
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    z-index: 100;
+    max-height: 250px;
+    overflow-y: auto;
+    display: none;
+    flex-direction: column;
+}
+.custom-multiselect.open .custom-select-dropdown,
+.custom-select.open .custom-select-dropdown {
+    display: flex;
+}
+.custom-select-search {
+    background: var(--bg-secondary);
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 10px;
+    width: 100%;
+    outline: none;
+}
+.custom-select-options {
+    display: flex;
+    flex-direction: column;
+}
+.custom-select-option {
+    padding: 10px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+}
+.custom-select-option:hover {
+    background: var(--accent-transparent);
+    color: var(--text-primary);
+}
+.custom-select-option.selected {
+    background: var(--accent-transparent);
+    border-left: 2px solid var(--accent-primary);
+    color: var(--text-primary);
+}
