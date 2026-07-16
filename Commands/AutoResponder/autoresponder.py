@@ -8,6 +8,15 @@ class AutoResponderCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    def _resolve_channel_mentions(self, text: str, guild: discord.Guild) -> str:
+        """Replace #channel-name with <#id> if the channel exists in the guild."""
+        import re
+        def replace_match(m):
+            name = m.group(1).lower()
+            ch = discord.utils.find(lambda c: c.name.lower() == name, guild.text_channels)
+            return f"<#{ch.id}>" if ch else m.group(0)
+        return re.sub(r'#([\w-]+)', replace_match, text)
+
     @commands.hybrid_command(name="addreply", description="Adds an auto-response trigger and message.")
     @commands.has_permissions(manage_guild=True)
     @app_commands.describe(
@@ -86,7 +95,8 @@ class AutoResponderCommand(commands.Cog):
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
             try:
-                return await message.reply(content=entry["response"], mention_author=False)
+                response_text = self._resolve_channel_mentions(entry["response"], message.guild)
+                return await message.reply(content=response_text, mention_author=False)
             except Exception:
                 pass
                 
@@ -97,7 +107,8 @@ class AutoResponderCommand(commands.Cog):
         for trigger, entry_data in data.items():
             if trigger in words and can_respond(entry_data):
                 try:
-                    await message.reply(content=entry_data["response"], mention_author=False)
+                    response_text = self._resolve_channel_mentions(entry_data["response"], message.guild)
+                    await message.reply(content=response_text, mention_author=False)
                 except Exception:
                     pass
                 break # Only reply to the first matching trigger to avoid spam

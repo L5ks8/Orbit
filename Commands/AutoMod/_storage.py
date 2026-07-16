@@ -14,6 +14,8 @@ DEFAULT_AUTOMOD_CONFIG = {
         "enabled": True,
         "delete_msg": True,
         "action": "warn",
+        "timeout_duration_min": 5,
+        "blocked_domains": ["discord.gg/", "discord.com/invite/", "dsc.gg/", "invite.gg/"],
         "whitelist_roles": []
     },
     "anti_spam": {
@@ -22,7 +24,7 @@ DEFAULT_AUTOMOD_CONFIG = {
         "time_window_sec": 3,
         "max_mentions": 4,
         "action": "warn",
-        "timeout_duration_sec": 300
+        "timeout_duration_min": 5
     },
     "anti_alt": {
         "enabled": True,

@@ -213,7 +213,28 @@ class WebDashboard:
                 "message": welcome_cfg.get("message", ""),
                 "image_url": welcome_cfg.get("image_url", "")
             },
-            "automod": automod_cfg,
+            "automod": {
+                "enabled": automod_cfg.get("enabled", False),
+                "anti_link": {
+                    "enabled": automod_cfg.get("anti_link", {}).get("enabled", False),
+                    "action": automod_cfg.get("anti_link", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("anti_link", {}).get("timeout_duration_min", 5),
+                    "blocked_domains": automod_cfg.get("anti_link", {}).get("blocked_domains", ["discord.gg/", "discord.com/invite/"])
+                },
+                "anti_spam": {
+                    "enabled": automod_cfg.get("anti_spam", {}).get("enabled", False),
+                    "max_messages": automod_cfg.get("anti_spam", {}).get("max_messages", 5),
+                    "time_window_sec": automod_cfg.get("anti_spam", {}).get("time_window_sec", 3),
+                    "max_mentions": automod_cfg.get("anti_spam", {}).get("max_mentions", 4),
+                    "action": automod_cfg.get("anti_spam", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("anti_spam", {}).get("timeout_duration_min", 5)
+                },
+                "anti_alt": {
+                    "enabled": automod_cfg.get("anti_alt", {}).get("enabled", False),
+                    "min_age_days": automod_cfg.get("anti_alt", {}).get("min_age_days", 3),
+                    "action": automod_cfg.get("anti_alt", {}).get("action", "kick")
+                }
+            },
             "verify": {
                 "enabled": verify_cfg.get("enabled", False),
                 "role_id": str(verify_cfg.get("role_id")) if verify_cfg.get("role_id") else "",
@@ -278,13 +299,41 @@ class WebDashboard:
             # AutoMod (Requires can_messages)
             if user_perms.get("can_messages") and "automod" in data:
                 automod_cfg = load_automod_config(guild_id)
-                automod_cfg["enabled"] = bool(data.get("automod", {}).get("enabled"))
+                am = data.get("automod", {})
+                automod_cfg["enabled"] = bool(am.get("enabled"))
+
+                # Anti-Link
                 if "anti_link" not in automod_cfg:
                     automod_cfg["anti_link"] = {}
+                al = am.get("anti_link", {})
+                automod_cfg["anti_link"]["enabled"] = bool(al.get("enabled"))
+                automod_cfg["anti_link"]["action"] = al.get("action", "warn")
+                automod_cfg["anti_link"]["timeout_duration_min"] = int(al.get("timeout_duration_min", 5))
+                raw_domains = al.get("blocked_domains", "")
+                if isinstance(raw_domains, str):
+                    automod_cfg["anti_link"]["blocked_domains"] = [d.strip() for d in raw_domains.split(",") if d.strip()]
+                elif isinstance(raw_domains, list):
+                    automod_cfg["anti_link"]["blocked_domains"] = raw_domains
+
+                # Anti-Spam
                 if "anti_spam" not in automod_cfg:
                     automod_cfg["anti_spam"] = {}
-                automod_cfg["anti_link"]["enabled"] = bool(data.get("automod", {}).get("anti_link", {}).get("enabled"))
-                automod_cfg["anti_spam"]["enabled"] = bool(data.get("automod", {}).get("anti_spam", {}).get("enabled"))
+                asp = am.get("anti_spam", {})
+                automod_cfg["anti_spam"]["enabled"] = bool(asp.get("enabled"))
+                automod_cfg["anti_spam"]["max_messages"] = int(asp.get("max_messages", 5))
+                automod_cfg["anti_spam"]["time_window_sec"] = int(asp.get("time_window_sec", 3))
+                automod_cfg["anti_spam"]["max_mentions"] = int(asp.get("max_mentions", 4))
+                automod_cfg["anti_spam"]["action"] = asp.get("action", "warn")
+                automod_cfg["anti_spam"]["timeout_duration_min"] = int(asp.get("timeout_duration_min", 5))
+
+                # Anti-Alt
+                if "anti_alt" not in automod_cfg:
+                    automod_cfg["anti_alt"] = {}
+                aalt = am.get("anti_alt", {})
+                automod_cfg["anti_alt"]["enabled"] = bool(aalt.get("enabled"))
+                automod_cfg["anti_alt"]["min_age_days"] = int(aalt.get("min_age_days", 3))
+                automod_cfg["anti_alt"]["action"] = aalt.get("action", "kick")
+
                 save_automod_config(guild_id, automod_cfg)
             
             # Verify (Requires can_roles)
@@ -446,9 +495,44 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 
+    async def api_upload_image(self, request: web.Request):
+        user = await self.get_user_session(request)
+        if not user:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+
+        try:
+            import uuid, pathlib, mimetypes
+            reader = await request.multipart()
+            field = await reader.next()
+            if not field or field.name != "file":
+                return web.json_response({"error": "No file field"}, status=400)
+
+            content_type = field.headers.get("Content-Type", "image/png")
+            ext = mimetypes.guess_extension(content_type) or ".png"
+            if ext == ".jpe":
+                ext = ".jpg"
+
+            upload_dir = pathlib.Path("Web/static/uploads")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+
+            filename = f"{uuid.uuid4().hex}{ext}"
+            filepath = upload_dir / filename
+
+            with open(filepath, "wb") as f:
+                while True:
+                    chunk = await field.read_chunk(8192)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+
+            url = f"/static/uploads/{filename}"
+            return web.json_response({"success": True, "url": url})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=400)
+
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
-    app = web.Application()
+    app = web.Application(client_max_size=10 * 1024 * 1024)  # 10 MB max upload
     
     app.router.add_get("/", dashboard.handle_index)
     app.router.add_static("/static", "Web/static")
@@ -464,5 +548,6 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_post("/api/config/{id}", dashboard.api_post_config)
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
+    app.router.add_post("/api/upload/image", dashboard.api_upload_image)
     
     return app

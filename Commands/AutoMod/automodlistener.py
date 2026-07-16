@@ -38,6 +38,43 @@ class AutoModListener(commands.Cog):
         else:
             return datetime.timedelta(days=7), f"Timed out for 7 DAYS (Reached {warn_count} Warnings)"
 
+    async def _apply_action(self, member: discord.Member, action: str, timeout_min: int, reason: str) -> str:
+        """Apply a moderation action and return the escalation/description string."""
+        escalation_str = ""
+        warn_count = len(get_user_warnings(member.guild.id, member.id))
+
+        if action == "warn":
+            add_warning(member.guild.id, member.id, reason, self.bot.user.id)
+            warn_count += 1
+            td, escalation_str = self._get_escalation(warn_count)
+            if td and member.id != member.guild.owner_id:
+                try:
+                    await member.timeout(td, reason=reason)
+                except Exception:
+                    pass
+        elif action == "timeout" and member.id != member.guild.owner_id:
+            secs = timeout_min * 60
+            td = datetime.timedelta(seconds=secs)
+            escalation_str = f"Timed out for {timeout_min} minute(s)"
+            try:
+                await member.timeout(td, reason=reason)
+            except Exception:
+                pass
+        elif action == "kick" and member.id != member.guild.owner_id:
+            escalation_str = "Kicked from server"
+            try:
+                await member.kick(reason=reason)
+            except Exception:
+                pass
+        elif action == "ban" and member.id != member.guild.owner_id:
+            escalation_str = "Permanently banned"
+            try:
+                await member.ban(reason=reason, delete_message_days=0)
+            except Exception:
+                pass
+
+        return escalation_str, warn_count
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if not message.guild or message.author.bot:
@@ -50,36 +87,21 @@ class AutoModListener(commands.Cog):
         if not config.get("enabled", False):
             return
 
+        # --- ANTI-LINK ---
         link_cfg = config["anti_link"]
         if link_cfg.get("enabled", False):
             content_lower = message.content.lower()
-            if any(domain in content_lower for domain in ["discord.gg/", "discord.com/invite/", "dsc.gg/", "invite.gg/"]):
+            blocked = link_cfg.get("blocked_domains", ["discord.gg/", "discord.com/invite/", "dsc.gg/", "invite.gg/"])
+            if any(domain in content_lower for domain in blocked):
                 try:
                     await message.delete()
                 except Exception:
                     pass
 
-                reason = "AutoMod: Unauthorized Discord invite link posted"
+                reason = "AutoMod: Unauthorized link detected"
                 action = link_cfg.get("action", "warn")
-                warn_count = len(get_user_warnings(message.guild.id, message.author.id))
-                escalation_str = ""
-
-                if action == "warn":
-                    add_warning(message.guild.id, message.author.id, reason, self.bot.user.id)
-                    warn_count += 1
-                    td, escalation_str = self._get_escalation(warn_count)
-                    if td and isinstance(message.author, discord.Member) and message.author.id != message.guild.owner_id:
-                        try:
-                            await message.author.timeout(td, reason=reason)
-                        except Exception:
-                            pass
-                elif action == "timeout" and isinstance(message.author, discord.Member) and message.author.id != message.guild.owner_id:
-                    td = datetime.timedelta(seconds=300)
-                    escalation_str = "Timed out for 5 minutes"
-                    try:
-                        await message.author.timeout(td, reason=reason)
-                    except Exception:
-                        pass
+                timeout_min = link_cfg.get("timeout_duration_min", 5)
+                escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
 
                 view = AutoModNoticeLayout(message.author, reason, action, warn_count, escalation_str)
                 try:
@@ -88,6 +110,7 @@ class AutoModListener(commands.Cog):
                     pass
                 return
 
+        # --- ANTI-SPAM ---
         spam_cfg = config["anti_spam"]
         if spam_cfg.get("enabled", False):
             m_mentions = spam_cfg.get("max_mentions", 4)
@@ -118,28 +141,10 @@ class AutoModListener(commands.Cog):
                 except Exception:
                     pass
 
-                reason = "AutoMod: Mass mentions detected" if is_mass_mention else f"AutoMod: Message flood across channels ({m_msgs}+ messages in {t_win}s)"
+                reason = "AutoMod: Mass mentions detected" if is_mass_mention else f"AutoMod: Message flood ({m_msgs}+ messages in {t_win}s)"
                 action = spam_cfg.get("action", "warn")
-                warn_count = len(get_user_warnings(message.guild.id, message.author.id))
-                escalation_str = ""
-
-                if action == "warn":
-                    add_warning(message.guild.id, message.author.id, reason, self.bot.user.id)
-                    warn_count += 1
-                    td, escalation_str = self._get_escalation(warn_count)
-                    if td and isinstance(message.author, discord.Member) and message.author.id != message.guild.owner_id:
-                        try:
-                            await message.author.timeout(td, reason=reason)
-                        except Exception:
-                            pass
-                elif action == "timeout" and isinstance(message.author, discord.Member) and message.author.id != message.guild.owner_id:
-                    t_sec = spam_cfg.get("timeout_duration_sec", 300)
-                    td = datetime.timedelta(seconds=t_sec)
-                    escalation_str = f"Timed out for {t_sec // 60} minutes"
-                    try:
-                        await message.author.timeout(td, reason=reason)
-                    except Exception:
-                        pass
+                timeout_min = spam_cfg.get("timeout_duration_min", 5)
+                escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
 
                 view = AutoModNoticeLayout(message.author, reason, action, warn_count, escalation_str)
                 try:
@@ -172,20 +177,28 @@ class AutoModListener(commands.Cog):
 
                 if action == "kick":
                     try:
-                        await member.send(f"You were automatically kicked from **{member.guild.name}** because your Discord account is too new (`{age_days} days old`, minimum required: `{min_days} days`).")
+                        await member.send(f"You were automatically kicked from **{member.guild.name}** because your Discord account is too new (`{age_days} days old`, minimum: `{min_days} days`).")
                     except Exception:
                         pass
                     try:
                         await member.kick(reason=reason)
-                        print(f"[AUTOMOD] Kicked suspicious alt {member} ({member.id}) from {member.guild.name} (Age: {age_days}d)")
                     except Exception as e:
                         print(f"[AUTOMOD ERROR] Could not kick alt {member.id}: {e}")
+                elif action == "ban":
+                    try:
+                        await member.send(f"You were automatically banned from **{member.guild.name}** because your Discord account is too new (`{age_days} days old`, minimum: `{min_days} days`).")
+                    except Exception:
+                        pass
+                    try:
+                        await member.ban(reason=reason, delete_message_days=0)
+                    except Exception as e:
+                        print(f"[AUTOMOD ERROR] Could not ban alt {member.id}: {e}")
                 elif action == "verify":
                     from Commands.Verify._storage import load_verify_config
                     v_cfg = load_verify_config(member.guild.id)
-                    unverified_role_id = v_cfg.get("unverified_role_id")
+                    unverified_role_id = v_cfg.get("remove_role_id") or v_cfg.get("unverified_role_id")
                     if unverified_role_id:
-                        role = member.guild.get_role(unverified_role_id)
+                        role = member.guild.get_role(int(unverified_role_id))
                         if role:
                             try:
                                 await member.add_roles(role, reason=reason)

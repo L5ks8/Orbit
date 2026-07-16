@@ -161,7 +161,7 @@ class CustomSelect {
         if (item) {
             this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <span style="font-size:10px">▼</span>`;
         } else {
-            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary)">${placeholder}</div> <span style="font-size:10px">▼</span>`;
+            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <span style="font-size:10px">▼</span>`;
         }
         this.select.value = this.value;
     }
@@ -442,13 +442,27 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('welcome_enabled').checked = config.welcome?.enabled || false;
         document.getElementById('welcome_channel_id').value = config.welcome?.channel_id || '';
         document.getElementById('welcome_message').value = config.welcome?.message || 'Welcome {user} to {server}!';
-        document.getElementById('welcome_image_url').value = config.welcome?.image_url || '';
+        const imgUrl = config.welcome?.image_url || '';
+        document.getElementById('welcome_image_url').value = imgUrl;
+        syncDropzoneFromUrl(imgUrl);
 
         // AutoMod
         if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
         document.getElementById('automod_enabled').checked = config.automod?.enabled || false;
         document.getElementById('automod_anti_link').checked = config.automod?.anti_link?.enabled || false;
+        document.getElementById('automod_link_domains').value = (config.automod?.anti_link?.blocked_domains || []).join(', ');
+        document.getElementById('automod_link_action').value = config.automod?.anti_link?.action || 'warn';
+        document.getElementById('automod_link_timeout_min').value = config.automod?.anti_link?.timeout_duration_min || 5;
         document.getElementById('automod_anti_spam').checked = config.automod?.anti_spam?.enabled || false;
+        document.getElementById('automod_spam_max_msgs').value = config.automod?.anti_spam?.max_messages || 5;
+        document.getElementById('automod_spam_window').value = config.automod?.anti_spam?.time_window_sec || 3;
+        document.getElementById('automod_spam_mentions').value = config.automod?.anti_spam?.max_mentions || 4;
+        document.getElementById('automod_spam_action').value = config.automod?.anti_spam?.action || 'warn';
+        document.getElementById('automod_spam_timeout_min').value = config.automod?.anti_spam?.timeout_duration_min || 5;
+        document.getElementById('automod_anti_alt').checked = config.automod?.anti_alt?.enabled || false;
+        document.getElementById('automod_alt_min_age').value = config.automod?.anti_alt?.min_age_days || 3;
+        document.getElementById('automod_alt_action').value = config.automod?.anti_alt?.action || 'kick';
+        updateAutomodTimeoutVisibility();
 
         // Verify
         if (!currentPermissions.can_roles) lockSection('section-verify', 'Manage Roles');
@@ -460,7 +474,7 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('ticket_enabled').checked = config.ticket?.enabled || false;
         document.getElementById('ticket_panel_title').value = config.ticket?.panel_title || 'Support Ticket Desk';
         document.getElementById('ticket_panel_description').value = config.ticket?.panel_description || 'Click the button below to open a direct support channel with our team.';
-        document.getElementById('ticket_panel_instructions').value = config.ticket?.panel_instructions || 'Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.';
+        document.getElementById('ticket_panel_instructions').value = config.ticket?.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel.';
         document.getElementById('ticket_panel_channel').value = config.ticket?.panel_channel_id || '';
         document.getElementById('ticket_log_channel_id').value = config.ticket?.log_channel_id || '';
 
@@ -544,11 +558,12 @@ function updateLivePreview() {
     const msgInput = document.getElementById('welcome_message').value;
     const imgInput = document.getElementById('welcome_image_url').value;
     
-    // Replace placeholders
+    // Replace placeholders and #channel-name mentions
     let formattedText = msgInput
         .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
-        .replace(/{count}/g, '<b>100</b>');
+        .replace(/{count}/g, '<b>100</b>')
+        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');
         
     document.getElementById('welcome_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
     
@@ -563,8 +578,82 @@ function updateLivePreview() {
     }
 }
 
+function syncDropzoneFromUrl(url) {
+    const preview = document.getElementById('dropzone-preview');
+    const inner = document.getElementById('dropzone-inner');
+    if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        if (inner) inner.style.display = 'none';
+    } else {
+        preview.style.display = 'none';
+        preview.src = '';
+        if (inner) inner.style.display = 'flex';
+    }
+    updateLivePreview();
+}
+
+function updateAutomodTimeoutVisibility() {
+    const linkAction = document.getElementById('automod_link_action')?.value;
+    const spamAction = document.getElementById('automod_spam_action')?.value;
+    const linkGroup = document.getElementById('automod_link_timeout_group');
+    const spamGroup = document.getElementById('automod_spam_timeout_group');
+    if (linkGroup) linkGroup.style.display = linkAction === 'timeout' ? '' : 'none';
+    if (spamGroup) spamGroup.style.display = spamAction === 'timeout' ? '' : 'none';
+}
+
+document.getElementById('automod_link_action').addEventListener('change', updateAutomodTimeoutVisibility);
+document.getElementById('automod_spam_action').addEventListener('change', updateAutomodTimeoutVisibility);
+
+// Dropzone setup
+(function setupDropzone() {
+    const zone = document.getElementById('image-dropzone');
+    const fileInput = document.getElementById('image-file-input');
+    const urlInput = document.getElementById('welcome_image_url');
+
+    if (!zone) return;
+
+    zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) uploadImageFile(file);
+    });
+    zone.addEventListener('click', (e) => {
+        if (e.target === zone || e.target.closest('.dropzone-inner')) {
+            fileInput.click();
+        }
+    });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) uploadImageFile(fileInput.files[0]);
+    });
+
+    async function uploadImageFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await fetch('/api/upload/image', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.url) {
+                urlInput.value = data.url;
+                syncDropzoneFromUrl(data.url);
+                showToast('Image uploaded successfully!');
+            } else {
+                showToast('Upload failed: ' + (data.error || 'Unknown error'));
+            }
+        } catch (e) {
+            showToast('Upload error.');
+        }
+    }
+})();
+
 document.getElementById('welcome_message').addEventListener('input', updateLivePreview);
-document.getElementById('welcome_image_url').addEventListener('input', updateLivePreview);
+document.getElementById('welcome_image_url').addEventListener('input', () => syncDropzoneFromUrl(document.getElementById('welcome_image_url').value));
 
 document.getElementById('btn-send-ticket').addEventListener('click', async () => {
     if (!currentGuildId) return;
@@ -637,8 +726,25 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         },
         automod: {
             enabled: document.getElementById('automod_enabled').checked,
-            anti_link: { enabled: document.getElementById('automod_anti_link').checked },
-            anti_spam: { enabled: document.getElementById('automod_anti_spam').checked }
+            anti_link: {
+                enabled: document.getElementById('automod_anti_link').checked,
+                blocked_domains: document.getElementById('automod_link_domains').value,
+                action: document.getElementById('automod_link_action').value,
+                timeout_duration_min: parseInt(document.getElementById('automod_link_timeout_min').value) || 5
+            },
+            anti_spam: {
+                enabled: document.getElementById('automod_anti_spam').checked,
+                max_messages: parseInt(document.getElementById('automod_spam_max_msgs').value) || 5,
+                time_window_sec: parseInt(document.getElementById('automod_spam_window').value) || 3,
+                max_mentions: parseInt(document.getElementById('automod_spam_mentions').value) || 4,
+                action: document.getElementById('automod_spam_action').value,
+                timeout_duration_min: parseInt(document.getElementById('automod_spam_timeout_min').value) || 5
+            },
+            anti_alt: {
+                enabled: document.getElementById('automod_anti_alt').checked,
+                min_age_days: parseInt(document.getElementById('automod_alt_min_age').value) || 3,
+                action: document.getElementById('automod_alt_action').value
+            }
         },
         verify: {
             enabled: document.getElementById('verify_enabled').checked,
