@@ -8,6 +8,7 @@ import discord
 from typing import Dict, Any
 
 from Commands.Welcome._storage import load_welcome_config, save_welcome_config
+from Commands.Goodbye._storage import load_goodbye_config, save_goodbye_config
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
 from Commands.Verify._storage import load_verify_config, save_verify_config
 from Commands.AutoResponder._storage import load_responses, save_responses
@@ -200,6 +201,7 @@ class WebDashboard:
         welcome_cfg = load_welcome_config(guild_id)
         automod_cfg = load_automod_config(guild_id)
         verify_cfg = load_verify_config(guild_id)
+        goodbye_cfg = load_goodbye_config(guild_id)
         autoresponder_cfg = load_responses(guild_id)
         joinroles_cfg = load_join_roles(guild_id)
         
@@ -212,6 +214,12 @@ class WebDashboard:
                 "channel_id": str(welcome_cfg.get("channel_id")) if welcome_cfg.get("channel_id") else "",
                 "message": welcome_cfg.get("message", ""),
                 "image_url": welcome_cfg.get("image_url", "")
+            },
+            "goodbye": {
+                "enabled": goodbye_cfg.get("enabled", False),
+                "channel_id": str(goodbye_cfg.get("channel_id")) if goodbye_cfg.get("channel_id") else "",
+                "message": goodbye_cfg.get("message", ""),
+                "image_url": goodbye_cfg.get("image_url", "")
             },
             "automod": {
                 "enabled": automod_cfg.get("enabled", False),
@@ -295,6 +303,20 @@ class WebDashboard:
                 if img_url is not None:
                     welcome_cfg["image_url"] = img_url
                 save_welcome_config(guild_id, welcome_cfg)
+                
+            # Goodbye (Requires can_channels)
+            if user_perms.get("can_channels") and "goodbye" in data:
+                goodbye_cfg = load_goodbye_config(guild_id)
+                goodbye_cfg["enabled"] = bool(data.get("goodbye", {}).get("enabled"))
+                cid = data.get("goodbye", {}).get("channel_id")
+                goodbye_cfg["channel_id"] = int(cid) if cid else None
+                msg = data.get("goodbye", {}).get("message", "")
+                if msg:
+                    goodbye_cfg["message"] = msg
+                img_url = data.get("goodbye", {}).get("image_url", "")
+                if img_url is not None:
+                    goodbye_cfg["image_url"] = img_url
+                save_goodbye_config(guild_id, goodbye_cfg)
             
             # AutoMod (Requires can_messages)
             if user_perms.get("can_messages") and "automod" in data:

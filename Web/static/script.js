@@ -466,6 +466,8 @@ async function loadConfig(guildId, guildName) {
         // Populate normal selects (channels)
         const welcomeSelect = document.getElementById('welcome_channel_id');
         welcomeSelect.innerHTML = '<option value="">None</option>';
+        const goodbyeSelect = document.getElementById('goodbye_channel_id');
+        goodbyeSelect.innerHTML = '<option value="">None</option>';
         const verifyPanelSelect = document.getElementById('verify_panel_channel');
         verifyPanelSelect.innerHTML = '<option value="">Select Channel...</option>';
         const ticketPanelSelect = document.getElementById('ticket_panel_channel');
@@ -473,7 +475,9 @@ async function loadConfig(guildId, guildName) {
         const ticketLogSelect = document.getElementById('ticket_log_channel_id');
         ticketLogSelect.innerHTML = '<option value="">None</option>';
         data.channels.forEach(c => {
-            welcomeSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
+            const opt = `<option value="${c.id}">#${c.name}</option>`;
+            welcomeSelect.innerHTML += opt;
+            goodbyeSelect.innerHTML += opt;
             verifyPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
             ticketPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
             ticketLogSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
@@ -490,6 +494,16 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('welcome_message').value = config.welcome?.message || 'Welcome {user} to {server}!';
         const imgUrl = config.welcome?.image_url || '';
         document.getElementById('welcome_image_url').value = imgUrl;
+        syncDropzoneFromUrl(imgUrl);
+
+        // Goodbye
+        if (!currentPermissions.can_channels) lockSection('section-goodbye', 'Manage Channels');
+        document.getElementById('goodbye_enabled').checked = config.goodbye?.enabled || false;
+        document.getElementById('goodbye_channel_id').value = config.goodbye?.channel_id || '';
+        document.getElementById('goodbye_message').value = config.goodbye?.message || "We're sad to see you go, {user}!";
+        const gbImgUrl = config.goodbye?.image_url || '';
+        document.getElementById('goodbye_image_url').value = gbImgUrl;
+        syncGoodbyeDropzoneFromUrl(gbImgUrl);
         syncDropzoneFromUrl(imgUrl);
 
         // AutoMod
@@ -624,6 +638,30 @@ function updateLivePreview() {
     }
 }
 
+function updateGoodbyeLivePreview() {
+    const msgInput = document.getElementById('goodbye_message').value;
+    const imgInput = document.getElementById('goodbye_image_url').value;
+    
+    // Replace placeholders and #channel-name mentions
+    let formattedText = msgInput
+        .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
+        .replace(/{server}/g, '<b>Orbit</b>')
+        .replace(/{count}/g, '<b>100</b>')
+        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');
+        
+    document.getElementById('goodbye_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
+    
+    const imgElement = document.getElementById('goodbye_preview_img');
+    
+    if (imgInput) {
+        imgElement.src = imgInput;
+        imgElement.style.display = 'block';
+    } else {
+        imgElement.style.display = 'none';
+        imgElement.src = '';
+    }
+}
+
 function syncDropzoneFromUrl(url) {
     const preview = document.getElementById('dropzone-preview');
     const inner = document.getElementById('dropzone-inner');
@@ -637,6 +675,21 @@ function syncDropzoneFromUrl(url) {
         if (inner) inner.style.display = 'flex';
     }
     updateLivePreview();
+}
+
+function syncGoodbyeDropzoneFromUrl(url) {
+    const preview = document.getElementById('goodbye-dropzone-preview');
+    const inner = document.getElementById('goodbye-dropzone-inner');
+    if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        if (inner) inner.style.display = 'none';
+    } else {
+        preview.style.display = 'none';
+        preview.src = '';
+        if (inner) inner.style.display = 'flex';
+    }
+    updateGoodbyeLivePreview();
 }
 
 function updateAutomodTimeoutVisibility() {
@@ -700,6 +753,9 @@ document.getElementById('automod_spam_action').addEventListener('change', update
 
 document.getElementById('welcome_message').addEventListener('input', updateLivePreview);
 document.getElementById('welcome_image_url').addEventListener('input', () => syncDropzoneFromUrl(document.getElementById('welcome_image_url').value));
+
+document.getElementById('goodbye_message').addEventListener('input', updateGoodbyeLivePreview);
+document.getElementById('goodbye_image_url').addEventListener('input', () => syncGoodbyeDropzoneFromUrl(document.getElementById('goodbye_image_url').value));
 
 document.getElementById('btn-send-ticket').addEventListener('click', async () => {
     if (!currentGuildId) return;
@@ -770,6 +826,12 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             channel_id: document.getElementById('welcome_channel_id').value,
             message: document.getElementById('welcome_message').value,
             image_url: document.getElementById('welcome_image_url').value
+        },
+        goodbye: {
+            enabled: document.getElementById('goodbye_enabled').checked,
+            channel_id: document.getElementById('goodbye_channel_id').value,
+            message: document.getElementById('goodbye_message').value,
+            image_url: document.getElementById('goodbye_image_url').value
         },
         automod: {
             enabled: document.getElementById('automod_enabled').checked,
