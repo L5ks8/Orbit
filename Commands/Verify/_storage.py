@@ -2,7 +2,6 @@ import os
 import json
 import pathlib
 from typing import Dict, Any, Optional
-from Commands.StorageEngine import get_json, save_json
 
 STORAGE_ROOT = pathlib.Path("Storage")
 
@@ -15,9 +14,18 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 def load_verify_config(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
     default_cfg = {"enabled": False, "channel_id": None, "role_id": None, "remove_role_id": None, "auto_kick_minutes": 0, "pending_kicks": {}}
-    data = get_json(path, default=default_cfg)
+    
+    if not path.exists():
+        data = default_cfg.copy()
+    else:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = default_cfg.copy()
+
     if not isinstance(data, dict):
-        data = default_cfg
+        data = default_cfg.copy()
 
     if "enabled" not in data:
         data["enabled"] = bool(data.get("channel_id") and data.get("role_id"))
@@ -29,7 +37,8 @@ def load_verify_config(guild_id: int) -> Dict[str, Any]:
 
 def save_verify_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    save_json(path, config)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
 
 def setup_verify_config(guild_id: int, channel_id: int, role_id: int, remove_role_id: Optional[int] = None, auto_kick_minutes: int = 0) -> Dict[str, Any]:
     config = load_verify_config(guild_id)

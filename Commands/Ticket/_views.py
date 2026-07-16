@@ -30,21 +30,55 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
     except Exception:
         pass
 
-    lines = [
-        "=== TICKET TRANSCRIPT ===",
-        f"Server: {guild.name} ({guild.id})",
-        f"Ticket Channel: #{channel.name} ({channel.id})",
-        f"Creator ID: {creator_id}",
-        f"Subject: {subject}",
-        f"Closed By: {closed_by} ({getattr(closed_by, 'id', 'Unknown')})",
-        f"Reason: {reason}",
-        "=========================\n"
-    ]
+    html_template = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ticket Transcript: #{channel.name}</title>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #313338; color: #dbdee1; margin: 0; padding: 20px; }}
+        .header {{ background-color: #2b2d31; padding: 20px; border-radius: 8px; margin-bottom: 20px; }}
+        .header h1 {{ margin: 0 0 10px 0; color: #f2f3f5; font-size: 24px; }}
+        .header p {{ margin: 5px 0; font-size: 14px; color: #b5bac1; }}
+        .message {{ display: flex; margin-bottom: 20px; }}
+        .avatar {{ width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; background-color: #5865F2; flex-shrink: 0; overflow: hidden; }}
+        .avatar img {{ width: 100%; height: 100%; object-fit: cover; }}
+        .msg-content {{ display: flex; flex-direction: column; }}
+        .msg-header {{ margin-bottom: 5px; }}
+        .msg-author {{ font-weight: 600; color: #f2f3f5; margin-right: 10px; font-size: 16px; }}
+        .msg-time {{ font-size: 12px; color: #949ba4; }}
+        .msg-text {{ font-size: 15px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Ticket Transcript: #{channel.name}</h1>
+        <p><strong>Server:</strong> {guild.name} ({guild.id})</p>
+        <p><strong>Creator ID:</strong> {creator_id}</p>
+        <p><strong>Subject:</strong> {subject}</p>
+        <p><strong>Closed By:</strong> {closed_by} ({getattr(closed_by, 'id', 'Unknown')})</p>
+        <p><strong>Reason:</strong> {reason}</p>
+    </div>
+    <div class="messages">
+"""
+    msgs_html = []
     for m in messages:
         t_str = m.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        lines.append(f"[{t_str}] {m.author.display_name} ({m.author.id}): {m.content}")
-
-    transcript_text = "\n".join(lines)
+        avatar_url = m.author.display_avatar.url if m.author.display_avatar else "https://cdn.discordapp.com/embed/avatars/0.png"
+        import html
+        safe_content = html.escape(m.content or "")
+        msgs_html.append(f'''        <div class="message">
+            <div class="avatar"><img src="{avatar_url}" alt="avatar"></div>
+            <div class="msg-content">
+                <div class="msg-header">
+                    <span class="msg-author">{html.escape(m.author.display_name)}</span>
+                    <span class="msg-time">{t_str}</span>
+                </div>
+                <div class="msg-text">{safe_content}</div>
+            </div>
+        </div>''')
+    
+    transcript_text = html_template + "\\n".join(msgs_html) + "\\n    </div>\\n</body>\\n</html>"
     transcript_bytes = transcript_text.encode("utf-8")
 
     log_ch_id = config.get("log_channel_id")
@@ -97,7 +131,7 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             )
             log_view = LayoutView()
             log_view.add_item(container)
-            file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.txt")
+            file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
             try:
                 await log_channel.send(view=log_view, file=file, allowed_mentions=discord.AllowedMentions.none())
             except Exception:

@@ -1,26 +1,17 @@
-import json
-import pathlib
 import random
 import string
 import time
 from typing import Dict, Any, List
-from Commands.StorageEngine import get_json, save_json
+from Database.mongo import get_config, save_config
 
-STORAGE_ROOT = pathlib.Path("Storage")
+async def load_warnings(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
+    doc = await get_config(guild_id, "warnings")
+    # doc contains "_id" and then user_ids as keys
+    # return everything except _id
+    return {k: v for k, v in doc.items() if k != "_id"}
 
-def _get_file_path(guild_id: int) -> pathlib.Path:
-    folder = STORAGE_ROOT / str(guild_id)
-    if not folder.exists():
-        folder.mkdir(parents=True, exist_ok=True)
-    return folder / "warnings.json"
-
-def load_warnings(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
-    path = _get_file_path(guild_id)
-    return get_json(path, default={})
-
-def save_warnings(guild_id: int, data: Dict[str, List[Dict[str, Any]]]) -> None:
-    path = _get_file_path(guild_id)
-    save_json(path, data)
+async def save_warnings(guild_id: int, data: Dict[str, List[Dict[str, Any]]]) -> None:
+    await save_config(guild_id, "warnings", data)
 
 def _generate_warn_id(existing_ids: set) -> str:
     while True:
@@ -28,8 +19,8 @@ def _generate_warn_id(existing_ids: set) -> str:
         if wid not in existing_ids:
             return wid
 
-def add_warning(guild_id: int, user_id: int, reason: str, moderator_id: int) -> Dict[str, Any]:
-    data = load_warnings(guild_id)
+async def add_warning(guild_id: int, user_id: int, reason: str, moderator_id: int) -> Dict[str, Any]:
+    data = await load_warnings(guild_id)
     uid_str = str(user_id)
     if uid_str not in data:
         data[uid_str] = []
@@ -44,15 +35,15 @@ def add_warning(guild_id: int, user_id: int, reason: str, moderator_id: int) -> 
         "timestamp": int(time.time())
     }
     data[uid_str].append(warn_entry)
-    save_warnings(guild_id, data)
+    await save_warnings(guild_id, data)
     return warn_entry
 
-def get_user_warnings(guild_id: int, user_id: int) -> List[Dict[str, Any]]:
-    data = load_warnings(guild_id)
+async def get_user_warnings(guild_id: int, user_id: int) -> List[Dict[str, Any]]:
+    data = await load_warnings(guild_id)
     return data.get(str(user_id), [])
 
-def delete_warning(guild_id: int, user_id: int, warn_id: str) -> bool:
-    data = load_warnings(guild_id)
+async def delete_warning(guild_id: int, user_id: int, warn_id: str) -> bool:
+    data = await load_warnings(guild_id)
     uid_str = str(user_id)
     if uid_str not in data:
         return False
@@ -65,17 +56,17 @@ def delete_warning(guild_id: int, user_id: int, warn_id: str) -> bool:
     data[uid_str] = [w for w in data[uid_str] if w["warn_id"] != clean_wid]
 
     if len(data[uid_str]) != original_len:
-        save_warnings(guild_id, data)
+        await save_warnings(guild_id, data)
         return True
     return False
 
-def clear_user_warnings(guild_id: int, user_id: int) -> int:
-    data = load_warnings(guild_id)
+async def clear_user_warnings(guild_id: int, user_id: int) -> int:
+    data = await load_warnings(guild_id)
     uid_str = str(user_id)
     if uid_str not in data or not data[uid_str]:
         return 0
 
     count = len(data[uid_str])
     data[uid_str] = []
-    save_warnings(guild_id, data)
+    await save_warnings(guild_id, data)
     return count

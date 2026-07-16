@@ -4,7 +4,6 @@ import random
 import string
 import time
 from typing import Dict, Any, List
-from Commands.StorageEngine import get_json, save_json
 
 STORAGE_ROOT = pathlib.Path("Storage")
 
@@ -16,11 +15,18 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_giveaways(guild_id: int) -> Dict[str, Dict[str, Any]]:
     path = _get_file_path(guild_id)
-    return get_json(path, default={})
+    if not path.exists():
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 def save_giveaways(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
     path = _get_file_path(guild_id)
-    save_json(path, data)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
 
 def generate_giveaway_id(guild_id: int) -> str:
     data = load_giveaways(guild_id)

@@ -1,8 +1,8 @@
 import pathlib
+import json
 from typing import Dict, Any
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-from Commands.StorageEngine import get_json, save_json
 
 STORAGE_ROOT = pathlib.Path("Storage")
 
@@ -29,9 +29,18 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
         "categories": DEFAULT_CATEGORIES.copy(),
         "channels": {k: None for k in DEFAULT_CATEGORIES}
     }
-    data = get_json(path, default)
+    
+    if not path.exists():
+        data = default.copy()
+    else:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = default.copy()
+
     if not isinstance(data, dict):
-        return default
+        return default.copy()
 
     if "categories" not in data or not isinstance(data["categories"], dict):
         data["categories"] = DEFAULT_CATEGORIES.copy()
@@ -59,7 +68,8 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
 
 def save_log_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    save_json(path, config)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
 
 def setup_log(guild_id: int, default_channel_id: int = None, channel_overrides: Dict[str, int] = None) -> Dict[str, Any]:
     config = load_log_config(guild_id)
@@ -136,11 +146,6 @@ def reset_log_config(guild_id: int) -> None:
             path.unlink()
         except Exception:
             pass
-    from Commands.StorageEngine import _RAM_CACHE, _DIRTY_FILES
-    key = str(path)
-    if key in _RAM_CACHE:
-        del _RAM_CACHE[key]
-    _DIRTY_FILES.discard(key)
 
 async def log_event(guild: discord.Guild, category: str, title: str, description: str) -> None:
     if not guild:
@@ -191,8 +196,4 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
             )
             await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except Exception as e:
-            try:
-                from Storage._error_recorder import log_error_event
-                log_error_event("Log Event Send Error", e, {"guild_id": guild.id, "category": category, "channel_id": ch_int})
-            except Exception:
-                pass
+            pass

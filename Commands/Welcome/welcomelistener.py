@@ -27,10 +27,28 @@ class WelcomeListener(commands.Cog):
             return
 
         formatted = format_welcome_string(config.get("message", ""), member)
-        view = WelcomeCardLayout(member, formatted)
+        
+        from Commands.Welcome._storage import get_welcome_bg_path
+        from Commands.Welcome.image_gen import generate_welcome_image
+        import discord
+
+        # Download avatar bytes
+        avatar_bytes = b""
+        if member.display_avatar:
+            try:
+                avatar_bytes = await member.display_avatar.read()
+            except Exception:
+                pass
+                
+        bg_path = get_welcome_bg_path(member.guild.id)
+        
+        # Run image generation in a separate thread to prevent blocking
+        import asyncio
+        img_buffer = await asyncio.to_thread(generate_welcome_image, avatar_bytes, bg_path, member.name)
+        file = discord.File(fp=img_buffer, filename="welcome.png")
 
         try:
-            await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            await channel.send(content=formatted, file=file, allowed_mentions=discord.AllowedMentions.none())
         except Exception:
             pass
 

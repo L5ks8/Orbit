@@ -21,10 +21,11 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
-    success = delete_warning(ctx.guild.id, user.id, warn_id)
+    success = await delete_warning(ctx.guild.id, user.id, warn_id)
     if not success:
         return await ctx.send(f"Could not find warning ID `{warn_id}` for **{user.display_name}**.", ephemeral=True)
-    remaining = len(get_user_warnings(ctx.guild.id, user.id))
+    warns = await get_user_warnings(ctx.guild.id, user.id)
+    remaining = len(warns)
     try:
         await ctx.message.delete()
     except Exception:

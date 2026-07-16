@@ -35,8 +35,9 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
         return await ctx.send("This user is on the global moderation whitelist (`Immune to Warnings`).", ephemeral=True)
     if user.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
         return await ctx.send("You cannot warn a user with an equal or higher role.", ephemeral=True)
-    warn_entry = add_warning(ctx.guild.id, user.id, reason, ctx.author.id)
-    total_warns = len(get_user_warnings(ctx.guild.id, user.id))
+    warn_entry = await add_warning(ctx.guild.id, user.id, reason, ctx.author.id)
+    warns = await get_user_warnings(ctx.guild.id, user.id)
+    total_warns = len(warns)
     try:
         await user.send(
             f"You have received a formal warning in **{ctx.guild.name}**.\n"

@@ -3,7 +3,6 @@ import json
 import pathlib
 import time
 from typing import Dict, Any, Optional
-from Commands.StorageEngine import get_json, save_json
 
 STORAGE_ROOT = pathlib.Path("Storage")
 
@@ -28,9 +27,18 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         "ticket_counter": 0,
         "active_tickets": {}
     }
-    data = get_json(path, default=default_cfg)
+    
+    if not path.exists():
+        data = default_cfg.copy()
+    else:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = default_cfg.copy()
+
     if not isinstance(data, dict):
-        data = default_cfg
+        data = default_cfg.copy()
 
     if "active_tickets" not in data:
         data["active_tickets"] = {}
@@ -46,7 +54,8 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
 
 def save_ticket_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    save_json(path, config)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
 
 def setup_ticket_config(
     guild_id: int,
