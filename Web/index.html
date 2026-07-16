@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orbit Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css?v=7">
+    <link rel="stylesheet" href="/static/style.css?v=8">
 </head>
 <body>
 
@@ -265,19 +265,13 @@
                             <div class="form-group">
                                 <label>Verified Role (Add)</label>
                                 <span class="help-text">The role granted upon successful verification.</span>
-                                <select id="verify_role_id">
-                                    <option value="">None</option>
-                                    <!-- Populated by JS -->
-                                </select>
+                                <input type="hidden" id="verify_role_id">
                             </div>
 
                             <div class="form-group">
                                 <label>Unverified Role (Remove)</label>
                                 <span class="help-text">Optional: A role that is REMOVED when the user verifies (e.g. Quarantine role).</span>
-                                <select id="verify_remove_role_id">
-                                    <option value="">None</option>
-                                    <!-- Populated by JS -->
-                                </select>
+                                <input type="hidden" id="verify_remove_role_id">
                             </div>
 
                             <div class="form-group" style="margin-top: 40px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
@@ -391,6 +385,6 @@
 
     <div id="toast" class="toast">Changes saved successfully!</div>
 
-    <script src="/static/script.js?v=7"></script>
+    <script src="/static/script.js?v=8"></script>
 </body>
 </html>
