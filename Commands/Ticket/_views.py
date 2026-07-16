@@ -131,9 +131,10 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             )
             log_view = LayoutView()
             log_view.add_item(container)
-            file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
             try:
-                await log_channel.send(view=log_view, file=file, allowed_mentions=discord.AllowedMentions.none())
+                await log_channel.send(view=log_view, allowed_mentions=discord.AllowedMentions.none())
+                file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
+                await log_channel.send(file=file)
             except Exception:
                 pass
 
