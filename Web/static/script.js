@@ -504,7 +504,6 @@ async function loadConfig(guildId, guildName) {
         const gbImgUrl = config.goodbye?.image_url || '';
         document.getElementById('goodbye_image_url').value = gbImgUrl;
         syncGoodbyeDropzoneFromUrl(gbImgUrl);
-        syncDropzoneFromUrl(imgUrl);
 
         // AutoMod
         if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
@@ -705,12 +704,12 @@ document.getElementById('automod_link_action').addEventListener('change', update
 document.getElementById('automod_spam_action').addEventListener('change', updateAutomodTimeoutVisibility);
 
 // Dropzone setup
-(function setupDropzone() {
-    const zone = document.getElementById('image-dropzone');
-    const fileInput = document.getElementById('image-file-input');
-    const urlInput = document.getElementById('welcome_image_url');
+function bindDropzone(zoneId, fileInputId, urlInputId, syncFunc) {
+    const zone = document.getElementById(zoneId);
+    const fileInput = document.getElementById(fileInputId);
+    const urlInput = document.getElementById(urlInputId);
 
-    if (!zone) return;
+    if (!zone || !fileInput || !urlInput) return;
 
     zone.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -724,9 +723,7 @@ document.getElementById('automod_spam_action').addEventListener('change', update
         if (file) uploadImageFile(file);
     });
     zone.addEventListener('click', (e) => {
-        if (e.target === zone || e.target.closest('.dropzone-inner')) {
-            fileInput.click();
-        }
+        fileInput.click();
     });
     fileInput.addEventListener('change', () => {
         if (fileInput.files[0]) uploadImageFile(fileInput.files[0]);
@@ -740,7 +737,7 @@ document.getElementById('automod_spam_action').addEventListener('change', update
             const data = await res.json();
             if (data.url) {
                 urlInput.value = data.url;
-                syncDropzoneFromUrl(data.url);
+                syncFunc(data.url);
                 showToast('Image uploaded successfully!');
             } else {
                 showToast('Upload failed: ' + (data.error || 'Unknown error'));
@@ -749,7 +746,10 @@ document.getElementById('automod_spam_action').addEventListener('change', update
             showToast('Upload error.');
         }
     }
-})();
+}
+
+bindDropzone('image-dropzone', 'image-file-input', 'welcome_image_url', syncDropzoneFromUrl);
+bindDropzone('goodbye-image-dropzone', 'goodbye-image-file-input', 'goodbye_image_url', syncGoodbyeDropzoneFromUrl);
 
 document.getElementById('welcome_message').addEventListener('input', updateLivePreview);
 document.getElementById('welcome_image_url').addEventListener('input', () => syncDropzoneFromUrl(document.getElementById('welcome_image_url').value));
