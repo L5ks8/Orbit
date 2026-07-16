@@ -80,6 +80,9 @@ class AutoModListener(commands.Cog):
         if not message.guild or message.author.bot:
             return
 
+        if message.author.guild_permissions.administrator or message.author.guild_permissions.manage_guild:
+            return
+
         if is_whitelisted(message.guild.id, message.author.id):
             return
 
@@ -87,38 +90,92 @@ class AutoModListener(commands.Cog):
         if not config.get("enabled", False):
             return
 
-        # --- ANTI-LINK ---
-        link_cfg = config["anti_link"]
-        if link_cfg.get("enabled", False):
-            content_lower = message.content.lower()
-            blocked = link_cfg.get("blocked_domains", ["discord.gg/", "discord.com/invite/", "dsc.gg/", "invite.gg/"])
-            if any(domain in content_lower for domain in blocked):
+        # Check Global Exemptions
+        if str(message.channel.id) in config.get("global_exempt_channels", []):
+            return
+        if any(str(r.id) in config.get("global_exempt_roles", []) for r in message.author.roles):
+            return
+
+        content_lower = message.content.lower()
+        
+        async def do_action(cfg, reason, delete_msg=True):
+            if delete_msg:
                 try:
                     await message.delete()
                 except Exception:
                     pass
+            action = cfg.get("action", "warn")
+            timeout_min = cfg.get("timeout_duration_min", 5)
+            escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
+            view = AutoModNoticeLayout(message.author, reason, action, warn_count, escalation_str)
+            try:
+                await message.channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            except Exception:
+                pass
 
-                reason = "AutoMod: Unauthorized link detected"
-                action = link_cfg.get("action", "warn")
-                timeout_min = link_cfg.get("timeout_duration_min", 5)
-                escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
-
-                view = AutoModNoticeLayout(message.author, reason, action, warn_count, escalation_str)
-                try:
-                    await message.channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
-                except Exception:
-                    pass
+        # 1. Banned Words
+        banned_cfg = config.get("banned_words", {})
+        if banned_cfg.get("enabled", False):
+            words = banned_cfg.get("words", [])
+            if any(w in content_lower for w in words if w):
+                await do_action(banned_cfg, "AutoMod: Banned word detected")
                 return
 
-        # --- ANTI-SPAM ---
-        spam_cfg = config["anti_spam"]
+        # 2. Anti-Invites
+        invites_cfg = config.get("anti_invites", {})
+        if invites_cfg.get("enabled", False):
+            invite_links = ["discord.gg/", "discord.com/invite/", "dsc.gg/", "invite.gg/"]
+            if any(inv in content_lower for inv in invite_links):
+                await do_action(invites_cfg, "AutoMod: Discord invite detected")
+                return
+
+        # 3. Anti-Link (Blocked Domains)
+        link_cfg = config.get("anti_link", {})
+        if link_cfg.get("enabled", False):
+            blocked = link_cfg.get("blocked_domains", [])
+            # If no specific domains are listed, we block all http/https if they want? 
+            # Or just block the listed ones. Let's block listed ones.
+            if blocked:
+                if any(domain in content_lower for domain in blocked if domain):
+                    await do_action(link_cfg, "AutoMod: Unauthorized link detected")
+                    return
+            else:
+                # If empty, default to block all links
+                if "http://" in content_lower or "https://" in content_lower:
+                    await do_action(link_cfg, "AutoMod: Unauthorized link detected")
+                    return
+
+        # 4. Anti-Caps
+        caps_cfg = config.get("anti_caps", {})
+        if caps_cfg.get("enabled", False):
+            content_alpha = [c for c in message.content if c.isalpha()]
+            if len(content_alpha) > 8:
+                upper_count = sum(1 for c in content_alpha if c.isupper())
+                if upper_count / len(content_alpha) > 0.7:
+                    await do_action(caps_cfg, "AutoMod: Excessive caps detected")
+                    return
+
+        # 5. Mention Spam
+        mention_cfg = config.get("mention_spam", {})
+        if mention_cfg.get("enabled", False):
+            max_mentions = mention_cfg.get("max_mentions", 4)
+            if len(message.mentions) >= max_mentions:
+                await do_action(mention_cfg, f"AutoMod: Mass mentions detected ({len(message.mentions)})")
+                return
+
+        # 6. Anti-Scam
+        scam_cfg = config.get("anti_scam", {})
+        if scam_cfg.get("enabled", False):
+            scam_patterns = ["free nitro", "steam 50$", "discord nitro free", "discord.gift/", "free robux"]
+            if any(p in content_lower for p in scam_patterns):
+                await do_action(scam_cfg, "AutoMod: Scam link/phrase detected")
+                return
+
+        # 7. Anti-Spam (Message Flood)
+        spam_cfg = config.get("anti_spam", {})
         if spam_cfg.get("enabled", False):
-            m_mentions = spam_cfg.get("max_mentions", 4)
             m_msgs = spam_cfg.get("max_messages", 5)
             t_win = spam_cfg.get("time_window_sec", 3)
-
-            is_mass_mention = len(message.mentions) >= m_mentions
-            is_flood = False
 
             now = time.time()
             gid = message.guild.id
@@ -132,25 +189,8 @@ class AutoModListener(commands.Cog):
             self.spam_cache[gid][uid].append(now)
 
             if len(self.spam_cache[gid][uid]) >= m_msgs:
-                is_flood = True
                 self.spam_cache[gid][uid] = []
-
-            if is_mass_mention or is_flood:
-                try:
-                    await message.delete()
-                except Exception:
-                    pass
-
-                reason = "AutoMod: Mass mentions detected" if is_mass_mention else f"AutoMod: Message flood ({m_msgs}+ messages in {t_win}s)"
-                action = spam_cfg.get("action", "warn")
-                timeout_min = spam_cfg.get("timeout_duration_min", 5)
-                escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
-
-                view = AutoModNoticeLayout(message.author, reason, action, warn_count, escalation_str)
-                try:
-                    await message.channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
-                except Exception:
-                    pass
+                await do_action(spam_cfg, f"AutoMod: Message flood ({m_msgs}+ messages in {t_win}s)")
                 return
 
     @commands.Cog.listener()

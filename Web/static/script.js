@@ -1,5 +1,7 @@
 let currentUser = null;
 let currentGuildId = null;
+let currentAutomodConfig = {};
+let activeAutomodRule = null;
 
 // Views
 const views = {
@@ -507,21 +509,17 @@ async function loadConfig(guildId, guildName) {
 
         // AutoMod
         if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
-        document.getElementById('automod_enabled').checked = config.automod?.enabled || false;
-        document.getElementById('automod_anti_link').checked = config.automod?.anti_link?.enabled || false;
-        document.getElementById('automod_link_domains').value = (config.automod?.anti_link?.blocked_domains || []).join(', ');
-        document.getElementById('automod_link_action').value = config.automod?.anti_link?.action || 'warn';
-        document.getElementById('automod_link_timeout_min').value = config.automod?.anti_link?.timeout_duration_min || 5;
-        document.getElementById('automod_anti_spam').checked = config.automod?.anti_spam?.enabled || false;
-        document.getElementById('automod_spam_max_msgs').value = config.automod?.anti_spam?.max_messages || 5;
-        document.getElementById('automod_spam_window').value = config.automod?.anti_spam?.time_window_sec || 3;
-        document.getElementById('automod_spam_mentions').value = config.automod?.anti_spam?.max_mentions || 4;
-        document.getElementById('automod_spam_action').value = config.automod?.anti_spam?.action || 'warn';
-        document.getElementById('automod_spam_timeout_min').value = config.automod?.anti_spam?.timeout_duration_min || 5;
-        document.getElementById('automod_anti_alt').checked = config.automod?.anti_alt?.enabled || false;
-        document.getElementById('automod_alt_min_age').value = config.automod?.anti_alt?.min_age_days || 3;
-        document.getElementById('automod_alt_action').value = config.automod?.anti_alt?.action || 'kick';
-        updateAutomodTimeoutVisibility();
+        currentAutomodConfig = config.automod || {};
+        
+        document.getElementById('automod_enabled').checked = currentAutomodConfig.enabled || false;
+        document.getElementById('automod_banned_words_enabled').checked = currentAutomodConfig.banned_words?.enabled || false;
+        document.getElementById('automod_anti_spam_enabled').checked = currentAutomodConfig.anti_spam?.enabled || false;
+        document.getElementById('automod_anti_invites_enabled').checked = currentAutomodConfig.anti_invites?.enabled || false;
+        document.getElementById('automod_anti_link_enabled').checked = currentAutomodConfig.anti_link?.enabled || false;
+        document.getElementById('automod_anti_caps_enabled').checked = currentAutomodConfig.anti_caps?.enabled || false;
+        document.getElementById('automod_mention_spam_enabled').checked = currentAutomodConfig.mention_spam?.enabled || false;
+        document.getElementById('automod_anti_scam_enabled').checked = currentAutomodConfig.anti_scam?.enabled || false;
+        document.getElementById('automod_anti_alt_enabled').checked = currentAutomodConfig.anti_alt?.enabled || false;
 
         // Verify
         if (!currentPermissions.can_roles) lockSection('section-verify', 'Manage Roles');
@@ -543,6 +541,27 @@ async function loadConfig(guildId, guildName) {
         // Initialize Custom Selects for Roles
         new CustomSelect(document.getElementById('verify_role_id'), globalRoles, config.verify?.role_id || '', 'Select Verified Role...');
         new CustomSelect(document.getElementById('verify_remove_role_id'), globalRoles, config.verify?.remove_role_id || '', 'Select Unverified Role...');
+
+        // Populate Global Channels and Roles Multi-Selects
+        const amChannelsEl = document.getElementById('automod_global_channels');
+        amChannelsEl.innerHTML = '';
+        globalChannels.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = '#' + c.name;
+            if (currentAutomodConfig.global_exempt_channels?.includes(c.id)) opt.selected = true;
+            amChannelsEl.appendChild(opt);
+        });
+
+        const amRolesEl = document.getElementById('automod_global_roles');
+        amRolesEl.innerHTML = '';
+        globalRoles.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.textContent = '@' + r.name;
+            if (currentAutomodConfig.global_exempt_roles?.includes(r.id)) opt.selected = true;
+            amRolesEl.appendChild(opt);
+        });
 
         // AutoResponder & JoinRoles & TicketOptions
         if (!currentPermissions.can_messages) lockSection('section-autoresponder', 'Manage Messages');
@@ -778,6 +797,147 @@ document.getElementById('btn-send-ticket').addEventListener('click', async () =>
     }
 });
 
+// AutoMod Modal Functions
+function openAutoModModal(ruleId) {
+    activeAutomodRule = ruleId;
+    const ruleCfg = currentAutomodConfig[ruleId] || {};
+    
+    let title = '';
+    let html = '';
+    
+    const actionSelect = `
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Action on Violation</label>
+            <select id="am-modal-action">
+                <option value="warn" ${ruleCfg.action === 'warn' ? 'selected' : ''}>Warn</option>
+                <option value="timeout" ${ruleCfg.action === 'timeout' ? 'selected' : ''}>Timeout</option>
+                <option value="kick" ${ruleCfg.action === 'kick' ? 'selected' : ''}>Kick</option>
+                <option value="ban" ${ruleCfg.action === 'ban' ? 'selected' : ''}>Ban</option>
+            </select>
+        </div>
+        <div class="form-group" id="am-modal-timeout-group" style="margin-bottom: 0;">
+            <label>Timeout (minutes)</label>
+            <input type="number" id="am-modal-timeout" min="1" max="10080" value="${ruleCfg.timeout_duration_min || 5}">
+        </div>
+    `;
+
+    if (ruleId === 'banned_words') {
+        title = 'Edit Banned Words Rule';
+        const words = ruleCfg.words || [];
+        html = `
+            <div class="form-group">
+                <label>Banned Words/Phrases (comma-separated)</label>
+                <input type="text" id="am-modal-words" value="${words.join(', ')}" placeholder="badword1, badword2">
+            </div>
+            ${actionSelect}
+        `;
+    } else if (ruleId === 'anti_spam') {
+        title = 'Edit Anti Spam Rule';
+        html = `
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <div class="form-group" style="flex:1;">
+                    <label>Max Messages</label>
+                    <input type="number" id="am-modal-msgs" min="2" max="100" value="${ruleCfg.max_messages || 5}">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Time Window (sec)</label>
+                    <input type="number" id="am-modal-window" min="1" max="60" value="${ruleCfg.time_window_sec || 3}">
+                </div>
+            </div>
+            ${actionSelect}
+        `;
+    } else if (ruleId === 'anti_invites') {
+        title = 'Edit Anti Invites Rule';
+        html = actionSelect;
+    } else if (ruleId === 'anti_link') {
+        title = 'Edit Anti Links Rule';
+        const domains = ruleCfg.blocked_domains || ["discord.gg/", "discord.com/invite/"];
+        html = `
+            <div class="form-group">
+                <label>Blocked Domains (comma-separated)</label>
+                <input type="text" id="am-modal-domains" value="${domains.join(', ')}">
+            </div>
+            ${actionSelect}
+        `;
+    } else if (ruleId === 'anti_caps') {
+        title = 'Edit Anti Caps Rule';
+        html = actionSelect;
+    } else if (ruleId === 'mention_spam') {
+        title = 'Edit Mention Spam Rule';
+        html = `
+            <div class="form-group">
+                <label>Max Mentions</label>
+                <input type="number" id="am-modal-mentions" min="2" max="50" value="${ruleCfg.max_mentions || 4}">
+            </div>
+            ${actionSelect}
+        `;
+    } else if (ruleId === 'anti_scam') {
+        title = 'Edit Anti-Scam Rule';
+        html = actionSelect;
+    } else if (ruleId === 'anti_alt') {
+        title = 'Edit Anti-Alt Account Rule';
+        html = `
+            <div class="form-group">
+                <label>Minimum Account Age (days)</label>
+                <input type="number" id="am-modal-age" min="1" max="365" value="${ruleCfg.min_age_days || 3}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Action on Violation</label>
+                <select id="am-modal-action-alt">
+                    <option value="kick" ${ruleCfg.action === 'kick' ? 'selected' : ''}>Kick</option>
+                    <option value="ban" ${ruleCfg.action === 'ban' ? 'selected' : ''}>Ban</option>
+                    <option value="verify" ${ruleCfg.action === 'verify' ? 'selected' : ''}>Force Verify (Quarantine Role)</option>
+                </select>
+            </div>
+        `;
+    }
+
+    document.getElementById('am-modal-title').innerText = title;
+    document.getElementById('am-modal-body').innerHTML = html;
+    
+    const actionEl = document.getElementById('am-modal-action');
+    if (actionEl) {
+        actionEl.addEventListener('change', (e) => {
+            const grp = document.getElementById('am-modal-timeout-group');
+            if (grp) grp.style.display = e.target.value === 'timeout' ? '' : 'none';
+        });
+        const grp = document.getElementById('am-modal-timeout-group');
+        if (grp) grp.style.display = actionEl.value === 'timeout' ? '' : 'none';
+    }
+
+    document.getElementById('automod-modal').classList.add('show');
+}
+
+function closeAutoModModal() {
+    if (activeAutomodRule) {
+        if (!currentAutomodConfig[activeAutomodRule]) currentAutomodConfig[activeAutomodRule] = {};
+        const ruleCfg = currentAutomodConfig[activeAutomodRule];
+        
+        const actionEl = document.getElementById('am-modal-action');
+        if (actionEl) ruleCfg.action = actionEl.value;
+        
+        const toEl = document.getElementById('am-modal-timeout');
+        if (toEl) ruleCfg.timeout_duration_min = parseInt(toEl.value) || 5;
+
+        if (activeAutomodRule === 'banned_words') {
+            ruleCfg.words = document.getElementById('am-modal-words').value.split(',').map(s=>s.trim()).filter(s=>s);
+        } else if (activeAutomodRule === 'anti_spam') {
+            ruleCfg.max_messages = parseInt(document.getElementById('am-modal-msgs').value) || 5;
+            ruleCfg.time_window_sec = parseInt(document.getElementById('am-modal-window').value) || 3;
+        } else if (activeAutomodRule === 'anti_link') {
+            ruleCfg.blocked_domains = document.getElementById('am-modal-domains').value.split(',').map(s=>s.trim()).filter(s=>s);
+        } else if (activeAutomodRule === 'mention_spam') {
+            ruleCfg.max_mentions = parseInt(document.getElementById('am-modal-mentions').value) || 4;
+        } else if (activeAutomodRule === 'anti_alt') {
+            ruleCfg.min_age_days = parseInt(document.getElementById('am-modal-age').value) || 3;
+            ruleCfg.action = document.getElementById('am-modal-action-alt').value;
+        }
+    }
+    
+    activeAutomodRule = null;
+    document.getElementById('automod-modal').classList.remove('show');
+}
+
 // Save Settings
 document.getElementById('config-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -788,13 +948,13 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     btn.disabled = true;
 
     // Collect AutoResponder Data
-    const autoresponder = {};
+    const localAutoresponder = {};
     document.querySelectorAll('.autoreply-row').forEach(row => {
         const trigger = row.querySelector('.ar-trigger').value.trim();
         const response = row.querySelector('.ar-response').value.trim();
         const channelVal = row.querySelector('.ar-channel')?.value || '';
         if (trigger && response) {
-            autoresponder[trigger] = { response: response, channel_id: channelVal ? channelVal : null };
+            localAutoresponder[trigger] = { response: response, channel_id: channelVal ? channelVal : null };
         }
     });
 
@@ -820,6 +980,29 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
 
+    // Collect AutoMod Toggle States and Global Exepts
+    currentAutomodConfig.enabled = document.getElementById('automod_enabled').checked;
+    
+    if(!currentAutomodConfig.banned_words) currentAutomodConfig.banned_words = {};
+    currentAutomodConfig.banned_words.enabled = document.getElementById('automod_banned_words_enabled').checked;
+    if(!currentAutomodConfig.anti_spam) currentAutomodConfig.anti_spam = {};
+    currentAutomodConfig.anti_spam.enabled = document.getElementById('automod_anti_spam_enabled').checked;
+    if(!currentAutomodConfig.anti_invites) currentAutomodConfig.anti_invites = {};
+    currentAutomodConfig.anti_invites.enabled = document.getElementById('automod_anti_invites_enabled').checked;
+    if(!currentAutomodConfig.anti_link) currentAutomodConfig.anti_link = {};
+    currentAutomodConfig.anti_link.enabled = document.getElementById('automod_anti_link_enabled').checked;
+    if(!currentAutomodConfig.anti_caps) currentAutomodConfig.anti_caps = {};
+    currentAutomodConfig.anti_caps.enabled = document.getElementById('automod_anti_caps_enabled').checked;
+    if(!currentAutomodConfig.mention_spam) currentAutomodConfig.mention_spam = {};
+    currentAutomodConfig.mention_spam.enabled = document.getElementById('automod_mention_spam_enabled').checked;
+    if(!currentAutomodConfig.anti_scam) currentAutomodConfig.anti_scam = {};
+    currentAutomodConfig.anti_scam.enabled = document.getElementById('automod_anti_scam_enabled').checked;
+    if(!currentAutomodConfig.anti_alt) currentAutomodConfig.anti_alt = {};
+    currentAutomodConfig.anti_alt.enabled = document.getElementById('automod_anti_alt_enabled').checked;
+    
+    currentAutomodConfig.global_exempt_channels = Array.from(document.getElementById('automod_global_channels').selectedOptions).map(o => o.value);
+    currentAutomodConfig.global_exempt_roles = Array.from(document.getElementById('automod_global_roles').selectedOptions).map(o => o.value);
+
     const payload = {
         welcome: {
             enabled: document.getElementById('welcome_enabled').checked,
@@ -833,28 +1016,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             message: document.getElementById('goodbye_message').value,
             image_url: document.getElementById('goodbye_image_url').value
         },
-        automod: {
-            enabled: document.getElementById('automod_enabled').checked,
-            anti_link: {
-                enabled: document.getElementById('automod_anti_link').checked,
-                blocked_domains: document.getElementById('automod_link_domains').value,
-                action: document.getElementById('automod_link_action').value,
-                timeout_duration_min: parseInt(document.getElementById('automod_link_timeout_min').value) || 5
-            },
-            anti_spam: {
-                enabled: document.getElementById('automod_anti_spam').checked,
-                max_messages: parseInt(document.getElementById('automod_spam_max_msgs').value) || 5,
-                time_window_sec: parseInt(document.getElementById('automod_spam_window').value) || 3,
-                max_mentions: parseInt(document.getElementById('automod_spam_mentions').value) || 4,
-                action: document.getElementById('automod_spam_action').value,
-                timeout_duration_min: parseInt(document.getElementById('automod_spam_timeout_min').value) || 5
-            },
-            anti_alt: {
-                enabled: document.getElementById('automod_anti_alt').checked,
-                min_age_days: parseInt(document.getElementById('automod_alt_min_age').value) || 3,
-                action: document.getElementById('automod_alt_action').value
-            }
-        },
+        automod: currentAutomodConfig,
         verify: {
             enabled: document.getElementById('verify_enabled').checked,
             role_id: document.getElementById('verify_role_id').value,
@@ -870,7 +1032,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             log_channel_id: document.getElementById('ticket_log_channel_id').value,
             options_slots: ticketOptions
         },
-        autoresponder: autoresponder,
+        autoresponder: localAutoresponder,
         joinroles: joinroles
     };
 

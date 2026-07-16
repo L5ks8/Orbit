@@ -223,19 +223,47 @@ class WebDashboard:
             },
             "automod": {
                 "enabled": automod_cfg.get("enabled", False),
+                "global_exempt_channels": automod_cfg.get("global_exempt_channels", []),
+                "global_exempt_roles": automod_cfg.get("global_exempt_roles", []),
+                "banned_words": {
+                    "enabled": automod_cfg.get("banned_words", {}).get("enabled", False),
+                    "action": automod_cfg.get("banned_words", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("banned_words", {}).get("timeout_duration_min", 5),
+                    "words": automod_cfg.get("banned_words", {}).get("words", [])
+                },
+                "anti_spam": {
+                    "enabled": automod_cfg.get("anti_spam", {}).get("enabled", False),
+                    "max_messages": automod_cfg.get("anti_spam", {}).get("max_messages", 5),
+                    "time_window_sec": automod_cfg.get("anti_spam", {}).get("time_window_sec", 3),
+                    "action": automod_cfg.get("anti_spam", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("anti_spam", {}).get("timeout_duration_min", 5)
+                },
+                "anti_invites": {
+                    "enabled": automod_cfg.get("anti_invites", {}).get("enabled", False),
+                    "action": automod_cfg.get("anti_invites", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("anti_invites", {}).get("timeout_duration_min", 5)
+                },
                 "anti_link": {
                     "enabled": automod_cfg.get("anti_link", {}).get("enabled", False),
                     "action": automod_cfg.get("anti_link", {}).get("action", "warn"),
                     "timeout_duration_min": automod_cfg.get("anti_link", {}).get("timeout_duration_min", 5),
                     "blocked_domains": automod_cfg.get("anti_link", {}).get("blocked_domains", ["discord.gg/", "discord.com/invite/"])
                 },
-                "anti_spam": {
-                    "enabled": automod_cfg.get("anti_spam", {}).get("enabled", False),
-                    "max_messages": automod_cfg.get("anti_spam", {}).get("max_messages", 5),
-                    "time_window_sec": automod_cfg.get("anti_spam", {}).get("time_window_sec", 3),
-                    "max_mentions": automod_cfg.get("anti_spam", {}).get("max_mentions", 4),
-                    "action": automod_cfg.get("anti_spam", {}).get("action", "warn"),
-                    "timeout_duration_min": automod_cfg.get("anti_spam", {}).get("timeout_duration_min", 5)
+                "anti_caps": {
+                    "enabled": automod_cfg.get("anti_caps", {}).get("enabled", False),
+                    "action": automod_cfg.get("anti_caps", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("anti_caps", {}).get("timeout_duration_min", 5)
+                },
+                "mention_spam": {
+                    "enabled": automod_cfg.get("mention_spam", {}).get("enabled", False),
+                    "max_mentions": automod_cfg.get("mention_spam", {}).get("max_mentions", 4),
+                    "action": automod_cfg.get("mention_spam", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("mention_spam", {}).get("timeout_duration_min", 5)
+                },
+                "anti_scam": {
+                    "enabled": automod_cfg.get("anti_scam", {}).get("enabled", False),
+                    "action": automod_cfg.get("anti_scam", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("anti_scam", {}).get("timeout_duration_min", 5)
                 },
                 "anti_alt": {
                     "enabled": automod_cfg.get("anti_alt", {}).get("enabled", False),
@@ -323,32 +351,43 @@ class WebDashboard:
                 automod_cfg = load_automod_config(guild_id)
                 am = data.get("automod", {})
                 automod_cfg["enabled"] = bool(am.get("enabled"))
+                
+                gec = am.get("global_exempt_channels", [])
+                ger = am.get("global_exempt_roles", [])
+                automod_cfg["global_exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
+                automod_cfg["global_exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
 
-                # Anti-Link
-                if "anti_link" not in automod_cfg:
-                    automod_cfg["anti_link"] = {}
-                al = am.get("anti_link", {})
-                automod_cfg["anti_link"]["enabled"] = bool(al.get("enabled"))
-                automod_cfg["anti_link"]["action"] = al.get("action", "warn")
-                automod_cfg["anti_link"]["timeout_duration_min"] = int(al.get("timeout_duration_min", 5))
-                raw_domains = al.get("blocked_domains", "")
-                if isinstance(raw_domains, str):
-                    automod_cfg["anti_link"]["blocked_domains"] = [d.strip() for d in raw_domains.split(",") if d.strip()]
-                elif isinstance(raw_domains, list):
-                    automod_cfg["anti_link"]["blocked_domains"] = raw_domains
+                def save_submodule(key: str, defaults: dict, extra_fields: list = None):
+                    if key not in automod_cfg:
+                        automod_cfg[key] = {}
+                    src = am.get(key, {})
+                    automod_cfg[key]["enabled"] = bool(src.get("enabled"))
+                    automod_cfg[key]["action"] = src.get("action", defaults.get("action", "warn"))
+                    automod_cfg[key]["timeout_duration_min"] = int(src.get("timeout_duration_min", defaults.get("timeout_duration_min", 5)))
+                    if extra_fields:
+                        for ef in extra_fields:
+                            field_name = ef["name"]
+                            if ef["type"] == int:
+                                automod_cfg[key][field_name] = int(src.get(field_name, ef["default"]))
+                            elif ef["type"] == list:
+                                raw = src.get(field_name, ef["default"])
+                                if isinstance(raw, str):
+                                    automod_cfg[key][field_name] = [x.strip() for x in raw.split(",") if x.strip()]
+                                else:
+                                    automod_cfg[key][field_name] = raw
 
-                # Anti-Spam
-                if "anti_spam" not in automod_cfg:
-                    automod_cfg["anti_spam"] = {}
-                asp = am.get("anti_spam", {})
-                automod_cfg["anti_spam"]["enabled"] = bool(asp.get("enabled"))
-                automod_cfg["anti_spam"]["max_messages"] = int(asp.get("max_messages", 5))
-                automod_cfg["anti_spam"]["time_window_sec"] = int(asp.get("time_window_sec", 3))
-                automod_cfg["anti_spam"]["max_mentions"] = int(asp.get("max_mentions", 4))
-                automod_cfg["anti_spam"]["action"] = asp.get("action", "warn")
-                automod_cfg["anti_spam"]["timeout_duration_min"] = int(asp.get("timeout_duration_min", 5))
+                save_submodule("banned_words", {}, [{"name": "words", "type": list, "default": []}])
+                save_submodule("anti_spam", {}, [
+                    {"name": "max_messages", "type": int, "default": 5},
+                    {"name": "time_window_sec", "type": int, "default": 3}
+                ])
+                save_submodule("anti_invites", {}, [])
+                save_submodule("anti_link", {}, [{"name": "blocked_domains", "type": list, "default": []}])
+                save_submodule("anti_caps", {}, [])
+                save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
+                save_submodule("anti_scam", {}, [])
 
-                # Anti-Alt
+                # Anti-Alt (Special structure)
                 if "anti_alt" not in automod_cfg:
                     automod_cfg["anti_alt"] = {}
                 aalt = am.get("anti_alt", {})
