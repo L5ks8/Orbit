@@ -84,7 +84,7 @@ body {
 
 .btn-edit-rule {
     background: var(--accent-color);
-    color: #fff;
+    color: var(--accent-color-text);
     border: none;
     border-radius: 6px;
     padding: 10px;
@@ -885,7 +885,8 @@ body {
 }
 
 select,
-input[type="text"] {
+input[type="text"],
+input[type="number"] {
     width: 100%;
     background: #000000;
     border: 1px solid var(--border-color);
@@ -898,7 +899,8 @@ input[type="text"] {
 }
 
 select:focus,
-input[type="text"]:focus {
+input[type="text"]:focus,
+input[type="number"]:focus {
     border-color: var(--text-primary);
 }
 
@@ -2559,3 +2561,5 @@ img {
 .custom-multiselect.open .custom-select-dropdown {
     display: block;
 }
+
+
