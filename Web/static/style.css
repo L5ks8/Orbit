@@ -1,15 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg-color: #050505;
-    --surface-color: #111111;
-    --border-color: #222222;
-    --border-hover: #444444;
+    --bg-color: #0F1115;
+    --bg-card: #16181D;
+    --surface-color: rgba(26, 29, 36, 0.6);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.15);
+    --border-subtle: rgba(255, 255, 255, 0.04);
     --text-primary: #ffffff;
-    --text-secondary: #888888;
-    --accent-color: #ffffff;
-    --accent-color-hover: #dddddd;
-    --accent-color-text: #000000;
+    --text-secondary: #A1A5AB;
+    --text-muted: #7A7E85;
+    --accent-color: #5865F2;
+    --accent-color-hover: #4752C4;
+    --accent-color-text: #ffffff;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
 }
 
 * {
@@ -46,13 +53,21 @@ body {
 }
 
 .automod-rule-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
+    background: rgba(22, 24, 29, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
     padding: 16px 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.automod-rule-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-color);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .am-card-header {
@@ -453,6 +468,27 @@ body {
 .lp-btn-secondary:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color-hover) 100%);
+    color: var(--accent-color-text);
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+}
+
+.btn-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
 }
 
 .lp-btn-ghost {
@@ -1834,7 +1870,10 @@ img {
 
 /* Sidebar */
 .dash-sidebar {
-    background: var(--bg-secondary);
+    background: rgba(22, 24, 29, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-right: 1px solid var(--border-subtle);
     padding: 24px 0;
     display: flex;
     flex-direction: column;
@@ -1920,6 +1959,16 @@ img {
 }
 
 /* Main Content */
+.config-card {
+    background: rgba(22, 24, 29, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    overflow: visible;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
 .dash-main {
     background: var(--bg-card);
     padding: 32px 32px 250px 32px;

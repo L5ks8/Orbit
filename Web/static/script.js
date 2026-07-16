@@ -74,8 +74,11 @@ async function init() {
         const footerLogin = document.getElementById('btn-footer-login');
         if (footerLogin) footerLogin.onclick = currentUser ? loadDashboard : () => window.location.href = '/auth/login';
     } catch (e) {
-        console.error("Init error", e);
+        console.error(e);
+        showView('landing');
     }
+    
+    lucide.createIcons();
 }
 
 async function openSupportInvite() {
@@ -182,7 +185,8 @@ class CustomSelect {
         
         this.select.parentNode.insertBefore(this.container, this.select.nextSibling);
         
-        this.trigger.addEventListener('click', () => {
+        this.trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
             const isOpen = this.container.classList.contains('open');
             document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
             if (!isOpen) {
@@ -194,6 +198,7 @@ class CustomSelect {
         });
         
         this.searchInput.addEventListener('input', (e) => {
+            e.stopPropagation();
             this.renderOptions(e.target.value.toLowerCase());
         });
         
@@ -209,10 +214,11 @@ class CustomSelect {
     updateTrigger(placeholder) {
         const item = this.items.find(i => String(i.id) === String(this.value));
         if (item) {
-            this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <span style="font-size:10px">Ã¢â€“Â¼</span>`;
+            this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>`;
         } else {
-            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <span style="font-size:10px">Ã¢â€“Â¼</span>`;
+            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>`;
         }
+        lucide.createIcons({ root: this.trigger });
         this.select.value = this.value;
     }
     
@@ -284,6 +290,7 @@ class CustomMultiSelect {
         this.renderOptions('');
         
         this.container.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (e.target.closest('.cm-tag-remove')) return;
             const isOpen = this.container.classList.contains('open');
             document.querySelectorAll('.custom-multiselect').forEach(el => el.classList.remove('open'));
@@ -323,7 +330,7 @@ class CustomMultiSelect {
             
             const tag = document.createElement('div');
             tag.className = 'cm-tag';
-            tag.innerHTML = this.renderTag(item) + ' <span class="cm-tag-remove" data-id="' + item.id + '">&times;</span>';
+            tag.innerHTML = this.renderTag(item) + ' <span class="cm-tag-remove" data-id="' + item.id + '"><i data-lucide="x" style="width: 14px; height: 14px;"></i></span>';
             this.tagsContainer.appendChild(tag);
             
             tag.querySelector('.cm-tag-remove').addEventListener('click', (e) => {
@@ -331,6 +338,7 @@ class CustomMultiSelect {
                 this.toggleOption(item.id, false);
             });
         });
+        lucide.createIcons({ root: this.tagsContainer });
     }
     
     renderOptions(filter) {
@@ -497,8 +505,9 @@ function addJoinRoleRow(roleId = '') {
     btnRemove.type = 'button';
     btnRemove.className = 'btn-danger';
     btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
-    btnRemove.innerText = 'Ãƒâ€”';
+    btnRemove.innerHTML = '<i data-lucide="x" style="width: 18px; height: 18px;"></i>';
     btnRemove.onclick = () => row.remove();
+    lucide.createIcons({ root: btnRemove });
 
     row.appendChild(selectContainer);
     row.appendChild(btnRemove);
@@ -581,8 +590,9 @@ function addTicketOptionRow(slot = { name: '', role_id: '', category_id: '' }) {
     btnRemove.type = 'button';
     btnRemove.className = 'btn-danger';
     btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
-    btnRemove.innerText = 'Ãƒâ€”';
+    btnRemove.innerHTML = '<i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>';
     btnRemove.onclick = () => row.remove();
+    lucide.createIcons({ root: btnRemove });
     
     row.appendChild(nameGroup);
     row.appendChild(roleGroup);
@@ -1163,6 +1173,7 @@ function openAutoModModal(ruleId) {
         if (grp) grp.style.display = actionEl.value === 'timeout' ? '' : 'none';
     }
 
+    lucide.createIcons({ root: document.getElementById('automod-modal') });
     document.getElementById('automod-modal').classList.add('show');
     document.body.style.overflow = 'hidden';
 }
