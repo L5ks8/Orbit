@@ -31,6 +31,7 @@ class WelcomeListener(commands.Cog):
         from Commands.Welcome._storage import get_welcome_bg_path
         from Commands.Welcome.image_gen import generate_welcome_image
         import discord
+        import aiohttp
 
         # Download avatar bytes
         avatar_bytes = b""
@@ -41,6 +42,19 @@ class WelcomeListener(commands.Cog):
                 pass
                 
         bg_path = get_welcome_bg_path(member.guild.id)
+        
+        # If config has an image_url, download it to be the background
+        image_url = config.get("image_url", "")
+        if image_url:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(image_url) as resp:
+                        if resp.status == 200:
+                            bg_bytes = await resp.read()
+                            with open(bg_path, "wb") as f:
+                                f.write(bg_bytes)
+            except Exception:
+                pass
         
         # Run image generation in a separate thread to prevent blocking
         import asyncio

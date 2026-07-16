@@ -82,6 +82,7 @@
                     <a href="#" class="nav-item" data-target="section-verify">Verification</a>
                     <a href="#" class="nav-item" data-target="section-autoresponder">Auto-Replies</a>
                     <a href="#" class="nav-item" data-target="section-joinroles">Join Roles</a>
+                    <a href="#" class="nav-item" data-target="section-ticket">Ticket System</a>
                 </div>
 
                 <div class="settings-panel">
@@ -90,12 +91,12 @@
                         <!-- WELCOME SECTION -->
                         <div id="section-welcome" class="settings-section active">
                             <h3>Welcome System</h3>
-                            <p>Configure automated messages and banner images for new members.</p>
+                            <p>Greet new members when they join the server. A beautiful custom welcome card is automatically generated for every new user!</p>
                             
                             <div class="toggle-container">
                                 <div class="toggle-info">
-                                    <h4>Enable Welcome Module</h4>
-                                    <p>Automatically greet new users.</p>
+                                    <h4>Enable Welcome Messages</h4>
+                                    <p>Send a message when someone joins.</p>
                                 </div>
                                 <label class="switch">
                                     <input type="checkbox" id="welcome_enabled">
@@ -105,11 +106,42 @@
 
                             <div class="form-group">
                                 <label>Welcome Channel</label>
-                                <span class="help-text">Select the channel where welcome messages will be sent.</span>
-                                <select id="welcome_channel_id">
-                                    <option value="">None</option>
-                                    <!-- Populated by JS -->
-                                </select>
+                                <span class="help-text">Where should the bot post the welcome message?</span>
+                                <select id="welcome_channel_id"></select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Custom Welcome Message</label>
+                                <span class="help-text">You can use <b>{user}</b>, <b>{server}</b>, and <b>{count}</b> as placeholders.</span>
+                                <textarea id="welcome_message" style="width: 100%; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 12px; border-radius: 6px; font-size: 14px; outline: none; min-height: 80px; resize: vertical;" placeholder="Welcome {user} to {server}!"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Background Image URL</label>
+                                <span class="help-text">Link to an image (PNG/JPG) to use as the custom background. Leave empty for default.</span>
+                                <input type="text" id="welcome_image_url" placeholder="https://example.com/image.png">
+                            </div>
+                            
+                            <!-- Discord Live Preview -->
+                            <div class="form-group" style="margin-top: 30px;">
+                                <label>Live Preview</label>
+                                <div class="discord-preview" style="background: #313338; border-radius: 8px; padding: 16px; margin-top: 10px; display: flex; gap: 16px; font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                                    <div class="dp-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: #5865F2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                        O
+                                    </div>
+                                    <div class="dp-content" style="flex: 1;">
+                                        <div class="dp-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <span style="color: #F2F3F5; font-weight: 500; font-size: 16px;">Orbit</span>
+                                            <span style="background: #5865F2; color: white; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 3px; text-transform: uppercase;">Bot</span>
+                                            <span style="color: #949BA4; font-size: 12px;">Today at 12:00 PM</span>
+                                        </div>
+                                        <div id="dp-text" style="color: #DBDEE1; font-size: 15px; line-height: 1.375; margin-bottom: 8px; white-space: pre-wrap;">Welcome @User to Orbit! We are happy to have you as member #100.</div>
+                                        <div id="dp-image" style="max-width: 400px; border-radius: 8px; overflow: hidden; background: #2B2D31; min-height: 100px; display: flex; align-items: center; justify-content: center; color: #949BA4; font-size: 12px; border: 1px solid #1E1F22;">
+                                            <span id="dp-image-placeholder">Background Image Preview</span>
+                                            <img id="dp-image-element" src="" style="width: 100%; display: none;">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -230,6 +262,54 @@
                             
                             <div id="joinrole-list" style="display: flex; flex-direction: column; gap: 10px;">
                                 <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- TICKET SYSTEM SECTION -->
+                        <div id="section-ticket" class="settings-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h3>Ticket System</h3>
+                                    <p>Configure support tickets and send the ticket panel to a channel.</p>
+                                </div>
+                                <button type="button" class="btn-secondary" id="btn-send-ticket" style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="color: #5865F2;">✉️</span> Send Panel
+                                </button>
+                            </div>
+                            
+                            <div class="toggle-container">
+                                <div class="toggle-info">
+                                    <h4>Enable Tickets</h4>
+                                    <p>Allow users to open support tickets.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="ticket_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Ticket Panel Channel</label>
+                                <span class="help-text">Select the channel where the "Open Ticket" button should be sent.</span>
+                                <select id="ticket_panel_channel"></select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Ticket Category</label>
+                                <span class="help-text">Under which category should new ticket channels be created?</span>
+                                <select id="ticket_category_id"></select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Support Role</label>
+                                <span class="help-text">Which role is allowed to view and manage tickets?</span>
+                                <select id="ticket_support_role_id"></select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Ticket Log Channel</label>
+                                <span class="help-text">Where should ticket transcripts and logs be saved when closed?</span>
+                                <select id="ticket_log_channel_id"></select>
                             </div>
                         </div>
 

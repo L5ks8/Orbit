@@ -177,6 +177,7 @@ class WebDashboard:
             
         # Get actual channels and roles for dropdowns
         channels = [{"id": str(c.id), "name": c.name} for c in guild.text_channels]
+        categories = [{"id": str(c.id), "name": c.name} for c in guild.categories]
         roles = [{"id": str(r.id), "name": r.name, "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe"} for r in guild.roles if not r.is_default()]
         
         # Load configs
@@ -186,28 +187,37 @@ class WebDashboard:
         autoresponder_cfg = load_responses(guild_id)
         joinroles_cfg = load_join_roles(guild_id)
         
+        from Commands.Ticket._storage import load_ticket_config
+        ticket_cfg = load_ticket_config(guild_id)
+
         config_data = {
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
-                "channel_id": str(welcome_cfg.get("channel_id", "")) if welcome_cfg.get("channel_id") else ""
+                "channel_id": str(welcome_cfg.get("channel_id")) if welcome_cfg.get("channel_id") else "",
+                "message": welcome_cfg.get("message", ""),
+                "image_url": welcome_cfg.get("image_url", "")
             },
-            "automod": {
-                "enabled": automod_cfg.get("enabled", False),
-                "anti_link": automod_cfg.get("anti_link", {}),
-                "anti_spam": automod_cfg.get("anti_spam", {})
-            },
+            "automod": automod_cfg,
             "verify": {
                 "enabled": verify_cfg.get("enabled", False),
-                "role_id": str(verify_cfg.get("role_id", "")) if verify_cfg.get("role_id") else "",
-                "remove_role_id": str(verify_cfg.get("remove_role_id", "")) if verify_cfg.get("remove_role_id") else "",
+                "role_id": str(verify_cfg.get("role_id")) if verify_cfg.get("role_id") else "",
+                "remove_role_id": str(verify_cfg.get("remove_role_id")) if verify_cfg.get("remove_role_id") else "",
                 "verification_type": verify_cfg.get("verification_type", "captcha")
             },
             "autoresponder": autoresponder_cfg,
-            "joinroles": [str(r) for r in joinroles_cfg]
+            "joinroles": [str(r) for r in joinroles_cfg],
+            "ticket": {
+                "enabled": ticket_cfg.get("enabled", False),
+                "panel_channel_id": str(ticket_cfg.get("panel_channel_id")) if ticket_cfg.get("panel_channel_id") else "",
+                "category_id": str(ticket_cfg.get("category_id")) if ticket_cfg.get("category_id") else "",
+                "support_role_id": str(ticket_cfg.get("support_role_id")) if ticket_cfg.get("support_role_id") else "",
+                "log_channel_id": str(ticket_cfg.get("log_channel_id")) if ticket_cfg.get("log_channel_id") else ""
+            }
         }
         
         return web.json_response({
             "channels": channels,
+            "categories": categories,
             "roles": roles,
             "config": config_data
         })
@@ -230,14 +240,22 @@ class WebDashboard:
             welcome_cfg["enabled"] = bool(data.get("welcome", {}).get("enabled"))
             cid = data.get("welcome", {}).get("channel_id")
             welcome_cfg["channel_id"] = int(cid) if cid else None
+            msg = data.get("welcome", {}).get("message", "")
+            if msg:
+                welcome_cfg["message"] = msg
+            img_url = data.get("welcome", {}).get("image_url", "")
+            if img_url is not None:
+                welcome_cfg["image_url"] = img_url
             save_welcome_config(guild_id, welcome_cfg)
             
             # AutoMod
             automod_cfg = load_automod_config(guild_id)
             automod_cfg["enabled"] = bool(data.get("automod", {}).get("enabled"))
-            if "anti_link" not in automod_cfg: automod_cfg["anti_link"] = {}
+            if "anti_link" not in automod_cfg:
+                automod_cfg["anti_link"] = {}
+            if "anti_spam" not in automod_cfg:
+                automod_cfg["anti_spam"] = {}
             automod_cfg["anti_link"]["enabled"] = bool(data.get("automod", {}).get("anti_link", {}).get("enabled"))
-            if "anti_spam" not in automod_cfg: automod_cfg["anti_spam"] = {}
             automod_cfg["anti_spam"]["enabled"] = bool(data.get("automod", {}).get("anti_spam", {}).get("enabled"))
             save_automod_config(guild_id, automod_cfg)
             
@@ -262,6 +280,26 @@ class WebDashboard:
                     if r:
                         roles_to_save.append(int(r))
                 save_join_roles(guild_id, roles_to_save)
+                
+            # Ticket
+            if "ticket" in data:
+                from Commands.Ticket._storage import load_ticket_config, save_ticket_config
+                ticket_cfg = load_ticket_config(guild_id)
+                ticket_cfg["enabled"] = bool(data["ticket"].get("enabled"))
+                
+                tid = data["ticket"].get("panel_channel_id")
+                ticket_cfg["panel_channel_id"] = int(tid) if tid else None
+                
+                tcid = data["ticket"].get("category_id")
+                ticket_cfg["category_id"] = int(tcid) if tcid else None
+                
+                trid = data["ticket"].get("support_role_id")
+                ticket_cfg["support_role_id"] = int(trid) if trid else None
+                
+                tlid = data["ticket"].get("log_channel_id")
+                ticket_cfg["log_channel_id"] = int(tlid) if tlid else None
+                
+                save_ticket_config(guild_id, ticket_cfg)
             
             return web.json_response({"success": True})
         except Exception as e:
@@ -300,6 +338,47 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 
+    async def api_action_send_ticket(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        try:
+            data = await request.json()
+            channel_id = data.get("channel_id")
+            if not channel_id:
+                return web.json_response({"error": "No channel_id provided"}, status=400)
+                
+            channel = guild.get_channel(int(channel_id))
+            if not channel:
+                return web.json_response({"error": "Channel not found"}, status=400)
+                
+            from Commands.Ticket._views import PersistentTicketLayout
+            from Commands.Ticket._storage import load_ticket_config, save_ticket_config
+            
+            ticket_cfg = load_ticket_config(guild_id)
+            view = PersistentTicketLayout(guild_id)
+            
+            embed = discord.Embed(
+                title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
+                description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
+                color=0x2b2d31
+            )
+            await channel.send(embed=embed, view=view)
+            
+            # Update storage
+            ticket_cfg["panel_channel_id"] = channel.id
+            save_ticket_config(guild_id, ticket_cfg)
+            
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=400)
+
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application()
@@ -317,5 +396,6 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/api/config/{id}", dashboard.api_get_config)
     app.router.add_post("/api/config/{id}", dashboard.api_post_config)
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
+    app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
     
     return app

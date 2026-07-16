@@ -272,14 +272,26 @@ async function loadConfig(guildId, guildName) {
         const data = await res.json();
         globalRoles = data.roles;
 
-        // Populate normal selects (channels)
+        // Populate normal selects (channels & categories)
         const welcomeSelect = document.getElementById('welcome_channel_id');
         welcomeSelect.innerHTML = '<option value="">None</option>';
         const verifyPanelSelect = document.getElementById('verify_panel_channel');
         verifyPanelSelect.innerHTML = '<option value="">Select Channel...</option>';
+        const ticketPanelSelect = document.getElementById('ticket_panel_channel');
+        ticketPanelSelect.innerHTML = '<option value="">Select Channel...</option>';
+        const ticketLogSelect = document.getElementById('ticket_log_channel_id');
+        ticketLogSelect.innerHTML = '<option value="">None</option>';
         data.channels.forEach(c => {
             welcomeSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
             verifyPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
+            ticketPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
+            ticketLogSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
+        });
+
+        const ticketCategorySelect = document.getElementById('ticket_category_id');
+        ticketCategorySelect.innerHTML = '<option value="">None</option>';
+        data.categories.forEach(c => {
+            ticketCategorySelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
         });
 
         // Set values
@@ -288,6 +300,8 @@ async function loadConfig(guildId, guildName) {
         // Welcome
         document.getElementById('welcome_enabled').checked = config.welcome?.enabled || false;
         document.getElementById('welcome_channel_id').value = config.welcome?.channel_id || '';
+        document.getElementById('welcome_message').value = config.welcome?.message || 'Welcome {user} to {server}!';
+        document.getElementById('welcome_image_url').value = config.welcome?.image_url || '';
 
         // AutoMod
         document.getElementById('automod_enabled').checked = config.automod?.enabled || false;
@@ -298,16 +312,26 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('verify_enabled').checked = config.verify?.enabled || false;
         document.getElementById('verify_type').value = config.verify?.verification_type || 'captcha';
 
+        // Ticket
+        document.getElementById('ticket_enabled').checked = config.ticket?.enabled || false;
+        document.getElementById('ticket_panel_channel').value = config.ticket?.panel_channel_id || '';
+        document.getElementById('ticket_category_id').value = config.ticket?.category_id || '';
+        document.getElementById('ticket_log_channel_id').value = config.ticket?.log_channel_id || '';
+
         // Clear existing custom selects
         document.querySelectorAll('.custom-select').forEach(el => el.remove());
 
         // Initialize Custom Selects for Roles
         new CustomSelect(document.getElementById('verify_role_id'), globalRoles, config.verify?.role_id || '', 'Select Verified Role...');
         new CustomSelect(document.getElementById('verify_remove_role_id'), globalRoles, config.verify?.remove_role_id || '', 'Select Unverified Role...');
+        new CustomSelect(document.getElementById('ticket_support_role_id'), globalRoles, config.ticket?.support_role_id || '', 'Select Support Role...');
 
         // AutoResponder & JoinRoles
         renderAutoReplies(config.autoresponder || {});
         renderJoinRoles(config.joinroles || []);
+        
+        // Initial Preview Update
+        updateLivePreview();
 
         document.getElementById('config-loader').classList.add('hidden');
         document.getElementById('config-layout').style.display = 'grid';
@@ -366,6 +390,78 @@ document.getElementById('btn-back').addEventListener('click', () => {
     loadDashboard();
 });
 
+function updateLivePreview() {
+    const msgInput = document.getElementById('welcome_message').value;
+    const imgInput = document.getElementById('welcome_image_url').value;
+    
+    // Replace placeholders
+    let formattedText = msgInput
+        .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@User</span>')
+        .replace(/{server}/g, '<b>Orbit</b>')
+        .replace(/{count}/g, '<b>100</b>');
+        
+    document.getElementById('dp-text').innerHTML = formattedText || '<i>No message configured</i>';
+    
+    const imgContainer = document.getElementById('dp-image');
+    const imgPlaceholder = document.getElementById('dp-image-placeholder');
+    const imgElement = document.getElementById('dp-image-element');
+    
+    if (imgInput) {
+        imgPlaceholder.style.display = 'none';
+        imgElement.src = imgInput;
+        imgElement.style.display = 'block';
+    } else {
+        imgPlaceholder.style.display = 'inline';
+        imgElement.style.display = 'none';
+        imgElement.src = '';
+    }
+}
+
+document.getElementById('welcome_message').addEventListener('input', updateLivePreview);
+document.getElementById('welcome_image_url').addEventListener('input', updateLivePreview);
+
+document.getElementById('btn-send-verify').addEventListener('click', async () => {
+    if (!currentGuildId) return;
+    const channelId = document.getElementById('verify_panel_channel').value;
+    if (!channelId) {
+        alert("Please select a channel to send the panel to.");
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/action/${currentGuildId}/send_verify_panel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channel_id: channelId })
+        });
+        if (res.ok) alert("Verify Panel sent successfully!");
+        else alert("Failed to send Verify Panel.");
+    } catch (e) {
+        alert("Error sending panel.");
+    }
+});
+
+document.getElementById('btn-send-ticket').addEventListener('click', async () => {
+    if (!currentGuildId) return;
+    const channelId = document.getElementById('ticket_panel_channel').value;
+    if (!channelId) {
+        alert("Please select a channel to send the ticket panel to.");
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/action/${currentGuildId}/send_ticket_panel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channel_id: channelId })
+        });
+        if (res.ok) alert("Ticket Panel sent successfully!");
+        else alert("Failed to send Ticket Panel.");
+    } catch (e) {
+        alert("Error sending panel.");
+    }
+});
+
 // Save Settings
 document.getElementById('config-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -395,7 +491,9 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     const payload = {
         welcome: {
             enabled: document.getElementById('welcome_enabled').checked,
-            channel_id: document.getElementById('welcome_channel_id').value
+            channel_id: document.getElementById('welcome_channel_id').value,
+            message: document.getElementById('welcome_message').value,
+            image_url: document.getElementById('welcome_image_url').value
         },
         automod: {
             enabled: document.getElementById('automod_enabled').checked,
@@ -407,6 +505,13 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             role_id: document.getElementById('verify_role_id').value,
             remove_role_id: document.getElementById('verify_remove_role_id').value,
             verification_type: document.getElementById('verify_type').value
+        },
+        ticket: {
+            enabled: document.getElementById('ticket_enabled').checked,
+            panel_channel_id: document.getElementById('ticket_panel_channel').value,
+            category_id: document.getElementById('ticket_category_id').value,
+            support_role_id: document.getElementById('ticket_support_role_id').value,
+            log_channel_id: document.getElementById('ticket_log_channel_id').value
         },
         autoresponder: autoresponder,
         joinroles: joinroles
