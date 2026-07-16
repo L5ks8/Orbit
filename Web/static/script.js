@@ -6,26 +6,33 @@ let autoresponder = {};
 let joinroles = [];
 
 const LOGS_CATEGORIES = [
-    { id: "moderation_action", title: "Moderationsaktion", icon: "Ã°Å¸â€ºÂ¡Ã¯Â¸Â" },
-    { id: "auto_moderation", title: "Auto Moderation", icon: "Ã°Å¸Â¤â€“" },
-    { id: "message_deleted", title: "Nachricht GelÃƒÂ¶scht", icon: "Ã°Å¸â€”â€˜Ã¯Â¸Â" },
-    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "Ã¢Å“ÂÃ¯Â¸Â" },
-    { id: "bulk_message_delete", title: "MassenlÃƒÂ¶schung", icon: "Ã°Å¸Â§Â¹" },
-    { id: "member_joined", title: "Mitglied Beigetreten", icon: "Ã°Å¸â€˜â€¹" },
-    { id: "member_left", title: "Mitglied Verlassen", icon: "Ã°Å¸Å¡Â¶" },
-    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "Ã°Å¸Å½Â¤" },
-    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "Ã°Å¸â€â€¡" },
-    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "Ã°Å¸Å½Â§" },
-    { id: "role_created", title: "Rolle Erstellt", icon: "Ã°Å¸Å½Â­" },
-    { id: "role_deleted", title: "Rolle GelÃƒÂ¶scht", icon: "Ã°Å¸â€Â¥" },
-    { id: "role_updated", title: "Rolle Aktualisiert", icon: "Ã¢Å¡â„¢Ã¯Â¸Â" },
-    { id: "channel_created", title: "Kanal Erstellt", icon: "Ã°Å¸â€œÂ" },
-    { id: "channel_deleted", title: "Kanal GelÃƒÂ¶scht", icon: "Ã¢ÂÅ’" },
-    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "Ã°Å¸â€â€ž" },
-    { id: "scheduled_event_created", title: "Event Erstellt", icon: "Ã°Å¸â€œâ€¦" },
-    { id: "scheduled_event_deleted", title: "Event GelÃƒÂ¶scht", icon: "Ã°Å¸â€™Â¥" },
-    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "Ã°Å¸â€œÂ" },
-    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "Ã¢Å’Â¨Ã¯Â¸Â" }
+    { id: "moderation_action", title: "Moderationsaktion", icon: "🛡️" },
+    { id: "auto_moderation", title: "Auto Moderation", icon: "🤖" },
+    { id: "member_banned", title: "Mitglied Gebannt", icon: "🔨" },
+    { id: "member_unbanned", title: "Mitglied Entbannt", icon: "🕊️" },
+    { id: "member_kicked", title: "Mitglied Gekickt", icon: "🥾" },
+    { id: "message_deleted", title: "Nachricht Gelöscht", icon: "🗑️" },
+    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "✏️" },
+    { id: "bulk_message_delete", title: "Massenlöschung", icon: "🧹" },
+    { id: "member_joined", title: "Mitglied Beigetreten", icon: "👋" },
+    { id: "member_left", title: "Mitglied Verlassen", icon: "🚶" },
+    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "🎤" },
+    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "🔇" },
+    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "🎧" },
+    { id: "voice_mute", title: "Sprachkanal Gemutet", icon: "🤐" },
+    { id: "voice_unmute", title: "Sprachkanal Entmutet", icon: "🗣️" },
+    { id: "voice_deafen", title: "Server Taub", icon: "🙉" },
+    { id: "voice_undeafen", title: "Server Enttaubt", icon: "🐒" },
+    { id: "role_created", title: "Rolle Erstellt", icon: "🎭" },
+    { id: "role_deleted", title: "Rolle Gelöscht", icon: "🔥" },
+    { id: "role_updated", title: "Rolle Aktualisiert", icon: "⚙️" },
+    { id: "channel_created", title: "Kanal Erstellt", icon: "📁" },
+    { id: "channel_deleted", title: "Kanal Gelöscht", icon: "❌" },
+    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "🔄" },
+    { id: "scheduled_event_created", title: "Event Erstellt", icon: "📅" },
+    { id: "scheduled_event_deleted", title: "Event Gelöscht", icon: "💥" },
+    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "📝" },
+    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "⌨️" }
 ];
 
 // Views
@@ -741,24 +748,22 @@ async function loadConfig(guildId, guildName) {
             const checked = isEnabled ? 'checked' : '';
 
             logsGrid.innerHTML += `
-                <div class="am-card">
+                <div class="automod-rule-card">
                     <div class="am-card-header">
                         <div class="am-card-title">
-                            <span class="am-card-icon">${cat.icon}</span>
-                            ${cat.title}
+                            <span style="font-size: 18px; line-height: 1;">${cat.icon}</span>
+                            <h4>${cat.title}</h4>
                         </div>
-                        <label class="toggle-switch">
+                        <label class="switch">
                             <input type="checkbox" id="log_cat_${cat.id}_enabled" ${checked}>
-                            <span class="toggle-slider"></span>
+                            <span class="slider"></span>
                         </label>
                     </div>
-                    <div class="am-card-body">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label>Log Kanal</label>
-                            <select id="log_cat_${cat.id}_channel" style="width:100%; padding:8px; border-radius:4px; background:var(--bg-modifier-hover); color:var(--text-normal); border:1px solid rgba(255,255,255,0.1);">
-                                ${optionsHtml}
-                            </select>
-                        </div>
+                    <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">Log Channel</label>
+                        <select id="log_cat_${cat.id}_channel">
+                            ${optionsHtml}
+                        </select>
                     </div>
                 </div>
             `;
