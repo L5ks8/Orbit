@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
     --bg-color: #050505;
@@ -83,9 +83,9 @@ body {
 }
 
 .btn-edit-rule {
-    background: var(--accent-color);
-    color: var(--accent-color-text);
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 6px;
     padding: 10px;
     font-size: 14px;
