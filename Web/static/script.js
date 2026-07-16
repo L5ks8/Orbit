@@ -403,6 +403,12 @@ async function loadConfig(guildId, guildName) {
     document.getElementById('config-layout').style.display = 'none';
     document.getElementById('config-loader').classList.remove('hidden');
 
+    // Reset tabs to welcome section
+    document.querySelectorAll('.dash-nav-item').forEach(nav => nav.classList.remove('active'));
+    document.querySelectorAll('.dash-panel').forEach(sec => sec.classList.remove('active'));
+    document.querySelector('.dash-nav-item[data-target="section-welcome"]').classList.add('active');
+    document.getElementById('section-welcome').classList.add('active');
+
     try {
         const res = await fetch(`/api/config/${guildId}`);
         const data = await res.json();
@@ -514,11 +520,11 @@ document.getElementById('btn-send-verify').addEventListener('click', async () =>
 });
 
 // Sidebar Navigation
-document.querySelectorAll('.nav-item').forEach(item => {
+document.querySelectorAll('.dash-nav-item').forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-        document.querySelectorAll('.settings-section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.dash-nav-item').forEach(nav => nav.classList.remove('active'));
+        document.querySelectorAll('.dash-panel').forEach(sec => sec.classList.remove('active'));
         
         item.classList.add('active');
         document.getElementById(item.dataset.target).classList.add('active');
@@ -535,22 +541,18 @@ function updateLivePreview() {
     
     // Replace placeholders
     let formattedText = msgInput
-        .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@User</span>')
+        .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
         .replace(/{count}/g, '<b>100</b>');
         
-    document.getElementById('dp-text').innerHTML = formattedText || '<i>No message configured</i>';
+    document.getElementById('welcome_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
     
-    const imgContainer = document.getElementById('dp-image');
-    const imgPlaceholder = document.getElementById('dp-image-placeholder');
-    const imgElement = document.getElementById('dp-image-element');
+    const imgElement = document.getElementById('welcome_preview_img');
     
     if (imgInput) {
-        imgPlaceholder.style.display = 'none';
         imgElement.src = imgInput;
         imgElement.style.display = 'block';
     } else {
-        imgPlaceholder.style.display = 'inline';
         imgElement.style.display = 'none';
         imgElement.src = '';
     }

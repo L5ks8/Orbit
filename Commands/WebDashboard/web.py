@@ -349,12 +349,7 @@ class WebDashboard:
                                 description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
                                 options_slots=ticket_cfg.get("options_slots", [])
                             )
-                            embed = discord.Embed(
-                                title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
-                                description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
-                                color=0x2b2d31
-                            )
-                            await msg.edit(embed=embed, view=view)
+                            await msg.edit(view=view, embed=None)
                         except Exception:
                             pass
             
@@ -425,12 +420,7 @@ class WebDashboard:
                 options_slots=ticket_cfg.get("options_slots", [])
             )
             
-            embed = discord.Embed(
-                title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
-                description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
-                color=0x2b2d31
-            )
-            msg = await channel.send(embed=embed, view=view)
+            msg = await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
             
             # Update storage
             ticket_cfg["panel_channel_id"] = channel.id
