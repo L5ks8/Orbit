@@ -249,7 +249,7 @@ class CustomMultiSelect {
         this.select.style.display = 'none';
         
         this.items = items;
-        this.placeholder = placeholder || 'AuswÃ¤hlen...';
+        this.placeholder = placeholder || 'Select...';
         this.renderTag = renderTag || ((item) => item.name);
         
         this.container = document.createElement('div');
@@ -684,7 +684,7 @@ async function loadConfig(guildId, guildName) {
             if (currentAutomodConfig.exempt_channels?.includes(c.id)) opt.selected = true;
             amGlobalChEl.appendChild(opt);
         });
-        new CustomMultiSelect(amGlobalChEl, globalChannels, "Auswählen...", (item) => "# " + item.name);
+        new CustomMultiSelect(amGlobalChEl, globalChannels, "Select...", (item) => "# " + item.name);
 
         const amGlobalRoEl = document.getElementById('automod_global_roles');
         if (amGlobalRoEl.nextElementSibling?.classList.contains('custom-multiselect')) amGlobalRoEl.nextElementSibling.remove();
@@ -695,7 +695,7 @@ async function loadConfig(guildId, guildName) {
             if (currentAutomodConfig.exempt_roles?.includes(r.id)) opt.selected = true;
             amGlobalRoEl.appendChild(opt);
         });
-        new CustomMultiSelect(amGlobalRoEl, globalRoles, "Auswählen...", (item) => "@ " + item.name);
+        new CustomMultiSelect(amGlobalRoEl, globalRoles, "Select...", (item) => "@ " + item.name);
 
         // Verify
         if (!currentPermissions.can_roles) lockSection('section-verify', 'Manage Roles');
@@ -722,7 +722,7 @@ async function loadConfig(guildId, guildName) {
             const isEnabled = config.logs?.categories?.[cat.id] || false;
             const selectedCh = config.logs?.channels?.[cat.id] || '';
             
-            let optionsHtml = `<option value="">-- Deaktiviert --</option>`;
+            let optionsHtml = `<option value="">-- Disabled --</option>`;
             globalChannels.forEach(c => {
                 const selected = (c.id === selectedCh) ? 'selected' : '';
                 optionsHtml += `<option value="${c.id}" ${selected}>#${c.name}</option>`;
@@ -784,8 +784,8 @@ async function loadConfig(guildId, guildName) {
         });
 
 
-        new CustomMultiSelect(logsChannelsEl, globalChannels, "AuswÃ¤hlen...", (item) => "# " + item.name);
-        new CustomMultiSelect(logsRolesEl, globalRoles, "AuswÃ¤hlen...", (item) => "@ " + item.name);
+        new CustomMultiSelect(logsChannelsEl, globalChannels, "Select...", (item) => "# " + item.name);
+        new CustomMultiSelect(logsRolesEl, globalRoles, "Select...", (item) => "@ " + item.name);
 
         // AutoResponder & JoinRoles & TicketOptions
         if (!currentPermissions.can_messages) lockSection('section-autoresponder', 'Manage Messages');
@@ -1149,8 +1149,8 @@ function openAutoModModal(ruleId) {
     document.getElementById('am-modal-body').innerHTML = html;
     
     if (ruleId !== 'anti_alt') {
-        new CustomMultiSelect(document.getElementById('am-modal-channels'), globalChannels, "Auswählen...", (item) => "# " + item.name);
-        new CustomMultiSelect(document.getElementById('am-modal-roles'), globalRoles, "Auswählen...", (item) => "@ " + item.name);
+        new CustomMultiSelect(document.getElementById('am-modal-channels'), globalChannels, "Select...", (item) => "# " + item.name);
+        new CustomMultiSelect(document.getElementById('am-modal-roles'), globalRoles, "Select...", (item) => "@ " + item.name);
     }
 
     const actionEl = document.getElementById('am-modal-action');

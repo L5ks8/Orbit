@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orbit Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css?v=14">
+    <link rel="stylesheet" href="/static/style.css?v=15">
 </head>
 <body>
 
@@ -519,18 +519,18 @@
                                 </div>
                             </div>
 
-                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Globale Optionen</h4>
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Global Options</h4>
                             <div class="config-card">
                                 <div class="form-group">
-                                    <label>Kanäle Zulassen</label>
-                                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die von den Regeln ausgeschlossenen Kanäle.</span>
+                                    <label>Allowed Channels</label>
+                                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Channels excluded from all automod rules.</span>
                                     <select id="automod_global_channels" multiple></select>
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
-                                    <label>Rollen Zulassen</label>
-                                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Die von den Regeln ausgeschlossenen Rollen.</span>
+                                    <label>Allowed Roles</label>
+                                    <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Roles excluded from all automod rules.</span>
                                     <select id="automod_global_roles" multiple></select>
-                                    <p style="color:var(--accent-color); font-size:11px; margin-top:8px; margin-bottom:0;">Mitglieder mit Administrator- oder Verwaltungsrechte werden immer ignoriert.</p>
+                                    <p style="color:var(--accent-color); font-size:11px; margin-top:8px; margin-bottom:0;">Members with Administrator or Manage Server permissions are always ignored.</p>
                                 </div>
                             </div>
 
@@ -712,12 +712,12 @@
                             </div>
                             
                             <!-- Options -->
-                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Optionen</h4>
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Options</h4>
                             <div class="config-card">
                                 <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
                                     <div>
-                                        <label style="margin-bottom: 4px;">AusfÃ¼hrender In Logs</label>
-                                        <span style="font-size: 12px; color: var(--text-muted);">Protokolliert die Person, die eine bestimmte Aktion ausgefÃ¼hrt hat, in den Logs (sofern von der API unterstÃ¼tzt).</span>
+                                        <label style="margin-bottom: 4px;">Executor In Logs</label>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Logs the person who performed a specific action in the logs (if supported by the API).</span>
                                     </div>
                                     <label class="toggle-switch" style="margin-left: 20px;">
                                         <input type="checkbox" id="logs_executor_in_logs">
@@ -725,19 +725,19 @@
                                     </label>
                                 </div>
                                 <div class="form-group">
-                                    <label>Ausgeschlossene KanÃ¤le</label>
-                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Die KanÃ¤le, in denen Ereignisse nicht protokolliert werden (gilt fÃ¼r KanÃ¤le, in denen Nachrichten gesendet/gelÃ¶scht werden usw.).</span>
+                                    <label>Excluded Channels</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Channels where events will not be logged (applies to channels where messages are sent/deleted, etc.).</span>
                                     <select id="logs_global_channels" multiple></select>
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
-                                    <label>Zugelassene Rollen</label>
-                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Die Rollen, die nicht protokolliert werden.</span>
+                                    <label>Excluded Roles</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Roles whose actions will not be logged.</span>
                                     <select id="logs_global_roles" multiple></select>
                                 </div>
                             </div>
                             
                             <!-- Log Channels Grid -->
-                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Log KanÃ¤le</h4>
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Log Channels</h4>
                             <div class="automod-grid" id="logs-grid">
                                 <!-- Populated by JS -->
                             </div>
@@ -752,7 +752,7 @@
 
     <div id="toast" class="toast">Changes saved successfully!</div>
 
-    <script src="/static/script.js?v=3"></script>
+    <script src="/static/script.js?v=4"></script>
 </body>
 </html>
 
