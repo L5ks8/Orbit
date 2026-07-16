@@ -675,8 +675,27 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('automod_mention_spam_enabled').checked = currentAutomodConfig.mention_spam?.enabled || false;
         document.getElementById('automod_anti_alt_enabled').checked = currentAutomodConfig.anti_alt?.enabled || false;
 
-        new CustomMultiSelect(document.getElementById('automod_global_channels'), globalChannels, "Auswählen...", (item) => "# " + item.name).setValue(currentAutomodConfig.exempt_channels || []);
-        new CustomMultiSelect(document.getElementById('automod_global_roles'), globalRoles, "Auswählen...", (item) => "@ " + item.name).setValue(currentAutomodConfig.exempt_roles || []);
+        const amGlobalChEl = document.getElementById('automod_global_channels');
+        if (amGlobalChEl.nextElementSibling?.classList.contains('custom-multiselect')) amGlobalChEl.nextElementSibling.remove();
+        amGlobalChEl.innerHTML = "";
+        globalChannels.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            if (currentAutomodConfig.exempt_channels?.includes(c.id)) opt.selected = true;
+            amGlobalChEl.appendChild(opt);
+        });
+        new CustomMultiSelect(amGlobalChEl, globalChannels, "Auswählen...", (item) => "# " + item.name);
+
+        const amGlobalRoEl = document.getElementById('automod_global_roles');
+        if (amGlobalRoEl.nextElementSibling?.classList.contains('custom-multiselect')) amGlobalRoEl.nextElementSibling.remove();
+        amGlobalRoEl.innerHTML = "";
+        globalRoles.forEach(r => {
+            const opt = document.createElement("option");
+            opt.value = r.id;
+            if (currentAutomodConfig.exempt_roles?.includes(r.id)) opt.selected = true;
+            amGlobalRoEl.appendChild(opt);
+        });
+        new CustomMultiSelect(amGlobalRoEl, globalRoles, "Auswählen...", (item) => "@ " + item.name);
 
         // Verify
         if (!currentPermissions.can_roles) lockSection('section-verify', 'Manage Roles');
@@ -783,8 +802,8 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('config-loader').classList.add('hidden');
         document.getElementById('config-layout').style.display = 'grid';
     } catch (e) {
-        console.error(e);
-        document.getElementById('config-loader').innerHTML = `<p style="color:red;">Error loading configuration.</p>`;
+        document.getElementById('config-layout').innerHTML = '<div style="display: flex; height: 100vh; width: 100%; align-items: center; justify-content: center;"><p style="color:var(--accent-color); font-weight: 600;">Fehler beim Laden der Konfiguration.</p></div>';
+        document.getElementById('config-layout').style.display = 'block';
     }
 }
 
