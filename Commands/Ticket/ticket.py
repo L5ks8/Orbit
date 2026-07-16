@@ -17,27 +17,6 @@ from Commands.Ticket._views import (
     close_ticket_flow
 )
 
-async def _do_ticket_setup(
-    ctx: commands.Context,
-    options: int,
-    panel_channel: discord.TextChannel,
-    log_channel: discord.TextChannel | None,
-    title: str,
-    description: str
-):
-    await ctx.defer()
-    if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
-
-    opt_count = max(1, min(10, options))
-    options_slots = [{"name": f"Option {i+1}", "role_id": None, "category_id": None} for i in range(opt_count)]
-    opt_names = [s["name"] for s in options_slots]
-
-    log_ch_id = log_channel.id if log_channel else None
-    setup_ticket_config(ctx.guild.id, panel_channel.id, None, None, log_ch_id, title, description, opt_names, options_slots)
-
-    view = TicketConfigDynamicView(ctx.guild.id)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
 async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
@@ -153,45 +132,6 @@ async def _do_ticket_close(ctx: commands.Context, reason: str):
     await ctx.send(f"Initiating ticket closure by {ctx.author.mention} (`Reason: {reason}`)...")
     asyncio.create_task(close_ticket_flow(ctx.guild, ctx.channel, ctx.author, reason))
 
-class TicketResetSuccessLayout(LayoutView):
-    def __init__(self, moderator: discord.Member, deleted_channels: int):
-        super().__init__()
-        header_str = f"### Orbit Support Desk Reset\n**Moderator:** {moderator.mention}"
-        info_str = (
-            f"**System Status:** `Wiped & Deactivated`\n"
-            f"**Active Channels Deleted:** `{deleted_channels}`\n"
-            f"**Ticket Counter:** Reset to `0`\n\n"
-            f"*Use `/ticket setup` whenever you are ready to configure a new support desk!*"
-        )
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_str)
-        )
-        self.add_item(self.container)
-
-async def _do_ticket_reset(ctx: commands.Context):
-    await ctx.defer()
-    if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
-
-    config = load_ticket_config(ctx.guild.id)
-    active_tickets = config.get("active_tickets", {})
-    deleted_channels = 0
-
-    for ch_id_str in list(active_tickets.keys()):
-        try:
-            ch_id = int(ch_id_str)
-            channel = ctx.guild.get_channel(ch_id)
-            if channel is not None:
-                await channel.delete(reason=f"Ticket System Reset by {ctx.author}")
-                deleted_channels += 1
-        except Exception:
-            pass
-
-    reset_ticket_config(ctx.guild.id)
-    view = TicketResetSuccessLayout(ctx.author, deleted_channels)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
 async def _do_ticket_transcript(ctx: commands.Context):
     await ctx.defer()
@@ -273,26 +213,8 @@ async def _do_ticket_transcript(ctx: commands.Context):
 @commands.has_permissions(manage_channels=True)
 async def ticket_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
-        await ctx.send("Use: `setup`, `add`, `remove`, `close`, `reset`, or `transcript`.", ephemeral=True)
+        await ctx.send("Use: `add`, `remove`, `close`, or `transcript`.", ephemeral=True)
 
-@ticket_group.command(name="setup", description="Configure the ticket panel")
-@commands.has_permissions(manage_guild=True)
-@app_commands.describe(
-    options="Number of ticket category option slots to configure (1 to 10)",
-    panel_channel="The channel where the 'Open Ticket' panel card will be sent",
-    log_channel="Optional: Channel where closed ticket transcripts will be saved",
-    title="Optional: Custom header title for the ticket desk panel",
-    description="Optional: Custom description explanation for the ticket desk panel"
-)
-async def ticket_setup_cmd(
-    ctx: commands.Context,
-    options: int,
-    panel_channel: discord.TextChannel,
-    log_channel: discord.TextChannel = None,
-    title: str = "Support Ticket Desk",
-    description: str = "Click the button below to open a direct support channel with our team."
-):
-    await _do_ticket_setup(ctx, options, panel_channel, log_channel, title, description)
 
 @ticket_group.command(name="add", description="Add a member to a ticket")
 @app_commands.describe(member="The member to grant access to this ticket")
@@ -309,10 +231,6 @@ async def ticket_remove_cmd(ctx: commands.Context, member: discord.Member):
 async def ticket_close_cmd(ctx: commands.Context, reason: str = "Closed via command"):
     await _do_ticket_close(ctx, reason)
 
-@ticket_group.command(name="reset", description="Reset the ticket system")
-@commands.has_permissions(manage_guild=True)
-async def ticket_reset_cmd(ctx: commands.Context):
-    await _do_ticket_reset(ctx)
 
 @ticket_group.command(name="transcript", description="Export this ticket transcript")
 async def ticket_transcript_cmd(ctx: commands.Context):
@@ -323,10 +241,6 @@ class TicketCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="tk_setup", aliases=["ticketsetup"], hidden=True)
-    @commands.has_permissions(manage_guild=True)
-    async def tk_setup_prefix(self, ctx: commands.Context, options: int, panel_channel: discord.TextChannel, log_channel: discord.TextChannel = None, title: str = "Support Ticket Desk", *, description: str = "Click the button below to open a direct support channel with our team."):
-        await _do_ticket_setup(ctx, options, panel_channel, log_channel, title, description)
 
     @commands.command(name="tk_add", aliases=["ticketadd"], hidden=True)
     async def tk_add_prefix(self, ctx: commands.Context, member: discord.Member):
@@ -340,21 +254,11 @@ class TicketCog(commands.Cog):
     async def tk_close_prefix(self, ctx: commands.Context, *, reason: str = "Closed via command"):
         await _do_ticket_close(ctx, reason)
 
-    @commands.command(name="tk_reset", aliases=["ticketreset"], hidden=True)
-    @commands.has_permissions(manage_guild=True)
-    async def tk_reset_prefix(self, ctx: commands.Context):
-        await _do_ticket_reset(ctx)
 
     @commands.command(name="tk_transcript", aliases=["tickettranscript"], hidden=True)
     async def tk_transcript_prefix(self, ctx: commands.Context):
         await _do_ticket_transcript(ctx)
 
-    @ticket_setup_cmd.error
-    async def setup_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Server permission to configure tickets.", ephemeral=True)
-        else:
-            await ctx.send(f"Ticket setup failed: {error}", ephemeral=True)
 
     @ticket_add_cmd.error
     async def add_error(self, ctx: commands.Context, error):
@@ -368,9 +272,6 @@ class TicketCog(commands.Cog):
     async def close_error(self, ctx: commands.Context, error):
         await ctx.send(f"Ticket close failed: {error}", ephemeral=True)
 
-    @ticket_reset_cmd.error
-    async def reset_error(self, ctx: commands.Context, error):
-        await ctx.send(f"Ticket reset failed: {error}", ephemeral=True)
 
     @ticket_transcript_cmd.error
     async def transcript_error(self, ctx: commands.Context, error):
