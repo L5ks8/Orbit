@@ -216,15 +216,51 @@ function addAutoReplyRow(triggerText = '', responseText = '') {
     row.style.cssText = 'display: flex; gap: 10px; background: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);';
     
     row.innerHTML = `
-    btn.style = 'padding:12px; color:#ff4444; border-color:#ff4444';
-    btn.innerText = 'X';
-    btn.onclick = () => row.remove();
-    
-    row.appendChild(select);
-    row.appendChild(btn);
+        <input type="text" class="ar-trigger" value="${triggerText.replace(/"/g, '&quot;')}" placeholder="Trigger (e.g. !help)" style="flex: 1; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
+        <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response" style="flex: 2; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
+        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px;" onclick="this.parentElement.remove()">×</button>
+    `;
     list.appendChild(row);
+}
+
+function renderJoinRoles(roles) {
+    const list = document.getElementById('joinrole-list');
+    list.innerHTML = '';
+    if (roles.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-secondary); font-size:14px; margin:0;">No join roles configured.</p>';
+        return;
+    }
+
+    roles.forEach(r => addJoinRoleRow(r));
+}
+
+function addJoinRoleRow(roleId = '') {
+    const list = document.getElementById('joinrole-list');
+    if (list.querySelector('p')) list.innerHTML = '';
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; gap: 10px; align-items: center; background: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);';
     
-    new CustomSelect(select, globalRoles, selectedRoleId, 'Select Role...');
+    const selectContainer = document.createElement('div');
+    selectContainer.style.cssText = 'flex: 1;';
+    
+    const btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.className = 'btn-danger';
+    btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
+    btnRemove.innerText = '×';
+    btnRemove.onclick = () => row.remove();
+
+    row.appendChild(selectContainer);
+    row.appendChild(btnRemove);
+    list.appendChild(row);
+
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.className = 'jr-select';
+    selectContainer.appendChild(hiddenInput);
+
+    new CustomSelect(hiddenInput, globalRoles, roleId, 'Select Role to Assign...');
 }
 
 document.getElementById('btn-add-autoreply').addEventListener('click', () => addAutoReplyRow());
