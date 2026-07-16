@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orbit Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
 </head>
 <body>
 
     <nav class="navbar">
         <a href="/" class="logo">
-            <img src="/static/logo.png" alt="Orbit Logo" style="height: 36px; filter: invert(1); opacity: 0.9;">
+            <img src="/static/logo.png" alt="Orbit Logo" style="height: 36px; opacity: 0.9;">
             Orbit
         </a>
         <div class="nav-right">
@@ -68,7 +68,7 @@
         </div>
 
         <!-- CONFIG VIEW (Settings) -->
-        <div id="view-config" class="view hidden" style="flex: 1; display: none; flex-direction: column;">
+        <div id="view-config" class="view hidden" style="display: flex; flex: 1; flex-direction: column;">
             <div id="config-loader" class="loader-container">
                 <span class="loader"></span>
             </div>
@@ -361,6 +361,6 @@
 
     <div id="toast" class="toast">Changes saved successfully!</div>
 
-    <script src="/static/script.js"></script>
+    <script src="/static/script.js?v=2"></script>
 </body>
 </html>

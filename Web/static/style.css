@@ -153,6 +153,11 @@ body {
     flex-grow: 1;
 }
 
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
 /* Landing Page */
 .hero {
     text-align: center;
