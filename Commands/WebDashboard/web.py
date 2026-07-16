@@ -623,7 +623,7 @@ class WebDashboard:
             if ext == ".jpe":
                 ext = ".jpg"
 
-            upload_dir = pathlib.Path("Web/static/uploads")
+            upload_dir = pathlib.Path("Storage/uploads")
             upload_dir.mkdir(parents=True, exist_ok=True)
 
             filename = f"{uuid.uuid4().hex}{ext}"
@@ -636,7 +636,7 @@ class WebDashboard:
                         break
                     f.write(chunk)
 
-            url = f"/static/uploads/{filename}"
+            url = f"/api/uploads/{filename}"
             return web.json_response({"success": True, "url": url})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
@@ -664,6 +664,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     
     app.router.add_get("/", dashboard.handle_index)
     app.router.add_static("/static", "Web/static")
+    app.router.add_static("/api/uploads", "Storage/uploads")
     
     app.router.add_get("/auth/login", dashboard.handle_login)
     app.router.add_get("/auth/callback", dashboard.handle_callback)

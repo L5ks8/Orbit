@@ -48,6 +48,9 @@ class GoodbyeListener(commands.Cog):
         if image_url:
             if image_url.startswith("/static/"):
                 bg_path = pathlib.Path("Web") / image_url.lstrip("/")
+            elif image_url.startswith("/api/uploads/"):
+                filename = image_url.split("/")[-1]
+                bg_path = pathlib.Path("Storage/uploads") / filename
             elif image_url.startswith("http"):
                 import tempfile
                 try:

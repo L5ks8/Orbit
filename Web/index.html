@@ -703,8 +703,9 @@
                                     <div>
                                         <h3 style="display: flex; align-items: center; gap: 8px;">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                            Logs
+                                            Server Logs
                                         </h3>
+                                        <p style="color: var(--text-muted); font-size: 14px;">Track and record server activity seamlessly.</p>
                                     </div>
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="logs_enabled">
@@ -714,12 +715,12 @@
                             </div>
                             
                             <!-- Options -->
-                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Optionen</h4>
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Options</h4>
                             <div class="config-card">
                                 <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
                                     <div>
-                                        <label style="margin-bottom: 4px;">Ausführender In Logs 👑</label>
-                                        <span style="font-size: 12px; color: var(--text-muted);">Soll der Ausführende der Aktion in den Logs angezeigt werden?</span>
+                                        <label style="margin-bottom: 4px;">Executor In Logs</label>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Logs the person who performed a specific action in the logs (if supported by the API).</span>
                                     </div>
                                     <label class="toggle-switch" style="margin-left: 20px;">
                                         <input type="checkbox" id="logs_executor_in_logs">
@@ -727,19 +728,19 @@
                                     </label>
                                 </div>
                                 <div class="form-group">
-                                    <label>Ausgeschlossene Kanäle</label>
-                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Kanäle, die nicht von Logs erfasst werden sollen.</span>
+                                    <label>Excluded Channels</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Channels where events will not be logged (applies to channels where messages are sent/deleted, etc.).</span>
                                     <select id="logs_global_channels" multiple></select>
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
-                                    <label>Zugelassene Rollen</label>
-                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Die Rollen, die nicht protokolliert werden.</span>
+                                    <label>Excluded Roles</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Roles whose actions will not be logged.</span>
                                     <select id="logs_global_roles" multiple></select>
                                 </div>
                             </div>
                             
                             <!-- Log Channels Grid -->
-                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Log Kanäle</h4>
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Log Channels</h4>
                             <div class="automod-grid" id="logs-grid">
                                 <!-- Populated by JS -->
                             </div>
@@ -754,7 +755,7 @@
 
     <div id="toast" class="toast">Changes saved successfully!</div>
 
-    <script src="/static/script.js?v=9"></script>
+    <script src="/static/script.js?v=5"></script>
 </body>
 </html>
 

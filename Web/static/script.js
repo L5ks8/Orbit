@@ -6,26 +6,26 @@ let autoresponder = {};
 let joinroles = [];
 
 const LOGS_CATEGORIES = [
-    { id: "moderation_action", title: "Moderationsaktion", icon: "hammer" },
-    { id: "auto_moderation", title: "Auto-Moderation", icon: "bot" },
-    { id: "message_deleted", title: "Nachricht gelöscht", icon: "trash" },
-    { id: "message_edited", title: "Nachricht bearbeitet", icon: "edit-2" },
-    { id: "bulk_message_delete", title: "Mehrere Nachrichten gelöscht", icon: "message-square" },
-    { id: "member_joined", title: "Mitglied beigetreten", icon: "user-plus" },
-    { id: "member_left", title: "Mitglied verlassen", icon: "user-minus" },
-    { id: "member_joined_voice", title: "Mitglied mit Sprachkanal verbunden", icon: "volume-2" },
-    { id: "member_left_voice", title: "Mitglied wurde vom Sprachkanal getrennt", icon: "volume-x" },
-    { id: "member_moved_voice", title: "Mitglied wurde in einen anderen Sprachkanal verschoben", icon: "arrow-left-right" },
-    { id: "role_created", title: "Rolle erstellt", icon: "shield-plus" },
-    { id: "role_deleted", title: "Rolle gelöscht", icon: "shield-minus" },
-    { id: "role_updated", title: "Rolle aktualisiert", icon: "shield" },
-    { id: "channel_created", title: "Kanal erstellt", icon: "hash" },
-    { id: "channel_deleted", title: "Kanal gelöscht", icon: "trash" },
-    { id: "channel_updated", title: "Kanal aktualisiert", icon: "edit-2" },
-    { id: "scheduled_event_created", title: "Geplantes Ereignis erstellt", icon: "calendar-plus" },
-    { id: "scheduled_event_deleted", title: "Geplantes Ereignis gelöscht", icon: "calendar-minus" },
-    { id: "scheduled_event_updated", title: "Geplantes Ereignis aktualisiert", icon: "calendar" },
-    { id: "mod_command_used", title: "Mod-Befehl verwendet 👑", icon: "terminal" }
+    { id: "moderation_action", title: "Moderationsaktion", icon: "Ã°Å¸â€ºÂ¡Ã¯Â¸Â" },
+    { id: "auto_moderation", title: "Auto Moderation", icon: "Ã°Å¸Â¤â€“" },
+    { id: "message_deleted", title: "Nachricht GelÃƒÂ¶scht", icon: "Ã°Å¸â€”â€˜Ã¯Â¸Â" },
+    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "Ã¢Å“ÂÃ¯Â¸Â" },
+    { id: "bulk_message_delete", title: "MassenlÃƒÂ¶schung", icon: "Ã°Å¸Â§Â¹" },
+    { id: "member_joined", title: "Mitglied Beigetreten", icon: "Ã°Å¸â€˜â€¹" },
+    { id: "member_left", title: "Mitglied Verlassen", icon: "Ã°Å¸Å¡Â¶" },
+    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "Ã°Å¸Å½Â¤" },
+    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "Ã°Å¸â€â€¡" },
+    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "Ã°Å¸Å½Â§" },
+    { id: "role_created", title: "Rolle Erstellt", icon: "Ã°Å¸Å½Â­" },
+    { id: "role_deleted", title: "Rolle GelÃƒÂ¶scht", icon: "Ã°Å¸â€Â¥" },
+    { id: "role_updated", title: "Rolle Aktualisiert", icon: "Ã¢Å¡â„¢Ã¯Â¸Â" },
+    { id: "channel_created", title: "Kanal Erstellt", icon: "Ã°Å¸â€œÂ" },
+    { id: "channel_deleted", title: "Kanal GelÃƒÂ¶scht", icon: "Ã¢ÂÅ’" },
+    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "Ã°Å¸â€â€ž" },
+    { id: "scheduled_event_created", title: "Event Erstellt", icon: "Ã°Å¸â€œâ€¦" },
+    { id: "scheduled_event_deleted", title: "Event GelÃƒÂ¶scht", icon: "Ã°Å¸â€™Â¥" },
+    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "Ã°Å¸â€œÂ" },
+    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "Ã¢Å’Â¨Ã¯Â¸Â" }
 ];
 
 // Views
@@ -457,9 +457,7 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
     topRow.innerHTML = `
         <input type="text" class="ar-trigger" value="${triggerText.replace(/"/g, '&quot;')}" placeholder="Trigger (e.g. !help)" style="flex: 1; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
         <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response (use #channel-name for mentions)" style="flex: 2; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
-        <button type="button" class="btn-danger" style="padding: 6px 12px; flex-shrink:0; display:flex; align-items:center; justify-content:center;" onclick="this.closest('.autoreply-row').remove()">
-            <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
-        </button>
+        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px; flex-shrink:0;" onclick="this.closest('.autoreply-row').remove()">Ãƒâ€”</button>
     `;
 
     // Bottom row: channel select
@@ -480,7 +478,6 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
     row.appendChild(topRow);
     row.appendChild(botRow);
     list.appendChild(row);
-    lucide.createIcons();
 }
 
 function renderJoinRoles(roles) {
@@ -731,34 +728,11 @@ async function loadConfig(guildId, guildName) {
         
         const logsGrid = document.getElementById('logs-grid');
         logsGrid.innerHTML = '';
-        
-        const logsGlobalChEl = document.getElementById('logs_global_channels');
-        if (logsGlobalChEl.nextElementSibling?.classList.contains('custom-multiselect')) logsGlobalChEl.nextElementSibling.remove();
-        logsGlobalChEl.innerHTML = "";
-        globalChannels.forEach(c => {
-            const opt = document.createElement("option");
-            opt.value = c.id;
-            if (config.logs?.global_exempt_channels?.includes(c.id)) opt.selected = true;
-            logsGlobalChEl.appendChild(opt);
-        });
-        new CustomMultiSelect(logsGlobalChEl, globalChannels, "Auswählen...", (item) => "# " + item.name);
-
-        const logsGlobalRoEl = document.getElementById('logs_global_roles');
-        if (logsGlobalRoEl.nextElementSibling?.classList.contains('custom-multiselect')) logsGlobalRoEl.nextElementSibling.remove();
-        logsGlobalRoEl.innerHTML = "";
-        globalRoles.forEach(r => {
-            const opt = document.createElement("option");
-            opt.value = r.id;
-            if (config.logs?.global_exempt_roles?.includes(r.id)) opt.selected = true;
-            logsGlobalRoEl.appendChild(opt);
-        });
-        new CustomMultiSelect(logsGlobalRoEl, globalRoles, "Auswählen...", (item) => `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${item.color};margin-right:6px;"></span> ${item.name}`);
-
         LOGS_CATEGORIES.forEach(cat => {
             const isEnabled = config.logs?.categories?.[cat.id] || false;
             const selectedCh = config.logs?.channels?.[cat.id] || '';
             
-            let optionsHtml = `<option value="">Auswählen...</option>`;
+            let optionsHtml = `<option value="">-- Disabled --</option>`;
             globalChannels.forEach(c => {
                 const selected = (c.id === selectedCh) ? 'selected' : '';
                 optionsHtml += `<option value="${c.id}" ${selected}>#${c.name}</option>`;
@@ -770,7 +744,7 @@ async function loadConfig(guildId, guildName) {
                 <div class="am-card">
                     <div class="am-card-header">
                         <div class="am-card-title">
-                            <i data-lucide="${cat.icon}" class="am-card-icon" style="color: #3b82f6; width: 18px; height: 18px;"></i>
+                            <span class="am-card-icon">${cat.icon}</span>
                             ${cat.title}
                         </div>
                         <label class="toggle-switch">
@@ -778,8 +752,9 @@ async function loadConfig(guildId, guildName) {
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="am-card-body" style="padding-top: 10px;">
+                    <div class="am-card-body">
                         <div class="form-group" style="margin-bottom: 0;">
+                            <label>Log Kanal</label>
                             <select id="log_cat_${cat.id}_channel" style="width:100%; padding:8px; border-radius:4px; background:var(--bg-modifier-hover); color:var(--text-normal); border:1px solid rgba(255,255,255,0.1);">
                                 ${optionsHtml}
                             </select>
@@ -788,7 +763,6 @@ async function loadConfig(guildId, guildName) {
                 </div>
             `;
         });
-        lucide.createIcons();
 
         // Clear existing custom selects
         document.querySelectorAll('.custom-select').forEach(el => el.remove());
