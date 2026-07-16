@@ -2,6 +2,31 @@ let currentUser = null;
 let currentGuildId = null;
 let currentAutomodConfig = {};
 let activeAutomodRule = null;
+let autoresponder = {};
+let joinroles = [];
+
+const LOGS_CATEGORIES = [
+    { id: "moderation_action", title: "Moderationsaktion", icon: "🛡️" },
+    { id: "auto_moderation", title: "Auto Moderation", icon: "🤖" },
+    { id: "message_deleted", title: "Nachricht Gelöscht", icon: "🗑️" },
+    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "✏️" },
+    { id: "bulk_message_delete", title: "Massenlöschung", icon: "🧹" },
+    { id: "member_joined", title: "Mitglied Beigetreten", icon: "👋" },
+    { id: "member_left", title: "Mitglied Verlassen", icon: "🚶" },
+    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "🎤" },
+    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "🔇" },
+    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "🎧" },
+    { id: "role_created", title: "Rolle Erstellt", icon: "🎭" },
+    { id: "role_deleted", title: "Rolle Gelöscht", icon: "🔥" },
+    { id: "role_updated", title: "Rolle Aktualisiert", icon: "⚙️" },
+    { id: "channel_created", title: "Kanal Erstellt", icon: "📁" },
+    { id: "channel_deleted", title: "Kanal Gelöscht", icon: "❌" },
+    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "🔄" },
+    { id: "scheduled_event_created", title: "Event Erstellt", icon: "📅" },
+    { id: "scheduled_event_deleted", title: "Event Gelöscht", icon: "💥" },
+    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "📝" },
+    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "⌨️" }
+];
 
 // Views
 const views = {
@@ -535,6 +560,49 @@ async function loadConfig(guildId, guildName) {
         document.getElementById('ticket_panel_channel').value = config.ticket?.panel_channel_id || '';
         document.getElementById('ticket_log_channel_id').value = config.ticket?.log_channel_id || '';
 
+        // Logs
+        if (!currentPermissions.can_channels) lockSection('section-logs', 'Manage Channels');
+        document.getElementById('logs_enabled').checked = config.logs?.enabled || false;
+        document.getElementById('logs_executor_in_logs').checked = config.logs?.executor_in_logs || false;
+        
+        const logsGrid = document.getElementById('logs-grid');
+        logsGrid.innerHTML = '';
+        LOGS_CATEGORIES.forEach(cat => {
+            const isEnabled = config.logs?.categories?.[cat.id] || false;
+            const selectedCh = config.logs?.channels?.[cat.id] || '';
+            
+            let optionsHtml = `<option value="">-- Deaktiviert --</option>`;
+            globalChannels.forEach(c => {
+                const selected = (c.id === selectedCh) ? 'selected' : '';
+                optionsHtml += `<option value="${c.id}" ${selected}>#${c.name}</option>`;
+            });
+
+            const checked = isEnabled ? 'checked' : '';
+
+            logsGrid.innerHTML += `
+                <div class="am-card">
+                    <div class="am-card-header">
+                        <div class="am-card-title">
+                            <span class="am-card-icon">${cat.icon}</span>
+                            ${cat.title}
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="log_cat_${cat.id}_enabled" ${checked}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="am-card-body">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Log Kanal</label>
+                            <select id="log_cat_${cat.id}_channel" style="width:100%; padding:8px; border-radius:4px; background:var(--bg-modifier-hover); color:var(--text-normal); border:1px solid rgba(255,255,255,0.1);">
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
         // Clear existing custom selects
         document.querySelectorAll('.custom-select').forEach(el => el.remove());
 
@@ -561,6 +629,26 @@ async function loadConfig(guildId, guildName) {
             opt.textContent = '@' + r.name;
             if (currentAutomodConfig.global_exempt_roles?.includes(r.id)) opt.selected = true;
             amRolesEl.appendChild(opt);
+        });
+        
+        const logsChannelsEl = document.getElementById('logs_global_channels');
+        logsChannelsEl.innerHTML = '';
+        globalChannels.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = '#' + c.name;
+            if (config.logs?.global_exempt_channels?.includes(c.id)) opt.selected = true;
+            logsChannelsEl.appendChild(opt);
+        });
+
+        const logsRolesEl = document.getElementById('logs_global_roles');
+        logsRolesEl.innerHTML = '';
+        globalRoles.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.textContent = '@' + r.name;
+            if (config.logs?.global_exempt_roles?.includes(r.id)) opt.selected = true;
+            logsRolesEl.appendChild(opt);
         });
 
         // AutoResponder & JoinRoles & TicketOptions
@@ -710,17 +798,7 @@ function syncGoodbyeDropzoneFromUrl(url) {
     updateGoodbyeLivePreview();
 }
 
-function updateAutomodTimeoutVisibility() {
-    const linkAction = document.getElementById('automod_link_action')?.value;
-    const spamAction = document.getElementById('automod_spam_action')?.value;
-    const linkGroup = document.getElementById('automod_link_timeout_group');
-    const spamGroup = document.getElementById('automod_spam_timeout_group');
-    if (linkGroup) linkGroup.style.display = linkAction === 'timeout' ? '' : 'none';
-    if (spamGroup) spamGroup.style.display = spamAction === 'timeout' ? '' : 'none';
-}
 
-document.getElementById('automod_link_action').addEventListener('change', updateAutomodTimeoutVisibility);
-document.getElementById('automod_spam_action').addEventListener('change', updateAutomodTimeoutVisibility);
 
 // Dropzone setup
 function bindDropzone(zoneId, fileInputId, urlInputId, syncFunc) {
@@ -1033,8 +1111,23 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             options_slots: ticketOptions
         },
         autoresponder: localAutoresponder,
-        joinroles: joinroles
+        joinroles: joinroles,
+        logs: {
+            enabled: document.getElementById('logs_enabled').checked,
+            executor_in_logs: document.getElementById('logs_executor_in_logs').checked,
+            global_exempt_channels: Array.from(document.getElementById('logs_global_channels').selectedOptions).map(o => o.value),
+            global_exempt_roles: Array.from(document.getElementById('logs_global_roles').selectedOptions).map(o => o.value),
+            categories: {},
+            channels: {}
+        }
     };
+    
+    LOGS_CATEGORIES.forEach(cat => {
+        const enCb = document.getElementById(`log_cat_${cat.id}_enabled`);
+        const chSel = document.getElementById(`log_cat_${cat.id}_channel`);
+        if (enCb) payload.logs.categories[cat.id] = enCb.checked;
+        if (chSel) payload.logs.channels[cat.id] = chSel.value;
+    });
 
     try {
         const res = await fetch(`/api/config/${currentGuildId}`, {

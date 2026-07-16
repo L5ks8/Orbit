@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orbit Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css?v=12">
+    <link rel="stylesheet" href="/static/style.css?v=13">
 </head>
 <body>
 
@@ -243,6 +243,11 @@
                             <span class="nav-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
                             </span> Ticket System
+                        </div>
+                        <div class="dash-nav-item" data-target="section-logs">
+                            <span class="nav-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </span> Logs
                         </div>
                     </div>
                 </div>
@@ -700,6 +705,57 @@
                             <div id="ticket-option-list" style="display: flex; flex-direction: column; gap: 10px;">
                                 <!-- Populated by JS -->
                             </div>
+                            </div>
+                        </div>
+
+                        <!-- Logs Section -->
+                        <div id="section-logs" class="config-section" style="display: none;">
+                            <div class="section-header">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                                    <div>
+                                        <h3 style="display: flex; align-items: center; gap: 8px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                            Server Logs
+                                        </h3>
+                                        <p style="color: var(--text-muted); font-size: 14px;">Track and record server activity seamlessly.</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="logs_enabled">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Options -->
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Optionen</h4>
+                            <div class="config-card">
+                                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <label style="margin-bottom: 4px;">Ausführender In Logs</label>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Protokolliert die Person, die eine bestimmte Aktion ausgeführt hat, in den Logs (sofern von der API unterstützt).</span>
+                                    </div>
+                                    <label class="toggle-switch" style="margin-left: 20px;">
+                                        <input type="checkbox" id="logs_executor_in_logs">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>Ausgeschlossene Kanäle</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Die Kanäle, in denen Ereignisse nicht protokolliert werden (gilt für Kanäle, in denen Nachrichten gesendet/gelöscht werden usw.).</span>
+                                    <select id="logs_global_channels" multiple></select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Zugelassene Rollen</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Die Rollen, die nicht protokolliert werden.</span>
+                                    <select id="logs_global_roles" multiple></select>
+                                </div>
+                            </div>
+                            
+                            <!-- Log Channels Grid -->
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;">Log Kanäle</h4>
+                            <div class="automod-grid" id="logs-grid">
+                                <!-- Populated by JS -->
+                            </div>
                         </div>
 
                     </form>
@@ -711,6 +767,6 @@
 
     <div id="toast" class="toast">Changes saved successfully!</div>
 
-    <script src="/static/script.js?v=12"></script>
+    <script src="/static/script.js?v=2"></script>
 </body>
 </html>

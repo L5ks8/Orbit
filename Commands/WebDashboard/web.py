@@ -13,6 +13,7 @@ from Commands.AutoMod._storage import load_automod_config, save_automod_config
 from Commands.Verify._storage import load_verify_config, save_verify_config
 from Commands.AutoResponder._storage import load_responses, save_responses
 from Commands.JoinRole._storage import load_join_roles, save_join_roles
+from Commands.Log._storage import load_log_config, save_log_config
 
 SESSIONS: Dict[str, Any] = {}
 
@@ -207,6 +208,7 @@ class WebDashboard:
         
         from Commands.Ticket._storage import load_ticket_config
         ticket_cfg = load_ticket_config(guild_id)
+        logs_cfg = load_log_config(guild_id)
 
         config_data = {
             "welcome": {
@@ -294,7 +296,8 @@ class WebDashboard:
                     }
                     for slot in ticket_cfg.get("options_slots", []) if isinstance(slot, dict)
                 ]
-            }
+            },
+            "logs": logs_cfg
         }
         
         return web.json_response({
@@ -458,6 +461,31 @@ class WebDashboard:
                 
                 save_ticket_config(guild_id, ticket_cfg)
                 
+            # Logs (Requires can_channels)
+            if user_perms.get("can_channels") and "logs" in data:
+                l_cfg = load_log_config(guild_id)
+                l_data = data["logs"]
+                
+                l_cfg["enabled"] = bool(l_data.get("enabled", False))
+                l_cfg["executor_in_logs"] = bool(l_data.get("executor_in_logs", False))
+                
+                gec = l_data.get("global_exempt_channels", [])
+                ger = l_data.get("global_exempt_roles", [])
+                l_cfg["global_exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
+                l_cfg["global_exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
+                
+                if "channels" in l_data and isinstance(l_data["channels"], dict):
+                    for k in l_cfg["channels"]:
+                        c = l_data["channels"].get(k)
+                        l_cfg["channels"][k] = int(c) if c else None
+                
+                if "categories" in l_data and isinstance(l_data["categories"], dict):
+                    for k in l_cfg["categories"]:
+                        l_cfg["categories"][k] = bool(l_data["categories"].get(k, False))
+                
+                save_log_config(guild_id, l_cfg)
+                
+
                 # Attempt to update the existing panel message dynamically
                 pid = ticket_cfg.get("panel_channel_id")
                 mid = ticket_cfg.get("panel_message_id")
