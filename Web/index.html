@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"></ellipse><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-45 12 12)"></ellipse></svg>
+            Orbit
+        </a>
+        <div class="nav-user" id="nav-user">
+            <!-- Will be populated by JS: either Login button or Avatar -->
+            <button id="btn-login" class="btn-primary">Login with Discord</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <!-- LANDING VIEW -->
+        <div id="view-landing" class="view">
+            <div class="hero">
+                <h1>Manage your server,<br>beautifully.</h1>
+                <p>Orbit is the modern, lightning-fast discord bot for community management. Login to configure your server's security, welcome messages, and more.</p>
+                <button id="btn-hero-login" class="btn-primary" style="font-size: 16px; padding: 14px 28px;">Open Dashboard</button>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-servers">--</div>
+                        <div class="stat-label">Servers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-users">--</div>
+                        <div class="stat-label">Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-ping">--</div>
+                        <div class="stat-label">Ping (ms)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD VIEW (Server List) -->
+        <div id="view-dashboard" class="view hidden">
+            <div class="page-header">
+                <h2>Select a Server</h2>
+                <p>Choose a server to manage its configuration.</p>
+            </div>
+            
+            <div id="dashboard-loader" class="loader-container">
+                <span class="loader"></span>
+            </div>
+
+            <div class="server-grid" id="server-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- CONFIG VIEW (Settings) -->
+        <div id="view-config" class="view hidden">
+            <div class="page-header" style="display: flex; align-items: center; gap: 20px;">
+                <button id="btn-back" class="btn-secondary" style="padding: 8px 12px;">← Back</button>
+                <div>
+                    <h2 id="config-server-name">Server Settings</h2>
+                    <p>Manage modules and configurations.</p>
+                </div>
+            </div>
+
+            <div id="config-loader" class="loader-container">
+                <span class="loader"></span>
+            </div>
+
+            <div class="config-layout" id="config-layout" style="display: none;">
+                <div class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-target="section-welcome">Welcome System</a>
+                    <a href="#" class="nav-item" data-target="section-automod">Auto Mod</a>
+                    <a href="#" class="nav-item" data-target="section-verify">Verification</a>
+                </div>
+
+                <div class="settings-panel">
+                    <form id="config-form">
+                        
+                        <!-- WELCOME SECTION -->
+                        <div id="section-welcome" class="settings-section active">
+                            <h3>Welcome System</h3>
+                            <p>Configure automated messages and banner images for new members.</p>
+                            
+                            <div class="toggle-container">
+                                <div class="toggle-info">
+                                    <h4>Enable Welcome Module</h4>
+                                    <p>Automatically greet new users.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="welcome_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Welcome Channel</label>
+                                <span class="help-text">Select the channel where welcome messages will be sent.</span>
+                                <select id="welcome_channel_id">
+                                    <option value="">None</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- AUTOMOD SECTION -->
+                        <div id="section-automod" class="settings-section">
+                            <h3>Auto Mod</h3>
+                            <p>Protect your server from spam, links, and malicious accounts.</p>
+                            
+                            <div class="toggle-container">
+                                <div class="toggle-info">
+                                    <h4>Enable Auto Mod</h4>
+                                    <p>Master switch for all automated moderation.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="automod_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="toggle-container">
+                                <div class="toggle-info">
+                                    <h4>Anti-Link</h4>
+                                    <p>Delete unauthorized Discord invite links.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="automod_anti_link">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="toggle-container">
+                                <div class="toggle-info">
+                                    <h4>Anti-Spam</h4>
+                                    <p>Prevent message flooding and mass mentions.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="automod_anti_spam">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- VERIFY SECTION -->
+                        <div id="section-verify" class="settings-section">
+                            <h3>Verification</h3>
+                            <p>Require users to solve a CAPTCHA before accessing channels.</p>
+                            
+                            <div class="toggle-container">
+                                <div class="toggle-info">
+                                    <h4>Enable CAPTCHA</h4>
+                                    <p>Activate the verification gate.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="verify_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Verified Role</label>
+                                <span class="help-text">The role granted upon successful CAPTCHA completion.</span>
+                                <select id="verify_role_id">
+                                    <option value="">None</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="save-bar">
+                            <button type="submit" class="btn-primary" id="btn-save">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="toast" class="toast">Changes saved successfully!</div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

@@ -190,10 +190,8 @@ class OrbitBot(commands.Bot):
         if os.environ.get("RENDER") or os.environ.get("PORT"):
             try:
                 from aiohttp import web
-                async def _health_handler(request):
-                    return web.Response(text="Orbit Discord Bot is Online & Healthy!")
-                app = web.Application()
-                app.router.add_get("/", _health_handler)
+                from Commands.WebDashboard.web import setup_web_app
+                app = setup_web_app(self)
                 runner = web.AppRunner(app)
                 await runner.setup()
                 port = int(os.environ.get("PORT", 10000))
