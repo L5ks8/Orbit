@@ -9,7 +9,7 @@ async def _do_verify_toggle(ctx: commands.Context):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    config = toggle_verify_config(ctx.guild.id)
+    config = await toggle_verify_config(ctx.guild.id)
     enabled = config["enabled"]
 
     header_str = f"### CAPTCHA Verification Toggled: **{ctx.guild.name}**\n**Status:** {'Active (Enabled)' if enabled else 'Inactive (Disabled)'}"

@@ -11,7 +11,7 @@ async def _do_verify_user(ctx: commands.Context, member: discord.Member):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    config = load_verify_config(ctx.guild.id)
+    config = await load_verify_config(ctx.guild.id)
     role_id = config.get("role_id")
     remove_role_id = config.get("remove_role_id")
 

@@ -9,7 +9,7 @@ async def _do_verify_reset(ctx: commands.Context):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    reset_verify_config(ctx.guild.id)
+    await reset_verify_config(ctx.guild.id)
 
     header_str = f"### CAPTCHA Verification Reset: **{ctx.guild.name}**\n**Status:** Inactive (Reset to defaults)"
     info_str = "**Action:** All verification configurations, channels, and pending auto-kicks have been cleared."

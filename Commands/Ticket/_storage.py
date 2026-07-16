@@ -1,19 +1,9 @@
-import os
-import json
-import pathlib
 import time
 from typing import Dict, Any, Optional
+from Database.mongo import get_config, save_config
 
-STORAGE_ROOT = pathlib.Path("Storage")
-
-def _get_file_path(guild_id: int) -> pathlib.Path:
-    folder = STORAGE_ROOT / str(guild_id)
-    if not folder.exists():
-        folder.mkdir(parents=True, exist_ok=True)
-    return folder / "ticket.json"
-
-def load_ticket_config(guild_id: int) -> Dict[str, Any]:
-    path = _get_file_path(guild_id)
+async def load_ticket_config(guild_id: int) -> Dict[str, Any]:
+    doc = await get_config(guild_id, "tickets")
     default_cfg = {
         "enabled": False,
         "panel_channel_id": None,
@@ -28,36 +18,21 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         "active_tickets": {}
     }
     
-    if not path.exists():
-        data = default_cfg.copy()
-    else:
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception:
-            data = default_cfg.copy()
+    # Merge defaults
+    for k, v in default_cfg.items():
+        if k not in doc:
+            doc[k] = v
+            
+    if not isinstance(doc.get("options"), list):
+        doc["options"] = []
+    if not isinstance(doc.get("options_slots"), list):
+        doc["options_slots"] = []
+    return doc
 
-    if not isinstance(data, dict):
-        data = default_cfg.copy()
+async def save_ticket_config(guild_id: int, config: Dict[str, Any]) -> None:
+    await save_config(guild_id, "tickets", config)
 
-    if "active_tickets" not in data:
-        data["active_tickets"] = {}
-    if "ticket_counter" not in data:
-        data["ticket_counter"] = 0
-    if "log_channel_id" not in data:
-        data["log_channel_id"] = None
-    if "options" not in data or not isinstance(data["options"], list):
-        data["options"] = []
-    if "options_slots" not in data or not isinstance(data["options_slots"], list):
-        data["options_slots"] = []
-    return data
-
-def save_ticket_config(guild_id: int, config: Dict[str, Any]) -> None:
-    path = _get_file_path(guild_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
-
-def setup_ticket_config(
+async def setup_ticket_config(
     guild_id: int,
     panel_channel_id: int,
     category_id: Optional[int] = None,
@@ -68,7 +43,7 @@ def setup_ticket_config(
     options: Optional[list] = None,
     options_slots: Optional[list] = None
 ) -> Dict[str, Any]:
-    config = load_ticket_config(guild_id)
+    config = await load_ticket_config(guild_id)
     config["enabled"] = True
     config["panel_channel_id"] = panel_channel_id
     config["category_id"] = category_id
@@ -80,11 +55,11 @@ def setup_ticket_config(
         config["options"] = options
     if options_slots is not None and isinstance(options_slots, list):
         config["options_slots"] = options_slots
-    save_ticket_config(guild_id, config)
+    await save_ticket_config(guild_id, config)
     return config
 
-def create_active_ticket(guild_id: int, channel_id: int, creator_id: int, subject: str, description: str, category_option: str = "General Support") -> int:
-    config = load_ticket_config(guild_id)
+async def create_active_ticket(guild_id: int, channel_id: int, creator_id: int, subject: str, description: str, category_option: str = "General Support") -> int:
+    config = await load_ticket_config(guild_id)
     counter = config.get("ticket_counter", 0) + 1
     config["ticket_counter"] = counter
     config["active_tickets"][str(channel_id)] = {
@@ -96,27 +71,27 @@ def create_active_ticket(guild_id: int, channel_id: int, creator_id: int, subjec
         "category_option": category_option,
         "number": counter
     }
-    save_ticket_config(guild_id, config)
+    await save_ticket_config(guild_id, config)
     return counter
 
-def claim_ticket(guild_id: int, channel_id: int, claimer_id: int) -> Optional[Dict[str, Any]]:
-    config = load_ticket_config(guild_id)
+async def claim_ticket(guild_id: int, channel_id: int, claimer_id: int) -> Optional[Dict[str, Any]]:
+    config = await load_ticket_config(guild_id)
     ticket_data = config.get("active_tickets", {}).get(str(channel_id))
     if not ticket_data:
         return None
     ticket_data["claimed_by"] = claimer_id
     config["active_tickets"][str(channel_id)] = ticket_data
-    save_ticket_config(guild_id, config)
+    await save_ticket_config(guild_id, config)
     return ticket_data
 
-def close_active_ticket(guild_id: int, channel_id: int) -> Optional[Dict[str, Any]]:
-    config = load_ticket_config(guild_id)
+async def close_active_ticket(guild_id: int, channel_id: int) -> Optional[Dict[str, Any]]:
+    config = await load_ticket_config(guild_id)
     ticket_data = config.get("active_tickets", {}).pop(str(channel_id), None)
     if ticket_data:
-        save_ticket_config(guild_id, config)
+        await save_ticket_config(guild_id, config)
     return ticket_data
 
-def reset_ticket_config(guild_id: int) -> Dict[str, Any]:
+async def reset_ticket_config(guild_id: int) -> Dict[str, Any]:
     default_config = {
         "enabled": False,
         "panel_channel_id": None,
@@ -129,5 +104,5 @@ def reset_ticket_config(guild_id: int) -> Dict[str, Any]:
         "ticket_counter": 0,
         "active_tickets": {}
     }
-    save_ticket_config(guild_id, default_config)
+    await save_ticket_config(guild_id, default_config)
     return default_config

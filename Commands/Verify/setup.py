@@ -18,7 +18,7 @@ async def _do_verify_setup(
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
     remove_role_id = remove_role.id if remove_role else None
-    config = setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
+    config = await setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
     
     view = PersistentVerifyLayout()
     try:

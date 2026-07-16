@@ -1,10 +1,7 @@
-import pathlib
-import json
 from typing import Dict, Any
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator
-
-STORAGE_ROOT = pathlib.Path("Storage")
+from Database.mongo import get_config, save_config
 
 DEFAULT_CATEGORIES = {
     "moderation": True,
@@ -15,14 +12,8 @@ DEFAULT_CATEGORIES = {
     "voice": True
 }
 
-def _get_file_path(guild_id: int) -> pathlib.Path:
-    folder = STORAGE_ROOT / str(guild_id)
-    if not folder.exists():
-        folder.mkdir(parents=True, exist_ok=True)
-    return folder / "logs.json"
-
-def load_log_config(guild_id: int) -> Dict[str, Any]:
-    path = _get_file_path(guild_id)
+async def load_log_config(guild_id: int) -> Dict[str, Any]:
+    data = await get_config(guild_id, "logs")
     default = {
         "enabled": False,
         "channel_id": None,
@@ -30,18 +21,6 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
         "channels": {k: None for k in DEFAULT_CATEGORIES}
     }
     
-    if not path.exists():
-        data = default.copy()
-    else:
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception:
-            data = default.copy()
-
-    if not isinstance(data, dict):
-        return default.copy()
-
     if "categories" not in data or not isinstance(data["categories"], dict):
         data["categories"] = DEFAULT_CATEGORIES.copy()
     else:
@@ -64,15 +43,17 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
                 else:
                     data["channels"][k] = None
 
+    for k, v in default.items():
+        if k not in data:
+            data[k] = v
+
     return data
 
-def save_log_config(guild_id: int, config: Dict[str, Any]) -> None:
-    path = _get_file_path(guild_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
+async def save_log_config(guild_id: int, config: Dict[str, Any]) -> None:
+    await save_config(guild_id, "logs", config)
 
-def setup_log(guild_id: int, default_channel_id: int = None, channel_overrides: Dict[str, int] = None) -> Dict[str, Any]:
-    config = load_log_config(guild_id)
+async def setup_log(guild_id: int, default_channel_id: int = None, channel_overrides: Dict[str, int] = None) -> Dict[str, Any]:
+    config = await load_log_config(guild_id)
     config["enabled"] = True
 
     if default_channel_id is not None:
@@ -91,11 +72,11 @@ def setup_log(guild_id: int, default_channel_id: int = None, channel_overrides: 
     if any(config["channels"].values()):
         config["enabled"] = True
 
-    save_log_config(guild_id, config)
+    await save_log_config(guild_id, config)
     return config
 
-def toggle_log_category(guild_id: int, category: str) -> Dict[str, Any]:
-    config = load_log_config(guild_id)
+async def toggle_log_category(guild_id: int, category: str) -> Dict[str, Any]:
+    config = await load_log_config(guild_id)
     if category.lower() == "all":
         channels_map = config.get("channels", {})
         all_on = config.get("enabled", False) and any(ch is not None for ch in channels_map.values())
@@ -116,7 +97,7 @@ def toggle_log_category(guild_id: int, category: str) -> Dict[str, Any]:
                 for k in DEFAULT_CATEGORIES:
                     config["channels"][k] = fallback_ch
                     config["categories"][k] = True
-        save_log_config(guild_id, config)
+        await save_log_config(guild_id, config)
         return config
 
     cat = category.lower()
@@ -136,21 +117,22 @@ def toggle_log_category(guild_id: int, category: str) -> Dict[str, Any]:
                 config["channels"][cat] = fallback_ch
                 config["categories"][cat] = True
                 config["enabled"] = True
-        save_log_config(guild_id, config)
+        await save_log_config(guild_id, config)
     return config
 
-def reset_log_config(guild_id: int) -> None:
-    path = _get_file_path(guild_id)
-    if path.exists():
-        try:
-            path.unlink()
-        except Exception:
-            pass
+async def reset_log_config(guild_id: int) -> None:
+    config = {
+        "enabled": False,
+        "channel_id": None,
+        "categories": DEFAULT_CATEGORIES.copy(),
+        "channels": {k: None for k in DEFAULT_CATEGORIES}
+    }
+    await save_log_config(guild_id, config)
 
 async def log_event(guild: discord.Guild, category: str, title: str, description: str) -> None:
     if not guild:
         return
-    config = load_log_config(guild.id)
+    config = await load_log_config(guild.id)
     if not config.get("enabled"):
         return
 

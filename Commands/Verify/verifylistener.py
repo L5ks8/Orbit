@@ -16,7 +16,7 @@ class VerifyListenerCog(commands.Cog):
         if member.bot:
             return
 
-        config = load_verify_config(member.guild.id)
+        config = await load_verify_config(member.guild.id)
         if not config.get("enabled", True):
             return
 
@@ -25,12 +25,12 @@ class VerifyListenerCog(commands.Cog):
 
         if role_id and auto_kick > 0:
             kick_time = time.time() + (auto_kick * 60)
-            add_pending_kick(member.guild.id, member.id, kick_time)
+            await add_pending_kick(member.guild.id, member.id, kick_time)
 
     @tasks.loop(seconds=30)
     async def auto_kick_checker(self):
         for guild in self.bot.guilds:
-            config = load_verify_config(guild.id)
+            config = await load_verify_config(guild.id)
             if not config.get("enabled", True):
                 continue
 
@@ -62,7 +62,7 @@ class VerifyListenerCog(commands.Cog):
 
             if to_remove:
                 for uid in to_remove:
-                    remove_pending_kick(guild.id, int(uid))
+                    await remove_pending_kick(guild.id, int(uid))
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
@@ -79,7 +79,7 @@ class VerifyListenerCog(commands.Cog):
             if not interaction.guild:
                 return await interaction.response.send_message("Verification must be done inside a server.", ephemeral=True)
 
-            config = load_verify_config(interaction.guild.id)
+            config = await load_verify_config(interaction.guild.id)
             if not config.get("enabled", True):
                 return await interaction.response.send_message("Server verification is currently disabled (`Status: Inactive`).", ephemeral=True)
 

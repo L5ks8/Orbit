@@ -115,7 +115,7 @@ class PersistentVerifyLayout(LayoutView):
         btn_verify = Button(label="Verify Now", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
         
         async def verify_cb(interaction: discord.Interaction):
-            config = load_verify_config(interaction.guild.id)
+            config = await load_verify_config(interaction.guild.id)
             if not config.get("enabled", True):
                 return await interaction.response.send_message("Server verification is currently disabled (`Status: Inactive`).", ephemeral=True)
 

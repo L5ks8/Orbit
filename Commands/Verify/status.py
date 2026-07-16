@@ -9,7 +9,7 @@ async def _do_verify_status(ctx: commands.Context):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-    config = load_verify_config(ctx.guild.id)
+    config = await load_verify_config(ctx.guild.id)
     enabled = config.get("enabled", True)
     ch_id = config.get("channel_id")
     role_id = config.get("role_id")

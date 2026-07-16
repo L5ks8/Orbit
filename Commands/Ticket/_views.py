@@ -8,7 +8,7 @@ from Commands.Ticket._storage import load_ticket_config, create_active_ticket, c
 _user_ticket_selections = {}
 
 async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, closed_by: discord.abc.User, reason: str = "No reason provided"):
-    config = load_ticket_config(guild.id)
+    config = await load_ticket_config(guild.id)
     ticket_data = config.get("active_tickets", {}).get(str(channel.id))
     
     if not ticket_data:
@@ -137,7 +137,7 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             except Exception:
                 pass
 
-    close_active_ticket(guild.id, channel.id)
+    await close_active_ticket(guild.id, channel.id)
     await asyncio.sleep(3)
     try:
         await channel.delete(reason=f"Ticket closed by {closed_by}: {reason}")
@@ -167,7 +167,7 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        config = load_ticket_config(interaction.guild.id)
+        config = await load_ticket_config(interaction.guild.id)
         if not config.get("enabled", False):
             return await interaction.followup.send("Support tickets are currently disabled on this server.", ephemeral=True)
 
@@ -236,7 +236,7 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
         except Exception as e:
             return await interaction.followup.send(f"Failed to create ticket channel: {e}", ephemeral=True)
 
-        create_active_ticket(interaction.guild.id, ticket_channel.id, interaction.user.id, subject, description, self.category_option)
+        await create_active_ticket(interaction.guild.id, ticket_channel.id, interaction.user.id, subject, description, self.category_option)
 
         header_str = f"### Ticket Opened\n**Channel:** #{ticket_channel.name}\n**Category:** {self.category_option}"
         info_str = (
@@ -289,7 +289,7 @@ class TicketControlLayout(LayoutView):
         )
 
         async def claim_cb(interaction: discord.Interaction):
-            config = load_ticket_config(interaction.guild.id)
+            config = await load_ticket_config(interaction.guild.id)
             support_role_id = config.get("support_role_id")
             ticket_data = config.get("active_tickets", {}).get(str(interaction.channel.id))
 
@@ -307,7 +307,7 @@ class TicketControlLayout(LayoutView):
             if ticket_data.get("claimed_by"):
                 return await interaction.response.send_message(f"This ticket has already been claimed by <@{ticket_data['claimed_by']}>.", ephemeral=True)
 
-            claim_ticket(interaction.guild.id, interaction.channel.id, interaction.user.id)
+            await claim_ticket(interaction.guild.id, interaction.channel.id, interaction.user.id)
 
             header_str = f"### Ticket Claimed\n**Channel:** #{interaction.channel.name}"
             info_str = (
@@ -337,7 +337,7 @@ class TicketControlLayout(LayoutView):
             await interaction.response.send_message(view=status_view, allowed_mentions=discord.AllowedMentions.none())
 
         async def close_cb(interaction: discord.Interaction):
-            config = load_ticket_config(interaction.guild.id)
+            config = await load_ticket_config(interaction.guild.id)
             support_role_id = config.get("support_role_id")
             ticket_data = config.get("active_tickets", {}).get(str(interaction.channel.id))
 
@@ -369,25 +369,25 @@ class TicketControlLayout(LayoutView):
 class TicketSlotRenameModal(Modal, title="Rename Selected Option Slot"):
     name_input = TextInput(label="New Option Category Name", placeholder="e.g. Macro, Giveaway, or Billing...", min_length=2, max_length=50, required=True)
 
-    def __init__(self, dynamic_view, slot_index: int):
+    def __init__(self, dynamic_view, slot_index: int, config: dict):
         super().__init__()
         self.dynamic_view = dynamic_view
         self.slot_index = slot_index
-        config = load_ticket_config(dynamic_view.guild_id)
+        config = config
         slots = config.get("options_slots", [])
         if 0 <= slot_index < len(slots) and isinstance(slots[slot_index], dict):
             self.name_input.default = slots[slot_index].get("name", "")
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        config = load_ticket_config(interaction.guild.id)
+        config = await load_ticket_config(interaction.guild.id)
         slots = config.get("options_slots", [])
         if 0 <= self.slot_index < len(slots) and isinstance(slots[self.slot_index], dict):
             slots[self.slot_index]["name"] = self.name_input.value.strip()
             config["options_slots"] = slots
             config["options"] = [s.get("name", "Option") for s in slots if isinstance(s, dict)]
             from Commands.Ticket._storage import save_ticket_config
-            save_ticket_config(interaction.guild.id, config)
+            await save_ticket_config(interaction.guild.id, config)
         self.dynamic_view.build_ui()
         try:
             await interaction.edit_original_response(view=self.dynamic_view)
@@ -395,10 +395,10 @@ class TicketSlotRenameModal(Modal, title="Rename Selected Option Slot"):
             pass
 
 class TicketRenameAllModal(Modal, title="Rename All Ticket Option Names"):
-    def __init__(self, dynamic_view):
+    def __init__(self, dynamic_view, config: dict):
         super().__init__()
         self.dynamic_view = dynamic_view
-        config = load_ticket_config(dynamic_view.guild_id)
+        config = config
         self.slots = config.get("options_slots", [])[:5]
         for idx, slot in enumerate(self.slots):
             default_name = slot.get("name", f"Option {idx+1}") if isinstance(slot, dict) else str(slot)
@@ -414,7 +414,7 @@ class TicketRenameAllModal(Modal, title="Rename All Ticket Option Names"):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        config = load_ticket_config(interaction.guild.id)
+        config = await load_ticket_config(interaction.guild.id)
         slots = config.get("options_slots", [])
         for idx, child in enumerate(self.children):
             if idx < len(slots) and isinstance(slots[idx], dict):
@@ -422,7 +422,7 @@ class TicketRenameAllModal(Modal, title="Rename All Ticket Option Names"):
         config["options_slots"] = slots
         config["options"] = [s.get("name", "Option") for s in slots if isinstance(s, dict)]
         from Commands.Ticket._storage import save_ticket_config
-        save_ticket_config(interaction.guild.id, config)
+        await save_ticket_config(interaction.guild.id, config)
         self.dynamic_view.build_ui()
         try:
             await interaction.edit_original_response(view=self.dynamic_view)
@@ -430,15 +430,16 @@ class TicketRenameAllModal(Modal, title="Rename All Ticket Option Names"):
             pass
 
 class TicketConfigDynamicView(LayoutView):
-    def __init__(self, guild_id: int):
+    def __init__(self, guild_id: int, config: dict):
         super().__init__(timeout=900)
         self.guild_id = guild_id
+        self.config = config
         self.selected_slot = 0
         self.build_ui()
 
     def build_ui(self):
         self.clear_items()
-        config = load_ticket_config(self.guild_id)
+        config = self.config
         slots = config.get("options_slots", [])
         if not isinstance(slots, list) or not slots:
             opts = config.get("options", ["Option 1"])
@@ -489,7 +490,7 @@ class TicketConfigDynamicView(LayoutView):
         role_select = RoleSelect(placeholder="2. Assign Staff Role to Selected Slot...", min_values=1, max_values=1, custom_id="orbit:cfg_dyn_role")
         
         async def role_cb(interaction: discord.Interaction):
-            config = load_ticket_config(self.guild_id)
+            config = self.config
             slots = config.get("options_slots", [])
             chosen_role_id = int(interaction.data["values"][0])
             if self.selected_slot == -1:
@@ -503,7 +504,7 @@ class TicketConfigDynamicView(LayoutView):
                     config["support_role_id"] = chosen_role_id
             config["options_slots"] = slots
             from Commands.Ticket._storage import save_ticket_config
-            save_ticket_config(self.guild_id, config)
+            await save_ticket_config(self.guild_id, config)
             self.build_ui()
             await interaction.response.edit_message(view=self)
 
@@ -512,7 +513,7 @@ class TicketConfigDynamicView(LayoutView):
         category_select = ChannelSelect(channel_types=[discord.ChannelType.category], placeholder="3. Assign Ticket Category to Selected Slot...", min_values=1, max_values=1, custom_id="orbit:cfg_dyn_cat")
         
         async def cat_cb(interaction: discord.Interaction):
-            config = load_ticket_config(self.guild_id)
+            config = self.config
             slots = config.get("options_slots", [])
             chosen_cat_id = int(interaction.data["values"][0])
             if self.selected_slot == -1:
@@ -526,7 +527,7 @@ class TicketConfigDynamicView(LayoutView):
                     config["category_id"] = chosen_cat_id
             config["options_slots"] = slots
             from Commands.Ticket._storage import save_ticket_config
-            save_ticket_config(self.guild_id, config)
+            await save_ticket_config(self.guild_id, config)
             self.build_ui()
             await interaction.response.edit_message(view=self)
 
@@ -552,7 +553,7 @@ class TicketConfigDynamicView(LayoutView):
         btn_publish = Button(label="Publish Ticket Desk", style=discord.ButtonStyle.primary, custom_id="orbit:cfg_dyn_publish")
         
         async def publish_cb(interaction: discord.Interaction):
-            config = load_ticket_config(self.guild_id)
+            config = self.config
             panel_ch_id = config.get("panel_channel_id")
             if not panel_ch_id:
                 return await interaction.response.send_message("Missing Target Panel Channel!", ephemeral=True)
@@ -635,7 +636,7 @@ class PersistentTicketPanelLayout(LayoutView):
         btn_create = Button(label="Create Ticket", style=discord.ButtonStyle.primary, custom_id="orbit:ticket_create_btn")
         
         async def _btn_create_cb(interaction: discord.Interaction):
-            config = load_ticket_config(interaction.guild.id) if interaction.guild else {}
+            config = await load_ticket_config(interaction.guild.id) if interaction.guild else {}
             slots = config.get("options_slots", [])
             if not isinstance(slots, list) or not slots:
                 opts = config.get("options", ["General Support"])
