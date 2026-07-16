@@ -6,6 +6,7 @@ from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.AutoMod._storage import load_automod_config
 from Commands.Warn._storage import add_warning, get_user_warnings
 from Commands.Whitelist._storage import is_whitelisted
+from Commands.Log._storage import log_event
 
 class AutoModNoticeLayout(LayoutView):
     def __init__(self, user: discord.Member, reason: str, action_taken: str, warn_count: int, escalation_str: str = ""):
@@ -118,6 +119,10 @@ class AutoModListener(commands.Cog):
             view = AutoModNoticeLayout(message.author, reason, action, warn_count, escalation_str)
             try:
                 await message.channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            except Exception:
+                pass
+            try:
+                await log_event(message.guild, "auto_moderation", "AutoMod Triggered", f"**User:** {message.author.mention}\n**Reason:** {reason}\n**Action Taken:** {action.upper()}\n**Escalation:** {escalation_str}", target_channel_obj=message.channel)
             except Exception:
                 pass
 
@@ -244,6 +249,10 @@ class AutoModListener(commands.Cog):
                                 await member.add_roles(role, reason=reason)
                             except Exception:
                                 pass
+                try:
+                    await log_event(member.guild, "auto_moderation", "Anti-Alt Triggered", f"**User:** {member.mention}\n**Reason:** {reason}\n**Action Taken:** {action.upper()}")
+                except Exception:
+                    pass
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModListener(bot))

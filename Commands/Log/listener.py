@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands.Log._storage import log_event
 
@@ -58,12 +58,35 @@ class LogListener(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
-        await log_event(
-            member.guild,
-            "member_left",
-            "Member Left",
-            f"**User:** {member.mention} (`{member.id}`)"
-        )
+        executor = None
+        reason = "No reason provided"
+        is_kick = False
+        try:
+            async for entry in member.guild.audit_logs(limit=3, action=discord.AuditLogAction.kick):
+                if entry.target.id == member.id:
+                    is_kick = True
+                    executor = entry.user
+                    reason = entry.reason or "No reason provided"
+                    break
+        except Exception:
+            pass
+
+        if is_kick:
+            moderator = f"{executor.mention} (`{executor.id}`)" if executor else "Unknown"
+            await log_event(
+                member.guild,
+                "member_kicked",
+                "Member Kicked",
+                f"**User:** {member.mention} (`{member.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}",
+                executor=executor if isinstance(executor, discord.Member) else None
+            )
+        else:
+            await log_event(
+                member.guild,
+                "member_left",
+                "Member Left",
+                f"**User:** {member.mention} (`{member.id}`)"
+            )
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User | discord.Member):
@@ -86,8 +109,8 @@ class LogListener(commands.Cog):
 
         await log_event(
             guild,
-            "moderation_action",
-            "Member Banned (via Discord UI)",
+            "member_banned",
+            "Member Banned",
             f"**User:** {user.mention} (`{user.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}",
             executor=executor if isinstance(executor, discord.Member) else None
         )
@@ -113,8 +136,8 @@ class LogListener(commands.Cog):
 
         await log_event(
             guild,
-            "moderation_action",
-            "Member Unbanned (via Discord UI)",
+            "member_unbanned",
+            "Member Unbanned",
             f"**User:** {user.mention} (`{user.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}",
             executor=executor if isinstance(executor, discord.Member) else None
         )
@@ -158,7 +181,7 @@ class LogListener(commands.Cog):
         if before.nick != after.nick:
             await log_event(
                 after.guild,
-                "member_joined", # Fallback for nick changes since no specific event
+                "moderation_action",
                 "Nickname Changed",
                 f"**User:** {after.mention} (`{after.id}`)\n**Before:** `{before.nick or before.name}`\n**After:** `{after.nick or after.name}`"
             )
@@ -272,7 +295,7 @@ class LogListener(commands.Cog):
         if not before.mute and after.mute:
             await log_event(
                 member.guild,
-                "moderation_action",
+                "voice_mute",
                 "Voice Muted",
                 f"**User:** {member.mention} (`{member.id}`)\n**Channel:** {after.channel.mention if after.channel else '*Unknown*'}",
                 target_channel_obj=after.channel
@@ -280,8 +303,24 @@ class LogListener(commands.Cog):
         elif before.mute and not after.mute:
             await log_event(
                 member.guild,
-                "moderation_action",
+                "voice_unmute",
                 "Voice Unmuted",
+                f"**User:** {member.mention} (`{member.id}`)\n**Channel:** {after.channel.mention if after.channel else '*Unknown*'}",
+                target_channel_obj=after.channel
+            )
+        if not before.deaf and after.deaf:
+            await log_event(
+                member.guild,
+                "voice_deafen",
+                "Server Deafened",
+                f"**User:** {member.mention} (`{member.id}`)\n**Channel:** {after.channel.mention if after.channel else '*Unknown*'}",
+                target_channel_obj=after.channel
+            )
+        elif before.deaf and not after.deaf:
+            await log_event(
+                member.guild,
+                "voice_undeafen",
+                "Server Undeafened",
                 f"**User:** {member.mention} (`{member.id}`)\n**Channel:** {after.channel.mention if after.channel else '*Unknown*'}",
                 target_channel_obj=after.channel
             )
