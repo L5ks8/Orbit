@@ -6,26 +6,26 @@ let autoresponder = {};
 let joinroles = [];
 
 const LOGS_CATEGORIES = [
-    { id: "moderation_action", title: "Moderationsaktion", icon: "Ã°Å¸â€ºÂ¡Ã¯Â¸Â" },
-    { id: "auto_moderation", title: "Auto Moderation", icon: "Ã°Å¸Â¤â€“" },
-    { id: "message_deleted", title: "Nachricht GelÃƒÂ¶scht", icon: "Ã°Å¸â€”â€˜Ã¯Â¸Â" },
-    { id: "message_edited", title: "Nachricht Bearbeitet", icon: "Ã¢Å“ÂÃ¯Â¸Â" },
-    { id: "bulk_message_delete", title: "MassenlÃƒÂ¶schung", icon: "Ã°Å¸Â§Â¹" },
-    { id: "member_joined", title: "Mitglied Beigetreten", icon: "Ã°Å¸â€˜â€¹" },
-    { id: "member_left", title: "Mitglied Verlassen", icon: "Ã°Å¸Å¡Â¶" },
-    { id: "member_joined_voice", title: "Sprachkanal Betreten", icon: "Ã°Å¸Å½Â¤" },
-    { id: "member_left_voice", title: "Sprachkanal Verlassen", icon: "Ã°Å¸â€â€¡" },
-    { id: "member_moved_voice", title: "Sprachkanal Gewechselt", icon: "Ã°Å¸Å½Â§" },
-    { id: "role_created", title: "Rolle Erstellt", icon: "Ã°Å¸Å½Â­" },
-    { id: "role_deleted", title: "Rolle GelÃƒÂ¶scht", icon: "Ã°Å¸â€Â¥" },
-    { id: "role_updated", title: "Rolle Aktualisiert", icon: "Ã¢Å¡â„¢Ã¯Â¸Â" },
-    { id: "channel_created", title: "Kanal Erstellt", icon: "Ã°Å¸â€œÂ" },
-    { id: "channel_deleted", title: "Kanal GelÃƒÂ¶scht", icon: "Ã¢ÂÅ’" },
-    { id: "channel_updated", title: "Kanal Aktualisiert", icon: "Ã°Å¸â€â€ž" },
-    { id: "scheduled_event_created", title: "Event Erstellt", icon: "Ã°Å¸â€œâ€¦" },
-    { id: "scheduled_event_deleted", title: "Event GelÃƒÂ¶scht", icon: "Ã°Å¸â€™Â¥" },
-    { id: "scheduled_event_updated", title: "Event Aktualisiert", icon: "Ã°Å¸â€œÂ" },
-    { id: "mod_command_used", title: "Mod-Befehl Genutzt", icon: "Ã¢Å’Â¨Ã¯Â¸Â" }
+    { id: "moderation_action", title: "Moderation Action", icon: "shield-alert" },
+    { id: "auto_moderation", title: "Auto-Moderation", icon: "bot" },
+    { id: "message_deleted", title: "Message Deleted", icon: "trash" },
+    { id: "message_edited", title: "Message Edited", icon: "edit-2" },
+    { id: "bulk_message_delete", title: "Multiple Messages Deleted", icon: "message-square-dashed" },
+    { id: "member_joined", title: "Member Joined", icon: "user-plus" },
+    { id: "member_left", title: "Member Left", icon: "user-minus" },
+    { id: "member_joined_voice", title: "Joined Voice Channel", icon: "mic" },
+    { id: "member_left_voice", title: "Left Voice Channel", icon: "mic-off" },
+    { id: "member_moved_voice", title: "Moved Voice Channel", icon: "arrow-right-left" },
+    { id: "role_created", title: "Role Created", icon: "plus-circle" },
+    { id: "role_deleted", title: "Role Deleted", icon: "minus-circle" },
+    { id: "role_updated", title: "Role Updated", icon: "refresh-cw" },
+    { id: "channel_created", title: "Channel Created", icon: "hash" },
+    { id: "channel_deleted", title: "Channel Deleted", icon: "x-square" },
+    { id: "channel_updated", title: "Channel Updated", icon: "edit" },
+    { id: "scheduled_event_created", title: "Event Created", icon: "calendar-plus" },
+    { id: "scheduled_event_deleted", title: "Event Deleted", icon: "calendar-minus" },
+    { id: "scheduled_event_updated", title: "Event Updated", icon: "calendar" },
+    { id: "mod_command_used", title: "Mod Command Used", icon: "terminal" }
 ];
 
 // Views
@@ -728,6 +728,29 @@ async function loadConfig(guildId, guildName) {
         
         const logsGrid = document.getElementById('logs-grid');
         logsGrid.innerHTML = '';
+        
+        const logsGlobalChEl = document.getElementById('logs_global_channels');
+        if (logsGlobalChEl.nextElementSibling?.classList.contains('custom-multiselect')) logsGlobalChEl.nextElementSibling.remove();
+        logsGlobalChEl.innerHTML = "";
+        globalChannels.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            if (config.logs?.global_exempt_channels?.includes(c.id)) opt.selected = true;
+            logsGlobalChEl.appendChild(opt);
+        });
+        new CustomMultiSelect(logsGlobalChEl, globalChannels, "Select...", (item) => "# " + item.name);
+
+        const logsGlobalRoEl = document.getElementById('logs_global_roles');
+        if (logsGlobalRoEl.nextElementSibling?.classList.contains('custom-multiselect')) logsGlobalRoEl.nextElementSibling.remove();
+        logsGlobalRoEl.innerHTML = "";
+        globalRoles.forEach(r => {
+            const opt = document.createElement("option");
+            opt.value = r.id;
+            if (config.logs?.global_exempt_roles?.includes(r.id)) opt.selected = true;
+            logsGlobalRoEl.appendChild(opt);
+        });
+        new CustomMultiSelect(logsGlobalRoEl, globalRoles, "Select...", (item) => `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${item.color};margin-right:6px;"></span> ${item.name}`);
+
         LOGS_CATEGORIES.forEach(cat => {
             const isEnabled = config.logs?.categories?.[cat.id] || false;
             const selectedCh = config.logs?.channels?.[cat.id] || '';
@@ -744,7 +767,7 @@ async function loadConfig(guildId, guildName) {
                 <div class="am-card">
                     <div class="am-card-header">
                         <div class="am-card-title">
-                            <span class="am-card-icon">${cat.icon}</span>
+                            <i data-lucide="${cat.icon}" class="am-card-icon"></i>
                             ${cat.title}
                         </div>
                         <label class="toggle-switch">
@@ -754,7 +777,7 @@ async function loadConfig(guildId, guildName) {
                     </div>
                     <div class="am-card-body">
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label>Log Kanal</label>
+                            <label>Log Channel</label>
                             <select id="log_cat_${cat.id}_channel" style="width:100%; padding:8px; border-radius:4px; background:var(--bg-modifier-hover); color:var(--text-normal); border:1px solid rgba(255,255,255,0.1);">
                                 ${optionsHtml}
                             </select>
@@ -763,6 +786,7 @@ async function loadConfig(guildId, guildName) {
                 </div>
             `;
         });
+        lucide.createIcons();
 
         // Clear existing custom selects
         document.querySelectorAll('.custom-select').forEach(el => el.remove());
