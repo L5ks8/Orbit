@@ -1,4 +1,4 @@
-﻿let currentUser = null;
+let currentUser = null;
 let currentGuildId = null;
 let currentAutomodConfig = {};
 let activeAutomodRule = null;
@@ -1142,6 +1142,7 @@ function openAutoModModal(ruleId) {
     }
 
     document.getElementById('automod-modal').classList.add('show');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeAutoModModal() {
@@ -1180,6 +1181,7 @@ function closeAutoModModal() {
     
     activeAutomodRule = null;
     document.getElementById('automod-modal').classList.remove('show');
+    document.body.style.overflow = '';
 }
 
 // Save Settings
