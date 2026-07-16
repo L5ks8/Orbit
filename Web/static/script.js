@@ -744,12 +744,6 @@ async function loadConfig(guildId, guildName) {
             const isEnabled = config.logs?.categories?.[cat.id] || false;
             const selectedCh = config.logs?.channels?.[cat.id] || '';
             
-            let optionsHtml = `<option value="">-- Disabled --</option>`;
-            globalChannels.forEach(c => {
-                const selected = (String(c.id) === String(selectedCh)) ? 'selected' : '';
-                optionsHtml += `<option value="${c.id}" ${selected}>#${c.name}</option>`;
-            });
-
             const checked = isEnabled ? 'checked' : '';
 
             logsGrid.innerHTML += `
@@ -766,9 +760,7 @@ async function loadConfig(guildId, guildName) {
                     </div>
                     <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
                         <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">Log Channel</label>
-                        <select id="log_cat_${cat.id}_channel">
-                            ${optionsHtml}
-                        </select>
+                        <input type="hidden" id="log_cat_${cat.id}_channel">
                     </div>
                 </div>
             `;
