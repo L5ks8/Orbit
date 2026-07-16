@@ -457,7 +457,9 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
     topRow.innerHTML = `
         <input type="text" class="ar-trigger" value="${triggerText.replace(/"/g, '&quot;')}" placeholder="Trigger (e.g. !help)" style="flex: 1; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
         <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response (use #channel-name for mentions)" style="flex: 2; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
-        <button type="button" class="btn-danger" style="padding: 0 12px; font-size: 16px; flex-shrink:0;" onclick="this.closest('.autoreply-row').remove()">Ãƒâ€”</button>
+        <button type="button" class="btn-danger" style="padding: 6px 12px; flex-shrink:0; display:flex; align-items:center; justify-content:center;" onclick="this.closest('.autoreply-row').remove()">
+            <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+        </button>
     `;
 
     // Bottom row: channel select
@@ -478,6 +480,7 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
     row.appendChild(topRow);
     row.appendChild(botRow);
     list.appendChild(row);
+    lucide.createIcons();
 }
 
 function renderJoinRoles(roles) {
