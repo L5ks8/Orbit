@@ -531,7 +531,6 @@ class WebDashboard:
             return web.json_response({"error": str(e)}, status=400)
 
     async def api_support_invite(self, request: web.Request):
-        """Generate a fresh Discord invite for the support server."""
         SUPPORT_GUILD_ID = 1525603130358759575
         guild = self.bot.get_guild(SUPPORT_GUILD_ID)
         if not guild:
