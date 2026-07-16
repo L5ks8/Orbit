@@ -225,42 +225,54 @@ class WebDashboard:
             },
             "automod": {
                 "enabled": automod_cfg.get("enabled", False),
-                "global_exempt_channels": automod_cfg.get("exempt_channels", []),
-                "global_exempt_roles": automod_cfg.get("exempt_roles", []),
+                "exempt_channels": automod_cfg.get("exempt_channels", []),
+                "exempt_roles": automod_cfg.get("exempt_roles", []),
                 "banned_words": {
                     "enabled": automod_cfg.get("banned_words", {}).get("enabled", False),
                     "action": automod_cfg.get("banned_words", {}).get("action", "warn"),
                     "timeout_duration_min": automod_cfg.get("banned_words", {}).get("timeout_duration_min", 5),
-                    "words": automod_cfg.get("banned_words", {}).get("words", [])
+                    "words": automod_cfg.get("banned_words", {}).get("words", []),
+                    "exempt_channels": automod_cfg.get("banned_words", {}).get("exempt_channels", []),
+                    "exempt_roles": automod_cfg.get("banned_words", {}).get("exempt_roles", [])
                 },
                 "anti_spam": {
                     "enabled": automod_cfg.get("anti_spam", {}).get("enabled", False),
                     "max_messages": automod_cfg.get("anti_spam", {}).get("max_messages", 5),
                     "time_window_sec": automod_cfg.get("anti_spam", {}).get("time_window_sec", 3),
                     "action": automod_cfg.get("anti_spam", {}).get("action", "warn"),
-                    "timeout_duration_min": automod_cfg.get("anti_spam", {}).get("timeout_duration_min", 5)
+                    "timeout_duration_min": automod_cfg.get("anti_spam", {}).get("timeout_duration_min", 5),
+                    "exempt_channels": automod_cfg.get("anti_spam", {}).get("exempt_channels", []),
+                    "exempt_roles": automod_cfg.get("anti_spam", {}).get("exempt_roles", [])
                 },
                 "anti_invites": {
                     "enabled": automod_cfg.get("anti_invites", {}).get("enabled", False),
                     "action": automod_cfg.get("anti_invites", {}).get("action", "warn"),
-                    "timeout_duration_min": automod_cfg.get("anti_invites", {}).get("timeout_duration_min", 5)
+                    "timeout_duration_min": automod_cfg.get("anti_invites", {}).get("timeout_duration_min", 5),
+                    "exempt_channels": automod_cfg.get("anti_invites", {}).get("exempt_channels", []),
+                    "exempt_roles": automod_cfg.get("anti_invites", {}).get("exempt_roles", [])
                 },
                 "anti_link": {
                     "enabled": automod_cfg.get("anti_link", {}).get("enabled", False),
                     "action": automod_cfg.get("anti_link", {}).get("action", "warn"),
                     "timeout_duration_min": automod_cfg.get("anti_link", {}).get("timeout_duration_min", 5),
-                    "blocked_domains": automod_cfg.get("anti_link", {}).get("blocked_domains", ["discord.gg/", "discord.com/invite/"])
+                    "blocked_domains": automod_cfg.get("anti_link", {}).get("blocked_domains", ["discord.gg/", "discord.com/invite/"]),
+                    "exempt_channels": automod_cfg.get("anti_link", {}).get("exempt_channels", []),
+                    "exempt_roles": automod_cfg.get("anti_link", {}).get("exempt_roles", [])
                 },
                 "anti_caps": {
                     "enabled": automod_cfg.get("anti_caps", {}).get("enabled", False),
                     "action": automod_cfg.get("anti_caps", {}).get("action", "warn"),
-                    "timeout_duration_min": automod_cfg.get("anti_caps", {}).get("timeout_duration_min", 5)
+                    "timeout_duration_min": automod_cfg.get("anti_caps", {}).get("timeout_duration_min", 5),
+                    "exempt_channels": automod_cfg.get("anti_caps", {}).get("exempt_channels", []),
+                    "exempt_roles": automod_cfg.get("anti_caps", {}).get("exempt_roles", [])
                 },
                 "mention_spam": {
                     "enabled": automod_cfg.get("mention_spam", {}).get("enabled", False),
                     "max_mentions": automod_cfg.get("mention_spam", {}).get("max_mentions", 4),
                     "action": automod_cfg.get("mention_spam", {}).get("action", "warn"),
-                    "timeout_duration_min": automod_cfg.get("mention_spam", {}).get("timeout_duration_min", 5)
+                    "timeout_duration_min": automod_cfg.get("mention_spam", {}).get("timeout_duration_min", 5),
+                    "exempt_channels": automod_cfg.get("mention_spam", {}).get("exempt_channels", []),
+                    "exempt_roles": automod_cfg.get("mention_spam", {}).get("exempt_roles", [])
                 },
                 "anti_scam": {
                     "enabled": automod_cfg.get("anti_scam", {}).get("enabled", False),
