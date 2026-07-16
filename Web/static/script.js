@@ -156,13 +156,14 @@ async function loadDashboard() {
 }
 
 class CustomSelect {
-    constructor(selectElement, items, selectedValue, placeholder) {
+    constructor(selectElement, items, selectedValue, placeholder, isRole = false) {
         this.select = selectElement;
         this.select.style.display = 'none';
         
         this.items = items;
         this.value = selectedValue || '';
         this.placeholder = placeholder || 'Select...';
+        this.isRole = isRole;
         this.select.value = this.value;
         
         this.container = document.createElement('div');
@@ -221,7 +222,9 @@ class CustomSelect {
     updateTrigger(placeholder) {
         const item = this.items.find(i => String(i.id) === String(this.value));
         if (item) {
-            this.trigger.innerHTML = `<div class="content"><span class="color-dot" style="background:${item.color}"></span> @${item.name}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>`;
+            const prefix = this.isRole ? '@' : '#';
+            const colorHtml = this.isRole ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
+            this.trigger.innerHTML = `<div class="content">${colorHtml}${prefix}${item.name}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>`;
         } else {
             this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>`;
         }
@@ -245,10 +248,12 @@ class CustomSelect {
         this.items.filter(i => i.name.toLowerCase().includes(filter)).forEach(item => {
             const opt = document.createElement('div');
             opt.className = `custom-select-option ${String(this.value) === String(item.id) ? 'selected' : ''}`;
-            opt.innerHTML = `<span class="color-dot" style="background:${item.color}"></span> @${item.name}`;
+            const prefix = this.isRole ? '@' : '#';
+            const colorHtml = this.isRole ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
+            opt.innerHTML = `${colorHtml}${prefix}${item.name}`;
             opt.addEventListener('click', () => {
                 this.value = item.id;
-                this.updateTrigger('Select Role...');
+                this.updateTrigger(this.placeholder);
                 this.container.classList.remove('open');
             });
             this.optionsContainer.appendChild(opt);
