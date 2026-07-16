@@ -746,7 +746,7 @@ async function loadConfig(guildId, guildName) {
             
             let optionsHtml = `<option value="">-- Disabled --</option>`;
             globalChannels.forEach(c => {
-                const selected = (c.id === selectedCh) ? 'selected' : '';
+                const selected = (String(c.id) === String(selectedCh)) ? 'selected' : '';
                 optionsHtml += `<option value="${c.id}" ${selected}>#${c.name}</option>`;
             });
 
