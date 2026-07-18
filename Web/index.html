@@ -965,12 +965,15 @@
 
                         <!-- Temp Voice Section -->
                         <div id="section-tempvoice" class="dash-panel">
-                            <div class="section-title">Join to Create (Temp Voice)</div>
-                            <p class="section-desc">Allow users to create their own temporary voice channels by joining a specific Hub channel.</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h3>Join to Create (Temp Voice)</h3>
+                                <button type="button" id="btn-add-tempvoice-hub" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">+ Add Hub</button>
+                            </div>
+                            <p class="section-desc">Allow users to create their own temporary voice channels by joining a specific Hub channel. Configure up to 5 hub channels.</p>
 
-                            <div class="card">
+                            <div class="card" style="margin-bottom: 20px;">
                                 <div class="card-title">System Status</div>
-                                <div class="form-group toggle-group">
+                                <div class="form-group toggle-group" style="margin-bottom: 0;">
                                     <label for="tempvoice-enabled" class="form-label mb-0">Enable Temp Voice System</label>
                                     <label class="switch">
                                         <input type="checkbox" id="tempvoice-enabled">
@@ -979,13 +982,8 @@
                                 </div>
                             </div>
 
-                            <div class="card" style="margin-top: 20px;">
-                                <div class="card-title">Temp Voice Hubs (Max 5)</div>
-                                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Configure up to 5 hub channels. When a user joins a hub channel, a temporary voice channel is automatically created for them.</p>
-                                
-                                <div id="tempvoice-hubs-container">
-                                    <!-- Populated by JS -->
-                                </div>
+                            <div id="tempvoice-hubs-container" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- Populated by JS -->
                             </div>
                         </div>
 

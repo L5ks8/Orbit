@@ -1182,45 +1182,87 @@ function renderTempVoiceHubs(tvConfig) {
     container.innerHTML = '';
     const hubs = tvConfig.hubs || [];
     
-    for (let i = 0; i < 5; i++) {
-        const hub = hubs[i] || {};
-        const hid = hub.hub_channel_id || '';
-        const cid = hub.category_id || '';
-        const limit = hub.default_user_limit || 0;
-        
-        let chOptions = '<option value="">-- None (Disabled) --</option>';
-        globalChannels.forEach(c => {
-            const sel = (c.id === hid) ? 'selected' : '';
-            chOptions += `<option value="${c.id}" ${sel}># ${c.name}</option>`;
-        });
-        
-        let catOptions = '<option value="">-- Same as Hub --</option>';
-        globalCategories.forEach(c => {
-            const sel = (c.id === cid) ? 'selected' : '';
-            catOptions += `<option value="${c.id}" ${sel}># ${c.name}</option>`;
-        });
-        
-        container.innerHTML += `
-            <div class="config-card" style="margin-top: 15px; padding: 15px;">
-                <div style="font-weight: 600; margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between;">
-                    <span>Hub ${i+1}</span>
-                </div>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 13px;">Hub Voice Channel</label>
-                    <select id="tv_hub_channel_${i}" class="form-select">${chOptions}</select>
-                </div>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 13px;">Category for Temp Channels</label>
-                    <select id="tv_hub_category_${i}" class="form-select">${catOptions}</select>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label style="font-size: 13px;">Default User Limit</label>
-                    <input type="number" id="tv_hub_limit_${i}" class="form-input" min="0" max="99" value="${limit}" placeholder="0 for unlimited">
-                </div>
-            </div>
-        `;
+    if (hubs.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary); font-size:14px; margin:0;" id="tv-empty-text">No Temp Voice Hubs configured.</p>';
+    } else {
+        hubs.forEach(hub => addTempVoiceHubRow(hub));
+    }
+    updateAddTempVoiceButton();
+}
+
+function updateAddTempVoiceButton() {
+    const container = document.getElementById('tempvoice-hubs-container');
+    const btn = document.getElementById('btn-add-tempvoice-hub');
+    if (!container || !btn) return;
+    const count = container.querySelectorAll('.tempvoice-hub-row').length;
+    if (count >= 5) {
+        btn.style.display = 'none';
+    } else {
+        btn.style.display = 'inline-block';
     }
 }
+
+function addTempVoiceHubRow(hub = { hub_channel_id: '', category_id: '', default_user_limit: 0 }) {
+    const container = document.getElementById('tempvoice-hubs-container');
+    if (container.querySelector('#tv-empty-text')) container.innerHTML = '';
+    
+    if (container.querySelectorAll('.tempvoice-hub-row').length >= 5) {
+        showToast("Maximum of 5 Temp Voice Hubs reached.");
+        return;
+    }
+    
+    const row = document.createElement('div');
+    row.className = 'tempvoice-hub-row config-card';
+    row.style.cssText = 'padding: 15px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 0; position: relative;';
+    
+    let chOptions = '<option value="">-- Select Hub Channel --</option>';
+    globalChannels.forEach(c => {
+        const sel = (String(c.id) === String(hub.hub_channel_id)) ? 'selected' : '';
+        chOptions += `<option value="${c.id}" ${sel}># ${c.name}</option>`;
+    });
+    
+    let catOptions = '<option value="">-- Same as Hub --</option>';
+    globalCategories.forEach(c => {
+        const sel = (String(c.id) === String(hub.category_id)) ? 'selected' : '';
+        catOptions += `<option value="${c.id}" ${sel}># ${c.name}</option>`;
+    });
+    
+    row.innerHTML = `
+        <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Hub Voice Channel</label>
+                <select class="tv-hub-channel form-select" style="margin-bottom: 0;">${chOptions}</select>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Temp Channel Category</label>
+                <select class="tv-hub-category form-select" style="margin-bottom: 0;">${catOptions}</select>
+            </div>
+            <div style="flex: 0 1 120px;">
+                <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">User Limit</label>
+                <input type="number" class="tv-hub-limit form-input" min="0" max="99" value="${hub.default_user_limit || 0}" placeholder="0" style="margin-bottom: 0;">
+            </div>
+            <button type="button" class="btn-danger btn-remove-hub" style="padding: 0 12px; font-size: 16px; height: 38px;">
+                <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+            </button>
+        </div>
+    `;
+    
+    row.querySelector('.btn-remove-hub').onclick = () => {
+        row.remove();
+        if (container.querySelectorAll('.tempvoice-hub-row').length === 0) {
+            container.innerHTML = '<p style="color:var(--text-secondary); font-size:14px; margin:0;" id="tv-empty-text">No Temp Voice Hubs configured.</p>';
+        }
+        updateAddTempVoiceButton();
+    };
+    
+    container.appendChild(row);
+    lucide.createIcons({ root: row });
+    updateAddTempVoiceButton();
+}
+
+document.getElementById('btn-add-tempvoice-hub')?.addEventListener('click', () => {
+    addTempVoiceHubRow();
+});
 
 // Dropzone setup
 function bindDropzone(zoneId, fileInputId, urlInputId, syncFunc) {
@@ -1587,10 +1629,10 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
 
     // Collect Temp Voice Data
     const tvHubs = [];
-    for (let i = 0; i < 5; i++) {
-        const hid = document.getElementById(`tv_hub_channel_${i}`)?.value;
-        const cid = document.getElementById(`tv_hub_category_${i}`)?.value;
-        const limit = document.getElementById(`tv_hub_limit_${i}`)?.value;
+    document.querySelectorAll('.tempvoice-hub-row').forEach(row => {
+        const hid = row.querySelector('.tv-hub-channel').value;
+        const cid = row.querySelector('.tv-hub-category').value;
+        const limit = row.querySelector('.tv-hub-limit').value;
         if (hid) {
             tvHubs.push({
                 hub_channel_id: hid,
@@ -1598,8 +1640,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
                 default_user_limit: limit ? parseInt(limit) : 0
             });
         }
-    }
-
+    });
     const payload = {
         welcome: {
             enabled: document.getElementById('welcome_enabled').checked,
