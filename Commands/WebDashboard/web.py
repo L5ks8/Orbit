@@ -194,6 +194,7 @@ class WebDashboard:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
 
         channels = [{"id": str(c.id), "name": c.name} for c in guild.text_channels]
+        voice_channels = [{"id": str(c.id), "name": c.name} for c in guild.voice_channels]
         categories = [{"id": str(c.id), "name": c.name} for c in guild.categories]
         roles = [{"id": str(r.id), "name": r.name, "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe"} for r in guild.roles if not r.is_default()]
 
@@ -337,6 +338,7 @@ class WebDashboard:
         return web.json_response({
             "permissions": user_perms,
             "channels": channels,
+            "voice_channels": voice_channels,
             "categories": categories,
             "roles": roles,
             "config": config_data

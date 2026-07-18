@@ -756,6 +756,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
         globalRoles = data.roles;
         globalCategories = data.categories || [];
         globalChannels = data.channels || [];
+        globalVoiceChannels = data.voice_channels || [];
 
         // Populate normal selects (channels)
         const welcomeSelect = document.getElementById('welcome_channel_id');
@@ -1215,37 +1216,31 @@ function addTempVoiceHubRow(hub = { hub_channel_id: '', category_id: '', default
     row.className = 'tempvoice-hub-row config-card';
     row.style.cssText = 'padding: 15px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 0; position: relative;';
     
-    let chOptions = '<option value="">-- Select Hub Channel --</option>';
-    globalChannels.forEach(c => {
-        const sel = (String(c.id) === String(hub.hub_channel_id)) ? 'selected' : '';
-        chOptions += `<option value="${c.id}" ${sel}># ${c.name}</option>`;
-    });
-    
-    let catOptions = '<option value="">-- Same as Hub --</option>';
-    globalCategories.forEach(c => {
-        const sel = (String(c.id) === String(hub.category_id)) ? 'selected' : '';
-        catOptions += `<option value="${c.id}" ${sel}># ${c.name}</option>`;
-    });
-    
     row.innerHTML = `
         <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
                 <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Hub Voice Channel</label>
-                <select class="tv-hub-channel form-select" style="margin-bottom: 0;">${chOptions}</select>
+                <input type="hidden" class="tv-hub-channel" value="${hub.hub_channel_id || ''}">
             </div>
             <div style="flex: 1; min-width: 200px;">
                 <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Temp Channel Category</label>
-                <select class="tv-hub-category form-select" style="margin-bottom: 0;">${catOptions}</select>
+                <input type="hidden" class="tv-hub-category" value="${hub.category_id || ''}">
             </div>
             <div style="flex: 0 1 120px;">
                 <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">User Limit</label>
-                <input type="number" class="tv-hub-limit form-input" min="0" max="99" value="${hub.default_user_limit || 0}" placeholder="0" style="margin-bottom: 0;">
+                <input type="number" class="tv-hub-limit form-input" min="0" max="99" value="${hub.default_user_limit || 0}" placeholder="0" style="margin-bottom: 0; height: 38px;">
             </div>
             <button type="button" class="btn-danger btn-remove-hub" style="padding: 0 12px; font-size: 16px; height: 38px;">
                 <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
             </button>
         </div>
     `;
+    
+    const channelInput = row.querySelector('.tv-hub-channel');
+    const categoryInput = row.querySelector('.tv-hub-category');
+    
+    new CustomSelect(channelInput, globalVoiceChannels, hub.hub_channel_id || '', '-- Select Voice Channel --');
+    new CustomSelect(categoryInput, globalCategories, hub.category_id || '', '-- Same as Hub --');
     
     row.querySelector('.btn-remove-hub').onclick = () => {
         row.remove();
