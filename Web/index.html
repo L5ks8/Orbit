@@ -562,6 +562,31 @@
                             </div>
                         </div>
 
+                        <!-- LOGS MODAL -->
+                        <div id="logs-modal" class="modal-overlay">
+                            <div class="modal-content" style="max-width: 500px;">
+                                <div class="modal-header">
+                                    <h3 id="logs-modal-title">Edit Log Category</h3>
+                                    <span class="close-modal" onclick="closeLogModal()">&times;</span>
+                                </div>
+                                <div class="modal-body" id="logs-modal-body">
+                                    <div class="form-group" style="margin-top: 10px;">
+                                        <label>Log Channel</label>
+                                        <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Channel where events for this category are logged.</span>
+                                        <input type="hidden" id="logs-modal-channel">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Ping Role</label>
+                                        <span style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:8px;">Role to mention when an event in this category occurs.</span>
+                                        <input type="hidden" id="logs-modal-role">
+                                    </div>
+                                </div>
+                                <div class="modal-footer" style="padding-top: 15px; border-top: 1px solid var(--border-color); display: flex;">
+                                    <button type="button" class="btn-save" onclick="closeLogModal()" style="width: 100%; background: #23a559; color: #fff; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px;">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- VERIFY SECTION -->
                         <div id="section-verify" class="dash-panel">
                             <h3>Verification</h3>
@@ -759,7 +784,7 @@
 
     <div id="toast" class="toast">Changes saved successfully!</div>
 
-    <script src="/static/script.js?v=6"></script>
+    <script src="/static/script.js?v=7"></script>
 </body>
 </html>
 
