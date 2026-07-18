@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import clear_user_warnings
@@ -8,7 +8,7 @@ from Commands._utils import MemberOrIDConverter, format_usage
 class ClearWarningsLayout(LayoutView):
     def __init__(self, member: discord.Member, cleared_count: int):
         super().__init__()
-        header_str = f"### All Warnings Cleared\n**Target Member:** {member.mention} (`{member.id}`)"
+        header_str = f"### ⚠️ All Warnings Cleared\n**Target Member:** {member.mention} (`{member.id}`)"
         content_str = f"**Total Removed:** `{cleared_count}` warnings\n**Current Remaining Warnings:** `0`"
         self.container = Container(
             TextDisplay(content=header_str),

@@ -30,7 +30,7 @@ class WarningsListLayout(LayoutView):
             )
         warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
         header_content = (
-            f"### Warning History: {self.member.mention} (Page {self.page} of {self.total_pages})\n"
+            f"### ⚠️ Warning History: {self.member.mention} (Page {self.page} of {self.total_pages})\n"
             f"**Total Warnings:** `{len(self.warnings)}`"
         )
         btn_close = Button(label="Close", style=discord.ButtonStyle.danger)

@@ -10,7 +10,7 @@ class WarnIssuedLayout(LayoutView):
     def __init__(self, member: discord.Member, warn_entry: dict, total_warns: int):
         super().__init__()
         header_str = (
-            f"### Warning Issued: {member.mention}\n"
+            f"### ⚠️ Warning Issued: {member.mention}\n"
             f"**Warn ID:** `{warn_entry['warn_id']}` | **Total Warnings:** `{total_warns}`"
         )
         info_str = (
