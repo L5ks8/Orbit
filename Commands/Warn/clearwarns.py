@@ -21,7 +21,7 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
-    cleared_count = await clear_user_warnings(ctx.guild.id, user.id)
+    cleared_count = clear_user_warnings(ctx.guild.id, user.id)
     if cleared_count == 0:
         return await ctx.send(f"**{user.display_name}** has no formal warnings on this server.", ephemeral=True)
     try:
