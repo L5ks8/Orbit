@@ -134,7 +134,7 @@ async function loadDashboard() {
             card.className = 'server-card';
             card.onclick = (e) => {
                 e.preventDefault();
-                loadConfig(g.id, g.name);
+                loadConfig(g.id, g.name, g.icon);
             };
             
             const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : '';
@@ -723,9 +723,11 @@ document.getElementById('btn-add-auto-reaction').addEventListener('click', () =>
 });
 
 // LOAD CONFIGURATION
-async function loadConfig(guildId, guildName) {
+async function loadConfig(guildId, guildName, guildIcon) {
     currentGuildId = guildId;
     document.getElementById('config-server-name').innerText = guildName;
+    const iconUrl = guildIcon ? `https://cdn.discordapp.com/icons/${guildId}/${guildIcon}.png` : '';
+    document.getElementById('sidebar-server-icon').innerHTML = iconUrl ? `<img src="${iconUrl}">` : guildName.charAt(0);
     showView('config');
     
     document.getElementById('config-layout').style.display = 'none';

@@ -213,21 +213,20 @@ body {
     display: flex;
     flex-direction: row;
     gap: 0;
-    min-height: calc(100vh - 56px);
+    height: calc(100vh - 56px);
     width: 100%;
     flex: 1;
+    overflow: hidden;
 }
 
 .dash-sidebar {
-    position: sticky;
-    top: 56px;
-    align-self: flex-start;
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0;
     width: 200px;
     min-width: 200px;
-    height: calc(100vh - 56px);
+    height: 100%;
     padding: 16px 0;
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
@@ -299,10 +298,10 @@ body {
     border: none;
     border-radius: 0;
     padding: 24px 32px;
-    min-height: 600px;
+    height: 100%;
     box-shadow: none;
     position: relative;
-    overflow: visible;
+    overflow-y: auto;
     flex: 1;
 }
 .dash-main::before { display: none; }
