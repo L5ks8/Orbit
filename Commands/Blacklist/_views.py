@@ -1,4 +1,4 @@
-﻿import re
+import re
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal
@@ -75,11 +75,11 @@ class BlacklistListLayout(LayoutView):
             content_text = "The blacklist is currently empty for this server."
         else:
             lines = []
-            for uid_str, info in list(self.data.items())[:15]:
+            for i, (uid_str, info) in enumerate(list(self.data.items())[:15], 1):
                 reason = info.get("reason", "No reason")
                 user = self.guild.get_member(int(uid_str)) or self.bot.get_user(int(uid_str))
                 mention_display = f"<@{uid_str}>" + (f" (`@{user.name}`)" if user and hasattr(user, "name") else "")
-                lines.append(f"â€¢ {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
+                lines.append(f"**{i}.** {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
             content_text = "\n".join(lines)
             if count > 15:
                 content_text += f"\n\n*And {count - 15} more users...*"
