@@ -826,7 +826,7 @@ async function loadConfig(guildId, guildName) {
         updateLivePreview();
 
         document.getElementById('config-loader').classList.add('hidden');
-        document.getElementById('config-layout').style.display = 'grid';
+        document.getElementById('config-layout').style.display = 'flex';
     } catch (e) {
         document.getElementById('config-layout').innerHTML = '<div style="display: flex; height: 100vh; width: 100%; align-items: center; justify-content: center;"><p style="color:var(--accent-color); font-weight: 600;">Fehler beim Laden der Konfiguration.</p></div>';
         document.getElementById('config-layout').style.display = 'block';
