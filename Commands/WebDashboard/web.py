@@ -312,6 +312,14 @@ class WebDashboard:
             "logs": logs_cfg
         }
         
+        # Ensure logs snowflakes are strings for JS
+        if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
+            for k, v in logs_cfg["channels"].items():
+                if v: logs_cfg["channels"][k] = str(v)
+        if "roles" in logs_cfg and isinstance(logs_cfg["roles"], dict):
+            for k, v in logs_cfg["roles"].items():
+                if v: logs_cfg["roles"][k] = str(v)
+        
         return web.json_response({
             "permissions": user_perms,
             "channels": channels,
@@ -500,12 +508,12 @@ class WebDashboard:
                 if "channels" in l_data and isinstance(l_data["channels"], dict):
                     for k in DEFAULT_CATEGORIES:
                         c = l_data["channels"].get(k)
-                        l_cfg["channels"][k] = int(c) if c else None
+                        l_cfg["channels"][k] = str(c) if c else None
                 
                 if "roles" in l_data and isinstance(l_data["roles"], dict):
                     for k in DEFAULT_CATEGORIES:
                         r = l_data["roles"].get(k)
-                        l_cfg["roles"][k] = int(r) if r else None
+                        l_cfg["roles"][k] = str(r) if r else None
                 
                 if "categories" in l_data and isinstance(l_data["categories"], dict):
                     for k in DEFAULT_CATEGORIES:
