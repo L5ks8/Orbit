@@ -167,14 +167,19 @@ async function loadDashboard() {
 }
 
 class CustomSelect {
-    constructor(selectElement, items, selectedValue, placeholder, isRole = false) {
+    constructor(selectElement, items, selectedValue, placeholder, type = 'channel') {
         this.select = selectElement;
         this.select.style.display = 'none';
         
         this.items = items;
         this.value = selectedValue || '';
         this.placeholder = placeholder || 'Select...';
-        this.isRole = isRole;
+        
+        // Backward compatibility
+        if (type === true) this.type = 'role';
+        else if (type === false) this.type = 'channel';
+        else this.type = type;
+
         this.select.value = this.value;
         
         this.container = document.createElement('div');
@@ -230,12 +235,19 @@ class CustomSelect {
         this.updateTrigger(placeholder);
     }
     
+    getPrefix() {
+        if (this.type === 'role') return '@';
+        if (this.type === 'voice') return '<i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>';
+        if (this.type === 'category') return '<i data-lucide="folder" style="width: 14px; height: 14px;"></i>';
+        return '#';
+    }
+
     updateTrigger(placeholder) {
         const item = this.items.find(i => String(i.id) === String(this.value));
         if (item) {
-            const prefix = this.isRole ? '@' : '#';
-            const colorHtml = this.isRole ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
-            this.trigger.innerHTML = `<div class="content" style="display:flex;align-items:center;gap:4px;"><div class="cm-tag" style="margin:0;">${colorHtml}${prefix}${item.name}</div></div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
+            const prefix = this.getPrefix();
+            const colorHtml = this.type === 'role' ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
+            this.trigger.innerHTML = `<div class="content" style="display:flex;align-items:center;gap:4px;"><div class="cm-tag" style="margin:0;display:flex;align-items:center;gap:4px;">${colorHtml}${prefix}${item.name}</div></div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
         } else {
             this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
         }
@@ -259,9 +271,9 @@ class CustomSelect {
         this.items.filter(i => i.name.toLowerCase().includes(filter)).forEach(item => {
             const opt = document.createElement('div');
             opt.className = `custom-select-option ${String(this.value) === String(item.id) ? 'selected' : ''}`;
-            const prefix = this.isRole ? '@' : '#';
-            const colorHtml = this.isRole ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
-            opt.innerHTML = `${colorHtml}${prefix}${item.name}`;
+            const prefix = this.getPrefix();
+            const colorHtml = this.type === 'role' ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
+            opt.innerHTML = `<div style="display:flex;align-items:center;gap:4px;">${colorHtml}${prefix}${item.name}</div>`;
             opt.addEventListener('click', () => {
                 this.value = item.id;
                 this.updateTrigger(this.placeholder);
@@ -269,6 +281,7 @@ class CustomSelect {
             });
             this.optionsContainer.appendChild(opt);
         });
+        lucide.createIcons({ root: this.optionsContainer });
     }
 }
 
@@ -1239,8 +1252,8 @@ function addTempVoiceHubRow(hub = { hub_channel_id: '', category_id: '', default
     const channelInput = row.querySelector('.tv-hub-channel');
     const categoryInput = row.querySelector('.tv-hub-category');
     
-    new CustomSelect(channelInput, globalVoiceChannels, hub.hub_channel_id || '', '-- Select Voice Channel --');
-    new CustomSelect(categoryInput, globalCategories, hub.category_id || '', '-- Same as Hub --');
+    new CustomSelect(channelInput, globalVoiceChannels, hub.hub_channel_id || '', '-- Select Voice Channel --', 'voice');
+    new CustomSelect(categoryInput, globalCategories, hub.category_id || '', '-- Same as Hub --', 'category');
     
     row.querySelector('.btn-remove-hub').onclick = () => {
         row.remove();
