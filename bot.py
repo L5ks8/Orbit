@@ -122,6 +122,20 @@ class OrbitBot(commands.Bot):
         )
 
     async def setup_hook(self):
+        if os.environ.get("RENDER") or os.environ.get("PORT"):
+            try:
+                from aiohttp import web
+                from Commands.WebDashboard.web import setup_web_app
+                app = setup_web_app(self)
+                runner = web.AppRunner(app)
+                await runner.setup()
+                port = int(os.environ.get("PORT", 10000))
+                site = web.TCPSite(runner, "0.0.0.0", port)
+                await site.start()
+                print(f"Render Web Service bound to 0.0.0.0:{port}")
+            except Exception as e:
+                print(f"Failed to bind Render port: {e}")
+
         commands_dir = pathlib.Path("Commands")
         if not commands_dir.exists():
             commands_dir.mkdir(parents=True, exist_ok=True)
@@ -186,20 +200,6 @@ class OrbitBot(commands.Bot):
                 pass
             await _old_modal_error(modal_self, error, interaction)
         discord.ui.Modal.on_error = _global_modal_error
-
-        if os.environ.get("RENDER") or os.environ.get("PORT"):
-            try:
-                from aiohttp import web
-                from Commands.WebDashboard.web import setup_web_app
-                app = setup_web_app(self)
-                runner = web.AppRunner(app)
-                await runner.setup()
-                port = int(os.environ.get("PORT", 10000))
-                site = web.TCPSite(runner, "0.0.0.0", port)
-                await site.start()
-                print(f"Render Web Service bound to 0.0.0.0:{port}")
-            except Exception as e:
-                print(f"Failed to bind Render port: {e}")
 
     async def on_error(self, event_method: str, *args, **kwargs):
         try:
