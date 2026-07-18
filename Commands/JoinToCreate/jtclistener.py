@@ -1,4 +1,4 @@
-import asyncio
+utf-8import asyncio
 import discord
 from discord.ext import commands
 from Commands.JoinToCreate._storage import load_jtc_config, load_active_channels, create_active_channel, update_active_channel, remove_active_channel, get_active_channel

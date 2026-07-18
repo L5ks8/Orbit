@@ -1,4 +1,4 @@
-import io
+utf-8import io
 import time
 import asyncio
 import discord
@@ -36,18 +36,18 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
     <meta charset="utf-8">
     <title>Ticket Transcript: #{channel.name}</title>
     <style>
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #313338; color: #dbdee1; margin: 0; padding: 20px; }}
-        .header {{ background-color: #2b2d31; padding: 20px; border-radius: 8px; margin-bottom: 20px; }}
-        .header h1 {{ margin: 0 0 10px 0; color: #f2f3f5; font-size: 24px; }}
-        .header p {{ margin: 5px 0; font-size: 14px; color: #b5bac1; }}
-        .message {{ display: flex; margin-bottom: 20px; }}
-        .avatar {{ width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; background-color: #5865F2; flex-shrink: 0; overflow: hidden; }}
-        .avatar img {{ width: 100%; height: 100%; object-fit: cover; }}
-        .msg-content {{ display: flex; flex-direction: column; }}
-        .msg-header {{ margin-bottom: 5px; }}
-        .msg-author {{ font-weight: 600; color: #f2f3f5; margin-right: 10px; font-size: 16px; }}
-        .msg-time {{ font-size: 12px; color: #949ba4; }}
-        .msg-text {{ font-size: 15px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }}
+        body {  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #313338; color: #dbdee1; margin: 0; padding: 20px; } 
+        .header {  background-color: #2b2d31; padding: 20px; border-radius: 8px; margin-bottom: 20px; } 
+        .header h1 {  margin: 0 0 10px 0; color: #f2f3f5; font-size: 24px; } 
+        .header p {  margin: 5px 0; font-size: 14px; color: #b5bac1; } 
+        .message {  display: flex; margin-bottom: 20px; } 
+        .avatar {  width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; background-color: #5865F2; flex-shrink: 0; overflow: hidden; } 
+        .avatar img {  width: 100%; height: 100%; object-fit: cover; } 
+        .msg-content {  display: flex; flex-direction: column; } 
+        .msg-header {  margin-bottom: 5px; } 
+        .msg-author {  font-weight: 600; color: #f2f3f5; margin-right: 10px; font-size: 16px; } 
+        .msg-time {  font-size: 12px; color: #949ba4; } 
+        .msg-text {  font-size: 15px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; } 
     </style>
 </head>
 <body>

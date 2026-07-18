@@ -1,4 +1,4 @@
-import time
+utf-8import time
 import discord
 from discord.ext import commands, tasks
 from Commands.Reminder._storage import remove_reminder, load_reminders

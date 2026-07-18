@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
@@ -62,7 +62,6 @@ class OwnerOverviewLayout(LayoutView):
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_close))
 
-
 class OwnerCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -83,7 +82,6 @@ class OwnerCommand(commands.Cog):
     @owner_cmd.error
     async def owner_error(self, ctx: commands.Context, error):
         pass
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(OwnerCommand(bot))

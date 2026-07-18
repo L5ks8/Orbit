@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
 
@@ -87,7 +87,6 @@ class ServersPaginationLayout(LayoutView):
         except Exception:
             await interaction.response.send_message("Closed server list.", ephemeral=True)
 
-
 class ServersCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -103,7 +102,6 @@ class ServersCommand(commands.Cog):
     async def servers_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             await ctx.send(f"Servers Error: {error}", allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ServersCommand(bot))

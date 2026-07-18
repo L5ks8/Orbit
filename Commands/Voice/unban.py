@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice._storage import remove_from_vcban

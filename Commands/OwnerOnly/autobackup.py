@@ -1,4 +1,4 @@
-import os
+utf-8import os
 import io
 import json
 import zipfile
@@ -77,7 +77,6 @@ def _get_latest_storage_mtime() -> float:
                 pass
     return latest
 
-
 class BackupNoticeLayout(LayoutView):
     def __init__(self, title: str, content: str):
         super().__init__()
@@ -98,7 +97,6 @@ class BackupNoticeLayout(LayoutView):
 
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_close))
-
 
 class AutoBackupCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -305,7 +303,6 @@ class AutoBackupCommand(commands.Cog):
     async def backup_errors(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             await ctx.send(f"Backup command error: {error}", allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoBackupCommand(bot))

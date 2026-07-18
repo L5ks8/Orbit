@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
 
@@ -35,7 +35,6 @@ class DmComposeModal(Modal, title="Compose Direct Message"):
         except Exception as e:
             await interaction.response.send_message(f"Error sending DM: {e}", ephemeral=True)
 
-
 class DmComposerLayout(LayoutView):
     def __init__(self, target: discord.User | discord.Member, author_id: int):
         super().__init__(timeout=180.0)
@@ -60,7 +59,6 @@ class DmComposerLayout(LayoutView):
             action_row
         )
         self.add_item(self.container)
-
 
 class DmCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

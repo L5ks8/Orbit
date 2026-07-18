@@ -1,4 +1,4 @@
-import json
+utf-8import json
 import pathlib
 import random
 import time
@@ -14,8 +14,6 @@ from Commands.Giveaway._storage import (
     update_giveaway_entry,
     get_all_active_giveaways
 )
-
-
 
 def build_ended_giveaway_container(entry: dict, winners_display: str) -> Container:
     reqs = []
@@ -106,7 +104,6 @@ class PersistentGiveawayLayout(LayoutView):
                     return await interaction.response.send_message(
                         f"You need the {role.mention} role to enter this giveaway!", ephemeral=True
                     )
-
 
             entry["entries"].append(uid)
             update_giveaway_entry(interaction.guild.id, entry)

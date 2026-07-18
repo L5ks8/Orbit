@@ -1,4 +1,4 @@
-import json
+utf-8import json
 import pathlib
 import threading
 from typing import Dict, Any

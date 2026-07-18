@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="tempvoice", aliases=["jtc", "jointocreate"], description="Temporary voice channel commands.")

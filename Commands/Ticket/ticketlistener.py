@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from Commands.Ticket._views import PersistentTicketPanelLayout, TicketControlLayout
 

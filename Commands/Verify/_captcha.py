@@ -1,4 +1,4 @@
-import io
+utf-8import io
 import math
 import random
 import string
@@ -38,18 +38,18 @@ FONT_GRID = {
 }
 
 BRIGHT_COLORS_RGB = [
-    [87, 242, 135],   # Neon Green
-    [0, 255, 127],    # Spring Green
-    [254, 231, 92],   # Bright Yellow
-    [255, 215, 0],    # Gold
-    [0, 210, 255],    # Cyan
-    [88, 101, 242],   # Blurple / Bright Blue
-    [235, 69, 158],   # Hot Pink / Magenta
-    [255, 20, 147],   # Deep Pink
-    [255, 140, 0],    # Bright Orange
-    [255, 99, 71],    # Tomato Red
-    [186, 85, 211],   # Medium Orchid
-    [237, 66, 69]     # Bright Red
+    [87, 242, 135],   
+    [0, 255, 127],    
+    [254, 231, 92],   
+    [255, 215, 0],    
+    [0, 210, 255],    
+    [88, 101, 242],   
+    [235, 69, 158],   
+    [255, 20, 147],   
+    [255, 140, 0],    
+    [255, 99, 71],    
+    [186, 85, 211],   
+    [237, 66, 69]     
 ]
 
 BRIGHT_COLORS_TUPLE = [tuple(c) for c in BRIGHT_COLORS_RGB]
@@ -69,12 +69,10 @@ def _draw_bmp_line(pixels: List[List[List[int]]], x0: int, y0: int, x1: int, y1:
 def _generate_fallback_bmp(code: str) -> bytes:
     width = 400
     height = 180
-    
-    # Pure black background
+
     pixels = [[[0, 0, 0] for _ in range(width)] for _ in range(height)]
     chars = list(FONT_GRID.keys())
-    
-    # Dark gray decoys
+
     decoy_colors = [[35, 35, 35], [45, 45, 45], [55, 55, 55]]
     for _ in range(20):
         char = random.choice(chars)
@@ -100,7 +98,6 @@ def _generate_fallback_bmp(code: str) -> bytes:
         ty = random.randint(30, height - 70)
         targets.append((tx, ty))
 
-    # White connecting lines
     cord_color = [255, 255, 255]
     for idx in range(len(targets) - 1):
         x0, y0 = targets[idx]
@@ -170,12 +167,12 @@ def generate_captcha() -> Tuple[str, bytes]:
         from PIL import Image, ImageDraw, ImageFont
         width = 420
         height = 190
-        # Pure black background
+        
         img = Image.new("RGB", (width, height), color=(0, 0, 0))
         draw = ImageDraw.Draw(img)
         
         decoy_font = _get_truetype_font(ImageFont, 32)
-        target_font = _get_truetype_font(ImageFont, 56)  # Huge 56px letters!
+        target_font = _get_truetype_font(ImageFont, 56)  
 
         decoy_colors = [(40, 40, 40), (50, 50, 50), (60, 60, 60)]
         for _ in range(20):
@@ -194,8 +191,7 @@ def generate_captcha() -> Tuple[str, bytes]:
         cord_points = []
         for tx, ty in targets:
             cord_points.append((tx + 20, ty + 28))
-            
-        # White connecting line
+
         draw.line(cord_points, fill=(255, 255, 255), width=5)
         for cx, cy in cord_points:
             draw.ellipse((cx - 6, cy - 6, cx + 6, cy + 6), fill=(255, 255, 255), outline=(0, 0, 0), width=2)

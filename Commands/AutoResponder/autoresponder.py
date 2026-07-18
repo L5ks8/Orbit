@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord import app_commands
 from Commands.AutoResponder._storage import add_response, remove_response, load_responses, get_response_entry
@@ -85,13 +85,11 @@ class AutoResponderCommand(commands.Cog):
         content = message.content.lower().strip()
         if not content:
             return
-            
-        # Helper to check if we can respond in this channel
+
         def can_respond(entry_data: dict) -> bool:
             cid = entry_data.get("channel_id")
             return not cid or str(cid) == str(message.channel.id)
 
-        # Check if the message exactly matches a trigger
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
             try:
@@ -99,9 +97,7 @@ class AutoResponderCommand(commands.Cog):
                 return await message.reply(content=response_text, mention_author=False)
             except Exception:
                 pass
-                
-        # Also check if a trigger is an exact word inside the message
-        # We only want to do this if the exact match failed to avoid double responses
+
         words = content.split()
         data = load_responses(message.guild.id)
         for trigger, entry_data in data.items():
@@ -111,7 +107,7 @@ class AutoResponderCommand(commands.Cog):
                     await message.reply(content=response_text, mention_author=False)
                 except Exception:
                     pass
-                break # Only reply to the first matching trigger to avoid spam
+                break 
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoResponderCommand(bot))

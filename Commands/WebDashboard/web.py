@@ -1,4 +1,4 @@
-import os
+utf-8import os
 import secrets
 import json
 import asyncio
@@ -68,22 +68,20 @@ class WebDashboard:
         }
         
         async with aiohttp.ClientSession() as session:
-            # Exchange code
+            
             async with session.post("https://discord.com/api/oauth2/token", data=data) as resp:
                 if resp.status != 200:
                     err = await resp.text()
                     return web.Response(text=f"Failed to exchange code: {err}", status=400)
                 token_info = await resp.json()
                 access_token = token_info["access_token"]
-                
-            # Get user info
+
             headers = {"Authorization": f"Bearer {access_token}"}
             async with session.get("https://discord.com/api/users/@me", headers=headers) as resp:
                 if resp.status != 200:
                     return web.Response(text="Failed to fetch user info", status=400)
                 user_info = await resp.json()
-                
-        # Create session
+
         session_id = secrets.token_urlsafe(32)
         SESSIONS[session_id] = {
             "id": user_info["id"],
@@ -135,7 +133,7 @@ class WebDashboard:
                 
         manageable_guilds = []
         for g in user_guilds:
-            # Permissions Check
+            
             perms = int(g["permissions"])
             is_admin = (perms & 0x8) == 0x8
             manage_guild = (perms & 0x20) == 0x20
@@ -144,7 +142,7 @@ class WebDashboard:
             manage_messages = (perms & 0x2000) == 0x2000
             
             if is_admin or manage_guild or manage_roles or manage_channels or manage_messages:
-                # Check if bot is in guild
+                
                 bot_guild = self.bot.get_guild(int(g["id"]))
                 if bot_guild:
                     manageable_guilds.append({
@@ -192,13 +190,11 @@ class WebDashboard:
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
-            
-        # Get actual channels and roles for dropdowns
+
         channels = [{"id": str(c.id), "name": c.name} for c in guild.text_channels]
         categories = [{"id": str(c.id), "name": c.name} for c in guild.categories]
         roles = [{"id": str(r.id), "name": r.name, "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe"} for r in guild.roles if not r.is_default()]
-        
-        # Load configs
+
         welcome_cfg = load_welcome_config(guild_id)
         automod_cfg = load_automod_config(guild_id)
         verify_cfg = load_verify_config(guild_id)
@@ -311,8 +307,7 @@ class WebDashboard:
             },
             "logs": logs_cfg
         }
-        
-        # Ensure logs snowflakes are strings for JS
+
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
             for k, v in logs_cfg["channels"].items():
                 if v: logs_cfg["channels"][k] = str(v)
@@ -340,8 +335,7 @@ class WebDashboard:
             
         try:
             data = await request.json()
-            
-            # Welcome (Requires can_channels)
+
             if user_perms.get("can_channels") and "welcome" in data:
                 welcome_cfg = load_welcome_config(guild_id)
                 welcome_cfg["enabled"] = bool(data.get("welcome", {}).get("enabled"))
@@ -354,8 +348,7 @@ class WebDashboard:
                 if img_url is not None:
                     welcome_cfg["image_url"] = img_url
                 save_welcome_config(guild_id, welcome_cfg)
-                
-            # Goodbye (Requires can_channels)
+
             if user_perms.get("can_channels") and "goodbye" in data:
                 goodbye_cfg = load_goodbye_config(guild_id)
                 goodbye_cfg["enabled"] = bool(data.get("goodbye", {}).get("enabled"))
@@ -368,8 +361,7 @@ class WebDashboard:
                 if img_url is not None:
                     goodbye_cfg["image_url"] = img_url
                 save_goodbye_config(guild_id, goodbye_cfg)
-            
-            # AutoMod (Requires can_messages)
+
             if user_perms.get("can_messages") and "automod" in data:
                 automod_cfg = load_automod_config(guild_id)
                 am = data.get("automod", {})
@@ -420,7 +412,6 @@ class WebDashboard:
                 save_submodule("anti_caps", {}, [])
                 save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
 
-                # Anti-Alt (Special structure)
                 if "anti_alt" not in automod_cfg:
                     automod_cfg["anti_alt"] = {}
                 aalt = am.get("anti_alt", {})
@@ -429,8 +420,7 @@ class WebDashboard:
                 automod_cfg["anti_alt"]["action"] = aalt.get("action", "kick")
 
                 save_automod_config(guild_id, automod_cfg)
-            
-            # Verify (Requires can_roles)
+
             if user_perms.get("can_roles") and "verify" in data:
                 verify_cfg = load_verify_config(guild_id)
                 verify_cfg["enabled"] = bool(data.get("verify", {}).get("enabled"))
@@ -440,20 +430,17 @@ class WebDashboard:
                 verify_cfg["remove_role_id"] = int(rrid) if rrid else None
                 verify_cfg["verification_type"] = data.get("verify", {}).get("verification_type", "captcha")
                 save_verify_config(guild_id, verify_cfg)
-            
-            # AutoResponder (Requires can_messages)
+
             if user_perms.get("can_messages") and "autoresponder" in data:
                 save_responses(guild_id, data["autoresponder"])
-                
-            # JoinRoles (Requires can_roles)
+
             if user_perms.get("can_roles") and "joinroles" in data:
                 roles_to_save = []
                 for r in data["joinroles"]:
                     if r:
                         roles_to_save.append(int(r))
                 save_join_roles(guild_id, roles_to_save)
-                
-            # Ticket (Requires can_channels)
+
             if user_perms.get("can_channels") and "ticket" in data:
                 from Commands.Ticket._storage import load_ticket_config, save_ticket_config
                 ticket_cfg = load_ticket_config(guild_id)
@@ -486,12 +473,11 @@ class WebDashboard:
                             "category_id": int(cid) if cid else None
                         })
                     ticket_cfg["options_slots"] = parsed_slots
-                    # Update 'options' list as well to keep backwards compatibility
+                    
                     ticket_cfg["options"] = [s.get("name", "Option") for s in parsed_slots]
                 
                 save_ticket_config(guild_id, ticket_cfg)
-                
-            # Logs (Requires can_channels)
+
             if user_perms.get("can_channels") and "logs" in data:
                 l_cfg = load_log_config(guild_id)
                 l_data = data["logs"]
@@ -520,9 +506,7 @@ class WebDashboard:
                         l_cfg["categories"][k] = bool(l_data["categories"].get(k, False))
                 
                 save_log_config(guild_id, l_cfg)
-                
 
-                # Attempt to update the existing panel message dynamically
                 pid = ticket_cfg.get("panel_channel_id")
                 mid = ticket_cfg.get("panel_message_id")
                 if pid and mid:
@@ -568,8 +552,7 @@ class WebDashboard:
             from Commands.Verify._views import PersistentVerifyLayout
             view = PersistentVerifyLayout()
             await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
-            
-            # Update storage to set the panel channel
+
             verify_cfg = load_verify_config(guild_id)
             verify_cfg["channel_id"] = channel.id
             save_verify_config(guild_id, verify_cfg)
@@ -610,8 +593,7 @@ class WebDashboard:
             )
             
             msg = await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
-            
-            # Update storage
+
             ticket_cfg["panel_channel_id"] = channel.id
             ticket_cfg["panel_message_id"] = msg.id
             save_ticket_config(guild_id, ticket_cfg)
@@ -661,7 +643,7 @@ class WebDashboard:
         if not guild:
             return web.json_response({"error": "Support guild not found"}, status=404)
         try:
-            # Find the first text channel we can create an invite in
+            
             for channel in guild.text_channels:
                 try:
                     invite = await channel.create_invite(max_age=86400, max_uses=1, unique=True, reason="Website support invite")
@@ -674,7 +656,7 @@ class WebDashboard:
 
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
-    app = web.Application(client_max_size=10 * 1024 * 1024)  # 10 MB max upload
+    app = web.Application(client_max_size=10 * 1024 * 1024)  
     
     import pathlib
     pathlib.Path("Storage/uploads").mkdir(parents=True, exist_ok=True)

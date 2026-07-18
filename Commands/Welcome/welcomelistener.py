@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from Commands.Welcome._storage import load_welcome_config
 from Commands.Welcome._views import format_welcome_string, WelcomeCardLayout
@@ -33,7 +33,6 @@ class WelcomeListener(commands.Cog):
         import aiohttp
         import pathlib
 
-        # Download avatar bytes
         avatar_bytes = b""
         if member.display_avatar:
             try:
@@ -42,8 +41,7 @@ class WelcomeListener(commands.Cog):
                 pass
                 
         bg_path = pathlib.Path("nonexistent.png")
-        
-        # If config has an image_url, resolve it
+
         image_url = config.get("image_url", "")
         if image_url:
             if image_url.startswith("/static/"):
@@ -64,8 +62,7 @@ class WelcomeListener(commands.Cog):
                                 bg_path = temp_path
                 except Exception:
                     pass
-        
-        # Run image generation in a separate thread to prevent blocking
+
         import asyncio
         img_buffer = await asyncio.to_thread(generate_welcome_image, avatar_bytes, bg_path, member.name)
         file = discord.File(fp=img_buffer, filename="welcome.png")

@@ -1,4 +1,4 @@
-import json
+utf-8import json
 import pathlib
 import discord
 from discord.ext import commands
@@ -53,8 +53,7 @@ class ServerManageCommand(commands.Cog):
         bl.append(target_guild_id)
         _save_sblacklist(bl)
         await ctx.send(f"Server `{target_guild_id}` has been globally blacklisted.\n**Reason:** {reason}")
-        
-        # If bot is currently in the server, leave it
+
         guild = self.bot.get_guild(target_guild_id)
         if guild:
             try:

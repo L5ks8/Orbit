@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.JoinRole._storage import load_join_roles, clear_join_roles
 

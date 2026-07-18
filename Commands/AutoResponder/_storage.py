@@ -1,4 +1,4 @@
-import json
+utf-8import json
 import pathlib
 from typing import Dict, Any
 
@@ -14,7 +14,7 @@ def load_responses(guild_id: int) -> Dict[str, dict]:
     try:
         with open(file, "r", encoding="utf-8") as f:
             data = json.load(f)
-            # Migrate old string format to dict format
+            
             for k, v in data.items():
                 if isinstance(v, str):
                     data[k] = {"response": v, "channel_id": None}

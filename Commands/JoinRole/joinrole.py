@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="joinrole", description="Automatic join roles system (`add`, `remove`, `list`).")

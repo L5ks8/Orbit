@@ -1,6 +1,5 @@
-import discord
+utf-8import discord
 from discord.ext import commands
-
 
 def format_usage(command: str, *args: str) -> str:
     """Build a short command usage string in a consistent format."""
@@ -8,7 +7,6 @@ def format_usage(command: str, *args: str) -> str:
     if args:
         usage += " " + " ".join(args)
     return usage
-
 
 class MemberOrIDConverter(commands.Converter):
     """Resolve a guild member from a mention, name, or ID."""

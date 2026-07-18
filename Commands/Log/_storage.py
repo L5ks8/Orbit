@@ -1,4 +1,4 @@
-import pathlib
+utf-8import pathlib
 import json
 from typing import Dict, Any
 import discord
@@ -104,8 +104,6 @@ def save_log_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4)
-
-
 
 async def log_event(guild: discord.Guild, category: str, title: str, description: str, target_channel_obj: discord.abc.GuildChannel = None, executor: discord.Member = None) -> None:
     if not guild:

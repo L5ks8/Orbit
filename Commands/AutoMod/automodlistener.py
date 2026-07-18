@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 import time
 import datetime
 from discord.ext import commands
@@ -22,7 +22,6 @@ class AutoModNoticeLayout(LayoutView):
             TextDisplay(content=body)
         )
         self.add_item(self.container)
-
 
 class AutoModListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -126,7 +125,6 @@ class AutoModListener(commands.Cog):
             except Exception:
                 pass
 
-        # 1. Banned Words
         banned_cfg = config.get("banned_words", {})
         if banned_cfg.get("enabled", False) and not is_exempt(banned_cfg):
             words = banned_cfg.get("words", [])
@@ -134,7 +132,6 @@ class AutoModListener(commands.Cog):
                 await do_action(banned_cfg, "AutoMod: Banned word detected")
                 return
 
-        # 2. Anti-Invites
         invites_cfg = config.get("anti_invites", {})
         if invites_cfg.get("enabled", False) and not is_exempt(invites_cfg):
             invite_links = ["discord.gg/", "discord.com/invite/", "dsc.gg/", "invite.gg/"]
@@ -142,23 +139,20 @@ class AutoModListener(commands.Cog):
                 await do_action(invites_cfg, "AutoMod: Discord invite detected")
                 return
 
-        # 3. Anti-Link (Blocked Domains)
         link_cfg = config.get("anti_link", {})
         if link_cfg.get("enabled", False) and not is_exempt(link_cfg):
             blocked = link_cfg.get("blocked_domains", [])
-            # If no specific domains are listed, we block all http/https if they want? 
-            # Or just block the listed ones. Let's block listed ones.
+
             if blocked:
                 if any(domain in content_lower for domain in blocked if domain):
                     await do_action(link_cfg, "AutoMod: Unauthorized link detected")
                     return
             else:
-                # If empty, default to block all links
+                
                 if "http://" in content_lower or "https://" in content_lower:
                     await do_action(link_cfg, "AutoMod: Unauthorized link detected")
                     return
 
-        # 4. Anti-Caps
         caps_cfg = config.get("anti_caps", {})
         if caps_cfg.get("enabled", False) and not is_exempt(caps_cfg):
             content_alpha = [c for c in message.content if c.isalpha()]
@@ -168,7 +162,6 @@ class AutoModListener(commands.Cog):
                     await do_action(caps_cfg, "AutoMod: Excessive caps detected")
                     return
 
-        # 5. Mention Spam
         mention_cfg = config.get("mention_spam", {})
         if mention_cfg.get("enabled", False) and not is_exempt(mention_cfg):
             max_mentions = mention_cfg.get("max_mentions", 4)
@@ -176,7 +169,6 @@ class AutoModListener(commands.Cog):
                 await do_action(mention_cfg, f"AutoMod: Mass mentions detected ({len(message.mentions)})")
                 return
 
-        # 6. Anti-Spam (Message Flood)
         spam_cfg = config.get("anti_spam", {})
         if spam_cfg.get("enabled", False) and not is_exempt(spam_cfg):
             m_msgs = spam_cfg.get("max_messages", 5)

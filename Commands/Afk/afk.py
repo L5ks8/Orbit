@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Afk._storage import set_afk, get_afk
@@ -13,7 +13,6 @@ class AfkSetLayout(LayoutView):
         )
         self.add_item(self.container)
 
-
 class AfkNoticeLayout(LayoutView):
     def __init__(self, target: discord.User | discord.Member, reason: str, timestamp: int):
         super().__init__()
@@ -24,7 +23,6 @@ class AfkNoticeLayout(LayoutView):
             TextDisplay(content=f"**Reason:** {reason}{since_text}")
         )
         self.add_item(self.container)
-
 
 class AfkCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

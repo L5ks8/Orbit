@@ -1,4 +1,4 @@
-import json
+utf-8import json
 import pathlib
 import discord
 from discord.ext import commands
@@ -32,7 +32,6 @@ class StorageBrowserSelect(Select):
             await interaction.edit_original_response(view=self.parent_view)
         except Exception:
             pass
-
 
 class StorageBrowserLayoutView(LayoutView):
     def __init__(self, owner: discord.abc.User):
@@ -80,7 +79,6 @@ class StorageBrowserLayoutView(LayoutView):
         self.add_item(ActionRow(file_select))
         self.add_item(ActionRow(btn_close))
 
-
 class StorageBrowserCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -100,7 +98,6 @@ class StorageBrowserCommand(commands.Cog):
     @storagebrowser_cmd.error
     async def storagebrowser_error(self, ctx: commands.Context, error):
         pass
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(StorageBrowserCommand(bot))

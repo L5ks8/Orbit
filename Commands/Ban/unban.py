@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Log._storage import log_event
@@ -65,7 +65,6 @@ class UnbanConfirmLayout(LayoutView):
             action_row
         )
         self.add_item(self.container)
-
 
 class UnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

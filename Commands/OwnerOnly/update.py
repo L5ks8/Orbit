@@ -1,9 +1,8 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
 UPDATE_CHANNEL_ID = 1525664972720312390
-
 
 class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
     title_input = discord.ui.TextInput(
@@ -103,7 +102,6 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
         except Exception as e:
             await interaction.followup.send(f"Failed to send update message: `{e}`", ephemeral=True)
 
-
 class UpdateLaunchLayout(LayoutView):
     def __init__(self, author_id: int):
         super().__init__(timeout=300)
@@ -132,7 +130,6 @@ class UpdateLaunchLayout(LayoutView):
             )
         )
 
-
 class UpdateCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -159,7 +156,6 @@ class UpdateCommand(commands.Cog):
                 await ctx.send(f"Update command error: `{error}`", delete_after=10.0)
             except Exception:
                 pass
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UpdateCommand(bot))

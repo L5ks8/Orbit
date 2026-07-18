@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.OwnerOnly._monitor import get_live_logs, record_command
@@ -34,7 +34,6 @@ class LiveLogsLayoutView(LayoutView):
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_close))
 
-
 class LiveLogsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -55,7 +54,6 @@ class LiveLogsCommand(commands.Cog):
     async def livelogs_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             await ctx.send(f"Livelogs error: {error}", allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(LiveLogsCommand(bot))

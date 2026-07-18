@@ -1,4 +1,4 @@
-import random
+utf-8import random
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
@@ -22,7 +22,6 @@ class Card:
     def __str__(self):
         return f"`{self.rank}{self.suit}`"
 
-
 def calculate_score(hand: list[Card]) -> int:
     total = sum(c.get_value() for c in hand)
     aces = sum(1 for c in hand if c.rank == "A")
@@ -30,7 +29,6 @@ def calculate_score(hand: list[Card]) -> int:
         total -= 10
         aces -= 1
     return total
-
 
 class BlackjackSession:
     def __init__(self, player: discord.abc.User):
@@ -96,7 +94,6 @@ class BlackjackSession:
             self.outcome_text = "**DOUBLE DOWN BUST!** You drew one card and went over 21. Dealer wins!"
         else:
             self.stand_player()
-
 
 class BlackjackLayoutView(LayoutView):
     def __init__(self, session: BlackjackSession):
@@ -178,7 +175,6 @@ class BlackjackLayoutView(LayoutView):
         else:
             self.add_item(ActionRow(btn_new))
 
-
 class BlackjackCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -188,7 +184,6 @@ class BlackjackCommand(commands.Cog):
         session = BlackjackSession(ctx.author)
         view = BlackjackLayoutView(session)
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BlackjackCommand(bot))

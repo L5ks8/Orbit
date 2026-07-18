@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 
 class ReactionRoleListener(commands.Cog):

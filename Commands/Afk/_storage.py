@@ -1,4 +1,4 @@
-import json
+utf-8import json
 import time
 import pathlib
 import threading

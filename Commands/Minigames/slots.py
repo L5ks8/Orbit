@@ -1,4 +1,4 @@
-import random
+utf-8import random
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
@@ -31,7 +31,6 @@ class SlotsSession:
             self.outcome_text = "**DOUBLE MATCH!** Small Payout (`1.5x Win`)!"
         else:
             self.outcome_text = "**NO MATCH!** Better luck on the next spin!"
-
 
 class SlotsLayoutView(LayoutView):
     def __init__(self, session: SlotsSession):
@@ -86,7 +85,6 @@ class SlotsLayoutView(LayoutView):
         btn_exit.callback = _exit_cb
         self.add_item(ActionRow(btn_spin, btn_exit))
 
-
 class SlotsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -96,7 +94,6 @@ class SlotsCommand(commands.Cog):
         session = SlotsSession(ctx.author)
         view = SlotsLayoutView(session)
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SlotsCommand(bot))

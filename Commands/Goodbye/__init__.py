@@ -1,4 +1,4 @@
-import sys
+utf-8import sys
 sys.dont_write_bytecode = True
 
 from .goodbyelistener import GoodbyeListener

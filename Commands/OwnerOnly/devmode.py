@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.OwnerOnly._storage import load_devmode_config, save_devmode_config
@@ -34,7 +34,6 @@ class DevmodeStatusLayout(LayoutView):
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_close))
 
-
 class DevmodeCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -67,7 +66,6 @@ class DevmodeCommand(commands.Cog):
     async def devmode_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             await ctx.send(f"Devmode Error: {error}", allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DevmodeCommand(bot))

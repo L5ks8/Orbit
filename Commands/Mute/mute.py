@@ -1,11 +1,10 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Mute._storage import get_muted_role_id, set_muted_role_id
 from Commands.Log._storage import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
-
 
 async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
     stored_id = get_muted_role_id(guild.id)
@@ -21,7 +20,6 @@ async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
     set_muted_role_id(guild.id, role.id)
     return role
 
-
 class MuteSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member, reason: str, author: discord.Member, channels_count: int):
         super().__init__()
@@ -31,7 +29,6 @@ class MuteSuccessLayout(LayoutView):
             TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}\n**Channel Overrides:** User permissions disabled in `{channels_count}` channel(s).")
         )
         self.add_item(self.container)
-
 
 class MuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -98,7 +95,6 @@ class MuteCommand(commands.Cog):
             await ctx.send(f"{format_usage('-mute', '<@member>', '[reason]')}", ephemeral=True)
         else:
             await ctx.send(f"An error occurred: {error}", ephemeral=True)
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MuteCommand(bot))

@@ -1,4 +1,4 @@
-import time
+utf-8import time
 import io
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput

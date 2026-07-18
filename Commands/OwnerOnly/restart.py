@@ -1,4 +1,4 @@
-import os
+utf-8import os
 import asyncio
 import discord
 from discord.ext import commands
@@ -18,7 +18,6 @@ class RestartNoticeLayout(LayoutView):
             TextDisplay(content=content_str)
         )
         self.add_item(self.container)
-
 
 class RestartCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -84,7 +83,6 @@ class RestartCommand(commands.Cog):
     async def restart_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             await ctx.send(f"Restart error: {error}", allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(RestartCommand(bot))

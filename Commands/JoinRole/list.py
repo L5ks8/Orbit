@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
 from Commands.JoinRole._views import JoinRoleLayout

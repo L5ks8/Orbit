@@ -1,4 +1,4 @@
-import re
+utf-8import re
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput

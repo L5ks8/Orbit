@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.OwnerOnly._monitor import get_error_log, clear_errors, record_command
@@ -54,7 +54,6 @@ class ErrorsLayoutView(LayoutView):
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_clear, btn_close))
 
-
 class ErrorsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -75,7 +74,6 @@ class ErrorsCommand(commands.Cog):
     async def errors_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             await ctx.send(f"Errors command exception: {error}", allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ErrorsCommand(bot))

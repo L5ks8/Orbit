@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="slowmode", description="Channel slowmode commands.")

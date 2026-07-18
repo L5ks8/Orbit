@@ -1,10 +1,9 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Mute._storage import get_muted_role_id
 from Commands.Mute.mute import get_or_create_muted_role
 from Commands.Log._storage import log_event
-
 
 class UnmuteSuccessLayout(LayoutView):
     def __init__(self, target: discord.Member, reason: str, author: discord.Member, channels_restored: int):
@@ -15,7 +14,6 @@ class UnmuteSuccessLayout(LayoutView):
             TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}\n**Channel Overrides:** User permissions restored in `{channels_restored}` channel(s).")
         )
         self.add_item(self.container)
-
 
 class UnmuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -67,7 +65,6 @@ class UnmuteCommand(commands.Cog):
             await ctx.send("Usage: -unmute <@user/ID> [reason]", ephemeral=True)
         else:
             await ctx.send(f"An error occurred: {error}", ephemeral=True)
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UnmuteCommand(bot))

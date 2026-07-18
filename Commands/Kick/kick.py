@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
@@ -14,7 +14,6 @@ class KickSuccessLayout(LayoutView):
             TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}")
         )
         self.add_item(self.container)
-
 
 class KickCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

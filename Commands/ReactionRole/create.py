@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from Commands.ReactionRole.reactionrole import reactionrole_group
 from Commands.ReactionRole._views import ReactionRolePanelLayout

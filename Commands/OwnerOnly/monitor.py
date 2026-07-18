@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.OwnerOnly._monitor import get_system_metrics, record_command
@@ -39,7 +39,6 @@ class MonitorLayoutView(LayoutView):
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_close))
 
-
 class MonitorCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -59,7 +58,6 @@ class MonitorCommand(commands.Cog):
     @monitor_cmd.error
     async def monitor_error(self, ctx: commands.Context, error):
         pass
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MonitorCommand(bot))

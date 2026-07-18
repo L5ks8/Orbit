@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from Commands.AutoMod.automod import automod_group
 from Commands.AutoMod._views import AutoModDashboardLayout

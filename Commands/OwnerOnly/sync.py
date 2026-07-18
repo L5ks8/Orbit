@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
@@ -25,7 +25,6 @@ class SyncSuccessLayout(LayoutView):
 
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_close))
-
 
 class SyncCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -78,7 +77,6 @@ class SyncCommand(commands.Cog):
             pass
         else:
             await ctx.send(f"Sync error: {error}")
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SyncCommand(bot))

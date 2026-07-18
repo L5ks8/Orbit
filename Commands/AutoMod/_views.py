@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
 
@@ -51,7 +51,6 @@ class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):
         await interaction.response.edit_message(view=self.dashboard_view)
         await interaction.followup.send(f"Updated Anti-Spam settings: {m_msgs} msgs in {t_win}s, Max Mentions: {m_mentions}.", ephemeral=True)
 
-
 class AntiAltAgeModal(Modal, title="Configure Anti-Alt Minimum Age"):
     min_age_input = TextInput(
         label="Minimum Account Age (in days)",
@@ -82,7 +81,6 @@ class AntiAltAgeModal(Modal, title="Configure Anti-Alt Minimum Age"):
         self.dashboard_view.refresh_content(self.guild_id)
         await interaction.response.edit_message(view=self.dashboard_view)
         await interaction.followup.send(f"Updated Anti-Alt minimum account age requirement to {age} days.", ephemeral=True)
-
 
 class AutoModDashboardLayout(LayoutView):
     def __init__(self, guild_id: int):

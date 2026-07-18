@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Welcome._storage import set_welcome_status
 
@@ -76,7 +76,7 @@ class WelcomeStatusLayout(LayoutView):
         info_str = (
             f"**Welcome Channel:** {ch_display}\n"
             f"**Message Template:**\n> {config.get('message', 'Default')}\n\n"
-            f"-# Available template variables: `{{user}}`, `{{server}}`, `{{count}}`, `{{username}}`"
+            f"-# Available template variables: `{ user} `, `{ server} `, `{ count} `, `{ username} `"
         )
 
         icon_url = guild.icon.with_size(256).url if guild.icon else None

@@ -1,4 +1,4 @@
-import os
+utf-8import os
 import io
 import zipfile
 import pathlib
@@ -27,7 +27,6 @@ class GetStorageSuccessLayout(LayoutView):
 
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_close))
-
 
 class GetStorageCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

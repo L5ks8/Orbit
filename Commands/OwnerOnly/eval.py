@@ -1,4 +1,4 @@
-import io
+utf-8import io
 import textwrap
 import traceback
 import contextlib
@@ -34,7 +34,6 @@ class EvalOutputLayout(LayoutView):
 
         btn_close.callback = _close_cb
         self.add_item(ActionRow(btn_close))
-
 
 class EvalCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -105,7 +104,6 @@ class EvalCommand(commands.Cog):
             pass
         else:
             await ctx.send(f"Eval syntax error: {error}")
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(EvalCommand(bot))

@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow, MediaGallery
 
 class ReactionRolePanelLayout(LayoutView):

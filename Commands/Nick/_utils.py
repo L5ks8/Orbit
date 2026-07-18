@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
@@ -15,7 +15,6 @@ class NickSuccessLayout(LayoutView):
             TextDisplay(content=f"**Old Nickname:** `{old_display}`\n**New Nickname:** `{new_display}`\n**Changed by:** {author.mention}")
         )
         self.add_item(self.container)
-
 
 async def perform_nick_edit(ctx: commands.Context, target: discord.Member, nickname: str | None):
     await ctx.defer()

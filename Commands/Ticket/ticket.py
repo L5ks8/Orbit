@@ -1,4 +1,4 @@
-import io
+utf-8import io
 import asyncio
 import discord
 from discord import app_commands
@@ -16,7 +16,6 @@ from Commands.Ticket._views import (
     TicketConfigDynamicView,
     close_ticket_flow
 )
-
 
 async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
@@ -132,7 +131,6 @@ async def _do_ticket_close(ctx: commands.Context, reason: str):
     await ctx.send(f"Initiating ticket closure by {ctx.author.mention} (`Reason: {reason}`)...")
     asyncio.create_task(close_ticket_flow(ctx.guild, ctx.channel, ctx.author, reason))
 
-
 async def _do_ticket_transcript(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
@@ -208,13 +206,11 @@ async def _do_ticket_transcript(ctx: commands.Context):
     view.add_item(container)
     await ctx.send(view=view, file=file, allowed_mentions=discord.AllowedMentions.none())
 
-
 @commands.hybrid_group(name="ticket", description="Support ticket tools.")
 @commands.has_permissions(manage_channels=True)
 async def ticket_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
         await ctx.send("Use: `add`, `remove`, `close`, or `transcript`.", ephemeral=True)
-
 
 @ticket_group.command(name="add", description="Add a member to a ticket")
 @app_commands.describe(member="The member to grant access to this ticket")
@@ -231,16 +227,13 @@ async def ticket_remove_cmd(ctx: commands.Context, member: discord.Member):
 async def ticket_close_cmd(ctx: commands.Context, reason: str = "Closed via command"):
     await _do_ticket_close(ctx, reason)
 
-
 @ticket_group.command(name="transcript", description="Export this ticket transcript")
 async def ticket_transcript_cmd(ctx: commands.Context):
     await _do_ticket_transcript(ctx)
 
-
 class TicketCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
 
     @commands.command(name="tk_add", aliases=["ticketadd"], hidden=True)
     async def tk_add_prefix(self, ctx: commands.Context, member: discord.Member):
@@ -254,11 +247,9 @@ class TicketCog(commands.Cog):
     async def tk_close_prefix(self, ctx: commands.Context, *, reason: str = "Closed via command"):
         await _do_ticket_close(ctx, reason)
 
-
     @commands.command(name="tk_transcript", aliases=["tickettranscript"], hidden=True)
     async def tk_transcript_prefix(self, ctx: commands.Context):
         await _do_ticket_transcript(ctx)
-
 
     @ticket_add_cmd.error
     async def add_error(self, ctx: commands.Context, error):
@@ -272,11 +263,9 @@ class TicketCog(commands.Cog):
     async def close_error(self, ctx: commands.Context, error):
         await ctx.send(f"Ticket close failed: {error}", ephemeral=True)
 
-
     @ticket_transcript_cmd.error
     async def transcript_error(self, ctx: commands.Context, error):
         await ctx.send(f"Ticket transcript failed: {error}", ephemeral=True)
-
 
 async def setup(bot: commands.Bot):
     if "ticket" not in bot.all_commands:

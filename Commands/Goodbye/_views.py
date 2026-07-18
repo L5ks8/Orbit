@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 
 def format_goodbye_string(template: str, member: discord.Member) -> str:
     count = member.guild.member_count or len(member.guild.members)

@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from Commands.Reminder.remind import remind_group
 from Commands.Reminder._storage import remove_reminder

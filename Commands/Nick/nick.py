@@ -1,4 +1,4 @@
-import discord
+utf-8import discord
 from discord.ext import commands
 from discord import app_commands
 from Commands.Nick._utils import perform_nick_edit

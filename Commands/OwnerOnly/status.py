@@ -1,4 +1,4 @@
-import json
+utf-8import json
 import pathlib
 import discord
 from discord.ext import commands
@@ -55,7 +55,6 @@ def _build_activity(act_type: str, text: str) -> discord.BaseActivity | None:
         return discord.Activity(type=discord.ActivityType.competing, name=text)
     return discord.CustomActivity(name=f"{act_type} {text}".strip())
 
-
 class ActivityTextInputModal(Modal, title="Set Activity Text"):
     def __init__(self, bot: commands.Bot, act_type: str, parent_view: "StatusInteractiveLayout"):
         super().__init__()
@@ -89,7 +88,6 @@ class ActivityTextInputModal(Modal, title="Set Activity Text"):
                 await interaction.response.defer()
             except Exception:
                 pass
-
 
 class StatusInteractiveLayout(LayoutView):
     def __init__(self, bot: commands.Bot, current_type: str, current_text: str, current_status: str):
@@ -187,7 +185,6 @@ class StatusInteractiveLayout(LayoutView):
         )
         self.display_item.content = content
 
-
 class StatusCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -249,7 +246,6 @@ class StatusCommand(commands.Cog):
     async def status_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             await ctx.send(f"Status error: {error}", allowed_mentions=discord.AllowedMentions.none())
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(StatusCommand(bot))

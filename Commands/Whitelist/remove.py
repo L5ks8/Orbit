@@ -1,4 +1,4 @@
-import re
+utf-8import re
 import discord
 from discord.ext import commands
 from Commands.Whitelist._storage import remove_from_whitelist

@@ -1,4 +1,4 @@
-import os
+utf-8import os
 import io
 import json
 import asyncio
@@ -97,7 +97,6 @@ class ConsoleEvalModal(Modal, title="Interactive Python Console"):
         except Exception:
             pass
 
-
 class ConsoleLayoutView(LayoutView):
     def __init__(self, bot: commands.Bot, owner: discord.abc.User):
         super().__init__(timeout=None)
@@ -133,7 +132,6 @@ class ConsoleLayoutView(LayoutView):
         self.add_item(self.container)
         self.add_item(ActionRow(btn_term, btn_close))
 
-
 class ConsoleCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -153,7 +151,6 @@ class ConsoleCommand(commands.Cog):
     @console_cmd.error
     async def console_error(self, ctx: commands.Context, error):
         pass
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ConsoleCommand(bot))

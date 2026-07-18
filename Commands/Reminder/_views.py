@@ -1,4 +1,4 @@
-import re
+utf-8import re
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 
