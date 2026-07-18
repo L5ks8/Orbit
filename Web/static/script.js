@@ -50,8 +50,10 @@ function showView(viewName) {
     if (mainContainer) {
         if (viewName === 'config') {
             mainContainer.style.display = 'none';
+            document.body.style.overflow = 'hidden';
         } else {
             mainContainer.style.display = '';
+            document.body.style.overflow = '';
         }
     }
 }
