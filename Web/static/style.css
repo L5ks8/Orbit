@@ -213,7 +213,7 @@ body {
     display: flex;
     flex-direction: row;
     gap: 0;
-    height: calc(100vh - 56px);
+    height: 100%;
     width: 100%;
     flex: 1;
     overflow: hidden;
@@ -232,6 +232,7 @@ body {
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
     min-height: 0;
+    flex-shrink: 0;
 }
 
 .dash-sidebar-header {
