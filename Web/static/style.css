@@ -211,8 +211,11 @@ body {
 /* ===== DASHBOARD LAYOUT ===== */
 .dashboard-grid {
     display: flex;
+    flex-direction: row;
     gap: 0;
-    min-height: calc(100vh - 120px);
+    min-height: calc(100vh - 56px);
+    width: 100%;
+    flex: 1;
 }
 
 .dash-sidebar {
