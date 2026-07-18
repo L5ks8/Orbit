@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 import time
 import datetime
 from discord.ext import commands
@@ -128,9 +128,23 @@ class AutoModListener(commands.Cog):
         banned_cfg = config.get("banned_words", {})
         if banned_cfg.get("enabled", False) and not is_exempt(banned_cfg):
             words = banned_cfg.get("words", [])
-            if any(w in content_lower for w in words if w):
-                await do_action(banned_cfg, "AutoMod: Banned word detected")
-                return
+            import re
+            for w in words:
+                w = w.strip()
+                if not w: continue
+                # Handle asterisk wildcards
+                if w.startswith("*") and w.endswith("*"):
+                    pattern = re.escape(w[1:-1])
+                elif w.startswith("*"):
+                    pattern = re.escape(w[1:]) + r"\b"
+                elif w.endswith("*"):
+                    pattern = r"\b" + re.escape(w[:-1])
+                else:
+                    pattern = r"\b" + re.escape(w) + r"\b"
+                
+                if re.search(pattern, content_lower):
+                    await do_action(banned_cfg, "AutoMod: Banned word detected")
+                    return
 
         invites_cfg = config.get("anti_invites", {})
         if invites_cfg.get("enabled", False) and not is_exempt(invites_cfg):
