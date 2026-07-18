@@ -743,6 +743,7 @@ async function loadConfig(guildId, guildName) {
         LOGS_CATEGORIES.forEach(cat => {
             const isEnabled = config.logs?.categories?.[cat.id] || false;
             const selectedCh = config.logs?.channels?.[cat.id] || '';
+            const selectedRole = config.logs?.roles?.[cat.id] || '';
             
             const checked = isEnabled ? 'checked' : '';
 
@@ -762,6 +763,10 @@ async function loadConfig(guildId, guildName) {
                         <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">Log Channel</label>
                         <input type="hidden" id="log_cat_${cat.id}_channel">
                     </div>
+                    <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">Ping Role</label>
+                        <input type="hidden" id="log_cat_${cat.id}_role">
+                    </div>
                 </div>
             `;
         });
@@ -774,7 +779,9 @@ async function loadConfig(guildId, guildName) {
         // Initialize Custom Selects for Logs
         LOGS_CATEGORIES.forEach(cat => {
             const selectedCh = config.logs?.channels?.[cat.id] || '';
+            const selectedRole = config.logs?.roles?.[cat.id] || '';
             new CustomSelect(document.getElementById(`log_cat_${cat.id}_channel`), globalChannels, selectedCh, '-- Disabled --', false);
+            new CustomSelect(document.getElementById(`log_cat_${cat.id}_role`), globalRoles, selectedRole, '-- No Role --', true);
         });
 
         // Initialize Custom Selects for Roles
@@ -1329,15 +1336,18 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             global_exempt_channels: Array.from(document.getElementById('logs_global_channels').selectedOptions).map(o => o.value),
             global_exempt_roles: Array.from(document.getElementById('logs_global_roles').selectedOptions).map(o => o.value),
             categories: {},
-            channels: {}
+            channels: {},
+            roles: {}
         }
     };
     
     LOGS_CATEGORIES.forEach(cat => {
         const enCb = document.getElementById(`log_cat_${cat.id}_enabled`);
         const chSel = document.getElementById(`log_cat_${cat.id}_channel`);
+        const roleSel = document.getElementById(`log_cat_${cat.id}_role`);
         if (enCb) payload.logs.categories[cat.id] = enCb.checked;
         if (chSel) payload.logs.channels[cat.id] = chSel.value;
+        if (roleSel) payload.logs.roles[cat.id] = roleSel.value;
     });
 
     try {

@@ -50,7 +50,8 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
         "global_exempt_channels": [],
         "global_exempt_roles": [],
         "categories": DEFAULT_CATEGORIES.copy(),
-        "channels": {k: None for k in DEFAULT_CATEGORIES}
+        "channels": {k: None for k in DEFAULT_CATEGORIES},
+        "roles": {k: None for k in DEFAULT_CATEGORIES}
     }
     
     if not path.exists():
@@ -87,6 +88,15 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
         for k in DEFAULT_CATEGORIES:
             if k not in data["channels"]:
                 data["channels"][k] = None
+
+    if "roles" not in data or not isinstance(data["roles"], dict):
+        data["roles"] = {}
+        for k in DEFAULT_CATEGORIES:
+            data["roles"][k] = None
+    else:
+        for k in DEFAULT_CATEGORIES:
+            if k not in data["roles"]:
+                data["roles"][k] = None
 
     return data
 

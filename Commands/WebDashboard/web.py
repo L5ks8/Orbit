@@ -502,6 +502,11 @@ class WebDashboard:
                         c = l_data["channels"].get(k)
                         l_cfg["channels"][k] = int(c) if c else None
                 
+                if "roles" in l_data and isinstance(l_data["roles"], dict):
+                    for k in DEFAULT_CATEGORIES:
+                        r = l_data["roles"].get(k)
+                        l_cfg["roles"][k] = int(r) if r else None
+                
                 if "categories" in l_data and isinstance(l_data["categories"], dict):
                     for k in DEFAULT_CATEGORIES:
                         l_cfg["categories"][k] = bool(l_data["categories"].get(k, False))
