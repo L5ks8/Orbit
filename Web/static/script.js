@@ -45,6 +45,15 @@ const views = {
 function showView(viewName) {
     Object.values(views).forEach(v => v.classList.add('hidden'));
     views[viewName].classList.remove('hidden');
+    
+    const mainContainer = document.getElementById('main-container');
+    if (mainContainer) {
+        if (viewName === 'config') {
+            mainContainer.style.display = 'none';
+        } else {
+            mainContainer.style.display = '';
+        }
+    }
 }
 
 // Initial Load
