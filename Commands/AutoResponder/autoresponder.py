@@ -89,7 +89,7 @@ class AutoResponderCommand(commands.Cog):
         # Helper to check if we can respond in this channel
         def can_respond(entry_data: dict) -> bool:
             cid = entry_data.get("channel_id")
-            return cid is None or cid == message.channel.id
+            return not cid or str(cid) == str(message.channel.id)
 
         # Check if the message exactly matches a trigger
         entry = get_response_entry(message.guild.id, content)
