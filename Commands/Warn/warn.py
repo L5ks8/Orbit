@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import add_warning, get_user_warnings
@@ -38,10 +38,31 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
     warn_entry = add_warning(ctx.guild.id, user.id, reason, ctx.author.id)
     warns = get_user_warnings(ctx.guild.id, user.id)
     total_warns = len(warns)
+    
+    import datetime
+    punishment_text = ""
+    try:
+        if total_warns == 2:
+            await user.timeout(datetime.timedelta(minutes=15), reason="Automatic punishment for 2 warnings")
+            punishment_text = "\n**Automatic Action:** 15m Timeout"
+        elif total_warns == 3:
+            await user.timeout(datetime.timedelta(minutes=45), reason="Automatic punishment for 3 warnings")
+            punishment_text = "\n**Automatic Action:** 45m Timeout"
+        elif total_warns == 4:
+            await user.timeout(datetime.timedelta(days=1), reason="Automatic punishment for 4 warnings")
+            punishment_text = "\n**Automatic Action:** 1d Timeout"
+        elif total_warns >= 5:
+            await user.timeout(datetime.timedelta(days=3), reason=f"Automatic punishment for {total_warns} warnings")
+            punishment_text = "\n**Automatic Action:** 3d Timeout"
+    except discord.Forbidden:
+        punishment_text = "\n**Automatic Action:** Failed to apply timeout (Missing Permissions)"
+    except Exception as e:
+        punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
+
     try:
         await user.send(
             f"You have received a formal warning in **{ctx.guild.name}**.\n"
-            f"**Warn ID:** `{warn_entry['warn_id']}` | **Reason:** {reason}"
+            f"**Warn ID:** `{warn_entry['warn_id']}` | **Reason:** {reason}{punishment_text}"
         )
     except Exception:
         pass
@@ -54,7 +75,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
         ctx.guild,
         "moderation_action",
         "User Warned (`-warn`)",
-        f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}"
+        f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}{punishment_text}"
     )
     await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 

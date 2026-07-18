@@ -1,8 +1,0 @@
-{
-    "enabled": true,
-    "channel_id": 1525655189250637937,
-    "role_id": 1525654372028252271,
-    "remove_role_id": 1525654425949966428,
-    "auto_kick_minutes": 60,
-    "pending_kicks": {}
-}
