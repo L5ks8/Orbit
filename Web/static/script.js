@@ -45,7 +45,7 @@ const views = {
 function showView(viewName) {
     Object.values(views).forEach(v => v.classList.add('hidden'));
     views[viewName].classList.remove('hidden');
-    
+
     const mainContainer = document.getElementById('main-container');
     if (mainContainer) {
         if (viewName === 'config') {
@@ -65,7 +65,7 @@ async function init() {
             fetch('/api/user'),
             fetch('/api/stats')
         ]);
-        
+
         if (statsRes.ok) {
             const stats = await statsRes.json();
             document.getElementById('stat-servers').innerText = stats.servers || '--';
@@ -95,7 +95,7 @@ async function init() {
         console.error(e);
         showView('landing');
     }
-    
+
     lucide.createIcons();
 }
 
@@ -131,9 +131,9 @@ async function loadDashboard() {
     try {
         const res = await fetch('/api/guilds');
         const guilds = await res.json();
-        
+
         loader.classList.add('hidden');
-        
+
         if (guilds.length === 0) {
             grid.innerHTML = `<p style="color:var(--text-secondary);grid-column:1/-1;text-align:center;">You don't have admin permissions on any servers with Orbit.</p>`;
             return;
@@ -147,10 +147,10 @@ async function loadDashboard() {
                 e.preventDefault();
                 loadConfig(g.id, g.name, g.icon);
             };
-            
+
             const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : '';
             const iconHtml = iconUrl ? `<img src="${iconUrl}">` : g.name.charAt(0);
-            
+
             card.innerHTML = `
                 <div class="server-icon">${iconHtml}</div>
                 <div class="server-info">
@@ -167,48 +167,43 @@ async function loadDashboard() {
 }
 
 class CustomSelect {
-    constructor(selectElement, items, selectedValue, placeholder, type = 'channel') {
+    constructor(selectElement, items, selectedValue, placeholder, isRole = false) {
         this.select = selectElement;
         this.select.style.display = 'none';
-        
+
         this.items = items;
         this.value = selectedValue || '';
         this.placeholder = placeholder || 'Select...';
-        
-        // Backward compatibility
-        if (type === true) this.type = 'role';
-        else if (type === false) this.type = 'channel';
-        else this.type = type;
-
+        this.isRole = isRole;
         this.select.value = this.value;
-        
+
         this.container = document.createElement('div');
         this.container.className = 'custom-select';
-        
+
         this.trigger = document.createElement('div');
         this.trigger.className = 'custom-select-trigger';
-        
+
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'custom-select-dropdown';
-        
+
         this.searchContainer = document.createElement('div');
         this.searchContainer.className = 'custom-select-search';
         this.searchInput = document.createElement('input');
         this.searchInput.type = 'text';
         this.searchInput.placeholder = 'Search...';
         this.searchContainer.appendChild(this.searchInput);
-        
+
         this.optionsContainer = document.createElement('div');
         this.optionsContainer.className = 'custom-select-options';
-        
+
         this.dropdown.appendChild(this.searchContainer);
         this.dropdown.appendChild(this.optionsContainer);
-        
+
         this.container.appendChild(this.trigger);
         this.container.appendChild(this.dropdown);
-        
+
         this.select.parentNode.insertBefore(this.container, this.select.nextSibling);
-        
+
         this.trigger.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = this.container.classList.contains('open');
@@ -220,44 +215,37 @@ class CustomSelect {
                 this.searchInput.focus();
             }
         });
-        
+
         this.searchInput.addEventListener('input', (e) => {
             e.stopPropagation();
             this.renderOptions(e.target.value.toLowerCase());
         });
-        
+
         document.addEventListener('click', (e) => {
             if (!this.container.contains(e.target)) {
                 this.container.classList.remove('open');
             }
         });
-        
+
         this.updateTrigger(placeholder);
-    }
-    
-    getPrefix() {
-        if (this.type === 'role') return '@';
-        if (this.type === 'voice') return '<i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>';
-        if (this.type === 'category') return '<i data-lucide="folder" style="width: 14px; height: 14px;"></i>';
-        return '#';
     }
 
     updateTrigger(placeholder) {
         const item = this.items.find(i => String(i.id) === String(this.value));
         if (item) {
-            const prefix = this.getPrefix();
-            const colorHtml = this.type === 'role' ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
-            this.trigger.innerHTML = `<div class="content" style="display:flex;align-items:center;gap:4px;"><div class="cm-tag" style="margin:0;display:flex;align-items:center;gap:4px;">${colorHtml}${prefix}${item.name}</div></div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
+            const prefix = this.isRole ? '@' : '#';
+            const colorHtml = this.isRole ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
+            this.trigger.innerHTML = `<div class="content" style="display:flex;align-items:center;gap:4px;"><div class="cm-tag" style="margin:0;">${colorHtml}${prefix}${item.name}</div></div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
         } else {
             this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
         }
         lucide.createIcons({ root: this.trigger });
         this.select.value = this.value;
     }
-    
+
     renderOptions(filter) {
         this.optionsContainer.innerHTML = '';
-        
+
         const noneOption = document.createElement('div');
         noneOption.className = `custom-select-option ${this.value === '' ? 'selected' : ''}`;
         noneOption.innerHTML = `<div class="content" style="color:var(--text-secondary)">None</div>`;
@@ -267,13 +255,13 @@ class CustomSelect {
             this.container.classList.remove('open');
         });
         this.optionsContainer.appendChild(noneOption);
-        
+
         this.items.filter(i => i.name.toLowerCase().includes(filter)).forEach(item => {
             const opt = document.createElement('div');
             opt.className = `custom-select-option ${String(this.value) === String(item.id) ? 'selected' : ''}`;
-            const prefix = this.getPrefix();
-            const colorHtml = this.type === 'role' ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
-            opt.innerHTML = `<div style="display:flex;align-items:center;gap:4px;">${colorHtml}${prefix}${item.name}</div>`;
+            const prefix = this.isRole ? '@' : '#';
+            const colorHtml = this.isRole ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
+            opt.innerHTML = `${colorHtml}${prefix}${item.name}`;
             opt.addEventListener('click', () => {
                 this.value = item.id;
                 this.updateTrigger(this.placeholder);
@@ -281,7 +269,6 @@ class CustomSelect {
             });
             this.optionsContainer.appendChild(opt);
         });
-        lucide.createIcons({ root: this.optionsContainer });
     }
 }
 
@@ -289,42 +276,42 @@ class CustomMultiSelect {
     constructor(selectElement, items, placeholder, renderTag) {
         this.select = selectElement;
         this.select.style.display = 'none';
-        
+
         this.items = items;
         this.placeholder = placeholder || 'Select...';
         this.renderTag = renderTag || ((item) => item.name);
-        
+
         this.container = document.createElement('div');
         this.container.className = 'custom-multiselect';
-        
+
         this.trigger = document.createElement('div');
         this.trigger.className = 'custom-multiselect-trigger';
-        
+
         this.tagsContainer = document.createElement('div');
         this.tagsContainer.className = 'custom-multiselect-tags';
-        
+
         this.searchInput = document.createElement('input');
         this.searchInput.type = 'text';
         this.searchInput.placeholder = this.placeholder;
         this.searchInput.className = 'custom-multiselect-input';
-        
+
         this.trigger.appendChild(this.tagsContainer);
         this.trigger.appendChild(this.searchInput);
-        
+
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'custom-select-dropdown';
-        
+
         this.optionsContainer = document.createElement('div');
         this.optionsContainer.className = 'custom-select-options';
         this.dropdown.appendChild(this.optionsContainer);
-        
+
         this.container.appendChild(this.trigger);
         this.container.appendChild(this.dropdown);
         this.select.parentNode.insertBefore(this.container, this.select.nextSibling);
-        
+
         this.renderTags();
         this.renderOptions('');
-        
+
         this.container.addEventListener('click', (e) => {
             e.stopPropagation();
             if (e.target.closest('.cm-tag-remove')) return;
@@ -336,11 +323,11 @@ class CustomMultiSelect {
                 this.searchInput.focus();
             }
         });
-        
+
         this.searchInput.addEventListener('input', (e) => {
             this.renderOptions(e.target.value.toLowerCase());
         });
-        
+
         document.addEventListener('click', (e) => {
             if (!this.container.contains(e.target)) {
                 this.container.classList.remove('open');
@@ -349,11 +336,11 @@ class CustomMultiSelect {
             }
         });
     }
-    
+
     renderTags() {
         this.tagsContainer.innerHTML = '';
         const selectedValues = Array.from(this.select.selectedOptions).map(o => o.value);
-        
+
         if (selectedValues.length > 0) {
             this.searchInput.placeholder = '';
         } else {
@@ -363,12 +350,12 @@ class CustomMultiSelect {
         selectedValues.forEach(val => {
             const item = this.items.find(i => String(i.id) === String(val));
             if (!item) return;
-            
+
             const tag = document.createElement('div');
             tag.className = 'cm-tag';
             tag.innerHTML = this.renderTag(item) + ' <span class="cm-tag-remove" data-id="' + item.id + '"><i data-lucide="x" style="width: 14px; height: 14px;"></i></span>';
             this.tagsContainer.appendChild(tag);
-            
+
             tag.querySelector('.cm-tag-remove').addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.toggleOption(item.id, false);
@@ -376,20 +363,20 @@ class CustomMultiSelect {
         });
         lucide.createIcons({ root: this.tagsContainer });
     }
-    
+
     renderOptions(filter) {
         this.optionsContainer.innerHTML = '';
         const selectedValues = Array.from(this.select.selectedOptions).map(o => o.value);
-        
+
         let count = 0;
         this.items.forEach(item => {
             if (selectedValues.includes(item.id)) return;
             if (filter && !item.name.toLowerCase().includes(filter)) return;
-            
+
             const optEl = document.createElement('div');
             optEl.className = 'custom-select-option';
             optEl.innerHTML = this.renderTag(item);
-            
+
             optEl.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.toggleOption(item.id, true);
@@ -400,12 +387,12 @@ class CustomMultiSelect {
             this.optionsContainer.appendChild(optEl);
             count++;
         });
-        
+
         if (count === 0) {
             this.optionsContainer.innerHTML = '<div class="custom-select-option" style="color:var(--text-muted); cursor:default;">No results</div>';
         }
     }
-    
+
     toggleOption(id, selectIt) {
         const option = Array.from(this.select.options).find(o => String(o.value) === String(id));
         if (option) {
@@ -425,12 +412,12 @@ let currentPermissions = {};
 function lockSection(sectionId, requirementText) {
     const section = document.getElementById(sectionId);
     if (!section) return;
-    
+
     section.style.position = 'relative';
     section.style.opacity = '0.6';
     section.style.pointerEvents = 'none';
     section.style.filter = 'grayscale(80%)';
-    
+
     const overlay = document.createElement('div');
     overlay.style.position = 'absolute';
     overlay.style.top = '0';
@@ -444,12 +431,12 @@ function lockSection(sectionId, requirementText) {
     overlay.style.justifyContent = 'center';
     overlay.style.zIndex = '10';
     overlay.style.borderRadius = '8px';
-    
+
     const icon = document.createElement('div');
     icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
     icon.style.color = '#fff';
     icon.style.marginBottom = '10px';
-    
+
     const text = document.createElement('div');
     text.innerText = `Missing Permissions: ${requirementText}`;
     text.style.color = '#fff';
@@ -457,11 +444,11 @@ function lockSection(sectionId, requirementText) {
     text.style.background = 'rgba(0,0,0,0.8)';
     text.style.padding = '8px 16px';
     text.style.borderRadius = '4px';
-    
+
     overlay.appendChild(icon);
     overlay.appendChild(text);
     section.appendChild(overlay);
-    
+
     const inputs = section.querySelectorAll('input, select, button');
     inputs.forEach(i => i.disabled = true);
 }
@@ -538,7 +525,7 @@ function addTicketOptionRow(slot = { name: '', role_id: '', category_id: '' }) {
     const row = document.createElement('div');
     row.className = 'ticket-option-row';
     row.style.cssText = 'display: flex; gap: 10px; align-items: flex-end; background: var(--bg-color); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); flex-wrap: wrap;';
-    
+
     // Name input
     const nameGroup = document.createElement('div');
     nameGroup.style.cssText = 'flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;';
@@ -546,23 +533,23 @@ function addTicketOptionRow(slot = { name: '', role_id: '', category_id: '' }) {
         <label style="font-size: 12px; color: var(--text-secondary);">Option Name</label>
         <input type="text" class="to-name" value="${(slot.name || '').replace(/"/g, '&quot;')}" placeholder="e.g. Bug Report" style="background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none; height: 38px; box-sizing: border-box;">
     `;
-    
+
     // Role Select (Custom)
     const roleGroup = document.createElement('div');
     roleGroup.style.cssText = 'flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;';
     const roleLabel = document.createElement('label');
     roleLabel.style.cssText = 'font-size: 12px; color: var(--text-secondary);';
     roleLabel.innerText = 'Support Role';
-    
+
     const roleSelectContainer = document.createElement('div');
     const roleHiddenInput = document.createElement('input');
     roleHiddenInput.type = 'hidden';
     roleHiddenInput.className = 'to-role';
     roleSelectContainer.appendChild(roleHiddenInput);
-    
+
     roleGroup.appendChild(roleLabel);
     roleGroup.appendChild(roleSelectContainer);
-    
+
     // Category Select (Native)
     const catGroup = document.createElement('div');
     catGroup.style.cssText = 'flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;';
@@ -571,14 +558,14 @@ function addTicketOptionRow(slot = { name: '', role_id: '', category_id: '' }) {
         const selected = (String(slot.category_id) === String(c.id)) ? 'selected' : '';
         catOptionsHTML += `<option value="${c.id}" ${selected}>${c.name}</option>`;
     });
-    
+
     catGroup.innerHTML = `
         <label style="font-size: 12px; color: var(--text-secondary);">Ticket Category</label>
         <select class="to-category" style="background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none; height: 38px; box-sizing: border-box;">
             ${catOptionsHTML}
         </select>
     `;
-    
+
     // Remove Button
     const btnRemove = document.createElement('button');
     btnRemove.type = 'button';
@@ -587,13 +574,13 @@ function addTicketOptionRow(slot = { name: '', role_id: '', category_id: '' }) {
     btnRemove.innerHTML = '<i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>';
     btnRemove.onclick = () => row.remove();
     lucide.createIcons({ root: btnRemove });
-    
+
     row.appendChild(nameGroup);
     row.appendChild(roleGroup);
     row.appendChild(catGroup);
     row.appendChild(btnRemove);
     list.appendChild(row);
-    
+
     // Initialize CustomSelect for the support role
     new CustomSelect(roleHiddenInput, globalRoles, slot.role_id || '', 'Select Staff Role...');
 }
@@ -753,7 +740,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
     const iconUrl = guildIcon ? `https://cdn.discordapp.com/icons/${guildId}/${guildIcon}.png` : '';
     document.getElementById('sidebar-server-icon').innerHTML = iconUrl ? `<img src="${iconUrl}">` : guildName.charAt(0);
     showView('config');
-    
+
     document.getElementById('config-layout').style.display = 'none';
     document.getElementById('config-loader').classList.remove('hidden');
 
@@ -797,7 +784,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
         // Set values
         const config = data.config;
         currentPermissions = data.permissions || {};
-        
+
         // Welcome
         if (!currentPermissions.can_channels) lockSection('section-welcome', 'Manage Channels');
         document.getElementById('welcome_enabled').checked = config.welcome?.enabled || false;
@@ -828,7 +815,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
         // AutoMod
         if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
         currentAutomodConfig = config.automod || {};
-        
+
         document.getElementById('automod_enabled').checked = currentAutomodConfig.enabled || false;
         document.getElementById('automod_banned_words_enabled').checked = currentAutomodConfig.banned_words?.enabled || false;
         document.getElementById('automod_anti_spam_enabled').checked = currentAutomodConfig.anti_spam?.enabled || false;
@@ -878,14 +865,14 @@ async function loadConfig(guildId, guildName, guildIcon) {
         if (!currentPermissions.can_channels) lockSection('section-logs', 'Manage Channels');
         document.getElementById('logs_enabled').checked = config.logs?.enabled || false;
         document.getElementById('logs_executor_in_logs').checked = config.logs?.executor_in_logs || false;
-        
+
         const logsGrid = document.getElementById('logs-grid');
         logsGrid.innerHTML = '';
         LOGS_CATEGORIES.forEach(cat => {
             const isEnabled = config.logs?.categories?.[cat.id] || false;
             const selectedCh = config.logs?.channels?.[cat.id] || '';
             const selectedRole = config.logs?.roles?.[cat.id] || '';
-            
+
             const checked = isEnabled ? 'checked' : '';
 
             logsGrid.innerHTML += `
@@ -931,7 +918,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
 
         // Populate Global Channels and Roles Multi-Selects
 
-        
+
         const logsChannelsEl = document.getElementById('logs_global_channels');
         logsChannelsEl.innerHTML = "";
         globalChannels.forEach(c => {
@@ -957,7 +944,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
         // AutoResponder & JoinRoles & TicketOptions
         if (!currentPermissions.can_messages) lockSection('section-autoresponder', 'Manage Messages');
         renderAutoReplies(config.autoresponder || {});
-        
+
         if (!currentPermissions.can_roles) lockSection('section-joinroles', 'Manage Roles');
         const arUserEl = document.getElementById('autoroles_user');
         const arBotEl = document.getElementById('autoroles_bot');
@@ -977,9 +964,9 @@ async function loadConfig(guildId, guildName, guildIcon) {
         document.getElementById('autoroles_enabled').checked = config.joinroles?.enabled ?? false;
         new CustomMultiSelect(arUserEl, globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
         new CustomMultiSelect(arBotEl, globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
-        
+
         renderTicketOptions(config.ticket?.options_slots || []);
-        
+
         // Automation
         if (!currentPermissions.can_channels) lockSection('section-automation', 'Manage Channels');
         const autoMediaChEl = document.getElementById('auto_media_channels');
@@ -991,7 +978,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
             autoMediaChEl.appendChild(opt);
         });
         document.getElementById('auto_media_ignore_bots').checked = config.automation?.media_only?.ignore_bots ?? true;
-        
+
         const autoCmdChEl = document.getElementById('auto_cmd_channels');
         autoCmdChEl.innerHTML = "";
         globalChannels.forEach(c => {
@@ -1000,13 +987,13 @@ async function loadConfig(guildId, guildName, guildIcon) {
             if (config.automation?.command_only?.channels?.includes(c.id)) opt.selected = true;
             autoCmdChEl.appendChild(opt);
         });
-        
+
         new CustomMultiSelect(autoMediaChEl, globalChannels, "Select...", (item) => "# " + item.name);
         new CustomMultiSelect(autoCmdChEl, globalChannels, "Select...", (item) => "# " + item.name);
 
         renderFileChannels(config.automation?.file_only || []);
         renderAutoReactions(config.automation?.auto_reaction || []);
-        
+
         // Temp Voice
         if (!currentPermissions.can_channels) lockSection('section-tempvoice', 'Manage Channels');
         document.getElementById('tempvoice-enabled').checked = config.tempvoice?.enabled ?? false;
@@ -1030,7 +1017,7 @@ document.getElementById('btn-send-verify').addEventListener('click', async () =>
         showToast("Please select a channel first.");
         return;
     }
-    
+
     const btn = document.getElementById('btn-send-verify');
     btn.innerText = 'Sending...';
     btn.disabled = true;
@@ -1041,7 +1028,7 @@ document.getElementById('btn-send-verify').addEventListener('click', async () =>
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ channel_id: channelId })
         });
-        
+
         if (res.ok) {
             showToast('Verification Panel successfully sent to the channel!');
         } else {
@@ -1062,7 +1049,7 @@ document.querySelectorAll('.dash-nav-item').forEach(item => {
         e.preventDefault();
         document.querySelectorAll('.dash-nav-item').forEach(nav => nav.classList.remove('active'));
         document.querySelectorAll('.dash-panel').forEach(sec => sec.classList.remove('active'));
-        
+
         item.classList.add('active');
         document.getElementById(item.dataset.target).classList.add('active');
     });
@@ -1075,18 +1062,18 @@ document.getElementById('btn-back').addEventListener('click', () => {
 function updateLivePreview() {
     const msgInput = document.getElementById('welcome_message').value;
     const imgInput = document.getElementById('welcome_image_url').value;
-    
+
     // Replace placeholders and #channel-name mentions
     let formattedText = msgInput
         .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
         .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
         .replace(/{count}/g, '<b>100</b>');
-        
+
     document.getElementById('welcome_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
-    
+
     const imgElement = document.getElementById('welcome_preview_img');
-    
+
     if (imgInput) {
         imgElement.src = imgInput;
         imgElement.style.display = 'block';
@@ -1099,18 +1086,18 @@ function updateLivePreview() {
 function updateGoodbyeLivePreview() {
     const msgInput = document.getElementById('goodbye_message').value;
     const imgInput = document.getElementById('goodbye_image_url').value;
-    
+
     // Replace placeholders and #channel-name mentions
     let formattedText = msgInput
         .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
         .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
         .replace(/{count}/g, '<b>100</b>');
-        
+
     document.getElementById('goodbye_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
-    
+
     const imgElement = document.getElementById('goodbye_preview_img');
-    
+
     if (imgInput) {
         imgElement.src = imgInput;
         imgElement.style.display = 'block';
@@ -1153,18 +1140,18 @@ function syncGoodbyeDropzoneFromUrl(url) {
 function updateBoostLivePreview() {
     const msgInput = document.getElementById('boost_message').value;
     const imgInput = document.getElementById('boost_image_url').value;
-    
+
     // Replace placeholders and #channel-name mentions
     let formattedText = msgInput
         .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
         .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
         .replace(/{count}/g, '<b>100</b>');
-        
+
     document.getElementById('boost_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
-    
+
     const imgElement = document.getElementById('boost_preview_img');
-    
+
     if (imgInput) {
         imgElement.src = imgInput;
         imgElement.style.display = 'block';
@@ -1192,10 +1179,10 @@ function syncBoostDropzoneFromUrl(url) {
 function renderTempVoiceHubs(tvConfig) {
     const container = document.getElementById('tempvoice-hubs-container');
     if (!container) return;
-    
+
     container.innerHTML = '';
     const hubs = tvConfig.hubs || [];
-    
+
     if (hubs.length === 0) {
         container.innerHTML = '<p style="color:var(--text-secondary); font-size:14px; margin:0;" id="tv-empty-text">No Temp Voice Hubs configured.</p>';
     } else {
@@ -1219,16 +1206,16 @@ function updateAddTempVoiceButton() {
 function addTempVoiceHubRow(hub = { hub_channel_id: '', category_id: '', default_user_limit: 0 }) {
     const container = document.getElementById('tempvoice-hubs-container');
     if (container.querySelector('#tv-empty-text')) container.innerHTML = '';
-    
+
     if (container.querySelectorAll('.tempvoice-hub-row').length >= 5) {
         showToast("Maximum of 5 Temp Voice Hubs reached.");
         return;
     }
-    
+
     const row = document.createElement('div');
     row.className = 'tempvoice-hub-row config-card';
     row.style.cssText = 'padding: 15px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 0; position: relative;';
-    
+
     row.innerHTML = `
         <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
@@ -1248,13 +1235,13 @@ function addTempVoiceHubRow(hub = { hub_channel_id: '', category_id: '', default
             </button>
         </div>
     `;
-    
+
     const channelInput = row.querySelector('.tv-hub-channel');
     const categoryInput = row.querySelector('.tv-hub-category');
-    
-    new CustomSelect(channelInput, globalVoiceChannels, hub.hub_channel_id || '', '-- Select Voice Channel --', 'voice');
-    new CustomSelect(categoryInput, globalCategories, hub.category_id || '', '-- Same as Hub --', 'category');
-    
+
+    new CustomSelect(channelInput, globalVoiceChannels, hub.hub_channel_id || '', '-- Select Voice Channel --');
+    new CustomSelect(categoryInput, globalCategories, hub.category_id || '', '-- Same as Hub --');
+
     row.querySelector('.btn-remove-hub').onclick = () => {
         row.remove();
         if (container.querySelectorAll('.tempvoice-hub-row').length === 0) {
@@ -1262,7 +1249,7 @@ function addTempVoiceHubRow(hub = { hub_channel_id: '', category_id: '', default
         }
         updateAddTempVoiceButton();
     };
-    
+
     container.appendChild(row);
     lucide.createIcons({ root: row });
     updateAddTempVoiceButton();
@@ -1337,7 +1324,7 @@ document.getElementById('btn-send-ticket').addEventListener('click', async () =>
         showToast("Please select a channel to send the ticket panel to.");
         return;
     }
-    
+
     try {
         const res = await fetch(`/api/action/${currentGuildId}/send_ticket_panel`, {
             method: 'POST',
@@ -1355,10 +1342,10 @@ document.getElementById('btn-send-ticket').addEventListener('click', async () =>
 function openAutoModModal(ruleId) {
     activeAutomodRule = ruleId;
     const ruleCfg = currentAutomodConfig[ruleId] || {};
-    
+
     let title = '';
     let html = '';
-    
+
     const actionSelect = `
         <div class="form-group" style="margin-top: 15px;">
             <label>Punishment</label>
@@ -1380,13 +1367,13 @@ function openAutoModModal(ruleId) {
     if (ruleId !== 'anti_alt') {
         const selCh = ruleCfg.exempt_channels || [];
         const selRo = ruleCfg.exempt_roles || [];
-        
+
         let chOptions = '';
         globalChannels.forEach(c => {
             const sel = selCh.includes(c.id) ? 'selected' : '';
             chOptions += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
         });
-        
+
         let roOptions = '';
         globalRoles.forEach(r => {
             const sel = selRo.includes(r.id) ? 'selected' : '';
@@ -1487,7 +1474,7 @@ function openAutoModModal(ruleId) {
 
     document.getElementById('am-modal-title').innerText = title;
     document.getElementById('am-modal-body').innerHTML = html;
-    
+
     if (ruleId !== 'anti_alt') {
         new CustomMultiSelect(document.getElementById('am-modal-channels'), globalChannels, "Select...", (item) => "# " + item.name);
         new CustomMultiSelect(document.getElementById('am-modal-roles'), globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
@@ -1512,28 +1499,28 @@ function closeAutoModModal() {
     if (activeAutomodRule) {
         if (!currentAutomodConfig[activeAutomodRule]) currentAutomodConfig[activeAutomodRule] = {};
         const ruleCfg = currentAutomodConfig[activeAutomodRule];
-        
+
         const actionEl = document.getElementById('am-modal-action');
         if (actionEl) ruleCfg.action = actionEl.value;
-        
+
         const toEl = document.getElementById('am-modal-timeout');
         if (toEl) ruleCfg.timeout_duration_min = parseInt(toEl.value) || 5;
 
         if (activeAutomodRule === 'banned_words') {
-            ruleCfg.words = document.getElementById('am-modal-words').value.split(',').map(s=>s.trim()).filter(s=>s);
+            ruleCfg.words = document.getElementById('am-modal-words').value.split(',').map(s => s.trim()).filter(s => s);
         } else if (activeAutomodRule === 'anti_spam') {
             ruleCfg.max_messages = parseInt(document.getElementById('am-modal-msgs').value) || 5;
             ruleCfg.time_window_sec = parseInt(document.getElementById('am-modal-window').value) || 3;
         } else if (activeAutomodRule === 'anti_link') {
-            ruleCfg.blocked_domains = document.getElementById('am-modal-domains').value.split(',').map(s=>s.trim()).filter(s=>s);
+            ruleCfg.blocked_domains = document.getElementById('am-modal-domains').value.split(',').map(s => s.trim()).filter(s => s);
         } else if (activeAutomodRule === 'mention_spam') {
             ruleCfg.max_mentions = parseInt(document.getElementById('am-modal-mentions').value) || 4;
         } else if (activeAutomodRule === 'anti_alt') {
             ruleCfg.min_age_days = parseInt(document.getElementById('am-modal-age').value) || 3;
             const act = document.getElementById('am-modal-action-alt');
-            if(act) ruleCfg.action = act.value;
+            if (act) ruleCfg.action = act.value;
         }
-        
+
         if (activeAutomodRule !== 'anti_alt') {
             const chEl = document.getElementById('am-modal-channels');
             if (chEl) ruleCfg.exempt_channels = Array.from(chEl.selectedOptions).map(o => o.value);
@@ -1541,7 +1528,7 @@ function closeAutoModModal() {
             if (roEl) ruleCfg.exempt_roles = Array.from(roEl.selectedOptions).map(o => o.value);
         }
     }
-    
+
     activeAutomodRule = null;
     document.getElementById('automod-modal').classList.remove('show');
     document.body.style.overflow = '';
@@ -1617,22 +1604,22 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
 
     // Collect AutoMod Toggle States and Global Exepts
     currentAutomodConfig.enabled = document.getElementById('automod_enabled').checked;
-    
-    if(!currentAutomodConfig.banned_words) currentAutomodConfig.banned_words = {};
+
+    if (!currentAutomodConfig.banned_words) currentAutomodConfig.banned_words = {};
     currentAutomodConfig.banned_words.enabled = document.getElementById('automod_banned_words_enabled').checked;
-    if(!currentAutomodConfig.anti_spam) currentAutomodConfig.anti_spam = {};
+    if (!currentAutomodConfig.anti_spam) currentAutomodConfig.anti_spam = {};
     currentAutomodConfig.anti_spam.enabled = document.getElementById('automod_anti_spam_enabled').checked;
-    if(!currentAutomodConfig.anti_invites) currentAutomodConfig.anti_invites = {};
+    if (!currentAutomodConfig.anti_invites) currentAutomodConfig.anti_invites = {};
     currentAutomodConfig.anti_invites.enabled = document.getElementById('automod_anti_invites_enabled').checked;
-    if(!currentAutomodConfig.anti_link) currentAutomodConfig.anti_link = {};
+    if (!currentAutomodConfig.anti_link) currentAutomodConfig.anti_link = {};
     currentAutomodConfig.anti_link.enabled = document.getElementById('automod_anti_link_enabled').checked;
-    if(!currentAutomodConfig.anti_caps) currentAutomodConfig.anti_caps = {};
+    if (!currentAutomodConfig.anti_caps) currentAutomodConfig.anti_caps = {};
     currentAutomodConfig.anti_caps.enabled = document.getElementById('automod_anti_caps_enabled').checked;
-    if(!currentAutomodConfig.mention_spam) currentAutomodConfig.mention_spam = {};
+    if (!currentAutomodConfig.mention_spam) currentAutomodConfig.mention_spam = {};
     currentAutomodConfig.mention_spam.enabled = document.getElementById('automod_mention_spam_enabled').checked;
-    if(!currentAutomodConfig.anti_alt) currentAutomodConfig.anti_alt = {};
+    if (!currentAutomodConfig.anti_alt) currentAutomodConfig.anti_alt = {};
     currentAutomodConfig.anti_alt.enabled = document.getElementById('automod_anti_alt_enabled').checked;
-    
+
 
 
     // Collect Temp Voice Data
@@ -1711,7 +1698,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             roles: {}
         }
     };
-    
+
     LOGS_CATEGORIES.forEach(cat => {
         const enCb = document.getElementById(`log_cat_${cat.id}_enabled`);
         const chSel = document.getElementById(`log_cat_${cat.id}_channel`);
@@ -1727,7 +1714,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        
+
         if (res.ok) {
             showToast('Settings saved successfully!');
         } else {
@@ -1753,7 +1740,7 @@ function showToast(msg) {
 
 init();
 // Workaround for multiple selects on Windows to behave like toggles
-document.addEventListener('mousedown', function(e) {
+document.addEventListener('mousedown', function (e) {
     if (e.target.tagName === 'OPTION' && e.target.parentElement.hasAttribute('multiple')) {
         e.preventDefault();
         e.target.selected = !e.target.selected;

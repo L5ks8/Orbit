@@ -334,6 +334,11 @@ class WebDashboard:
         if "roles" in logs_cfg and isinstance(logs_cfg["roles"], dict):
             for k, v in logs_cfg["roles"].items():
                 if v: logs_cfg["roles"][k] = str(v)
+                
+        if "hubs" in tempvoice_cfg and isinstance(tempvoice_cfg["hubs"], list):
+            for hub in tempvoice_cfg["hubs"]:
+                if hub.get("hub_channel_id"): hub["hub_channel_id"] = str(hub["hub_channel_id"])
+                if hub.get("category_id"): hub["category_id"] = str(hub["category_id"])
         
         return web.json_response({
             "permissions": user_perms,
