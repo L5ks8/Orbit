@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import discord
 from discord.ext import commands
 from Commands.JoinToCreate._storage import load_jtc_config, load_active_channels, create_active_channel, update_active_channel, remove_active_channel, get_active_channel
@@ -18,59 +18,65 @@ class JTCListenerCog(commands.Cog):
         if not config.get("enabled", False):
             return
 
-        hub_id = config.get("hub_channel_id")
+        if after.channel:
+            joined_hub = None
+            for hub in config.get("hubs", []):
+                if hub.get("hub_channel_id") == after.channel.id:
+                    joined_hub = hub
+                    break
+            
+            if joined_hub:
+                category_id = joined_hub.get("category_id")
+                category = guild.get_channel(category_id) if category_id else after.channel.category
+                if not category and after.channel.category:
+                    category = after.channel.category
 
-        if after.channel and after.channel.id == hub_id:
-            category_id = config.get("category_id")
-            category = guild.get_channel(category_id) if category_id else after.channel.category
-            if not category and after.channel.category:
-                category = after.channel.category
+                clean_name = member.display_name[:20]
+                channel_name = f"{clean_name}'s Channel"
+                default_limit = joined_hub.get("default_user_limit", 0)
 
-            clean_name = member.display_name[:20]
-            channel_name = f"{clean_name}'s Channel"
-            default_limit = config.get("default_user_limit", 0)
+                overwrites = {
+                    guild.default_role: discord.PermissionOverwrite(connect=True, view_channel=True),
+                    member: discord.PermissionOverwrite(connect=True, view_channel=True, manage_channels=True)
+                }
 
-            overwrites = {
-                guild.default_role: discord.PermissionOverwrite(connect=True, view_channel=True),
-                member: discord.PermissionOverwrite(connect=True, view_channel=True, manage_channels=True)
-            }
+                try:
+                    temp_channel = await guild.create_voice_channel(
+                        name=channel_name,
+                        category=category,
+                        user_limit=default_limit,
+                        overwrites=overwrites,
+                        reason=f"Join-to-Create temp channel for {member}"
+                    )
+                except Exception as e:
+                    print(f"Failed to create JTC voice channel: {e}")
+                    return
 
-            try:
-                temp_channel = await guild.create_voice_channel(
-                    name=channel_name,
-                    category=category,
-                    user_limit=default_limit,
-                    overwrites=overwrites,
-                    reason=f"Join-to-Create temp channel for {member}"
-                )
-            except Exception as e:
-                print(f"Failed to create JTC voice channel: {e}")
-                return
+                try:
+                    await member.move_to(temp_channel, reason="Moved into temp voice channel")
+                except Exception:
+                    pass
 
-            try:
-                await member.move_to(temp_channel, reason="Moved into temp voice channel")
-            except Exception:
-                pass
+                data = create_active_channel(guild.id, temp_channel.id, member.id)
+                if default_limit > 0:
+                    data["limit"] = default_limit
 
-            data = create_active_channel(guild.id, temp_channel.id, member.id)
-            if default_limit > 0:
-                data["limit"] = default_limit
+                container = build_jtc_container(data)
+                control_view = PersistentJTCControlLayout(container=container, data=data)
 
-            container = build_jtc_container(data)
-            control_view = PersistentJTCControlLayout(container=container, data=data)
+                try:
+                    msg = await temp_channel.send(
+                        view=control_view,
+                        allowed_mentions=discord.AllowedMentions.none()
+                    )
+                    if msg:
+                        data["message_id"] = msg.id
+                        update_active_channel(guild.id, temp_channel.id, data)
+                except Exception as e:
+                    print(f"Failed to send JTC control container: {e}")
 
-            try:
-                msg = await temp_channel.send(
-                    view=control_view,
-                    allowed_mentions=discord.AllowedMentions.none()
-                )
-                if msg:
-                    data["message_id"] = msg.id
-                    update_active_channel(guild.id, temp_channel.id, data)
-            except Exception as e:
-                print(f"Failed to send JTC control container: {e}")
-
-        if before.channel and before.channel.id != hub_id:
+        hub_ids = [h.get("hub_channel_id") for h in config.get("hubs", [])]
+        if before.channel and before.channel.id not in hub_ids:
             active = get_active_channel(guild.id, before.channel.id)
             if active:
                 remaining_members = [m for m in before.channel.members if not m.bot]

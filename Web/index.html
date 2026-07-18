@@ -291,6 +291,11 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                             </span> Channel Automation
                         </div>
+                        <div class="dash-nav-item" data-target="section-tempvoice">
+                            <span class="nav-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                            </span> Temp Voice
+                        </div>
                     </div>
                 </div>
 
@@ -955,6 +960,32 @@
                                     </table>
                                 </div>
                                 <button type="button" class="btn-primary" id="btn-add-auto-reaction" style="font-size: 13px; padding: 6px 12px;">+ Add Reaction-Channel</button>
+                            </div>
+                        </div>
+
+                        <!-- Temp Voice Section -->
+                        <div id="section-tempvoice" class="dash-section hidden">
+                            <div class="section-title">Join to Create (Temp Voice)</div>
+                            <p class="section-desc">Allow users to create their own temporary voice channels by joining a specific Hub channel.</p>
+
+                            <div class="card">
+                                <div class="card-title">System Status</div>
+                                <div class="form-group toggle-group">
+                                    <label for="tempvoice-enabled" class="form-label mb-0">Enable Temp Voice System</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="tempvoice-enabled">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="card" style="margin-top: 20px;">
+                                <div class="card-title">Temp Voice Hubs (Max 5)</div>
+                                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Configure up to 5 hub channels. When a user joins a hub channel, a temporary voice channel is automatically created for them.</p>
+                                
+                                <div id="tempvoice-hubs-container">
+                                    <!-- Populated by JS -->
+                                </div>
                             </div>
                         </div>
 

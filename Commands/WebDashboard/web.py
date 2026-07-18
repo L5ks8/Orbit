@@ -209,6 +209,9 @@ class WebDashboard:
         ticket_cfg = load_ticket_config(guild_id)
         logs_cfg = load_log_config(guild_id)
         automation_cfg = load_automation_config(guild_id)
+        
+        from Commands.JoinToCreate._storage import load_jtc_config
+        tempvoice_cfg = load_jtc_config(guild_id)
 
         config_data = {
             "welcome": {
@@ -320,7 +323,8 @@ class WebDashboard:
                 ]
             },
             "logs": logs_cfg,
-            "automation": automation_cfg
+            "automation": automation_cfg,
+            "tempvoice": tempvoice_cfg
         }
 
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
@@ -538,6 +542,26 @@ class WebDashboard:
                         l_cfg["categories"][k] = bool(l_data["categories"].get(k, False))
                 
                 save_log_config(guild_id, l_cfg)
+
+            if user_perms.get("can_channels") and "tempvoice" in data:
+                from Commands.JoinToCreate._storage import load_jtc_config, save_jtc_config
+                jtc_cfg = load_jtc_config(guild_id)
+                jtc_data = data["tempvoice"]
+                
+                jtc_cfg["enabled"] = bool(jtc_data.get("enabled", False))
+                parsed_hubs = []
+                for hub in jtc_data.get("hubs", []):
+                    hid = hub.get("hub_channel_id")
+                    cid = hub.get("category_id")
+                    limit = hub.get("default_user_limit", 0)
+                    if hid:
+                        parsed_hubs.append({
+                            "hub_channel_id": int(hid) if str(hid).isdigit() else None,
+                            "category_id": int(cid) if cid and str(cid).isdigit() else None,
+                            "default_user_limit": int(limit) if str(limit).isdigit() else 0
+                        })
+                jtc_cfg["hubs"] = [h for h in parsed_hubs if h["hub_channel_id"]]
+                save_jtc_config(guild_id, jtc_cfg)
 
                 pid = ticket_cfg.get("panel_channel_id")
                 mid = ticket_cfg.get("panel_message_id")

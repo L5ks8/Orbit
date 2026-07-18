@@ -992,6 +992,11 @@ async function loadConfig(guildId, guildName, guildIcon) {
 
         renderFileChannels(config.automation?.file_only || []);
         renderAutoReactions(config.automation?.auto_reaction || []);
+        
+        // Temp Voice
+        if (!currentPermissions.can_channels) lockSection('section-tempvoice', 'Manage Channels');
+        document.getElementById('tempvoice-enabled').checked = config.tempvoice?.enabled ?? false;
+        renderTempVoiceHubs(config.tempvoice || {});
 
         // Initial Preview Update
         updateLivePreview();
@@ -1170,7 +1175,52 @@ function syncBoostDropzoneFromUrl(url) {
     updateBoostLivePreview();
 }
 
-
+function renderTempVoiceHubs(tvConfig) {
+    const container = document.getElementById('tempvoice-hubs-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const hubs = tvConfig.hubs || [];
+    
+    for (let i = 0; i < 5; i++) {
+        const hub = hubs[i] || {};
+        const hid = hub.hub_channel_id || '';
+        const cid = hub.category_id || '';
+        const limit = hub.default_user_limit || 0;
+        
+        let chOptions = '<option value="">-- None (Disabled) --</option>';
+        globalChannels.forEach(c => {
+            const sel = (c.id === hid) ? 'selected' : '';
+            chOptions += `<option value="${c.id}" ${sel}># ${c.name}</option>`;
+        });
+        
+        let catOptions = '<option value="">-- Same as Hub --</option>';
+        globalCategories.forEach(c => {
+            const sel = (c.id === cid) ? 'selected' : '';
+            catOptions += `<option value="${c.id}" ${sel}># ${c.name}</option>`;
+        });
+        
+        container.innerHTML += `
+            <div class="config-card" style="margin-top: 15px; padding: 15px;">
+                <div style="font-weight: 600; margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between;">
+                    <span>Hub ${i+1}</span>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 13px;">Hub Voice Channel</label>
+                    <select id="tv_hub_channel_${i}" class="form-select">${chOptions}</select>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 13px;">Category for Temp Channels</label>
+                    <select id="tv_hub_category_${i}" class="form-select">${catOptions}</select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 13px;">Default User Limit</label>
+                    <input type="number" id="tv_hub_limit_${i}" class="form-input" min="0" max="99" value="${limit}" placeholder="0 for unlimited">
+                </div>
+            </div>
+        `;
+    }
+}
 
 // Dropzone setup
 function bindDropzone(zoneId, fileInputId, urlInputId, syncFunc) {
@@ -1535,6 +1585,21 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     
 
 
+    // Collect Temp Voice Data
+    const tvHubs = [];
+    for (let i = 0; i < 5; i++) {
+        const hid = document.getElementById(`tv_hub_channel_${i}`)?.value;
+        const cid = document.getElementById(`tv_hub_category_${i}`)?.value;
+        const limit = document.getElementById(`tv_hub_limit_${i}`)?.value;
+        if (hid) {
+            tvHubs.push({
+                hub_channel_id: hid,
+                category_id: cid,
+                default_user_limit: limit ? parseInt(limit) : 0
+            });
+        }
+    }
+
     const payload = {
         welcome: {
             enabled: document.getElementById('welcome_enabled').checked,
@@ -1582,6 +1647,10 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             },
             file_only: fileChannels,
             auto_reaction: autoReactions
+        },
+        tempvoice: {
+            enabled: document.getElementById('tempvoice-enabled')?.checked || false,
+            hubs: tvHubs
         },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,

@@ -1,4 +1,4 @@
-﻿import json
+import json
 import pathlib
 import threading
 from typing import Dict, Any
@@ -28,23 +28,27 @@ def load_jtc_config(guild_id: int) -> Dict[str, Any]:
         if not path.exists():
             default_cfg = {
                 "enabled": False,
-                "hub_channel_id": None,
-                "category_id": None,
-                "default_user_limit": 0
+                "hubs": []
             }
             _jtc_config_cache[guild_id] = default_cfg
             return default_cfg
         try:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                if "hubs" not in data:
+                    data["hubs"] = []
+                    if data.get("hub_channel_id"):
+                        data["hubs"].append({
+                            "hub_channel_id": data.get("hub_channel_id"),
+                            "category_id": data.get("category_id"),
+                            "default_user_limit": data.get("default_user_limit", 0)
+                        })
                 _jtc_config_cache[guild_id] = data
                 return data
         except Exception:
             default_cfg = {
                 "enabled": False,
-                "hub_channel_id": None,
-                "category_id": None,
-                "default_user_limit": 0
+                "hubs": []
             }
             _jtc_config_cache[guild_id] = default_cfg
             return default_cfg
