@@ -1034,10 +1034,10 @@ function updateLivePreview() {
     
     // Replace placeholders and #channel-name mentions
     let formattedText = msgInput
+        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
         .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
-        .replace(/{count}/g, '<b>100</b>')
-        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');
+        .replace(/{count}/g, '<b>100</b>');
         
     document.getElementById('welcome_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
     
@@ -1058,10 +1058,10 @@ function updateGoodbyeLivePreview() {
     
     // Replace placeholders and #channel-name mentions
     let formattedText = msgInput
+        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
         .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
-        .replace(/{count}/g, '<b>100</b>')
-        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');
+        .replace(/{count}/g, '<b>100</b>');
         
     document.getElementById('goodbye_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
     
