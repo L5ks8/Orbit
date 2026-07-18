@@ -35,7 +35,7 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
 
     await log_event(
         ctx.guild,
-        "moderation",
+        "moderation_action",
         "User Blacklisted (`-blacklist add`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}{ban_msg}"
     )

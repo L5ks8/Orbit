@@ -33,7 +33,7 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
     view = DelWarnLayout(user, warn_id, remaining)
     await log_event(
         ctx.guild,
-        "moderation",
+        "moderation_action",
         "Warning Deleted (`-delwarn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Removed Warn ID:** `{warn_id}`\n**Remaining Warnings:** `{remaining}`"
     )

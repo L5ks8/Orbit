@@ -144,6 +144,17 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
     if not channel or not isinstance(channel, (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel, discord.Thread)):
         return
 
+    role_ping = None
+    target_role_id = config.get("roles", {}).get(category.lower())
+    if target_role_id:
+        try:
+            r_int = int(target_role_id)
+            role = guild.get_role(r_int)
+            if role:
+                role_ping = role.mention
+        except Exception:
+            pass
+
     container = Container(
         TextDisplay(content=f"### {title}"),
         Separator(spacing=discord.SeparatorSpacing.small),
@@ -153,7 +164,7 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
     view.add_item(container)
 
     try:
-        await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        await channel.send(content=role_ping, view=view, allowed_mentions=discord.AllowedMentions(roles=True))
     except Exception:
         try:
             embed = discord.Embed(
@@ -162,6 +173,6 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
                 color=0x2b2d31,
                 timestamp=discord.utils.utcnow()
             )
-            await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         except Exception as e:
             pass

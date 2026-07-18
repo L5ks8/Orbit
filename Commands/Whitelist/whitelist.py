@@ -22,7 +22,7 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
 
     await log_event(
         ctx.guild,
-        "moderation",
+        "moderation_action",
         "User Whitelisted (`-whitelist add`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
     )

@@ -22,7 +22,7 @@ async def _do_bl_remove(ctx: commands.Context, target_id_str: str = None):
 
     await log_event(
         ctx.guild,
-        "moderation",
+        "moderation_action",
         "User Removed from Blacklist (`-unblacklist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)"
     )

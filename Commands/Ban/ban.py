@@ -37,7 +37,7 @@ class BanCommand(commands.Cog):
             view = BanSuccessLayout(target, reason, ctx.author)
             await log_event(
                 ctx.guild,
-                "moderation",
+        "moderation_action",
                 "User Banned (`-ban`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )

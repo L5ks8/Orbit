@@ -39,7 +39,7 @@ class TimeoutCommand(commands.Cog):
             view = TimeoutSuccessLayout(target, minutes, reason, ctx.author)
             await log_event(
                 ctx.guild,
-                "moderation",
+        "moderation_action",
                 "User Timed Out (`-timeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Duration:** `{minutes} minutes`\n**Reason:** {reason}"
             )

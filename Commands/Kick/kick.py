@@ -37,7 +37,7 @@ class KickCommand(commands.Cog):
             view = KickSuccessLayout(target, reason, ctx.author)
             await log_event(
                 ctx.guild,
-                "moderation",
+        "moderation_action",
                 "User Kicked (`-kick`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )

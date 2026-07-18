@@ -82,7 +82,7 @@ class MuteCommand(commands.Cog):
         view = MuteSuccessLayout(target, reason, ctx.author, channels_affected)
         await log_event(
             ctx.guild,
-            "moderation",
+        "moderation_action",
             "User Muted (`-mute`)",
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Affected Channels:** `{channels_affected}`"
         )

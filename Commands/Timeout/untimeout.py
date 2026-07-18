@@ -30,7 +30,7 @@ class UntimeoutCommand(commands.Cog):
             view = UntimeoutSuccessLayout(target, reason, ctx.author)
             await log_event(
                 ctx.guild,
-                "moderation",
+        "moderation_action",
                 "User Timeout Removed (`-untimeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )

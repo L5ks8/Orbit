@@ -52,7 +52,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
     view = WarnIssuedLayout(user, warn_entry, total_warns)
     await log_event(
         ctx.guild,
-        "moderation",
+        "moderation_action",
         "User Warned (`-warn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}"
     )

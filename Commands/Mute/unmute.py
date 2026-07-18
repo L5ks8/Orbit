@@ -53,7 +53,7 @@ class UnmuteCommand(commands.Cog):
         view = UnmuteSuccessLayout(target, reason, ctx.author, channels_restored)
         await log_event(
             ctx.guild,
-            "moderation",
+        "moderation_action",
             "User Unmuted (`-unmute`)",
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Channels Restored:** `{channels_restored}`"
         )

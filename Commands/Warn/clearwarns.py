@@ -31,7 +31,7 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     view = ClearWarningsLayout(user, cleared_count)
     await log_event(
         ctx.guild,
-        "moderation",
+        "moderation_action",
         "All Warnings Cleared (`-clearwarns`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Total Cleared:** `{cleared_count}` warnings"
     )

@@ -21,7 +21,7 @@ class UnbanConfirmLayout(LayoutView):
                 await interaction.guild.unban(self.ban_entry.user, reason=f"Unbanned by {self.author} | Reason: {self.reason}")
                 await log_event(
                     interaction.guild,
-                    "moderation",
+        "moderation_action",
                     "User Unbanned (`-unban`)",
                     f"**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Reason:** {self.reason}"
                 )
