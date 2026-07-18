@@ -1,4 +1,4 @@
-﻿import math
+import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
@@ -87,7 +87,7 @@ async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
     target = user or ctx.author
-    warns = await get_user_warnings(ctx.guild.id, target.id)
+    warns = get_user_warnings(ctx.guild.id, target.id)
     if not warns:
         return await ctx.send(f"`{target.display_name}` has 0 formal warnings on this server.", ephemeral=True)
     view = WarningsListLayout(target, warns, ctx.author.id)
