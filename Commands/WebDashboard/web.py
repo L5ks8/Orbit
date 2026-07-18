@@ -15,6 +15,7 @@ from Commands.AutoResponder._storage import load_responses, save_responses
 from Commands.JoinRole._storage import load_join_roles, save_join_roles
 from Commands.Log._storage import load_log_config, save_log_config
 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
+from Commands.Boost._storage import load_boost_config, save_boost_config
 
 SESSIONS: Dict[str, Any] = {}
 
@@ -200,6 +201,7 @@ class WebDashboard:
         automod_cfg = load_automod_config(guild_id)
         verify_cfg = load_verify_config(guild_id)
         goodbye_cfg = load_goodbye_config(guild_id)
+        boost_cfg = load_boost_config(guild_id)
         autoresponder_cfg = load_responses(guild_id)
         joinroles_cfg = load_join_roles(guild_id)
         
@@ -220,6 +222,12 @@ class WebDashboard:
                 "channel_id": str(goodbye_cfg.get("channel_id")) if goodbye_cfg.get("channel_id") else "",
                 "message": goodbye_cfg.get("message", ""),
                 "image_url": goodbye_cfg.get("image_url", "")
+            },
+            "boost": {
+                "enabled": boost_cfg.get("enabled", False),
+                "channel_id": str(boost_cfg.get("channel_id")) if boost_cfg.get("channel_id") else "",
+                "message": boost_cfg.get("message", ""),
+                "image_url": boost_cfg.get("image_url", "")
             },
             "automod": {
                 "enabled": automod_cfg.get("enabled", False),
@@ -368,6 +376,19 @@ class WebDashboard:
                 if img_url is not None:
                     goodbye_cfg["image_url"] = img_url
                 save_goodbye_config(guild_id, goodbye_cfg)
+
+            if user_perms.get("can_channels") and "boost" in data:
+                boost_cfg = load_boost_config(guild_id)
+                boost_cfg["enabled"] = bool(data.get("boost", {}).get("enabled"))
+                cid = data.get("boost", {}).get("channel_id")
+                boost_cfg["channel_id"] = int(cid) if cid else None
+                msg = data.get("boost", {}).get("message", "")
+                if msg:
+                    boost_cfg["message"] = msg
+                img_url = data.get("boost", {}).get("image_url", "")
+                if img_url is not None:
+                    boost_cfg["image_url"] = img_url
+                save_boost_config(guild_id, boost_cfg)
 
             if user_perms.get("can_messages") and "automod" in data:
                 automod_cfg = load_automod_config(guild_id)
