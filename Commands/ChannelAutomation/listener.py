@@ -53,6 +53,49 @@ class ChannelAutomationListener(commands.Cog):
                     except discord.NotFound:
                         pass
                     return # Message deleted
+        # 3. File-Only Channels
+        file_only_list = config.get("file_only", [])
+        for f_cfg in file_only_list:
+            if str(message.channel.id) == f_cfg.get("channel_id"):
+                ignore_bots = f_cfg.get("ignore_bots", True)
+                if not (message.author.bot and ignore_bots):
+                    extensions = f_cfg.get("extensions", "").lower()
+                    allowed_exts = [ext.strip() for ext in extensions.split(",") if ext.strip()]
+                    
+                    has_valid_file = False
+                    if message.attachments:
+                        if not allowed_exts:
+                            has_valid_file = True
+                        else:
+                            for attachment in message.attachments:
+                                for ext in allowed_exts:
+                                    if attachment.filename.lower().endswith(ext if ext.startswith('.') else f".{ext}"):
+                                        has_valid_file = True
+                                        break
+                                if has_valid_file: break
 
+                    if not has_valid_file:
+                        try:
+                            await message.delete()
+                        except discord.Forbidden:
+                            pass
+                        except discord.NotFound:
+                            pass
+                        return # Message deleted
+
+        # 4. Auto-Reaction Channels
+        reaction_list = config.get("auto_reaction", [])
+        for r_cfg in reaction_list:
+            if str(message.channel.id) == r_cfg.get("channel_id"):
+                ignore_bots = r_cfg.get("ignore_bots", True)
+                if not (message.author.bot and ignore_bots):
+                    emoji = r_cfg.get("emoji")
+                    if emoji:
+                        try:
+                            # Try to add the reaction. If it's a custom emoji string like <:name:id>, discord.py might need partial emoji or just the string.
+                            # message.add_reaction supports unicode and custom emoji strings.
+                            await message.add_reaction(emoji.strip())
+                        except discord.HTTPException:
+                            pass # Emoji not found or bot lacks permissions
 async def setup(bot: commands.Bot):
     await bot.add_cog(ChannelAutomationListener(bot))

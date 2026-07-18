@@ -622,6 +622,150 @@ document.getElementById('btn-add-ticket-option').addEventListener('click', () =>
     addTicketOptionRow();
 });
 
+// FILE CHANNELS
+function renderFileChannels(channels) {
+    const list = document.getElementById('file-channels-body');
+    list.innerHTML = '';
+    if (!channels || channels.length === 0) {
+        list.innerHTML = '<tr id="empty-file-channels"><td colspan="4" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">No File-Channels found.</td></tr>';
+        return;
+    }
+    channels.forEach(ch => addFileChannelRow(ch));
+}
+
+function addFileChannelRow(data = { channel_id: '', extensions: '', ignore_bots: true }) {
+    const list = document.getElementById('file-channels-body');
+    const emptyRow = document.getElementById('empty-file-channels');
+    if (emptyRow) emptyRow.remove();
+
+    const tr = document.createElement('tr');
+    tr.className = 'fc-row';
+    tr.style.borderBottom = '1px solid var(--border-color)';
+
+    // Channel
+    const tdChannel = document.createElement('td');
+    tdChannel.style.padding = '10px';
+    const chSelect = document.createElement('select');
+    chSelect.className = 'fc-channel';
+    chSelect.style.cssText = 'width: 100%; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none; height: 38px; box-sizing: border-box;';
+    chSelect.innerHTML = '<option value="">Select Channel...</option>';
+    globalChannels.forEach(c => {
+        const selected = (String(data.channel_id) === String(c.id)) ? 'selected' : '';
+        chSelect.innerHTML += `<option value="${c.id}" ${selected}>#${c.name}</option>`;
+    });
+    tdChannel.appendChild(chSelect);
+
+    // Extensions
+    const tdExt = document.createElement('td');
+    tdExt.style.padding = '10px';
+    tdExt.innerHTML = `<input type="text" class="fc-extensions" value="${(data.extensions || '').replace(/"/g, '&quot;')}" placeholder="e.g. pdf, png" style="width: 100%; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none; height: 38px; box-sizing: border-box;">`;
+
+    // Ignore Bots
+    const tdBots = document.createElement('td');
+    tdBots.style.padding = '10px';
+    const checked = data.ignore_bots !== false ? 'checked' : '';
+    tdBots.innerHTML = `<label class="switch"><input type="checkbox" class="fc-ignore" ${checked}><span class="slider"></span></label>`;
+
+    // Action
+    const tdAction = document.createElement('td');
+    tdAction.style.padding = '10px';
+    const btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.className = 'btn-danger';
+    btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
+    btnRemove.innerHTML = '<i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>';
+    btnRemove.onclick = () => {
+        tr.remove();
+        if (list.children.length === 0) {
+            list.innerHTML = '<tr id="empty-file-channels"><td colspan="4" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">No File-Channels found.</td></tr>';
+        }
+    };
+    lucide.createIcons({ root: btnRemove });
+    tdAction.appendChild(btnRemove);
+
+    tr.appendChild(tdChannel);
+    tr.appendChild(tdExt);
+    tr.appendChild(tdBots);
+    tr.appendChild(tdAction);
+    list.appendChild(tr);
+}
+
+document.getElementById('btn-add-file-channel').addEventListener('click', () => {
+    addFileChannelRow();
+});
+
+// AUTO REACTIONS
+function renderAutoReactions(channels) {
+    const list = document.getElementById('auto-reaction-body');
+    list.innerHTML = '';
+    if (!channels || channels.length === 0) {
+        list.innerHTML = '<tr id="empty-auto-reaction"><td colspan="4" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">No Reaction-Channels found.</td></tr>';
+        return;
+    }
+    channels.forEach(ch => addAutoReactionRow(ch));
+}
+
+function addAutoReactionRow(data = { channel_id: '', emoji: '', ignore_bots: true }) {
+    const list = document.getElementById('auto-reaction-body');
+    const emptyRow = document.getElementById('empty-auto-reaction');
+    if (emptyRow) emptyRow.remove();
+
+    const tr = document.createElement('tr');
+    tr.className = 'ar-row';
+    tr.style.borderBottom = '1px solid var(--border-color)';
+
+    // Channel
+    const tdChannel = document.createElement('td');
+    tdChannel.style.padding = '10px';
+    const chSelect = document.createElement('select');
+    chSelect.className = 'ar-channel-sel';
+    chSelect.style.cssText = 'width: 100%; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none; height: 38px; box-sizing: border-box;';
+    chSelect.innerHTML = '<option value="">Select Channel...</option>';
+    globalChannels.forEach(c => {
+        const selected = (String(data.channel_id) === String(c.id)) ? 'selected' : '';
+        chSelect.innerHTML += `<option value="${c.id}" ${selected}>#${c.name}</option>`;
+    });
+    tdChannel.appendChild(chSelect);
+
+    // Emoji
+    const tdEmoji = document.createElement('td');
+    tdEmoji.style.padding = '10px';
+    tdEmoji.innerHTML = `<input type="text" class="ar-emoji" value="${(data.emoji || '').replace(/"/g, '&quot;')}" placeholder="e.g. 👍 or <:name:id>" style="width: 100%; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none; height: 38px; box-sizing: border-box;">`;
+
+    // Ignore Bots
+    const tdBots = document.createElement('td');
+    tdBots.style.padding = '10px';
+    const checked = data.ignore_bots !== false ? 'checked' : '';
+    tdBots.innerHTML = `<label class="switch"><input type="checkbox" class="ar-ignore" ${checked}><span class="slider"></span></label>`;
+
+    // Action
+    const tdAction = document.createElement('td');
+    tdAction.style.padding = '10px';
+    const btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.className = 'btn-danger';
+    btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
+    btnRemove.innerHTML = '<i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>';
+    btnRemove.onclick = () => {
+        tr.remove();
+        if (list.children.length === 0) {
+            list.innerHTML = '<tr id="empty-auto-reaction"><td colspan="4" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">No Reaction-Channels found.</td></tr>';
+        }
+    };
+    lucide.createIcons({ root: btnRemove });
+    tdAction.appendChild(btnRemove);
+
+    tr.appendChild(tdChannel);
+    tr.appendChild(tdEmoji);
+    tr.appendChild(tdBots);
+    tr.appendChild(tdAction);
+    list.appendChild(tr);
+}
+
+document.getElementById('btn-add-auto-reaction').addEventListener('click', () => {
+    addAutoReactionRow();
+});
+
 // LOAD CONFIGURATION
 async function loadConfig(guildId, guildName) {
     currentGuildId = guildId;
@@ -847,6 +991,9 @@ async function loadConfig(guildId, guildName) {
         
         new CustomMultiSelect(autoMediaChEl, globalChannels, "Select...", (item) => "# " + item.name);
         new CustomMultiSelect(autoCmdChEl, globalChannels, "Select...", (item) => "# " + item.name);
+
+        renderFileChannels(config.automation?.file_only || []);
+        renderAutoReactions(config.automation?.auto_reaction || []);
 
         // Initial Preview Update
         updateLivePreview();
@@ -1305,6 +1452,28 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
 
+    // Collect File Channels
+    const fileChannels = [];
+    document.querySelectorAll('.fc-row').forEach(row => {
+        const channel_id = row.querySelector('.fc-channel').value;
+        const extensions = row.querySelector('.fc-extensions').value.trim();
+        const ignore_bots = row.querySelector('.fc-ignore').checked;
+        if (channel_id) {
+            fileChannels.push({ channel_id, extensions, ignore_bots });
+        }
+    });
+
+    // Collect Auto Reactions
+    const autoReactions = [];
+    document.querySelectorAll('.ar-row').forEach(row => {
+        const channel_id = row.querySelector('.ar-channel-sel').value;
+        const emoji = row.querySelector('.ar-emoji').value.trim();
+        const ignore_bots = row.querySelector('.ar-ignore').checked;
+        if (channel_id && emoji) {
+            autoReactions.push({ channel_id, emoji, ignore_bots });
+        }
+    });
+
     // Collect AutoMod Toggle States and Global Exepts
     currentAutomodConfig.enabled = document.getElementById('automod_enabled').checked;
     
@@ -1363,7 +1532,9 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             },
             command_only: {
                 channels: Array.from(document.getElementById('auto_cmd_channels').selectedOptions).map(o => o.value)
-            }
+            },
+            file_only: fileChannels,
+            auto_reaction: autoReactions
         },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,

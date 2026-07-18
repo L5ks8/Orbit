@@ -12,7 +12,9 @@ def load_automation_config(guild_id: int) -> Dict[str, Any]:
     if not file.exists():
         return {
             "media_only": {"channels": [], "ignore_bots": True},
-            "command_only": {"channels": []}
+            "command_only": {"channels": []},
+            "file_only": [],
+            "auto_reaction": []
         }
     try:
         with open(file, "r", encoding="utf-8") as f:
@@ -20,7 +22,9 @@ def load_automation_config(guild_id: int) -> Dict[str, Any]:
     except Exception:
         return {
             "media_only": {"channels": [], "ignore_bots": True},
-            "command_only": {"channels": []}
+            "command_only": {"channels": []},
+            "file_only": [],
+            "auto_reaction": []
         }
 
 def save_automation_config(guild_id: int, data: Dict[str, Any]) -> None:

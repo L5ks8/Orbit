@@ -812,6 +812,56 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- File Only -->
+                            <div class="config-card" style="margin-top: 20px;">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-size: 16px;">File-Only Channels</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted);">Channels where only files can be uploaded.</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table" style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                        <thead>
+                                            <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                                                <th style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">Channel</th>
+                                                <th style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">Allowed Extensions</th>
+                                                <th style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">Ignore Bots</th>
+                                                <th style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="file-channels-body">
+                                            <!-- Dynamically populated -->
+                                            <tr id="empty-file-channels"><td colspan="4" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">No File-Channels found.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button type="button" class="btn-primary" id="btn-add-file-channel" style="font-size: 13px; padding: 6px 12px;">+ Add File-Channel</button>
+                            </div>
+
+                            <!-- Auto-Reaction -->
+                            <div class="config-card" style="margin-top: 20px;">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-size: 16px;">Auto-Reaction Channels</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted);">Automatically add a reaction to messages in specific channels.</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table" style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                        <thead>
+                                            <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                                                <th style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">Channel</th>
+                                                <th style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">Emoji</th>
+                                                <th style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">Ignore Bots</th>
+                                                <th style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="auto-reaction-body">
+                                            <!-- Dynamically populated -->
+                                            <tr id="empty-auto-reaction"><td colspan="4" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">No Reaction-Channels found.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button type="button" class="btn-primary" id="btn-add-auto-reaction" style="font-size: 13px; padding: 6px 12px;">+ Add Reaction-Channel</button>
+                            </div>
                         </div>
 
                     </form>
