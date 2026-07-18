@@ -2,8 +2,6 @@ let currentUser = null;
 let currentGuildId = null;
 let currentAutomodConfig = {};
 let activeAutomodRule = null;
-let currentLogsConfig = { channels: {}, roles: {} };
-let activeLogCategory = null;
 let autoresponder = {};
 let joinroles = [];
 
@@ -226,9 +224,9 @@ class CustomSelect {
         if (item) {
             const prefix = this.isRole ? '@' : '#';
             const colorHtml = this.isRole ? `<span class="color-dot" style="background:${item.color}"></span> ` : '';
-            this.trigger.innerHTML = `<div class="content">${colorHtml}${prefix}${item.name}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>`;
+            this.trigger.innerHTML = `<div class="content" style="display:flex;align-items:center;gap:4px;"><div class="cm-tag" style="margin:0;">${colorHtml}${prefix}${item.name}</div></div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
         } else {
-            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>`;
+            this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
         }
         lucide.createIcons({ root: this.trigger });
         this.select.value = this.value;
@@ -664,10 +662,9 @@ async function loadConfig(guildId, guildName) {
             ticketLogSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
         });
 
-        currentPermissions = data.permissions;
+        // Set values
         const config = data.config;
-        currentAutomodConfig = config.automod || {};
-        currentLogsConfig = { channels: config.logs?.channels || {}, roles: config.logs?.roles || {} };
+        currentPermissions = data.permissions || {};
         
         // Welcome
         if (!currentPermissions.can_channels) lockSection('section-welcome', 'Manage Channels');
@@ -689,6 +686,7 @@ async function loadConfig(guildId, guildName) {
 
         // AutoMod
         if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
+        currentAutomodConfig = config.automod || {};
         
         document.getElementById('automod_enabled').checked = currentAutomodConfig.enabled || false;
         document.getElementById('automod_banned_words_enabled').checked = currentAutomodConfig.banned_words?.enabled || false;
@@ -719,7 +717,7 @@ async function loadConfig(guildId, guildName) {
             if (currentAutomodConfig.exempt_roles?.includes(r.id)) opt.selected = true;
             amGlobalRoEl.appendChild(opt);
         });
-        new CustomMultiSelect(amGlobalRoEl, globalRoles, "Select...", (item) => "@ " + item.name);
+        new CustomMultiSelect(amGlobalRoEl, globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
 
         // Verify
         if (!currentPermissions.can_roles) lockSection('section-verify', 'Manage Roles');
@@ -744,6 +742,9 @@ async function loadConfig(guildId, guildName) {
         logsGrid.innerHTML = '';
         LOGS_CATEGORIES.forEach(cat => {
             const isEnabled = config.logs?.categories?.[cat.id] || false;
+            const selectedCh = config.logs?.channels?.[cat.id] || '';
+            const selectedRole = config.logs?.roles?.[cat.id] || '';
+            
             const checked = isEnabled ? 'checked' : '';
 
             logsGrid.innerHTML += `
@@ -758,8 +759,14 @@ async function loadConfig(guildId, guildName) {
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <p class="am-card-desc">Configure the channel and ping role for this log category.</p>
-                    <button type="button" class="btn-edit-rule" onclick="openLogModal('${cat.id}')">Edit Settings</button>
+                    <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">Log Channel</label>
+                        <input type="hidden" id="log_cat_${cat.id}_channel">
+                    </div>
+                    <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+                        <label style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">Ping Role</label>
+                        <input type="hidden" id="log_cat_${cat.id}_role">
+                    </div>
                 </div>
             `;
         });
@@ -768,6 +775,14 @@ async function loadConfig(guildId, guildName) {
         // Clear existing custom selects
         document.querySelectorAll('.custom-select').forEach(el => el.remove());
         document.querySelectorAll('.custom-multiselect').forEach(el => el.remove());
+
+        // Initialize Custom Selects for Logs
+        LOGS_CATEGORIES.forEach(cat => {
+            const selectedCh = config.logs?.channels?.[cat.id] || '';
+            const selectedRole = config.logs?.roles?.[cat.id] || '';
+            new CustomSelect(document.getElementById(`log_cat_${cat.id}_channel`), globalChannels, selectedCh, '-- Disabled --', false);
+            new CustomSelect(document.getElementById(`log_cat_${cat.id}_role`), globalRoles, selectedRole, '-- No Role --', true);
+        });
 
         // Initialize Custom Selects for Roles
         new CustomSelect(document.getElementById('verify_role_id'), globalRoles, config.verify?.role_id || '', 'Select Verified Role...');
@@ -796,7 +811,7 @@ async function loadConfig(guildId, guildName) {
 
 
         new CustomMultiSelect(logsChannelsEl, globalChannels, "Select...", (item) => "# " + item.name);
-        new CustomMultiSelect(logsRolesEl, globalRoles, "Select...", (item) => "@ " + item.name);
+        new CustomMultiSelect(logsRolesEl, globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
 
         // AutoResponder & JoinRoles & TicketOptions
         if (!currentPermissions.can_messages) lockSection('section-autoresponder', 'Manage Messages');
@@ -1161,7 +1176,7 @@ function openAutoModModal(ruleId) {
     
     if (ruleId !== 'anti_alt') {
         new CustomMultiSelect(document.getElementById('am-modal-channels'), globalChannels, "Select...", (item) => "# " + item.name);
-        new CustomMultiSelect(document.getElementById('am-modal-roles'), globalRoles, "Select...", (item) => "@ " + item.name);
+        new CustomMultiSelect(document.getElementById('am-modal-roles'), globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
     }
 
     const actionEl = document.getElementById('am-modal-action');
@@ -1181,76 +1196,41 @@ function openAutoModModal(ruleId) {
 
 function closeAutoModModal() {
     if (activeAutomodRule) {
-        // Save back to object
+        if (!currentAutomodConfig[activeAutomodRule]) currentAutomodConfig[activeAutomodRule] = {};
+        const ruleCfg = currentAutomodConfig[activeAutomodRule];
+        
         const actionEl = document.getElementById('am-modal-action');
-        const timeoutEl = document.getElementById('am-modal-timeout');
-        const chEl = document.getElementById('am-modal-channels');
-        const roEl = document.getElementById('am-modal-roles');
+        if (actionEl) ruleCfg.action = actionEl.value;
         
-        if (actionEl) currentAutomodConfig[activeAutomodRule].action = actionEl.value;
-        if (timeoutEl) currentAutomodConfig[activeAutomodRule].timeout_duration_min = parseInt(timeoutEl.value) || 5;
-        if (chEl) currentAutomodConfig[activeAutomodRule].exempt_channels = Array.from(chEl.selectedOptions).map(o => o.value);
-        if (roEl) currentAutomodConfig[activeAutomodRule].exempt_roles = Array.from(roEl.selectedOptions).map(o => o.value);
-        
+        const toEl = document.getElementById('am-modal-timeout');
+        if (toEl) ruleCfg.timeout_duration_min = parseInt(toEl.value) || 5;
+
         if (activeAutomodRule === 'banned_words') {
-            const wordsInput = document.getElementById('am-modal-words');
-            currentAutomodConfig[activeAutomodRule].words = wordsInput.value.split(',').map(s=>s.trim()).filter(s=>s);
+            ruleCfg.words = document.getElementById('am-modal-words').value.split(',').map(s=>s.trim()).filter(s=>s);
         } else if (activeAutomodRule === 'anti_spam') {
-            currentAutomodConfig[activeAutomodRule].max_messages = parseInt(document.getElementById('am-modal-msgs').value) || 5;
-            currentAutomodConfig[activeAutomodRule].time_window_sec = parseInt(document.getElementById('am-modal-window').value) || 3;
+            ruleCfg.max_messages = parseInt(document.getElementById('am-modal-msgs').value) || 5;
+            ruleCfg.time_window_sec = parseInt(document.getElementById('am-modal-window').value) || 3;
         } else if (activeAutomodRule === 'anti_link') {
-            currentAutomodConfig[activeAutomodRule].blocked_domains = document.getElementById('am-modal-domains').value.split(',').map(s=>s.trim()).filter(s=>s);
+            ruleCfg.blocked_domains = document.getElementById('am-modal-domains').value.split(',').map(s=>s.trim()).filter(s=>s);
         } else if (activeAutomodRule === 'mention_spam') {
-            currentAutomodConfig[activeAutomodRule].max_mentions = parseInt(document.getElementById('am-modal-mentions').value) || 4;
+            ruleCfg.max_mentions = parseInt(document.getElementById('am-modal-mentions').value) || 4;
         } else if (activeAutomodRule === 'anti_alt') {
-            currentAutomodConfig[activeAutomodRule].min_age_days = parseInt(document.getElementById('am-modal-age').value) || 3;
+            ruleCfg.min_age_days = parseInt(document.getElementById('am-modal-age').value) || 3;
             const act = document.getElementById('am-modal-action-alt');
-            if(act) currentAutomodConfig[activeAutomodRule].action = act.value;
+            if(act) ruleCfg.action = act.value;
+        }
+        
+        if (activeAutomodRule !== 'anti_alt') {
+            const chEl = document.getElementById('am-modal-channels');
+            if (chEl) ruleCfg.exempt_channels = Array.from(chEl.selectedOptions).map(o => o.value);
+            const roEl = document.getElementById('am-modal-roles');
+            if (roEl) ruleCfg.exempt_roles = Array.from(roEl.selectedOptions).map(o => o.value);
         }
     }
-    document.getElementById('automod-modal').classList.remove('show');
+    
     activeAutomodRule = null;
+    document.getElementById('automod-modal').classList.remove('show');
     document.body.style.overflow = '';
-}
-
-// Logs Modal Functions
-function openLogModal(categoryId) {
-    activeLogCategory = categoryId;
-    const cat = LOGS_CATEGORIES.find(c => c.id === categoryId);
-    if (!cat) return;
-    
-    document.getElementById('logs-modal-title').innerText = `Edit ${cat.title}`;
-    
-    // Clear old selects if they exist
-    const modalBody = document.getElementById('logs-modal-body');
-    modalBody.querySelectorAll('.custom-select').forEach(el => el.remove());
-    
-    const selectedCh = currentLogsConfig.channels[categoryId] || '';
-    const selectedRole = currentLogsConfig.roles[categoryId] || '';
-    
-    const chInput = document.getElementById('logs-modal-channel');
-    const roleInput = document.getElementById('logs-modal-role');
-    
-    // Ensure inputs are clean
-    chInput.value = selectedCh;
-    roleInput.value = selectedRole;
-    
-    document.getElementById('logs-modal').classList.add('show');
-    
-    // Initialize CustomSelects
-    new CustomSelect(chInput, globalChannels, selectedCh, '-- Disabled --', false);
-    new CustomSelect(roleInput, globalRoles, selectedRole, '-- No Role --', true);
-}
-
-function closeLogModal() {
-    if (activeLogCategory) {
-        const chInput = document.getElementById('logs-modal-channel');
-        const roleInput = document.getElementById('logs-modal-role');
-        currentLogsConfig.channels[activeLogCategory] = chInput.value;
-        currentLogsConfig.roles[activeLogCategory] = roleInput.value;
-    }
-    document.getElementById('logs-modal').classList.remove('show');
-    activeLogCategory = null;
 }
 
 // Save Settings
@@ -1363,9 +1343,11 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     
     LOGS_CATEGORIES.forEach(cat => {
         const enCb = document.getElementById(`log_cat_${cat.id}_enabled`);
+        const chSel = document.getElementById(`log_cat_${cat.id}_channel`);
+        const roleSel = document.getElementById(`log_cat_${cat.id}_role`);
         if (enCb) payload.logs.categories[cat.id] = enCb.checked;
-        payload.logs.channels[cat.id] = currentLogsConfig.channels[cat.id] || "";
-        payload.logs.roles[cat.id] = currentLogsConfig.roles[cat.id] || "";
+        if (chSel) payload.logs.channels[cat.id] = chSel.value;
+        if (roleSel) payload.logs.roles[cat.id] = roleSel.value;
     });
 
     try {
