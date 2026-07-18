@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands.JoinRole._storage import load_join_roles
 
@@ -8,16 +8,17 @@ class JoinRoleListener(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        if member.bot:
+        config = load_join_roles(member.guild.id)
+        if not config.get("enabled", False):
             return
 
-        role_ids = load_join_roles(member.guild.id)
+        role_ids = config.get("bot_roles", []) if member.bot else config.get("user_roles", [])
         if not role_ids:
             return
 
         roles_to_add = []
         for rid in role_ids:
-            role = member.guild.get_role(rid)
+            role = member.guild.get_role(int(rid))
             if role and not role.is_default() and not role.managed:
                 if member.guild.me.top_role > role:
                     roles_to_add.append(role)

@@ -1,6 +1,6 @@
-﻿import json
+import json
 import pathlib
-from typing import List
+from typing import Dict, Any
 
 STORAGE_ROOT = pathlib.Path("Storage")
 
@@ -10,42 +10,31 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
         folder.mkdir(parents=True, exist_ok=True)
     return folder / "joinroles.json"
 
-def load_join_roles(guild_id: int) -> List[int]:
+def load_join_roles(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
+    default_config = {"enabled": False, "user_roles": [], "bot_roles": []}
     if not path.exists():
-        return []
+        return default_config
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return data.get("roles", [])
+            # Migration check: if old format, migrate to new format
+            if "roles" in data and "user_roles" not in data:
+                return {
+                    "enabled": True, # If they had roles, keep them enabled
+                    "user_roles": data.get("roles", []),
+                    "bot_roles": []
+                }
+            # Ensure all keys exist
+            return {
+                "enabled": data.get("enabled", False),
+                "user_roles": data.get("user_roles", []),
+                "bot_roles": data.get("bot_roles", [])
+            }
     except Exception:
-        return []
+        return default_config
 
-def save_join_roles(guild_id: int, roles: List[int]) -> None:
+def save_join_roles(guild_id: int, data: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump({"roles": roles}, f, indent=4)
-
-def add_join_role(guild_id: int, role_id: int) -> bool:
-    roles = load_join_roles(guild_id)
-    if role_id in roles:
-        return False
-    roles.append(role_id)
-    save_join_roles(guild_id, roles)
-    return True
-
-def remove_join_role(guild_id: int, role_id: int) -> bool:
-    roles = load_join_roles(guild_id)
-    if role_id not in roles:
-        return False
-    roles.remove(role_id)
-    save_join_roles(guild_id, roles)
-    return True
-
-def clear_join_roles(guild_id: int) -> int:
-    roles = load_join_roles(guild_id)
-    count = len(roles)
-    if count > 0:
-        save_join_roles(guild_id, [])
-    return count
-
+        json.dump(data, f, indent=4)

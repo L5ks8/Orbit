@@ -269,7 +269,7 @@
                         <div class="dash-nav-item" data-target="section-joinroles">
                             <span class="nav-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                            </span> Join Roles
+                            </span> Auto Roles
                         </div>
                         <div class="dash-nav-item" data-target="section-ticket">
                             <span class="nav-icon">
@@ -654,14 +654,32 @@
 
                         <!-- JOIN ROLES SECTION -->
                         <div id="section-joinroles" class="dash-panel">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <h3>Join Roles</h3>
-                                <button type="button" id="btn-add-joinrole" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">+ Add Join Role</button>
+                            <div class="toggle-container" style="margin-bottom: 20px;">
+                                <div>
+                                    <h3>Auto-Rolle</h3>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="autoroles_enabled">
+                                    <span class="slider"></span>
+                                </label>
                             </div>
-                            <p style="color: var(--text-secondary); margin-bottom: 20px;">Automatically give these roles to users when they join the server.</p>
                             
-                            <div id="joinrole-list" style="display: flex; flex-direction: column; gap: 15px;">
-                                <!-- Populated by JS -->
+                            <div class="config-card">
+                                <div style="margin-bottom: 20px;">
+                                    <h4 style="font-size: 16px; margin: 0 0 5px 0;">Rollen beim Beitritt</h4>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label style="font-size: 14px; font-weight: 600;">Rollen</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Rollen, die neue Mitglieder erhalten.</span>
+                                    <select id="autoroles_user" multiple></select>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size: 14px; font-weight: 600;">Bot Rollen</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Rollen, die neue Bots erhalten.</span>
+                                    <select id="autoroles_bot" multiple></select>
+                                </div>
                             </div>
                         </div>
 

@@ -494,51 +494,7 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
     list.appendChild(row);
 }
 
-function renderJoinRoles(roles) {
-    const list = document.getElementById('joinrole-list');
-    list.innerHTML = '';
-    if (roles.length === 0) {
-        list.innerHTML = '<p style="color:var(--text-secondary); font-size:14px; margin:0;">No join roles configured.</p>';
-        return;
-    }
-
-    roles.forEach(r => addJoinRoleRow(r));
-}
-
-function addJoinRoleRow(roleId = '') {
-    const list = document.getElementById('joinrole-list');
-    if (list.querySelector('p')) list.innerHTML = '';
-
-    const row = document.createElement('div');
-    row.style.cssText = 'display: flex; gap: 10px; align-items: center; background: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);';
-    
-    const selectContainer = document.createElement('div');
-    selectContainer.style.cssText = 'flex: 1;';
-    
-    const btnRemove = document.createElement('button');
-    btnRemove.type = 'button';
-    btnRemove.className = 'btn-danger';
-    btnRemove.style.cssText = 'padding: 0 12px; font-size: 16px; height: 38px;';
-    btnRemove.innerHTML = '<i data-lucide="x" style="width: 18px; height: 18px;"></i>';
-    btnRemove.onclick = () => row.remove();
-    lucide.createIcons({ root: btnRemove });
-
-    row.appendChild(selectContainer);
-    row.appendChild(btnRemove);
-    list.appendChild(row);
-
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.className = 'jr-select';
-    selectContainer.appendChild(hiddenInput);
-
-    new CustomSelect(hiddenInput, globalRoles, roleId, 'Select Role to Assign...');
-}
-
 document.getElementById('btn-add-autoreply').addEventListener('click', () => addAutoReplyRow());
-document.getElementById('btn-add-joinrole').addEventListener('click', () => {
-    addJoinRoleRow();
-});
 
 function renderTicketOptions(optionsSlots) {
     const list = document.getElementById('ticket-option-list');
@@ -964,7 +920,24 @@ async function loadConfig(guildId, guildName) {
         renderAutoReplies(config.autoresponder || {});
         
         if (!currentPermissions.can_roles) lockSection('section-joinroles', 'Manage Roles');
-        renderJoinRoles(config.joinroles || []);
+        const arUserEl = document.getElementById('autoroles_user');
+        const arBotEl = document.getElementById('autoroles_bot');
+        arUserEl.innerHTML = "";
+        arBotEl.innerHTML = "";
+        globalRoles.forEach(r => {
+            const optU = document.createElement("option");
+            optU.value = r.id;
+            if (config.joinroles?.user_roles?.includes(r.id)) optU.selected = true;
+            arUserEl.appendChild(optU);
+
+            const optB = document.createElement("option");
+            optB.value = r.id;
+            if (config.joinroles?.bot_roles?.includes(r.id)) optB.selected = true;
+            arBotEl.appendChild(optB);
+        });
+        document.getElementById('autoroles_enabled').checked = config.joinroles?.enabled ?? false;
+        new CustomMultiSelect(arUserEl, globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
+        new CustomMultiSelect(arBotEl, globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
         
         renderTicketOptions(config.ticket?.options_slots || []);
         
@@ -1430,12 +1403,12 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
 
-    // Collect JoinRoles Data
-    const joinroles = [];
-    document.querySelectorAll('.jr-select').forEach(select => {
-        const val = select.value;
-        if (val) joinroles.push(val);
-    });
+    // Collect AutoRoles Data
+    const joinroles = {
+        enabled: document.getElementById('autoroles_enabled').checked,
+        user_roles: Array.from(document.getElementById('autoroles_user').selectedOptions).map(o => o.value),
+        bot_roles: Array.from(document.getElementById('autoroles_bot').selectedOptions).map(o => o.value)
+    };
 
     // Collect Ticket Options Data
     const ticketOptions = [];

@@ -290,7 +290,11 @@ class WebDashboard:
                 "verification_type": verify_cfg.get("verification_type", "captcha")
             },
             "autoresponder": autoresponder_cfg,
-            "joinroles": [str(r) for r in joinroles_cfg],
+            "joinroles": {
+                "enabled": joinroles_cfg.get("enabled", False),
+                "user_roles": [str(r) for r in joinroles_cfg.get("user_roles", [])],
+                "bot_roles": [str(r) for r in joinroles_cfg.get("bot_roles", [])]
+            },
             "ticket": {
                 "enabled": ticket_cfg.get("enabled", False),
                 "panel_title": ticket_cfg.get("panel_title", ""),
@@ -438,11 +442,12 @@ class WebDashboard:
                 save_responses(guild_id, data["autoresponder"])
 
             if user_perms.get("can_roles") and "joinroles" in data:
-                roles_to_save = []
-                for r in data["joinroles"]:
-                    if r:
-                        roles_to_save.append(int(r))
-                save_join_roles(guild_id, roles_to_save)
+                jr_data = data["joinroles"]
+                save_join_roles(guild_id, {
+                    "enabled": bool(jr_data.get("enabled", False)),
+                    "user_roles": [int(r) for r in jr_data.get("user_roles", []) if r],
+                    "bot_roles": [int(r) for r in jr_data.get("bot_roles", []) if r]
+                })
 
             if user_perms.get("can_channels") and "ticket" in data:
                 from Commands.Ticket._storage import load_ticket_config, save_ticket_config
