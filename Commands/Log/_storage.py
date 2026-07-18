@@ -1,4 +1,4 @@
-﻿import pathlib
+import pathlib
 import json
 from typing import Dict, Any
 import discord
@@ -162,7 +162,7 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
     view.add_item(container)
 
     try:
-        await channel.send(content=role_ping, view=view, allowed_mentions=discord.AllowedMentions(roles=True))
+        await channel.send(content=role_ping, view=view, allowed_mentions=discord.AllowedMentions.none())
     except Exception:
         try:
             embed = discord.Embed(
@@ -171,7 +171,7 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
                 color=0x2b2d31,
                 timestamp=discord.utils.utcnow()
             )
-            await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
+            await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except Exception as e:
             pass
 
