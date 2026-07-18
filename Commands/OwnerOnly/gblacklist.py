@@ -1,10 +1,10 @@
-﻿import json
+import json
 import pathlib
 import discord
 from discord.ext import commands
 from Commands.OwnerOnly._monitor import record_command
 
-GBLACKLIST_FILE = pathlib.Path("Storage/global_blacklist.json")
+GBLACKLIST_FILE = pathlib.Path("Storage/server_blacklist.json")
 
 def _load_gblacklist() -> list[int]:
     if not GBLACKLIST_FILE.exists():
@@ -24,43 +24,59 @@ def _save_gblacklist(data: list[int]):
     except Exception:
         pass
 
-def is_globally_blacklisted(user_id: int) -> bool:
-    return user_id in _load_gblacklist()
-
 class GlobalBlacklistCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command(name="gblacklist", hidden=True)
     @commands.is_owner()
-    async def gblacklist_cmd(self, ctx: commands.Context, target: discord.User = None, *, reason: str = "No reason provided"):
+    async def gblacklist_cmd(self, ctx: commands.Context, target_guild_id: int = None, *, reason: str = "No reason provided"):
         record_command("gblacklist", str(ctx.author))
         bl = _load_gblacklist()
         
-        if target is None:
+        if target_guild_id is None:
             if not bl:
-                return await ctx.send("The global blacklist is currently empty.")
-            bl_str = ", ".join([f"`{uid}`" for uid in bl])
-            return await ctx.send(f"**Globally Blacklisted Users ({len(bl)}):**\n{bl_str}")
+                return await ctx.send("The global server blacklist is currently empty.")
+            bl_str = ", ".join([f"`{gid}`" for gid in bl])
+            return await ctx.send(f"**Globally Blacklisted Servers ({len(bl)}):**\n{bl_str}")
             
-        if target.id in bl:
-            return await ctx.send(f"User `{target.id}` is already globally blacklisted.", ephemeral=True)
+        if target_guild_id in bl:
+            return await ctx.send(f"Server `{target_guild_id}` is already globally blacklisted.", ephemeral=True)
         
-        bl.append(target.id)
+        bl.append(target_guild_id)
         _save_gblacklist(bl)
-        await ctx.send(f"User `{target.id}` (`{target.name}`) has been added to the global bot blacklist.\n**Reason:** {reason}", allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(f"Server `{target_guild_id}` has been added to the global blacklist.\n**Reason:** {reason}")
 
-    @commands.command(name="gunblacklist", hidden=True)
+        guild = self.bot.get_guild(target_guild_id)
+        if guild:
+            try:
+                await guild.leave()
+                await ctx.send("I was currently in that server, so I have automatically left it.")
+            except Exception:
+                pass
+
+    @commands.command(name="gblacklistremove", hidden=True)
     @commands.is_owner()
-    async def gunblacklist_cmd(self, ctx: commands.Context, target: discord.User):
-        record_command("gunblacklist", str(ctx.author))
+    async def gblacklistremove_cmd(self, ctx: commands.Context, target_guild_id: int):
+        record_command("gblacklistremove", str(ctx.author))
         bl = _load_gblacklist()
-        if target.id not in bl:
-            return await ctx.send(f"User `{target.id}` is not globally blacklisted.", ephemeral=True)
+        if target_guild_id not in bl:
+            return await ctx.send(f"Server `{target_guild_id}` is not globally blacklisted.", ephemeral=True)
         
-        bl.remove(target.id)
+        bl.remove(target_guild_id)
         _save_gblacklist(bl)
-        await ctx.send(f"User `{target.id}` (`{target.name}`) has been removed from the global bot blacklist.", allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(f"Server `{target_guild_id}` has been removed from the global blacklist.")
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild):
+        bl = _load_gblacklist()
+        if guild.id in bl:
+            try:
+                await guild.leave()
+                from Commands.OwnerOnly._monitor import record_log
+                record_log(f"[Security] Auto-left globally blacklisted server {guild.name} ({guild.id})")
+            except Exception:
+                pass
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GlobalBlacklistCommand(bot))

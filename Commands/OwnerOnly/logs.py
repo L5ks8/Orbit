@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.OwnerOnly._monitor import get_live_logs, record_command
@@ -38,10 +38,10 @@ class LiveLogsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="livelogs", hidden=True)
+    @commands.command(name="logs", hidden=True)
     @commands.is_owner()
-    async def livelogs_cmd(self, ctx: commands.Context):
-        record_command("livelogs", str(ctx.author))
+    async def logs_cmd(self, ctx: commands.Context):
+        record_command("logs", str(ctx.author))
         if ctx.guild is not None:
             try:
                 await ctx.message.delete()
@@ -50,8 +50,8 @@ class LiveLogsCommand(commands.Cog):
         view = LiveLogsLayoutView(ctx.author)
         await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-    @livelogs_cmd.error
-    async def livelogs_error(self, ctx: commands.Context, error):
+    @logs_cmd.error
+    async def logs_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             await ctx.send(f"Livelogs error: {error}", allowed_mentions=discord.AllowedMentions.none())
 
