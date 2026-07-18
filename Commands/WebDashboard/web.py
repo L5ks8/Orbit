@@ -1,4 +1,4 @@
-﻿import os
+import os
 import secrets
 import json
 import asyncio
@@ -14,6 +14,7 @@ from Commands.Verify._storage import load_verify_config, save_verify_config
 from Commands.AutoResponder._storage import load_responses, save_responses
 from Commands.JoinRole._storage import load_join_roles, save_join_roles
 from Commands.Log._storage import load_log_config, save_log_config
+from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 
 SESSIONS: Dict[str, Any] = {}
 
@@ -205,6 +206,7 @@ class WebDashboard:
         from Commands.Ticket._storage import load_ticket_config
         ticket_cfg = load_ticket_config(guild_id)
         logs_cfg = load_log_config(guild_id)
+        automation_cfg = load_automation_config(guild_id)
 
         config_data = {
             "welcome": {
@@ -305,7 +307,8 @@ class WebDashboard:
                     for slot in ticket_cfg.get("options_slots", []) if isinstance(slot, dict)
                 ]
             },
-            "logs": logs_cfg
+            "logs": logs_cfg,
+            "automation": automation_cfg
         }
 
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
@@ -477,6 +480,9 @@ class WebDashboard:
                     ticket_cfg["options"] = [s.get("name", "Option") for s in parsed_slots]
                 
                 save_ticket_config(guild_id, ticket_cfg)
+
+            if user_perms.get("can_channels") and "automation" in data:
+                save_automation_config(guild_id, data["automation"])
 
             if user_perms.get("can_channels") and "logs" in data:
                 l_cfg = load_log_config(guild_id)

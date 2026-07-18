@@ -824,6 +824,30 @@ async function loadConfig(guildId, guildName) {
         
         renderTicketOptions(config.ticket?.options_slots || []);
         
+        // Automation
+        if (!currentPermissions.can_channels) lockSection('section-automation', 'Manage Channels');
+        const autoMediaChEl = document.getElementById('auto_media_channels');
+        autoMediaChEl.innerHTML = "";
+        globalChannels.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            if (config.automation?.media_only?.channels?.includes(c.id)) opt.selected = true;
+            autoMediaChEl.appendChild(opt);
+        });
+        document.getElementById('auto_media_ignore_bots').checked = config.automation?.media_only?.ignore_bots ?? true;
+        
+        const autoCmdChEl = document.getElementById('auto_cmd_channels');
+        autoCmdChEl.innerHTML = "";
+        globalChannels.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            if (config.automation?.command_only?.channels?.includes(c.id)) opt.selected = true;
+            autoCmdChEl.appendChild(opt);
+        });
+        
+        new CustomMultiSelect(autoMediaChEl, globalChannels, "Select...", (item) => "# " + item.name);
+        new CustomMultiSelect(autoCmdChEl, globalChannels, "Select...", (item) => "# " + item.name);
+
         // Initial Preview Update
         updateLivePreview();
 
@@ -1332,6 +1356,15 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         },
         autoresponder: localAutoresponder,
         joinroles: joinroles,
+        automation: {
+            media_only: {
+                channels: Array.from(document.getElementById('auto_media_channels').selectedOptions).map(o => o.value),
+                ignore_bots: document.getElementById('auto_media_ignore_bots').checked
+            },
+            command_only: {
+                channels: Array.from(document.getElementById('auto_cmd_channels').selectedOptions).map(o => o.value)
+            }
+        },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,
             executor_in_logs: document.getElementById('logs_executor_in_logs').checked,
