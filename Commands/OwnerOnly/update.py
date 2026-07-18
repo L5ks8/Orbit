@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
@@ -74,10 +74,10 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
             icon_url=interaction.client.user.display_avatar.url if interaction.client.user else None
         )
 
-        btn_server = discord.ui.Button(
-            label="Support Server",
+        btn_website = discord.ui.Button(
+            label="Website & Dashboard",
             style=discord.ButtonStyle.link,
-            url="https://discord.gg/qW6kjq6TG"
+            url="https://orbit-498b.onrender.com"
         )
         btn_invite = discord.ui.Button(
             label="Add Orbit to Your Server",
@@ -85,7 +85,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
             url="https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=564430072179831&scope=bot+applications.commands"
         )
         view = discord.ui.View()
-        view.add_item(btn_server)
+        view.add_item(btn_website)
         view.add_item(btn_invite)
 
         try:
