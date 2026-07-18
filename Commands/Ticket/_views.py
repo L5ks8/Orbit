@@ -204,10 +204,10 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
             return await interaction.followup.send("You already have 3 open tickets! Please close an existing ticket before opening a new one.", ephemeral=True)
 
         counter = config.get("ticket_counter", 0) + 1
-        clean_name = "".join(c for c in interaction.user.name.lower() if c.isalnum() or c in "-_")[:15]
+        clean_name = "".join(c for c in interaction.user.name.lower().replace(" ", "-") if c.isalnum() or c in "-_")[:15]
         if not clean_name:
             clean_name = "user"
-        clean_option = "".join(c for c in self.category_option.lower() if c.isalnum() or c in "-_")[:20]
+        clean_option = "".join(c for c in self.category_option.lower().replace(" ", "-") if c.isalnum() or c in "-_")[:20]
         if not clean_option:
             clean_option = "ticket"
         base_channel_name = f"{clean_option}-{clean_name}"
