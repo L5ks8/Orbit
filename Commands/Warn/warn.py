@@ -60,10 +60,16 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
         punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
 
     try:
-        await user.send(
-            f"You have received a formal warning in **{ctx.guild.name}**.\n"
-            f"**Warn ID:** `{warn_entry['warn_id']}` | **Reason:** {reason}{punishment_text}"
+        dm_view = LayoutView()
+        dm_header = f"### ⚠️ Formal Warning Received\n**Server:** `{ctx.guild.name}`"
+        dm_info = f"**Warn ID:** `{warn_entry['warn_id']}`\n**Reason:** {reason}{punishment_text}"
+        dm_container = Container(
+            TextDisplay(content=dm_header),
+            Separator(spacing=discord.SeparatorSpacing.small),
+            TextDisplay(content=dm_info)
         )
+        dm_view.add_item(dm_container)
+        await user.send(view=dm_view)
     except Exception:
         pass
     try:
