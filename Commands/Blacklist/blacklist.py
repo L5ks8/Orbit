@@ -1,4 +1,4 @@
-utf-8import re
+﻿import re
 import discord
 from discord.ext import commands
 from Commands.Blacklist._storage import add_to_blacklist
@@ -62,3 +62,4 @@ async def setup(bot: commands.Bot):
     if "blacklist" not in bot.all_commands:
         bot.add_command(blacklist_cmd)
     await bot.add_cog(BlacklistCog(bot))
+

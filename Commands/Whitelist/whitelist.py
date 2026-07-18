@@ -1,4 +1,4 @@
-utf-8import re
+﻿import re
 import discord
 from discord.ext import commands
 from Commands.Whitelist._storage import add_to_whitelist
@@ -49,3 +49,4 @@ async def setup(bot: commands.Bot):
     if "whitelist" not in bot.all_commands:
         bot.add_command(whitelist_cmd)
     await bot.add_cog(WhitelistCog(bot))
+

@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Channel.channel import channel_group
@@ -87,3 +87,4 @@ async def setup(bot: commands.Bot):
     if "channel" not in bot.all_commands:
         bot.add_command(channel_group)
     await bot.add_cog(ChannelCreateCog(bot))
+

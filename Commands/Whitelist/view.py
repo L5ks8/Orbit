@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Whitelist._views import WhitelistListLayout
 
@@ -26,3 +26,4 @@ async def setup(bot: commands.Bot):
     if "checkwhitelist" not in bot.all_commands:
         bot.add_command(checkwhitelist_cmd)
     await bot.add_cog(WhitelistListCog(bot))
+

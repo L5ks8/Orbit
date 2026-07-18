@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import random
 import string
@@ -85,3 +85,4 @@ def clear_user_warnings(guild_id: int, user_id: int) -> int:
     data[uid_str] = []
     save_warnings(guild_id, data)
     return count
+

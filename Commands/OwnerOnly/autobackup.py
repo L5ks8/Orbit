@@ -1,4 +1,4 @@
-utf-8import os
+﻿import os
 import io
 import json
 import zipfile
@@ -306,3 +306,4 @@ class AutoBackupCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoBackupCommand(bot))
+

@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="voice", aliases=["vc"], description="Voice channel controls")
@@ -9,3 +9,4 @@ async def voice_group(ctx: commands.Context):
 async def setup(bot: commands.Bot):
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
+

@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Afk._storage import set_afk, get_afk
@@ -62,3 +62,4 @@ class AfkCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AfkCommand(bot))
+

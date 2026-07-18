@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import random
 import time
@@ -175,9 +175,9 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
 
     try:
         if picked_winners:
-            await channel.send(content=f"🎉 **GIVEAWAY ENDED!** 🎉\nCongratulations {winners_display}! You won **{entry['prize']}**! 🎊 (`Giveaway ID: #`{entry['giveaway_id']})")
+            await channel.send(content=f"ðŸŽ‰ **GIVEAWAY ENDED!** ðŸŽ‰\nCongratulations {winners_display}! You won **{entry['prize']}**! ðŸŽŠ (`Giveaway ID: #`{entry['giveaway_id']})")
         else:
-            await channel.send(content=f"Giveaway **{entry['prize']}** (`#{entry['giveaway_id']}`) ended with no valid entries. 😔")
+            await channel.send(content=f"Giveaway **{entry['prize']}** (`#{entry['giveaway_id']}`) ended with no valid entries. ðŸ˜”")
     except Exception:
         pass
 
@@ -268,3 +268,4 @@ class GiveawayCommand(commands.Cog):
 async def setup(bot: commands.Bot):
     bot.add_view(PersistentGiveawayLayout())
     await bot.add_cog(GiveawayCommand(bot))
+

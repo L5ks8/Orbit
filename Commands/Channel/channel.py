@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="channel", description="Channel management commands.")
@@ -10,3 +10,4 @@ async def channel_group(ctx: commands.Context):
 async def setup(bot: commands.Bot):
     if "channel" not in bot.all_commands:
         bot.add_command(channel_group)
+

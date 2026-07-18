@@ -1,2 +1,3 @@
-utf-8import sys
+﻿import sys
 sys.dont_write_bytecode = True
+

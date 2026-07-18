@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
@@ -67,3 +67,4 @@ class PollCloseCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(PollCloseCommand(bot))
+

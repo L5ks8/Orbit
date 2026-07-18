@@ -1,4 +1,4 @@
-utf-8import io
+﻿import io
 import math
 import random
 import string
@@ -208,3 +208,4 @@ def generate_captcha() -> Tuple[str, bytes]:
     except Exception:
         bmp_bytes = _generate_fallback_bmp(code)
         return code, bmp_bytes
+

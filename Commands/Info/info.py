@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="info", description="General information and inspection commands.")
@@ -9,3 +9,4 @@ async def info_group(ctx: commands.Context):
 async def setup(bot: commands.Bot):
     if "info" not in bot.all_commands:
         bot.add_command(info_group)
+

@@ -1,4 +1,4 @@
-utf-8import re
+﻿import re
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
@@ -75,7 +75,7 @@ class WhitelistListLayout(LayoutView):
                 reason = info.get("reason", "No reason")
                 user = self.guild.get_member(int(uid_str)) or self.bot.get_user(int(uid_str))
                 mention_display = f"<@{uid_str}>" + (f" (`@{user.name}`)" if user and hasattr(user, "name") else "")
-                lines.append(f"• {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
+                lines.append(f"â€¢ {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
             content_text = "\n".join(lines)
             if count > 15:
                 content_text += f"\n\n*And {count - 15} more users...*"
@@ -117,3 +117,4 @@ class WhitelistListLayout(LayoutView):
         btn_close.callback = close_cb
 
         self.add_item(ActionRow(btn_add, btn_remove, btn_close))
+

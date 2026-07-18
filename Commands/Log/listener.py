@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Log._storage import log_event
 
@@ -381,3 +381,4 @@ class LogListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(LogListener(bot))
+

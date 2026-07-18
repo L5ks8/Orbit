@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 import time
 import datetime
 from discord.ext import commands
@@ -248,3 +248,4 @@ class AutoModListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModListener(bot))
+

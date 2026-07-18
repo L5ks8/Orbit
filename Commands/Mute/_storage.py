@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 from typing import Dict, Any
 
@@ -34,3 +34,4 @@ def set_muted_role_id(guild_id: int, role_id: int) -> None:
     data = _load_data()
     data[str(guild_id)] = role_id
     _save_data(data)
+

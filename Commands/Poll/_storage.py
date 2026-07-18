@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import random
 import string
@@ -66,3 +66,4 @@ def close_poll_entry(guild_id: int, poll_id: str) -> bool:
     data[pid_clean]["closed"] = True
     save_polls(guild_id, data)
     return True
+

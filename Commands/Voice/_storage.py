@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 from typing import Dict, Any
 
@@ -49,3 +49,4 @@ def remove_from_vcban(guild_id: int, user_id: int) -> bool:
 def is_vcbanned(guild_id: int, user_id: int) -> bool:
     data = load_vcban(guild_id)
     return str(user_id) in data
+

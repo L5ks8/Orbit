@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
@@ -98,3 +98,4 @@ class MuteCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MuteCommand(bot))
+

@@ -1,4 +1,4 @@
-utf-8import pathlib
+﻿import pathlib
 import json
 from typing import Dict, Any
 import discord
@@ -174,3 +174,4 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
             await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         except Exception as e:
             pass
+

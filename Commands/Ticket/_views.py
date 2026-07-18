@@ -1,4 +1,4 @@
-utf-8import io
+﻿import io
 import time
 import asyncio
 import discord
@@ -461,7 +461,7 @@ class TicketConfigDynamicView(LayoutView):
             role_display = f"<@&{rid}>" if rid else "`Role Not Set`"
             cat_display = f"<#{cid}>" if cid else "`Category Not Set`"
             marker = "> " if idx == self.selected_slot else ""
-            slot_lines.append(f"{marker}`{idx+1}.` **{name}** — Staff: {role_display} | Category: {cat_display}")
+            slot_lines.append(f"{marker}`{idx+1}.` **{name}** â€” Staff: {role_display} | Category: {cat_display}")
 
         slots_display = "\n".join(slot_lines)
         header_str = f"### Ticket Desk Builder ({len(slots)} options)\n**Panel:** {panel_str} | **Log:** {log_str}"
@@ -664,3 +664,4 @@ class PersistentTicketPanelLayout(LayoutView):
             ActionRow(btn_create)
         )
         self.add_item(container)
+

@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
@@ -44,3 +44,4 @@ async def perform_nick_edit(ctx: commands.Context, target: discord.Member, nickn
         await ctx.send("I do not have sufficient permissions (`Manage Nicknames`) to modify this user's nickname.", ephemeral=True)
     except Exception as e:
         await ctx.send(f"An error occurred while setting nickname: {e}", ephemeral=True)
+

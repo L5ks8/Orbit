@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Blacklist._views import BlacklistListLayout
 
@@ -26,3 +26,4 @@ async def setup(bot: commands.Bot):
     if "checkblacklist" not in bot.all_commands:
         bot.add_command(checkblacklist_cmd)
     await bot.add_cog(BlacklistListCog(bot))
+

@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice._storage import remove_from_vcban
@@ -59,3 +59,4 @@ async def setup(bot: commands.Bot):
         bot.add_command(voice_group)
     await bot.add_cog(VcUnbanCommand(bot))
     await bot.add_cog(VcUnbanPrefixFallback(bot))
+

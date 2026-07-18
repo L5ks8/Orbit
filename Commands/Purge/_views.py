@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 
 class PurgeSuccessLayout(LayoutView):
@@ -12,3 +12,4 @@ class PurgeSuccessLayout(LayoutView):
             TextDisplay(content=f"**Channel:** {channel.mention}\n**Moderator:** {author.mention}{filter_text}")
         )
         self.add_item(self.container)
+

@@ -1,4 +1,4 @@
-utf-8import time
+﻿import time
 import discord
 from discord.ext import commands, tasks
 from Commands.Reminder._storage import remove_reminder, load_reminders
@@ -61,3 +61,4 @@ class ReminderListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ReminderListener(bot))
+

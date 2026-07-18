@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Role.role import role_group
@@ -60,3 +60,4 @@ async def setup(bot: commands.Bot):
         bot.add_command(role_group)
     await bot.add_cog(RoleInfoCog(bot))
     await bot.add_cog(RoleInfoFallback(bot))
+

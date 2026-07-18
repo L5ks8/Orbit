@@ -1,9 +1,9 @@
-utf-8import random
+﻿import random
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
-SUITS = ["♠️", "♥️", "♦️", "♣️"]
+SUITS = ["â™ ï¸", "â™¥ï¸", "â™¦ï¸", "â™£ï¸"]
 RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 
 class Card:
@@ -187,3 +187,4 @@ class BlackjackCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BlackjackCommand(bot))
+

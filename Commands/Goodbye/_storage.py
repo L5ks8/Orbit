@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 from typing import Dict, Any
 
@@ -54,3 +54,4 @@ def reset_goodbye(guild_id: int) -> Dict[str, Any]:
     config = {"enabled": False, "channel_id": None, "message": DEFAULT_MESSAGE, "image_url": ""}
     save_goodbye_config(guild_id, config)
     return config
+

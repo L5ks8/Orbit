@@ -1,4 +1,4 @@
-utf-8import asyncio
+﻿import asyncio
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
@@ -69,3 +69,4 @@ class DmClearCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DmClearCommand(bot))
+

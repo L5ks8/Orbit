@@ -1,4 +1,4 @@
-utf-8import re
+﻿import re
 import discord
 from discord.ext import commands
 from Commands.Blacklist._storage import remove_from_blacklist
@@ -46,3 +46,4 @@ async def setup(bot: commands.Bot):
     if "unblacklist" not in bot.all_commands:
         bot.add_command(unblacklist_cmd)
     await bot.add_cog(BlacklistRemoveCog(bot))
+

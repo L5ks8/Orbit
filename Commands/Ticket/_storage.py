@@ -1,4 +1,4 @@
-utf-8import os
+﻿import os
 import json
 import pathlib
 import time
@@ -131,3 +131,4 @@ def reset_ticket_config(guild_id: int) -> Dict[str, Any]:
     }
     save_ticket_config(guild_id, default_config)
     return default_config
+

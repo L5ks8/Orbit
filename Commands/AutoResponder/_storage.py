@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 from typing import Dict, Any
 
@@ -44,3 +44,4 @@ def remove_response(guild_id: int, trigger: str) -> bool:
 def get_response_entry(guild_id: int, trigger: str) -> dict | None:
     data = load_responses(guild_id)
     return data.get(trigger.lower())
+

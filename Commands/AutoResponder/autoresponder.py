@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord import app_commands
 from Commands.AutoResponder._storage import add_response, remove_response, load_responses, get_response_entry
@@ -36,7 +36,7 @@ class AutoResponderCommand(commands.Cog):
         add_response(ctx.guild.id, trigger, response, channel_id)
         
         chan_text = f"<#{channel.id}>" if channel else "All Channels"
-        await ctx.send(f"✅ Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Channel:** {chan_text}\n**Response:** {response}")
+        await ctx.send(f"âœ… Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Channel:** {chan_text}\n**Response:** {response}")
 
     @commands.hybrid_command(name="delreply", aliases=["removereply"], description="Removes an auto-response.")
     @commands.has_permissions(manage_guild=True)
@@ -51,9 +51,9 @@ class AutoResponderCommand(commands.Cog):
             
         success = remove_response(ctx.guild.id, trigger)
         if success:
-            await ctx.send(f"✅ Successfully removed auto-response for trigger: `{trigger}`")
+            await ctx.send(f"âœ… Successfully removed auto-response for trigger: `{trigger}`")
         else:
-            await ctx.send(f"❌ Could not find an auto-response with trigger: `{trigger}`", ephemeral=True)
+            await ctx.send(f"âŒ Could not find an auto-response with trigger: `{trigger}`", ephemeral=True)
 
     @commands.hybrid_command(name="replies", aliases=["listreplies"], description="Lists all active auto-responses.")
     @commands.has_permissions(manage_guild=True)
@@ -111,3 +111,4 @@ class AutoResponderCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoResponderCommand(bot))
+

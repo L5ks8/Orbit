@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.JoinRole._storage import load_join_roles, clear_join_roles
 
@@ -17,7 +17,7 @@ class JoinRoleLayout(LayoutView):
             else:
                 role_mentions.append(f"`Unknown ID: {rid}`")
 
-        roles_text = "\n".join(f"> • {rm}" for rm in role_mentions) if role_mentions else "`No automatic join roles currently configured.`"
+        roles_text = "\n".join(f"> â€¢ {rm}" for rm in role_mentions) if role_mentions else "`No automatic join roles currently configured.`"
         header_str = f"### Automatic Join Roles: **{guild.name}**\n**Action:** {action_summary} | **Total Configured:** `{len(role_ids)}`"
         
         items = [
@@ -59,3 +59,4 @@ class JoinRoleLayout(LayoutView):
 
         self.container = Container(*items)
         self.add_item(self.container)
+

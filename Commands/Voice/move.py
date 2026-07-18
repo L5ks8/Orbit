@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice.voice import voice_group
@@ -63,3 +63,4 @@ async def setup(bot: commands.Bot):
         bot.add_command(voice_group)
     await bot.add_cog(MoveCommand(bot))
     await bot.add_cog(MovePrefixFallback(bot))
+

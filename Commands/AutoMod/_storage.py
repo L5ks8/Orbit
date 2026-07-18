@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import os
 import threading
@@ -89,3 +89,4 @@ def save_automod_config(guild_id: int, config: Dict[str, Any]) -> None:
             except Exception as e:
                 print(f"[AUTOMOD STORAGE ERROR] Permission denied saving {path}: {e}")
                 raise e
+

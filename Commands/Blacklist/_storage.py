@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import threading
 from typing import Dict, Any
@@ -61,3 +61,4 @@ def remove_from_blacklist(guild_id: int, user_id: int) -> bool:
 def is_blacklisted(guild_id: int, user_id: int) -> bool:
     data = load_blacklist(guild_id)
     return str(user_id) in data
+

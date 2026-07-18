@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 
 class ReactionRoleListener(commands.Cog):
@@ -44,3 +44,4 @@ class ReactionRoleListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ReactionRoleListener(bot))
+

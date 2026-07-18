@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import threading
 
@@ -33,3 +33,4 @@ def save_devmode_config(data: dict):
 def is_devmode_enabled() -> tuple[bool, str]:
     data = load_devmode_config()
     return data.get("enabled", False), data.get("reason", "System upgrades and developer testing")
+

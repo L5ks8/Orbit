@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="slowmode", description="Channel slowmode commands.")
@@ -10,3 +10,4 @@ async def slowmode_group(ctx: commands.Context):
 async def setup(bot: commands.Bot):
     if "slowmode" not in bot.all_commands:
         bot.add_command(slowmode_group)
+

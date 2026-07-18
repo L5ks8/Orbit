@@ -1,4 +1,4 @@
-utf-8import os
+﻿import os
 import sys
 import time
 import platform
@@ -190,3 +190,4 @@ def get_system_metrics(bot) -> dict:
         "cache_hit_rate": hit_rate_pct,
         "error_count": len(_SYSTEM_ERRORS)
     }
+

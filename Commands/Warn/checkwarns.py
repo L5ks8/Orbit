@@ -1,4 +1,4 @@
-utf-8import math
+﻿import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
@@ -108,3 +108,4 @@ class CheckWarnsCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CheckWarnsCog(bot))
+

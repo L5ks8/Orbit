@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import discord
 from discord.ext import commands
@@ -87,3 +87,4 @@ class ServerManageCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ServerManageCommand(bot))
+

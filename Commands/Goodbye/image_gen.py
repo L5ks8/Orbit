@@ -1,4 +1,4 @@
-utf-8import io
+﻿import io
 import pathlib
 import urllib.request
 import tempfile
@@ -100,3 +100,4 @@ def generate_goodbye_image(avatar_bytes: bytes, background_path: pathlib.Path, u
     bg.save(out, format="PNG")
     out.seek(0)
     return out
+

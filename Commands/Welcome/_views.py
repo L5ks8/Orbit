@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Welcome._storage import set_welcome_status
 
@@ -140,3 +140,4 @@ class WelcomeStatusLayout(LayoutView):
         items.append(ActionRow(btn_toggle, btn_close))
         self.container = Container(*items)
         self.add_item(self.container)
+

@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import random
 import string
@@ -96,3 +96,4 @@ def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
                 if not entry.get("ended"):
                     active.append((gid, entry))
     return active
+

@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="verify", description="Member verification commands.")
@@ -10,3 +10,4 @@ async def verify_group(ctx: commands.Context):
 async def setup(bot: commands.Bot):
     if "verify" not in bot.all_commands:
         bot.add_command(verify_group)
+

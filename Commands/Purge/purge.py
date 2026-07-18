@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.Purge._views import PurgeSuccessLayout
@@ -77,3 +77,4 @@ async def setup(bot: commands.Bot):
         bot.add_command(purge_cmd)
     await bot.add_cog(PurgeCog(bot))
     await bot.add_cog(PurgePrefixFallback(bot))
+

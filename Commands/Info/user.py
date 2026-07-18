@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Info.info import info_group
@@ -83,3 +83,4 @@ async def setup(bot: commands.Bot):
         bot.add_command(info_group)
     await bot.add_cog(UserInfoCommand(bot))
     await bot.add_cog(UserInfoPrefixFallback(bot))
+

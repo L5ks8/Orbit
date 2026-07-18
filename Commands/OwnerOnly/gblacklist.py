@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import discord
 from discord.ext import commands
@@ -64,3 +64,4 @@ class GlobalBlacklistCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GlobalBlacklistCommand(bot))
+

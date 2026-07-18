@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.ReactionRole.reactionrole import reactionrole_group
 from Commands.ReactionRole._views import ReactionRolePanelLayout
@@ -57,3 +57,4 @@ async def setup(bot: commands.Bot):
     if "reactionrole" not in bot.all_commands:
         bot.add_command(reactionrole_group)
     await bot.add_cog(ReactionRoleCreateCog(bot))
+

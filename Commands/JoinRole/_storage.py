@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 from typing import List
 
@@ -48,3 +48,4 @@ def clear_join_roles(guild_id: int) -> int:
     if count > 0:
         save_join_roles(guild_id, [])
     return count
+

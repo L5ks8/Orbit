@@ -1,9 +1,9 @@
-utf-8import random
+﻿import random
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
-SYMBOLS = ["🍒", "🍋", "🍊", "🍇", "🔔", "💎", "7️⃣"]
+SYMBOLS = ["ðŸ’", "ðŸ‹", "ðŸŠ", "ðŸ‡", "ðŸ””", "ðŸ’Ž", "7ï¸âƒ£"]
 
 class SlotsSession:
     def __init__(self, player: discord.abc.User):
@@ -21,9 +21,9 @@ class SlotsSession:
         center = self.grid[1]
         s1, s2, s3 = center[0], center[1], center[2]
 
-        if s1 == s2 == s3 == "7️⃣":
+        if s1 == s2 == s3 == "7ï¸âƒ£":
             self.outcome_text = "**JACKPOT 777!** Mega Casino Payout (`10x Win`)!"
-        elif s1 == s2 == s3 == "💎":
+        elif s1 == s2 == s3 == "ðŸ’Ž":
             self.outcome_text = "**DIAMOND TRIPLE!** High Roller Payout (`5x Win`)!"
         elif s1 == s2 == s3:
             self.outcome_text = f"**TRIPLE MATCH (`{s1}`)!** Classic Payout (`3x Win`)!"
@@ -97,3 +97,4 @@ class SlotsCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SlotsCommand(bot))
+

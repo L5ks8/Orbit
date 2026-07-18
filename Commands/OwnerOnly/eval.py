@@ -1,4 +1,4 @@
-utf-8import io
+﻿import io
 import textwrap
 import traceback
 import contextlib
@@ -107,3 +107,4 @@ class EvalCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(EvalCommand(bot))
+

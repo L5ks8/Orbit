@@ -1,2 +1,3 @@
-utf-8async def setup(bot):
+﻿async def setup(bot):
     pass
+

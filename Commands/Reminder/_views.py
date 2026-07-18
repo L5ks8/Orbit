@@ -1,4 +1,4 @@
-utf-8import re
+﻿import re
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 
@@ -74,3 +74,4 @@ class ReminderAlertLayout(LayoutView):
             )
         )
         self.add_item(self.container)
+

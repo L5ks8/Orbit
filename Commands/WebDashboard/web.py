@@ -1,4 +1,4 @@
-utf-8import os
+﻿import os
 import secrets
 import json
 import asyncio
@@ -680,3 +680,4 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/api/support-invite", dashboard.api_support_invite)
     
     return app
+

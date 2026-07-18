@@ -1,4 +1,4 @@
-utf-8import time
+﻿import time
 import io
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
@@ -169,3 +169,4 @@ class PersistentVerifyLayout(LayoutView):
 
         btn_verify.callback = verify_cb
         self.add_item(Container(TextDisplay(content=header_str), Separator(spacing=discord.SeparatorSpacing.small), TextDisplay(content=info_str), Separator(spacing=discord.SeparatorSpacing.small), ActionRow(btn_verify)))
+

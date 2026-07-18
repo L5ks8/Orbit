@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
 
@@ -228,3 +228,4 @@ class AutoModDashboardLayout(LayoutView):
             ActionRow(btn_spam_cfg, btn_alt, btn_alt_cfg, btn_close)
         )
         self.add_item(self.container)
+

@@ -1,4 +1,4 @@
-utf-8import asyncio
+﻿import asyncio
 import discord
 from discord.ext import commands
 from Commands.JoinToCreate._storage import load_jtc_config, load_active_channels, create_active_channel, update_active_channel, remove_active_channel, get_active_channel
@@ -111,3 +111,4 @@ class JTCListenerCog(commands.Cog):
 async def setup(bot: commands.Bot):
     bot.add_view(PersistentJTCControlLayout())
     await bot.add_cog(JTCListenerCog(bot))
+

@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
@@ -123,3 +123,4 @@ class ReloadCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ReloadCommand(bot))
+

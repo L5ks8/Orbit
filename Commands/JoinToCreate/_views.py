@@ -1,4 +1,4 @@
-utf-8import asyncio
+﻿import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, UserSelect
 from Commands.JoinToCreate._storage import get_active_channel, update_active_channel, remove_active_channel
@@ -330,3 +330,4 @@ class PersistentJTCControlLayout(LayoutView):
             await channel.delete(reason=f"Deleted by owner {interaction.user}")
         except Exception:
             pass
+

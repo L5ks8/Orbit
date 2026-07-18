@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Verify._storage import load_verify_config
@@ -71,3 +71,4 @@ async def setup(bot: commands.Bot):
         bot.add_command(verify_group)
     await bot.add_cog(VerifyStatusCog(bot))
     await bot.add_cog(VerifyStatusFallback(bot))
+

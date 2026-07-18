@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import os
 import time
@@ -82,3 +82,4 @@ def remove_from_whitelist(guild_id: int, user_id: int) -> bool:
     del data[uid_str]
     save_whitelist(guild_id, data)
     return True
+

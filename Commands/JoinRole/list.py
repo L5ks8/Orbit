@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
 from Commands.JoinRole._views import JoinRoleLayout
@@ -30,3 +30,4 @@ async def setup(bot: commands.Bot):
     if "joinrole" not in bot.all_commands:
         bot.add_command(joinrole_group)
     await bot.add_cog(JoinRoleListCog(bot))
+

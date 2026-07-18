@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow, MediaGallery
 
 class ReactionRolePanelLayout(LayoutView):
@@ -35,3 +35,4 @@ class ReactionRolePanelLayout(LayoutView):
             self.container.add_item(row)
 
         self.add_item(self.container)
+

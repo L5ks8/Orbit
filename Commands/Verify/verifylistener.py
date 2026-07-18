@@ -1,4 +1,4 @@
-utf-8import time
+﻿import time
 import discord
 from discord.ext import commands, tasks
 from Commands.Verify._storage import load_verify_config, add_pending_kick, remove_pending_kick
@@ -80,3 +80,4 @@ async def setup(bot: commands.Bot):
     from Commands.Verify._views import PersistentVerifyLayout
     bot.add_view(PersistentVerifyLayout())
     await bot.add_cog(VerifyListenerCog(bot))
+

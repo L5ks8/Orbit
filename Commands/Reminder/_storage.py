@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import time
 import uuid
@@ -53,3 +53,4 @@ def remove_reminder(rem_id: str, user_id: int | None = None) -> bool:
 def get_user_reminders(user_id: int) -> list[dict]:
     reminders = load_reminders()
     return [r for r in reminders if r["user_id"] == user_id]
+

@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Goodbye._storage import load_goodbye_config
 from Commands.Goodbye._views import format_goodbye_string
@@ -74,3 +74,4 @@ class GoodbyeListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GoodbyeListener(bot))
+

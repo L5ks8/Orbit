@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import discord
 from discord.ext import commands
@@ -33,7 +33,7 @@ def _parse_discord_status(status_str: str) -> discord.Status:
     s = status_str.lower().strip()
     if s in ["idle", "abwesend"]:
         return discord.Status.idle
-    if s in ["dnd", "do_not_disturb", "nicht stören", "nicht stoeren"]:
+    if s in ["dnd", "do_not_disturb", "nicht stÃ¶ren", "nicht stoeren"]:
         return discord.Status.dnd
     if s in ["invisible", "offline", "unsichtbar"]:
         return discord.Status.invisible
@@ -249,3 +249,4 @@ class StatusCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(StatusCommand(bot))
+

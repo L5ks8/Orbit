@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.OwnerOnly._monitor import get_live_logs, record_command
@@ -57,3 +57,4 @@ class LiveLogsCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(LiveLogsCommand(bot))
+

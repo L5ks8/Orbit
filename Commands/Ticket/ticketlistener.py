@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Ticket._views import PersistentTicketPanelLayout, TicketControlLayout
 
@@ -25,3 +25,4 @@ async def setup(bot: commands.Bot):
     bot.add_view(PersistentTicketPanelLayout())
     bot.add_view(TicketControlLayout())
     await bot.add_cog(TicketListenerCog(bot))
+

@@ -1,4 +1,4 @@
-utf-8import os
+﻿import os
 import asyncio
 import discord
 from discord.ext import commands
@@ -86,3 +86,4 @@ class RestartCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(RestartCommand(bot))
+

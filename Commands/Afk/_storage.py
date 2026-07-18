@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import time
 import pathlib
 import threading
@@ -58,3 +58,4 @@ def remove_afk(guild_id: int, user_id: int) -> bool:
 def get_afk(guild_id: int, user_id: int) -> Dict[str, Any] | None:
     data = load_afk(guild_id)
     return data.get(str(user_id))
+

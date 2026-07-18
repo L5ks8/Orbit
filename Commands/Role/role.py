@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="role", description="Server role management commands.")
@@ -10,3 +10,4 @@ async def role_group(ctx: commands.Context):
 async def setup(bot: commands.Bot):
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
+

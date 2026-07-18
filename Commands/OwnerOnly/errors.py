@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.OwnerOnly._monitor import get_error_log, clear_errors, record_command
@@ -19,7 +19,7 @@ class ErrorsLayoutView(LayoutView):
             lines = []
             for e in errs[:5]:
                 clean_msg = str(e.get("message", ""))[:65]
-                lines.append(f"`[{e.get('timestamp', '')}]` **[{e.get('source', '')}]** — `{clean_msg}`")
+                lines.append(f"`[{e.get('timestamp', '')}]` **[{e.get('source', '')}]** â€” `{clean_msg}`")
             err_text = f"**Caught Error Ring Buffer ({len(errs)} stored):**\n" + "\n".join(lines)
             
             latest_tb = errs[0].get("traceback", "")
@@ -77,3 +77,4 @@ class ErrorsCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ErrorsCommand(bot))
+

@@ -1,4 +1,4 @@
-utf-8import random
+﻿import random
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -51,7 +51,7 @@ class GiveawayRerollCommand(commands.Cog):
                 pass
 
         if channel:
-            await channel.send(content=f"🎉 **GIVEAWAY REROLL!** 🎉\nCongratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! 🎊 (`Giveaway ID: #`{entry['giveaway_id']})")
+            await channel.send(content=f"ðŸŽ‰ **GIVEAWAY REROLL!** ðŸŽ‰\nCongratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! ðŸŽŠ (`Giveaway ID: #`{entry['giveaway_id']})")
             await ctx.send(f"Rerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).")
         else:
             await ctx.send("Could not access the original giveaway channel to announce the reroll.", ephemeral=True)
@@ -67,3 +67,4 @@ class GiveawayRerollCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GiveawayRerollCommand(bot))
+

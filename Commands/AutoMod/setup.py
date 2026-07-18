@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.AutoMod.automod import automod_group
 from Commands.AutoMod._views import AutoModDashboardLayout
@@ -40,3 +40,4 @@ async def setup(bot: commands.Bot):
         bot.add_command(automod_group)
     await bot.add_cog(AutoModCommand(bot))
     await bot.add_cog(AutoModPrefixFallback(bot))
+

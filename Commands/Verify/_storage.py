@@ -1,4 +1,4 @@
-utf-8import os
+﻿import os
 import json
 import pathlib
 from typing import Dict, Any, Optional
@@ -82,3 +82,4 @@ def remove_pending_kick(guild_id: int, user_id: int) -> None:
     if str(user_id) in config.get("pending_kicks", {}):
         del config["pending_kicks"][str(user_id)]
         save_verify_config(guild_id, config)
+

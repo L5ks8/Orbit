@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Reminder.remind import remind_group
 from Commands.Reminder._storage import add_reminder
@@ -38,3 +38,4 @@ async def setup(bot: commands.Bot):
     if "remind" not in bot.all_commands:
         bot.add_command(remind_group)
     await bot.add_cog(ReminderSetCog(bot))
+

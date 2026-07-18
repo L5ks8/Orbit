@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import add_warning, get_user_warnings
@@ -78,3 +78,4 @@ async def warn_cmd_error(ctx: commands.Context, error):
 async def setup(bot: commands.Bot):
     if "warn" not in bot.all_commands:
         bot.add_command(warn_cmd)
+

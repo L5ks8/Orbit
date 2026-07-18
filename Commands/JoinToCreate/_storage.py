@@ -1,4 +1,4 @@
-utf-8import json
+﻿import json
 import pathlib
 import threading
 from typing import Dict, Any
@@ -110,3 +110,4 @@ def remove_active_channel(guild_id: int, channel_id: int) -> None:
     if ch_str in data:
         del data[ch_str]
         save_active_channels(guild_id, data)
+

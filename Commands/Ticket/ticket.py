@@ -1,4 +1,4 @@
-utf-8import io
+﻿import io
 import asyncio
 import discord
 from discord import app_commands
@@ -271,3 +271,4 @@ async def setup(bot: commands.Bot):
     if "ticket" not in bot.all_commands:
         bot.add_command(ticket_group)
     await bot.add_cog(TicketCog(bot))
+

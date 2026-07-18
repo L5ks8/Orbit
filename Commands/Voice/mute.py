@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
@@ -66,3 +66,4 @@ async def setup(bot: commands.Bot):
         bot.add_command(voice_group)
     await bot.add_cog(VcMuteCommand(bot))
     await bot.add_cog(VcMutePrefixFallback(bot))
+

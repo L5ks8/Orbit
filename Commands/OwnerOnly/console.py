@@ -1,4 +1,4 @@
-utf-8import os
+﻿import os
 import io
 import json
 import asyncio
@@ -154,3 +154,4 @@ class ConsoleCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ConsoleCommand(bot))
+

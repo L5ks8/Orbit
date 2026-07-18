@@ -1,4 +1,4 @@
-utf-8import datetime
+﻿import datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -9,7 +9,7 @@ def make_bar(pct: int, length: int = 15) -> str:
     filled = int(round((pct / 100.0) * length))
     filled = max(0, min(length, filled))
     empty = length - filled
-    return "█" * filled + "░" * empty
+    return "â–ˆ" * filled + "â–‘" * empty
 
 class ComponentsPollView(LayoutView):
     def __init__(self, poll_id: str, question: str, options: list[str], author: discord.Member, duration_minutes: int):
@@ -122,3 +122,4 @@ class PollCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(PollCommand(bot))
+

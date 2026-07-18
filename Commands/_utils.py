@@ -1,4 +1,4 @@
-utf-8import discord
+﻿import discord
 from discord.ext import commands
 
 def format_usage(command: str, *args: str) -> str:
@@ -27,3 +27,4 @@ class UserOrIDConverter(commands.Converter):
             return await commands.UserConverter().convert(ctx, str(argument))
         except commands.BadArgument:
             raise commands.BadArgument(f"Could not find user '{argument}'. Please provide a valid @mention or user ID.")
+
