@@ -24,6 +24,12 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     cleared_count = clear_user_warnings(ctx.guild.id, user.id)
     if cleared_count == 0:
         return await ctx.send(f"**{user.display_name}** has no formal warnings on this server.", ephemeral=True)
+    
+    if user.is_timed_out():
+        try:
+            await user.timeout(None, reason="Warnings cleared via -clearwarns")
+        except Exception:
+            pass
     try:
         await ctx.message.delete()
     except Exception:

@@ -41,23 +41,35 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
     
     import datetime
     punishment_text = ""
-    try:
-        if total_warns == 2:
-            await user.timeout(datetime.timedelta(minutes=15), reason="Automatic punishment for 2 warnings")
-            punishment_text = "\n**Automatic Action:** 15m Timeout"
-        elif total_warns == 3:
-            await user.timeout(datetime.timedelta(minutes=45), reason="Automatic punishment for 3 warnings")
-            punishment_text = "\n**Automatic Action:** 45m Timeout"
-        elif total_warns == 4:
-            await user.timeout(datetime.timedelta(days=1), reason="Automatic punishment for 4 warnings")
-            punishment_text = "\n**Automatic Action:** 1d Timeout"
-        elif total_warns >= 5:
-            await user.timeout(datetime.timedelta(days=3), reason=f"Automatic punishment for {total_warns} warnings")
-            punishment_text = "\n**Automatic Action:** 3d Timeout"
-    except discord.Forbidden:
-        punishment_text = "\n**Automatic Action:** Failed to apply timeout (Missing Permissions)"
-    except Exception as e:
-        punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
+    duration = None
+    if total_warns == 2:
+        duration = datetime.timedelta(minutes=15)
+        punishment_text = "\n**Automatic Action:** +15m Timeout"
+    elif total_warns == 3:
+        duration = datetime.timedelta(minutes=45)
+        punishment_text = "\n**Automatic Action:** +45m Timeout"
+    elif total_warns == 4:
+        duration = datetime.timedelta(days=1)
+        punishment_text = "\n**Automatic Action:** +1d Timeout"
+    elif total_warns >= 5:
+        duration = datetime.timedelta(days=3)
+        punishment_text = "\n**Automatic Action:** +3d Timeout"
+
+    if duration:
+        try:
+            new_until = discord.utils.utcnow() + duration
+            if user.is_timed_out() and user.timed_out_until:
+                new_until = user.timed_out_until + duration
+            
+            max_until = discord.utils.utcnow() + datetime.timedelta(days=28)
+            if new_until > max_until:
+                new_until = max_until
+                
+            await user.timeout(new_until, reason=f"Automatic punishment for {total_warns} warnings")
+        except discord.Forbidden:
+            punishment_text = "\n**Automatic Action:** Failed to apply timeout (Missing Permissions)"
+        except Exception as e:
+            punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
 
     try:
         dm_view = LayoutView()
