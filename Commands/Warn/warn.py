@@ -51,9 +51,19 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
     elif total_warns == 4:
         duration = datetime.timedelta(days=1)
         punishment_text = "\n**Automatic Action:** +1d Timeout"
-    elif total_warns >= 5:
+    elif total_warns == 5:
         duration = datetime.timedelta(days=3)
         punishment_text = "\n**Automatic Action:** +3d Timeout"
+    elif total_warns >= 6:
+        punishment_text = "\n**Automatic Action:** Kicked from server (6 Warnings Limit Reached)"
+        try:
+            await user.kick(reason=f"Automatic kick: Reached {total_warns} warnings.")
+            from Commands.Warn._storage import clear_user_warnings
+            clear_user_warnings(ctx.guild.id, user.id)
+        except discord.Forbidden:
+            punishment_text = "\n**Automatic Action:** Failed to kick user (Missing Permissions)"
+        except Exception as e:
+            punishment_text = f"\n**Automatic Action:** Failed to kick user ({e})"
 
     if duration:
         try:

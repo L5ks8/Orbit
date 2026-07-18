@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
@@ -33,6 +33,8 @@ class BanCommand(commands.Cog):
 
         try:
             await ctx.guild.ban(target, reason=f"Banned by {ctx.author} | Reason: {reason}")
+            from Commands.Ban._storage import add_ban_history
+            add_ban_history(ctx.guild.id, target.id, reason, ctx.author.id)
             view = BanSuccessLayout(target, reason, ctx.author)
             await log_event(
                 ctx.guild,

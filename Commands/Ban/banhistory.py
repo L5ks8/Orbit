@@ -2,36 +2,37 @@ import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
-from Commands.Warn._storage import get_user_warnings
+from Commands.Ban._storage import get_ban_history
 from Commands._utils import MemberOrIDConverter, format_usage
 
-class WarningsListLayout(LayoutView):
-    def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
+class BanHistoryLayout(LayoutView):
+    def __init__(self, target_id: int, target_name: str, bans: list[dict], author_id: int, page: int = 1):
         super().__init__(timeout=300)
-        self.member = member
-        self.warnings = warnings
+        self.target_id = target_id
+        self.target_name = target_name
+        self.bans = bans
         self.author_id = author_id
         self.page = page
         self.per_page = 5
-        self.total_pages = max(1, math.ceil(len(self.warnings) / self.per_page))
+        self.total_pages = max(1, math.ceil(len(self.bans) / self.per_page))
         self._build_view()
 
     def _build_view(self):
         self.clear_items()
         start = (self.page - 1) * self.per_page
         end = start + self.per_page
-        slice_warns = self.warnings[start:end]
+        slice_bans = self.bans[start:end]
 
         lines = []
-        for w in slice_warns:
+        for b in slice_bans:
             lines.append(
-                f"**ID:** `{w['warn_id']}` | **Mod:** <@{w['moderator_id']}>\n"
-                f"**Reason:** {w['reason']} (<t:{w['timestamp']}:R>)"
+                f"**ID:** `{b['ban_id']}` | **Mod:** <@{b['moderator_id']}>\n"
+                f"**Reason:** {b['reason']} (<t:{b['timestamp']}:R>)"
             )
-        warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
+        bans_text = "\n\n".join(lines) if lines else "No ban history found on this page."
         header_content = (
-            f"### ⚠️ Warning History: {self.member.mention} (Page {self.page} of {self.total_pages})\n"
-            f"**Total Warnings:** `{len(self.warnings)}`"
+            f"### 🔨 Permanent Ban History: <@{self.target_id}> (Page {self.page} of {self.total_pages})\n"
+            f"**Total Past Bans:** `{len(self.bans)}`"
         )
         btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
@@ -68,7 +69,7 @@ class WarningsListLayout(LayoutView):
             self.container = Container(
                 TextDisplay(content=header_content),
                 Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=warns_text),
+                TextDisplay(content=bans_text),
                 Separator(spacing=discord.SeparatorSpacing.small),
                 ActionRow(btn_prev, btn_next, btn_close)
             )
@@ -76,36 +77,39 @@ class WarningsListLayout(LayoutView):
             self.container = Container(
                 TextDisplay(content=header_content),
                 Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=warns_text),
+                TextDisplay(content=bans_text),
                 Separator(spacing=discord.SeparatorSpacing.small),
                 ActionRow(btn_close)
             )
         self.add_item(self.container)
 
-async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
+async def _do_banhistory(ctx: commands.Context, target: discord.User | discord.Member):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
-    target = user or ctx.author
-    warns = get_user_warnings(ctx.guild.id, target.id)
-    if not warns:
-        return await ctx.send(f"`{target.display_name}` has 0 formal warnings on this server.", ephemeral=True)
-    view = WarningsListLayout(target, warns, ctx.author.id)
+    bans = get_ban_history(ctx.guild.id, target.id)
+    if not bans:
+        return await ctx.send(f"`{target.display_name}` has no permanent ban history on this server.", ephemeral=True)
+    view = BanHistoryLayout(target.id, target.display_name, bans, ctx.author.id)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-class CheckWarnsCog(commands.Cog):
+class BanHistoryCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="checkwarns", aliases=["checkwarn", "warnings", "warnlist"], description="Check all active warnings issued to a member.")
-    async def checkwarn_cmd(self, ctx: commands.Context, user: discord.Member = None):
-        await _do_warnings(ctx, user)
+    @commands.hybrid_command(name="banhistory", aliases=["bhistory", "pastbans"], description="Check the complete, permanent ban history of a user.")
+    @commands.has_permissions(ban_members=True)
+    async def banhistory_cmd(self, ctx: commands.Context, user: discord.Member | discord.User):
+        await _do_banhistory(ctx, user)
 
-    @checkwarn_cmd.error
-    async def checkwarns_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-checkwarns', '<@member>')}", ephemeral=True)
+    @banhistory_cmd.error
+    async def banhistory_error(self, ctx: commands.Context, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("You need Ban Members permission to view ban history.", ephemeral=True)
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(format_usage("-banhistory", "<@user>"), ephemeral=True)
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send(f"{format_usage('-banhistory', '<@user>')}", ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(CheckWarnsCog(bot))
-
+    await bot.add_cog(BanHistoryCog(bot))

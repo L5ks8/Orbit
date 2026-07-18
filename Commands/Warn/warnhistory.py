@@ -2,13 +2,14 @@ import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
-from Commands.Warn._storage import get_user_warnings
+from Commands.Warn._storage import get_warn_history
 from Commands._utils import MemberOrIDConverter, format_usage
 
-class WarningsListLayout(LayoutView):
-    def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
+class WarnHistoryLayout(LayoutView):
+    def __init__(self, target_id: int, target_name: str, warnings: list[dict], author_id: int, page: int = 1):
         super().__init__(timeout=300)
-        self.member = member
+        self.target_id = target_id
+        self.target_name = target_name
         self.warnings = warnings
         self.author_id = author_id
         self.page = page
@@ -28,10 +29,10 @@ class WarningsListLayout(LayoutView):
                 f"**ID:** `{w['warn_id']}` | **Mod:** <@{w['moderator_id']}>\n"
                 f"**Reason:** {w['reason']} (<t:{w['timestamp']}:R>)"
             )
-        warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
+        warns_text = "\n\n".join(lines) if lines else "No warning history found on this page."
         header_content = (
-            f"### ⚠️ Warning History: {self.member.mention} (Page {self.page} of {self.total_pages})\n"
-            f"**Total Warnings:** `{len(self.warnings)}`"
+            f"### ⚠️ Permanent Warning History: <@{self.target_id}> (Page {self.page} of {self.total_pages})\n"
+            f"**Total Past Warnings:** `{len(self.warnings)}`"
         )
         btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
@@ -82,30 +83,33 @@ class WarningsListLayout(LayoutView):
             )
         self.add_item(self.container)
 
-async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
+async def _do_warnhistory(ctx: commands.Context, target: discord.User | discord.Member):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
-    target = user or ctx.author
-    warns = get_user_warnings(ctx.guild.id, target.id)
+    warns = get_warn_history(ctx.guild.id, target.id)
     if not warns:
-        return await ctx.send(f"`{target.display_name}` has 0 formal warnings on this server.", ephemeral=True)
-    view = WarningsListLayout(target, warns, ctx.author.id)
+        return await ctx.send(f"`{target.display_name}` has no permanent warning history on this server.", ephemeral=True)
+    view = WarnHistoryLayout(target.id, target.display_name, warns, ctx.author.id)
     await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
-class CheckWarnsCog(commands.Cog):
+class WarnHistoryCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="checkwarns", aliases=["checkwarn", "warnings", "warnlist"], description="Check all active warnings issued to a member.")
-    async def checkwarn_cmd(self, ctx: commands.Context, user: discord.Member = None):
-        await _do_warnings(ctx, user)
+    @commands.hybrid_command(name="warnhistory", aliases=["whistory", "pastwarns"], description="Check the complete, permanent warning history of a user.")
+    @commands.has_permissions(moderate_members=True)
+    async def warnhistory_cmd(self, ctx: commands.Context, user: discord.Member | discord.User):
+        await _do_warnhistory(ctx, user)
 
-    @checkwarn_cmd.error
-    async def checkwarns_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-checkwarns', '<@member>')}", ephemeral=True)
+    @warnhistory_cmd.error
+    async def warnhistory_error(self, ctx: commands.Context, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("You need Moderate Members permission to view warn history.", ephemeral=True)
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(format_usage("-warnhistory", "<@user>"), ephemeral=True)
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send(f"{format_usage('-warnhistory', '<@user>')}", ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(CheckWarnsCog(bot))
-
+    await bot.add_cog(WarnHistoryCog(bot))
