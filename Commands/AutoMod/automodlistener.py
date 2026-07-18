@@ -46,12 +46,42 @@ class AutoModListener(commands.Cog):
         if action == "warn":
             add_warning(member.guild.id, member.id, reason, self.bot.user.id)
             warn_count += 1
-            td, escalation_str = self._get_escalation(warn_count)
-            if td and member.id != member.guild.owner_id:
-                try:
-                    await member.timeout(td, reason=reason)
-                except Exception:
-                    pass
+            if member.id != member.guild.owner_id:
+                td = None
+                if warn_count == 2:
+                    td = datetime.timedelta(minutes=15)
+                    escalation_str = "+15m Timeout (2 Warnings)"
+                elif warn_count == 3:
+                    td = datetime.timedelta(minutes=45)
+                    escalation_str = "+45m Timeout (3 Warnings)"
+                elif warn_count == 4:
+                    td = datetime.timedelta(days=1)
+                    escalation_str = "+1d Timeout (4 Warnings)"
+                elif warn_count == 5:
+                    td = datetime.timedelta(days=3)
+                    escalation_str = "+3d Timeout (5 Warnings)"
+                elif warn_count >= 6:
+                    escalation_str = "Kicked & Warns Reset (6 Warnings)"
+                    try:
+                        await member.kick(reason=f"AutoMod: Reached {warn_count} warnings")
+                        from Commands.Warn._storage import clear_user_warnings
+                        clear_user_warnings(member.guild.id, member.id)
+                    except Exception:
+                        pass
+                
+                if td:
+                    try:
+                        new_until = discord.utils.utcnow() + td
+                        if member.is_timed_out() and member.timed_out_until:
+                            new_until = member.timed_out_until + td
+                        
+                        max_until = discord.utils.utcnow() + datetime.timedelta(days=28)
+                        if new_until > max_until:
+                            new_until = max_until
+                            
+                        await member.timeout(new_until, reason=f"AutoMod: {warn_count} warnings")
+                    except Exception:
+                        pass
         elif action == "timeout" and member.id != member.guild.owner_id:
             secs = timeout_min * 60
             td = datetime.timedelta(seconds=secs)
