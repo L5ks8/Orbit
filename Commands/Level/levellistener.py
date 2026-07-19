@@ -25,7 +25,6 @@ class LevelListenerCog(commands.Cog):
         self.leaderboard_loop.cancel()
 
     def _check_cooldown(self, cooldowns: dict, guild_id: int, user_id: int, cooldown_seconds: int) -> bool:
-        """Check if user is on cooldown. Returns True if NOT on cooldown (can earn XP)."""
         key = (guild_id, user_id)
         now = time.time()
         if key in cooldowns and now - cooldowns[key] < cooldown_seconds:
@@ -34,7 +33,6 @@ class LevelListenerCog(commands.Cog):
         return True
 
     def _is_blocked(self, config: dict, channel_id: int, member: discord.Member) -> bool:
-        """Check if the channel or member's roles are blocked from earning XP."""
         ch_mode = config.get("channel_mode", "blacklist")
         blocked_channels = config.get("blocked_channels", [])
         if ch_mode == "blacklist" and str(channel_id) in blocked_channels:
@@ -54,7 +52,6 @@ class LevelListenerCog(commands.Cog):
         return False
 
     def _calculate_multiplier(self, config: dict, member: discord.Member, channel_id: int) -> float:
-        """Calculate total XP multiplier from global + role + channel boosters."""
         base = config.get("xp_multiplier", 1.0)
         role_boosters = config.get("role_boosters", [])
         channel_boosters = config.get("channel_boosters", [])
@@ -77,7 +74,6 @@ class LevelListenerCog(commands.Cog):
         return base * (1 + role_mult + ch_mult)
 
     async def _handle_level_up(self, member: discord.Member, channel: discord.TextChannel, old_level: int, new_level: int, config: dict):
-        """Handle level up: assign roles and send message."""
         if old_level >= new_level:
             return
 
@@ -191,7 +187,6 @@ class LevelListenerCog(commands.Cog):
             pass
 
     async def _check_stat_roles(self, member: discord.Member, stat_type: str, new_value: int, config: dict):
-        """Check if a user has earned a stat role."""
         stat_key = f"stat_roles_{stat_type}"
         stat_roles = config.get(stat_key, [])
         stack = config.get(f"{stat_key}_stack", False)
@@ -321,7 +316,6 @@ class LevelListenerCog(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def voice_xp_loop(self):
-        """Award voice XP every 60 seconds to users currently in voice channels."""
         for guild in self.bot.guilds:
             config = load_level_config(guild.id)
             if not config.get("enabled", False) or not config.get("voice_xp_enabled", False):

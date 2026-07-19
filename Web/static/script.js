@@ -1049,27 +1049,23 @@ async function loadConfig(guildId, guildName, guildIcon) {
         levelUpChEl.innerHTML = '<option value="current">Current Channel</option>';
         const levelLbChEl = document.getElementById('level_leaderboard_channel');
         levelLbChEl.innerHTML = '<option value="">Select Channel...</option>';
-        const levelBlockChEl = document.getElementById('level_blocked_channels');
-        levelBlockChEl.innerHTML = '';
+        const levelBlockChPicker = document.getElementById('level_blocked_channels_picker');
+        levelBlockChPicker.innerHTML = '<option value="">Select a channel...</option>';
         globalChannels.forEach(c => {
             levelUpChEl.innerHTML += `<option value="${c.id}" ${config.level?.levelup_channel == c.id ? 'selected' : ''}>#${c.name}</option>`;
             levelLbChEl.innerHTML += `<option value="${c.id}" ${config.level?.leaderboard_channel == c.id ? 'selected' : ''}>#${c.name}</option>`;
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = '#' + c.name;
-            if (config.level?.blocked_channels?.includes(c.id)) opt.selected = true;
-            levelBlockChEl.appendChild(opt);
+            levelBlockChPicker.innerHTML += `<option value="${c.id}"># ${c.name}</option>`;
         });
+        // Init blocked channels chips
+        initChipPicker('level_blocked_channels_picker', 'level_blocked_channels_tags', 'level_blocked_channels', config.level?.blocked_channels || [], '#');
 
-        const levelBlockRoEl = document.getElementById('level_blocked_roles');
-        levelBlockRoEl.innerHTML = '';
+        const levelBlockRoPicker = document.getElementById('level_blocked_roles_picker');
+        levelBlockRoPicker.innerHTML = '<option value="">Select a role...</option>';
         globalRoles.forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r.id;
-            opt.textContent = '@ ' + r.name;
-            if (config.level?.blocked_roles?.includes(r.id)) opt.selected = true;
-            levelBlockRoEl.appendChild(opt);
+            levelBlockRoPicker.innerHTML += `<option value="${r.id}">@ ${r.name}</option>`;
         });
+        // Init blocked roles chips
+        initChipPicker('level_blocked_roles_picker', 'level_blocked_roles_tags', 'level_blocked_roles', config.level?.blocked_roles || [], '@');
 
         // Render dynamic lists
         renderLevelRoles(config.level?.level_roles || []);
@@ -1682,6 +1678,46 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
 
+    // Setup Test Level Up Button
+    const testLevelUpBtn = document.getElementById('btn-test-levelup');
+    if (testLevelUpBtn) {
+        testLevelUpBtn.addEventListener('click', async () => {
+            const originalText = testLevelUpBtn.textContent;
+            testLevelUpBtn.textContent = 'Sending...';
+            testLevelUpBtn.disabled = true;
+            
+            try {
+                const levelupChannelId = document.getElementById('level_levelup_channel').value;
+                const response = await fetch(`/api/server/${currentGuildId}/test-levelup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        channel_id: levelupChannelId,
+                        message: document.getElementById('level_levelup_message_content').value,
+                        embed_author: document.getElementById('level_levelup_embed_author').value,
+                        embed_title: document.getElementById('level_levelup_embed_title').value,
+                        embed_description: document.getElementById('level_levelup_embed_description').value,
+                        embed_image: document.getElementById('level_levelup_embed_image').value,
+                        embed_footer: document.getElementById('level_levelup_embed_footer').value,
+                        show_avatar: document.getElementById('level_levelup_show_avatar').checked
+                    })
+                });
+                
+                if (response.ok) {
+                    testLevelUpBtn.textContent = 'Sent!';
+                    setTimeout(() => { testLevelUpBtn.textContent = originalText; testLevelUpBtn.disabled = false; }, 2000);
+                } else {
+                    testLevelUpBtn.textContent = 'Failed';
+                    setTimeout(() => { testLevelUpBtn.textContent = originalText; testLevelUpBtn.disabled = false; }, 2000);
+                }
+            } catch (e) {
+                console.error(e);
+                testLevelUpBtn.textContent = 'Error';
+                setTimeout(() => { testLevelUpBtn.textContent = originalText; testLevelUpBtn.disabled = false; }, 2000);
+            }
+        });
+    }
+
     // Collect AutoMod Toggle States and Global Exepts
     currentAutomodConfig.enabled = document.getElementById('automod_enabled').checked;
 
@@ -1791,8 +1827,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             xp_multiplier: parseFloat(document.getElementById('level_xp_multiplier').value) || 1.0,
             channel_mode: document.getElementById('level_channel_mode').value,
             role_mode: document.getElementById('level_role_mode').value,
-            blocked_channels: Array.from(document.getElementById('level_blocked_channels').selectedOptions).map(o => o.value),
-            blocked_roles: Array.from(document.getElementById('level_blocked_roles').selectedOptions).map(o => o.value),
+            blocked_channels: document.getElementById('level_blocked_channels').value ? document.getElementById('level_blocked_channels').value.split(',') : [],
+            blocked_roles: document.getElementById('level_blocked_roles').value ? document.getElementById('level_blocked_roles').value.split(',') : [],
             levelup_channel: document.getElementById('level_levelup_channel').value,
             leaderboard_url: document.getElementById('level_leaderboard_url').value,
             leaderboard_channel: document.getElementById('level_leaderboard_channel').value,

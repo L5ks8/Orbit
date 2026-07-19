@@ -3,7 +3,6 @@ import io
 import os
 
 def _format_number(n: int) -> str:
-    """Format large numbers with K/M suffix."""
     if n >= 1_000_000:
         return f"{n / 1_000_000:.1f}M"
     elif n >= 1_000:
@@ -24,7 +23,6 @@ def generate_rank_card(
     bar_color: tuple = (59, 130, 246),
     bg_color: tuple = (22, 22, 30),
 ) -> bytes:
-    """Generate a beautiful rank card image. Returns PNG bytes."""
 
     WIDTH, HEIGHT = 934, 282
     PADDING = 30

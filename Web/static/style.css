@@ -787,6 +787,37 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .reward-table-body {
     min-height: 40px;
 }
+.chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    min-height: 10px;
+}
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.chip .chip-remove {
+    cursor: pointer;
+    font-size: 14px;
+    color: #93c5fd;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+    line-height: 1;
+}
+.chip .chip-remove:hover {
+    opacity: 1;
+    color: #f87171;
+}
 .reward-empty {
     padding: 15px;
     text-align: center;

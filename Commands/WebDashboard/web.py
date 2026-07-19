@@ -747,7 +747,71 @@ class WebDashboard:
             
             return web.json_response({"success": True})
         except Exception as e:
-            return web.json_response({"error": str(e)}, status=400)
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_action_test_levelup(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("can_channels"):
+            return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+            
+        try:
+            data = await request.json()
+            channel_id = data.get("channel_id")
+            
+            target_ch = None
+            if channel_id and channel_id != "current":
+                target_ch = guild.get_channel(int(channel_id))
+            
+            # If no channel selected or 'current', try to find a valid text channel
+            if not target_ch:
+                target_ch = next((ch for ch in guild.text_channels if ch.permissions_for(guild.me).send_messages), None)
+                
+            if not target_ch:
+                return web.json_response({"error": "No valid channel found to send the test message"}, status=400)
+                
+            import discord
+            import re
+            
+            member = guild.me
+            
+            content = data.get("message", "{user_mention}")
+            title = data.get("embed_title", "🎉 Level Up!")
+            desc = data.get("embed_description", "")
+            author = data.get("embed_author", "")
+            footer = data.get("embed_footer", "")
+            image = data.get("embed_image", "")
+            show_avatar = data.get("show_avatar", True)
+            
+            def replace_vars(text):
+                text = text.replace("{user_mention}", member.mention)
+                text = text.replace("{user_globalname}", member.global_name or member.display_name)
+                text = text.replace("{level}", "99")
+                text = text.replace("{roles}", "None")
+                return text
+                
+            content = replace_vars(content)
+            title = replace_vars(title)
+            desc = replace_vars(desc)
+            
+            embed = discord.Embed(title=title, description=desc, color=0x3B82F6)
+            if author:
+                embed.set_author(name=replace_vars(author))
+            if footer:
+                embed.set_footer(text=replace_vars(footer))
+            if image:
+                embed.set_image(url=image)
+            if show_avatar:
+                embed.set_thumbnail(url=member.display_avatar.url)
+                
+            await target_ch.send(content=content if content else None, embed=embed)
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
 
     async def api_upload_image(self, request: web.Request):
         user = await self.get_user_session(request)
@@ -819,6 +883,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_post("/api/config/{id}", dashboard.api_post_config)
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
+    app.router.add_post("/api/server/{id}/test-levelup", dashboard.api_action_test_levelup)
     app.router.add_post("/api/upload/image", dashboard.api_upload_image)
     app.router.add_get("/api/support-invite", dashboard.api_support_invite)
     

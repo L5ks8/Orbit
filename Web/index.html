@@ -1616,7 +1616,11 @@
                                         <button type="button" class="toggle-tab" data-mode="whitelist" data-target-mode="level_channel_mode">Whitelist</button>
                                     </div>
                                     <input type="hidden" id="level_channel_mode" value="blacklist">
-                                    <select id="level_blocked_channels" multiple></select>
+                                    <select id="level_blocked_channels_picker">
+                                        <option value="">Select a channel...</option>
+                                    </select>
+                                    <div id="level_blocked_channels_tags" class="chip-container"></div>
+                                    <input type="hidden" id="level_blocked_channels" value="">
                                 </div>
                                 <div class="form-group">
                                     <label>Blocked XP Roles</label>
@@ -1626,7 +1630,11 @@
                                         <button type="button" class="toggle-tab" data-mode="whitelist" data-target-mode="level_role_mode">Whitelist</button>
                                     </div>
                                     <input type="hidden" id="level_role_mode" value="blacklist">
-                                    <select id="level_blocked_roles" multiple></select>
+                                    <select id="level_blocked_roles_picker">
+                                        <option value="">Select a role...</option>
+                                    </select>
+                                    <div id="level_blocked_roles_tags" class="chip-container"></div>
+                                    <input type="hidden" id="level_blocked_roles" value="">
                                 </div>
                             </div>
                             <div class="form-group" style="margin-top: 15px;">
@@ -1666,7 +1674,7 @@
                         <div class="level-card" style="margin-top: 20px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div class="level-card-title" style="margin-bottom: 0;">Level Up Message</div>
-                                <button type="button" id="btn-test-levelup" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">🔔 Test Message</button>
+                                <button type="button" id="btn-test-levelup" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">Test Message</button>
                             </div>
 
                             <div class="form-group" style="margin-top: 15px;">
