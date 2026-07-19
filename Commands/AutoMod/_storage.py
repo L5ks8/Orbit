@@ -1,4 +1,4 @@
-﻿from Database.mongodb import get_config, set_config
+from Database.mongodb import get_config, set_config
 import json
 import pathlib
 import os
@@ -49,15 +49,13 @@ def load_automod_config(guild_id: int) -> Dict[str, Any]:
         if guild_id in _automod_cache:
             return _automod_cache[guild_id]
         path = _get_file_path(guild_id)
-        if not path.exists():
-            cfg = json.loads(json.dumps(DEFAULT_AUTOMOD_CONFIG))
-            _automod_cache[guild_id] = cfg
-            return cfg
         try:
-            if True:
-                data = get_config("AutoMod", guild_id)
-            for key, val in DEFAULT_AUTOMOD_CONFIG.items():
-                if key not in data:
+            data = get_config("AutoMod", guild_id)
+            if not data:
+                data = json.loads(json.dumps(DEFAULT_AUTOMOD_CONFIG))
+            else:
+                for key, val in DEFAULT_AUTOMOD_CONFIG.items():
+                    if key not in data:
                     data[key] = val
                 elif isinstance(val, dict) and isinstance(data[key], dict):
                     for subkey, subval in val.items():

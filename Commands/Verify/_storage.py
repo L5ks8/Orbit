@@ -16,14 +16,12 @@ def load_verify_config(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
     default_cfg = {"enabled": False, "channel_id": None, "role_id": None, "remove_role_id": None, "verification_type": "captcha", "auto_kick_minutes": 0, "pending_kicks": {}}
     
-    if not path.exists():
-        data = default_cfg.copy()
-    else:
-        try:
-            if True:
-                data = get_config("Verify", guild_id)
-        except Exception:
+    try:
+        data = get_config("Verify", guild_id)
+        if not data:
             data = default_cfg.copy()
+    except Exception:
+        data = default_cfg.copy()
 
     if not isinstance(data, dict):
         data = default_cfg.copy()

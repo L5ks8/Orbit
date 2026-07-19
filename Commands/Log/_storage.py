@@ -55,14 +55,12 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
         "roles": {k: None for k in DEFAULT_CATEGORIES}
     }
     
-    if not path.exists():
-        data = default.copy()
-    else:
-        try:
-            if True:
-                data = get_config("Log", guild_id)
-        except Exception:
+    try:
+        data = get_config("Log", guild_id)
+        if not data:
             data = default.copy()
+    except Exception:
+        data = default.copy()
 
     if not isinstance(data, dict):
         return default.copy()

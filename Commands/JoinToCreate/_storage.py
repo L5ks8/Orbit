@@ -26,16 +26,14 @@ def load_jtc_config(guild_id: int) -> Dict[str, Any]:
         if guild_id in _jtc_config_cache:
             return _jtc_config_cache[guild_id]
         path = _get_config_path(guild_id)
-        if not path.exists():
-            default_cfg = {
-                "enabled": False,
-                "hubs": []
-            }
-            _jtc_config_cache[guild_id] = default_cfg
-            return default_cfg
         try:
-            if True:
-                data = get_config("JoinToCreate", guild_id)
+            data = get_config("JoinToCreate", guild_id)
+            if not data:
+                data = {
+                    "enabled": False,
+                    "hubs": []
+                }
+            else:
                 if "hubs" not in data:
                     data["hubs"] = []
                     if data.get("hub_channel_id"):
@@ -66,14 +64,12 @@ def load_active_channels(guild_id: int) -> Dict[str, Dict[str, Any]]:
         if guild_id in _jtc_channels_cache:
             return _jtc_channels_cache[guild_id]
         path = _get_channels_path(guild_id)
-        if not path.exists():
-            _jtc_channels_cache[guild_id] = {}
-            return _jtc_channels_cache[guild_id]
         try:
-            if True:
-                data = get_config("JoinToCreate_Channels", guild_id)
-                _jtc_channels_cache[guild_id] = data
-                return data
+            data = get_config("JoinToCreate_Channels", guild_id)
+            if not data:
+                data = {}
+            _jtc_channels_cache[guild_id] = data
+            return data
         except Exception:
             _jtc_channels_cache[guild_id] = {}
             return _jtc_channels_cache[guild_id]

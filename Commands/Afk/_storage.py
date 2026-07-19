@@ -20,14 +20,12 @@ def load_afk(guild_id: int) -> Dict[str, Dict[str, Any]]:
         if guild_id in _afk_cache:
             return _afk_cache[guild_id]
         path = _get_file_path(guild_id)
-        if not path.exists():
-            _afk_cache[guild_id] = {}
-            return _afk_cache[guild_id]
         try:
-            if True:
-                data = get_config("Afk", guild_id)
-                _afk_cache[guild_id] = data
-                return data
+            data = get_config("Afk", guild_id)
+            if not data:
+                data = {}
+            _afk_cache[guild_id] = data
+            return data
         except Exception:
             _afk_cache[guild_id] = {}
             return _afk_cache[guild_id]

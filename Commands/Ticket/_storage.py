@@ -29,14 +29,12 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         "active_tickets": {}
     }
     
-    if not path.exists():
-        data = default_cfg.copy()
-    else:
-        try:
-            if True:
-                data = get_config("Ticket", guild_id)
-        except Exception:
+    try:
+        data = get_config("Ticket", guild_id)
+        if not data:
             data = default_cfg.copy()
+    except Exception:
+        data = default_cfg.copy()
 
     if not isinstance(data, dict):
         data = default_cfg.copy()
