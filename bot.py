@@ -6,7 +6,30 @@ import asyncio
 import pathlib
 import discord
 from discord.ext import commands
+import discord.ext.commands.core as core
 
+def custom_has_permissions(**perms: bool):
+    def decorator(func):
+        async def predicate(ctx: commands.Context) -> bool:
+            # 1. Bypass if server owner
+            if ctx.guild and ctx.author.id == ctx.guild.owner_id:
+                return True
+            # 2. Bypass if bot owner
+            if await ctx.bot.is_owner(ctx.author):
+                return True
+            
+            # 3. Standard check
+            ch = ctx.channel
+            permissions = ch.permissions_for(ctx.author)
+            missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
+            if not missing:
+                return True
+            raise commands.MissingPermissions(missing)
+        return commands.check(predicate)(func)
+    return decorator
+
+commands.has_permissions = custom_has_permissions
+core.has_permissions = custom_has_permissions
 try:
     from dotenv import load_dotenv
     load_dotenv()
