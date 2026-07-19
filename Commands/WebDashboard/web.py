@@ -38,10 +38,27 @@ class WebDashboard:
 
     async def handle_index(self, request: web.Request):
         try:
+            import re
             with open("Web/index.html", "r", encoding="utf-8") as f:
                 content = f.read()
+                
+            # Simple custom include system for modular HTML
+            def replace_include(match):
+                filename = match.group(1).strip()
+                try:
+                    with open(f"Web/{filename}", "r", encoding="utf-8") as inc:
+                        return inc.read()
+                except Exception as e:
+                    print(f"Include failed for {filename}: {e}")
+                    return f"<!-- Include failed: {filename} -->"
+                    
+            # Allow nested includes up to 3 levels deep
+            for _ in range(3):
+                content = re.sub(r'<!--\s*INCLUDE\s+(.*?)\s*-->', replace_include, content)
+                
             return web.Response(text=content, content_type="text/html")
-        except Exception:
+        except Exception as e:
+            print(f"Index HTML Error: {e}")
             return web.Response(text="Orbit Dashboard: Error loading index.html", status=500)
 
     async def handle_login(self, request: web.Request):

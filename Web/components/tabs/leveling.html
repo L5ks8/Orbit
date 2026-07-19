@@ -1,0 +1,498 @@
+<div id="section-level" class="dash-panel">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <h3>Level System</h3>
+                            <label class="switch">
+                                <input type="checkbox" id="level_enabled">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p class="section-desc">Reward members with XP for participating in your server.</p>
+
+                        <!-- XP Modules Grid -->
+                        <div class="level-card-grid">
+                            <!-- Message XP Card -->
+                            <div class="level-card">
+                                <div class="level-card-title">Message XP</div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Message XP Enabled</label>
+                                        <span class="help-text">Should members earn XP for sending messages?</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="level_msg_xp_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Message XP Amount</label>
+                                        <span class="help-text">Amount of XP per message.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="level_msg_xp_amount">−</button>
+                                        <input type="number" id="level_msg_xp_amount" value="20" min="1" max="1000">
+                                        <button type="button" class="num-btn plus" data-target="level_msg_xp_amount">+</button>
+                                    </div>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Message Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between messages.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="level_msg_xp_cooldown">−</button>
+                                        <input type="number" id="level_msg_xp_cooldown" value="60" min="0" max="3600">
+                                        <button type="button" class="num-btn plus" data-target="level_msg_xp_cooldown">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Voice XP Card -->
+                            <div class="level-card">
+                                <div class="level-card-title">Voice XP</div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Voice XP Enabled</label>
+                                        <span class="help-text">Should members earn XP while in a voice channel?</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="level_voice_xp_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Ignore Muted/Deafened Members</label>
+                                        <span class="help-text">Should muted or deafened members be ignored?</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="level_voice_xp_ignore_muted" checked><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Ignore Solo Members</label>
+                                        <span class="help-text">Should solo members in a voice channel be ignored?</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="level_voice_xp_ignore_solo"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Voice XP Amount</label>
+                                        <span class="help-text">Amount of XP per minute in voice channels.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="level_voice_xp_amount">−</button>
+                                        <input type="number" id="level_voice_xp_amount" value="6" min="1" max="1000">
+                                        <button type="button" class="num-btn plus" data-target="level_voice_xp_amount">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Command XP Card -->
+                            <div class="level-card">
+                                <div class="level-card-title">Command XP</div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Command XP Enabled</label>
+                                        <span class="help-text">Should members earn XP for using commands?</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="level_cmd_xp_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Command XP Amount</label>
+                                        <span class="help-text">Amount of XP per command.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="level_cmd_xp_amount">−</button>
+                                        <input type="number" id="level_cmd_xp_amount" value="15" min="1" max="1000">
+                                        <button type="button" class="num-btn plus" data-target="level_cmd_xp_amount">+</button>
+                                    </div>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Command Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between commands.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="level_cmd_xp_cooldown">−</button>
+                                        <input type="number" id="level_cmd_xp_cooldown" value="60" min="0" max="3600">
+                                        <button type="button" class="num-btn plus" data-target="level_cmd_xp_cooldown">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reaction XP Card -->
+                            <div class="level-card">
+                                <div class="level-card-title">Reaction XP</div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Reaction XP Enabled</label>
+                                        <span class="help-text">Should members earn XP for reacting to messages?</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="level_react_xp_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Reaction XP Amount</label>
+                                        <span class="help-text">Amount of XP per reaction.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="level_react_xp_amount">−</button>
+                                        <input type="number" id="level_react_xp_amount" value="15" min="1" max="1000">
+                                        <button type="button" class="num-btn plus" data-target="level_react_xp_amount">+</button>
+                                    </div>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Reaction Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between reactions.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="level_react_xp_cooldown">−</button>
+                                        <input type="number" id="level_react_xp_cooldown" value="300" min="0" max="3600">
+                                        <button type="button" class="num-btn plus" data-target="level_react_xp_cooldown">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- XP Options -->
+                        <div class="level-card" style="margin-top: 20px;">
+                            <div class="level-card-title">XP Options</div>
+                            <div class="level-card-grid" style="border:none; padding:0;">
+                                <div>
+                                    <div class="form-group toggle-group">
+                                        <div>
+                                            <label class="form-label mb-0">Reset XP on Leave</label>
+                                            <span class="help-text">Should members lose their XP when they leave the server?</span>
+                                        </div>
+                                        <label class="switch"><input type="checkbox" id="level_reset_on_leave"><span class="slider"></span></label>
+                                    </div>
+                                    <div class="form-group toggle-group">
+                                        <div>
+                                            <label class="form-label mb-0">Vote Boost</label>
+                                            <span class="help-text">Should members receive an XP boost for voting for Orbit?</span>
+                                        </div>
+                                        <label class="switch"><input type="checkbox" id="level_vote_boost"><span class="slider"></span></label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="form-group toggle-group">
+                                        <div>
+                                            <label class="form-label mb-0">Reset XP on Ban</label>
+                                            <span class="help-text">Should members lose their XP when they get banned?</span>
+                                        </div>
+                                        <label class="switch"><input type="checkbox" id="level_reset_on_ban"><span class="slider"></span></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>Multiplier</label>
+                                <span class="help-text">Global multiplier for all earned XP.</span>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <input type="range" id="level_xp_multiplier" min="0.1" max="5" step="0.05" value="1.0" style="flex: 1;">
+                                    <span id="level_xp_multiplier_display" style="font-weight: 600; min-width: 50px; text-align: right;">x1.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Channels & Roles -->
+                        <div class="level-card" style="margin-top: 20px;">
+                            <div class="level-card-title">Channels</div>
+                            <div class="level-card-grid" style="border:none; padding:0;">
+                                <div class="form-group">
+                                    <label>Blocked XP Channels</label>
+                                    <span class="help-text">Channels where members earn no XP.</span>
+                                    <div class="toggle-tabs" style="margin-bottom: 8px;">
+                                        <button type="button" class="toggle-tab active" data-mode="blacklist" data-target-mode="level_channel_mode">Blacklist</button>
+                                        <button type="button" class="toggle-tab" data-mode="whitelist" data-target-mode="level_channel_mode">Whitelist</button>
+                                    </div>
+                                    <input type="hidden" id="level_channel_mode" value="blacklist">
+                                    <select id="level_blocked_channels_picker">
+                                        <option value="">Select a channel...</option>
+                                    </select>
+                                    <div id="level_blocked_channels_tags" class="chip-container"></div>
+                                    <input type="hidden" id="level_blocked_channels" value="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Blocked XP Roles</label>
+                                    <span class="help-text">Members with these roles earn no XP.</span>
+                                    <div class="toggle-tabs" style="margin-bottom: 8px;">
+                                        <button type="button" class="toggle-tab active" data-mode="blacklist" data-target-mode="level_role_mode">Blacklist</button>
+                                        <button type="button" class="toggle-tab" data-mode="whitelist" data-target-mode="level_role_mode">Whitelist</button>
+                                    </div>
+                                    <input type="hidden" id="level_role_mode" value="blacklist">
+                                    <select id="level_blocked_roles_picker">
+                                        <option value="">Select a role...</option>
+                                    </select>
+                                    <div id="level_blocked_roles_tags" class="chip-container"></div>
+                                    <input type="hidden" id="level_blocked_roles" value="">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>Level Up Channel</label>
+                                <span class="help-text">Channel where level up messages are sent.</span>
+                                <select id="level_levelup_channel">
+                                    <option value="current">Current Channel</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Leaderboard -->
+                        <div class="level-card" style="margin-top: 20px;">
+                            <div class="level-card-title">Leaderboard</div>
+                            <div class="level-card-grid" style="border:none; padding:0;">
+                                <div class="form-group">
+                                    <label>Custom URL</label>
+                                    <span class="help-text">The custom URL for the leaderboard. This URL must be unique.</span>
+                                    <input type="text" id="level_leaderboard_url" placeholder="my-server">
+                                </div>
+                                <div class="form-group">
+                                    <label>Auto Leaderboard</label>
+                                    <span class="help-text">Channel where the leaderboard is automatically updated every hour.</span>
+                                    <select id="level_leaderboard_channel">
+                                        <option value="">Select Channel...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>Embed Color</label>
+                                <span class="help-text">The color of the automatic leaderboard embed.</span>
+                                <input type="color" id="level_leaderboard_color" value="#3B82F6" style="width: 50px; height: 35px; border: none; border-radius: 8px; cursor: pointer;">
+                            </div>
+                        </div>
+
+                        <!-- Level Up Message -->
+                        <div class="level-card" style="margin-top: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div class="level-card-title" style="margin-bottom: 0;">Level Up Message</div>
+                                <button type="button" id="btn-test-levelup" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">Test Message</button>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>Conditional Message</label>
+                                <span class="help-text">You can use conditional scripts: {earned: Text} is displayed when any role is earned, {level[X]: Text} is shown only at Level X.</span>
+                                <input type="text" id="level_levelup_conditional" placeholder="{earned: You earned {roles}!} {level[10]: Milestone Level 10!}">
+                            </div>
+
+                            <div class="form-group toggle-group" style="margin-top: 15px;">
+                                <div>
+                                    <label class="form-label mb-0">Show Avatar</label>
+                                    <span class="help-text">Should the member's avatar be displayed in the thumbnail?</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="level_levelup_show_avatar" checked><span class="slider"></span></label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Message Content</label>
+                                <span class="help-text">Text outside the embed (e.g. {user_mention}).</span>
+                                <input type="text" id="level_levelup_message_content" value="{user_mention}" maxlength="2000">
+                            </div>
+
+                            <!-- Embed Builder -->
+                            <div class="embed-builder-preview" style="margin-top: 10px;">
+                                <div class="form-group">
+                                    <label>Author Name</label>
+                                    <input type="text" id="level_levelup_embed_author" maxlength="256" placeholder="Optional author name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Title</label>
+                                    <input type="text" id="level_levelup_embed_title" maxlength="256" value="🎉 Level Up!">
+                                </div>
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea id="level_levelup_embed_description" rows="3" maxlength="4096">Congratulations **{user_globalname}**!
+You reached **Level {level}**.</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Image URL</label>
+                                    <input type="text" id="level_levelup_embed_image" placeholder="Optional image URL">
+                                </div>
+                                <div class="form-group">
+                                    <label>Footer Text</label>
+                                    <input type="text" id="level_levelup_embed_footer" maxlength="2048" placeholder="Optional footer text">
+                                </div>
+                            </div>
+                            <p style="color: #e67e22; font-size: 12px; margin-top: 8px;">You can use {variables} in the embedded message: {user_mention}, {user_globalname}, {level}, {roles}</p>
+                        </div>
+
+                        <!-- Level Roles -->
+                        <div class="level-card" style="margin-top: 20px;">
+                            <div class="level-card-title">Level Roles</div>
+                            <div class="level-card-grid" style="border:none; padding:0;">
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Stack Roles</label>
+                                        <span class="help-text">Should members keep roles below their level?</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="level_roles_stack"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Re-add on Rejoin</label>
+                                        <span class="help-text">Should members get their level role back when they rejoin?</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="level_roles_rejoin"><span class="slider"></span></label>
+                                </div>
+                            </div>
+
+                            <div class="reward-table" style="margin-top: 15px;">
+                                <div class="reward-table-header">
+                                    <span>Level</span>
+                                    <span>Role</span>
+                                    <span>Action</span>
+                                </div>
+                                <div id="level-roles-list" class="reward-table-body">
+                                    <div class="reward-empty">No rewards configured.</div>
+                                </div>
+                            </div>
+                            <button type="button" id="btn-add-level-role" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Role</button>
+                        </div>
+
+                        <!-- Stat Roles -->
+                        <div class="level-card" style="margin-top: 20px;">
+                            <div class="level-card-title">Stat Roles</div>
+
+                            <div class="toggle-tabs" style="margin-bottom: 15px;">
+                                <button type="button" class="toggle-tab active" data-stat-tab="messages">Messages</button>
+                                <button type="button" class="toggle-tab" data-stat-tab="voice">Voice Hours</button>
+                                <button type="button" class="toggle-tab" data-stat-tab="reactions">Reactions</button>
+                            </div>
+
+                            <!-- Messages Stat Tab -->
+                            <div id="stat-tab-messages" class="stat-tab-content">
+                                <h4 style="margin-bottom: 10px;">Message Roles (<span id="stat-msg-count">0</span>/5)</h4>
+                                <div class="level-card-grid" style="border:none; padding:0;">
+                                    <div class="form-group toggle-group">
+                                        <div>
+                                            <label class="form-label mb-0">Stack Stat Roles</label>
+                                            <span class="help-text">Should members keep stat roles below their count?</span>
+                                        </div>
+                                        <label class="switch"><input type="checkbox" id="level_stat_roles_msg_stack"><span class="slider"></span></label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Stat Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between each stat count.</span>
+                                        <div class="number-input-group">
+                                            <button type="button" class="num-btn minus" data-target="level_stat_roles_msg_cooldown">−</button>
+                                            <input type="number" id="level_stat_roles_msg_cooldown" value="5" min="0" max="3600">
+                                            <button type="button" class="num-btn plus" data-target="level_stat_roles_msg_cooldown">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="reward-table" style="margin-top: 15px;">
+                                    <div class="reward-table-header">
+                                        <span>Messages</span>
+                                        <span>Role</span>
+                                        <span>Action</span>
+                                    </div>
+                                    <div id="stat-msg-roles-list" class="reward-table-body">
+                                        <div class="reward-empty">No rewards configured.</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-primary btn-add-stat-role" data-stat-type="msg" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Role</button>
+                            </div>
+
+                            <!-- Voice Stat Tab -->
+                            <div id="stat-tab-voice" class="stat-tab-content" style="display: none;">
+                                <h4 style="margin-bottom: 10px;">Voice Hours Roles (<span id="stat-voice-count">0</span>/5)</h4>
+                                <div class="level-card-grid" style="border:none; padding:0;">
+                                    <div class="form-group toggle-group">
+                                        <div>
+                                            <label class="form-label mb-0">Stack Stat Roles</label>
+                                            <span class="help-text">Should members keep stat roles below their count?</span>
+                                        </div>
+                                        <label class="switch"><input type="checkbox" id="level_stat_roles_voice_stack"><span class="slider"></span></label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Stat Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between each stat count.</span>
+                                        <div class="number-input-group">
+                                            <button type="button" class="num-btn minus" data-target="level_stat_roles_voice_cooldown">−</button>
+                                            <input type="number" id="level_stat_roles_voice_cooldown" value="5" min="0" max="3600">
+                                            <button type="button" class="num-btn plus" data-target="level_stat_roles_voice_cooldown">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="reward-table" style="margin-top: 15px;">
+                                    <div class="reward-table-header">
+                                        <span>Hours</span>
+                                        <span>Role</span>
+                                        <span>Action</span>
+                                    </div>
+                                    <div id="stat-voice-roles-list" class="reward-table-body">
+                                        <div class="reward-empty">No rewards configured.</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-primary btn-add-stat-role" data-stat-type="voice" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Role</button>
+                            </div>
+
+                            <!-- Reactions Stat Tab -->
+                            <div id="stat-tab-reactions" class="stat-tab-content" style="display: none;">
+                                <h4 style="margin-bottom: 10px;">Reaction Roles (<span id="stat-react-count">0</span>/5)</h4>
+                                <div class="level-card-grid" style="border:none; padding:0;">
+                                    <div class="form-group toggle-group">
+                                        <div>
+                                            <label class="form-label mb-0">Stack Stat Roles</label>
+                                            <span class="help-text">Should members keep stat roles below their count?</span>
+                                        </div>
+                                        <label class="switch"><input type="checkbox" id="level_stat_roles_react_stack"><span class="slider"></span></label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Stat Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between each stat count.</span>
+                                        <div class="number-input-group">
+                                            <button type="button" class="num-btn minus" data-target="level_stat_roles_react_cooldown">−</button>
+                                            <input type="number" id="level_stat_roles_react_cooldown" value="5" min="0" max="3600">
+                                            <button type="button" class="num-btn plus" data-target="level_stat_roles_react_cooldown">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="reward-table" style="margin-top: 15px;">
+                                    <div class="reward-table-header">
+                                        <span>Reactions</span>
+                                        <span>Role</span>
+                                        <span>Action</span>
+                                    </div>
+                                    <div id="stat-react-roles-list" class="reward-table-body">
+                                        <div class="reward-empty">No rewards configured.</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-primary btn-add-stat-role" data-stat-type="react" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Role</button>
+                            </div>
+                        </div>
+
+                        <!-- Role Boosters -->
+                        <div class="level-card" style="margin-top: 20px;">
+                            <div class="level-card-title">Role Boosters (<span id="role-booster-count">0</span>/10)</div>
+                            <div class="form-group toggle-group">
+                                <div>
+                                    <label class="form-label mb-0">Stack Boosters</label>
+                                    <span class="help-text">Should multiple boosters stack (add up)?</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="level_role_boosters_stack" checked><span class="slider"></span></label>
+                            </div>
+                            <div class="reward-table" style="margin-top: 15px;">
+                                <div class="reward-table-header">
+                                    <span>XP Multiplier</span>
+                                    <span>Role</span>
+                                    <span>Action</span>
+                                </div>
+                                <div id="role-boosters-list" class="reward-table-body">
+                                    <div class="reward-empty">No boosters configured.</div>
+                                </div>
+                            </div>
+                            <button type="button" id="btn-add-role-booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Role</button>
+                        </div>
+
+                        <!-- Channel Boosters -->
+                        <div class="level-card" style="margin-top: 20px;">
+                            <div class="level-card-title">Channel Boosters (<span id="channel-booster-count">0</span>/10)</div>
+                            <div class="reward-table" style="margin-top: 15px;">
+                                <div class="reward-table-header">
+                                    <span>XP Multiplier</span>
+                                    <span>Channel</span>
+                                    <span>Action</span>
+                                </div>
+                                <div id="channel-boosters-list" class="reward-table-body">
+                                    <div class="reward-empty">No boosters configured.</div>
+                                </div>
+                            </div>
+                            <button type="button" id="btn-add-channel-booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Channel</button>
+                        </div>
+
+                    </div>

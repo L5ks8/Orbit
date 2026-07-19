@@ -1,0 +1,78 @@
+<div id="section-overview" class="dash-panel active">
+                        <h3 style="margin-top: 0;">Overview</h3>
+                        
+                        <!-- Stat Cards -->
+                        <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #00A8FC; display: flex; align-items: center; justify-content: center; color: white;">
+                                        <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">New Messages</div>
+                                        <div style="color: #949BA4; font-size: 11px;">in the last 24h</div>
+                                    </div>
+                                </div>
+                                <div id="stat_new_messages" style="color: #F2F3F5; font-size: 24px; font-weight: 700;">-</div>
+                            </div>
+                            
+                            <div style="flex: 1; min-width: 200px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #F5A623; display: flex; align-items: center; justify-content: center; color: white;">
+                                        <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">Joins/Leaves</div>
+                                        <div style="color: #949BA4; font-size: 11px;">in the last 24h</div>
+                                    </div>
+                                </div>
+                                <div id="stat_joins_leaves" style="color: #F2F3F5; font-size: 24px; font-weight: 700;">-</div>
+                            </div>
+
+                            <div style="flex: 1; min-width: 200px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #8E44AD; display: flex; align-items: center; justify-content: center; color: white;">
+                                        <i data-lucide="users" style="width: 16px; height: 16px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">Total Members</div>
+                                    </div>
+                                </div>
+                                <div id="stat_total_members" style="color: #F2F3F5; font-size: 24px; font-weight: 700;">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Section -->
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; color: #F2F3F5; font-weight: 600; margin-bottom: 8px;">Charts for</label>
+                            <select id="chart_days_select" style="width: 100%; max-width: 300px; background: #1E1F22; border: 1px solid #313338; color: #DBDEE1; padding: 8px 12px; border-radius: 4px;">
+                                <option value="7">Last 7 Days</option>
+                                <option value="14">Last 14 Days</option>
+                                <option value="30">Last Month</option>
+                                <option value="90">Last 3 Months</option>
+                                <option value="180">Last 6 Months</option>
+                                <option value="365">Last Year</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                            <div style="flex: 1; min-width: 300px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Joins / Leaves</div>
+                                <div style="position: relative; height: 200px; width: 100%;">
+                                    <canvas id="chart-joins"></canvas>
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 300px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Member Flow</div>
+                                <div style="position: relative; height: 200px; width: 100%;">
+                                    <canvas id="chart-flow"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                            <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Message Count (excluding Bots)</div>
+                            <div style="position: relative; height: 200px; width: 100%;">
+                                <canvas id="chart-messages"></canvas>
+                            </div>
+                        </div>
+                    </div>
