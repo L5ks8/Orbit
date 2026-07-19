@@ -579,16 +579,22 @@
                         <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
                             <div style="flex: 1; min-width: 300px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
                                 <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Joins / Leaves</div>
-                                <canvas id="chart-joins" style="width: 100%; height: 200px;"></canvas>
+                                <div style="position: relative; height: 200px; width: 100%;">
+                                    <canvas id="chart-joins"></canvas>
+                                </div>
                             </div>
                             <div style="flex: 1; min-width: 300px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
                                 <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Member Flow</div>
-                                <canvas id="chart-flow" style="width: 100%; height: 200px;"></canvas>
+                                <div style="position: relative; height: 200px; width: 100%;">
+                                    <canvas id="chart-flow"></canvas>
+                                </div>
                             </div>
                         </div>
                         <div style="background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
                             <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Message Count (excluding Bots)</div>
-                            <canvas id="chart-messages" style="width: 100%; height: 200px;"></canvas>
+                            <div style="position: relative; height: 200px; width: 100%;">
+                                <canvas id="chart-messages"></canvas>
+                            </div>
                         </div>
                     </div>
 
