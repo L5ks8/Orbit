@@ -28,8 +28,19 @@ def custom_has_permissions(**perms: bool):
         return commands.check(predicate)(func)
     return decorator
 
+def custom_bot_has_permissions(**perms: bool):
+    def decorator(func):
+        async def predicate(ctx: commands.Context) -> bool:
+            # We bypass the check because Discord sometimes reports app_permissions incorrectly for hybrid commands.
+            # The API call will raise discord.Forbidden anyway if the bot lacks permissions.
+            return True
+        return commands.check(predicate)(func)
+    return decorator
+
 commands.has_permissions = custom_has_permissions
 core.has_permissions = custom_has_permissions
+commands.bot_has_permissions = custom_bot_has_permissions
+core.bot_has_permissions = custom_bot_has_permissions
 try:
     from dotenv import load_dotenv
     load_dotenv()
