@@ -5,6 +5,11 @@
     100% { transform: translate(-50%, 0); opacity: 1; }
 }
 
+@keyframes slideDownFade {
+    0% { transform: translate(-50%, 0); opacity: 1; }
+    100% { transform: translate(-50%, 50px); opacity: 0; }
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;

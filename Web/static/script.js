@@ -2262,9 +2262,19 @@ const changedInputs = new Set();
 window.manualDirty = false;
 
 function setDirty(dirty) {
+    if (hasUnsavedChanges === dirty) return;
     hasUnsavedChanges = dirty;
+    const unsavedBar = document.getElementById('unsaved-bar');
     if (unsavedBar) {
-        unsavedBar.style.display = dirty ? 'flex' : 'none';
+        if (dirty) {
+            unsavedBar.style.display = 'flex';
+            unsavedBar.style.animation = 'slideUpFade 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+        } else {
+            unsavedBar.style.animation = 'slideDownFade 0.3s ease-in forwards';
+            setTimeout(() => {
+                if (!hasUnsavedChanges) unsavedBar.style.display = 'none';
+            }, 300);
+        }
     }
 }
 
