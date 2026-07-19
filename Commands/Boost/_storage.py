@@ -14,7 +14,7 @@ def load_boost_config(guild_id: int) -> Dict[str, Any]:
     default_config = {
         "enabled": False,
         "channel_id": "",
-        "message": "Thank you for boosting the server, {user}!",
+        "message": "",
         "image_url": ""
     }
     

@@ -833,7 +833,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
         if (!currentPermissions.can_channels) lockSection('section-welcome', 'Manage Channels');
         document.getElementById('welcome_enabled').checked = config.welcome?.enabled || false;
         document.getElementById('welcome_channel_id').value = config.welcome?.channel_id || '';
-        document.getElementById('welcome_message').value = config.welcome?.message || 'Welcome {user} to {server}!';
+        document.getElementById('welcome_message').value = config.welcome?.message || '';
         const imgUrl = config.welcome?.image_url || '';
         document.getElementById('welcome_image_url').value = imgUrl;
         syncDropzoneFromUrl(imgUrl);
@@ -842,7 +842,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
         if (!currentPermissions.can_channels) lockSection('section-goodbye', 'Manage Channels');
         document.getElementById('goodbye_enabled').checked = config.goodbye?.enabled || false;
         document.getElementById('goodbye_channel_id').value = config.goodbye?.channel_id || '';
-        document.getElementById('goodbye_message').value = config.goodbye?.message || "We're sad to see you go, {user}!";
+        document.getElementById('goodbye_message').value = config.goodbye?.message || '';
         const gbImgUrl = config.goodbye?.image_url || '';
         document.getElementById('goodbye_image_url').value = gbImgUrl;
         syncGoodbyeDropzoneFromUrl(gbImgUrl);
@@ -851,7 +851,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
         if (!currentPermissions.can_channels) lockSection('section-boost', 'Manage Channels');
         document.getElementById('boost_enabled').checked = config.boost?.enabled || false;
         document.getElementById('boost_channel_id').value = config.boost?.channel_id || '';
-        document.getElementById('boost_message').value = config.boost?.message || 'Thank you for boosting the server, {user}!';
+        document.getElementById('boost_message').value = config.boost?.message || '';
         const boostImgUrl = config.boost?.image_url || '';
         document.getElementById('boost_image_url').value = boostImgUrl;
         syncBoostDropzoneFromUrl(boostImgUrl);
@@ -901,9 +901,9 @@ async function loadConfig(guildId, guildName, guildIcon) {
         // Ticket
         if (!currentPermissions.can_channels) lockSection('section-ticket', 'Manage Channels');
         document.getElementById('ticket_enabled').checked = config.ticket?.enabled || false;
-        document.getElementById('ticket_panel_title').value = config.ticket?.panel_title || 'Support Ticket Desk';
-        document.getElementById('ticket_panel_description').value = config.ticket?.panel_description || 'Click the button below to open a direct support channel with our team.';
-        document.getElementById('ticket_panel_instructions').value = config.ticket?.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel.';
+        document.getElementById('ticket_panel_title').value = config.ticket?.panel_title || '';
+        document.getElementById('ticket_panel_description').value = config.ticket?.panel_description || '';
+        document.getElementById('ticket_panel_instructions').value = config.ticket?.panel_instructions || '';
         document.getElementById('ticket_panel_channel').value = config.ticket?.panel_channel_id || '';
         document.getElementById('ticket_log_channel_id').value = config.ticket?.log_channel_id || '';
 
@@ -1068,10 +1068,10 @@ async function loadConfig(guildId, guildName, guildIcon) {
         document.getElementById('level_xp_multiplier_display').textContent = 'x' + parseFloat(xpMul).toFixed(2);
         document.getElementById('level_levelup_conditional').value = config.level?.levelup_conditional || '';
         document.getElementById('level_levelup_show_avatar').checked = config.level?.levelup_show_avatar ?? true;
-        document.getElementById('level_levelup_message_content').value = config.level?.levelup_message_content || '{user_mention}';
+        document.getElementById('level_levelup_message_content').value = config.level?.levelup_message_content || '';
         document.getElementById('level_levelup_embed_author').value = config.level?.levelup_embed_author || '';
-        document.getElementById('level_levelup_embed_title').value = config.level?.levelup_embed_title || '🎉 Level Up!';
-        document.getElementById('level_levelup_embed_description').value = config.level?.levelup_embed_description || 'Congratulations **{user_globalname}**!\nYou reached **Level {level}**.';
+        document.getElementById('level_levelup_embed_title').value = config.level?.levelup_embed_title || '';
+        document.getElementById('level_levelup_embed_description').value = config.level?.levelup_embed_description || '';
         document.getElementById('level_levelup_embed_image').value = config.level?.levelup_embed_image || '';
         document.getElementById('level_levelup_embed_footer').value = config.level?.levelup_embed_footer || '';
         document.getElementById('level_roles_stack').checked = config.level?.level_roles_stack ?? false;

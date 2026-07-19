@@ -54,7 +54,8 @@ class BoostListener(commands.Cog):
         if not channel:
             return
 
-        formatted = format_boost_string(config.get("message", ""), after)
+        msg_content = config.get("message") or "Thank you for boosting the server, {user}!"
+        formatted = format_boost_string(msg_content, after)
         
         from Commands.Boost._image_gen import generate_boost_image
         import discord

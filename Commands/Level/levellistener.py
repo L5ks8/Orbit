@@ -125,12 +125,12 @@ class LevelListenerCog(commands.Cog):
             pass
 
         # Send level up message
-        content = config.get("levelup_message_content", "{user_mention}")
-        title = config.get("levelup_embed_title", "🎉 Level Up!")
-        desc = config.get("levelup_embed_description", "")
-        author = config.get("levelup_embed_author", "")
-        footer = config.get("levelup_embed_footer", "")
-        image = config.get("levelup_embed_image", "")
+        content = config.get("levelup_message_content") or "{user_mention}"
+        title = config.get("levelup_embed_title") or "🎉 Level Up!"
+        desc = config.get("levelup_embed_description") or "Congratulations **{user_globalname}**!\nYou reached **Level {level}**."
+        author = config.get("levelup_embed_author") or ""
+        footer = config.get("levelup_embed_footer") or ""
+        image = config.get("levelup_embed_image") or ""
         show_avatar = config.get("levelup_show_avatar", True)
         conditional = config.get("levelup_conditional", "")
 
