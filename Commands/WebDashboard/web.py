@@ -944,6 +944,60 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
+    
+    async def api_get_messages(self, request: web.Request):
+        user = await self.get_user_session(request)
+        if not user: return web.json_response({"error": "Unauthorized"}, status=401)
+        guild_id = int(request.match_info['id'])
+        if not await self.check_guild_permission(guild_id, user['id']):
+            return web.json_response({"error": "Forbidden"}, status=403)
+            
+        from Database.mongodb import get_db
+        db = get_db()
+        cursor = db["CustomMessages"].find({"guild_id": str(guild_id)}, {"_id": 0})
+        messages = list(cursor)
+        return web.json_response(messages)
+        
+    async def api_save_message(self, request: web.Request):
+        user = await self.get_user_session(request)
+        if not user: return web.json_response({"error": "Unauthorized"}, status=401)
+        guild_id = int(request.match_info['id'])
+        if not await self.check_guild_permission(guild_id, user['id']):
+            return web.json_response({"error": "Forbidden"}, status=403)
+            
+        try:
+            data = await request.json()
+            import uuid
+            msg_id = data.get("id")
+            if not msg_id:
+                msg_id = str(uuid.uuid4())
+                data["id"] = msg_id
+                
+            data["guild_id"] = str(guild_id)
+            # Default name if missing
+            if not data.get("name"):
+                data["name"] = "Untitled Message"
+            
+            from Database.mongodb import get_db
+            db = get_db()
+            db["CustomMessages"].replace_one({"id": msg_id, "guild_id": str(guild_id)}, data, upsert=True)
+            return web.json_response({"success": True, "id": msg_id})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=400)
+            
+    async def api_delete_message(self, request: web.Request):
+        user = await self.get_user_session(request)
+        if not user: return web.json_response({"error": "Unauthorized"}, status=401)
+        guild_id = int(request.match_info['id'])
+        if not await self.check_guild_permission(guild_id, user['id']):
+            return web.json_response({"error": "Forbidden"}, status=403)
+            
+        msg_id = request.match_info['msg_id']
+        from Database.mongodb import get_db
+        db = get_db()
+        db["CustomMessages"].delete_one({"id": msg_id, "guild_id": str(guild_id)})
+        return web.json_response({"success": True})
+
     async def api_upload_image(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user:
@@ -1015,6 +1069,9 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
     app.router.add_post("/api/action/{id}/send_embed", dashboard.api_action_send_embed)
+    app.router.add_get("/api/messages/{id}", dashboard.api_get_messages)
+    app.router.add_post("/api/messages/{id}", dashboard.api_save_message)
+    app.router.add_delete("/api/messages/{id}/{msg_id}", dashboard.api_delete_message)
     app.router.add_post("/api/server/{id}/test-levelup", dashboard.api_action_test_levelup)
     app.router.add_post("/api/upload/image", dashboard.api_upload_image)
     app.router.add_get("/api/support-invite", dashboard.api_support_invite)

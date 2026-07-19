@@ -797,6 +797,7 @@ async function loadConfig(guildId, guildName, guildIcon) {
     try {
         const res = await fetch(`/api/config/${guildId}`);
         const data = await res.json();
+        await loadMessages();
         globalRoles = data.roles;
         globalCategories = data.categories || [];
         globalChannels = data.channels || [];
@@ -2340,6 +2341,315 @@ if (btnAddComp) {
     });
 }
 
+
+// ----------------------------------------------------
+// MESSAGES CRUD & UI LOGIC
+// ----------------------------------------------------
+let customMessages = [];
+let currentMessageId = null;
+
+async function loadMessages() {
+    if (!currentGuildId) return;
+    try {
+        const res = await fetch(`/api/messages/${currentGuildId}`);
+        if (res.ok) {
+            customMessages = await res.json();
+            renderMessagesList();
+        }
+    } catch(e) {
+        console.error("Failed to load messages", e);
+    }
+}
+
+function renderMessagesList() {
+    const cont = document.getElementById('messages-container');
+    if (!cont) return;
+    cont.innerHTML = '';
+    const query = (document.getElementById('search-messages-input')?.value || '').toLowerCase();
+    
+    customMessages.filter(m => (m.name || 'Untitled').toLowerCase().includes(query)).forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'msg-list-item';
+        div.style.width = '280px';
+        div.style.height = '60px';
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i data-lucide="message-square" style="width:16px; height:16px; color:#949BA4;"></i>
+                <span style="color:#DBDEE1; font-weight:500;">${m.name || 'Untitled'}</span>
+            </div>
+            <i data-lucide="more-vertical" style="width:16px; height:16px; color:#949BA4;"></i>
+        `;
+        div.onclick = () => openMessageBuilder(m);
+        cont.appendChild(div);
+    });
+    lucide.createIcons();
+}
+
+const searchInput = document.getElementById('search-messages-input');
+if (searchInput) searchInput.addEventListener('input', renderMessagesList);
+
+window.openMessageBuilder = function(msg = null) {
+    document.getElementById('messages-list-view').style.display = 'none';
+    document.getElementById('messages-builder-view').style.display = 'block';
+    
+    if (msg) {
+        currentMessageId = msg.id;
+        document.getElementById('embed_msg_id').value = msg.id || '';
+        document.getElementById('embed_content').value = msg.content || '';
+        
+        const modeRadio = document.querySelector(`input[name="embed_mode"][value="${msg.mode || 'normal'}"]`);
+        if (modeRadio) {
+            modeRadio.checked = true;
+            modeRadio.dispatchEvent(new Event('change'));
+        }
+        
+        document.getElementById('embed_author_name').value = msg.author_name || '';
+        document.getElementById('embed_author_icon').value = msg.author_icon || '';
+        document.getElementById('embed_title').value = msg.title || '';
+        document.getElementById('embed_description').value = msg.description || '';
+        document.getElementById('embed_color').value = msg.color || '#5865F2';
+        document.getElementById('embed_image').value = msg.image || '';
+        document.getElementById('embed_thumbnail').value = msg.thumbnail || '';
+        document.getElementById('embed_footer_text').value = msg.footer_text || '';
+        document.getElementById('embed_footer_icon').value = msg.footer_icon || '';
+        
+        embedFields = msg.fields || [];
+        embedComponents = msg.components || [];
+    } else {
+        currentMessageId = null;
+        document.getElementById('embed_msg_id').value = '';
+        document.getElementById('embed_content').value = '';
+        document.getElementById('embed_author_name').value = '';
+        document.getElementById('embed_author_icon').value = '';
+        document.getElementById('embed_title').value = '';
+        document.getElementById('embed_description').value = '';
+        document.getElementById('embed_image').value = '';
+        document.getElementById('embed_thumbnail').value = '';
+        document.getElementById('embed_footer_text').value = '';
+        document.getElementById('embed_footer_icon').value = '';
+        embedFields = [];
+        embedComponents = [];
+        
+        const modeRadio = document.querySelector(`input[name="embed_mode"][value="normal"]`);
+        if (modeRadio) {
+            modeRadio.checked = true;
+            modeRadio.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    renderEmbedFields();
+    renderComponents();
+    updateEmbedPreview();
+    updateDropBackgrounds();
+    
+    // Dispatch input events to trigger char counts
+    ['embed_content', 'embed_author_name', 'embed_title', 'embed_description', 'embed_footer_text'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.dispatchEvent(new Event('input'));
+    });
+    
+    setDirty(false);
+}
+
+window.closeMessageBuilder = function() {
+    if (hasUnsavedChanges) {
+        if (!confirm("You have unsaved changes. Discard?")) return;
+    }
+    document.getElementById('messages-list-view').style.display = 'block';
+    document.getElementById('messages-builder-view').style.display = 'none';
+    setDirty(false);
+}
+
+// ----------------------------------------------------
+// DRAG AND DROP IMAGE UPLOADS
+// ----------------------------------------------------
+function updateDropBackgrounds() {
+    const bgs = [
+        { dropId: 'drop-author-icon', inputId: 'embed_author_icon' },
+        { dropId: 'drop-thumbnail', inputId: 'embed_thumbnail' },
+        { dropId: 'drop-image', inputId: 'embed_image' },
+        { dropId: 'drop-footer-icon', inputId: 'embed_footer_icon' }
+    ];
+    bgs.forEach(b => {
+        const drop = document.getElementById(b.dropId);
+        const inp = document.getElementById(b.inputId);
+        if (drop && inp) {
+            if (inp.value) {
+                drop.style.backgroundImage = `url(${inp.value})`;
+                drop.querySelector('i').style.display = 'none';
+            } else {
+                drop.style.backgroundImage = 'none';
+                drop.querySelector('i').style.display = 'block';
+            }
+        }
+    });
+}
+
+const fileInput = document.getElementById('file-upload-input');
+let currentUploadTarget = null;
+
+async function uploadFile(file, targetInputId) {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    showToast("Uploading image...");
+    try {
+        const res = await fetch(`/api/upload/image`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+            document.getElementById(targetInputId).value = data.url;
+            updateDropBackgrounds();
+            updateEmbedPreview();
+            setDirty(true);
+            showToast("Upload successful!");
+        } else {
+            showToast("Upload failed: " + (data.error || "Unknown"));
+        }
+    } catch(e) {
+        showToast("Upload failed.");
+    }
+}
+
+if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0 && currentUploadTarget) {
+            uploadFile(e.target.files[0], currentUploadTarget);
+        }
+        e.target.value = '';
+    });
+}
+
+function setupDropZone(dropId, inputId) {
+    const drop = document.getElementById(dropId);
+    if (!drop) return;
+    
+    drop.addEventListener('click', () => {
+        // Just trigger file input
+        currentUploadTarget = inputId;
+        fileInput.click();
+    });
+    
+    drop.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        drop.style.borderColor = '#006CE7';
+    });
+    
+    drop.addEventListener('dragleave', () => {
+        drop.style.borderColor = '#4E5058';
+    });
+    
+    drop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        drop.style.borderColor = '#4E5058';
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            uploadFile(e.dataTransfer.files[0], inputId);
+        }
+    });
+}
+
+setupDropZone('drop-author-icon', 'embed_author_icon');
+setupDropZone('drop-thumbnail', 'embed_thumbnail');
+setupDropZone('drop-image', 'embed_image');
+setupDropZone('drop-footer-icon', 'embed_footer_icon');
+
+// Replace the old promptUrl logic
+window.promptUrl = function(inputId) {
+    // Legacy mapping (just in case)
+    currentUploadTarget = inputId;
+    fileInput.click();
+}
+
+// ----------------------------------------------------
+// SAVE AND DELETE MESSAGE LOGIC
+// ----------------------------------------------------
+const btnSaveMsg = document.getElementById('btn-embed-save');
+if (btnSaveMsg) {
+    btnSaveMsg.addEventListener('click', async () => {
+        if (!currentGuildId) return;
+        let mode = 'normal';
+        const modeRadio = document.querySelector('input[name="embed_mode"]:checked');
+        if (modeRadio) mode = modeRadio.value;
+        
+        let msgName = prompt("Enter a name for this message to save it:", currentMessageId ? customMessages.find(m => m.id === currentMessageId)?.name : "New Message");
+        if (msgName === null) return; // Cancelled
+        
+        const payload = {
+            id: currentMessageId,
+            name: msgName,
+            mode: mode,
+            content: document.getElementById('embed_content').value,
+            author_name: document.getElementById('embed_author_name').value,
+            author_icon: document.getElementById('embed_author_icon').value,
+            title: document.getElementById('embed_title').value,
+            description: document.getElementById('embed_description').value,
+            color: document.getElementById('embed_color').value,
+            image: document.getElementById('embed_image').value,
+            thumbnail: document.getElementById('embed_thumbnail').value,
+            footer_text: document.getElementById('embed_footer_text').value,
+            footer_icon: document.getElementById('embed_footer_icon').value,
+            fields: embedFields,
+            components: mode === 'components' ? embedComponents : []
+        };
+        
+        btnSaveMsg.disabled = true;
+        btnSaveMsg.textContent = 'Saving...';
+        
+        try {
+            const res = await fetch(`/api/messages/${currentGuildId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Message saved!");
+                currentMessageId = data.id;
+                setDirty(false);
+                await loadMessages();
+            } else {
+                showToast("Error: " + data.error);
+            }
+        } catch(e) {
+            showToast("Failed to save.");
+        }
+        btnSaveMsg.disabled = false;
+        btnSaveMsg.textContent = 'Save Message';
+    });
+}
+
+const btnDeleteMsg = document.getElementById('btn-embed-delete');
+if (btnDeleteMsg) {
+    btnDeleteMsg.addEventListener('click', async () => {
+        if (!currentMessageId || !currentGuildId) {
+            showToast("This message hasn't been saved yet.");
+            return;
+        }
+        if (!confirm("Are you sure you want to delete this message?")) return;
+        
+        btnDeleteMsg.disabled = true;
+        try {
+            const res = await fetch(`/api/messages/${currentGuildId}/${currentMessageId}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Message deleted!");
+                await loadMessages();
+                closeMessageBuilder();
+            } else {
+                showToast("Error: " + data.error);
+            }
+        } catch(e) {
+            showToast("Failed to delete.");
+        }
+        btnDeleteMsg.disabled = false;
+    });
+}
+
 // ----------------------------------------------------
 // OLD LOGIC HOOKUPS
 // ----------------------------------------------------
@@ -2468,7 +2778,8 @@ if (btnSendEmbed) {
             footer_text: document.getElementById('embed_footer_text').value,
             footer_icon: document.getElementById('embed_footer_icon').value,
             fields: embedFields,
-            components: mode === 'components' ? embedComponents : []
+            components: mode === 'components' ? embedComponents : [],
+            mode: mode
         };
         
         btnSendEmbed.disabled = true;

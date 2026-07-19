@@ -11,6 +11,30 @@
     <link rel="icon" type="image/png" href="/static/logo.png">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/static/style.css?v=18">
+<style>
+    .nav-category {
+        color: #949BA4;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin: 16px 12px 4px 12px;
+        letter-spacing: 0.5px;
+    }
+    .msg-list-item {
+        background: #1E1F22;
+        border: 1px solid #313338;
+        border-radius: 4px;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        margin-bottom: 8px;
+    }
+    .msg-list-item:hover {
+        background: #2B2D31;
+    }
+</style>
 </head>
 
 <body>
@@ -1218,121 +1242,188 @@
 
                     <!-- Logs Section -->
                     
-                    <!-- EMBED BUILDER SECTION -->
-
-                    <!-- EMBED BUILDER SECTION -->
-                    <div id="section-embedbuilder" class="dash-panel">
-                        <div style="display: flex; gap: 24px;">
-                            <!-- Form Column -->
-                            <div style="flex: 1; max-width: 600px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                    <h3>Message & Embed Builder</h3>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button type="button" class="btn" id="btn-embed-send" style="background: #006CE7; border: none; color: white;">Send Message</button>
-                                        <button type="button" class="btn" id="btn-embed-edit" style="background: #4E5058; border: none; color: white;">Edit Message</button>
-                                        <button type="button" class="btn" id="btn-embed-delete" style="background: #DA373C; border: none; color: white;">Delete</button>
+                    
+                    <!-- MESSAGES SECTION -->
+                    <div id="section-messages" class="dash-panel">
+                        <!-- List View -->
+                        <div id="messages-list-view">
+                            <h3>Messages</h3>
+                            
+                            <div class="form-group" style="margin-bottom: 24px;">
+                                <label>Search Messages</label>
+                                <input type="text" id="search-messages-input" placeholder="Search for a message..." style="width: 100%; max-width: 600px; background: #1E1F22; border: 1px solid #313338; color: #DBDEE1; padding: 10px; border-radius: 4px;">
+                            </div>
+                            
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #F2F3F5;">Saved Messages</label>
+                            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;">
+                                <!-- Create Message Button -->
+                                <div onclick="openMessageBuilder()" style="width: 280px; height: 60px; background: #1E1F22; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #DBDEE1; transition: 0.2s;">
+                                    <i data-lucide="plus" style="width:16px; height:16px; margin-right:8px;"></i> Create a Message
+                                </div>
+                                <div id="messages-container" style="display: flex; gap: 16px; flex-wrap: wrap; flex: 1;">
+                                    <!-- Messages rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Builder View -->
+                        <div id="messages-builder-view" style="display: none;">
+                            <div style="display: flex; gap: 24px;">
+                                <!-- Form Column -->
+                                <div style="flex: 1; max-width: 600px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                        <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                                            <button type="button" onclick="closeMessageBuilder()" style="background:transparent; border:none; color:#949BA4; cursor:pointer;"><i data-lucide="arrow-left" style="width:20px;height:20px;"></i></button>
+                                            Message
+                                        </h3>
+                                        <div style="display: flex; gap: 8px;">
+                                            <button type="button" class="btn" id="btn-embed-send" style="background: #006CE7; border: none; color: white;">Send Message</button>
+                                            <button type="button" class="btn" id="btn-embed-save" style="background: #4E5058; border: none; color: white;">Save Message</button>
+                                            <button type="button" class="btn" id="btn-embed-delete" style="background: #DA373C; border: none; color: white;">Delete</button>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <!-- Mode Switch -->
-                                <div class="form-group" style="display: flex; gap: 16px; margin-bottom: 24px; align-items: center;">
-                                    <label style="margin: 0;">Mode:</label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="embed_mode" value="normal" checked> Normal Embed
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="embed_mode" value="components"> Components v2
-                                    </label>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Destination Channel</label>
-                                    <select id="embed_channel_id" style="background: #1E1F22; border: 1px solid #313338; color: #DBDEE1;"></select>
-                                </div>
-
-                                <!-- Message Input -->
-                                <div style="background: #1E1F22; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                                    <label style="font-size: 12px; color: #DBDEE1;">Content</label>
-                                    <textarea id="embed_content" rows="2" style="background: transparent; border: none; color: #DBDEE1; padding: 0; min-height: 40px; margin-top: 8px; width: 100%; resize: none;" placeholder="Message content..."></textarea>
-                                    <div style="text-align: right; font-size: 10px; color: #949BA4;" id="embed_content_count">0/2000</div>
-                                </div>
-
-                                <!-- Embed Container -->
-                                <div style="display: flex; gap: 16px;">
-                                    <!-- Blue Bar (Left) -->
-                                    <div style="width: 4px; background: #006CE7; border-radius: 4px;"></div>
                                     
-                                    <!-- Embed Content -->
-                                    <div style="flex: 1; background: #1E1F22; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- Mode Switch -->
+                                    <div class="form-group" style="display: flex; gap: 16px; margin-bottom: 24px; align-items: center;">
+                                        <label style="margin: 0;">Mode:</label>
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                            <input type="radio" name="embed_mode" value="normal" checked> Normal Embed
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                            <input type="radio" name="embed_mode" value="components"> Components v2
+                                        </label>
+                                    </div>
+    
+                                    <!-- Message Input -->
+                                    <div style="background: #1E1F22; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                                        <label style="font-size: 12px; color: #DBDEE1;">Content</label>
+                                        <textarea id="embed_content" rows="2" style="background: transparent; border: none; color: #DBDEE1; padding: 0; min-height: 40px; margin-top: 8px; width: 100%; resize: none;" placeholder="Message content..."></textarea>
+                                        <div style="text-align: right; font-size: 10px; color: #949BA4;" id="embed_content_count">0/2000</div>
+                                    </div>
+    
+                                    <!-- Embed Container -->
+                                    <div style="display: flex; gap: 16px;">
+                                        <!-- Blue Bar (Left) -->
+                                        <div style="width: 4px; background: #006CE7; border-radius: 4px;"></div>
                                         
-                                        <!-- Author Row -->
-                                        <div style="display: flex; gap: 8px; align-items: center;">
-                                            <div style="width: 32px; height: 32px; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Author Icon URL" onclick="promptUrl('embed_author_icon')">
-                                                <i data-lucide="image" style="width:16px; height:16px; color: #4E5058;"></i>
+                                        <!-- Embed Content -->
+                                        <div style="flex: 1; background: #1E1F22; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                                            
+                                            <!-- Author Row -->
+                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                <div id="drop-author-icon" style="width: 32px; height: 32px; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; background-size: cover; background-position: center;" title="Upload Author Icon">
+                                                    <i data-lucide="image" style="width:16px; height:16px; color: #4E5058;"></i>
+                                                </div>
+                                                <div style="flex: 1; border: 1px solid #313338; border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between;">
+                                                    <input type="text" id="embed_author_name" placeholder="Author Name" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0;">
+                                                    <span style="font-size: 10px; color: #949BA4;" id="embed_author_count">0/256</span>
+                                                </div>
+                                                <div id="drop-thumbnail" style="width: 60px; height: 60px; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; position: absolute; right: 16px; top: 16px; cursor: pointer; overflow: hidden; background-size: cover; background-position: center;" title="Upload Thumbnail">
+                                                    <i data-lucide="image" style="width:24px; height:24px; color: #4E5058;"></i>
+                                                </div>
                                             </div>
-                                            <div style="flex: 1; border: 1px solid #313338; border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between;">
-                                                <input type="text" id="embed_author_name" placeholder="Author Name" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0;">
-                                                <span style="font-size: 10px; color: #949BA4;" id="embed_author_count">0/256</span>
+    
+                                            <!-- Title -->
+                                            <div style="border: 1px solid #313338; border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; margin-right: 76px;">
+                                                <input type="text" id="embed_title" placeholder="Title" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0;">
+                                                <span style="font-size: 10px; color: #949BA4;" id="embed_title_count">0/256</span>
                                             </div>
-                                            <div style="width: 60px; height: 60px; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; position: absolute; right: 16px; top: 16px; cursor: pointer;" title="Thumbnail URL" onclick="promptUrl('embed_thumbnail')">
-                                                <i data-lucide="image" style="width:24px; height:24px; color: #4E5058;"></i>
+    
+                                            <!-- Description -->
+                                            <div style="border: 1px solid #313338; border-radius: 4px; padding: 8px 12px;">
+                                                <textarea id="embed_description" rows="4" placeholder="Description" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none;"></textarea>
+                                                <div style="text-align: right; font-size: 10px; color: #949BA4;" id="embed_desc_count">0/4096</div>
+                                            </div>
+    
+                                            <!-- Dynamic Fields Container -->
+                                            <div id="embed-fields-container" style="display: flex; flex-direction: column; gap: 12px;"></div>
+    
+                                            <!-- Add Field Button -->
+                                            <button type="button" id="btn-add-embed-field" style="width: 100%; padding: 12px; background: #006CE7; border: none; border-radius: 4px; color: white; font-weight: 500; cursor: pointer;">Add Field</button>
+    
+                                            <!-- Main Image -->
+                                            <div id="drop-image" style="width: 100%; height: 100px; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-top: 8px; overflow: hidden; background-size: cover; background-position: center;" title="Upload Main Image">
+                                                <i data-lucide="image" style="width:32px; height:32px; color: #4E5058;"></i>
+                                            </div>
+    
+                                            <!-- Footer Row -->
+                                            <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                                                <div id="drop-footer-icon" style="width: 32px; height: 32px; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; background-size: cover; background-position: center;" title="Upload Footer Icon">
+                                                    <i data-lucide="image" style="width:16px; height:16px; color: #4E5058;"></i>
+                                                </div>
+                                                <div style="flex: 1; border: 1px solid #313338; border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between;">
+                                                    <input type="text" id="embed_footer_text" placeholder="Footer Text" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0;">
+                                                    <span style="font-size: 10px; color: #949BA4;" id="embed_footer_count">0/2048</span>
+                                                </div>
                                             </div>
                                         </div>
-
-                                        <!-- Title -->
-                                        <div style="border: 1px solid #313338; border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; margin-right: 76px;">
-                                            <input type="text" id="embed_title" placeholder="Title" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0;">
-                                            <span style="font-size: 10px; color: #949BA4;" id="embed_title_count">0/256</span>
-                                        </div>
-
-                                        <!-- Description -->
-                                        <div style="border: 1px solid #313338; border-radius: 4px; padding: 8px 12px;">
-                                            <textarea id="embed_description" rows="4" placeholder="Description" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none;"></textarea>
-                                            <div style="text-align: right; font-size: 10px; color: #949BA4;" id="embed_desc_count">0/4096</div>
-                                        </div>
-
-                                        <!-- Dynamic Fields Container -->
-                                        <div id="embed-fields-container" style="display: flex; flex-direction: column; gap: 12px;"></div>
-
-                                        <!-- Add Field Button -->
-                                        <button type="button" id="btn-add-embed-field" style="width: 100%; padding: 12px; background: #006CE7; border: none; border-radius: 4px; color: white; font-weight: 500; cursor: pointer;">Add Field</button>
-
-                                        <!-- Main Image -->
-                                        <div style="width: 100%; height: 100px; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-top: 8px;" title="Main Image URL" onclick="promptUrl('embed_image')">
-                                            <i data-lucide="image" style="width:32px; height:32px; color: #4E5058;"></i>
-                                        </div>
-
-                                        <!-- Footer Row -->
-                                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
-                                            <div style="width: 32px; height: 32px; border: 1px dashed #4E5058; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Footer Icon URL" onclick="promptUrl('embed_footer_icon')">
-                                                <i data-lucide="image" style="width:16px; height:16px; color: #4E5058;"></i>
+                                    </div>
+                                    
+                                    <!-- Components v2 Section -->
+                                    <div id="components-v2-section" style="display: none; background: #1E1F22; border-radius: 8px; padding: 16px; margin-top: 16px;">
+                                        <h4 style="margin-top: 0; color: #F2F3F5;">Interactive Components</h4>
+                                        <p style="color: #949BA4; font-size: 12px; margin-bottom: 12px;">Add buttons that appear underneath your message.</p>
+                                        <div id="components-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;"></div>
+                                        <button type="button" id="btn-add-component" class="btn" style="background: #4E5058; border: none; color: white;">+ Add URL Button</button>
+                                    </div>
+    
+                                    <!-- Hidden Inputs for URLs & System -->
+                                    <input type="file" id="file-upload-input" style="display: none;" accept="image/*">
+                                    <input type="hidden" id="embed_msg_id">
+                                    <input type="hidden" id="embed_author_icon">
+                                    <input type="hidden" id="embed_thumbnail">
+                                    <input type="hidden" id="embed_image">
+                                    <input type="hidden" id="embed_footer_icon">
+                                    <input type="hidden" id="embed_url">
+                                    <input type="hidden" id="embed_color" value="#5865F2">
+                                </div>
+                                
+                                <!-- Preview (Restored from existing) -->
+                                <div style="flex: 1;" id="embed-preview-container">
+                                    
+                                <h3>Live Preview</h3>
+                                <div class="discord-preview" style="background: #313338; border-radius: 8px; padding: 16px; font-family: 'gg sans', sans-serif; position: sticky; top: 20px;">
+                                    <div style="display: flex; gap: 16px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #5865F2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold;">O</div>
+                                        <div style="flex: 1; max-width: 100%; min-width: 0;">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                                <span style="color: #F2F3F5; font-weight: 500; font-size: 16px;">Orbit</span>
+                                                <span style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
+                                                <span style="color: #949BA4; font-size: 12px;">Today at 12:00 PM</span>
                                             </div>
-                                            <div style="flex: 1; border: 1px solid #313338; border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between;">
-                                                <input type="text" id="embed_footer_text" placeholder="Footer Text" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0;">
-                                                <span style="font-size: 10px; color: #949BA4;" id="embed_footer_count">0/2048</span>
+                                            <div id="preview-content" style="color: #DBDEE1; font-size: 14px; margin-bottom: 4px; white-space: pre-wrap; word-wrap: break-word;"></div>
+                                            
+                                            <!-- Embed -->
+                                            <div id="preview-embed" style="background: #2B2D31; border-radius: 4px; border-left: 4px solid #5865F2; padding: 12px 16px; max-width: 432px; display: none; margin-top: 4px;">
+                                                <div id="preview-author" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; display: none;">
+                                                    <img id="preview-author-icon" src="" style="width: 24px; height: 24px; border-radius: 50%; display: none;">
+                                                    <span id="preview-author-name" style="color: #F2F3F5; font-size: 14px; font-weight: 600;"></span>
+                                                </div>
+                                                <div style="display: flex; gap: 16px;">
+                                                    <div style="flex: 1; min-width: 0;">
+                                                        <div id="preview-title" style="color: #00A8FC; font-size: 16px; font-weight: 600; margin-bottom: 8px; display: none; word-wrap: break-word;"></div>
+                                                        <div id="preview-description" style="color: #DBDEE1; font-size: 14px; margin-bottom: 8px; display: none; white-space: pre-wrap; word-wrap: break-word;"></div>
+                                                        <div id="preview-fields" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;"></div>
+                                                        <img id="preview-image" src="" style="max-width: 100%; border-radius: 4px; margin-top: 8px; display: none;">
+                                                    </div>
+                                                    <div id="preview-thumbnail-container" style="flex-shrink: 0; display: none;">
+                                                        <img id="preview-thumbnail" src="" style="max-width: 80px; max-height: 80px; border-radius: 4px;">
+                                                    </div>
+                                                </div>
+                                                <div id="preview-footer" style="display: flex; align-items: center; gap: 8px; margin-top: 8px; display: none;">
+                                                    <img id="preview-footer-icon" src="" style="width: 20px; height: 20px; border-radius: 50%; display: none;">
+                                                    <span id="preview-footer-text" style="color: #B5BAC1; font-size: 12px;"></span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Components v2 Section (Hidden by default) -->
-                                <div id="components-v2-section" style="display: none; background: #1E1F22; border-radius: 8px; padding: 16px; margin-top: 16px;">
-                                    <h4 style="margin-top: 0; color: #F2F3F5;">Interactive Components</h4>
-                                    <p style="color: #949BA4; font-size: 12px; margin-bottom: 12px;">Add buttons that appear underneath your message.</p>
-                                    <div id="components-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;"></div>
-                                    <button type="button" id="btn-add-component" class="btn" style="background: #4E5058; border: none; color: white;">+ Add URL Button</button>
+    
                                 </div>
-
-                                <!-- Hidden Inputs for URLs & Color -->
-                                <input type="hidden" id="embed_author_icon">
-                                <input type="hidden" id="embed_thumbnail">
-                                <input type="hidden" id="embed_image">
-                                <input type="hidden" id="embed_footer_icon">
-                                <input type="hidden" id="embed_url">
-                                <input type="hidden" id="embed_color" value="#5865F2">
                             </div>
                         </div>
                     </div>
+
                     <div id="section-logs" class="dash-panel">
                         <div class="section-header">
                             <div
