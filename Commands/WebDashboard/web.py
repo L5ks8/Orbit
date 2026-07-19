@@ -501,7 +501,6 @@ class WebDashboard:
                         import asyncio
                         asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     boost_cfg["image_url"] = img_url
-                    boost_cfg["image_url"] = img_url
                 save_boost_config(guild_id, boost_cfg)
 
             if user_perms.get("can_messages") and "automod" in data:
