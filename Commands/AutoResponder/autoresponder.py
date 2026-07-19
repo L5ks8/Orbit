@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord import app_commands
 from Commands.AutoResponder._storage import add_response, remove_response, load_responses, get_response_entry
@@ -15,7 +15,7 @@ class AutoResponderCommand(commands.Cog):
             name = m.group(1).lower()
             ch = discord.utils.find(lambda c: c.name.lower() == name, guild.text_channels)
             return f"<#{ch.id}>" if ch else m.group(0)
-        return re.sub(r'#([\w-]+)', replace_match, text)
+        return re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_match, text)
 
     @commands.hybrid_command(name="addreply", description="Adds an auto-response trigger and message.")
     @commands.has_permissions(manage_guild=True)

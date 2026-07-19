@@ -20,7 +20,7 @@ def format_boost_string(text: str, member: discord.Member) -> str:
             return channel.mention
         return f"#{c_name}"
         
-    formatted = re.sub(r'#([\w-]+)', replace_channel, formatted)
+    formatted = re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
     
     return formatted
 
