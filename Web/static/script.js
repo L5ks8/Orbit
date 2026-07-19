@@ -789,7 +789,7 @@ document.getElementById('btn-add-auto-reaction').addEventListener('click', () =>
 let currentGuildName = '';
 let currentGuildIcon = '';
 
-async function loadConfig(guildId, guildName, guildIcon) {
+async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
     currentGuildId = guildId;
     if (guildName !== undefined) currentGuildName = guildName;
     if (guildIcon !== undefined) currentGuildIcon = guildIcon;
@@ -802,11 +802,13 @@ async function loadConfig(guildId, guildName, guildIcon) {
     document.getElementById('config-layout').style.display = 'none';
     document.getElementById('config-loader').classList.remove('hidden');
 
-    // Reset tabs to overview section
-    document.querySelectorAll('.dash-nav-item').forEach(i => i.classList.remove('active'));
-    document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
-    document.querySelector('.dash-nav-item[data-target="section-overview"]')?.classList.add('active');
-    document.getElementById('section-overview')?.classList.add('active');
+    if (!keepTab) {
+        // Reset tabs to overview section
+        document.querySelectorAll('.dash-nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+        document.querySelector('.dash-nav-item[data-target="section-overview"]')?.classList.add('active');
+        document.getElementById('section-overview')?.classList.add('active');
+    }
 
     try {
         const res = await fetch(`/api/config/${guildId}`);
@@ -1182,7 +1184,11 @@ async function loadConfig(guildId, guildName, guildIcon) {
                 el.dataset.initial = el.value;
             }
         });
-        setDirty(false); // Make sure it's clean on load
+        if (typeof window.clearDirtyTracking === 'function') {
+            window.clearDirtyTracking();
+        } else {
+            setDirty(false);
+        }
 
         document.getElementById('config-loader').classList.add('hidden');
         document.getElementById('config-layout').style.display = 'flex';
@@ -2248,10 +2254,12 @@ document.getElementById('btn-add-channel-booster')?.addEventListener('click', ()
 
 
 
-// --- Unsaved Changes Logic ---
 let hasUnsavedChanges = false;
 const unsavedBar = document.getElementById('unsaved-bar');
 const btnCancelChanges = document.getElementById('btn-cancel-changes');
+
+const changedInputs = new Set();
+window.manualDirty = false;
 
 function setDirty(dirty) {
     hasUnsavedChanges = dirty;
@@ -2260,25 +2268,59 @@ function setDirty(dirty) {
     }
 }
 
-// Track inputs
-document.addEventListener('input', (e) => {
+window.clearDirtyTracking = function() {
+    changedInputs.clear();
+    window.manualDirty = false;
+    setDirty(false);
+};
+
+function handleInputChange(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
         if (e.target.id === 'chart_days_select') return;
-        setDirty(true);
+        
+        let currentVal = e.target.type === 'checkbox' ? String(e.target.checked) : String(e.target.value);
+        if (e.target.dataset.initial !== undefined) {
+            if (currentVal !== e.target.dataset.initial) {
+                changedInputs.add(e.target);
+            } else {
+                changedInputs.delete(e.target);
+            }
+        } else {
+            changedInputs.add(e.target);
+        }
+        
+        setDirty(changedInputs.size > 0 || window.manualDirty);
     }
-});
-document.addEventListener('change', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-        if (e.target.id === 'chart_days_select') return;
+}
+
+// Track inputs
+document.addEventListener('input', handleInputChange);
+document.addEventListener('change', handleInputChange);
+
+document.addEventListener('click', (e) => {
+    if (e.target.closest('#btn-add-ticket-option') || 
+        e.target.closest('#btn-add-file-channel') ||
+        e.target.closest('#btn-add-auto-reaction') ||
+        e.target.closest('#btn-add-hub') ||
+        e.target.closest('#btn-add-autoreply') ||
+        e.target.closest('.ar-remove-btn') ||
+        e.target.closest('.fc-remove-btn') ||
+        e.target.closest('.to-remove-btn') ||
+        e.target.closest('.tv-remove-btn') ||
+        e.target.closest('.add-role-btn') ||
+        e.target.closest('.remove-role-btn') ||
+        e.target.closest('.add-booster-btn') ||
+        e.target.closest('.remove-booster-btn')) {
+        window.manualDirty = true;
         setDirty(true);
     }
 });
 
 if (btnCancelChanges) {
     btnCancelChanges.addEventListener('click', () => {
-        setDirty(false);
-        // Reload config to revert changes
-        if (currentGuildId) loadConfig(currentGuildId);
+        window.clearDirtyTracking();
+        // Reload config to revert changes but keep current tab
+        if (currentGuildId) loadConfig(currentGuildId, undefined, undefined, true);
     });
 }
 

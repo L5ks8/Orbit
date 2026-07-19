@@ -514,7 +514,13 @@
                     </div>
 
                     <!-- Unsaved Changes Bar -->
-                    <div id="unsaved-bar" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #111214; border: 1px solid #1E1F22; padding: 12px 24px; border-radius: 8px; z-index: 9999; box-shadow: 0 8px 16px rgba(0,0,0,0.5); align-items: center; gap: 16px;">
+                    <style>
+@keyframes slideUpFade {
+    0% { transform: translate(-50%, 50px); opacity: 0; }
+    100% { transform: translate(-50%, 0); opacity: 1; }
+}
+</style>
+<div id="unsaved-bar" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #111214; border: 1px solid #1E1F22; padding: 12px 24px; border-radius: 8px; z-index: 9999; box-shadow: 0 8px 16px rgba(0,0,0,0.5); align-items: center; gap: 16px; animation: slideUpFade 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
                         <span style="color: #F2F3F5; font-weight: 500;">You have unsaved changes!</span>
                         <div style="display: flex; gap: 8px;">
                             <button type="button" id="btn-cancel-changes" class="btn" style="background: transparent; border: none; color: #DBDEE1;">Cancel</button>
