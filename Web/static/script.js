@@ -2260,29 +2260,17 @@ function setDirty(dirty) {
     }
 }
 
-function checkDirty() {
-    let dirty = false;
-    document.querySelectorAll('input, textarea, select').forEach(el => {
-        if (el.id === 'chart_days_select' || el.classList.contains('custom-multiselect-input') || el.classList.contains('custom-select-input') || !el.id || el.dataset.initial === undefined) return;
-        
-        if (el.type === 'checkbox') {
-            if (String(el.checked) !== el.dataset.initial) dirty = true;
-        } else if (el.type !== 'file' && el.type !== 'hidden') {
-            if (String(el.value) !== el.dataset.initial) dirty = true;
-        }
-    });
-    setDirty(dirty);
-}
-
 // Track inputs
 document.addEventListener('input', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-        checkDirty();
+        if (e.target.id === 'chart_days_select') return;
+        setDirty(true);
     }
 });
 document.addEventListener('change', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-        checkDirty();
+        if (e.target.id === 'chart_days_select') return;
+        setDirty(true);
     }
 });
 
