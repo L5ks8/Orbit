@@ -733,9 +733,9 @@ class WebDashboard:
             
             ticket_cfg = load_ticket_config(guild_id)
             view = PersistentTicketPanelLayout(
-                title=ticket_cfg.get("panel_title") or "Support Ticket Desk",
-                description=ticket_cfg.get("panel_description") or "Click the button below to open a direct support channel with our team.",
-                instructions=ticket_cfg.get("panel_instructions") or "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel.",
+                title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
+                description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
+                instructions=ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."),
                 options_slots=ticket_cfg.get("options_slots", [])
             )
             

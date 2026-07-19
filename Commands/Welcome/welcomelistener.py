@@ -26,8 +26,7 @@ class WelcomeListener(commands.Cog):
         if not channel:
             return
 
-        msg_content = config.get("message") or "Welcome {user} to {server}!"
-        formatted = format_welcome_string(msg_content, member)
+        formatted = format_welcome_string(config.get("message", ""), member)
         
         import re
         def replace_channel(match):

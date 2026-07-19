@@ -42,10 +42,10 @@ DEFAULT_LEVEL_CONFIG = {
     "leaderboard_channel": "",
     "leaderboard_color": "#3B82F6",
     # Level Up Message
-    "levelup_message_content": "",
+    "levelup_message_content": "{user_mention}",
     "levelup_embed_author": "",
-    "levelup_embed_title": "",
-    "levelup_embed_description": "",
+    "levelup_embed_title": "🎉 Level Up!",
+    "levelup_embed_description": "Congratulations **{user_globalname}**!\nYou reached **Level {level}**.",
     "levelup_embed_footer": "",
     "levelup_embed_image": "",
     "levelup_show_avatar": True,
