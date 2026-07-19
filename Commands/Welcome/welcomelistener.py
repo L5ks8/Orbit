@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands.Welcome._storage import load_welcome_config
 from Commands.Welcome._views import format_welcome_string, WelcomeCardLayout
@@ -27,6 +27,19 @@ class WelcomeListener(commands.Cog):
             return
 
         formatted = format_welcome_string(config.get("message", ""), member)
+        
+        import re
+        def replace_channel(match):
+            name_or_id = match.group(1)
+            if name_or_id.isdigit():
+                return f"<#{name_or_id}>"
+            c_name = name_or_id.lower()
+            ch = discord.utils.find(lambda c: c.name.lower() == c_name, member.guild.text_channels)
+            if ch:
+                return ch.mention
+            return f"#{c_name}"
+            
+        formatted = re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
         
         from Commands.Welcome.image_gen import generate_welcome_image
         import discord

@@ -453,25 +453,6 @@ function lockSection(sectionId, requirementText) {
     inputs.forEach(i => i.disabled = true);
 }
 
-function convertIdsToNames(text) {
-    if (!text) return text;
-    return text.replace(/<#(\d+)>/g, (match, id) => {
-        const channel = globalChannels.find(c => String(c.id) === String(id));
-        return channel ? `#${channel.name}` : match;
-    });
-}
-
-function convertNamesToIds(text) {
-    if (!text) return text;
-    let newText = text;
-    const sortedChannels = [...globalChannels].sort((a, b) => b.name.length - a.name.length);
-    sortedChannels.forEach(ch => {
-        const regex = new RegExp(`#${ch.name}(?![\\w-])`, 'gi');
-        newText = newText.replace(regex, `<#${ch.id}>`);
-    });
-    return newText;
-}
-
 function renderAutoReplies(replies) {
     const list = document.getElementById('autoreply-list');
     list.innerHTML = '';
@@ -481,7 +462,7 @@ function renderAutoReplies(replies) {
     }
 
     for (const [trigger, data] of Object.entries(replies)) {
-        addAutoReplyRow(trigger, convertIdsToNames(data.response), data.channel_id || '');
+        addAutoReplyRow(trigger, data.response, data.channel_id || '');
     }
 }
 
@@ -1570,10 +1551,9 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     const localAutoresponder = {};
     document.querySelectorAll('.autoreply-row').forEach(row => {
         const trigger = row.querySelector('.ar-trigger').value.trim();
-        let response = row.querySelector('.ar-response').value.trim();
+        const response = row.querySelector('.ar-response').value.trim();
         const channelVal = row.querySelector('.ar-channel')?.value || '';
         if (trigger && response) {
-            response = convertNamesToIds(response);
             localAutoresponder[trigger] = { response: response, channel_id: channelVal ? channelVal : null };
         }
     });

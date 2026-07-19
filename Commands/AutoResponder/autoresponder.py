@@ -12,7 +12,10 @@ class AutoResponderCommand(commands.Cog):
         """Replace #channel-name with <#id> if the channel exists in the guild."""
         import re
         def replace_match(m):
-            name = m.group(1).lower()
+            name_or_id = m.group(1)
+            if name_or_id.isdigit():
+                return f"<#{name_or_id}>"
+            name = name_or_id.lower()
             ch = discord.utils.find(lambda c: c.name.lower() == name, guild.text_channels)
             return f"<#{ch.id}>" if ch else m.group(0)
         return re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_match, text)

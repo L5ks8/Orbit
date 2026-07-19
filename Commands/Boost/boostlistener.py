@@ -12,10 +12,12 @@ def format_boost_string(text: str, member: discord.Member) -> str:
     formatted = formatted.replace("{server}", member.guild.name)
     formatted = formatted.replace("{count}", str(member.guild.premium_subscription_count))
     
-    # Replace #channel-name with actual channel mention if it exists
     def replace_channel(match):
-        c_name = match.group(1)
-        channel = discord.utils.get(member.guild.channels, name=c_name)
+        name_or_id = match.group(1)
+        if name_or_id.isdigit():
+            return f"<#{name_or_id}>"
+        c_name = name_or_id.lower()
+        channel = discord.utils.find(lambda c: c.name.lower() == c_name, member.guild.text_channels)
         if channel:
             return channel.mention
         return f"#{c_name}"
