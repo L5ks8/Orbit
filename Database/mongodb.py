@@ -51,9 +51,13 @@ def get_config(collection_name: str, guild_id: int, default_config: Dict[str, An
                     if migrated:
                         doc = migrated
                         set_config(collection_name, guild_id, migrated)
+                        # Delete the local JSON file so it doesn't resurrect deleted configs later
+                        try:
+                            os.remove(path)
+                        except Exception:
+                            pass
                 except Exception:
                     pass
-                    
     if not doc:
         return default_config or {}
     
