@@ -1426,26 +1426,30 @@
                         <div class="level-card-grid">
                             <!-- Message XP Card -->
                             <div class="level-card">
-                                <div class="level-card-title">Nachrichten XP</div>
+                                <div class="level-card-title">Message XP</div>
                                 <div class="form-group toggle-group">
                                     <div>
-                                        <label class="form-label mb-0">Nachrichten XP Aktiviert</label>
-                                        <span class="help-text">Sollen Mitglieder XP für das Versenden von Nachrichten erhalten?</span>
+                                        <label class="form-label mb-0">Message XP Enabled</label>
+                                        <span class="help-text">Should members earn XP for sending messages?</span>
                                     </div>
                                     <label class="switch"><input type="checkbox" id="level_msg_xp_enabled"><span class="slider"></span></label>
                                 </div>
-                                <div class="form-group">
-                                    <label>Nachrichten XP Menge</label>
-                                    <span class="help-text">Anzahl der XP pro Nachricht.</span>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Message XP Amount</label>
+                                        <span class="help-text">Amount of XP per message.</span>
+                                    </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="level_msg_xp_amount">−</button>
                                         <input type="number" id="level_msg_xp_amount" value="20" min="1" max="1000">
                                         <button type="button" class="num-btn plus" data-target="level_msg_xp_amount">+</button>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Nachrichten Abkühlzeit</label>
-                                    <span class="help-text">Die Abkühlzeit in Sekunden zwischen Nachrichten.</span>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Message Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between messages.</span>
+                                    </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="level_msg_xp_cooldown">−</button>
                                         <input type="number" id="level_msg_xp_cooldown" value="60" min="0" max="3600">
@@ -1456,31 +1460,33 @@
 
                             <!-- Voice XP Card -->
                             <div class="level-card">
-                                <div class="level-card-title">Sprach XP</div>
+                                <div class="level-card-title">Voice XP</div>
                                 <div class="form-group toggle-group">
                                     <div>
-                                        <label class="form-label mb-0">Sprach XP Aktiviert</label>
-                                        <span class="help-text">Sollen Mitglieder XP erhalten, wenn sie in einem Sprachkanal sind?</span>
+                                        <label class="form-label mb-0">Voice XP Enabled</label>
+                                        <span class="help-text">Should members earn XP while in a voice channel?</span>
                                     </div>
                                     <label class="switch"><input type="checkbox" id="level_voice_xp_enabled"><span class="slider"></span></label>
                                 </div>
                                 <div class="form-group toggle-group">
                                     <div>
-                                        <label class="form-label mb-0">Stumme/Taube Mitglieder Ignorieren</label>
-                                        <span class="help-text">Sollen stumme oder taube Mitglieder ignoriert werden?</span>
+                                        <label class="form-label mb-0">Ignore Muted/Deafened Members</label>
+                                        <span class="help-text">Should muted or deafened members be ignored?</span>
                                     </div>
                                     <label class="switch"><input type="checkbox" id="level_voice_xp_ignore_muted" checked><span class="slider"></span></label>
                                 </div>
                                 <div class="form-group toggle-group">
                                     <div>
-                                        <label class="form-label mb-0">Einzelne Mitglieder Ignorieren</label>
-                                        <span class="help-text">Sollen einzelne Mitglieder in einem Sprachkanal ignoriert werden?</span>
+                                        <label class="form-label mb-0">Ignore Solo Members</label>
+                                        <span class="help-text">Should solo members in a voice channel be ignored?</span>
                                     </div>
                                     <label class="switch"><input type="checkbox" id="level_voice_xp_ignore_solo"><span class="slider"></span></label>
                                 </div>
-                                <div class="form-group">
-                                    <label>Sprach XP Menge</label>
-                                    <span class="help-text">Anzahl der XP pro Minute in Sprachkanälen.</span>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Voice XP Amount</label>
+                                        <span class="help-text">Amount of XP per minute in voice channels.</span>
+                                    </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="level_voice_xp_amount">−</button>
                                         <input type="number" id="level_voice_xp_amount" value="6" min="1" max="1000">
@@ -1491,26 +1497,30 @@
 
                             <!-- Command XP Card -->
                             <div class="level-card">
-                                <div class="level-card-title">Befehls XP</div>
+                                <div class="level-card-title">Command XP</div>
                                 <div class="form-group toggle-group">
                                     <div>
-                                        <label class="form-label mb-0">Befehls XP Aktiviert</label>
-                                        <span class="help-text">Sollen Mitglieder XP für das Nutzen von Befehlen erhalten?</span>
+                                        <label class="form-label mb-0">Command XP Enabled</label>
+                                        <span class="help-text">Should members earn XP for using commands?</span>
                                     </div>
                                     <label class="switch"><input type="checkbox" id="level_cmd_xp_enabled"><span class="slider"></span></label>
                                 </div>
-                                <div class="form-group">
-                                    <label>Befehls XP Menge</label>
-                                    <span class="help-text">Anzahl der XP pro Befehl.</span>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Command XP Amount</label>
+                                        <span class="help-text">Amount of XP per command.</span>
+                                    </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="level_cmd_xp_amount">−</button>
                                         <input type="number" id="level_cmd_xp_amount" value="15" min="1" max="1000">
                                         <button type="button" class="num-btn plus" data-target="level_cmd_xp_amount">+</button>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Befehls Abkühlzeit</label>
-                                    <span class="help-text">Die Abkühlzeit in Sekunden zwischen Befehlen.</span>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Command Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between commands.</span>
+                                    </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="level_cmd_xp_cooldown">−</button>
                                         <input type="number" id="level_cmd_xp_cooldown" value="60" min="0" max="3600">
@@ -1521,26 +1531,30 @@
 
                             <!-- Reaction XP Card -->
                             <div class="level-card">
-                                <div class="level-card-title">Reaktionen XP</div>
+                                <div class="level-card-title">Reaction XP</div>
                                 <div class="form-group toggle-group">
                                     <div>
-                                        <label class="form-label mb-0">Reaktionen XP Aktiviert</label>
-                                        <span class="help-text">Sollen Mitglieder XP für das Reagieren auf Nachrichten erhalten?</span>
+                                        <label class="form-label mb-0">Reaction XP Enabled</label>
+                                        <span class="help-text">Should members earn XP for reacting to messages?</span>
                                     </div>
                                     <label class="switch"><input type="checkbox" id="level_react_xp_enabled"><span class="slider"></span></label>
                                 </div>
-                                <div class="form-group">
-                                    <label>Reaktionen XP Menge</label>
-                                    <span class="help-text">Anzahl der XP pro Reaktion.</span>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Reaction XP Amount</label>
+                                        <span class="help-text">Amount of XP per reaction.</span>
+                                    </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="level_react_xp_amount">−</button>
                                         <input type="number" id="level_react_xp_amount" value="15" min="1" max="1000">
                                         <button type="button" class="num-btn plus" data-target="level_react_xp_amount">+</button>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Reaktionen Abkühlzeit</label>
-                                    <span class="help-text">Die Abkühlzeit in Sekunden zwischen Reaktionen.</span>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Reaction Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between reactions.</span>
+                                    </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="level_react_xp_cooldown">−</button>
                                         <input type="number" id="level_react_xp_cooldown" value="300" min="0" max="3600">
