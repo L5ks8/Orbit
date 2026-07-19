@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.Purge._views import PurgeSuccessLayout
@@ -6,7 +6,7 @@ from Commands._utils import MemberOrIDConverter, format_usage
 
 async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member = None):
     if not isinstance(ctx.channel, (discord.TextChannel, discord.VoiceChannel, discord.Thread)):
-        return await ctx.send("This command can only be used in server channels.", ephemeral=True)
+        return await ctx.send("This command can only be used in server channels.", ephemeral=True, delete_after=5)
 
     clean_str = count_str.strip().lower()
     is_all = (clean_str == "all")
@@ -17,13 +17,13 @@ async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member 
     elif clean_str.isdigit():
         limit = int(clean_str)
         if limit < 1 or limit > 100:
-            return await ctx.send("Please specify an amount between 1 and 100, or `all`.", ephemeral=True)
+            return await ctx.send("Please specify an amount between 1 and 100, or `all`.", ephemeral=True, delete_after=5)
         def check(m: discord.Message) -> bool:
             if user:
                 return m.author.id == user.id
             return True
     else:
-        return await ctx.send("Invalid purge count. Please specify a number (`e.g. 20`) or `all`.", ephemeral=True)
+        return await ctx.send("Invalid purge count. Please specify a number (`e.g. 20`) or `all`.", ephemeral=True, delete_after=5)
 
     try:
         if check:
@@ -31,13 +31,13 @@ async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member 
         else:
             deleted = await ctx.channel.purge(limit=limit)
         view = PurgeSuccessLayout(len(deleted), ctx.channel, ctx.author, filter_user=user, is_all=is_all)
-        await ctx.send(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none(), delete_after=5)
     except discord.Forbidden:
-        await ctx.send("I do not have sufficient permissions to delete messages in this channel.", ephemeral=True)
+        await ctx.send("I do not have sufficient permissions to delete messages in this channel.", ephemeral=True, delete_after=5)
     except discord.HTTPException as e:
-        await ctx.send(f"Could not delete messages (they may be older than 14 days): {e}", ephemeral=True)
+        await ctx.send(f"Could not delete messages (they may be older than 14 days): {e}", ephemeral=True, delete_after=5)
     except Exception as e:
-        await ctx.send(f"Error purging messages: {e}", ephemeral=True)
+        await ctx.send(f"Error purging messages: {e}", ephemeral=True, delete_after=5)
 
 @commands.hybrid_command(name="purge", aliases=["clear", "clean", "prg"], description="Purge messages (`/purge 20` or `/purge all`).")
 @commands.has_permissions(manage_messages=True)
