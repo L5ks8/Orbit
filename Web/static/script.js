@@ -1173,6 +1173,17 @@ async function loadConfig(guildId, guildName, guildIcon) {
         // Initial Preview Update
         updateLivePreview();
 
+        // Capture initial state for checkDirty
+        document.querySelectorAll('input, textarea, select').forEach(el => {
+            if (el.id === 'chart_days_select' || el.classList.contains('custom-multiselect-input') || el.classList.contains('custom-select-input') || !el.id) return;
+            if (el.type === 'checkbox') {
+                el.dataset.initial = el.checked;
+            } else if (el.type !== 'file' && el.type !== 'hidden') {
+                el.dataset.initial = el.value;
+            }
+        });
+        setDirty(false); // Make sure it's clean on load
+
         document.getElementById('config-loader').classList.add('hidden');
         document.getElementById('config-layout').style.display = 'flex';
     } catch (e) {
@@ -2032,6 +2043,7 @@ document.addEventListener('click', function(e) {
         if (e.target.classList.contains('plus')) val = Math.min(max, val + step);
         else val = Math.max(min, val - step);
         input.value = val;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
     }
 });
 
@@ -2248,11 +2260,30 @@ function setDirty(dirty) {
     }
 }
 
+function checkDirty() {
+    let dirty = false;
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+        if (el.id === 'chart_days_select' || el.classList.contains('custom-multiselect-input') || el.classList.contains('custom-select-input') || !el.id || el.dataset.initial === undefined) return;
+        
+        if (el.type === 'checkbox') {
+            if (String(el.checked) !== el.dataset.initial) dirty = true;
+        } else if (el.type !== 'file' && el.type !== 'hidden') {
+            if (String(el.value) !== el.dataset.initial) dirty = true;
+        }
+    });
+    setDirty(dirty);
+}
+
 // Track inputs
-document.querySelectorAll('input, textarea, select').forEach(el => {
-    if (el.id === 'chart_days_select') return;
-    el.addEventListener('input', () => setDirty(true));
-    el.addEventListener('change', () => setDirty(true));
+document.addEventListener('input', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        checkDirty();
+    }
+});
+document.addEventListener('change', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        checkDirty();
+    }
 });
 
 if (btnCancelChanges) {
