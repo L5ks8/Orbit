@@ -16,6 +16,7 @@ from Commands.JoinRole._storage import load_join_roles, save_join_roles
 from Commands.Log._storage import load_log_config, save_log_config
 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Commands.Boost._storage import load_boost_config, save_boost_config
+from Commands.Level._storage import load_level_config, save_level_config
 
 SESSIONS: Dict[str, Any] = {}
 
@@ -213,6 +214,7 @@ class WebDashboard:
         
         from Commands.JoinToCreate._storage import load_jtc_config
         tempvoice_cfg = load_jtc_config(guild_id)
+        level_cfg = load_level_config(guild_id)
 
         config_data = {
             "welcome": {
@@ -325,7 +327,8 @@ class WebDashboard:
             },
             "logs": logs_cfg,
             "automation": automation_cfg,
-            "tempvoice": tempvoice_cfg
+            "tempvoice": tempvoice_cfg,
+            "level": level_cfg
         }
 
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
@@ -593,6 +596,63 @@ class WebDashboard:
                         })
                 jtc_cfg["hubs"] = [h for h in parsed_hubs if h["hub_channel_id"]]
                 save_jtc_config(guild_id, jtc_cfg)
+
+            if "level" in data:
+                level_cfg = load_level_config(guild_id)
+                ld = data["level"]
+                level_cfg["enabled"] = bool(ld.get("enabled", False))
+                level_cfg["msg_xp_enabled"] = bool(ld.get("msg_xp_enabled", True))
+                level_cfg["msg_xp_amount"] = int(ld.get("msg_xp_amount", 20))
+                level_cfg["msg_xp_cooldown"] = int(ld.get("msg_xp_cooldown", 60))
+                level_cfg["voice_xp_enabled"] = bool(ld.get("voice_xp_enabled", False))
+                level_cfg["voice_xp_ignore_muted"] = bool(ld.get("voice_xp_ignore_muted", True))
+                level_cfg["voice_xp_ignore_solo"] = bool(ld.get("voice_xp_ignore_solo", False))
+                level_cfg["voice_xp_amount"] = int(ld.get("voice_xp_amount", 6))
+                level_cfg["cmd_xp_enabled"] = bool(ld.get("cmd_xp_enabled", True))
+                level_cfg["cmd_xp_amount"] = int(ld.get("cmd_xp_amount", 15))
+                level_cfg["cmd_xp_cooldown"] = int(ld.get("cmd_xp_cooldown", 60))
+                level_cfg["react_xp_enabled"] = bool(ld.get("react_xp_enabled", True))
+                level_cfg["react_xp_amount"] = int(ld.get("react_xp_amount", 15))
+                level_cfg["react_xp_cooldown"] = int(ld.get("react_xp_cooldown", 300))
+                level_cfg["reset_on_leave"] = bool(ld.get("reset_on_leave", False))
+                level_cfg["reset_on_ban"] = bool(ld.get("reset_on_ban", False))
+                level_cfg["vote_boost"] = bool(ld.get("vote_boost", True))
+                try:
+                    level_cfg["xp_multiplier"] = float(ld.get("xp_multiplier", 1.0))
+                except (ValueError, TypeError):
+                    level_cfg["xp_multiplier"] = 1.0
+                level_cfg["channel_mode"] = ld.get("channel_mode", "blacklist")
+                level_cfg["role_mode"] = ld.get("role_mode", "blacklist")
+                level_cfg["blocked_channels"] = ld.get("blocked_channels", [])
+                level_cfg["blocked_roles"] = ld.get("blocked_roles", [])
+                level_cfg["levelup_channel"] = ld.get("levelup_channel", "current")
+                level_cfg["leaderboard_url"] = ld.get("leaderboard_url", "")
+                level_cfg["leaderboard_channel"] = ld.get("leaderboard_channel", "")
+                level_cfg["leaderboard_color"] = ld.get("leaderboard_color", "#3B82F6")
+                level_cfg["levelup_conditional"] = ld.get("levelup_conditional", "")
+                level_cfg["levelup_show_avatar"] = bool(ld.get("levelup_show_avatar", True))
+                level_cfg["levelup_message_content"] = ld.get("levelup_message_content", "{user_mention}")
+                level_cfg["levelup_embed_author"] = ld.get("levelup_embed_author", "")
+                level_cfg["levelup_embed_title"] = ld.get("levelup_embed_title", "🎉 Level Up!")
+                level_cfg["levelup_embed_description"] = ld.get("levelup_embed_description", "")
+                level_cfg["levelup_embed_image"] = ld.get("levelup_embed_image", "")
+                level_cfg["levelup_embed_footer"] = ld.get("levelup_embed_footer", "")
+                level_cfg["level_roles_stack"] = bool(ld.get("level_roles_stack", False))
+                level_cfg["level_roles_rejoin"] = bool(ld.get("level_roles_rejoin", False))
+                level_cfg["level_roles"] = ld.get("level_roles", [])
+                level_cfg["stat_roles_msg_stack"] = bool(ld.get("stat_roles_msg_stack", False))
+                level_cfg["stat_roles_msg_cooldown"] = int(ld.get("stat_roles_msg_cooldown", 5))
+                level_cfg["stat_roles_msg"] = ld.get("stat_roles_msg", [])
+                level_cfg["stat_roles_voice_stack"] = bool(ld.get("stat_roles_voice_stack", False))
+                level_cfg["stat_roles_voice_cooldown"] = int(ld.get("stat_roles_voice_cooldown", 5))
+                level_cfg["stat_roles_voice"] = ld.get("stat_roles_voice", [])
+                level_cfg["stat_roles_react_stack"] = bool(ld.get("stat_roles_react_stack", False))
+                level_cfg["stat_roles_react_cooldown"] = int(ld.get("stat_roles_react_cooldown", 5))
+                level_cfg["stat_roles_react"] = ld.get("stat_roles_react", [])
+                level_cfg["role_boosters_stack"] = bool(ld.get("role_boosters_stack", True))
+                level_cfg["role_boosters"] = ld.get("role_boosters", [])
+                level_cfg["channel_boosters"] = ld.get("channel_boosters", [])
+                save_level_config(guild_id, level_cfg)
 
                 pid = ticket_cfg.get("panel_channel_id")
                 mid = ticket_cfg.get("panel_message_id")

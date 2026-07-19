@@ -1001,6 +1001,84 @@ async function loadConfig(guildId, guildName, guildIcon) {
         document.getElementById('tempvoice-enabled').checked = config.tempvoice?.enabled ?? false;
         renderTempVoiceHubs(config.tempvoice || {});
 
+        // Level System
+        document.getElementById('level_enabled').checked = config.level?.enabled || false;
+        document.getElementById('level_msg_xp_enabled').checked = config.level?.msg_xp_enabled ?? true;
+        document.getElementById('level_msg_xp_amount').value = config.level?.msg_xp_amount ?? 20;
+        document.getElementById('level_msg_xp_cooldown').value = config.level?.msg_xp_cooldown ?? 60;
+        document.getElementById('level_voice_xp_enabled').checked = config.level?.voice_xp_enabled ?? false;
+        document.getElementById('level_voice_xp_ignore_muted').checked = config.level?.voice_xp_ignore_muted ?? true;
+        document.getElementById('level_voice_xp_ignore_solo').checked = config.level?.voice_xp_ignore_solo ?? false;
+        document.getElementById('level_voice_xp_amount').value = config.level?.voice_xp_amount ?? 6;
+        document.getElementById('level_cmd_xp_enabled').checked = config.level?.cmd_xp_enabled ?? true;
+        document.getElementById('level_cmd_xp_amount').value = config.level?.cmd_xp_amount ?? 15;
+        document.getElementById('level_cmd_xp_cooldown').value = config.level?.cmd_xp_cooldown ?? 60;
+        document.getElementById('level_react_xp_enabled').checked = config.level?.react_xp_enabled ?? true;
+        document.getElementById('level_react_xp_amount').value = config.level?.react_xp_amount ?? 15;
+        document.getElementById('level_react_xp_cooldown').value = config.level?.react_xp_cooldown ?? 300;
+        document.getElementById('level_reset_on_leave').checked = config.level?.reset_on_leave ?? false;
+        document.getElementById('level_reset_on_ban').checked = config.level?.reset_on_ban ?? false;
+        document.getElementById('level_vote_boost').checked = config.level?.vote_boost ?? true;
+        const xpMul = config.level?.xp_multiplier ?? 1.0;
+        document.getElementById('level_xp_multiplier').value = xpMul;
+        document.getElementById('level_xp_multiplier_display').textContent = 'x' + parseFloat(xpMul).toFixed(2);
+        document.getElementById('level_levelup_conditional').value = config.level?.levelup_conditional || '';
+        document.getElementById('level_levelup_show_avatar').checked = config.level?.levelup_show_avatar ?? true;
+        document.getElementById('level_levelup_message_content').value = config.level?.levelup_message_content || '{user_mention}';
+        document.getElementById('level_levelup_embed_author').value = config.level?.levelup_embed_author || '';
+        document.getElementById('level_levelup_embed_title').value = config.level?.levelup_embed_title || '🎉 Level Up!';
+        document.getElementById('level_levelup_embed_description').value = config.level?.levelup_embed_description || 'Congratulations **{user_globalname}**!\nYou reached **Level {level}**.';
+        document.getElementById('level_levelup_embed_image').value = config.level?.levelup_embed_image || '';
+        document.getElementById('level_levelup_embed_footer').value = config.level?.levelup_embed_footer || '';
+        document.getElementById('level_roles_stack').checked = config.level?.level_roles_stack ?? false;
+        document.getElementById('level_roles_rejoin').checked = config.level?.level_roles_rejoin ?? false;
+        document.getElementById('level_role_boosters_stack').checked = config.level?.role_boosters_stack ?? true;
+        document.getElementById('level_stat_roles_msg_stack').checked = config.level?.stat_roles_msg_stack ?? false;
+        document.getElementById('level_stat_roles_msg_cooldown').value = config.level?.stat_roles_msg_cooldown ?? 5;
+        document.getElementById('level_stat_roles_voice_stack').checked = config.level?.stat_roles_voice_stack ?? false;
+        document.getElementById('level_stat_roles_voice_cooldown').value = config.level?.stat_roles_voice_cooldown ?? 5;
+        document.getElementById('level_stat_roles_react_stack').checked = config.level?.stat_roles_react_stack ?? false;
+        document.getElementById('level_stat_roles_react_cooldown').value = config.level?.stat_roles_react_cooldown ?? 5;
+        document.getElementById('level_leaderboard_url').value = config.level?.leaderboard_url || '';
+        document.getElementById('level_leaderboard_color').value = config.level?.leaderboard_color || '#3B82F6';
+        document.getElementById('level_channel_mode').value = config.level?.channel_mode || 'blacklist';
+        document.getElementById('level_role_mode').value = config.level?.role_mode || 'blacklist';
+
+        // Populate Level System Channel Selects
+        const levelUpChEl = document.getElementById('level_levelup_channel');
+        levelUpChEl.innerHTML = '<option value="current">Current Channel</option>';
+        const levelLbChEl = document.getElementById('level_leaderboard_channel');
+        levelLbChEl.innerHTML = '<option value="">Select Channel...</option>';
+        const levelBlockChEl = document.getElementById('level_blocked_channels');
+        levelBlockChEl.innerHTML = '';
+        globalChannels.forEach(c => {
+            levelUpChEl.innerHTML += `<option value="${c.id}" ${config.level?.levelup_channel == c.id ? 'selected' : ''}>#${c.name}</option>`;
+            levelLbChEl.innerHTML += `<option value="${c.id}" ${config.level?.leaderboard_channel == c.id ? 'selected' : ''}>#${c.name}</option>`;
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = '#' + c.name;
+            if (config.level?.blocked_channels?.includes(c.id)) opt.selected = true;
+            levelBlockChEl.appendChild(opt);
+        });
+
+        const levelBlockRoEl = document.getElementById('level_blocked_roles');
+        levelBlockRoEl.innerHTML = '';
+        globalRoles.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.textContent = '@ ' + r.name;
+            if (config.level?.blocked_roles?.includes(r.id)) opt.selected = true;
+            levelBlockRoEl.appendChild(opt);
+        });
+
+        // Render dynamic lists
+        renderLevelRoles(config.level?.level_roles || []);
+        renderStatRoles('msg', config.level?.stat_roles_msg || []);
+        renderStatRoles('voice', config.level?.stat_roles_voice || []);
+        renderStatRoles('react', config.level?.stat_roles_react || []);
+        renderBoosters('role', config.level?.role_boosters || []);
+        renderBoosters('channel', config.level?.channel_boosters || []);
+
         // Initial Preview Update
         updateLivePreview();
 
@@ -1692,6 +1770,57 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('tempvoice-enabled')?.checked || false,
             hubs: tvHubs
         },
+        level: {
+            enabled: document.getElementById('level_enabled').checked,
+            msg_xp_enabled: document.getElementById('level_msg_xp_enabled').checked,
+            msg_xp_amount: parseInt(document.getElementById('level_msg_xp_amount').value) || 20,
+            msg_xp_cooldown: parseInt(document.getElementById('level_msg_xp_cooldown').value) || 60,
+            voice_xp_enabled: document.getElementById('level_voice_xp_enabled').checked,
+            voice_xp_ignore_muted: document.getElementById('level_voice_xp_ignore_muted').checked,
+            voice_xp_ignore_solo: document.getElementById('level_voice_xp_ignore_solo').checked,
+            voice_xp_amount: parseInt(document.getElementById('level_voice_xp_amount').value) || 6,
+            cmd_xp_enabled: document.getElementById('level_cmd_xp_enabled').checked,
+            cmd_xp_amount: parseInt(document.getElementById('level_cmd_xp_amount').value) || 15,
+            cmd_xp_cooldown: parseInt(document.getElementById('level_cmd_xp_cooldown').value) || 60,
+            react_xp_enabled: document.getElementById('level_react_xp_enabled').checked,
+            react_xp_amount: parseInt(document.getElementById('level_react_xp_amount').value) || 15,
+            react_xp_cooldown: parseInt(document.getElementById('level_react_xp_cooldown').value) || 300,
+            reset_on_leave: document.getElementById('level_reset_on_leave').checked,
+            reset_on_ban: document.getElementById('level_reset_on_ban').checked,
+            vote_boost: document.getElementById('level_vote_boost').checked,
+            xp_multiplier: parseFloat(document.getElementById('level_xp_multiplier').value) || 1.0,
+            channel_mode: document.getElementById('level_channel_mode').value,
+            role_mode: document.getElementById('level_role_mode').value,
+            blocked_channels: Array.from(document.getElementById('level_blocked_channels').selectedOptions).map(o => o.value),
+            blocked_roles: Array.from(document.getElementById('level_blocked_roles').selectedOptions).map(o => o.value),
+            levelup_channel: document.getElementById('level_levelup_channel').value,
+            leaderboard_url: document.getElementById('level_leaderboard_url').value,
+            leaderboard_channel: document.getElementById('level_leaderboard_channel').value,
+            leaderboard_color: document.getElementById('level_leaderboard_color').value,
+            levelup_conditional: document.getElementById('level_levelup_conditional').value,
+            levelup_show_avatar: document.getElementById('level_levelup_show_avatar').checked,
+            levelup_message_content: document.getElementById('level_levelup_message_content').value,
+            levelup_embed_author: document.getElementById('level_levelup_embed_author').value,
+            levelup_embed_title: document.getElementById('level_levelup_embed_title').value,
+            levelup_embed_description: document.getElementById('level_levelup_embed_description').value,
+            levelup_embed_image: document.getElementById('level_levelup_embed_image').value,
+            levelup_embed_footer: document.getElementById('level_levelup_embed_footer').value,
+            level_roles_stack: document.getElementById('level_roles_stack').checked,
+            level_roles_rejoin: document.getElementById('level_roles_rejoin').checked,
+            level_roles: collectLevelRoles(),
+            stat_roles_msg_stack: document.getElementById('level_stat_roles_msg_stack').checked,
+            stat_roles_msg_cooldown: parseInt(document.getElementById('level_stat_roles_msg_cooldown').value) || 5,
+            stat_roles_msg: collectStatRoles('msg'),
+            stat_roles_voice_stack: document.getElementById('level_stat_roles_voice_stack').checked,
+            stat_roles_voice_cooldown: parseInt(document.getElementById('level_stat_roles_voice_cooldown').value) || 5,
+            stat_roles_voice: collectStatRoles('voice'),
+            stat_roles_react_stack: document.getElementById('level_stat_roles_react_stack').checked,
+            stat_roles_react_cooldown: parseInt(document.getElementById('level_stat_roles_react_cooldown').value) || 5,
+            stat_roles_react: collectStatRoles('react'),
+            role_boosters_stack: document.getElementById('level_role_boosters_stack').checked,
+            role_boosters: collectBoosters('role'),
+            channel_boosters: collectBoosters('channel'),
+        },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,
             executor_in_logs: document.getElementById('logs_executor_in_logs').checked,
@@ -1752,6 +1881,219 @@ document.addEventListener('mousedown', function (e) {
     }
 });
 
+// ─── Level System Dynamic Functions ──────────────────────────────────────────
 
+// Number +/- buttons
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('num-btn')) {
+        const targetId = e.target.dataset.target;
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const step = parseInt(input.step) || 1;
+        const min = parseInt(input.min) || 0;
+        const max = parseInt(input.max) || 99999;
+        let val = parseInt(input.value) || 0;
+        if (e.target.classList.contains('plus')) val = Math.min(max, val + step);
+        else val = Math.max(min, val - step);
+        input.value = val;
+    }
+});
 
+// XP Multiplier slider display
+document.getElementById('level_xp_multiplier')?.addEventListener('input', function() {
+    document.getElementById('level_xp_multiplier_display').textContent = 'x' + parseFloat(this.value).toFixed(2);
+});
 
+// Toggle tabs (Blacklist/Whitelist and Stat tabs)
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('toggle-tab')) {
+        const parent = e.target.closest('.toggle-tabs');
+        parent.querySelectorAll('.toggle-tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Handle mode tabs (blacklist/whitelist)
+        const targetMode = e.target.dataset.targetMode;
+        if (targetMode) {
+            document.getElementById(targetMode).value = e.target.dataset.mode;
+        }
+
+        // Handle stat tabs (messages/voice/reactions)
+        const statTab = e.target.dataset.statTab;
+        if (statTab) {
+            document.querySelectorAll('.stat-tab-content').forEach(el => el.style.display = 'none');
+            document.getElementById('stat-tab-' + statTab).style.display = '';
+        }
+    }
+});
+
+// ─── Level Roles ─────────────────────────────────────────────────────────────
+function renderLevelRoles(roles) {
+    const container = document.getElementById('level-roles-list');
+    if (!roles.length) {
+        container.innerHTML = '<div class="reward-empty">No rewards configured.</div>';
+        return;
+    }
+    container.innerHTML = '';
+    roles.forEach((r, i) => {
+        const row = document.createElement('div');
+        row.className = 'reward-row';
+        row.innerHTML = `
+            <input type="number" class="lr-level" value="${r.level || 1}" min="1" max="200">
+            <select class="lr-role">${globalRoles.map(gr => `<option value="${gr.id}" ${gr.id == r.role_id ? 'selected' : ''}>@ ${gr.name}</option>`).join('')}</select>
+            <button type="button" class="btn-remove" data-idx="${i}">Remove</button>
+        `;
+        row.querySelector('.btn-remove').addEventListener('click', () => { row.remove(); updateLevelRolesEmpty(); });
+        container.appendChild(row);
+    });
+}
+function updateLevelRolesEmpty() {
+    const container = document.getElementById('level-roles-list');
+    if (!container.children.length) container.innerHTML = '<div class="reward-empty">No rewards configured.</div>';
+}
+function collectLevelRoles() {
+    return Array.from(document.querySelectorAll('#level-roles-list .reward-row')).map(row => ({
+        level: parseInt(row.querySelector('.lr-level').value) || 1,
+        role_id: row.querySelector('.lr-role').value
+    }));
+}
+document.getElementById('btn-add-level-role')?.addEventListener('click', () => {
+    const container = document.getElementById('level-roles-list');
+    const empty = container.querySelector('.reward-empty');
+    if (empty) empty.remove();
+    const row = document.createElement('div');
+    row.className = 'reward-row';
+    row.innerHTML = `
+        <input type="number" class="lr-level" value="1" min="1" max="200">
+        <select class="lr-role">${globalRoles.map(r => `<option value="${r.id}">@ ${r.name}</option>`).join('')}</select>
+        <button type="button" class="btn-remove">Remove</button>
+    `;
+    row.querySelector('.btn-remove').addEventListener('click', () => { row.remove(); updateLevelRolesEmpty(); });
+    container.appendChild(row);
+});
+
+// ─── Stat Roles ──────────────────────────────────────────────────────────────
+function renderStatRoles(type, roles) {
+    const container = document.getElementById(`stat-${type}-roles-list`);
+    const countEl = document.getElementById(`stat-${type}-count`);
+    if (countEl) countEl.textContent = roles.length;
+    if (!roles.length) {
+        container.innerHTML = '<div class="reward-empty">No rewards configured.</div>';
+        return;
+    }
+    container.innerHTML = '';
+    roles.forEach((r, i) => {
+        const row = document.createElement('div');
+        row.className = 'reward-row';
+        row.innerHTML = `
+            <input type="number" class="sr-count" value="${r.count || 1}" min="1">
+            <select class="sr-role">${globalRoles.map(gr => `<option value="${gr.id}" ${gr.id == r.role_id ? 'selected' : ''}>@ ${gr.name}</option>`).join('')}</select>
+            <button type="button" class="btn-remove">Remove</button>
+        `;
+        row.querySelector('.btn-remove').addEventListener('click', () => { row.remove(); updateStatRolesEmpty(type); });
+        container.appendChild(row);
+    });
+}
+function updateStatRolesEmpty(type) {
+    const container = document.getElementById(`stat-${type}-roles-list`);
+    const countEl = document.getElementById(`stat-${type}-count`);
+    const count = container.querySelectorAll('.reward-row').length;
+    if (countEl) countEl.textContent = count;
+    if (!count) container.innerHTML = '<div class="reward-empty">No rewards configured.</div>';
+}
+function collectStatRoles(type) {
+    return Array.from(document.querySelectorAll(`#stat-${type}-roles-list .reward-row`)).map(row => ({
+        count: parseInt(row.querySelector('.sr-count').value) || 1,
+        role_id: row.querySelector('.sr-role').value
+    }));
+}
+document.querySelectorAll('.btn-add-stat-role').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const type = btn.dataset.statType;
+        const container = document.getElementById(`stat-${type}-roles-list`);
+        if (container.querySelectorAll('.reward-row').length >= 5) return;
+        const empty = container.querySelector('.reward-empty');
+        if (empty) empty.remove();
+        const row = document.createElement('div');
+        row.className = 'reward-row';
+        row.innerHTML = `
+            <input type="number" class="sr-count" value="100" min="1">
+            <select class="sr-role">${globalRoles.map(r => `<option value="${r.id}">@ ${r.name}</option>`).join('')}</select>
+            <button type="button" class="btn-remove">Remove</button>
+        `;
+        row.querySelector('.btn-remove').addEventListener('click', () => { row.remove(); updateStatRolesEmpty(type); });
+        container.appendChild(row);
+        updateStatRolesEmpty(type);
+    });
+});
+
+// ─── Boosters ────────────────────────────────────────────────────────────────
+function renderBoosters(type, boosters) {
+    const container = document.getElementById(`${type}-boosters-list`);
+    const countEl = document.getElementById(`${type}-booster-count`);
+    if (countEl) countEl.textContent = boosters.length;
+    if (!boosters.length) {
+        container.innerHTML = '<div class="reward-empty">No boosters configured.</div>';
+        return;
+    }
+    container.innerHTML = '';
+    const items = type === 'role' ? globalRoles : globalChannels;
+    const prefix = type === 'role' ? '@ ' : '# ';
+    const idKey = type === 'role' ? 'role_id' : 'channel_id';
+    boosters.forEach((b, i) => {
+        const row = document.createElement('div');
+        row.className = 'reward-row';
+        row.innerHTML = `
+            <input type="number" class="b-mult" value="${b.multiplier || 2}" min="1" max="10" step="0.5" style="width:70px">
+            <select class="b-item">${items.map(it => `<option value="${it.id}" ${it.id == b[idKey] ? 'selected' : ''}>${prefix}${it.name}</option>`).join('')}</select>
+            <button type="button" class="btn-remove">Remove</button>
+        `;
+        row.querySelector('.btn-remove').addEventListener('click', () => { row.remove(); updateBoostersEmpty(type); });
+        container.appendChild(row);
+    });
+}
+function updateBoostersEmpty(type) {
+    const container = document.getElementById(`${type}-boosters-list`);
+    const countEl = document.getElementById(`${type}-booster-count`);
+    const count = container.querySelectorAll('.reward-row').length;
+    if (countEl) countEl.textContent = count;
+    if (!count) container.innerHTML = '<div class="reward-empty">No boosters configured.</div>';
+}
+function collectBoosters(type) {
+    const idKey = type === 'role' ? 'role_id' : 'channel_id';
+    return Array.from(document.querySelectorAll(`#${type}-boosters-list .reward-row`)).map(row => ({
+        multiplier: parseFloat(row.querySelector('.b-mult').value) || 2,
+        [idKey]: row.querySelector('.b-item').value
+    }));
+}
+document.getElementById('btn-add-role-booster')?.addEventListener('click', () => {
+    const container = document.getElementById('role-boosters-list');
+    if (container.querySelectorAll('.reward-row').length >= 10) return;
+    const empty = container.querySelector('.reward-empty');
+    if (empty) empty.remove();
+    const row = document.createElement('div');
+    row.className = 'reward-row';
+    row.innerHTML = `
+        <input type="number" class="b-mult" value="2" min="1" max="10" step="0.5" style="width:70px">
+        <select class="b-item">${globalRoles.map(r => `<option value="${r.id}">@ ${r.name}</option>`).join('')}</select>
+        <button type="button" class="btn-remove">Remove</button>
+    `;
+    row.querySelector('.btn-remove').addEventListener('click', () => { row.remove(); updateBoostersEmpty('role'); });
+    container.appendChild(row);
+    updateBoostersEmpty('role');
+});
+document.getElementById('btn-add-channel-booster')?.addEventListener('click', () => {
+    const container = document.getElementById('channel-boosters-list');
+    if (container.querySelectorAll('.reward-row').length >= 10) return;
+    const empty = container.querySelector('.reward-empty');
+    if (empty) empty.remove();
+    const row = document.createElement('div');
+    row.className = 'reward-row';
+    row.innerHTML = `
+        <input type="number" class="b-mult" value="2" min="1" max="10" step="0.5" style="width:70px">
+        <select class="b-item">${globalChannels.map(c => `<option value="${c.id}"># ${c.name}</option>`).join('')}</select>
+        <button type="button" class="btn-remove">Remove</button>
+    `;
+    row.querySelector('.btn-remove').addEventListener('click', () => { row.remove(); updateBoostersEmpty('channel'); });
+    container.appendChild(row);
+    updateBoostersEmpty('channel');
+});
