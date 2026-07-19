@@ -788,16 +788,15 @@ async function loadConfig(guildId, guildName, guildIcon) {
     document.getElementById('config-layout').style.display = 'none';
     document.getElementById('config-loader').classList.remove('hidden');
 
-    // Reset tabs to welcome section
-    document.querySelectorAll('.dash-nav-item').forEach(nav => nav.classList.remove('active'));
-    document.querySelectorAll('.dash-panel').forEach(sec => sec.classList.remove('active'));
-    document.querySelector('.dash-nav-item[data-target="section-welcome"]').classList.add('active');
-    document.getElementById('section-welcome').classList.add('active');
+    // Reset tabs to overview section
+    document.querySelectorAll('.dash-nav-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector('.dash-nav-item[data-target="section-overview"]')?.classList.add('active');
+    document.getElementById('section-overview')?.classList.add('active');
 
     try {
         const res = await fetch(`/api/config/${guildId}`);
         const data = await res.json();
-        await loadMessages();
         globalRoles = data.roles;
         globalCategories = data.categories || [];
         globalChannels = data.channels || [];
