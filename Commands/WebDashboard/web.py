@@ -370,8 +370,14 @@ class WebDashboard:
                 msg = data.get("welcome", {}).get("message", "")
                 if msg:
                     welcome_cfg["message"] = msg
-                img_url = data.get("welcome", {}).get("image_url", "")
-                if img_url is not None:
+                
+                if "image_url" in data.get("welcome", {}):
+                    img_url = data["welcome"]["image_url"]
+                    old_url = welcome_cfg.get("image_url", "")
+                    if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
+                        from Database.cloudinary_storage import delete_image_by_url
+                        import asyncio
+                        asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     welcome_cfg["image_url"] = img_url
                 save_welcome_config(guild_id, welcome_cfg)
 
@@ -383,8 +389,14 @@ class WebDashboard:
                 msg = data.get("goodbye", {}).get("message", "")
                 if msg:
                     goodbye_cfg["message"] = msg
-                img_url = data.get("goodbye", {}).get("image_url", "")
-                if img_url is not None:
+                    
+                if "image_url" in data.get("goodbye", {}):
+                    img_url = data["goodbye"]["image_url"]
+                    old_url = goodbye_cfg.get("image_url", "")
+                    if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
+                        from Database.cloudinary_storage import delete_image_by_url
+                        import asyncio
+                        asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     goodbye_cfg["image_url"] = img_url
                 save_goodbye_config(guild_id, goodbye_cfg)
 
@@ -396,8 +408,15 @@ class WebDashboard:
                 msg = data.get("boost", {}).get("message", "")
                 if msg:
                     boost_cfg["message"] = msg
-                img_url = data.get("boost", {}).get("image_url", "")
-                if img_url is not None:
+                    
+                if "image_url" in data.get("boost", {}):
+                    img_url = data["boost"]["image_url"]
+                    old_url = boost_cfg.get("image_url", "")
+                    if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
+                        from Database.cloudinary_storage import delete_image_by_url
+                        import asyncio
+                        asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
+                    boost_cfg["image_url"] = img_url
                     boost_cfg["image_url"] = img_url
                 save_boost_config(guild_id, boost_cfg)
 
