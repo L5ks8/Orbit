@@ -31,8 +31,6 @@ def custom_has_permissions(**perms: bool):
 def custom_bot_has_permissions(**perms: bool):
     def decorator(func):
         async def predicate(ctx: commands.Context) -> bool:
-            # We bypass the check because Discord sometimes reports app_permissions incorrectly for hybrid commands.
-            # The API call will raise discord.Forbidden anyway if the bot lacks permissions.
             return True
         return commands.check(predicate)(func)
     return decorator
@@ -156,19 +154,18 @@ class OrbitBot(commands.Bot):
         )
 
     async def setup_hook(self):
-        if os.environ.get("RENDER") or os.environ.get("PORT"):
-            try:
-                from aiohttp import web
-                from Commands.WebDashboard.web import setup_web_app
-                app = setup_web_app(self)
-                runner = web.AppRunner(app)
-                await runner.setup()
-                port = int(os.environ.get("PORT", 10000))
-                site = web.TCPSite(runner, "0.0.0.0", port)
-                await site.start()
-                print(f"Render Web Service bound to 0.0.0.0:{port}")
-            except Exception as e:
-                print(f"Failed to bind Render port: {e}")
+        try:
+            from aiohttp import web
+            from Commands.WebDashboard.web import setup_web_app
+            app = setup_web_app(self)
+            runner = web.AppRunner(app)
+            await runner.setup()
+            port = int(os.environ.get("PORT", 10000))
+            site = web.TCPSite(runner, "0.0.0.0", port)
+            await site.start()
+            print(f"Web Dashboard started on 0.0.0.0:{port}")
+        except Exception as e:
+            print(f"Failed to start Web Dashboard: {e}")
 
         commands_dir = pathlib.Path("Commands")
         if not commands_dir.exists():
