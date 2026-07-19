@@ -134,6 +134,7 @@ class WebDashboard:
                     return web.json_response({"error": "Failed to fetch guilds"}, status=400)
                 user_guilds = await resp.json()
                 
+        from Commands.WebDashboard._storage import load_settings_config
         manageable_guilds = []
         for g in user_guilds:
             
@@ -144,10 +145,19 @@ class WebDashboard:
             manage_channels = (perms & 0x10) == 0x10
             manage_messages = (perms & 0x2000) == 0x2000
             
-            if is_admin or manage_guild or manage_roles or manage_channels or manage_messages:
+            bot_guild = self.bot.get_guild(int(g["id"]))
+            if bot_guild:
+                has_perms = is_admin or manage_guild or manage_roles or manage_channels or manage_messages
                 
-                bot_guild = self.bot.get_guild(int(g["id"]))
-                if bot_guild:
+                if not has_perms:
+                    settings_cfg = load_settings_config(int(g["id"]))
+                    manager_roles = settings_cfg.get("manager_roles", [])
+                    if manager_roles:
+                        member = bot_guild.get_member(int(user["id"]))
+                        if member and any(str(r.id) in manager_roles for r in member.roles):
+                            has_perms = True
+
+                if has_perms:
                     manageable_guilds.append({
                         "id": g["id"],
                         "name": g["name"],
@@ -171,6 +181,13 @@ class WebDashboard:
             
         perms = member.guild_permissions
         is_admin = perms.administrator or perms.manage_guild
+        
+        if not is_admin:
+            from Commands.WebDashboard._storage import load_settings_config
+            settings_cfg = load_settings_config(guild_id)
+            manager_roles = settings_cfg.get("manager_roles", [])
+            if any(str(r.id) in manager_roles for r in member.roles):
+                is_admin = True
         
         user_perms = {
             "is_admin": is_admin,
@@ -216,7 +233,11 @@ class WebDashboard:
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
 
+        from Commands.WebDashboard._storage import load_settings_config
+        settings_cfg = load_settings_config(guild_id)
+
         config_data = {
+            "settings": settings_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
                 "channel_id": str(welcome_cfg.get("channel_id")) if welcome_cfg.get("channel_id") else "",
@@ -419,6 +440,10 @@ class WebDashboard:
             
         try:
             data = await request.json()
+
+            if user_perms.get("is_admin") and "settings" in data:
+                from Commands.WebDashboard._storage import save_settings_config
+                save_settings_config(guild_id, data["settings"])
 
             if user_perms.get("can_channels") and "welcome" in data:
                 welcome_cfg = load_welcome_config(guild_id)

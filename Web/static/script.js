@@ -215,6 +215,10 @@ class CustomSelect {
         this.select = selectElement;
         this.select.style.display = 'none';
 
+        if (this.select.nextElementSibling && this.select.nextElementSibling.classList.contains('custom-select')) {
+            this.select.nextElementSibling.remove();
+        }
+
         this.items = items;
         this.value = selectedValue || '';
         this.placeholder = placeholder || 'Select...';
@@ -320,6 +324,10 @@ class CustomMultiSelect {
     constructor(selectElement, items, placeholder, renderTag) {
         this.select = selectElement;
         this.select.style.display = 'none';
+
+        if (this.select.nextElementSibling && this.select.nextElementSibling.classList.contains('custom-multiselect')) {
+            this.select.nextElementSibling.remove();
+        }
 
         this.items = items;
         this.placeholder = placeholder || 'Select...';
