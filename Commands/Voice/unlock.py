@@ -39,16 +39,16 @@ async def _do_vc_unlock(ctx: commands.Context, channel: discord.VoiceChannel | N
 async def vc_unlock_cmd(ctx: commands.Context, channel: discord.VoiceChannel = None, *, reason: str = "No reason provided"):
     await _do_vc_unlock(ctx, channel, reason)
 
+@vc_unlock_cmd.error
+async def vcunlock_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Manage Channels permission to unlock voice channels.", ephemeral=True)
+    else:
+        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+
 class VcUnlockCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    @vc_unlock_cmd.error
-    async def vcunlock_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Channels permission to unlock voice channels.", ephemeral=True)
-        else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
 class VcUnlockPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):

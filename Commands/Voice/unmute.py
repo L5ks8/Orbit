@@ -35,18 +35,18 @@ async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: s
 async def vc_unmute_cmd(ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
     await _do_vc_unmute(ctx, target, reason)
 
+@vc_unmute_cmd.error
+async def vcunmute_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Mute Members permission to voice unmute users.", ephemeral=True)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Usage: `-voice unmute <@member> [reason]`", ephemeral=True)
+    else:
+        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+
 class VcUnmuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    @vc_unmute_cmd.error
-    async def vcunmute_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Mute Members permission to voice unmute users.", ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-voice unmute <@member> [reason]`", ephemeral=True)
-        else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
 class VcUnmutePrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):

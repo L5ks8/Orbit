@@ -38,16 +38,16 @@ async def _do_vc_limit(ctx: commands.Context, limit: int, channel: discord.Voice
 async def vc_limit_cmd(ctx: commands.Context, limit: int, channel: discord.VoiceChannel = None):
     await _do_vc_limit(ctx, limit, channel)
 
+@vc_limit_cmd.error
+async def vclimit_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Manage Channels permission to set voice limits.", ephemeral=True)
+    else:
+        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+
 class VcLimitCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    @vc_limit_cmd.error
-    async def vclimit_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Channels permission to set voice limits.", ephemeral=True)
-        else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
 class VcLimitPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):

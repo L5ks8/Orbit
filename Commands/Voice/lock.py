@@ -39,16 +39,16 @@ async def _do_vc_lock(ctx: commands.Context, channel: discord.VoiceChannel | Non
 async def vc_lock_cmd(ctx: commands.Context, channel: discord.VoiceChannel = None, *, reason: str = "No reason provided"):
     await _do_vc_lock(ctx, channel, reason)
 
+@vc_lock_cmd.error
+async def vclock_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Manage Channels permission to lock voice channels.", ephemeral=True)
+    else:
+        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+
 class VcLockCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    @vc_lock_cmd.error
-    async def vclock_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Channels permission to lock voice channels.", ephemeral=True)
-        else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
 class VcLockPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):

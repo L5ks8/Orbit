@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice.voice import voice_group
@@ -35,18 +35,18 @@ async def _do_vc_move(ctx: commands.Context, target: discord.Member, channel: di
 async def vc_move_cmd(ctx: commands.Context, target: discord.Member, channel: discord.VoiceChannel, *, reason: str = "No reason provided"):
     await _do_vc_move(ctx, target, channel, reason)
 
+@vc_move_cmd.error
+async def move_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Move Members permission to move users.", ephemeral=True)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Usage: `-voice move <@member> <#channel> [reason]`", ephemeral=True)
+    else:
+        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+
 class MoveCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    @vc_move_cmd.error
-    async def move_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Move Members permission to move users.", ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-voice move <@member> <#channel> [reason]`", ephemeral=True)
-        else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
 class MovePrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):

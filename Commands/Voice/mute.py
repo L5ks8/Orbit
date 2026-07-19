@@ -38,18 +38,18 @@ async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str
 async def vc_mute_cmd(ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
     await _do_vc_mute(ctx, target, reason)
 
+@vc_mute_cmd.error
+async def vcmute_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Mute Members permission to voice mute users.", ephemeral=True)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Usage: `-voice mute <@member> [reason]`", ephemeral=True)
+    else:
+        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+
 class VcMuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    @vc_mute_cmd.error
-    async def vcmute_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Mute Members permission to voice mute users.", ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-voice mute <@member> [reason]`", ephemeral=True)
-        else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
 class VcMutePrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):

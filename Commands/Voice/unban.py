@@ -31,18 +31,18 @@ async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
 async def vc_unban_cmd(ctx: commands.Context, user: discord.User, *, reason: str = "No reason provided"):
     await _do_vc_unban(ctx, user, reason)
 
+@vc_unban_cmd.error
+async def vcunban_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Move Members permission to voice unban users.", ephemeral=True)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Usage: `-voice unban <@user> [reason]`", ephemeral=True)
+    else:
+        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+
 class VcUnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    @vc_unban_cmd.error
-    async def vcunban_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Move Members permission to voice unban users.", ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-voice unban <@user> [reason]`", ephemeral=True)
-        else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
 class VcUnbanPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):

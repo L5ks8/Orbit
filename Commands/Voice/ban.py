@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice._storage import add_to_vcban, is_vcbanned
@@ -57,15 +57,14 @@ class VcBanCommand(commands.Cog):
                 await member.edit(voice_channel=None, reason="User is Voice Banned on this server")
             except Exception:
                 pass
-
-    @vc_ban_cmd.error
-    async def vc_ban_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Move Members permission to voice ban users.", ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Use: `-voice ban <member> [reason]`", ephemeral=True)
-        else:
-            await ctx.send(f"Voice ban failed: {error}", ephemeral=True)
+@vc_ban_cmd.error
+async def vc_ban_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You need Move Members permission to voice ban users.", ephemeral=True)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Use: `-voice ban <member> [reason]`", ephemeral=True)
+    else:
+        await ctx.send(f"Voice ban failed: {error}", ephemeral=True)
 
 class VcBanPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
