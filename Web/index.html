@@ -10,6 +10,7 @@
     <title>Orbit Dashboard</title>
     <link rel="icon" type="image/png" href="/static/logo.png">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/style.css?v=18">
 <style>
     .nav-category {
@@ -377,6 +378,14 @@
                             </svg>
                         </span> Overview
                     </div>
+                    <div class="dash-nav-item" data-target="section-settings">
+                        <span class="nav-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span> Settings
+                    </div>
 
                     <!-- INTERACTION -->
                     <div class="nav-category">INTERACTION</div>
@@ -515,15 +524,105 @@
 
                     <!-- OVERVIEW SECTION -->
                     <div id="section-overview" class="dash-panel active">
-                        <div class="dash-stats-row">
-                            <div class="dash-stat-card">
-                                <div class="dash-stat-label">System Status</div>
-                                <div class="status-pill active"><span class="status-dot"></span> Online</div>
+                        <h3 style="margin-top: 0;">Overview</h3>
+                        
+                        <!-- Stat Cards -->
+                        <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #00A8FC; display: flex; align-items: center; justify-content: center; color: white;">
+                                        <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">New Messages</div>
+                                        <div style="color: #949BA4; font-size: 11px;">in the last 24h</div>
+                                    </div>
+                                </div>
+                                <div style="color: #F2F3F5; font-size: 24px; font-weight: 700;">115</div>
+                            </div>
+                            
+                            <div style="flex: 1; min-width: 200px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #F5A623; display: flex; align-items: center; justify-content: center; color: white;">
+                                        <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">Joins/Leaves</div>
+                                        <div style="color: #949BA4; font-size: 11px;">in the last 24h</div>
+                                    </div>
+                                </div>
+                                <div style="color: #F2F3F5; font-size: 24px; font-weight: 700;">2/1</div>
+                            </div>
+
+                            <div style="flex: 1; min-width: 200px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #8E44AD; display: flex; align-items: center; justify-content: center; color: white;">
+                                        <i data-lucide="users" style="width: 16px; height: 16px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">Total Members</div>
+                                    </div>
+                                </div>
+                                <div style="color: #F2F3F5; font-size: 24px; font-weight: 700;">3</div>
                             </div>
                         </div>
 
-                        <h3>Overview</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Welcome to the Orbit Dashboard. Select a module from the sidebar to configure your server.</p>
+                        <!-- Charts Section -->
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; color: #F2F3F5; font-weight: 600; margin-bottom: 8px;">Charts for</label>
+                            <select style="width: 100%; max-width: 300px; background: #1E1F22; border: 1px solid #313338; color: #DBDEE1; padding: 8px 12px; border-radius: 4px;">
+                                <option>Last 7 Days</option>
+                                <option>Last 30 Days</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                            <div style="flex: 1; min-width: 300px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Joins / Leaves</div>
+                                <canvas id="chart-joins" style="width: 100%; height: 200px;"></canvas>
+                            </div>
+                            <div style="flex: 1; min-width: 300px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                                <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Member Flow</div>
+                                <canvas id="chart-flow" style="width: 100%; height: 200px;"></canvas>
+                            </div>
+                        </div>
+                        <div style="background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
+                            <div style="color: #F2F3F5; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Message Count (excluding Bots)</div>
+                            <canvas id="chart-messages" style="width: 100%; height: 200px;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- SETTINGS SECTION -->
+                    <div id="section-settings" class="dash-panel" style="display: none;">
+                        <h3 style="margin-top: 0; font-size: 24px; font-weight: 700; margin-bottom: 24px;">Settings</h3>
+                        
+                        <div style="background: #1E1F22; border: 1px solid #313338; border-radius: 8px; margin-bottom: 24px;">
+                            <div style="padding: 16px; border-bottom: 1px solid #313338;">
+                                <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #F2F3F5;">Bot Managers</h4>
+                            </div>
+                            <div style="padding: 16px;">
+                                <label style="display: block; font-weight: 600; color: #F2F3F5; margin-bottom: 4px;">Bot Manager Roles</label>
+                                <p style="color: #949BA4; font-size: 12px; margin-top: 0; margin-bottom: 12px;">Roles that can access the Dashboard and reset XP.</p>
+                                <select id="settings_manager_roles" multiple class="select2-roles" style="width: 100%;">
+                                    <option value="">Select...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="background: #1E1F22; border: 1px solid #313338; border-radius: 8px;">
+                            <div style="padding: 16px; border-bottom: 1px solid #313338;">
+                                <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #F2F3F5;">Timezone</h4>
+                            </div>
+                            <div style="padding: 16px;">
+                                <label style="display: block; font-weight: 600; color: #F2F3F5; margin-bottom: 4px;">Bot Timezone</label>
+                                <p style="color: #949BA4; font-size: 12px; margin-top: 0; margin-bottom: 12px;">The timezone used for time-based features.</p>
+                                <select id="settings_timezone" style="width: 100%; background: #111214; border: 1px solid #313338; color: #DBDEE1; padding: 10px 12px; border-radius: 4px; appearance: none;">
+                                    <option value="UTC">UTC</option>
+                                    <option value="Europe/Berlin">Europe/Berlin</option>
+                                    <option value="America/New_York">America/New_York</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- WELCOME SECTION -->

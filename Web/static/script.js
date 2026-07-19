@@ -802,7 +802,32 @@ async function loadConfig(guildId, guildName, guildIcon) {
         globalChannels = data.channels || [];
         globalVoiceChannels = data.voice_channels || [];
 
-        // Populate normal selects (channels)
+        // Settings: Manager Roles
+        const settingsManagerRolesEl = document.getElementById('settings_manager_roles');
+        if (settingsManagerRolesEl) {
+            settingsManagerRolesEl.innerHTML = "";
+            globalRoles.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.name;
+                if (config.settings?.manager_roles?.includes(r.id)) opt.selected = true;
+                settingsManagerRolesEl.appendChild(opt);
+            });
+            new CustomMultiSelect(settingsManagerRolesEl, globalRoles, "Select...", (item) => `<span class="role-badge" style="border-color: ${item.color !== '#000000' ? item.color : '#4E5058'}"><span class="role-dot" style="background-color: ${item.color !== '#000000' ? item.color : '#949BA4'}"></span>${item.name}</span>`);
+        }
+
+        if (config.settings?.timezone) {
+            document.getElementById('settings_timezone').value = config.settings.timezone;
+        }
+
+        // Initialize Charts
+        if (window.Chart) {
+            setTimeout(() => {
+                initCharts();
+            }, 500);
+        }
+
+        // --- WELCOME ---
         const welcomeSelect = document.getElementById('welcome_channel_id');
         welcomeSelect.innerHTML = '<option value="">None</option>';
         const goodbyeSelect = document.getElementById('goodbye_channel_id');
@@ -1806,6 +1831,10 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
     const payload = {
+        settings: {
+            manager_roles: Array.from(document.getElementById('settings_manager_roles').selectedOptions).map(o => o.value),
+            timezone: document.getElementById('settings_timezone').value
+        },
         welcome: {
             enabled: document.getElementById('welcome_enabled').checked,
             channel_id: document.getElementById('welcome_channel_id').value,
@@ -2918,4 +2947,82 @@ if (btnSendEmbed) {
         btnSendEmbed.disabled = false;
         btnSendEmbed.textContent = 'Send Message';
     });
+}
+
+// ==========================================
+// CHARTS (Chart.js)
+// ==========================================
+let chartsInitialized = false;
+function initCharts() {
+    if (chartsInitialized) return;
+    chartsInitialized = true;
+    
+    Chart.defaults.color = '#DBDEE1';
+    Chart.defaults.font.family = "'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+    
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: '#313338' },
+                ticks: { stepSize: 1 }
+            },
+            x: {
+                grid: { display: false }
+            }
+        }
+    };
+
+    const labels = ['2026-07-12', '2026-07-13', '2026-07-14', '2026-07-15', '2026-07-16', '2026-07-17', '2026-07-18'];
+
+    // Joins / Leaves
+    const ctxJoins = document.getElementById('chart-joins');
+    if (ctxJoins) {
+        new Chart(ctxJoins, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Joins', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#23A559', backgroundColor: 'rgba(35, 165, 89, 0.1)', fill: true, tension: 0.4 },
+                    { label: 'Leaves', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#DA373C', backgroundColor: 'rgba(218, 55, 60, 0.1)', fill: true, tension: 0.4 }
+                ]
+            },
+            options: commonOptions
+        });
+    }
+
+    // Member Flow
+    const ctxFlow = document.getElementById('chart-flow');
+    if (ctxFlow) {
+        new Chart(ctxFlow, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Flow', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#5865F2', backgroundColor: 'rgba(88, 101, 242, 0.1)', fill: true, tension: 0.4 }
+                ]
+            },
+            options: commonOptions
+        });
+    }
+
+    // Messages
+    const ctxMessages = document.getElementById('chart-messages');
+    if (ctxMessages) {
+        new Chart(ctxMessages, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Messages', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#F47FFF', backgroundColor: 'rgba(244, 127, 255, 0.1)', fill: true, tension: 0.4 }
+                ]
+            },
+            options: commonOptions
+        });
+    }
 }
