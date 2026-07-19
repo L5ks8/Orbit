@@ -770,80 +770,111 @@ class WebDashboard:
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
                 
-            embed = discord.Embed()
+            mode = data.get("mode", "normal")
+            components = data.get("components", [])
+            content_text = data.get("content", "").strip()
             
-            # Title & Desc
             title = data.get("title", "").strip()
             desc = data.get("description", "").strip()
-            if title: embed.title = title
-            if desc: embed.description = desc
             url = data.get("url", "").strip()
-            if url: embed.url = url
-            
-            # Color
             color = data.get("color", "")
-            if color:
-                try:
-                    embed.color = discord.Color(int(color.replace("#", ""), 16))
-                except Exception:
-                    pass
-            
-            # Author
             author_name = data.get("author_name", "").strip()
             author_icon = data.get("author_icon", "").strip()
-            if author_name:
-                kwargs = {"name": author_name}
-                if author_icon: kwargs["icon_url"] = author_icon
-                embed.set_author(**kwargs)
-                
-            # Media
             image = data.get("image", "").strip()
             thumbnail = data.get("thumbnail", "").strip()
-            if image: embed.set_image(url=image)
-            if thumbnail: embed.set_thumbnail(url=thumbnail)
-            
-            # Footer
             footer_text = data.get("footer_text", "").strip()
             footer_icon = data.get("footer_icon", "").strip()
-            if footer_text:
-                kwargs = {"text": footer_text}
-                if footer_icon: kwargs["icon_url"] = footer_icon
-                embed.set_footer(**kwargs)
-                
-            # Fields
             fields = data.get("fields", [])
-            for f in fields:
-                fname = f.get("name", "").strip() or "​"
-                fvalue = f.get("value", "").strip() or "​"
-                finline = f.get("inline", False)
-                embed.add_field(name=fname, value=fvalue, inline=finline)
-                
-            content = data.get("content", "").strip()
             
-            # Must have at least content or something in the embed
-            components = data.get("components", [])
-            
-            if not content and not title and not desc and not author_name and not image and not footer_text and not fields:
-                return web.json_response({"error": "Message cannot be completely empty"}, status=400)
-                
             msg_kwargs = {}
-            if content: msg_kwargs["content"] = content
-            if embed.title or embed.description or embed.author or embed.image or embed.footer or embed.fields:
-                msg_kwargs["embed"] = embed
+            if content_text:
+                msg_kwargs["content"] = content_text
+
+            if mode == "components":
+                from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+                view = LayoutView(timeout=None)
+                elements = []
                 
-            if components:
-                view = discord.ui.View(timeout=None)
-                for comp in components:
-                    if comp.get("style") == 5: # URL Button
-                        url = comp.get("url")
-                        label = comp.get("label", "Link")
-                        if url and url.startswith("http"):
-                            view.add_item(discord.ui.Button(style=discord.ButtonStyle.link, url=url, label=label))
+                if author_name:
+                    elements.append(TextDisplay(content=f"**{author_name}**"))
+                if title:
+                    elements.append(TextDisplay(content=f"### {title}"))
+                if desc:
+                    elements.append(TextDisplay(content=desc))
+                    
+                if fields:
+                    if elements: elements.append(Separator(spacing=discord.SeparatorSpacing.small))
+                    for f in fields:
+                        fname = f.get("name", "").strip() or "​"
+                        fvalue = f.get("value", "").strip() or "​"
+                        elements.append(TextDisplay(content=f"**{fname}**\\n{fvalue}"))
+                        
+                if footer_text:
+                    if elements: elements.append(Separator(spacing=discord.SeparatorSpacing.small))
+                    elements.append(TextDisplay(content=f"-# {footer_text}"))
+                    
+                if elements:
+                    view.add_item(Container(*elements))
+                    
+                if components:
+                    for comp in components:
+                        if comp.get("style") == 5: # URL Button
+                            url_str = comp.get("url")
+                            label = comp.get("label", "Link")
+                            if url_str and url_str.startswith("http"):
+                                view.add_item(ActionRow(Button(style=discord.ButtonStyle.link, url=url_str, label=label)))
+                                
                 if len(view.children) > 0:
                     msg_kwargs["view"] = view
-                
-            await channel.send(**msg_kwargs)
-            return web.json_response({"success": True})
+                    
+                if not content_text and not elements:
+                    return web.json_response({"error": "Message cannot be completely empty"}, status=400)
+                    
+                await channel.send(**msg_kwargs)
+                return web.json_response({"success": True})
+            else:
+                embed = discord.Embed()
+                if title: embed.title = title
+                if desc: embed.description = desc
+                if url: embed.url = url
+                if color:
+                    try: embed.color = discord.Color(int(color.replace("#", ""), 16))
+                    except Exception: pass
+                if author_name:
+                    kwargs = {"name": author_name}
+                    if author_icon: kwargs["icon_url"] = author_icon
+                    embed.set_author(**kwargs)
+                if image: embed.set_image(url=image)
+                if thumbnail: embed.set_thumbnail(url=thumbnail)
+                if footer_text:
+                    kwargs = {"text": footer_text}
+                    if footer_icon: kwargs["icon_url"] = footer_icon
+                    embed.set_footer(**kwargs)
+                for f in fields:
+                    fname = f.get("name", "").strip() or "​"
+                    fvalue = f.get("value", "").strip() or "​"
+                    finline = f.get("inline", False)
+                    embed.add_field(name=fname, value=fvalue, inline=finline)
+                    
+                if embed.title or embed.description or embed.author or embed.image or embed.footer or embed.fields:
+                    msg_kwargs["embed"] = embed
+                    
+                if components:
+                    view = discord.ui.View(timeout=None)
+                    for comp in components:
+                        if comp.get("style") == 5:
+                            url_str = comp.get("url")
+                            label = comp.get("label", "Link")
+                            if url_str and url_str.startswith("http"):
+                                view.add_item(discord.ui.Button(style=discord.ButtonStyle.link, url=url_str, label=label))
+                    if len(view.children) > 0:
+                        msg_kwargs["view"] = view
+                        
+                if not content_text and "embed" not in msg_kwargs:
+                    return web.json_response({"error": "Message cannot be completely empty"}, status=400)
+                    
+                await channel.send(**msg_kwargs)
+                return web.json_response({"success": True})
         except discord.Forbidden:
             return web.json_response({"error": "Bot missing permissions to send message in that channel"}, status=403)
         except Exception as e:
