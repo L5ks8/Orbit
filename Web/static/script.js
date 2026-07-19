@@ -2188,10 +2188,45 @@ document.getElementById('btn-add-channel-booster')?.addEventListener('click', ()
 });
 
 
-// ----------------------------------------------------
-// EMBED BUILDER LOGIC
-// ----------------------------------------------------
-let embedFields = [];
+
+// --- Unsaved Changes Logic ---
+let hasUnsavedChanges = false;
+const unsavedBar = document.getElementById('unsaved-bar');
+const btnCancelChanges = document.getElementById('btn-cancel-changes');
+
+function setDirty(dirty) {
+    hasUnsavedChanges = dirty;
+    if (unsavedBar) {
+        unsavedBar.style.display = dirty ? 'flex' : 'none';
+    }
+}
+
+// Track inputs
+document.querySelectorAll('input, textarea, select').forEach(el => {
+    el.addEventListener('input', () => setDirty(true));
+    el.addEventListener('change', () => setDirty(true));
+});
+
+if (btnCancelChanges) {
+    btnCancelChanges.addEventListener('click', () => {
+        setDirty(false);
+        // Reload config to revert changes
+        if (currentGuildId) loadConfig(currentGuildId);
+    });
+}
+
+// --- NEW EMBED BUILDER LOGIC ---
+
+window.promptUrl = function(inputId) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    const url = prompt("Enter Image URL (HTTPS only):", el.value);
+    if (url !== null) {
+        el.value = url;
+        updateEmbedPreview();
+        setDirty(true);
+    }
+}
 
 function renderEmbedFields() {
     const container = document.getElementById('embed-fields-container');
@@ -2199,52 +2234,144 @@ function renderEmbedFields() {
     container.innerHTML = '';
     embedFields.forEach((field, index) => {
         const div = document.createElement('div');
-        div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 6px; margin-bottom: 8px; position: relative;';
+        div.style.cssText = 'border: 1px solid #313338; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 8px;';
+        
+        // Inline icon logic
+        const inlineBg = field.inline ? '#006CE7' : 'transparent';
+        const inlineBorder = field.inline ? 'none' : '1px solid #4E5058';
+        const inlineColor = field.inline ? 'white' : '#949BA4';
+
         div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">Field ${index + 1}</span>
-                <button type="button" class="btn-danger" style="padding: 2px 6px; height: auto;" onclick="removeEmbedField(${index})">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="flex: 1; border: 1px solid #313338; border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <input type="text" placeholder="Fieldname" value="${field.name}" oninput="updateEmbedField(${index}, 'name', this.value); updateCount(this, 256);" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0;">
+                    <span style="font-size: 10px; color: #949BA4;">${field.name.length}/256</span>
+                </div>
+                
+                <button type="button" class="btn" title="Toggle Inline" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: ${inlineBg}; border: ${inlineBorder}; color: ${inlineColor}; border-radius: 4px;" onclick="updateEmbedField(${index}, 'inline', !${field.inline})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+                </button>
+                
+                <button type="button" class="btn" title="Edit Properties" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #4E5058; color: #949BA4; border-radius: 4px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                </button>
+                
+                <button type="button" class="btn-danger" title="Delete Field" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px;" onclick="removeEmbedField(${index})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </div>
-            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <input type="text" placeholder="Name" value="${field.name}" oninput="updateEmbedField(${index}, 'name', this.value)" style="flex:1;">
-                <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; margin: 0; cursor: pointer;">
-                    <input type="checkbox" ${field.inline ? 'checked' : ''} onchange="updateEmbedField(${index}, 'inline', this.checked)"> Inline
-                </label>
+            
+            <div style="border: 1px solid #313338; border-radius: 4px; padding: 8px 12px;">
+                <textarea rows="2" placeholder="Fieldwert" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none;" oninput="updateEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
+                <div style="text-align: right; font-size: 10px; color: #949BA4;">${field.value.length}/1024</div>
             </div>
-            <textarea rows="2" placeholder="Value" oninput="updateEmbedField(${index}, 'value', this.value)">${field.value}</textarea>
         `;
         container.appendChild(div);
     });
     updateEmbedPreview();
+    lucide.createIcons();
 }
+
+window.updateCount = function(el, max) {
+    const countEl = el.nextElementSibling;
+    if (countEl && countEl.tagName === 'DIV' || countEl.tagName === 'SPAN') {
+        countEl.textContent = `${el.value.length}/${max}`;
+    }
+}
+
+// Attach character count updaters
+const attachCount = (id, max) => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('input', () => {
+            const countEl = document.getElementById(`${id}_count`);
+            if (countEl) countEl.textContent = `${el.value.length}/${max}`;
+        });
+    }
+};
+attachCount('embed_content', 2000);
+attachCount('embed_author_name', 256);
+attachCount('embed_title', 256);
+attachCount('embed_description', 4096);
+attachCount('embed_footer_text', 2048);
+
+
+// Components v2 Mode Switch
+const modeRadios = document.querySelectorAll('input[name="embed_mode"]');
+const compSection = document.getElementById('components-v2-section');
+modeRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        if (e.target.value === 'components') {
+            compSection.style.display = 'block';
+        } else {
+            compSection.style.display = 'none';
+        }
+    });
+});
+
+let embedComponents = [];
+
+function renderComponents() {
+    const cont = document.getElementById('components-container');
+    if (!cont) return;
+    cont.innerHTML = '';
+    embedComponents.forEach((c, i) => {
+        const d = document.createElement('div');
+        d.style.cssText = 'background: #4E5058; padding: 4px 12px; border-radius: 4px; display: flex; align-items: center; gap: 8px; color: white; font-size: 14px;';
+        d.innerHTML = `
+            <span><i data-lucide="link" style="width:14px; height:14px;"></i> ${c.label}</span>
+            <i data-lucide="x" style="width:14px; height:14px; cursor: pointer;" onclick="embedComponents.splice(${i}, 1); renderComponents(); setDirty(true);"></i>
+        `;
+        cont.appendChild(d);
+    });
+    lucide.createIcons();
+}
+
+const btnAddComp = document.getElementById('btn-add-component');
+if (btnAddComp) {
+    btnAddComp.addEventListener('click', () => {
+        const label = prompt("Button Label:");
+        if (!label) return;
+        const url = prompt("Button URL (HTTPS only):");
+        if (!url) return;
+        embedComponents.push({ label, url, style: 5 }); // 5 is URL button
+        renderComponents();
+        setDirty(true);
+    });
+}
+
+// ----------------------------------------------------
+// OLD LOGIC HOOKUPS
+// ----------------------------------------------------
+let embedFields = [];
 
 window.addEmbedField = function() {
     if (embedFields.length >= 25) return showToast('Maximum 25 fields allowed');
     embedFields.push({ name: '', value: '', inline: false });
     renderEmbedFields();
+    setDirty(true);
 }
 
 window.removeEmbedField = function(index) {
     embedFields.splice(index, 1);
     renderEmbedFields();
+    setDirty(true);
 }
 
 window.updateEmbedField = function(index, key, value) {
     embedFields[index][key] = value;
     updateEmbedPreview();
+    setDirty(true);
 }
 
 function updateEmbedPreview() {
+    // Keep existing preview code ...
     if (!document.getElementById('section-embedbuilder')) return;
     
-    // Get values
     const content = document.getElementById('embed_content').value;
     const authorName = document.getElementById('embed_author_name').value;
     const authorIcon = document.getElementById('embed_author_icon').value;
     const title = document.getElementById('embed_title').value;
-    const url = document.getElementById('embed_url').value;
     const desc = document.getElementById('embed_description').value;
     const color = document.getElementById('embed_color').value || '#5865F2';
     const image = document.getElementById('embed_image').value;
@@ -2252,7 +2379,7 @@ function updateEmbedPreview() {
     const footerText = document.getElementById('embed_footer_text').value;
     const footerIcon = document.getElementById('embed_footer_icon').value;
     
-    // Update Content
+    // ... [Copy-paste from previous state because regex will nuke it] ...
     document.getElementById('preview-content').textContent = content;
     document.getElementById('preview-content').style.display = content ? 'block' : 'none';
     
@@ -2263,7 +2390,6 @@ function updateEmbedPreview() {
         embedEl.style.display = 'block';
         embedEl.style.borderLeftColor = color;
         
-        // Author
         const authorEl = document.getElementById('preview-author');
         if (authorName) {
             authorEl.style.display = 'flex';
@@ -2271,47 +2397,20 @@ function updateEmbedPreview() {
             const aIcon = document.getElementById('preview-author-icon');
             if (authorIcon) { aIcon.src = authorIcon; aIcon.style.display = 'block'; }
             else { aIcon.style.display = 'none'; }
-        } else {
-            authorEl.style.display = 'none';
-        }
+        } else { authorEl.style.display = 'none'; }
         
-        // Title
         const titleEl = document.getElementById('preview-title');
-        if (title) {
-            titleEl.style.display = 'block';
-            titleEl.textContent = title;
-        } else {
-            titleEl.style.display = 'none';
-        }
+        if (title) { titleEl.style.display = 'block'; titleEl.textContent = title; } else { titleEl.style.display = 'none'; }
         
-        // Desc
         const descEl = document.getElementById('preview-description');
-        if (desc) {
-            descEl.style.display = 'block';
-            descEl.textContent = desc;
-        } else {
-            descEl.style.display = 'none';
-        }
+        if (desc) { descEl.style.display = 'block'; descEl.textContent = desc; } else { descEl.style.display = 'none'; }
         
-        // Image
         const imageEl = document.getElementById('preview-image');
-        if (image) {
-            imageEl.style.display = 'block';
-            imageEl.src = image;
-        } else {
-            imageEl.style.display = 'none';
-        }
+        if (image) { imageEl.style.display = 'block'; imageEl.src = image; } else { imageEl.style.display = 'none'; }
         
-        // Thumbnail
         const thumbCont = document.getElementById('preview-thumbnail-container');
-        if (thumbnail) {
-            thumbCont.style.display = 'block';
-            document.getElementById('preview-thumbnail').src = thumbnail;
-        } else {
-            thumbCont.style.display = 'none';
-        }
+        if (thumbnail) { thumbCont.style.display = 'block'; document.getElementById('preview-thumbnail').src = thumbnail; } else { thumbCont.style.display = 'none'; }
         
-        // Footer
         const footerEl = document.getElementById('preview-footer');
         if (footerText) {
             footerEl.style.display = 'flex';
@@ -2319,11 +2418,8 @@ function updateEmbedPreview() {
             const fIcon = document.getElementById('preview-footer-icon');
             if (footerIcon) { fIcon.src = footerIcon; fIcon.style.display = 'block'; }
             else { fIcon.style.display = 'none'; }
-        } else {
-            footerEl.style.display = 'none';
-        }
+        } else { footerEl.style.display = 'none'; }
         
-        // Fields
         const fieldsCont = document.getElementById('preview-fields');
         fieldsCont.innerHTML = '';
         if (embedFields.length > 0) {
@@ -2332,47 +2428,32 @@ function updateEmbedPreview() {
                 const fd = document.createElement('div');
                 fd.style.minWidth = f.inline ? '30%' : '100%';
                 fd.style.flex = f.inline ? '1' : '0 0 100%';
-                fd.innerHTML = `
-                    <div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div>
-                    <div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${f.value || '​'}</div>
-                `;
+                fd.innerHTML = `<div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div><div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${f.value || '​'}</div>`;
                 fieldsCont.appendChild(fd);
             });
-        } else {
-            fieldsCont.style.display = 'none';
-        }
-        
-    } else {
-        embedEl.style.display = 'none';
-    }
+        } else { fieldsCont.style.display = 'none'; }
+    } else { embedEl.style.display = 'none'; }
 }
 
-// Bind events for preview update
-const embedInputs = ['embed_content', 'embed_author_name', 'embed_author_icon', 'embed_title', 'embed_url', 'embed_description', 'embed_color', 'embed_image', 'embed_thumbnail', 'embed_footer_text', 'embed_footer_icon'];
+const embedInputs = ['embed_content', 'embed_author_name', 'embed_title', 'embed_description', 'embed_footer_text'];
 embedInputs.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', updateEmbedPreview);
 });
 
-// Color picker sync
-const cp = document.getElementById('embed_color_picker');
-const ct = document.getElementById('embed_color');
-if (cp && ct) {
-    cp.addEventListener('input', (e) => { ct.value = e.target.value; updateEmbedPreview(); });
-    ct.addEventListener('input', (e) => { cp.value = e.target.value; updateEmbedPreview(); });
-}
-
-// Add Field button
 const btnAddField = document.getElementById('btn-add-embed-field');
 if (btnAddField) btnAddField.addEventListener('click', window.addEmbedField);
 
-// Send Embed Action
-const btnSendEmbed = document.getElementById('btn-send-embed');
+const btnSendEmbed = document.getElementById('btn-embed-send');
 if (btnSendEmbed) {
     btnSendEmbed.addEventListener('click', async () => {
         const channelId = document.getElementById('embed_channel_id').value;
         if (!channelId) return showToast("Please select a destination channel");
         
+        let mode = 'normal';
+        const modeRadio = document.querySelector('input[name="embed_mode"]:checked');
+        if (modeRadio) mode = modeRadio.value;
+
         const payload = {
             channel_id: channelId,
             content: document.getElementById('embed_content').value,
@@ -2386,11 +2467,12 @@ if (btnSendEmbed) {
             thumbnail: document.getElementById('embed_thumbnail').value,
             footer_text: document.getElementById('embed_footer_text').value,
             footer_icon: document.getElementById('embed_footer_icon').value,
-            fields: embedFields
+            fields: embedFields,
+            components: mode === 'components' ? embedComponents : []
         };
         
         btnSendEmbed.disabled = true;
-        btnSendEmbed.innerHTML = 'Sending...';
+        btnSendEmbed.textContent = 'Sending...';
         
         try {
             const res = await fetch(`/api/action/${currentGuildId}/send_embed`, {
@@ -2400,19 +2482,17 @@ if (btnSendEmbed) {
             });
             const text = await res.text();
             if (res.ok) {
-                showToast("Embed sent successfully!");
-                // Clear form optionally, but we leave it so they can resend
+                showToast("Message sent successfully!");
             } else {
                 let err = text;
                 try { err = JSON.parse(text).error || text; } catch(e){}
                 showToast("Error: " + err);
             }
         } catch (e) {
-            showToast("Failed to send embed.");
+            showToast("Failed to send message.");
         }
         
         btnSendEmbed.disabled = false;
-        btnSendEmbed.innerHTML = '<i data-lucide="send" style="width:16px; height:16px; margin-right:8px; vertical-align:middle;"></i> Send to Discord';
-        lucide.createIcons({ root: btnSendEmbed });
+        btnSendEmbed.textContent = 'Send Message';
     });
 }

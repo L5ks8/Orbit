@@ -821,6 +821,8 @@ class WebDashboard:
             content = data.get("content", "").strip()
             
             # Must have at least content or something in the embed
+            components = data.get("components", [])
+            
             if not content and not title and not desc and not author_name and not image and not footer_text and not fields:
                 return web.json_response({"error": "Message cannot be completely empty"}, status=400)
                 
@@ -828,6 +830,17 @@ class WebDashboard:
             if content: msg_kwargs["content"] = content
             if embed.title or embed.description or embed.author or embed.image or embed.footer or embed.fields:
                 msg_kwargs["embed"] = embed
+                
+            if components:
+                view = discord.ui.View(timeout=None)
+                for comp in components:
+                    if comp.get("style") == 5: # URL Button
+                        url = comp.get("url")
+                        label = comp.get("label", "Link")
+                        if url and url.startswith("http"):
+                            view.add_item(discord.ui.Button(style=discord.ButtonStyle.link, url=url, label=label))
+                if len(view.children) > 0:
+                    msg_kwargs["view"] = view
                 
             await channel.send(**msg_kwargs)
             return web.json_response({"success": True})
