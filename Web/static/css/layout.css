@@ -164,8 +164,12 @@
 
 /* ===== LANDING PAGE ===== */
 .landing-wrapper {
-    position: absolute; top: 56px; left: 0; width: 100%; min-height: calc(100vh - 56px);
-    overflow-x: hidden; background: var(--bg-base);
+    margin-top: -32px; /* Negate container padding */
+    margin-left: calc(50% - 50vw);
+    width: 100vw;
+    min-height: calc(100vh - 56px);
+    overflow-x: hidden;
+    background: var(--bg-base);
 }
 
 /* --- Dot grid background for hero --- */
