@@ -778,11 +778,17 @@ document.getElementById('btn-add-auto-reaction').addEventListener('click', () =>
 });
 
 // LOAD CONFIGURATION
+let currentGuildName = '';
+let currentGuildIcon = '';
+
 async function loadConfig(guildId, guildName, guildIcon) {
     currentGuildId = guildId;
-    document.getElementById('config-server-name').innerText = guildName;
-    const iconUrl = guildIcon ? `https://cdn.discordapp.com/icons/${guildId}/${guildIcon}.png` : '';
-    document.getElementById('sidebar-server-icon').innerHTML = iconUrl ? `<img src="${iconUrl}">` : guildName.charAt(0);
+    if (guildName !== undefined) currentGuildName = guildName;
+    if (guildIcon !== undefined) currentGuildIcon = guildIcon;
+    
+    document.getElementById('config-server-name').innerText = currentGuildName;
+    const iconUrl = currentGuildIcon ? `https://cdn.discordapp.com/icons/${guildId}/${currentGuildIcon}.png` : '';
+    document.getElementById('sidebar-server-icon').innerHTML = iconUrl ? `<img src="${iconUrl}">` : (currentGuildName?.charAt(0) || '');
     showView('config');
 
     document.getElementById('config-layout').style.display = 'none';
@@ -806,6 +812,9 @@ async function loadConfig(guildId, guildName, guildIcon) {
         if (window.Chart) {
             setTimeout(() => {
                 initCharts();
+                if (typeof fetchAndRenderStats === 'function') {
+                    fetchAndRenderStats(document.getElementById('chart_days_select')?.value || 7);
+                }
             }, 500);
         }
 
@@ -1968,6 +1977,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
 
         if (res.ok) {
             showToast('Settings saved successfully!');
+            setDirty(false);
         } else {
             const data = await res.json();
             showToast('Error: ' + (data.error || 'Unknown error'));
@@ -2232,6 +2242,7 @@ function setDirty(dirty) {
 
 // Track inputs
 document.querySelectorAll('input, textarea, select').forEach(el => {
+    if (el.id === 'chart_days_select') return;
     el.addEventListener('input', () => setDirty(true));
     el.addEventListener('change', () => setDirty(true));
 });
@@ -3001,6 +3012,25 @@ const customTooltip = (context) => {
     tooltipEl.style.top = position.top + window.scrollY + tooltipModel.caretY - tooltipEl.offsetHeight - 15 + 'px';
 };
 
+const verticalLinePlugin = {
+    id: 'verticalLine',
+    afterDraw: chart => {
+        if (chart.tooltip?._active?.length) {
+            let x = chart.tooltip._active[0].element.x;
+            let yAxis = chart.scales.y;
+            let ctx = chart.ctx;
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, yAxis.top);
+            ctx.lineTo(x, yAxis.bottom);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#DBDEE1';
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+};
+
 const commonChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -3013,7 +3043,8 @@ const commonChartOptions = {
         tooltip: {
             enabled: false,
             external: customTooltip
-        }
+        },
+        verticalLine: true
     },
     scales: {
         y: {
@@ -3026,6 +3057,8 @@ const commonChartOptions = {
         }
     }
 };
+
+Chart.register(verticalLinePlugin);
 
 function initCharts() {
     if (chartsInitialized) return;
