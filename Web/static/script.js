@@ -802,24 +802,6 @@ async function loadConfig(guildId, guildName, guildIcon) {
         globalChannels = data.channels || [];
         globalVoiceChannels = data.voice_channels || [];
 
-        // Settings: Manager Roles
-        const settingsManagerRolesEl = document.getElementById('settings_manager_roles');
-        if (settingsManagerRolesEl) {
-            settingsManagerRolesEl.innerHTML = "";
-            globalRoles.forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r.id;
-                opt.textContent = r.name;
-                if (config.settings?.manager_roles?.includes(r.id)) opt.selected = true;
-                settingsManagerRolesEl.appendChild(opt);
-            });
-            new CustomMultiSelect(settingsManagerRolesEl, globalRoles, "Select...", (item) => `<span class="role-badge" style="border-color: ${item.color !== '#000000' ? item.color : '#4E5058'}"><span class="role-dot" style="background-color: ${item.color !== '#000000' ? item.color : '#949BA4'}"></span>${item.name}</span>`);
-        }
-
-        if (config.settings?.timezone) {
-            document.getElementById('settings_timezone').value = config.settings.timezone;
-        }
-
         // Initialize Charts
         if (window.Chart) {
             setTimeout(() => {
@@ -862,6 +844,24 @@ async function loadConfig(guildId, guildName, guildIcon) {
         // Set values
         const config = data.config;
         currentPermissions = data.permissions || {};
+
+        // Settings: Manager Roles
+        const settingsManagerRolesEl = document.getElementById('settings_manager_roles');
+        if (settingsManagerRolesEl) {
+            settingsManagerRolesEl.innerHTML = "";
+            globalRoles.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.name;
+                if (config.settings?.manager_roles?.includes(r.id)) opt.selected = true;
+                settingsManagerRolesEl.appendChild(opt);
+            });
+            new CustomMultiSelect(settingsManagerRolesEl, globalRoles, "Select...", (item) => `<span class="role-badge" style="border-color: ${item.color !== '#000000' ? item.color : '#4E5058'}"><span class="role-dot" style="background-color: ${item.color !== '#000000' ? item.color : '#949BA4'}"></span>${item.name}</span>`);
+        }
+
+        if (config.settings?.timezone) {
+            document.getElementById('settings_timezone').value = config.settings.timezone;
+        }
 
         // Welcome
         if (!currentPermissions.can_channels) lockSection('section-welcome', 'Manage Channels');
