@@ -1,4 +1,4 @@
-﻿import math
+import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
@@ -27,7 +27,7 @@ class AllRolesLayout(LayoutView):
 
         lines = []
         for index, r in enumerate(current_roles, start=start_idx + 1):
-            lines.append(f"`{index}.` {r.mention} â€” ID: `{r.id}` | Members: `{len(r.members)}`")
+            lines.append(f"`{index}.` {r.mention} - ID: `{r.id}` | Members: `{len(r.members)}`")
 
         roles_text = "\n".join(lines) if lines else "No roles found on this page."
         header_content = f"### Server Roles List (Page {self.page} of {self.total_pages})\n**Total Roles:** `{len(self.roles)}` on **{self.guild.name}**"
