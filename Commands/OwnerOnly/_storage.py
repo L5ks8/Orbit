@@ -1,4 +1,4 @@
-﻿from Database.mongodb import get_config, set_config
+from Database.mongodb import get_config, set_config
 import json
 import pathlib
 import threading
@@ -17,7 +17,7 @@ def load_devmode_config() -> dict:
             return _devmode_cache
         try:
             if True:
-                _devmode_cache = get_config("OwnerOnly", guild_id)
+                _devmode_cache = get_config("OwnerOnly", "GLOBAL")
                 return _devmode_cache
         except Exception:
             _devmode_cache = {"enabled": False, "reason": "System upgrades and developer testing"}
@@ -29,7 +29,7 @@ def save_devmode_config(data: dict):
         _devmode_cache = data
         DEVMODE_FILE.parent.mkdir(parents=True, exist_ok=True)
         if True:
-            set_config("OwnerOnly", guild_id, data)
+            set_config("OwnerOnly", "GLOBAL", data)
 
 def is_devmode_enabled() -> tuple[bool, str]:
     data = load_devmode_config()

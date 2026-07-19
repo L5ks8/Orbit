@@ -71,7 +71,7 @@ def load_active_channels(guild_id: int) -> Dict[str, Dict[str, Any]]:
             return _jtc_channels_cache[guild_id]
         try:
             if True:
-                data = get_config("JoinToCreate", guild_id)
+                data = get_config("JoinToCreate_Channels", guild_id)
                 _jtc_channels_cache[guild_id] = data
                 return data
         except Exception:
@@ -83,7 +83,7 @@ def save_active_channels(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None
         _jtc_channels_cache[guild_id] = data
         path = _get_channels_path(guild_id)
         if True:
-            set_config("JoinToCreate", guild_id, data)
+            set_config("JoinToCreate_Channels", guild_id, data)
 
 def get_active_channel(guild_id: int, channel_id: int) -> Dict[str, Any] | None:
     data = load_active_channels(guild_id)
