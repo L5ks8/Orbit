@@ -1673,6 +1673,20 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     btn.innerText = 'Saving...';
     btn.disabled = true;
 
+    // Check if we are currently in the Message Builder view
+    const msgBuilderView = document.getElementById('messages-builder-view');
+    if (msgBuilderView && msgBuilderView.style.display !== 'none') {
+        try {
+            await window.saveCurrentCustomMessage();
+        } catch(err) {
+            console.error(err);
+        } finally {
+            btn.innerText = 'Save Changes';
+            btn.disabled = false;
+        }
+        return; // Prevent saving global config when just editing a message
+    }
+
     // Update AutoMod global options
     currentAutomodConfig.exempt_channels = Array.from(document.getElementById('automod_global_channels').selectedOptions).map(o => o.value);
     currentAutomodConfig.exempt_roles = Array.from(document.getElementById('automod_global_roles').selectedOptions).map(o => o.value);
@@ -2321,7 +2335,7 @@ function renderComponents() {
         d.style.cssText = 'background: #4E5058; padding: 4px 12px; border-radius: 4px; display: flex; align-items: center; gap: 8px; color: white; font-size: 14px;';
         d.innerHTML = `
             <span><i data-lucide="link" style="width:14px; height:14px;"></i> ${c.label}</span>
-            <i data-lucide="x" style="width:14px; height:14px; cursor: pointer;" onclick="embedComponents.splice(${i}, 1); renderComponents(); setDirty(true);"></i>
+            <i data-lucide="x" style="width:14px; height:14px; cursor: pointer;" onclick="embedComponents.splice(${i}, 1); renderComponents(); updateEmbedPreview(); setDirty(true);"></i>
         `;
         cont.appendChild(d);
     });
@@ -2337,6 +2351,7 @@ if (btnAddComp) {
         if (!url) return;
         embedComponents.push({ label, url, style: 5 }); // 5 is URL button
         renderComponents();
+        updateEmbedPreview();
         setDirty(true);
     });
 }
@@ -2488,30 +2503,20 @@ function updateDropBackgrounds() {
 const fileInput = document.getElementById('file-upload-input');
 let currentUploadTarget = null;
 
+window.pendingMessageUploads = {};
+
 async function uploadFile(file, targetInputId) {
     if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
     
-    showToast("Uploading image...");
-    try {
-        const res = await fetch(`/api/upload/image`, {
-            method: 'POST',
-            body: formData
-        });
-        const data = await res.json();
-        if (data.success && data.url) {
-            document.getElementById(targetInputId).value = data.url;
-            updateDropBackgrounds();
-            updateEmbedPreview();
-            setDirty(true);
-            showToast("Upload successful!");
-        } else {
-            showToast("Upload failed: " + (data.error || "Unknown"));
-        }
-    } catch(e) {
-        showToast("Upload failed.");
-    }
+    // Defer the upload until save
+    window.pendingMessageUploads[targetInputId] = file;
+    const blobUrl = URL.createObjectURL(file);
+    document.getElementById(targetInputId).value = blobUrl;
+    
+    updateDropBackgrounds();
+    updateEmbedPreview();
+    setDirty(true);
+    showToast("Image added (will upload on save)");
 }
 
 if (fileInput) {
@@ -2566,60 +2571,76 @@ window.promptUrl = function(inputId) {
 // ----------------------------------------------------
 // SAVE AND DELETE MESSAGE LOGIC
 // ----------------------------------------------------
-const btnSaveMsg = document.getElementById('btn-embed-save');
-if (btnSaveMsg) {
-    btnSaveMsg.addEventListener('click', async () => {
-        if (!currentGuildId) return;
-        let mode = 'normal';
-        const modeRadio = document.querySelector('input[name="embed_mode"]:checked');
-        if (modeRadio) mode = modeRadio.value;
-        
-        let msgName = prompt("Enter a name for this message to save it:", currentMessageId ? customMessages.find(m => m.id === currentMessageId)?.name : "New Message");
-        if (msgName === null) return; // Cancelled
-        
-        const payload = {
-            id: currentMessageId,
-            name: msgName,
-            mode: mode,
-            content: document.getElementById('embed_content').value,
-            author_name: document.getElementById('embed_author_name').value,
-            author_icon: document.getElementById('embed_author_icon').value,
-            title: document.getElementById('embed_title').value,
-            description: document.getElementById('embed_description').value,
-            color: document.getElementById('embed_color').value,
-            image: document.getElementById('embed_image').value,
-            thumbnail: document.getElementById('embed_thumbnail').value,
-            footer_text: document.getElementById('embed_footer_text').value,
-            footer_icon: document.getElementById('embed_footer_icon').value,
-            fields: embedFields,
-            components: mode === 'components' ? embedComponents : []
-        };
-        
-        btnSaveMsg.disabled = true;
-        btnSaveMsg.textContent = 'Saving...';
-        
+window.saveCurrentCustomMessage = async function() {
+    if (!currentGuildId) return;
+    
+    let mode = 'normal';
+    const modeRadio = document.querySelector('input[name="embed_mode"]:checked');
+    if (modeRadio) mode = modeRadio.value;
+    
+    let msgName = prompt("Enter a name for this message to save it:", currentMessageId ? customMessages.find(m => m.id === currentMessageId)?.name : "New Message");
+    if (msgName === null) return; // Cancelled
+    
+    showToast("Processing uploads...");
+    
+    // Process pending uploads
+    const uploadTargets = Object.keys(window.pendingMessageUploads);
+    for (let targetId of uploadTargets) {
+        const file = window.pendingMessageUploads[targetId];
+        const formData = new FormData();
+        formData.append('file', file);
         try {
-            const res = await fetch(`/api/messages/${currentGuildId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const res = await fetch(`/api/upload/image`, { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) {
-                showToast("Message saved!");
-                currentMessageId = data.id;
-                setDirty(false);
-                await loadMessages();
+            if (data.success && data.url) {
+                document.getElementById(targetId).value = data.url;
             } else {
-                showToast("Error: " + data.error);
+                showToast("Upload failed for one image, continuing anyway.");
             }
         } catch(e) {
-            showToast("Failed to save.");
+            console.error("Upload failed", e);
         }
-        btnSaveMsg.disabled = false;
-        btnSaveMsg.textContent = 'Save Message';
-    });
-}
+    }
+    // Clear pending
+    window.pendingMessageUploads = {};
+    
+    const payload = {
+        id: currentMessageId,
+        name: msgName,
+        mode: mode,
+        content: document.getElementById('embed_content').value,
+        author_name: document.getElementById('embed_author_name').value,
+        author_icon: document.getElementById('embed_author_icon').value,
+        title: document.getElementById('embed_title').value,
+        description: document.getElementById('embed_description').value,
+        color: document.getElementById('embed_color').value,
+        image: document.getElementById('embed_image').value,
+        thumbnail: document.getElementById('embed_thumbnail').value,
+        footer_text: document.getElementById('embed_footer_text').value,
+        footer_icon: document.getElementById('embed_footer_icon').value,
+        fields: embedFields,
+        components: mode === 'components' ? embedComponents : []
+    };
+    
+    try {
+        const res = await fetch(`/api/messages/${currentGuildId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Message saved!");
+            currentMessageId = data.id;
+            setDirty(false);
+            await loadMessages();
+        } else {
+            showToast("Error: " + data.error);
+        }
+    } catch(e) {
+        showToast("Failed to save.");
+    }
+};
 
 const btnDeleteMsg = document.getElementById('btn-embed-delete');
 if (btnDeleteMsg) {
@@ -2776,11 +2797,30 @@ function updateEmbedPreview() {
                     const fd = document.createElement('div');
                     fd.style.minWidth = f.inline ? '30%' : '100%';
                     fd.style.flex = f.inline ? '1' : '0 0 100%';
+                    fd.className = 'embed-field-preview';
                     fd.innerHTML = `<div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div><div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${f.value || '​'}</div>`;
                     fieldsCont.appendChild(fd);
                 });
             } else { fieldsCont.style.display = 'none'; }
         } else { embedEl.style.display = 'none'; }
+    }
+    
+    // Render Components (Buttons) below the embed/v2 UI
+    const compCont = document.getElementById('preview-components-container');
+    if (compCont) {
+        compCont.innerHTML = '';
+        if (mode === 'components' && embedComponents && embedComponents.length > 0) {
+            compCont.style.display = 'flex';
+            embedComponents.forEach(c => {
+                const b = document.createElement('div');
+                b.style.cssText = 'background: #4E5058; padding: 6px 16px; border-radius: 4px; display: inline-flex; align-items: center; gap: 8px; color: white; font-size: 14px; font-weight: 500; cursor: default;';
+                b.innerHTML = `<i data-lucide="link" style="width:16px; height:16px;"></i> ${c.label}`;
+                compCont.appendChild(b);
+            });
+            lucide.createIcons();
+        } else {
+            compCont.style.display = 'none';
+        }
     }
 }
 

@@ -34,6 +34,16 @@
     .msg-list-item:hover {
         background: #2B2D31;
     }
+    .embed-field-preview {
+        transition: 0.2s;
+        border-radius: 4px;
+        padding: 4px;
+        margin: -4px;
+        cursor: default;
+    }
+    .embed-field-preview:hover {
+        background: #313338;
+    }
 </style>
 </head>
 
@@ -1373,7 +1383,7 @@
                                             <div id="preview-content" style="color: #DBDEE1; font-size: 14px; margin-bottom: 4px; white-space: pre-wrap; word-wrap: break-word;"></div>
                                             
                                             <!-- Components V2 Container -->
-                                            <div id="preview-v2-container" style="display: none; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px; margin-top: 4px; max-width: 432px;">
+                                            <div id="preview-v2-container" style="display: none; background: #2B2D31; border-radius: 4px; border-left: 4px solid #1E1F22; padding: 12px 16px; margin-top: 4px; max-width: 432px;">
                                                 <div id="preview-v2-title" style="color: #F2F3F5; font-size: 16px; font-weight: 600; margin-bottom: 8px; display: none; word-wrap: break-word;"></div>
                                                 <div id="preview-v2-divider" style="height: 1px; background: #313338; margin: 12px 0; display: none;"></div>
                                                 <div id="preview-v2-description" style="color: #DBDEE1; font-size: 14px; margin-bottom: 8px; display: none; white-space: pre-wrap; word-wrap: break-word;"></div>
@@ -1402,6 +1412,9 @@
                                                     <span id="preview-footer-text" style="color: #B5BAC1; font-size: 12px;"></span>
                                                 </div>
                                             </div>
+                                            
+                                            <!-- Buttons Container (applies to both modes) -->
+                                            <div id="preview-components-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
                                         </div>
                                     </div>
                                 </div>
