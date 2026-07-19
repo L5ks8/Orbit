@@ -949,7 +949,8 @@ class WebDashboard:
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
         guild_id = int(request.match_info['id'])
-        if not await self.check_guild_permission(guild_id, user['id']):
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
             return web.json_response({"error": "Forbidden"}, status=403)
             
         from Database.mongodb import get_db
@@ -962,7 +963,8 @@ class WebDashboard:
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
         guild_id = int(request.match_info['id'])
-        if not await self.check_guild_permission(guild_id, user['id']):
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
             return web.json_response({"error": "Forbidden"}, status=403)
             
         try:
@@ -989,7 +991,8 @@ class WebDashboard:
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
         guild_id = int(request.match_info['id'])
-        if not await self.check_guild_permission(guild_id, user['id']):
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
             return web.json_response({"error": "Forbidden"}, status=403)
             
         msg_id = request.match_info['msg_id']
