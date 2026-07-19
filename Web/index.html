@@ -538,7 +538,7 @@
                                         <div style="color: #949BA4; font-size: 11px;">in the last 24h</div>
                                     </div>
                                 </div>
-                                <div style="color: #F2F3F5; font-size: 24px; font-weight: 700;">115</div>
+                                <div id="stat_new_messages" style="color: #F2F3F5; font-size: 24px; font-weight: 700;">-</div>
                             </div>
                             
                             <div style="flex: 1; min-width: 200px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
@@ -551,7 +551,7 @@
                                         <div style="color: #949BA4; font-size: 11px;">in the last 24h</div>
                                     </div>
                                 </div>
-                                <div style="color: #F2F3F5; font-size: 24px; font-weight: 700;">2/1</div>
+                                <div id="stat_joins_leaves" style="color: #F2F3F5; font-size: 24px; font-weight: 700;">-</div>
                             </div>
 
                             <div style="flex: 1; min-width: 200px; background: #1E1F22; border: 1px solid #313338; border-radius: 8px; padding: 16px;">
@@ -563,16 +563,20 @@
                                         <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">Total Members</div>
                                     </div>
                                 </div>
-                                <div style="color: #F2F3F5; font-size: 24px; font-weight: 700;">3</div>
+                                <div id="stat_total_members" style="color: #F2F3F5; font-size: 24px; font-weight: 700;">-</div>
                             </div>
                         </div>
 
                         <!-- Charts Section -->
                         <div style="margin-bottom: 16px;">
                             <label style="display: block; color: #F2F3F5; font-weight: 600; margin-bottom: 8px;">Charts for</label>
-                            <select style="width: 100%; max-width: 300px; background: #1E1F22; border: 1px solid #313338; color: #DBDEE1; padding: 8px 12px; border-radius: 4px;">
-                                <option>Last 7 Days</option>
-                                <option>Last 30 Days</option>
+                            <select id="chart_days_select" style="width: 100%; max-width: 300px; background: #1E1F22; border: 1px solid #313338; color: #DBDEE1; padding: 8px 12px; border-radius: 4px;">
+                                <option value="7">Last 7 Days</option>
+                                <option value="14">Last 14 Days</option>
+                                <option value="30">Last Month</option>
+                                <option value="90">Last 3 Months</option>
+                                <option value="180">Last 6 Months</option>
+                                <option value="365">Last Year</option>
                             </select>
                         </div>
                         

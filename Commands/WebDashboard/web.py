@@ -352,6 +352,61 @@ class WebDashboard:
             "config": config_data
         })
 
+    async def api_guild_stats(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        try:
+            days = int(request.query.get("days", "7"))
+        except ValueError:
+            days = 7
+            
+        from Database.mongodb import get_db
+        db = get_db()
+        
+        from datetime import datetime, timedelta, timezone
+        today = datetime.now(timezone.utc)
+        
+        stats = []
+        if db is not None:
+            for i in range(days - 1, -1, -1):
+                d = today - timedelta(days=i)
+                date_str = d.strftime("%Y-%m-%d")
+                doc_id = f"{guild_id}_{date_str}"
+                
+                doc = db["GuildStats"].find_one({"_id": doc_id})
+                if doc:
+                    stats.append({
+                        "date": date_str,
+                        "joins": doc.get("joins", 0),
+                        "leaves": doc.get("leaves", 0),
+                        "messages": doc.get("messages", 0)
+                    })
+                else:
+                    stats.append({
+                        "date": date_str,
+                        "joins": 0,
+                        "leaves": 0,
+                        "messages": 0
+                    })
+        
+        today_str = today.strftime("%Y-%m-%d")
+        today_doc = db["GuildStats"].find_one({"_id": f"{guild_id}_{today_str}"}) if db is not None else None
+        
+        return web.json_response({
+            "total_members": guild.member_count,
+            "today_joins": today_doc.get("joins", 0) if today_doc else 0,
+            "today_leaves": today_doc.get("leaves", 0) if today_doc else 0,
+            "today_messages": today_doc.get("messages", 0) if today_doc else 0,
+            "history": stats
+        })
+
     async def api_post_config(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
@@ -1068,6 +1123,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/api/stats", dashboard.api_stats)
     app.router.add_get("/api/guilds", dashboard.api_guilds)
     app.router.add_get("/api/config/{id}", dashboard.api_get_config)
+    app.router.add_get("/api/guild_stats/{id}", dashboard.api_guild_stats)
     app.router.add_post("/api/config/{id}", dashboard.api_post_config)
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)

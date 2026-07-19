@@ -2950,9 +2950,83 @@ if (btnSendEmbed) {
 }
 
 // ==========================================
-// CHARTS (Chart.js)
+// CHARTS (Chart.js) & STATS
 // ==========================================
 let chartsInitialized = false;
+let chartJoins, chartFlow, chartMessages;
+
+const customTooltip = (context) => {
+    let tooltipEl = document.getElementById('chartjs-tooltip');
+    if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.id = 'chartjs-tooltip';
+        tooltipEl.style.background = '#FFFFFF';
+        tooltipEl.style.borderRadius = '4px';
+        tooltipEl.style.color = '#313338';
+        tooltipEl.style.opacity = 1;
+        tooltipEl.style.pointerEvents = 'none';
+        tooltipEl.style.position = 'absolute';
+        tooltipEl.style.transform = 'translate(-50%, 0)';
+        tooltipEl.style.transition = 'all .1s ease';
+        tooltipEl.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+        tooltipEl.style.padding = '8px 12px';
+        tooltipEl.style.minWidth = '100px';
+        tooltipEl.style.zIndex = 1000;
+        document.body.appendChild(tooltipEl);
+    }
+
+    const tooltipModel = context.tooltip;
+    if (tooltipModel.opacity === 0) {
+        tooltipEl.style.opacity = 0;
+        return;
+    }
+
+    if (tooltipModel.body) {
+        const titleLines = tooltipModel.title || [];
+        let innerHtml = '<div style="margin-bottom: 6px; font-weight: 500;">' + titleLines[0] + '</div>';
+
+        tooltipModel.dataPoints.forEach(function(dataPoint) {
+            const dataset = context.chart.data.datasets[dataPoint.datasetIndex];
+            const color = dataset.borderColor;
+            const label = dataset.label.toLowerCase();
+            const value = dataPoint.raw;
+            innerHtml += `<div style="color: ${color}; margin-top: 4px;">${label} : ${value}</div>`;
+        });
+        tooltipEl.innerHTML = innerHtml;
+    }
+
+    const position = context.chart.canvas.getBoundingClientRect();
+    tooltipEl.style.opacity = 1;
+    tooltipEl.style.left = position.left + window.scrollX + tooltipModel.caretX + 'px';
+    tooltipEl.style.top = position.top + window.scrollY + tooltipModel.caretY - tooltipEl.offsetHeight - 15 + 'px';
+};
+
+const commonChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+        mode: 'index',
+        intersect: false,
+    },
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            enabled: false,
+            external: customTooltip
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            grid: { color: '#313338' },
+            ticks: { stepSize: 1, precision: 0 }
+        },
+        x: {
+            grid: { display: false }
+        }
+    }
+};
+
 function initCharts() {
     if (chartsInitialized) return;
     chartsInitialized = true;
@@ -2960,69 +3034,89 @@ function initCharts() {
     Chart.defaults.color = '#DBDEE1';
     Chart.defaults.font.family = "'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif";
     
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: { color: '#313338' },
-                ticks: { stepSize: 1 }
-            },
-            x: {
-                grid: { display: false }
-            }
-        }
-    };
-
-    const labels = ['2026-07-12', '2026-07-13', '2026-07-14', '2026-07-15', '2026-07-16', '2026-07-17', '2026-07-18'];
-
-    // Joins / Leaves
     const ctxJoins = document.getElementById('chart-joins');
     if (ctxJoins) {
-        new Chart(ctxJoins, {
+        chartJoins = new Chart(ctxJoins, {
             type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Joins', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#23A559', backgroundColor: 'rgba(35, 165, 89, 0.1)', fill: true, tension: 0.4 },
-                    { label: 'Leaves', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#DA373C', backgroundColor: 'rgba(218, 55, 60, 0.1)', fill: true, tension: 0.4 }
-                ]
-            },
-            options: commonOptions
+            data: { labels: [], datasets: [
+                { label: 'Joins', data: [], borderColor: '#23A559', backgroundColor: 'rgba(35, 165, 89, 0.1)', fill: true, tension: 0.4 },
+                { label: 'Leaves', data: [], borderColor: '#DA373C', backgroundColor: 'rgba(218, 55, 60, 0.1)', fill: true, tension: 0.4 }
+            ]},
+            options: commonChartOptions
         });
     }
 
-    // Member Flow
     const ctxFlow = document.getElementById('chart-flow');
     if (ctxFlow) {
-        new Chart(ctxFlow, {
+        chartFlow = new Chart(ctxFlow, {
             type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Flow', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#5865F2', backgroundColor: 'rgba(88, 101, 242, 0.1)', fill: true, tension: 0.4 }
-                ]
-            },
-            options: commonOptions
+            data: { labels: [], datasets: [
+                { label: 'Flow', data: [], borderColor: '#5865F2', backgroundColor: 'rgba(88, 101, 242, 0.1)', fill: true, tension: 0.4 }
+            ]},
+            options: commonChartOptions
         });
     }
 
-    // Messages
     const ctxMessages = document.getElementById('chart-messages');
     if (ctxMessages) {
-        new Chart(ctxMessages, {
+        chartMessages = new Chart(ctxMessages, {
             type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Messages', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#F47FFF', backgroundColor: 'rgba(244, 127, 255, 0.1)', fill: true, tension: 0.4 }
-                ]
-            },
-            options: commonOptions
+            data: { labels: [], datasets: [
+                { label: 'Messages', data: [], borderColor: '#F47FFF', backgroundColor: 'rgba(244, 127, 255, 0.1)', fill: true, tension: 0.4 }
+            ]},
+            options: commonChartOptions
         });
+    }
+
+    const daysSelect = document.getElementById('chart_days_select');
+    if (daysSelect) {
+        daysSelect.addEventListener('change', (e) => {
+            fetchAndRenderStats(e.target.value);
+        });
+    }
+
+    fetchAndRenderStats(7);
+}
+
+async function fetchAndRenderStats(days) {
+    if (!currentGuildId) return;
+    try {
+        const res = await fetch(`/api/guild_stats/${currentGuildId}?days=${days}`);
+        const data = await res.json();
+        if (data.error) return;
+
+        const elNewMessages = document.getElementById('stat_new_messages');
+        const elJoinsLeaves = document.getElementById('stat_joins_leaves');
+        const elTotalMembers = document.getElementById('stat_total_members');
+
+        if (elNewMessages) elNewMessages.textContent = data.today_messages || 0;
+        if (elJoinsLeaves) elJoinsLeaves.textContent = `${data.today_joins || 0}/${data.today_leaves || 0}`;
+        if (elTotalMembers) elTotalMembers.textContent = data.total_members || 0;
+
+        if (!data.history) return;
+        const labels = data.history.map(d => d.date);
+        const joins = data.history.map(d => d.joins);
+        const leaves = data.history.map(d => d.leaves);
+        const flow = data.history.map(d => d.joins - d.leaves);
+        const msgs = data.history.map(d => d.messages);
+
+        if (chartJoins) {
+            chartJoins.data.labels = labels;
+            chartJoins.data.datasets[0].data = joins;
+            chartJoins.data.datasets[1].data = leaves;
+            chartJoins.update();
+        }
+        if (chartFlow) {
+            chartFlow.data.labels = labels;
+            chartFlow.data.datasets[0].data = flow;
+            chartFlow.update();
+        }
+        if (chartMessages) {
+            chartMessages.data.labels = labels;
+            chartMessages.data.datasets[0].data = msgs;
+            chartMessages.update();
+        }
+    } catch (e) {
+        console.error("Failed to fetch stats", e);
     }
 }
