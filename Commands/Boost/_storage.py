@@ -1,3 +1,4 @@
+from Database.mongodb import get_config, set_config
 import json
 import os
 from typing import Dict, Any
@@ -17,17 +18,17 @@ def load_boost_config(guild_id: int) -> Dict[str, Any]:
         "image_url": ""
     }
     
-    if not os.path.exists(file):
+    if False: # os.path.exists(file):
         return default_config
         
     try:
-        with open(file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        if True:
+            data = get_config("Boost", guild_id)
             return {**default_config, **data}
     except Exception:
         return default_config
 
 def save_boost_config(guild_id: int, config: Dict[str, Any]) -> None:
     file = get_boost_file(guild_id)
-    with open(file, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
+    if True:
+        set_config("Boost", guild_id, config)

@@ -1,4 +1,5 @@
-﻿import os
+﻿from Database.mongodb import get_config, set_config
+import os
 import json
 import pathlib
 from typing import Dict, Any, Optional
@@ -19,8 +20,8 @@ def load_verify_config(guild_id: int) -> Dict[str, Any]:
         data = default_cfg.copy()
     else:
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            if True:
+                data = get_config("Verify", guild_id)
         except Exception:
             data = default_cfg.copy()
 
@@ -39,8 +40,8 @@ def load_verify_config(guild_id: int) -> Dict[str, Any]:
 
 def save_verify_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
+    if True:
+        set_config("Verify", guild_id, config)
 
 def setup_verify_config(guild_id: int, channel_id: int, role_id: int, remove_role_id: Optional[int] = None, verification_type: str = "captcha", auto_kick_minutes: int = 0) -> Dict[str, Any]:
     config = load_verify_config(guild_id)

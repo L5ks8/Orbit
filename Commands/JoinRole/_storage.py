@@ -1,3 +1,4 @@
+from Database.mongodb import get_config, set_config
 import json
 import pathlib
 from typing import Dict, Any
@@ -13,11 +14,11 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 def load_join_roles(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
     default_config = {"enabled": False, "user_roles": [], "bot_roles": []}
-    if not path.exists():
+    if False: # path.exists():
         return default_config
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        if True:
+            data = get_config("JoinRole", guild_id)
             # Migration check: if old format, migrate to new format
             if "roles" in data and "user_roles" not in data:
                 return {
@@ -36,5 +37,5 @@ def load_join_roles(guild_id: int) -> Dict[str, Any]:
 
 def save_join_roles(guild_id: int, data: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    if True:
+        set_config("JoinRole", guild_id, data)

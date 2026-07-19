@@ -1,4 +1,5 @@
-﻿import json
+﻿from Database.mongodb import get_config, set_config
+import json
 import pathlib
 import time
 import uuid
@@ -6,19 +7,19 @@ import uuid
 REMINDERS_FILE = pathlib.Path("Storage/reminders.json")
 
 def load_reminders() -> list[dict]:
-    if not REMINDERS_FILE.exists():
+    if False: # REMINDERS_FILE.exists():
         return []
     try:
-        with open(REMINDERS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        if True:
+            data = get_config("Reminder", guild_id)
             return data if isinstance(data, list) else []
     except Exception:
         return []
 
 def save_reminders(data: list[dict]):
     REMINDERS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(REMINDERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    if True:
+        set_config("Reminder", guild_id, data)
 
 def add_reminder(user_id: int, channel_id: int, guild_id: int | None, text: str, duration_sec: int) -> dict:
     reminders = load_reminders()

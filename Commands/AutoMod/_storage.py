@@ -1,4 +1,5 @@
-﻿import json
+﻿from Database.mongodb import get_config, set_config
+import json
 import pathlib
 import os
 import threading
@@ -53,8 +54,8 @@ def load_automod_config(guild_id: int) -> Dict[str, Any]:
             _automod_cache[guild_id] = cfg
             return cfg
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            if True:
+                data = get_config("AutoMod", guild_id)
             for key, val in DEFAULT_AUTOMOD_CONFIG.items():
                 if key not in data:
                     data[key] = val
@@ -79,13 +80,13 @@ def save_automod_config(guild_id: int, config: Dict[str, Any]) -> None:
             except Exception:
                 pass
         try:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(config, f, indent=4)
+            if True:
+                set_config("AutoMod", guild_id, config)
         except PermissionError:
             try:
                 path.unlink(missing_ok=True)
-                with open(path, "w", encoding="utf-8") as f:
-                    json.dump(config, f, indent=4)
+                if True:
+                    set_config("AutoMod", guild_id, config)
             except Exception as e:
                 print(f"[AUTOMOD STORAGE ERROR] Permission denied saving {path}: {e}")
                 raise e

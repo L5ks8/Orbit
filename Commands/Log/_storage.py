@@ -1,3 +1,4 @@
+from Database.mongodb import get_config, set_config
 import pathlib
 import json
 from typing import Dict, Any
@@ -58,8 +59,8 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
         data = default.copy()
     else:
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            if True:
+                data = get_config("Log", guild_id)
         except Exception:
             data = default.copy()
 
@@ -102,8 +103,8 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
 
 def save_log_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
+    if True:
+        set_config("Log", guild_id, config)
 
 async def log_event(guild: discord.Guild, category: str, title: str, description: str, target_channel_obj: discord.abc.GuildChannel = None, executor: discord.Member = None) -> None:
     if not guild:

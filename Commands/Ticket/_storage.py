@@ -1,4 +1,5 @@
-﻿import os
+﻿from Database.mongodb import get_config, set_config
+import os
 import json
 import pathlib
 import time
@@ -32,8 +33,8 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         data = default_cfg.copy()
     else:
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            if True:
+                data = get_config("Ticket", guild_id)
         except Exception:
             data = default_cfg.copy()
 
@@ -54,8 +55,8 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
 
 def save_ticket_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
+    if True:
+        set_config("Ticket", guild_id, config)
 
 def setup_ticket_config(
     guild_id: int,

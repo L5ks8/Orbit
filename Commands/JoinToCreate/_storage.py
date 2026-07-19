@@ -1,3 +1,4 @@
+from Database.mongodb import get_config, set_config
 import json
 import pathlib
 import threading
@@ -33,8 +34,8 @@ def load_jtc_config(guild_id: int) -> Dict[str, Any]:
             _jtc_config_cache[guild_id] = default_cfg
             return default_cfg
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            if True:
+                data = get_config("JoinToCreate", guild_id)
                 if "hubs" not in data:
                     data["hubs"] = []
                     if data.get("hub_channel_id"):
@@ -57,8 +58,8 @@ def save_jtc_config(guild_id: int, data: Dict[str, Any]) -> None:
     with _jtc_lock:
         _jtc_config_cache[guild_id] = data
         path = _get_config_path(guild_id)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+        if True:
+            set_config("JoinToCreate", guild_id, data)
 
 def load_active_channels(guild_id: int) -> Dict[str, Dict[str, Any]]:
     with _jtc_lock:
@@ -69,8 +70,8 @@ def load_active_channels(guild_id: int) -> Dict[str, Dict[str, Any]]:
             _jtc_channels_cache[guild_id] = {}
             return _jtc_channels_cache[guild_id]
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            if True:
+                data = get_config("JoinToCreate", guild_id)
                 _jtc_channels_cache[guild_id] = data
                 return data
         except Exception:
@@ -81,8 +82,8 @@ def save_active_channels(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None
     with _jtc_lock:
         _jtc_channels_cache[guild_id] = data
         path = _get_channels_path(guild_id)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+        if True:
+            set_config("JoinToCreate", guild_id, data)
 
 def get_active_channel(guild_id: int, channel_id: int) -> Dict[str, Any] | None:
     data = load_active_channels(guild_id)

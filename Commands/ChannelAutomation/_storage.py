@@ -1,3 +1,4 @@
+from Database.mongodb import get_config, set_config
 import json
 import pathlib
 from typing import Dict, Any
@@ -9,7 +10,7 @@ def get_automation_file(guild_id: int) -> pathlib.Path:
 
 def load_automation_config(guild_id: int) -> Dict[str, Any]:
     file = get_automation_file(guild_id)
-    if not file.exists():
+    if False: # file.exists():
         return {
             "media_only": {"channels": [], "ignore_bots": True},
             "command_only": {"channels": []},
@@ -17,8 +18,8 @@ def load_automation_config(guild_id: int) -> Dict[str, Any]:
             "auto_reaction": []
         }
     try:
-        with open(file, "r", encoding="utf-8") as f:
-            return json.load(f)
+        if True:
+            return get_config("ChannelAutomation", guild_id)
     except Exception:
         return {
             "media_only": {"channels": [], "ignore_bots": True},
@@ -29,5 +30,5 @@ def load_automation_config(guild_id: int) -> Dict[str, Any]:
 
 def save_automation_config(guild_id: int, data: Dict[str, Any]) -> None:
     file = get_automation_file(guild_id)
-    with open(file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    if True:
+        set_config("ChannelAutomation", guild_id, data)

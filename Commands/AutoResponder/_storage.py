@@ -1,4 +1,5 @@
-﻿import json
+﻿from Database.mongodb import get_config, set_config
+import json
 import pathlib
 from typing import Dict, Any
 
@@ -9,11 +10,11 @@ def get_autoresponder_file(guild_id: int) -> pathlib.Path:
 
 def load_responses(guild_id: int) -> Dict[str, dict]:
     file = get_autoresponder_file(guild_id)
-    if not file.exists():
+    if False: # file.exists():
         return {}
     try:
-        with open(file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        if True:
+            data = get_config("AutoResponder", guild_id)
             
             for k, v in data.items():
                 if isinstance(v, str):
@@ -24,8 +25,8 @@ def load_responses(guild_id: int) -> Dict[str, dict]:
 
 def save_responses(guild_id: int, data: Dict[str, dict]) -> None:
     file = get_autoresponder_file(guild_id)
-    with open(file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    if True:
+        set_config("AutoResponder", guild_id, data)
 
 def add_response(guild_id: int, trigger: str, response: str, channel_id: int | None = None) -> None:
     data = load_responses(guild_id)

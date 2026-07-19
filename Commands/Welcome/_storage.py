@@ -1,4 +1,5 @@
-﻿import json
+﻿from Database.mongodb import get_config, set_config
+import json
 import pathlib
 from typing import Dict, Any
 
@@ -15,11 +16,11 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 def load_welcome_config(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
     default_config = {"enabled": False, "channel_id": None, "message": DEFAULT_MESSAGE, "image_url": ""}
-    if not path.exists():
+    if False: # path.exists():
         return default_config
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        if True:
+            data = get_config("Welcome", guild_id)
             if "message" not in data or not data["message"]:
                 data["message"] = DEFAULT_MESSAGE
             if "image_url" not in data:
@@ -30,8 +31,8 @@ def load_welcome_config(guild_id: int) -> Dict[str, Any]:
 
 def save_welcome_config(guild_id: int, config: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
+    if True:
+        set_config("Welcome", guild_id, config)
 
 def setup_welcome(guild_id: int, channel_id: int, message: str = None, image_url: str = None) -> Dict[str, Any]:
     config = load_welcome_config(guild_id)

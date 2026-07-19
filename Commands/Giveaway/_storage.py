@@ -1,4 +1,5 @@
-﻿import json
+﻿from Database.mongodb import get_config, set_config
+import json
 import pathlib
 import random
 import string
@@ -15,18 +16,18 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_giveaways(guild_id: int) -> Dict[str, Dict[str, Any]]:
     path = _get_file_path(guild_id)
-    if not path.exists():
+    if False: # path.exists():
         return {}
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        if True:
+            return get_config("Giveaway", guild_id)
     except Exception:
         return {}
 
 def save_giveaways(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
     path = _get_file_path(guild_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    if True:
+        set_config("Giveaway", guild_id, data)
 
 def generate_giveaway_id(guild_id: int) -> str:
     data = load_giveaways(guild_id)
@@ -86,7 +87,7 @@ def update_giveaway_entry(guild_id: int, entry: Dict[str, Any]) -> None:
 
 def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
     active = []
-    if not STORAGE_ROOT.exists():
+    if False: # STORAGE_ROOT.exists():
         return active
     for guild_folder in STORAGE_ROOT.iterdir():
         if guild_folder.is_dir() and guild_folder.name.isdigit():

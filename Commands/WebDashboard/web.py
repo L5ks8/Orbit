@@ -682,21 +682,21 @@ class WebDashboard:
             if ext == ".jpe":
                 ext = ".jpg"
 
-            upload_dir = pathlib.Path("Storage/uploads")
-            upload_dir.mkdir(parents=True, exist_ok=True)
+            file_bytes = b""
+            while True:
+                chunk = await field.read_chunk(8192)
+                if not chunk:
+                    break
+                file_bytes += chunk
 
-            filename = f"{uuid.uuid4().hex}{ext}"
-            filepath = upload_dir / filename
-
-            with open(filepath, "wb") as f:
-                while True:
-                    chunk = await field.read_chunk(8192)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-
-            url = f"/api/uploads/{filename}"
-            return web.json_response({"success": True, "url": url})
+            from Database.cloudinary_storage import upload_image_bytes
+            import asyncio
+            url = await asyncio.to_thread(upload_image_bytes, file_bytes, "Orbit")
+            
+            if url:
+                return web.json_response({"success": True, "url": url})
+            else:
+                return web.json_response({"error": "Upload failed"}, status=500)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 
@@ -721,12 +721,8 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application(client_max_size=10 * 1024 * 1024)  
     
-    import pathlib
-    pathlib.Path("Storage/uploads").mkdir(parents=True, exist_ok=True)
-    
     app.router.add_get("/", dashboard.handle_index)
     app.router.add_static("/static", "Web/static")
-    app.router.add_static("/api/uploads", "Storage/uploads")
     
     app.router.add_get("/auth/login", dashboard.handle_login)
     app.router.add_get("/auth/callback", dashboard.handle_callback)

@@ -1,4 +1,5 @@
-﻿import json
+﻿from Database.mongodb import get_config, set_config
+import json
 import pathlib
 import threading
 
@@ -15,8 +16,8 @@ def load_devmode_config() -> dict:
             _devmode_cache = {"enabled": False, "reason": "System upgrades and developer testing"}
             return _devmode_cache
         try:
-            with open(DEVMODE_FILE, "r", encoding="utf-8") as f:
-                _devmode_cache = json.load(f)
+            if True:
+                _devmode_cache = get_config("OwnerOnly", guild_id)
                 return _devmode_cache
         except Exception:
             _devmode_cache = {"enabled": False, "reason": "System upgrades and developer testing"}
@@ -27,8 +28,8 @@ def save_devmode_config(data: dict):
     with _devmode_lock:
         _devmode_cache = data
         DEVMODE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(DEVMODE_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+        if True:
+            set_config("OwnerOnly", guild_id, data)
 
 def is_devmode_enabled() -> tuple[bool, str]:
     data = load_devmode_config()

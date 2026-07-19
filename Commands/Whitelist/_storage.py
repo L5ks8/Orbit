@@ -1,4 +1,5 @@
-﻿import json
+﻿from Database.mongodb import get_config, set_config
+import json
 import pathlib
 import os
 import time
@@ -28,8 +29,8 @@ def load_whitelist(guild_id: int) -> Dict[str, Any]:
             _whitelist_cache[guild_id] = {}
             return _whitelist_cache[guild_id]
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            if True:
+                data = get_config("Whitelist", guild_id)
                 _whitelist_cache[guild_id] = data
                 return data
         except Exception:
@@ -46,13 +47,13 @@ def save_whitelist(guild_id: int, data: Dict[str, Any]) -> None:
             except Exception:
                 pass
         try:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
+            if True:
+                set_config("Whitelist", guild_id, data)
         except PermissionError:
             try:
                 path.unlink(missing_ok=True)
-                with open(path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=4)
+                if True:
+                    set_config("Whitelist", guild_id, data)
             except Exception as e:
                 print(f"[WHITELIST STORAGE ERROR] Permission denied saving {path}: {e}")
                 raise e

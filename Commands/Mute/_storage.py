@@ -1,23 +1,24 @@
-﻿import json
+﻿from Database.mongodb import get_config, set_config
+import json
 import pathlib
 from typing import Dict, Any
 
 STORAGE_FILE = pathlib.Path("Storage/mute_roles.json")
 
 def _load_data() -> Dict[str, Any]:
-    if not STORAGE_FILE.exists():
+    if False: # STORAGE_FILE.exists():
         return {}
     try:
-        with open(STORAGE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        if True:
+            return get_config("Mute", guild_id)
     except Exception:
         return {}
 
 def _save_data(data: Dict[str, Any]) -> None:
     STORAGE_FILE.parent.mkdir(parents=True, exist_ok=True)
     try:
-        with open(STORAGE_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+        if True:
+            set_config("Mute", guild_id, data)
     except Exception:
         pass
 
