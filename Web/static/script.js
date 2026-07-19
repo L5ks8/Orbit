@@ -2675,8 +2675,7 @@ window.updateEmbedField = function(index, key, value) {
 }
 
 function updateEmbedPreview() {
-    // Keep existing preview code ...
-    if (!document.getElementById('section-embedbuilder')) return;
+    if (!document.getElementById('section-messages')) return;
     
     const content = document.getElementById('embed_content').value;
     const authorName = document.getElementById('embed_author_name').value;
@@ -2689,66 +2688,110 @@ function updateEmbedPreview() {
     const footerText = document.getElementById('embed_footer_text').value;
     const footerIcon = document.getElementById('embed_footer_icon').value;
     
-    // ... [Copy-paste from previous state because regex will nuke it] ...
     document.getElementById('preview-content').textContent = content;
     document.getElementById('preview-content').style.display = content ? 'block' : 'none';
     
-    const embedEl = document.getElementById('preview-embed');
-    let hasEmbed = authorName || title || desc || image || thumbnail || footerText || embedFields.length > 0;
+    const modeRadio = document.querySelector('input[name="embed_mode"]:checked');
+    const mode = modeRadio ? modeRadio.value : 'normal';
     
-    if (hasEmbed) {
-        embedEl.style.display = 'block';
-        embedEl.style.borderLeftColor = color;
+    const embedEl = document.getElementById('preview-embed');
+    const v2El = document.getElementById('preview-v2-container');
+    
+    if (mode === 'components') {
+        embedEl.style.display = 'none';
+        let hasV2 = title || desc || embedFields.length > 0;
         
-        const authorEl = document.getElementById('preview-author');
-        if (authorName) {
-            authorEl.style.display = 'flex';
-            document.getElementById('preview-author-name').textContent = authorName;
-            const aIcon = document.getElementById('preview-author-icon');
-            if (authorIcon) { aIcon.src = authorIcon; aIcon.style.display = 'block'; }
-            else { aIcon.style.display = 'none'; }
-        } else { authorEl.style.display = 'none'; }
+        if (hasV2) {
+            v2El.style.display = 'block';
+            
+            const v2Title = document.getElementById('preview-v2-title');
+            if (title) { v2Title.style.display = 'block'; v2Title.textContent = title; } else { v2Title.style.display = 'none'; }
+            
+            const v2Desc = document.getElementById('preview-v2-description');
+            if (desc) { v2Desc.style.display = 'block'; v2Desc.textContent = desc; } else { v2Desc.style.display = 'none'; }
+            
+            const v2Div = document.getElementById('preview-v2-divider');
+            if (title && (desc || embedFields.length > 0)) { v2Div.style.display = 'block'; } else { v2Div.style.display = 'none'; }
+            
+            const v2Fields = document.getElementById('preview-v2-fields');
+            v2Fields.innerHTML = '';
+            if (embedFields.length > 0) {
+                v2Fields.style.display = 'flex';
+                if (!title && !desc) v2Div.style.display = 'none';
+                else if (title) v2Div.style.display = 'block';
+                
+                embedFields.forEach(f => {
+                    const fd = document.createElement('div');
+                    fd.innerHTML = `<div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div><div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${f.value || '​'}</div>`;
+                    v2Fields.appendChild(fd);
+                });
+            } else { v2Fields.style.display = 'none'; }
+            
+        } else {
+            v2El.style.display = 'none';
+        }
+    } else {
+        v2El.style.display = 'none';
+        let hasEmbed = authorName || title || desc || image || thumbnail || footerText || embedFields.length > 0;
         
-        const titleEl = document.getElementById('preview-title');
-        if (title) { titleEl.style.display = 'block'; titleEl.textContent = title; } else { titleEl.style.display = 'none'; }
-        
-        const descEl = document.getElementById('preview-description');
-        if (desc) { descEl.style.display = 'block'; descEl.textContent = desc; } else { descEl.style.display = 'none'; }
-        
-        const imageEl = document.getElementById('preview-image');
-        if (image) { imageEl.style.display = 'block'; imageEl.src = image; } else { imageEl.style.display = 'none'; }
-        
-        const thumbCont = document.getElementById('preview-thumbnail-container');
-        if (thumbnail) { thumbCont.style.display = 'block'; document.getElementById('preview-thumbnail').src = thumbnail; } else { thumbCont.style.display = 'none'; }
-        
-        const footerEl = document.getElementById('preview-footer');
-        if (footerText) {
-            footerEl.style.display = 'flex';
-            document.getElementById('preview-footer-text').textContent = footerText;
-            const fIcon = document.getElementById('preview-footer-icon');
-            if (footerIcon) { fIcon.src = footerIcon; fIcon.style.display = 'block'; }
-            else { fIcon.style.display = 'none'; }
-        } else { footerEl.style.display = 'none'; }
-        
-        const fieldsCont = document.getElementById('preview-fields');
-        fieldsCont.innerHTML = '';
-        if (embedFields.length > 0) {
-            fieldsCont.style.display = 'flex';
-            embedFields.forEach(f => {
-                const fd = document.createElement('div');
-                fd.style.minWidth = f.inline ? '30%' : '100%';
-                fd.style.flex = f.inline ? '1' : '0 0 100%';
-                fd.innerHTML = `<div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div><div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${f.value || '​'}</div>`;
-                fieldsCont.appendChild(fd);
-            });
-        } else { fieldsCont.style.display = 'none'; }
-    } else { embedEl.style.display = 'none'; }
+        if (hasEmbed) {
+            embedEl.style.display = 'block';
+            embedEl.style.borderLeftColor = color;
+            
+            const authorEl = document.getElementById('preview-author');
+            if (authorName) {
+                authorEl.style.display = 'flex';
+                document.getElementById('preview-author-name').textContent = authorName;
+                const aIcon = document.getElementById('preview-author-icon');
+                if (authorIcon) { aIcon.src = authorIcon; aIcon.style.display = 'block'; }
+                else { aIcon.style.display = 'none'; }
+            } else { authorEl.style.display = 'none'; }
+            
+            const titleEl = document.getElementById('preview-title');
+            if (title) { titleEl.style.display = 'block'; titleEl.textContent = title; } else { titleEl.style.display = 'none'; }
+            
+            const descEl = document.getElementById('preview-description');
+            if (desc) { descEl.style.display = 'block'; descEl.textContent = desc; } else { descEl.style.display = 'none'; }
+            
+            const imageEl = document.getElementById('preview-image');
+            if (image) { imageEl.style.display = 'block'; imageEl.src = image; } else { imageEl.style.display = 'none'; }
+            
+            const thumbCont = document.getElementById('preview-thumbnail-container');
+            if (thumbnail) { thumbCont.style.display = 'block'; document.getElementById('preview-thumbnail').src = thumbnail; } else { thumbCont.style.display = 'none'; }
+            
+            const footerEl = document.getElementById('preview-footer');
+            if (footerText) {
+                footerEl.style.display = 'flex';
+                document.getElementById('preview-footer-text').textContent = footerText;
+                const fIcon = document.getElementById('preview-footer-icon');
+                if (footerIcon) { fIcon.src = footerIcon; fIcon.style.display = 'block'; }
+                else { fIcon.style.display = 'none'; }
+            } else { footerEl.style.display = 'none'; }
+            
+            const fieldsCont = document.getElementById('preview-fields');
+            fieldsCont.innerHTML = '';
+            if (embedFields.length > 0) {
+                fieldsCont.style.display = 'flex';
+                embedFields.forEach(f => {
+                    const fd = document.createElement('div');
+                    fd.style.minWidth = f.inline ? '30%' : '100%';
+                    fd.style.flex = f.inline ? '1' : '0 0 100%';
+                    fd.innerHTML = `<div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div><div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${f.value || '​'}</div>`;
+                    fieldsCont.appendChild(fd);
+                });
+            } else { fieldsCont.style.display = 'none'; }
+        } else { embedEl.style.display = 'none'; }
+    }
 }
 
 const embedInputs = ['embed_content', 'embed_author_name', 'embed_title', 'embed_description', 'embed_footer_text'];
 embedInputs.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', updateEmbedPreview);
+});
+
+document.querySelectorAll('input[name="embed_mode"]').forEach(radio => {
+    radio.addEventListener('change', updateEmbedPreview);
 });
 
 const btnAddField = document.getElementById('btn-add-embed-field');
