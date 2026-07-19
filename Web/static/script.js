@@ -99,6 +99,50 @@ async function init() {
     lucide.createIcons();
 }
 
+function initChipPicker(pickerId, tagsContainerId, hiddenInputId, initialValues, prefix) {
+    const picker = document.getElementById(pickerId);
+    const container = document.getElementById(tagsContainerId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    
+    if (!picker || !container || !hiddenInput) return;
+    
+    let selectedIds = Array.isArray(initialValues) ? [...initialValues] : [];
+    
+    function renderChips() {
+        container.innerHTML = '';
+        selectedIds.forEach(id => {
+            const option = Array.from(picker.options).find(o => o.value === id);
+            if (!option) return;
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.innerHTML = `${option.textContent} <span class="chip-remove" data-id="${id}">&times;</span>`;
+            container.appendChild(chip);
+        });
+        
+        container.querySelectorAll('.chip-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const removeId = e.target.getAttribute('data-id');
+                selectedIds = selectedIds.filter(i => i !== removeId);
+                renderChips();
+            });
+        });
+        
+        hiddenInput.value = selectedIds.join(',');
+    }
+    
+    picker.addEventListener('change', () => {
+        const val = picker.value;
+        if (val && !selectedIds.includes(val)) {
+            selectedIds.push(val);
+            renderChips();
+        }
+        picker.value = '';
+    });
+    
+    // Defer initial render slightly to ensure options are loaded
+    setTimeout(renderChips, 100);
+}
+
 async function openSupportInvite() {
     const btn = document.getElementById('btn-support-invite');
     if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
