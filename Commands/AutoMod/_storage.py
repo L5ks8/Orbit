@@ -56,11 +56,11 @@ def load_automod_config(guild_id: int) -> Dict[str, Any]:
             else:
                 for key, val in DEFAULT_AUTOMOD_CONFIG.items():
                     if key not in data:
-                    data[key] = val
-                elif isinstance(val, dict) and isinstance(data[key], dict):
-                    for subkey, subval in val.items():
-                        if subkey not in data[key]:
-                            data[key][subkey] = subval
+                        data[key] = val
+                    elif isinstance(val, dict) and isinstance(data[key], dict):
+                        for subkey, subval in val.items():
+                            if subkey not in data[key]:
+                                data[key][subkey] = subval
             _automod_cache[guild_id] = data
             return data
         except Exception:
