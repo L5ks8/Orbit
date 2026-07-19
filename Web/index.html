@@ -1255,17 +1255,16 @@
                             </div>
                         </div>
                         
-                        <!-- Builder View -->
                         <div id="messages-builder-view" style="display: none;">
                             <div style="display: flex; gap: 24px;">
                                 <!-- Form Column -->
                                 <div style="flex: 1; max-width: 600px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                        <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
-                                            <button type="button" onclick="closeMessageBuilder()" style="background:transparent; border:none; color:#949BA4; cursor:pointer;"><i data-lucide="arrow-left" style="width:20px;height:20px;"></i></button>
-                                            Message
-                                        </h3>
-                                    </div>
+                                    <!-- Header -->
+                                    <h3 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                                        <button type="button" onclick="closeMessageBuilder()" style="background:transparent; border:none; color:#949BA4; cursor:pointer;"><i data-lucide="arrow-left" style="width:20px;height:20px;"></i></button>
+                                        Message
+                                    </h3>
+                                    <div style="height: 1px; background: linear-gradient(90deg, #313338 0%, transparent 100%); margin-bottom: 20px;"></div>
                                     
                                     <!-- Mode Switch -->
                                     <div class="form-group" style="display: flex; gap: 16px; margin-bottom: 24px; align-items: center;">
@@ -1277,12 +1276,21 @@
                                             <input type="radio" name="embed_mode" value="components"> Components v2
                                         </label>
                                     </div>
-    
-                                    <!-- Message Input -->
-                                    <div style="background: #1E1F22; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                                        <label style="font-size: 12px; color: #DBDEE1;">Content</label>
-                                        <textarea id="embed_content" rows="2" style="background: transparent; border: none; color: #DBDEE1; padding: 0; min-height: 40px; margin-top: 8px; width: 100%; resize: none;" placeholder="Message content..."></textarea>
-                                        <div style="text-align: right; font-size: 10px; color: #949BA4;" id="embed_content_count">0/2000</div>
+
+                                    <!-- Content Row: Textarea LEFT + Buttons RIGHT -->
+                                    <div style="display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start;">
+                                        <!-- Content Input -->
+                                        <div style="flex: 1; background: #1E1F22; border-radius: 8px; padding: 12px;">
+                                            <label style="font-size: 12px; color: #DBDEE1;">Content</label>
+                                            <textarea id="embed_content" rows="2" style="background: transparent; border: none; color: #DBDEE1; padding: 0; min-height: 40px; margin-top: 8px; width: 100%; resize: none;" placeholder="Message content..."></textarea>
+                                            <div style="text-align: right; font-size: 10px; color: #949BA4;" id="embed_content_count">0/2000</div>
+                                        </div>
+                                        <!-- Action Buttons -->
+                                        <div style="display: flex; gap: 8px; flex-shrink: 0; padding-top: 4px;">
+                                            <button type="button" class="btn" id="btn-embed-send" style="background: #006CE7; border: none; color: white; padding: 8px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; white-space: nowrap;">Send Message</button>
+                                            <button type="button" class="btn" id="btn-embed-save" style="background: #4E5058; border: none; color: white; padding: 8px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; white-space: nowrap;">Save Message</button>
+                                            <button type="button" class="btn" id="btn-embed-delete" style="background: #DA373C; border: none; color: white; padding: 8px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; white-space: nowrap; display: none;">Delete</button>
+                                        </div>
                                     </div>
     
                                     <!-- Embed Container -->
@@ -1370,11 +1378,6 @@
                                         <p style="color: #949BA4; font-size: 12px; margin-bottom: 12px;">Add buttons that appear underneath your message.</p>
                                         <div id="components-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;"></div>
                                         <button type="button" id="btn-add-component" class="btn" style="background: #4E5058; border: none; color: white;">+ Add URL Button</button>
-                                    </div>
-
-                                    <div style="display: flex; gap: 12px; margin-top: 24px;">
-                                        <button type="button" class="btn-save" id="btn-embed-send" style="flex: 1; background: #006CE7;"><i data-lucide="send" style="width:16px; height:16px; margin-right:8px; vertical-align:middle;"></i> Send to Discord</button>
-                                        <button type="button" class="btn" id="btn-embed-delete" style="background: #DA373C; color: white; display: none;">Delete Message</button>
                                     </div>
     
                                     <!-- Hidden Inputs for URLs & System -->

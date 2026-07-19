@@ -1673,20 +1673,6 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     btn.innerText = 'Saving...';
     btn.disabled = true;
 
-    // Check if we are currently in the Message Builder view
-    const msgBuilderView = document.getElementById('messages-builder-view');
-    if (msgBuilderView && msgBuilderView.style.display !== 'none') {
-        try {
-            await window.saveCurrentCustomMessage();
-        } catch(err) {
-            console.error(err);
-        } finally {
-            btn.innerText = 'Save Changes';
-            btn.disabled = false;
-        }
-        return; // Prevent saving global config when just editing a message
-    }
-
     // Update AutoMod global options
     currentAutomodConfig.exempt_channels = Array.from(document.getElementById('automod_global_channels').selectedOptions).map(o => o.value);
     currentAutomodConfig.exempt_roles = Array.from(document.getElementById('automod_global_roles').selectedOptions).map(o => o.value);
@@ -2457,6 +2443,13 @@ window.openMessageBuilder = function(msg = null) {
     updateEmbedPreview();
     updateDropBackgrounds();
     
+    // Show/hide Delete button based on whether editing existing message
+    const delBtn = document.getElementById('btn-embed-delete');
+    if (delBtn) delBtn.style.display = msg ? 'inline-block' : 'none';
+    
+    // Clear any pending uploads from previous session
+    window.pendingMessageUploads = {};
+    
     // Dispatch input events to trigger char counts
     ['embed_content', 'embed_author_name', 'embed_title', 'embed_description', 'embed_footer_text'].forEach(id => {
         const el = document.getElementById(id);
@@ -2671,6 +2664,21 @@ if (btnDeleteMsg) {
     });
 }
 
+const btnSaveMsg = document.getElementById('btn-embed-save');
+if (btnSaveMsg) {
+    btnSaveMsg.addEventListener('click', async () => {
+        btnSaveMsg.disabled = true;
+        btnSaveMsg.textContent = 'Saving...';
+        try {
+            await window.saveCurrentCustomMessage();
+        } catch(e) {
+            console.error(e);
+        }
+        btnSaveMsg.disabled = false;
+        btnSaveMsg.textContent = 'Save Message';
+    });
+}
+
 // ----------------------------------------------------
 // OLD LOGIC HOOKUPS
 // ----------------------------------------------------
@@ -2864,6 +2872,28 @@ if (btnSendEmbed) {
             components: mode === 'components' ? embedComponents : [],
             mode: mode
         };
+        
+        // Upload any pending images before sending
+        const pendingKeys = Object.keys(window.pendingMessageUploads);
+        if (pendingKeys.length > 0) {
+            showToast("Uploading images...");
+            for (let targetId of pendingKeys) {
+                const file = window.pendingMessageUploads[targetId];
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    const upRes = await fetch(`/api/upload/image`, { method: 'POST', body: formData });
+                    const upData = await upRes.json();
+                    if (upData.success && upData.url) {
+                        document.getElementById(targetId).value = upData.url;
+                        // Update the payload field that corresponds to this input
+                        const fieldMap = { 'embed_author_icon': 'author_icon', 'embed_thumbnail': 'thumbnail', 'embed_image': 'image', 'embed_footer_icon': 'footer_icon' };
+                        if (fieldMap[targetId]) payload[fieldMap[targetId]] = upData.url;
+                    }
+                } catch(e) { console.error("Upload failed", e); }
+            }
+            window.pendingMessageUploads = {};
+        }
         
         btnSendEmbed.disabled = true;
         btnSendEmbed.textContent = 'Sending...';
