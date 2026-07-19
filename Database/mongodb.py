@@ -30,6 +30,30 @@ def get_config(collection_name: str, guild_id: int, default_config: Dict[str, An
     db = get_db()
     collection = db[collection_name]
     doc = collection.find_one({"_id": str(guild_id)})
+    
+    if not doc:
+        file_to_collection = {
+            'ticket.json': 'Ticket', 'verify.json': 'Verify', 'automod.json': 'AutoMod',
+            'logs.json': 'Log', 'welcome.json': 'Welcome', 'goodbye.json': 'Goodbye',
+            'boost.json': 'Boost', 'level_config.json': 'Level', 'jtc_config.json': 'JoinToCreate',
+            'jtc_channels.json': 'JoinToCreate_Channels', 'blacklist.json': 'Blacklist',
+            'whitelist.json': 'Whitelist', 'afk.json': 'Afk', 'autoresponder.json': 'AutoResponder',
+            'automation.json': 'ChannelAutomation', 'joinroles.json': 'JoinRole'
+        }
+        filename = next((k for k, v in file_to_collection.items() if v == collection_name), None)
+        if filename:
+            import os, json
+            path = os.path.join("Storage", str(guild_id), filename)
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        migrated = json.load(f)
+                    if migrated:
+                        doc = migrated
+                        set_config(collection_name, guild_id, migrated)
+                except Exception:
+                    pass
+                    
     if not doc:
         return default_config or {}
     
