@@ -825,6 +825,15 @@ async function loadConfig(guildId, guildName, guildIcon) {
             ticketLogSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
         });
 
+        const embedSelect = document.getElementById('embed_channel_id');
+        if (embedSelect) {
+            embedSelect.innerHTML = '<option value="">Select Channel...</option>';
+            data.channels.forEach(c => {
+                embedSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
+            });
+        }
+
+
         // Set values
         const config = data.config;
         currentPermissions = data.permissions || {};
@@ -2177,3 +2186,233 @@ document.getElementById('btn-add-channel-booster')?.addEventListener('click', ()
     container.appendChild(row);
     updateBoostersEmpty('channel');
 });
+
+
+// ----------------------------------------------------
+// EMBED BUILDER LOGIC
+// ----------------------------------------------------
+let embedFields = [];
+
+function renderEmbedFields() {
+    const container = document.getElementById('embed-fields-container');
+    if (!container) return;
+    container.innerHTML = '';
+    embedFields.forEach((field, index) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 6px; margin-bottom: 8px; position: relative;';
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">Field ${index + 1}</span>
+                <button type="button" class="btn-danger" style="padding: 2px 6px; height: auto;" onclick="removeEmbedField(${index})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <input type="text" placeholder="Name" value="${field.name}" oninput="updateEmbedField(${index}, 'name', this.value)" style="flex:1;">
+                <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; margin: 0; cursor: pointer;">
+                    <input type="checkbox" ${field.inline ? 'checked' : ''} onchange="updateEmbedField(${index}, 'inline', this.checked)"> Inline
+                </label>
+            </div>
+            <textarea rows="2" placeholder="Value" oninput="updateEmbedField(${index}, 'value', this.value)">${field.value}</textarea>
+        `;
+        container.appendChild(div);
+    });
+    updateEmbedPreview();
+}
+
+window.addEmbedField = function() {
+    if (embedFields.length >= 25) return showToast('Maximum 25 fields allowed');
+    embedFields.push({ name: '', value: '', inline: false });
+    renderEmbedFields();
+}
+
+window.removeEmbedField = function(index) {
+    embedFields.splice(index, 1);
+    renderEmbedFields();
+}
+
+window.updateEmbedField = function(index, key, value) {
+    embedFields[index][key] = value;
+    updateEmbedPreview();
+}
+
+function updateEmbedPreview() {
+    if (!document.getElementById('section-embedbuilder')) return;
+    
+    // Get values
+    const content = document.getElementById('embed_content').value;
+    const authorName = document.getElementById('embed_author_name').value;
+    const authorIcon = document.getElementById('embed_author_icon').value;
+    const title = document.getElementById('embed_title').value;
+    const url = document.getElementById('embed_url').value;
+    const desc = document.getElementById('embed_description').value;
+    const color = document.getElementById('embed_color').value || '#5865F2';
+    const image = document.getElementById('embed_image').value;
+    const thumbnail = document.getElementById('embed_thumbnail').value;
+    const footerText = document.getElementById('embed_footer_text').value;
+    const footerIcon = document.getElementById('embed_footer_icon').value;
+    
+    // Update Content
+    document.getElementById('preview-content').textContent = content;
+    document.getElementById('preview-content').style.display = content ? 'block' : 'none';
+    
+    const embedEl = document.getElementById('preview-embed');
+    let hasEmbed = authorName || title || desc || image || thumbnail || footerText || embedFields.length > 0;
+    
+    if (hasEmbed) {
+        embedEl.style.display = 'block';
+        embedEl.style.borderLeftColor = color;
+        
+        // Author
+        const authorEl = document.getElementById('preview-author');
+        if (authorName) {
+            authorEl.style.display = 'flex';
+            document.getElementById('preview-author-name').textContent = authorName;
+            const aIcon = document.getElementById('preview-author-icon');
+            if (authorIcon) { aIcon.src = authorIcon; aIcon.style.display = 'block'; }
+            else { aIcon.style.display = 'none'; }
+        } else {
+            authorEl.style.display = 'none';
+        }
+        
+        // Title
+        const titleEl = document.getElementById('preview-title');
+        if (title) {
+            titleEl.style.display = 'block';
+            titleEl.textContent = title;
+        } else {
+            titleEl.style.display = 'none';
+        }
+        
+        // Desc
+        const descEl = document.getElementById('preview-description');
+        if (desc) {
+            descEl.style.display = 'block';
+            descEl.textContent = desc;
+        } else {
+            descEl.style.display = 'none';
+        }
+        
+        // Image
+        const imageEl = document.getElementById('preview-image');
+        if (image) {
+            imageEl.style.display = 'block';
+            imageEl.src = image;
+        } else {
+            imageEl.style.display = 'none';
+        }
+        
+        // Thumbnail
+        const thumbCont = document.getElementById('preview-thumbnail-container');
+        if (thumbnail) {
+            thumbCont.style.display = 'block';
+            document.getElementById('preview-thumbnail').src = thumbnail;
+        } else {
+            thumbCont.style.display = 'none';
+        }
+        
+        // Footer
+        const footerEl = document.getElementById('preview-footer');
+        if (footerText) {
+            footerEl.style.display = 'flex';
+            document.getElementById('preview-footer-text').textContent = footerText;
+            const fIcon = document.getElementById('preview-footer-icon');
+            if (footerIcon) { fIcon.src = footerIcon; fIcon.style.display = 'block'; }
+            else { fIcon.style.display = 'none'; }
+        } else {
+            footerEl.style.display = 'none';
+        }
+        
+        // Fields
+        const fieldsCont = document.getElementById('preview-fields');
+        fieldsCont.innerHTML = '';
+        if (embedFields.length > 0) {
+            fieldsCont.style.display = 'flex';
+            embedFields.forEach(f => {
+                const fd = document.createElement('div');
+                fd.style.minWidth = f.inline ? '30%' : '100%';
+                fd.style.flex = f.inline ? '1' : '0 0 100%';
+                fd.innerHTML = `
+                    <div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div>
+                    <div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${f.value || '​'}</div>
+                `;
+                fieldsCont.appendChild(fd);
+            });
+        } else {
+            fieldsCont.style.display = 'none';
+        }
+        
+    } else {
+        embedEl.style.display = 'none';
+    }
+}
+
+// Bind events for preview update
+const embedInputs = ['embed_content', 'embed_author_name', 'embed_author_icon', 'embed_title', 'embed_url', 'embed_description', 'embed_color', 'embed_image', 'embed_thumbnail', 'embed_footer_text', 'embed_footer_icon'];
+embedInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateEmbedPreview);
+});
+
+// Color picker sync
+const cp = document.getElementById('embed_color_picker');
+const ct = document.getElementById('embed_color');
+if (cp && ct) {
+    cp.addEventListener('input', (e) => { ct.value = e.target.value; updateEmbedPreview(); });
+    ct.addEventListener('input', (e) => { cp.value = e.target.value; updateEmbedPreview(); });
+}
+
+// Add Field button
+const btnAddField = document.getElementById('btn-add-embed-field');
+if (btnAddField) btnAddField.addEventListener('click', window.addEmbedField);
+
+// Send Embed Action
+const btnSendEmbed = document.getElementById('btn-send-embed');
+if (btnSendEmbed) {
+    btnSendEmbed.addEventListener('click', async () => {
+        const channelId = document.getElementById('embed_channel_id').value;
+        if (!channelId) return showToast("Please select a destination channel");
+        
+        const payload = {
+            channel_id: channelId,
+            content: document.getElementById('embed_content').value,
+            author_name: document.getElementById('embed_author_name').value,
+            author_icon: document.getElementById('embed_author_icon').value,
+            title: document.getElementById('embed_title').value,
+            url: document.getElementById('embed_url').value,
+            description: document.getElementById('embed_description').value,
+            color: document.getElementById('embed_color').value,
+            image: document.getElementById('embed_image').value,
+            thumbnail: document.getElementById('embed_thumbnail').value,
+            footer_text: document.getElementById('embed_footer_text').value,
+            footer_icon: document.getElementById('embed_footer_icon').value,
+            fields: embedFields
+        };
+        
+        btnSendEmbed.disabled = true;
+        btnSendEmbed.innerHTML = 'Sending...';
+        
+        try {
+            const res = await fetch(`/api/action/${currentGuildId}/send_embed`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const text = await res.text();
+            if (res.ok) {
+                showToast("Embed sent successfully!");
+                // Clear form optionally, but we leave it so they can resend
+            } else {
+                let err = text;
+                try { err = JSON.parse(text).error || text; } catch(e){}
+                showToast("Error: " + err);
+            }
+        } catch (e) {
+            showToast("Failed to send embed.");
+        }
+        
+        btnSendEmbed.disabled = false;
+        btnSendEmbed.innerHTML = '<i data-lucide="send" style="width:16px; height:16px; margin-right:8px; vertical-align:middle;"></i> Send to Discord';
+        lucide.createIcons({ root: btnSendEmbed });
+    });
+}

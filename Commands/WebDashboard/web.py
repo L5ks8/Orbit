@@ -749,6 +749,93 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
+
+    async def api_action_send_embed(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("can_channels"):
+            return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+            
+        try:
+            data = await request.json()
+            channel_id = data.get("channel_id")
+            if not channel_id:
+                return web.json_response({"error": "No channel_id provided"}, status=400)
+                
+            channel = guild.get_channel(int(channel_id))
+            if not channel:
+                return web.json_response({"error": "Channel not found"}, status=400)
+                
+            embed = discord.Embed()
+            
+            # Title & Desc
+            title = data.get("title", "").strip()
+            desc = data.get("description", "").strip()
+            if title: embed.title = title
+            if desc: embed.description = desc
+            url = data.get("url", "").strip()
+            if url: embed.url = url
+            
+            # Color
+            color = data.get("color", "")
+            if color:
+                try:
+                    embed.color = discord.Color(int(color.replace("#", ""), 16))
+                except Exception:
+                    pass
+            
+            # Author
+            author_name = data.get("author_name", "").strip()
+            author_icon = data.get("author_icon", "").strip()
+            if author_name:
+                kwargs = {"name": author_name}
+                if author_icon: kwargs["icon_url"] = author_icon
+                embed.set_author(**kwargs)
+                
+            # Media
+            image = data.get("image", "").strip()
+            thumbnail = data.get("thumbnail", "").strip()
+            if image: embed.set_image(url=image)
+            if thumbnail: embed.set_thumbnail(url=thumbnail)
+            
+            # Footer
+            footer_text = data.get("footer_text", "").strip()
+            footer_icon = data.get("footer_icon", "").strip()
+            if footer_text:
+                kwargs = {"text": footer_text}
+                if footer_icon: kwargs["icon_url"] = footer_icon
+                embed.set_footer(**kwargs)
+                
+            # Fields
+            fields = data.get("fields", [])
+            for f in fields:
+                fname = f.get("name", "").strip() or "​"
+                fvalue = f.get("value", "").strip() or "​"
+                finline = f.get("inline", False)
+                embed.add_field(name=fname, value=fvalue, inline=finline)
+                
+            content = data.get("content", "").strip()
+            
+            # Must have at least content or something in the embed
+            if not content and not title and not desc and not author_name and not image and not footer_text and not fields:
+                return web.json_response({"error": "Message cannot be completely empty"}, status=400)
+                
+            msg_kwargs = {}
+            if content: msg_kwargs["content"] = content
+            if embed.title or embed.description or embed.author or embed.image or embed.footer or embed.fields:
+                msg_kwargs["embed"] = embed
+                
+            await channel.send(**msg_kwargs)
+            return web.json_response({"success": True})
+        except discord.Forbidden:
+            return web.json_response({"error": "Bot missing permissions to send message in that channel"}, status=403)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_action_test_levelup(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
@@ -883,6 +970,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_post("/api/config/{id}", dashboard.api_post_config)
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
+    app.router.add_post("/api/action/{id}/send_embed", dashboard.api_action_send_embed)
     app.router.add_post("/api/server/{id}/test-levelup", dashboard.api_action_test_levelup)
     app.router.add_post("/api/upload/image", dashboard.api_upload_image)
     app.router.add_get("/api/support-invite", dashboard.api_support_invite)

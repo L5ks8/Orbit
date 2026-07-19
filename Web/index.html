@@ -420,6 +420,17 @@
                             </svg>
                         </span> Ticket System
                     </div>
+                    <div class="dash-nav-item" data-target="section-embedbuilder">
+                        <span class="nav-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="9" y1="21" x2="9" y2="9"></line>
+                            </svg>
+                        </span> Embed Builder
+                    </div>
                     <div class="dash-nav-item" data-target="section-logs">
                         <span class="nav-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
@@ -1199,7 +1210,136 @@
                     </div>
 
                     <!-- Logs Section -->
-                    <div id="section-logs" class="dash-panel">
+                    
+                    <!-- EMBED BUILDER SECTION -->
+                    <div id="section-embedbuilder" class="dash-panel">
+                        <div style="display: flex; gap: 24px;">
+                            <div style="flex: 1;">
+                                <h3>Embed Builder</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: 20px;">Design and send beautiful rich embeds directly to your server.</p>
+                                
+                                <div class="form-group">
+                                    <label>Destination Channel <span style="color:red;">*</span></label>
+                                    <select id="embed_channel_id"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Message Content</label>
+                                    <textarea id="embed_content" rows="2" placeholder="Text outside the embed..."></textarea>
+                                </div>
+                                
+                                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Author Name</label>
+                                        <input type="text" id="embed_author_name" placeholder="Author Name">
+                                    </div>
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Author Icon URL</label>
+                                        <input type="text" id="embed_author_icon" placeholder="https://...">
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Title</label>
+                                        <input type="text" id="embed_title" placeholder="Embed Title">
+                                    </div>
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Title URL</label>
+                                        <input type="text" id="embed_url" placeholder="https://...">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea id="embed_description" rows="5" placeholder="Embed Description..."></textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Color (Hex)</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="color" id="embed_color_picker" value="#5865F2" style="width:40px; padding:0; height:38px; border:none; cursor:pointer;">
+                                        <input type="text" id="embed_color" value="#5865F2" style="flex:1;" placeholder="#5865F2">
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Image URL</label>
+                                        <input type="text" id="embed_image" placeholder="https://...">
+                                    </div>
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Thumbnail URL</label>
+                                        <input type="text" id="embed_thumbnail" placeholder="https://...">
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Footer Text</label>
+                                        <input type="text" id="embed_footer_text" placeholder="Footer Text">
+                                    </div>
+                                    <div class="form-group" style="flex:1;">
+                                        <label>Footer Icon URL</label>
+                                        <input type="text" id="embed_footer_icon" placeholder="https://...">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <label style="margin:0;">Fields</label>
+                                        <button type="button" class="btn" id="btn-add-embed-field" style="padding: 4px 12px; font-size: 12px;">+ Add Field</button>
+                                    </div>
+                                    <div id="embed-fields-container"></div>
+                                </div>
+                                
+                                <button type="button" class="btn-save" id="btn-send-embed" style="width: 100%; margin-top: 16px;">
+                                    <i data-lucide="send" style="width:16px; height:16px; margin-right:8px; vertical-align:middle;"></i> Send to Discord
+                                </button>
+                            </div>
+                            
+                            <!-- Preview -->
+                            <div style="flex: 1;">
+                                <h3>Live Preview</h3>
+                                <div class="discord-preview" style="background: #313338; border-radius: 8px; padding: 16px; font-family: 'gg sans', sans-serif; position: sticky; top: 20px;">
+                                    <div style="display: flex; gap: 16px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #5865F2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold;">O</div>
+                                        <div style="flex: 1; max-width: 100%; min-width: 0;">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                                <span style="color: #F2F3F5; font-weight: 500; font-size: 16px;">Orbit</span>
+                                                <span style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
+                                                <span style="color: #949BA4; font-size: 12px;">Today at 12:00 PM</span>
+                                            </div>
+                                            <div id="preview-content" style="color: #DBDEE1; font-size: 14px; margin-bottom: 4px; white-space: pre-wrap; word-wrap: break-word;"></div>
+                                            
+                                            <!-- Embed -->
+                                            <div id="preview-embed" style="background: #2B2D31; border-radius: 4px; border-left: 4px solid #5865F2; padding: 12px 16px; max-width: 432px; display: none; margin-top: 4px;">
+                                                <div id="preview-author" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; display: none;">
+                                                    <img id="preview-author-icon" src="" style="width: 24px; height: 24px; border-radius: 50%; display: none;">
+                                                    <span id="preview-author-name" style="color: #F2F3F5; font-size: 14px; font-weight: 600;"></span>
+                                                </div>
+                                                <div style="display: flex; gap: 16px;">
+                                                    <div style="flex: 1; min-width: 0;">
+                                                        <div id="preview-title" style="color: #00A8FC; font-size: 16px; font-weight: 600; margin-bottom: 8px; display: none; word-wrap: break-word;"></div>
+                                                        <div id="preview-description" style="color: #DBDEE1; font-size: 14px; margin-bottom: 8px; display: none; white-space: pre-wrap; word-wrap: break-word;"></div>
+                                                        <div id="preview-fields" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;"></div>
+                                                        <img id="preview-image" src="" style="max-width: 100%; border-radius: 4px; margin-top: 8px; display: none;">
+                                                    </div>
+                                                    <div id="preview-thumbnail-container" style="flex-shrink: 0; display: none;">
+                                                        <img id="preview-thumbnail" src="" style="max-width: 80px; max-height: 80px; border-radius: 4px;">
+                                                    </div>
+                                                </div>
+                                                <div id="preview-footer" style="display: flex; align-items: center; gap: 8px; margin-top: 8px; display: none;">
+                                                    <img id="preview-footer-icon" src="" style="width: 20px; height: 20px; border-radius: 50%; display: none;">
+                                                    <span id="preview-footer-text" style="color: #B5BAC1; font-size: 12px;"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+<div id="section-logs" class="dash-panel">
                         <div class="section-header">
                             <div
                                 style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
