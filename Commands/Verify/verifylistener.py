@@ -1,4 +1,4 @@
-﻿import time
+import time
 import discord
 from discord.ext import commands, tasks
 from Commands.Verify._storage import load_verify_config, add_pending_kick, remove_pending_kick
@@ -21,10 +21,16 @@ class VerifyListenerCog(commands.Cog):
             return
 
         role_id = config.get("role_id")
-        auto_kick = config.get("auto_kick_minutes", 0)
+        timeout_action = config.get("timeout_action", "none")
+        timeout_minutes = config.get("timeout_minutes", 0)
+        # fallback to old auto_kick_minutes if timeout_minutes is 0
+        if timeout_minutes == 0:
+            timeout_minutes = config.get("auto_kick_minutes", 0)
+            if timeout_minutes > 0 and timeout_action == "none":
+                timeout_action = "kick"
 
-        if role_id and auto_kick > 0:
-            kick_time = time.time() + (auto_kick * 60)
+        if role_id and timeout_minutes > 0 and timeout_action in ["kick", "ban"]:
+            kick_time = time.time() + (timeout_minutes * 60)
             add_pending_kick(member.guild.id, member.id, kick_time)
 
     @tasks.loop(seconds=30)
@@ -41,6 +47,13 @@ class VerifyListenerCog(commands.Cog):
             role_id = config.get("role_id")
             if not role_id:
                 continue
+                
+            timeout_action = config.get("timeout_action", "none")
+            timeout_minutes = config.get("timeout_minutes", 0)
+            if timeout_minutes == 0:
+                timeout_minutes = config.get("auto_kick_minutes", 0)
+                if timeout_minutes > 0 and timeout_action == "none":
+                    timeout_action = "kick"
 
             to_remove = []
             now = time.time()
@@ -51,14 +64,24 @@ class VerifyListenerCog(commands.Cog):
                     member = guild.get_member(int(user_id_str))
                     if member:
                         if not any(r.id == role_id for r in member.roles):
-                            try:
-                                await member.send(f"You were automatically kicked from **{guild.name}** because you did not complete CAPTCHA verification within `{config['auto_kick_minutes']} minutes`.")
-                            except Exception:
-                                pass
-                            try:
-                                await member.kick(reason=f"Failed CAPTCHA verification within {config['auto_kick_minutes']} minutes")
-                            except Exception:
-                                pass
+                            if timeout_action == "ban":
+                                try:
+                                    await member.send(f"You were automatically banned from **{guild.name}** because you did not complete verification within `{timeout_minutes} minutes`.")
+                                except Exception:
+                                    pass
+                                try:
+                                    await member.ban(reason=f"Failed verification within {timeout_minutes} minutes")
+                                except Exception:
+                                    pass
+                            elif timeout_action == "kick":
+                                try:
+                                    await member.send(f"You were automatically kicked from **{guild.name}** because you did not complete verification within `{timeout_minutes} minutes`.")
+                                except Exception:
+                                    pass
+                                try:
+                                    await member.kick(reason=f"Failed verification within {timeout_minutes} minutes")
+                                except Exception:
+                                    pass
 
             if to_remove:
                 for uid in to_remove:

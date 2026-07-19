@@ -487,6 +487,11 @@ class WebDashboard:
                 rrid = data.get("verify", {}).get("remove_role_id")
                 verify_cfg["remove_role_id"] = int(rrid) if rrid else None
                 verify_cfg["verification_type"] = data.get("verify", {}).get("verification_type", "captcha")
+                verify_cfg["timeout_action"] = data.get("verify", {}).get("timeout_action", "none")
+                try:
+                    verify_cfg["timeout_minutes"] = int(data.get("verify", {}).get("timeout_minutes", 0))
+                except (ValueError, TypeError):
+                    verify_cfg["timeout_minutes"] = 0
                 save_verify_config(guild_id, verify_cfg)
 
             if user_perms.get("can_messages") and "autoresponder" in data:

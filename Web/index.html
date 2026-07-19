@@ -1035,6 +1035,19 @@
                             <input type="hidden" id="verify_remove_role_id">
                         </div>
 
+                        <div class="form-group">
+                            <label>Timeout Penalty</label>
+                            <span class="help-text">Action to take if the user fails to verify within a specific timeframe.</span>
+                            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                                <select id="verify_timeout_action" style="flex: 1;">
+                                    <option value="none">None (Stay in server)</option>
+                                    <option value="kick">Kick User</option>
+                                    <option value="ban">Ban User</option>
+                                </select>
+                                <input type="number" id="verify_timeout_minutes" placeholder="Minutes (e.g. 15)" min="0" style="width: 150px;">
+                            </div>
+                        </div>
+
                         <div class="form-group"
                             style="margin-top: 40px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
                             <label>Send Verification Panel</label>

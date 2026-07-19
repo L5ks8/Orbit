@@ -851,6 +851,8 @@ async function loadConfig(guildId, guildName, guildIcon) {
         if (!currentPermissions.can_roles) lockSection('section-verify', 'Manage Roles');
         document.getElementById('verify_enabled').checked = config.verify?.enabled || false;
         document.getElementById('verify_type').value = config.verify?.verification_type || 'captcha';
+        document.getElementById('verify_timeout_action').value = config.verify?.timeout_action || 'none';
+        document.getElementById('verify_timeout_minutes').value = config.verify?.timeout_minutes || '';
 
         // Ticket
         if (!currentPermissions.can_channels) lockSection('section-ticket', 'Manage Channels');
@@ -1660,7 +1662,9 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('verify_enabled').checked,
             role_id: document.getElementById('verify_role_id').value,
             remove_role_id: document.getElementById('verify_remove_role_id').value,
-            verification_type: document.getElementById('verify_type').value
+            verification_type: document.getElementById('verify_type').value,
+            timeout_action: document.getElementById('verify_timeout_action').value,
+            timeout_minutes: document.getElementById('verify_timeout_minutes').value
         },
         ticket: {
             enabled: document.getElementById('ticket_enabled').checked,
