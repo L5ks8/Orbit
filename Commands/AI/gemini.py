@@ -16,7 +16,7 @@ class GeminiChatbot(commands.Cog):
     @memory.command(name="reset")
     async def memory_reset(self, ctx):
         self.memory_resets[ctx.channel.id] = ctx.message.created_at
-        await ctx.reply("🧠 My memory for this channel has been successfully cleared! I won't remember anything said before this.", mention_author=False)
+        await ctx.reply("My memory for this channel has been successfully cleared! I won't remember anything said before this.", mention_author=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -47,15 +47,27 @@ class GeminiChatbot(commands.Cog):
                 messages = [m async for m in message.channel.history(limit=10, before=message, after=reset_time)]
                 messages.reverse()
 
-                prompt = "You are a helpful and friendly Discord bot named Orbit. "
-                prompt += "You are talking in a Discord server. Here is the recent conversation history:\n\n"
+                import copy
+                import re
+
+                prompt = "You are a helpful and friendly Discord bot named Orbit. You are talking in a Discord server. "
+                prompt += "You have the ability to execute moderation commands if the user asks you to. "
+                prompt += "The allowed commands are: mute, unmute, warn, checkwarns, timeout, untimeout, vmove, vmute, vunmute. "
+                prompt += "If the user asks you to warn/mute/etc someone, and you want to execute it, you MUST include the exact syntax `[EXECUTE: command @user reason]` anywhere in your response. "
+                prompt += "For example: `[EXECUTE: warn <@123456789> spamming]`. Do not use code blocks for the EXECUTE tag. \n\n"
+                
+                prompt += "Here is the recent conversation history:\n\n"
                 
                 for msg in messages:
                     author_name = msg.author.display_name
                     content = msg.clean_content
-                    prompt += f"{author_name}: {content}\n"
+                    # If the user mentioned someone, they might appear as @Name in clean_content. 
+                    # But the AI needs their raw ID to execute commands.
+                    # We will provide the raw content so the AI sees <@ID> instead of just @Name.
+                    raw_content = msg.content
+                    prompt += f"{author_name}: {raw_content}\n"
 
-                prompt += f"\n{message.author.display_name}: {message.clean_content}\n"
+                prompt += f"\n{message.author.display_name}: {message.content}\n"
                 prompt += "Orbit:"
 
                 response = await self.client.chat.completions.create(
@@ -66,7 +78,32 @@ class GeminiChatbot(commands.Cog):
                 text_response = response.choices[0].message.content
                             
                 if text_response:
-                    await self._send_chunked(message, text_response)
+                    # Parse Tool Calling
+                    execute_match = re.search(r'\[EXECUTE:\s*([^\]]+)\]', text_response, re.IGNORECASE)
+                    if execute_match:
+                        cmd_string = execute_match.group(1).strip()
+                        text_response = text_response.replace(execute_match.group(0), '').strip()
+                        
+                        if text_response:
+                            await self._send_chunked(message, text_response)
+                            
+                        # Security Check
+                        allowed_commands = ["mute", "unmute", "warn", "checkwarns", "timeout", "untimeout", "vmove", "vmute", "vunmute"]
+                        base_cmd = cmd_string.split(" ")[0].lower()
+                        
+                        if base_cmd in allowed_commands:
+                            fake_msg = copy.copy(message)
+                            # Prefix is globally '-' by default in Orbit
+                            fake_msg.content = f"-{cmd_string}"
+                            ctx = await self.bot.get_context(fake_msg)
+                            if ctx.valid:
+                                await self.bot.invoke(ctx)
+                            else:
+                                await message.reply(f"❌ Die KI hat versucht, den Befehl `{cmd_string}` auszuführen, aber dieser Befehl ist ungültig.", mention_author=False)
+                        else:
+                            await message.reply(f"⚠️ Die KI hat versucht, einen nicht autorisierten Befehl auszuführen: `{base_cmd}`", mention_author=False)
+                    else:
+                        await self._send_chunked(message, text_response)
                 else:
                     await message.reply("I'm sorry, I couldn't generate a response.")
                     
