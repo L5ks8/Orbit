@@ -32,7 +32,7 @@ async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member 
             deleted = await ctx.channel.purge(limit=limit)
         from Embeds import get_command_embed
         kwargs = get_command_embed(
-            ctx.guild.id, "purge",
+            ctx.guild.id, "purge", msg_type="success",
             count=len(deleted), channel_mention=ctx.channel.mention,
             author_mention=ctx.author.mention,
             filter_user_mention=user.mention if user else None,
