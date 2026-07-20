@@ -1,4 +1,8 @@
 import os
+import json
+import re
+import asyncio
+import random
 import discord
 from discord.ext import commands
 from g4f.client import AsyncClient
@@ -16,7 +20,7 @@ class GeminiChatbot(commands.Cog):
     @memory.command(name="reset")
     async def memory_reset(self, ctx):
         self.memory_resets[ctx.channel.id] = ctx.message.created_at
-        await ctx.reply("🧠 My memory for this channel has been successfully cleared! I don't remember anything from before.", mention_author=False)
+        await ctx.reply("My memory for this channel has been successfully cleared! I don't remember anything from before.", mention_author=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -37,8 +41,13 @@ class GeminiChatbot(commands.Cog):
                 if message.reference.resolved.author.id == self.bot.user.id:
                     is_reply_to_bot = True
 
+        is_spontaneous = False
         if not (is_mentioned or is_reply_to_bot):
-            return
+            # 2% chance to randomly jump into conversation
+            if random.random() < 0.05:
+                is_spontaneous = True
+            else:
+                return
 
         async with message.channel.typing():
             try:
@@ -47,15 +56,43 @@ class GeminiChatbot(commands.Cog):
                 messages = [m async for m in message.channel.history(limit=10, before=message, after=reset_time)]
                 messages.reverse()
 
-                prompt = "You are a helpful and friendly Discord bot named Orbit. "
-                prompt += "You are talking in a Discord server. Here is the recent conversation history:\n\n"
+                system_prompt = (
+                    "Du bist Orbit, ein intelligenter, direkter und effizienter Discord-Bot. "
+                    "Dein Ton ist cool, prägnant und etwas sarkastisch. Du bist nicht aufdringlich freundlich, weich oder kitschig. "
+                    "Du sprichst mit Usern in einem Discord-Server. "
+                    "Du hast die Fähigkeit, bestimmte Aktionen auf Befehl des Users auszuführen. "
+                    "Verfügbare Aktionen:\n"
+                    "1. 'dm_user' - Schreibt einem User eine DM. (Parameter: 'target' als Mention, 'message' als Text)\n"
+                    "2. 'spam_ping' - Pingt einen User mehrmals. (Parameter: 'target' als Mention, 'count' max 10)\n"
+                    "Um eine Aktion auszuführen, MUSS deine Antwort GANZ AM ENDE einen JSON-Block enthalten, z.B.:\n"
+                    "```json\n"
+                    "{\n"
+                    '  "action": "spam_ping",\n'
+                    '  "target": "<@123456789>",\n'
+                    '  "count": 5,\n'
+                    '  "message": "optional"\n'
+                    "}\n"
+                    "```\n"
+                    "Ersetze <@123456789> durch den tatsächlichen Ping, den der User dir nennt. "
+                    "Führe diese Aktionen nur aus, wenn der User dich explizit dazu auffordert!"
+                )
+
+                if is_spontaneous:
+                    system_prompt += (
+                        "\n\nWICHTIG: Du wurdest NICHT erwähnt, sondern mischst dich gerade unaufgefordert in die Unterhaltung ein. "
+                        "Wirf einen kurzen, passenden Kommentar oder eine coole/sarkastische Frage zum aktuellen Thema ein, "
+                        "um die Konversation zu beleben."
+                    )
+
+                prompt = f"{system_prompt}\n\nHier ist der Chat-Verlauf:\n"
                 
                 for msg in messages:
                     author_name = msg.author.display_name
                     content = msg.clean_content
                     prompt += f"{author_name}: {content}\n"
 
-                prompt += f"\n{message.author.display_name}: {message.clean_content}\n"
+                # Use message.content instead of clean_content to preserve pings
+                prompt += f"\n{message.author.display_name}: {message.content}\n"
                 prompt += "Orbit:"
 
                 response = await self.client.chat.completions.create(
@@ -66,7 +103,24 @@ class GeminiChatbot(commands.Cog):
                 text_response = response.choices[0].message.content
                             
                 if text_response:
-                    await self._send_chunked(message, text_response)
+                    # Extract JSON block
+                    json_match = re.search(r'```json\s*(\{.*?\})\s*```', text_response, re.DOTALL)
+                    action_data = None
+                    if json_match:
+                        try:
+                            action_data = json.loads(json_match.group(1))
+                            text_response = text_response[:json_match.start()].strip()
+                        except json.JSONDecodeError:
+                            pass
+
+                    # Send text response
+                    if text_response:
+                        await self._send_chunked(message, text_response)
+
+                    # Execute action
+                    if action_data:
+                        await self._execute_action(message, action_data)
+
                 else:
                     await message.reply("I'm sorry, I couldn't generate a response.")
                     
@@ -79,6 +133,47 @@ class GeminiChatbot(commands.Cog):
         reply_to = message
         for chunk in chunks:
             reply_to = await reply_to.reply(chunk)
+
+    async def _execute_action(self, message: discord.Message, action_data: dict):
+        action = action_data.get("action")
+        target_str = action_data.get("target", "")
+        
+        # Check permissions
+        if not (message.author.guild_permissions.administrator or message.author.guild_permissions.manage_guild):
+            await message.channel.send(f"{message.author.mention} Du hast keine Berechtigung für diese Aktion!")
+            return
+
+        # Extract user ID
+        user_id_match = re.search(r'<@!?(\d+)>', target_str)
+        if not user_id_match:
+            await message.channel.send("Fehler: Konnte den Ziel-User nicht finden.")
+            return
+            
+        user_id = int(user_id_match.group(1))
+        
+        try:
+            target_member = message.guild.get_member(user_id) or await message.guild.fetch_member(user_id)
+        except discord.NotFound:
+            target_member = None
+
+        if not target_member:
+            await message.channel.send("Fehler: User nicht im Server gefunden.")
+            return
+
+        if action == "dm_user":
+            msg_content = action_data.get("message", "Hallo!")
+            try:
+                await target_member.send(msg_content)
+                await message.channel.send(f"✅ DM an {target_member.mention} gesendet.")
+            except discord.Forbidden:
+                await message.channel.send(f"❌ Konnte keine DM an {target_member.mention} senden (DMs deaktiviert?).")
+                
+        elif action == "spam_ping":
+            count = min(action_data.get("count", 1), 10)
+            await message.channel.send(f"Spam-Ping gestartet für {target_member.mention} ({count} mal)...")
+            for _ in range(count):
+                await message.channel.send(target_member.mention)
+                await asyncio.sleep(1)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GeminiChatbot(bot))

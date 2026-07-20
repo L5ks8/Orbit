@@ -25,11 +25,9 @@ async def perform_nick_edit(ctx: commands.Context, target: discord.Member, nickn
 
     old_nick = target.nick
     try:
-        await target.edit(nick=nickname)
         from Embeds import get_command_embed
         kwargs = get_command_embed(
             ctx.guild.id, "nick",
-            msg_type="success",
             target_mention=target.mention, target_id=target.id,
             target_name=target.name, old_nick=old_nick, new_nick=nickname,
             author_mention=ctx.author.mention
