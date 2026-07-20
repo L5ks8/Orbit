@@ -1,19 +1,11 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
 
-class BanSuccessLayout(LayoutView):
-    def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### User banned\n**Target:** {target.mention} (`{target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}")
-        )
-        self.add_item(self.container)
+
 
 class BanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -35,14 +27,17 @@ class BanCommand(commands.Cog):
             await ctx.guild.ban(target, reason=f"Banned by {ctx.author} | Reason: {reason}")
             from Commands.Ban._storage import add_ban_history
             add_ban_history(ctx.guild.id, target.id, reason, ctx.author.id)
-            view = BanSuccessLayout(target, reason, ctx.author)
+            from Embeds import get_command_embed
+            
             await log_event(
                 ctx.guild,
-        "moderation_action",
+                "moderation_action",
                 "User Banned (`-ban`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
-            await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            
+            kwargs = get_command_embed(ctx.guild.id, "ban", msg_type="success", target=target, reason=reason, author=ctx.author)
+            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to ban this user.", ephemeral=True)
         except Exception as e:

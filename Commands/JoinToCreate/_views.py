@@ -1,32 +1,9 @@
-﻿import asyncio
+import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, UserSelect
 from Commands.JoinToCreate._storage import get_active_channel, update_active_channel, remove_active_channel
 
-def build_jtc_container(data: dict) -> Container:
-    owner_id = data.get("owner_id", "Unknown")
-    owner_mention = f"<@{owner_id}>" if owner_id != "Unknown" else "Unknown"
 
-    status_lock = "Locked" if data.get("locked") else "Unlocked"
-    status_vis = "Hidden" if data.get("hidden") else "Visible"
-
-    trusted_list = data.get("trusted_users", [])
-    if trusted_list:
-        trusted_display = ", ".join(f"<@{u}>" for u in trusted_list)
-    else:
-        trusted_display = "*No trusted users*"
-
-    header_str = f"### Your Voice Channel\n**Owner:** {owner_mention}"
-    status_str = f"**Channel Status**\n{status_lock} | {status_vis}\n\n**Trusted Users**\n{trusted_display}"
-    footer_str = "-# Use the buttons below to manage your channel."
-
-    return Container(
-        TextDisplay(content=header_str),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=status_str),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=footer_str)
-    )
 
 class RenameVoiceModal(Modal, title="Rename Voice Channel"):
     name_input = TextInput(
@@ -89,38 +66,43 @@ class LimitVoiceModal(Modal, title="Set Voice User Limit"):
         except Exception as e:
             await interaction.followup.send(f"Failed to change user limit: {e}", ephemeral=True)
 
-class PersistentJTCControlLayout(LayoutView):
-    def __init__(self, container: Container = None, data: dict = None):
+class PersistentJTCControlLayout(discord.ui.View):
+    def __init__(self, guild_id: int, data: dict = None):
         super().__init__(timeout=None)
-        self.container = container
+        self.guild_id = guild_id
         self.data = data or {}
 
-        self.btn_lock = Button(label="Lock", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_lock")
-        self.btn_hide = Button(label="Hide", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_hide")
-        self.btn_rename = Button(label="Rename", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_rename")
-        self.btn_limit = Button(label="Limit", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_limit")
+    def get_kwargs(self):
+        btn_lock = discord.ui.Button(label="Lock", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_lock")
+        btn_hide = discord.ui.Button(label="Hide", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_hide")
+        btn_rename = discord.ui.Button(label="Rename", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_rename")
+        btn_limit = discord.ui.Button(label="Limit", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_limit")
 
-        self.btn_kick = Button(label="Kick", style=discord.ButtonStyle.danger, custom_id="orbit:jtc_kick")
-        self.btn_trust = Button(label="Trust", style=discord.ButtonStyle.success, custom_id="orbit:jtc_trust")
-        self.btn_claim = Button(label="Claim", style=discord.ButtonStyle.primary, custom_id="orbit:jtc_claim")
-        self.btn_delete = Button(label="Delete", style=discord.ButtonStyle.danger, custom_id="orbit:jtc_delete")
+        btn_kick = discord.ui.Button(label="Kick", style=discord.ButtonStyle.danger, custom_id="orbit:jtc_kick")
+        btn_trust = discord.ui.Button(label="Trust", style=discord.ButtonStyle.success, custom_id="orbit:jtc_trust")
+        btn_claim = discord.ui.Button(label="Claim", style=discord.ButtonStyle.primary, custom_id="orbit:jtc_claim")
+        btn_delete = discord.ui.Button(label="Delete", style=discord.ButtonStyle.danger, custom_id="orbit:jtc_delete")
 
-        self.btn_lock.callback = self.on_lock
-        self.btn_hide.callback = self.on_hide
-        self.btn_rename.callback = self.on_rename
-        self.btn_limit.callback = self.on_limit
-        self.btn_kick.callback = self.on_kick
-        self.btn_trust.callback = self.on_trust
-        self.btn_claim.callback = self.on_claim
-        self.btn_delete.callback = self.on_delete
+        btn_lock.callback = self.on_lock
+        btn_hide.callback = self.on_hide
+        btn_rename.callback = self.on_rename
+        btn_limit.callback = self.on_limit
+        btn_kick.callback = self.on_kick
+        btn_trust.callback = self.on_trust
+        btn_claim.callback = self.on_claim
+        btn_delete.callback = self.on_delete
 
-        row1 = ActionRow(self.btn_lock, self.btn_hide, self.btn_rename, self.btn_limit)
-        row2 = ActionRow(self.btn_kick, self.btn_trust, self.btn_claim, self.btn_delete)
+        row1 = [btn_lock, btn_hide, btn_rename, btn_limit]
+        row2 = [btn_kick, btn_trust, btn_claim, btn_delete]
+        
+        # We must group them into ActionRows or just pass the flat list to the Embed dispatcher
+        components = row1 + row2
 
-        if self.container:
-            self.container.add_item(row1)
-            self.container.add_item(row2)
-            self.add_item(self.container)
+        from Embeds import get_command_embed
+        return get_command_embed(
+            self.guild_id, "jtc", msg_type="control",
+            data=self.data, components=components
+        )
 
     async def _get_context(self, interaction: discord.Interaction) -> tuple[discord.VoiceChannel | None, dict | None]:
         if not interaction.guild:
@@ -158,9 +140,8 @@ class PersistentJTCControlLayout(LayoutView):
         try:
             await channel.set_permissions(interaction.guild.default_role, connect=not new_locked, reason=f"Voice locked toggle by {interaction.user}")
             update_active_channel(interaction.guild.id, channel.id, data)
-            updated_container = build_jtc_container(data)
-            updated_view = PersistentJTCControlLayout(container=updated_container, data=data)
-            await interaction.response.edit_message(view=updated_view, allowed_mentions=discord.AllowedMentions.none())
+            updated_view = PersistentJTCControlLayout(interaction.guild.id, data)
+            await interaction.response.edit_message(**updated_view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
             await interaction.followup.send(f"Voice channel is now **{'Locked' if new_locked else 'Unlocked'}**.", ephemeral=True)
         except Exception as e:
             if not interaction.response.is_done():
@@ -178,9 +159,8 @@ class PersistentJTCControlLayout(LayoutView):
         try:
             await channel.set_permissions(interaction.guild.default_role, view_channel=not new_hidden, reason=f"Voice hide toggle by {interaction.user}")
             update_active_channel(interaction.guild.id, channel.id, data)
-            updated_container = build_jtc_container(data)
-            updated_view = PersistentJTCControlLayout(container=updated_container, data=data)
-            await interaction.response.edit_message(view=updated_view, allowed_mentions=discord.AllowedMentions.none())
+            updated_view = PersistentJTCControlLayout(interaction.guild.id, data)
+            await interaction.response.edit_message(**updated_view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
             await interaction.followup.send(f"Voice channel is now **{'Hidden' if new_hidden else 'Visible'}**.", ephemeral=True)
         except Exception as e:
             if not interaction.response.is_done():
@@ -275,9 +255,8 @@ class PersistentJTCControlLayout(LayoutView):
                 try:
                     msg = await channel.fetch_message(msg_id)
                     if msg:
-                        updated_container = build_jtc_container(data)
-                        updated_view = PersistentJTCControlLayout(container=updated_container, data=data)
-                        await msg.edit(view=updated_view, allowed_mentions=discord.AllowedMentions.none())
+                        updated_view = PersistentJTCControlLayout(inter.guild.id, data)
+                        await msg.edit(**updated_view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
                 except Exception:
                     pass
 
@@ -311,9 +290,8 @@ class PersistentJTCControlLayout(LayoutView):
 
         try:
             await channel.set_permissions(interaction.user, read_messages=True, connect=True, view_channel=True, manage_channels=True, reason=f"Claimed by {interaction.user}")
-            updated_container = build_jtc_container(data)
-            updated_view = PersistentJTCControlLayout(container=updated_container, data=data)
-            await interaction.response.edit_message(view=updated_view, allowed_mentions=discord.AllowedMentions.none())
+            updated_view = PersistentJTCControlLayout(interaction.guild.id, data)
+            await interaction.response.edit_message(**updated_view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
             await interaction.followup.send("You are now the **Owner** of this temporary voice channel.", ephemeral=True)
         except Exception as e:
             if not interaction.response.is_done():

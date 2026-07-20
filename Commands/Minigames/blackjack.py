@@ -1,7 +1,7 @@
-﻿import random
+import random
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+
 
 SUITS = ["â™ ï¸", "â™¥ï¸", "â™¦ï¸", "â™£ï¸"]
 RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
@@ -95,14 +95,12 @@ class BlackjackSession:
         else:
             self.stand_player()
 
-class BlackjackLayoutView(LayoutView):
+class BlackjackLayoutView(discord.ui.View):
     def __init__(self, session: BlackjackSession):
         super().__init__(timeout=300)
         self.session = session
-        self.build_ui()
 
-    def build_ui(self):
-        self.clear_items()
+    def get_kwargs(self):
         p_score = calculate_score(self.session.player_hand)
         d_score = calculate_score(self.session.dealer_hand)
 
@@ -111,69 +109,56 @@ class BlackjackLayoutView(LayoutView):
             d_cards_str = f"{self.session.dealer_hand[0]} `[ ? ]`"
             d_visible_score = self.session.dealer_hand[0].get_value()
             d_info = f"**Dealer Hand (`Score: {d_visible_score}+?`):**\n> {d_cards_str}"
+            status_text = "**Your Turn!** Choose whether to Hit, Stand, or Double Down below."
         else:
             d_cards_str = " ".join(str(c) for c in self.session.dealer_hand)
             d_info = f"**Dealer Hand (`Final Score: {d_score}`):**\n> {d_cards_str}"
+            status_text = self.session.outcome_text
 
         p_info = f"**Your Hand (`Score: {p_score}`):**\n> {p_cards_str}"
 
-        if not self.session.game_over:
-            status_text = "**Your Turn!** Choose whether to Hit, Stand, or Double Down below."
-        else:
-            status_text = self.session.outcome_text
-
-        self.container = Container(
-            TextDisplay(content=f"### Orbit V2 Casino: Blackjack Table\n**Player:** {self.session.player.mention}"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"{d_info}\n\n{p_info}"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"### {status_text}")
-        )
-        self.add_item(self.container)
-
-        btn_hit = Button(label="Hit", style=discord.ButtonStyle.primary, disabled=self.session.game_over)
-        btn_stand = Button(label="Stand", style=discord.ButtonStyle.secondary, disabled=self.session.game_over)
-        btn_double = Button(label="Double Down", style=discord.ButtonStyle.success, disabled=(self.session.game_over or not self.session.can_double))
-        btn_new = Button(label="Play Again", style=discord.ButtonStyle.primary, disabled=not self.session.game_over)
+        btn_hit = discord.ui.Button(label="Hit", style=discord.ButtonStyle.primary, disabled=self.session.game_over)
+        btn_stand = discord.ui.Button(label="Stand", style=discord.ButtonStyle.secondary, disabled=self.session.game_over)
+        btn_double = discord.ui.Button(label="Double Down", style=discord.ButtonStyle.success, disabled=(self.session.game_over or not self.session.can_double))
+        btn_new = discord.ui.Button(label="Play Again", style=discord.ButtonStyle.primary, disabled=not self.session.game_over)
 
         async def _hit_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.hit_player()
-            self.build_ui()
-            await interaction.response.edit_message(view=self)
+            await interaction.response.edit_message(**self.get_kwargs())
 
         async def _stand_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.stand_player()
-            self.build_ui()
-            await interaction.response.edit_message(view=self)
+            await interaction.response.edit_message(**self.get_kwargs())
 
         async def _double_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.double_down()
-            self.build_ui()
-            await interaction.response.edit_message(view=self)
+            await interaction.response.edit_message(**self.get_kwargs())
 
         async def _new_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
-            new_session = BlackjackSession(self.session.player)
-            self.session = new_session
-            self.build_ui()
-            await interaction.response.edit_message(view=self)
+            self.session = BlackjackSession(self.session.player)
+            await interaction.response.edit_message(**self.get_kwargs())
 
         btn_hit.callback = _hit_cb
         btn_stand.callback = _stand_cb
         btn_double.callback = _double_cb
         btn_new.callback = _new_cb
 
-        if not self.session.game_over:
-            self.add_item(ActionRow(btn_hit, btn_stand, btn_double))
-        else:
-            self.add_item(ActionRow(btn_new))
+        components = [btn_hit, btn_stand, btn_double] if not self.session.game_over else [btn_new]
+
+        from Embeds import get_command_embed
+        return get_command_embed(
+            0, "blackjack", msg_type="game",
+            player=self.session.player, d_info=d_info, p_info=p_info,
+            status_text=status_text, components=components
+        )
 
 class BlackjackCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -183,7 +168,7 @@ class BlackjackCommand(commands.Cog):
     async def blackjack_cmd(self, ctx: commands.Context):
         session = BlackjackSession(ctx.author)
         view = BlackjackLayoutView(session)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BlackjackCommand(bot))

@@ -1,19 +1,11 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Mute._storage import get_muted_role_id
 from Commands.Mute.mute import get_or_create_muted_role
 from Commands.Log._storage import log_event
 
-class UnmuteSuccessLayout(LayoutView):
-    def __init__(self, target: discord.Member, reason: str, author: discord.Member, channels_restored: int):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### User Unmuted\n**Target:** {target.mention} (`{target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}\n**Channel Overrides:** User permissions restored in `{channels_restored}` channel(s).")
-        )
-        self.add_item(self.container)
+
 
 class UnmuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -48,14 +40,15 @@ class UnmuteCommand(commands.Cog):
             except Exception:
                 pass
 
-        view = UnmuteSuccessLayout(target, reason, ctx.author, channels_restored)
+        from Embeds import get_command_embed
         await log_event(
             ctx.guild,
-        "moderation_action",
+            "moderation_action",
             "User Unmuted (`-unmute`)",
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Channels Restored:** `{channels_restored}`"
         )
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        kwargs = get_command_embed(ctx.guild.id, "unmute", msg_type="success", target=target, reason=reason, author=ctx.author, channels_restored=channels_restored)
+        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
     @unmute.error
     async def unmute_error(self, ctx: commands.Context, error):

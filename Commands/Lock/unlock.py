@@ -1,16 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 
-class UnlockSuccessLayout(LayoutView):
-    def __init__(self, channel: discord.TextChannel, reason: str, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### Channel Unlocked\n**Channel:** {channel.mention} (`{channel.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}\n**Status:** `@everyone` send messages restored")
-        )
-        self.add_item(self.container)
+
 
 class UnlockCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -35,8 +27,9 @@ class UnlockCommand(commands.Cog):
                 await target_channel.set_permissions(ctx.guild.default_role, overwrite=None, reason=f"Unlocked by {ctx.author} | Reason: {reason}")
             else:
                 await target_channel.set_permissions(ctx.guild.default_role, overwrite=overwrite, reason=f"Unlocked by {ctx.author} | Reason: {reason}")
-            view = UnlockSuccessLayout(target_channel, reason, ctx.author)
-            await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(ctx.guild.id, "unlock", msg_type="success", channel=target_channel, reason=reason, author=ctx.author)
+            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to unlock this channel.", ephemeral=True)
         except Exception as e:

@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
@@ -13,7 +13,7 @@ async def _do_jr_remove(ctx: commands.Context, role: discord.Role):
     removed = remove_join_role(ctx.guild.id, role.id)
     summary = f"Removed {role.mention}" if removed else f"{role.mention} was not in the join roles list."
     view = JoinRoleLayout(ctx.guild, summary, ctx.author.id)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 @joinrole_group.command(name="remove", description="Remove auto join role.")
 @commands.has_permissions(manage_roles=True)

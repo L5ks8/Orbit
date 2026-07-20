@@ -1,19 +1,11 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
 
-class KickSuccessLayout(LayoutView):
-    def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### User kicked\n**Target:** {target.mention} (`{target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}")
-        )
-        self.add_item(self.container)
+
 
 class KickCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -33,14 +25,15 @@ class KickCommand(commands.Cog):
 
         try:
             await ctx.guild.kick(target, reason=f"Kicked by {ctx.author} | Reason: {reason}")
-            view = KickSuccessLayout(target, reason, ctx.author)
+            from Embeds import get_command_embed
             await log_event(
                 ctx.guild,
-        "moderation_action",
+                "moderation_action",
                 "User Kicked (`-kick`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
-            await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            kwargs = get_command_embed(ctx.guild.id, "kick", msg_type="success", target=target, reason=reason, author=ctx.author)
+            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to kick this user.", ephemeral=True)
         except Exception as e:

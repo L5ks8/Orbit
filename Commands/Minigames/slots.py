@@ -1,7 +1,7 @@
-﻿import random
+import random
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+
 
 SYMBOLS = ["ðŸ’", "ðŸ‹", "ðŸŠ", "ðŸ‡", "ðŸ””", "ðŸ’Ž", "7ï¸âƒ£"]
 
@@ -32,14 +32,20 @@ class SlotsSession:
         else:
             self.outcome_text = "**NO MATCH!** Better luck on the next spin!"
 
-class SlotsLayoutView(LayoutView):
+class SlotsLayoutView(discord.ui.View):
     def __init__(self, session: SlotsSession):
         super().__init__(timeout=300)
         self.session = session
-        self.build_ui()
+        self.closed = False
 
-    def build_ui(self):
-        self.clear_items()
+    def get_kwargs(self):
+        if self.closed:
+            from Embeds import get_command_embed
+            return get_command_embed(
+                0, "slots", msg_type="closed",
+                player=self.session.player
+            )
+            
         r1 = " | ".join(self.session.grid[0])
         r2 = " | ".join(self.session.grid[1])
         r3 = " | ".join(self.session.grid[2])
@@ -50,40 +56,32 @@ class SlotsLayoutView(LayoutView):
             f"  [ {r3} ]"
         )
 
-        self.container = Container(
-            TextDisplay(content=f"### Orbit V2 Casino: Slot Machine\n**Player:** {self.session.player.mention}"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Machine Reels:**\n{reels_str}"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"### {self.session.outcome_text}")
-        )
-        self.add_item(self.container)
-
-        btn_spin = Button(label="Spin Again", style=discord.ButtonStyle.primary)
-        btn_exit = Button(label="Exit Machine", style=discord.ButtonStyle.secondary)
+        btn_spin = discord.ui.Button(label="Spin Again", style=discord.ButtonStyle.primary)
+        btn_exit = discord.ui.Button(label="Exit Machine", style=discord.ButtonStyle.secondary)
 
         async def _spin_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
             self.session.spin()
-            self.build_ui()
-            await interaction.response.edit_message(view=self)
+            await interaction.response.edit_message(**self.get_kwargs())
 
         async def _exit_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
-            self.clear_items()
-            self.container = Container(
-                TextDisplay(content=f"### Orbit V2 Casino: Slot Machine\n**Player:** {self.session.player.mention}"),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content="**Thanks for playing at the Orbit V2 Casino!** Machine closed.")
-            )
-            self.add_item(self.container)
-            await interaction.response.edit_message(view=self)
+            self.closed = True
+            await interaction.response.edit_message(**self.get_kwargs())
 
         btn_spin.callback = _spin_cb
         btn_exit.callback = _exit_cb
-        self.add_item(ActionRow(btn_spin, btn_exit))
+        
+        components = [btn_spin, btn_exit]
+        
+        from Embeds import get_command_embed
+        return get_command_embed(
+            0, "slots", msg_type="game",
+            player=self.session.player, reels_str=reels_str,
+            outcome_text=self.session.outcome_text, components=components
+        )
 
 class SlotsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -93,7 +91,7 @@ class SlotsCommand(commands.Cog):
     async def slots_cmd(self, ctx: commands.Context):
         session = SlotsSession(ctx.author)
         view = SlotsLayoutView(session)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SlotsCommand(bot))

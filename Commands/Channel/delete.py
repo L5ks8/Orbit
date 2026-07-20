@@ -1,22 +1,9 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Channel.channel import channel_group
 
-class ChannelDeletedLayout(LayoutView):
-    def __init__(self, channel_name: str, channel_type: str, author: discord.Member):
-        super().__init__()
-        content_str = (
-            f"**Channel:** `#{channel_name}`\n"
-            f"**Type:** `{channel_type}`\n"
-            f"**Deleted by:** {author.mention}"
-        )
-        self.container = Container(
-            TextDisplay(content="### Channel Deleted"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=content_str)
-        )
-        self.add_item(self.container)
+
 
 async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | None):
     await ctx.defer()
@@ -40,8 +27,9 @@ async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | 
                 await ctx.message.delete()
             except Exception:
                 pass
-            view = ChannelDeletedLayout(name, ch_type, ctx.author)
-            await ctx.send(view=view, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(ctx.guild.id, "channel_delete", msg_type="success", channel_name=name, channel_type=ch_type, author=ctx.author)
+            await ctx.send(**kwargs, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
     else:
         await ctx.send("That channel type cannot be deleted with this command.", ephemeral=True)
 

@@ -55,45 +55,30 @@ class RemoveBlacklistModal(Modal, title="Remove ID from Blacklist"):
         await interaction.response.edit_message(view=self.parent_view)
         await interaction.followup.send(f"Removed ID `{user_id}` from the command blacklist.", ephemeral=True)
 
-class BlacklistListLayout(LayoutView):
+class BlacklistListLayout(discord.ui.View):
     def __init__(self, guild: discord.Guild, bot: commands.Bot, author_id: int):
         super().__init__(timeout=300)
         self.guild = guild
         self.bot = bot
         self.author_id = author_id
         self.data = load_blacklist(guild.id)
-        self.build_ui()
 
     def update_view(self, data: dict):
         self.data = data
-        self.build_ui()
 
-    def build_ui(self):
-        self.clear_items()
+    def get_kwargs(self):
         count = len(self.data)
-        if count == 0:
-            content_text = "The blacklist is currently empty for this server."
-        else:
-            lines = []
+        lines = []
+        if count > 0:
             for i, (uid_str, info) in enumerate(list(self.data.items())[:15], 1):
                 reason = info.get("reason", "No reason")
                 user = self.guild.get_member(int(uid_str)) or self.bot.get_user(int(uid_str))
                 mention_display = f"<@{uid_str}>" + (f" (`@{user.name}`)" if user and hasattr(user, "name") else "")
                 lines.append(f"**{i}.** {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
-            content_text = "\n".join(lines)
-            if count > 15:
-                content_text += f"\n\n*And {count - 15} more users...*"
 
-        self.container = Container(
-            TextDisplay(content=f"### Blacklist Overview ({count} Users)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=content_text)
-        )
-        self.add_item(self.container)
-
-        btn_add = Button(label="Add ID", style=discord.ButtonStyle.success)
-        btn_remove = Button(label="Remove ID", style=discord.ButtonStyle.secondary)
-        btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
+        btn_add = discord.ui.Button(label="Add ID", style=discord.ButtonStyle.success)
+        btn_remove = discord.ui.Button(label="Remove ID", style=discord.ButtonStyle.secondary)
+        btn_close = discord.ui.Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def add_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
@@ -111,10 +96,7 @@ class BlacklistListLayout(LayoutView):
             try:
                 await interaction.message.delete()
             except Exception:
-                self.clear_items()
-                self.add_item(Container(TextDisplay(content="### Blacklist overview closed.")))
-                await interaction.response.edit_message(view=self)
-                self.stop()
+                pass
 
         btn_add.callback = add_cb
         btn_remove.callback = remove_cb

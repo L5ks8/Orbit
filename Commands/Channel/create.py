@@ -1,25 +1,9 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Channel.channel import channel_group
 
-class ChannelCreatedLayout(LayoutView):
-    def __init__(self, channel: discord.abc.GuildChannel, author: discord.Member):
-        super().__init__()
-        ch_type = "Voice" if isinstance(channel, discord.VoiceChannel) else "Text"
-        cat = channel.category.name if channel.category else "No Category"
-        content_str = (
-            f"**Channel:** {channel.mention}\n"
-            f"**Type:** `{ch_type}`\n"
-            f"**Category:** `{cat}`\n"
-            f"**Created by:** {author.mention}"
-        )
-        self.container = Container(
-            TextDisplay(content="### Channel Created"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=content_str)
-        )
-        self.add_item(self.container)
+
 
 async def _do_create(ctx: commands.Context, name: str, channel_type: str, category: discord.CategoryChannel | None):
     await ctx.defer()
@@ -44,8 +28,9 @@ async def _do_create(ctx: commands.Context, name: str, channel_type: str, catego
     except Exception:
         pass
 
-    view = ChannelCreatedLayout(new_channel, ctx.author)
-    await ctx.send(view=view, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "channel_create", msg_type="success", channel=new_channel, author=ctx.author)
+    await ctx.send(**kwargs, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
 
 @channel_group.command(name="create", description="Create a new channel.")
 @commands.has_permissions(manage_channels=True)

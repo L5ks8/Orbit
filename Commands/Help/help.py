@@ -1,22 +1,9 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Select
 
-def _create_thumbnail(url: str):
-    Thumbnail = getattr(discord.ui, "Thumbnail", None)
-    if not Thumbnail:
-        return None
-    try:
-        return Thumbnail(media=url)
-    except TypeError:
-        try:
-            return Thumbnail(url=url)
-        except Exception:
-            try:
-                return Thumbnail(url)
-            except Exception:
-                return None
+
 
 PAGES = [
     {
@@ -113,7 +100,7 @@ PAGES = [
     }
 ]
 
-class HelpCategorySelect(Select):
+class HelpCategorySelect(discord.ui.Select):
     def __init__(self, parent_view: "HelpLayout"):
         self.parent_view = parent_view
         options = [
@@ -133,75 +120,39 @@ class HelpCategorySelect(Select):
         
         page_idx = int(self.values[0])
         self.parent_view.current_page = page_idx
-        self.parent_view.build_ui()
-        await interaction.response.edit_message(view=self.parent_view)
+        await interaction.response.edit_message(**self.parent_view.get_kwargs())
 
-class HelpLayout(LayoutView):
+class HelpLayout(discord.ui.View):
     def __init__(self, bot: commands.Bot, author_id: int, current_page: int = 0):
         super().__init__(timeout=300)
         self.bot = bot
         self.author_id = author_id
         self.current_page = current_page
-        self.build_ui()
 
-    def build_ui(self):
-        self.clear_items()
+    def get_kwargs(self):
         page = PAGES[self.current_page]
-        
-        header_str = f"### Orbit Command Guide: **{page['title']}**\n**Page:** `{self.current_page + 1} / {len(PAGES)}`"
-        info_str = page["description"]
-
         icon_url = self.bot.user.avatar.with_size(256).url if (self.bot.user and self.bot.user.avatar) else None
-        thumbnail = _create_thumbnail(icon_url) if icon_url else None
-        Section = getattr(discord.ui, "Section", None)
-
-        if thumbnail and Section:
-            try:
-                top_section = Section(TextDisplay(content=header_str), accessory=thumbnail)
-                items = [
-                    top_section,
-                    Separator(spacing=discord.SeparatorSpacing.small),
-                    TextDisplay(content=info_str),
-                    Separator(spacing=discord.SeparatorSpacing.small)
-                ]
-            except Exception:
-                items = [
-                    TextDisplay(content=header_str),
-                    Separator(spacing=discord.SeparatorSpacing.small),
-                    TextDisplay(content=info_str),
-                    Separator(spacing=discord.SeparatorSpacing.small)
-                ]
-        else:
-            items = [
-                TextDisplay(content=header_str),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=info_str),
-                Separator(spacing=discord.SeparatorSpacing.small)
-            ]
 
         select_menu = HelpCategorySelect(self)
-        items.append(ActionRow(select_menu))
 
-        btn_prev = Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=(self.current_page == 0))
-        btn_page = Button(label=f"Page {self.current_page + 1}/{len(PAGES)}", style=discord.ButtonStyle.primary, disabled=True)
-        btn_next = Button(label="Next", style=discord.ButtonStyle.secondary, disabled=(self.current_page == len(PAGES) - 1))
-        btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
+        btn_prev = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=(self.current_page == 0))
+        btn_page = discord.ui.Button(label=f"Page {self.current_page + 1}/{len(PAGES)}", style=discord.ButtonStyle.primary, disabled=True)
+        btn_next = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=(self.current_page == len(PAGES) - 1))
+        btn_close = discord.ui.Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def prev_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
                 return await interaction.response.send_message("You cannot control this help panel.", ephemeral=True)
             if self.current_page > 0:
                 self.current_page -= 1
-                self.build_ui()
-                await interaction.response.edit_message(view=self)
+                await interaction.response.edit_message(**self.get_kwargs())
 
         async def next_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
                 return await interaction.response.send_message("You cannot control this help panel.", ephemeral=True)
             if self.current_page < len(PAGES) - 1:
                 self.current_page += 1
-                self.build_ui()
-                await interaction.response.edit_message(view=self)
+                await interaction.response.edit_message(**self.get_kwargs())
 
         async def close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
@@ -209,18 +160,21 @@ class HelpLayout(LayoutView):
             try:
                 await interaction.message.delete()
             except Exception:
-                self.clear_items()
-                self.add_item(Container(TextDisplay(content="### Help menu closed.")))
-                await interaction.response.edit_message(view=self)
-                self.stop()
+                pass
 
         btn_prev.callback = prev_cb
         btn_next.callback = next_cb
         btn_close.callback = close_cb
 
-        items.append(ActionRow(btn_prev, btn_page, btn_next, btn_close))
-        self.container = Container(*items)
-        self.add_item(self.container)
+        components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
+
+        from Embeds import get_command_embed
+        return get_command_embed(
+            0, "help", msg_type="page",
+            page_data=page, current_page=self.current_page,
+            total_pages=len(PAGES), icon_url=icon_url,
+            components=components
+        )
 
 class HelpCommandCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -230,7 +184,7 @@ class HelpCommandCog(commands.Cog):
     async def help_cmd(self, ctx: commands.Context):
         await ctx.defer()
         view = HelpLayout(self.bot, ctx.author.id, 0)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
     @help_cmd.error
     async def help_error(self, ctx: commands.Context, error):

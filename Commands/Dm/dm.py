@@ -1,6 +1,6 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
+from discord.ui import Modal, TextInput
 
 class DmComposeModal(Modal, title="Compose Direct Message"):
     message_input = TextInput(
@@ -22,26 +22,22 @@ class DmComposeModal(Modal, title="Compose Direct Message"):
         try:
             await self.target.send(exact_content)
             
-            success_container = Container(
-                TextDisplay(content=f"### DM Sent Successfully\n**To:** {self.target.mention} (`{self.target.id}`)"),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=f"**Message sent:**\n{exact_content}")
-            )
-            self.parent_view.clear_items()
-            self.parent_view.add_item(success_container)
-            await interaction.response.edit_message(view=self.parent_view)
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(interaction.guild.id if interaction.guild else 0, "dm", msg_type="success", target=self.target, exact_content=exact_content)
+            await interaction.response.edit_message(**kwargs)
         except discord.Forbidden:
             await interaction.response.send_message("Could not send DM to this user. They may have DMs disabled or blocked the bot.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"Error sending DM: {e}", ephemeral=True)
 
-class DmComposerLayout(LayoutView):
+class DmComposerLayout(discord.ui.View):
     def __init__(self, target: discord.User | discord.Member, author_id: int):
         super().__init__(timeout=180.0)
         self.target = target
         self.author_id = author_id
 
-        btn_write = Button(label="Write DM", style=discord.ButtonStyle.primary, custom_id="dm_write")
+    def get_kwargs(self):
+        btn_write = discord.ui.Button(label="Write DM", style=discord.ButtonStyle.primary, custom_id="dm_write")
 
         async def write_callback(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
@@ -49,16 +45,12 @@ class DmComposerLayout(LayoutView):
             await interaction.response.send_modal(DmComposeModal(self.target, self))
 
         btn_write.callback = write_callback
-        action_row = ActionRow(btn_write)
 
-        self.container = Container(
-            TextDisplay(content=f"### Direct Message Composer\n**Target:** {self.target.mention} (`{self.target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content="Click the button below to open the text box and compose your message."),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            action_row
+        from Embeds import get_command_embed
+        return get_command_embed(
+            self.target.guild.id if hasattr(self.target, "guild") else 0,
+            "dm", msg_type="composer", target=self.target, components=[btn_write]
         )
-        self.add_item(self.container)
 
 class DmCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -71,7 +63,7 @@ class DmCommand(commands.Cog):
             return await ctx.send("You cannot send DMs to bot accounts.", ephemeral=True)
 
         view = DmComposerLayout(user, ctx.author.id)
-        await ctx.send(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(**view.get_kwargs(), ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 
     @dm.error
     async def dm_error(self, ctx: commands.Context, error):

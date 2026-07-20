@@ -2,7 +2,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from Commands.JoinToCreate._storage import load_jtc_config, load_active_channels, create_active_channel, update_active_channel, remove_active_channel, get_active_channel
-from Commands.JoinToCreate._views import build_jtc_container, PersistentJTCControlLayout
+from Commands.JoinToCreate._views import PersistentJTCControlLayout
 
 class JTCListenerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -61,12 +61,11 @@ class JTCListenerCog(commands.Cog):
                 if default_limit > 0:
                     data["limit"] = default_limit
 
-                container = build_jtc_container(data)
-                control_view = PersistentJTCControlLayout(container=container, data=data)
+                control_view = PersistentJTCControlLayout(guild.id, data)
 
                 try:
                     msg = await temp_channel.send(
-                        view=control_view,
+                        **control_view.get_kwargs(),
                         allowed_mentions=discord.AllowedMentions.none()
                     )
                     if msg:

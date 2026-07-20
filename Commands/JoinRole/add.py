@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
@@ -19,7 +19,7 @@ async def _do_jr_add(ctx: commands.Context, role: discord.Role):
     added = add_join_role(ctx.guild.id, role.id)
     summary = f"Added {role.mention}" if added else f"{role.mention} is already in the join roles list."
     view = JoinRoleLayout(ctx.guild, summary, ctx.author.id)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 @joinrole_group.command(name="add", description="Add auto join role.")
 @commands.has_permissions(manage_roles=True)

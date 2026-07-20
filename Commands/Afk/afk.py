@@ -1,28 +1,9 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Afk._storage import set_afk, get_afk
 
-class AfkSetLayout(LayoutView):
-    def __init__(self, author: discord.Member | discord.User, reason: str):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### AFK Status Enabled\n**User:** {author.mention} (`{author.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}")
-        )
-        self.add_item(self.container)
 
-class AfkNoticeLayout(LayoutView):
-    def __init__(self, target: discord.User | discord.Member, reason: str, timestamp: int):
-        super().__init__()
-        since_text = f"\n**Since:** <t:{timestamp}:R>" if timestamp else ""
-        self.container = Container(
-            TextDisplay(content=f"### AFK Notice\n**User:** {target.mention} is currently AFK."),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}{since_text}")
-        )
-        self.add_item(self.container)
 
 class AfkCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -34,8 +15,9 @@ class AfkCommand(commands.Cog):
             return await ctx.send("This command can only be used inside a server.", ephemeral=True)
 
         set_afk(ctx.guild.id, ctx.author.id, reason)
-        view = AfkSetLayout(ctx.author, reason)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(ctx.guild.id, "afk", msg_type="set", author=ctx.author, reason=reason)
+        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -54,9 +36,10 @@ class AfkCommand(commands.Cog):
             if afk_data:
                 reason = afk_data.get("reason", "AFK")
                 ts = afk_data.get("timestamp", 0)
-                view = AfkNoticeLayout(user, reason, ts)
+                from Embeds import get_command_embed
+                kwargs = get_command_embed(message.guild.id, "afk", msg_type="notice", target=user, reason=reason, timestamp=ts)
                 try:
-                    await message.reply(view=view, mention_author=False, allowed_mentions=discord.AllowedMentions.none())
+                    await message.reply(**kwargs, mention_author=False, allowed_mentions=discord.AllowedMentions.none())
                 except Exception as e:
                     print(f"Failed to reply AFK notice: {e}")
 

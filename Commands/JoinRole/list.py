@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
 from Commands.JoinRole._views import JoinRoleLayout
@@ -9,7 +9,7 @@ async def _do_jr_list(ctx: commands.Context):
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
     view = JoinRoleLayout(ctx.guild, "Viewing list", ctx.author.id)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 @joinrole_group.command(name="list", description="List configured auto join roles.")
 @commands.has_permissions(manage_roles=True)
