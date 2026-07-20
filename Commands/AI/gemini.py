@@ -1,17 +1,16 @@
 import os
 import discord
 from discord.ext import commands
-import aiohttp
+from g4f.client import AsyncClient
 
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model_name = "gemini-3.5-flash"
+        self.client = AsyncClient()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot or not self.api_key:
+        if message.author.bot:
             return
 
         # Check if the bot is mentioned or if it's a reply to the bot
@@ -43,33 +42,21 @@ class GeminiChatbot(commands.Cog):
                 prompt += f"\n{message.author.display_name}: {message.clean_content}\n"
                 prompt += "Orbit:"
 
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
-                headers = {'Content-Type': 'application/json'}
-                payload = {
-                    "contents": [{"parts": [{"text": prompt}]}]
-                }
+                response = await self.client.chat.completions.create(
+                    model='gpt-4o',
+                    messages=[{'role': 'user', 'content': prompt}]
+                )
                 
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, headers=headers, json=payload) as resp:
-                        if resp.status != 200:
-                            error_text = await resp.text()
-                            raise Exception(f"HTTP {resp.status}: {error_text}")
-                            
-                        data = await resp.json()
-                        
-                        try:
-                            text_response = data['candidates'][0]['content']['parts'][0]['text']
-                        except (KeyError, IndexError):
-                            text_response = None
+                text_response = response.choices[0].message.content
                             
                 if text_response:
                     await self._send_chunked(message, text_response)
                 else:
-                    await message.reply("I'm sorry, my safety filters prevented me from responding to that or the response was empty.")
+                    await message.reply("I'm sorry, I couldn't generate a response.")
                     
             except Exception as e:
                 await message.reply(f"An error occurred while communicating with Orbit: `{e}`")
-                print(f"Gemini API Error: {e}")
+                print(f"AI Error: {e}")
 
     async def _send_chunked(self, message: discord.Message, text: str):
         chunks = [text[i:i+1950] for i in range(0, len(text), 1950)]
