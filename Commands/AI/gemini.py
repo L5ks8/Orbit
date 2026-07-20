@@ -62,7 +62,13 @@ class GeminiChatbot(commands.Cog):
                     await message.reply("I'm sorry, my safety filters prevented me from responding to that.")
                     
             except Exception as e:
-                await message.reply(f"An error occurred while communicating with Orbit: `{e}`")
+                err_msg = f"An error occurred while communicating with Orbit: `{e}`"
+                try:
+                    models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                    err_msg += f"\n\n**Available Models for your API Key:**\n" + ", ".join(models)
+                except Exception:
+                    pass
+                await message.reply(err_msg)
                 print(f"Gemini API Error: {e}")
 
     async def _send_chunked(self, message: discord.Message, text: str):
