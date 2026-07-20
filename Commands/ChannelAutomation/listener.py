@@ -134,14 +134,17 @@ class ChannelAutomationListener(commands.Cog):
                     save_automation_config(message.guild.id, config)
                     
                     # Update or send the honeypot message
-                    trap_text = (
-                        "# :warning: POSTING IN THIS CHANNEL WILL GET YOU BANNED. :hammer:\n"
-                        "## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n"
-                        ":no_entry_sign: THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
-                        ":information_source: Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n"
-                        "**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\n"
-                        f"Ban Counter: `{ban_count}`"
-                    )
+                    template = auto_ban_cfg.get("message")
+                    if not template:
+                        template = (
+                            "# :warning: POSTING IN THIS CHANNEL WILL GET YOU BANNED. :hammer:\n"
+                            "## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n"
+                            ":no_entry_sign: THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
+                            ":information_source: Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n"
+                            "**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\n"
+                            "Ban Counter: `{count}`"
+                        )
+                    trap_text = template.replace("{count}", str(ban_count))
                     
                     msg_id = auto_ban_cfg.get("message_id")
                     trap_msg = None

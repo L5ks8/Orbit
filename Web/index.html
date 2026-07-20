@@ -1523,6 +1523,12 @@
                                     <input type="text" id="auto_ban_exempt_users" class="form-input" placeholder="e.g. 123456789, 987654321">
                                 </div>
                             </div>
+                            <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
+                                <label>Honeypot Warning Message</label>
+                                <span style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">The warning message sent by the bot. You can use <code>{count}</code> to display the number of banned accounts.</span>
+                                <textarea id="auto_ban_message" class="form-input" style="width: 100%; height: 160px; resize: vertical;" placeholder="# ⚠️ POSTING IN THIS CHANNEL WILL GET YOU BANNED..."></textarea>
+                                <button type="button" class="btn-primary" id="btn-send-honeypot" style="margin-top: 10px; font-size: 13px; padding: 6px 12px; background: #EF4444; border-color: #EF4444;">Send Message to Channel</button>
+                            </div>
                         </div>
 
                         <!-- File Only -->

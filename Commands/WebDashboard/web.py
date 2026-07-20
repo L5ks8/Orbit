@@ -1039,6 +1039,48 @@ class WebDashboard:
         messages = list(cursor)
         return web.json_response(messages)
         
+    async def api_action_send_honeypot(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("can_channels"):
+            return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+            
+        try:
+            data = await request.json()
+            channel_id = data.get("channel_id")
+            if not channel_id:
+                return web.json_response({"error": "No channel_id provided"}, status=400)
+                
+            channel = guild.get_channel(int(channel_id))
+            if not channel:
+                return web.json_response({"error": "Channel not found in this guild"}, status=404)
+                
+            message_template = data.get("message", "")
+            if not message_template:
+                return web.json_response({"error": "No message provided"}, status=400)
+                
+            from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
+            config = load_automation_config(guild_id)
+            auto_ban_cfg = config.get("auto_ban", {})
+            ban_count = auto_ban_cfg.get("ban_count", 0)
+            
+            text = message_template.replace("{count}", str(ban_count))
+            msg = await channel.send(content=text)
+            
+            auto_ban_cfg["message_id"] = str(msg.id)
+            config["auto_ban"] = auto_ban_cfg
+            save_automation_config(guild_id, config)
+            
+            return web.json_response({"success": True})
+        except discord.Forbidden:
+            return web.json_response({"error": "Bot lacks permission to send messages in that channel"}, status=403)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_save_message(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1153,6 +1195,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
     app.router.add_post("/api/action/{id}/send_embed", dashboard.api_action_send_embed)
+    app.router.add_post("/api/action/{id}/send_honeypot", dashboard.api_action_send_honeypot)
     app.router.add_get("/api/messages/{id}", dashboard.api_get_messages)
     app.router.add_post("/api/messages/{id}", dashboard.api_save_message)
     app.router.add_delete("/api/messages/{id}/{msg_id}", dashboard.api_delete_message)

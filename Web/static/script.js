@@ -1119,6 +1119,35 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             autoBanUsersEl.value = config.automation?.auto_ban?.exempt_users?.join(', ') || '';
         }
 
+        const autoBanMsgEl = document.getElementById('auto_ban_message');
+        if (autoBanMsgEl) {
+            autoBanMsgEl.value = config.automation?.auto_ban?.message || "# :warning: POSTING IN THIS CHANNEL WILL GET YOU BANNED. :hammer:\n## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n:no_entry_sign: THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n:information_source: Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\nBan Counter: `{count}`";
+        }
+
+        const btnSendHoneypot = document.getElementById('btn-send-honeypot');
+        if (btnSendHoneypot) {
+            btnSendHoneypot.onclick = async () => {
+                const channelId = document.getElementById('auto_ban_channel').value;
+                if (!channelId) return showToast("Please select a Honeypot Channel first.");
+                const message = document.getElementById('auto_ban_message').value;
+                try {
+                    const res = await fetch(`/api/action/${currentGuildId}/send_honeypot`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ channel_id: channelId, message: message })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast("Honeypot message sent!");
+                    } else {
+                        showToast(data.error || "Failed to send honeypot message.");
+                    }
+                } catch (e) {
+                    showToast("Error sending message.");
+                }
+            };
+        }
+
         renderFileChannels(config.automation?.file_only || []);
         renderAutoReactions(config.automation?.auto_reaction || []);
 
@@ -1949,7 +1978,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             auto_ban: {
                 channel_id: document.getElementById('auto_ban_channel').value,
                 exempt_roles: Array.from(document.getElementById('auto_ban_exempt_roles').selectedOptions).map(o => o.value),
-                exempt_users: document.getElementById('auto_ban_exempt_users').value.split(',').map(u => u.trim()).filter(u => u.length > 0)
+                exempt_users: document.getElementById('auto_ban_exempt_users').value.split(',').map(u => u.trim()).filter(u => u.length > 0),
+                message: document.getElementById('auto_ban_message').value
             }
         },
         tempvoice: {
