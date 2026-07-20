@@ -2513,8 +2513,10 @@ window.openMessageBuilder = function(msg = null) {
     
     if (msg) {
         currentMessageId = msg.id;
-        document.getElementById('embed_msg_id').value = msg.id || '';
-        document.getElementById('embed_content').value = msg.content || '';
+        if (document.getElementById('embed_msg_id')) document.getElementById('embed_msg_id').value = msg.id || '';
+        if (document.getElementById('embed_msg_name')) document.getElementById('embed_msg_name').value = msg.name || '';
+        if (document.getElementById('embed_channel_id')) document.getElementById('embed_channel_id').value = msg.channel_id || '';
+        if (document.getElementById('embed_content')) document.getElementById('embed_content').value = msg.content || '';
         
         const modeRadio = document.querySelector(`input[name="embed_mode"][value="${msg.mode || 'normal'}"]`);
         if (modeRadio) {
@@ -2522,30 +2524,32 @@ window.openMessageBuilder = function(msg = null) {
             modeRadio.dispatchEvent(new Event('change'));
         }
         
-        document.getElementById('embed_author_name').value = msg.author_name || '';
-        document.getElementById('embed_author_icon').value = msg.author_icon || '';
-        document.getElementById('embed_title').value = msg.title || '';
-        document.getElementById('embed_description').value = msg.description || '';
-        document.getElementById('embed_color').value = msg.color || '#5865F2';
-        document.getElementById('embed_image').value = msg.image || '';
-        document.getElementById('embed_thumbnail').value = msg.thumbnail || '';
-        document.getElementById('embed_footer_text').value = msg.footer_text || '';
-        document.getElementById('embed_footer_icon').value = msg.footer_icon || '';
+        if (document.getElementById('embed_author_name')) document.getElementById('embed_author_name').value = msg.author_name || '';
+        if (document.getElementById('embed_author_icon')) document.getElementById('embed_author_icon').value = msg.author_icon || '';
+        if (document.getElementById('embed_title')) document.getElementById('embed_title').value = msg.title || '';
+        if (document.getElementById('embed_description')) document.getElementById('embed_description').value = msg.description || '';
+        if (document.getElementById('embed_color')) document.getElementById('embed_color').value = msg.color || '#5865F2';
+        if (document.getElementById('embed_image')) document.getElementById('embed_image').value = msg.image || '';
+        if (document.getElementById('embed_thumbnail')) document.getElementById('embed_thumbnail').value = msg.thumbnail || '';
+        if (document.getElementById('embed_footer_text')) document.getElementById('embed_footer_text').value = msg.footer_text || '';
+        if (document.getElementById('embed_footer_icon')) document.getElementById('embed_footer_icon').value = msg.footer_icon || '';
         
         embedFields = msg.fields || [];
         embedComponents = msg.components || [];
     } else {
         currentMessageId = null;
-        document.getElementById('embed_msg_id').value = '';
-        document.getElementById('embed_content').value = '';
-        document.getElementById('embed_author_name').value = '';
-        document.getElementById('embed_author_icon').value = '';
-        document.getElementById('embed_title').value = '';
-        document.getElementById('embed_description').value = '';
-        document.getElementById('embed_image').value = '';
-        document.getElementById('embed_thumbnail').value = '';
-        document.getElementById('embed_footer_text').value = '';
-        document.getElementById('embed_footer_icon').value = '';
+        if (document.getElementById('embed_msg_id')) document.getElementById('embed_msg_id').value = '';
+        if (document.getElementById('embed_msg_name')) document.getElementById('embed_msg_name').value = 'new embed';
+        if (document.getElementById('embed_channel_id')) document.getElementById('embed_channel_id').value = '';
+        if (document.getElementById('embed_content')) document.getElementById('embed_content').value = '';
+        if (document.getElementById('embed_author_name')) document.getElementById('embed_author_name').value = '';
+        if (document.getElementById('embed_author_icon')) document.getElementById('embed_author_icon').value = '';
+        if (document.getElementById('embed_title')) document.getElementById('embed_title').value = '';
+        if (document.getElementById('embed_description')) document.getElementById('embed_description').value = '';
+        if (document.getElementById('embed_image')) document.getElementById('embed_image').value = '';
+        if (document.getElementById('embed_thumbnail')) document.getElementById('embed_thumbnail').value = '';
+        if (document.getElementById('embed_footer_text')) document.getElementById('embed_footer_text').value = '';
+        if (document.getElementById('embed_footer_icon')) document.getElementById('embed_footer_icon').value = '';
         embedFields = [];
         embedComponents = [];
         
@@ -2689,8 +2693,12 @@ window.saveCurrentCustomMessage = async function() {
     const modeRadio = document.querySelector('input[name="embed_mode"]:checked');
     if (modeRadio) mode = modeRadio.value;
     
-    let msgName = prompt("Enter a name for this message to save it:", currentMessageId ? customMessages.find(m => m.id === currentMessageId)?.name : "New Message");
-    if (msgName === null) return; // Cancelled
+    let msgNameElement = document.getElementById('embed_msg_name');
+    let msgName = msgNameElement ? msgNameElement.value.trim() : "New Message";
+    if (!msgName) {
+        showToast("Please provide a name for this message.");
+        return;
+    }
     
     showToast("Processing uploads...");
     
@@ -2718,17 +2726,18 @@ window.saveCurrentCustomMessage = async function() {
     const payload = {
         id: currentMessageId,
         name: msgName,
+        channel_id: document.getElementById('embed_channel_id') ? document.getElementById('embed_channel_id').value : '',
         mode: mode,
-        content: document.getElementById('embed_content').value,
-        author_name: document.getElementById('embed_author_name').value,
-        author_icon: document.getElementById('embed_author_icon').value,
-        title: document.getElementById('embed_title').value,
-        description: document.getElementById('embed_description').value,
-        color: document.getElementById('embed_color').value,
-        image: document.getElementById('embed_image').value,
-        thumbnail: document.getElementById('embed_thumbnail').value,
-        footer_text: document.getElementById('embed_footer_text').value,
-        footer_icon: document.getElementById('embed_footer_icon').value,
+        content: document.getElementById('embed_content') ? document.getElementById('embed_content').value : '',
+        author_name: document.getElementById('embed_author_name') ? document.getElementById('embed_author_name').value : '',
+        author_icon: document.getElementById('embed_author_icon') ? document.getElementById('embed_author_icon').value : '',
+        title: document.getElementById('embed_title') ? document.getElementById('embed_title').value : '',
+        description: document.getElementById('embed_description') ? document.getElementById('embed_description').value : '',
+        color: document.getElementById('embed_color') ? document.getElementById('embed_color').value : '#5865F2',
+        image: document.getElementById('embed_image') ? document.getElementById('embed_image').value : '',
+        thumbnail: document.getElementById('embed_thumbnail') ? document.getElementById('embed_thumbnail').value : '',
+        footer_text: document.getElementById('embed_footer_text') ? document.getElementById('embed_footer_text').value : '',
+        footer_icon: document.getElementById('embed_footer_icon') ? document.getElementById('embed_footer_icon').value : '',
         fields: embedFields,
         components: mode === 'components' ? embedComponents : []
     };
