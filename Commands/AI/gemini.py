@@ -62,7 +62,7 @@ class GeminiChatbot(commands.Cog):
                     await message.reply("I'm sorry, my safety filters prevented me from responding to that.")
                     
             except Exception as e:
-                await message.reply(f"An error occurred while communicating with Orbit.")
+                await message.reply(f"An error occurred while communicating with Orbit: `{e}`")
                 print(f"Gemini API Error: {e}")
 
     async def _send_chunked(self, message: discord.Message, text: str):
