@@ -47,15 +47,21 @@ class GeminiChatbot(commands.Cog):
                 prompt += f"\n{message.author.display_name}: {message.clean_content}\n"
                 prompt += "Orbit:"
 
-                response = self.model.generate_content(prompt)
+                response = await self.model.generate_content_async(prompt)
                 
-                if response.text:
-                    await self._send_chunked(message, response.text)
+                try:
+                    text_response = response.text
+                except ValueError:
+                    text_response = None
+                    
+                if text_response:
+                    await self._send_chunked(message, text_response)
                 else:
-                    await message.reply("I'm sorry, I couldn't answer that.")
+                    await message.reply("I'm sorry, my safety filters prevented me from responding to that.")
                     
             except Exception as e:
-                await message.reply(f"An error occurred while communicating with the AI: {e}")
+                await message.reply(f"An error occurred while communicating with the AI.")
+                print(f"Gemini API Error: {e}")
 
     async def _send_chunked(self, message: discord.Message, text: str):
         chunks = [text[i:i+1950] for i in range(0, len(text), 1950)]
