@@ -35,8 +35,8 @@ def save_settings_config(guild_id: int, data: dict):
     )
     
     try:
-        from bot import PREFIX_CACHE
-        if "prefix" in update_data:
-            PREFIX_CACHE[guild_id] = update_data["prefix"].strip()
+        import sys
+        if "bot" in sys.modules and "prefix" in update_data:
+            sys.modules["bot"].PREFIX_CACHE[guild_id] = update_data["prefix"].strip()
     except Exception:
         pass

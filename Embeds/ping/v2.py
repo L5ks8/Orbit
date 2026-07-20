@@ -1,7 +1,7 @@
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 
-def get_embed(msg_type: str, **kwargs):
+def get_embed(**kwargs):
     latency = kwargs.get("latency", 0)
     ms = round(latency * 1000)
     
