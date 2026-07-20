@@ -144,6 +144,36 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
         except Exception:
             pass
 
+PREFIX_CACHE = {}
+
+async def get_prefix(bot, message: discord.Message):
+    if not message.guild:
+        return commands.when_mentioned_or(PREFIX)(bot, message)
+        
+    guild_id = message.guild.id
+    if guild_id in PREFIX_CACHE:
+        pfx = PREFIX_CACHE[guild_id]
+        if not pfx:
+            pfx = PREFIX
+        return commands.when_mentioned_or(pfx)(bot, message)
+        
+    # Fetch from DB
+    try:
+        from Database.mongodb import get_db
+        db = get_db()
+        if db is not None:
+            doc = db["GuildSettings"].find_one({"_id": guild_id}, {"prefix": 1})
+            if doc and "prefix" in doc and doc["prefix"].strip():
+                pfx = doc["prefix"].strip()
+                PREFIX_CACHE[guild_id] = pfx
+                return commands.when_mentioned_or(pfx)(bot, message)
+    except Exception:
+        pass
+        
+    # Cache the default so we don't spam DB queries
+    PREFIX_CACHE[guild_id] = PREFIX
+    return commands.when_mentioned_or(PREFIX)(bot, message)
+
 class OrbitBot(commands.Bot):
     def __init__(self):
         try:
@@ -160,7 +190,7 @@ class OrbitBot(commands.Bot):
             discord_status = None
             
         super().__init__(
-            command_prefix=commands.when_mentioned_or(PREFIX),
+            command_prefix=get_prefix,
             intents=intents,
             help_command=None,
             tree_cls=OrbitCommandTree,
