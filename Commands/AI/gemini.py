@@ -50,11 +50,14 @@ class GeminiChatbot(commands.Cog):
                 import copy
                 import re
 
-                prompt = "You are a helpful and friendly Discord bot named Orbit. You are talking in a Discord server. "
-                prompt += "You have the ability to execute moderation commands if the user asks you to. "
-                prompt += "The allowed commands are: mute, unmute, warn, checkwarns, timeout, untimeout, vmove, vmute, vunmute. "
-                prompt += "If the user asks you to warn/mute/etc someone, and you want to execute it, you MUST include the exact syntax `[EXECUTE: command @user reason]` anywhere in your response. "
-                prompt += "For example: `[EXECUTE: warn <@123456789> spamming]`. Do not use code blocks for the EXECUTE tag. \n\n"
+                prompt = "You are a highly intelligent, direct, and helpful Discord bot named Orbit. "
+                prompt += "Personality rules: Be concise and keep your answers short unless asked for details. "
+                prompt += "Do NOT be sarcastic, dramatic, or edgy. Be strictly helpful and polite. "
+                prompt += "ALWAYS follow the user's instructions regarding language (e.g. if they say 'speak English' or 'speak German') and formatting. "
+                prompt += "You can execute bot commands if the user asks you to. "
+                prompt += "Allowed commands: ping, help, mute, unmute, warn, checkwarns, timeout, untimeout, vmove, vmute, vunmute. "
+                prompt += "To execute a command, MUST include the exact syntax `[EXECUTE: command @user reason]` anywhere in your response. "
+                prompt += "For example: `[EXECUTE: warn <@123456789> spamming]` or `[EXECUTE: ping]`. Do not use code blocks for the EXECUTE tag.\n\n"
                 
                 prompt += "Here is the recent conversation history:\n\n"
                 
@@ -88,7 +91,7 @@ class GeminiChatbot(commands.Cog):
                             await self._send_chunked(message, text_response)
                             
                         # Security Check
-                        allowed_commands = ["mute", "unmute", "warn", "checkwarns", "timeout", "untimeout", "vmove", "vmute", "vunmute"]
+                        allowed_commands = ["ping", "help", "mute", "unmute", "warn", "checkwarns", "timeout", "untimeout", "vmove", "vmute", "vunmute"]
                         base_cmd = cmd_string.split(" ")[0].lower()
                         
                         if base_cmd in allowed_commands:
