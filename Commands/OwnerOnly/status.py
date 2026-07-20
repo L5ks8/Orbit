@@ -54,7 +54,7 @@ def _build_activity(act_type: str, text: str) -> discord.BaseActivity | None:
     if t_clean in ["listen", "listening"]:
         return discord.Activity(type=discord.ActivityType.listening, name=text)
     if t_clean in ["stream", "streaming"]:
-        return discord.Streaming(name=text, url="https://discord.gg/archbf")
+        return discord.Streaming(name=text, url="https://twitch.tv/discord")
     if t_clean in ["compete", "competing"]:
         return discord.Activity(type=discord.ActivityType.competing, name=text)
     return discord.CustomActivity(name=f"{act_type} {text}".strip())
