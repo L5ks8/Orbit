@@ -123,10 +123,11 @@ class HelpCategorySelect(discord.ui.Select):
         await interaction.response.edit_message(**self.parent_view.get_kwargs())
 
 class HelpLayout(discord.ui.View):
-    def __init__(self, bot: commands.Bot, author_id: int, current_page: int = 0):
+    def __init__(self, bot: commands.Bot, author_id: int, guild_id: int = None, current_page: int = 0):
         super().__init__(timeout=300)
         self.bot = bot
         self.author_id = author_id
+        self.guild_id = guild_id or 0
         self.current_page = current_page
 
     def get_kwargs(self):
@@ -170,7 +171,7 @@ class HelpLayout(discord.ui.View):
 
         from Embeds import get_command_embed
         return get_command_embed(
-            0, "help", msg_type="page",
+            self.guild_id, "help", msg_type="page",
             page_data=page, current_page=self.current_page,
             total_pages=len(PAGES), icon_url=icon_url,
             components=components
@@ -183,7 +184,7 @@ class HelpCommandCog(commands.Cog):
     @commands.hybrid_command(name="help", description="Displays an interactive paginated guide of all Orbit commands.")
     async def help_cmd(self, ctx: commands.Context):
         await ctx.defer()
-        view = HelpLayout(self.bot, ctx.author.id, 0)
+        view = HelpLayout(self.bot, ctx.author.id, ctx.guild.id if ctx.guild else 0, 0)
         await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
     @help_cmd.error
