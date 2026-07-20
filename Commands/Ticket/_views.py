@@ -100,39 +100,10 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             executor_username = f"@{closed_by.name}" if hasattr(closed_by, "name") and closed_by.name else str(closed_by)
             executor_id_str = str(getattr(closed_by, "id", "Unknown"))
 
-            section_closed = f"### Ticket Closed\n{executor_mention} closed a ticket."
-            section_close_info = (
-                f"### Close Information\n"
-                f"> **Ticket Name:** {channel.name}\n"
-                f"> **Ticket ID:** {channel.id}\n"
-                f"> **Reason:** {reason}"
-            )
-            section_creator_info = (
-                f"### Creator Information\n"
-                f"> **Creator:** {creator_mention}\n"
-                f"> **Creator Username:** {creator_username}\n"
-                f"> **Creator ID:** {creator_id_str}"
-            )
-            section_executor_info = (
-                f"### Executor Information\n"
-                f"> **Executor:** {executor_mention}\n"
-                f"> **Executor Username:** {executor_username}\n"
-                f"> **Executor ID:** {executor_id_str}"
-            )
-
-            container = Container(
-                TextDisplay(content=section_closed),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=section_close_info),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=section_creator_info),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=section_executor_info)
-            )
-            log_view = LayoutView()
-            log_view.add_item(container)
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(guild.id, "ticket", msg_type="close", executor_mention=executor_mention, channel_name=channel.name, channel_id=channel.id, reason=reason, creator_mention=creator_mention, creator_username=creator_username, creator_id_str=creator_id_str, executor_username=executor_username, executor_id_str=executor_id_str)
             try:
-                await log_channel.send(view=log_view, allowed_mentions=discord.AllowedMentions.none())
+                await log_channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
                 file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
                 await log_channel.send(file=file)
             except Exception:
@@ -239,20 +210,10 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
 
         create_active_ticket(interaction.guild.id, ticket_channel.id, interaction.user.id, subject, description, self.category_option)
 
-        header_str = f"### Ticket Opened\n**Channel:** #{ticket_channel.name}\n**Category:** {self.category_option}"
-        info_str = (
-            f"**Creator:** {interaction.user.mention}\n"
-            f"**Assigned Team:** {support_role.mention}\n\n"
-            f"**Subject:** {subject}\n"
-            f"**Description:**\n> {description.replace(chr(10), chr(10) + '> ')}"
-        )
-
-        container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_str)
-        )
-        control_view = TicketControlLayout(container=container)
+        control_view = TicketControlLayout()
+        
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(interaction.guild_id, "ticket", msg_type="control", channel_name=ticket_channel.name, category_option=self.category_option, creator_mention=interaction.user.mention, support_mention=support_role.mention, subject=subject, description=description, components=control_view.children)
 
         try:
             allowed_mentions = discord.AllowedMentions(users=True, roles=True)
@@ -261,7 +222,7 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
                 allowed_mentions=allowed_mentions
             )
             await ticket_channel.send(
-                view=control_view,
+                **kwargs,
                 allowed_mentions=discord.AllowedMentions.none()
             )
         except Exception as e:
@@ -274,8 +235,8 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
 
         await interaction.followup.send(f"Your support ticket has been created: {ticket_channel.mention}", ephemeral=True)
 
-class TicketControlLayout(LayoutView):
-    def __init__(self, claimed_name: str = None, container: Container = None):
+class TicketControlLayout(discord.ui.View):
+    def __init__(self, claimed_name: str = None):
         super().__init__(timeout=None)
         self.btn_claim = Button(
             label=f"Claimed by {claimed_name}" if claimed_name else "Claim Ticket",
@@ -310,32 +271,17 @@ class TicketControlLayout(LayoutView):
 
             claim_ticket(interaction.guild.id, interaction.channel.id, interaction.user.id)
 
-            header_str = f"### Ticket Claimed\n**Channel:** #{interaction.channel.name}"
-            info_str = (
-                f"**Assigned Staff:** {interaction.user.mention}\n"
-                f"**Subject:** {ticket_data.get('subject', 'Unknown')}"
-            )
-            updated_container = Container(
-                TextDisplay(content=header_str),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=info_str)
-            )
-            updated_view = TicketControlLayout(claimed_name=interaction.user.display_name, container=updated_container)
+            updated_view = TicketControlLayout(claimed_name=interaction.user.display_name)
+            from Embeds import get_command_embed
+            
+            kwargs = get_command_embed(interaction.guild_id, "ticket", msg_type="control", channel_name=interaction.channel.name, category_option=ticket_data.get('category', 'Unknown'), creator_mention=f"<@{ticket_data.get('creator_id')}>", support_mention=interaction.user.mention, subject=ticket_data.get('subject', 'Unknown'), description="[Original Description Preserved]", components=updated_view.children)
             try:
-                await interaction.message.edit(view=updated_view, allowed_mentions=discord.AllowedMentions.none())
+                await interaction.message.edit(**kwargs, allowed_mentions=discord.AllowedMentions.none())
             except Exception:
                 pass
 
-            claim_header = f"### Ticket Claimed\n**Channel:** #{interaction.channel.name}"
-            claim_info = "A staff member is handling this ticket now."
-            status_container = Container(
-                TextDisplay(content=claim_header),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=claim_info)
-            )
-            status_view = LayoutView()
-            status_view.add_item(status_container)
-            await interaction.response.send_message(view=status_view, allowed_mentions=discord.AllowedMentions.none())
+            claim_kwargs = get_command_embed(interaction.guild_id, "ticket", msg_type="claim", channel_name=interaction.channel.name, author_mention=interaction.user.mention, subject=ticket_data.get('subject', 'Unknown'))
+            await interaction.response.send_message(**claim_kwargs, allowed_mentions=discord.AllowedMentions.none())
 
         async def close_cb(interaction: discord.Interaction):
             config = load_ticket_config(interaction.guild.id)
@@ -579,7 +525,9 @@ class TicketConfigDynamicView(LayoutView):
                 description=config.get("panel_description", "Click the button below to open a direct support channel with our team."),
                 options_slots=slots
             )
-            await panel_ch.send(view=live_view, allowed_mentions=discord.AllowedMentions.none())
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(interaction.guild_id, "ticket", msg_type="panel", title=live_view.panel_title, description=live_view.panel_desc, instructions=live_view.panel_instructions, components=live_view.children)
+            await panel_ch.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
             await interaction.response.send_message(f"Ticket Desk successfully sent to {panel_ch.mention} featuring {len(slots)} custom category buttons!", ephemeral=True)
 
         btn_publish.callback = publish_cb
@@ -596,7 +544,7 @@ class TicketConfigDynamicView(LayoutView):
         )
         self.add_item(container)
 
-class PersistentTicketPanelLayout(LayoutView):
+class PersistentTicketPanelLayout(discord.ui.View):
     def __init__(self, title: str = "Support Ticket Desk", description: str = "Click the button below to open a direct support channel with our team.", instructions: str = "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel.", options: list | None = None, options_slots: list | None = None):
         super().__init__(timeout=None)
         self.panel_title = title
@@ -604,21 +552,13 @@ class PersistentTicketPanelLayout(LayoutView):
         self.panel_instructions = instructions
         self.panel_options = options or []
         self.options_slots = options_slots or []
-        self.build_ui()
-
-    def build_ui(self):
-        self.clear_items()
-        header_str = f"### {self.panel_title}\n{self.panel_desc}"
-        info_str = self.panel_instructions
 
         select_opts = []
         slots_to_render = self.options_slots if self.options_slots else self.panel_options
         for idx, slot in enumerate(slots_to_render[:25]):
             opt_str = slot.get("name", "").strip()[:100] if isinstance(slot, dict) else str(slot).strip()[:100]
-            if not opt_str:
-                continue
+            if not opt_str: continue
             select_opts.append(discord.SelectOption(label=opt_str, value=opt_str))
-
         if not select_opts:
             select_opts.append(discord.SelectOption(label="General Support", value="General Support"))
 
@@ -627,10 +567,8 @@ class PersistentTicketPanelLayout(LayoutView):
         async def _panel_dropdown_cb(interaction: discord.Interaction):
             val = interaction.data.get("values", ["General Support"])[0]
             _user_ticket_selections[interaction.user.id] = val
-            try:
-                await interaction.response.defer()
-            except Exception:
-                pass
+            try: await interaction.response.defer()
+            except Exception: pass
 
         panel_dropdown.callback = _panel_dropdown_cb
 
@@ -655,13 +593,6 @@ class PersistentTicketPanelLayout(LayoutView):
 
         btn_create.callback = _btn_create_cb
 
-        container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            ActionRow(panel_dropdown),
-            ActionRow(btn_create)
-        )
-        self.add_item(container)
+        self.add_item(panel_dropdown)
+        self.add_item(btn_create)
 

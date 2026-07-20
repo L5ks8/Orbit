@@ -6,24 +6,7 @@ from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
 
-class WarnIssuedLayout(LayoutView):
-    def __init__(self, member: discord.Member, warn_entry: dict, total_warns: int):
-        super().__init__()
-        header_str = (
-            f"### ⚠️ Warning Issued: {member.mention}\n"
-            f"**Warn ID:** `{warn_entry['warn_id']}` | **Total Warnings:** `{total_warns}`"
-        )
-        info_str = (
-            f"**Moderator:** <@{warn_entry['moderator_id']}>\n"
-            f"**Reason:** {warn_entry['reason']}\n"
-            f"**Date:** <t:{warn_entry['timestamp']}:f> (<t:{warn_entry['timestamp']}:R>)"
-        )
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_str)
-        )
-        self.add_item(self.container)
+
 
 async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str):
     await ctx.defer()
@@ -82,30 +65,39 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member, reason: str)
             punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
 
     try:
-        dm_view = LayoutView()
-        dm_header = f"### ⚠️ Formal Warning Received\n**Server:** `{ctx.guild.name}`"
-        dm_info = f"**Warn ID:** `{warn_entry['warn_id']}`\n**Reason:** {reason}{punishment_text}"
-        dm_container = Container(
-            TextDisplay(content=dm_header),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=dm_info)
-        )
-        dm_view.add_item(dm_container)
-        await user.send(view=dm_view)
+        from Embeds import get_command_embed
+        dm_kwargs = get_command_embed(ctx.guild.id, "warn", msg_type="dm", guild_name=ctx.guild.name, warn_entry=warn_entry, reason=reason, punishment_text=punishment_text)
+        
+        if "embed" in dm_kwargs:
+            await user.send(embed=dm_kwargs["embed"])
+        elif "components" in dm_kwargs:
+            dm_view = LayoutView()
+            for comp in dm_kwargs["components"]:
+                dm_view.add_item(comp)
+            await user.send(view=dm_view)
     except Exception:
         pass
     try:
         await ctx.message.delete()
     except Exception:
         pass
-    view = WarnIssuedLayout(user, warn_entry, total_warns)
+    from Embeds import get_command_embed
+    public_kwargs = get_command_embed(ctx.guild.id, "warn", msg_type="public", member=user, warn_entry=warn_entry, total_warns=total_warns)
+    
     await log_event(
         ctx.guild,
         "moderation_action",
         "User Warned (`-warn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}{punishment_text}"
     )
-    await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+    
+    if "embed" in public_kwargs:
+        await ctx.send(embed=public_kwargs["embed"], delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+    elif "components" in public_kwargs:
+        public_view = LayoutView()
+        for comp in public_kwargs["components"]:
+            public_view.add_item(comp)
+        await ctx.send(view=public_view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 @commands.hybrid_command(
     name="warn",

@@ -1,4 +1,4 @@
-﻿import io
+import io
 import asyncio
 import discord
 from discord import app_commands
@@ -47,17 +47,9 @@ async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
             reason=f"Added to ticket by {ctx.author}"
         )
 
-        header_str = f"### Member Added to Ticket: **#{ctx.channel.name}**\n**Status:** Access Granted"
-        info_str = f"**User Added:** {member.mention} (`{member.id}`)\n**Added By:** {ctx.author.mention}"
-
-        container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_str)
-        )
-        status_view = LayoutView()
-        status_view.add_item(container)
-        await ctx.send(view=status_view, allowed_mentions=discord.AllowedMentions.none())
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(ctx.guild.id, "ticket", msg_type="add", channel_name=ctx.channel.name, member_mention=member.mention, member_id=member.id, author_mention=ctx.author.mention)
+        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
         await ctx.send(f"I do not have permission to modify channel overwrites for {member.mention}.", ephemeral=True)
@@ -90,17 +82,9 @@ async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
     try:
         await ctx.channel.set_permissions(member, overwrite=None, reason=f"Removed from ticket by {ctx.author}")
 
-        header_str = f"### Member Removed from Ticket: **#{ctx.channel.name}**\n**Status:** Access Revoked"
-        info_str = f"**User Removed:** {member.mention} (`{member.id}`)\n**Removed By:** {ctx.author.mention}"
-
-        container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_str)
-        )
-        status_view = LayoutView()
-        status_view.add_item(container)
-        await ctx.send(view=status_view, allowed_mentions=discord.AllowedMentions.none())
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(ctx.guild.id, "ticket", msg_type="remove", channel_name=ctx.channel.name, member_mention=member.mention, member_id=member.id, author_mention=ctx.author.mention)
+        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
         await ctx.send(f"I do not have permission to modify channel overwrites for {member.mention}.", ephemeral=True)
@@ -185,26 +169,9 @@ async def _do_ticket_transcript(ctx: commands.Context):
     file_bytes = "\n".join(lines).encode("utf-8")
     file = discord.File(io.BytesIO(file_bytes), filename=f"transcript-{ctx.channel.name}.txt")
 
-    section_closed = f"### Ticket Transcript Generated\n**Ticket:** `#{ctx.channel.name}` (`{ctx.channel.id}`)"
-    section_close_info = (
-        f"**Subject:** `{subject}`\n"
-        f"**Messages Archived:** `{len(messages)}`"
-    )
-    section_creator_info = f"**Creator ID:** `{creator_id}`"
-    section_executor_info = f"**Exported By:** {ctx.author.mention} (`{ctx.author.id}`)"
-
-    container = Container(
-        TextDisplay(content=section_closed),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=section_close_info),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=section_creator_info),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=section_executor_info)
-    )
-    view = LayoutView()
-    view.add_item(container)
-    await ctx.send(view=view, file=file, allowed_mentions=discord.AllowedMentions.none())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "ticket", msg_type="transcript", channel_name=ctx.channel.name, channel_id=ctx.channel.id, subject=subject, messages_count=len(messages), creator_id=creator_id, executor_mention=ctx.author.mention, executor_id=ctx.author.id)
+    await ctx.send(**kwargs, file=file, allowed_mentions=discord.AllowedMentions.none())
 
 @commands.hybrid_group(name="ticket", description="Support ticket tools.")
 @commands.has_permissions(manage_channels=True)

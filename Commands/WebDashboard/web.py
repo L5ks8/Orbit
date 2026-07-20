@@ -748,7 +748,9 @@ class WebDashboard:
                                 instructions=ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."),
                                 options_slots=ticket_cfg.get("options_slots", [])
                             )
-                            await msg.edit(view=view, allowed_mentions=discord.AllowedMentions.none())
+                            from Embeds import get_command_embed
+                            kwargs = get_command_embed(guild_id, "ticket", msg_type="panel", title=view.panel_title, description=view.panel_desc, instructions=view.panel_instructions, components=view.children)
+                            await msg.edit(**kwargs, allowed_mentions=discord.AllowedMentions.none())
                         except Exception:
                             pass
             
@@ -776,9 +778,9 @@ class WebDashboard:
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
                 
-            from Commands.Verify._views import PersistentVerifyLayout
-            view = PersistentVerifyLayout()
-            await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(guild_id, "verify", msg_type="panel")
+            await channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
             verify_cfg = load_verify_config(guild_id)
             verify_cfg["channel_id"] = channel.id
@@ -810,6 +812,7 @@ class WebDashboard:
                 
             from Commands.Ticket._views import PersistentTicketPanelLayout
             from Commands.Ticket._storage import load_ticket_config, save_ticket_config
+            from Embeds import get_command_embed
             
             ticket_cfg = load_ticket_config(guild_id)
             view = PersistentTicketPanelLayout(
@@ -818,8 +821,8 @@ class WebDashboard:
                 instructions=ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."),
                 options_slots=ticket_cfg.get("options_slots", [])
             )
-            
-            msg = await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            kwargs = get_command_embed(guild_id, "ticket", msg_type="panel", title=view.panel_title, description=view.panel_desc, instructions=view.panel_instructions, components=view.children)
+            msg = await channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
             ticket_cfg["panel_channel_id"] = channel.id
             ticket_cfg["panel_message_id"] = msg.id

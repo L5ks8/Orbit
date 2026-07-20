@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Verify._storage import load_verify_config
@@ -21,24 +21,10 @@ async def _do_verify_status(ctx: commands.Context):
     rem_display = f"<@&{remove_role_id}> (`{remove_role_id}`)" if remove_role_id else "`Not set`"
     kick_str = f"`{auto_kick} minutes`" if auto_kick > 0 else "`Disabled`"
 
-    header_str = f"### Server Verification Status: **{ctx.guild.name}**\n**Status:** {'Active' if enabled and ch_id and role_id else 'Inactive'}"
-    info_str = (
-        f"**System Enabled:** `{'Yes' if enabled else 'No'}`\n"
-        f"**Channel:** {ch_display}\n"
-        f"**Granted Role:** {role_display}\n"
-        f"**Removed Role:** {rem_display}\n"
-        f"**Auto-Kick Timer:** {kick_str}\n"
-        f"**Pending Unverified Members:** `{len(config.get('pending_kicks', {}))}`"
-    )
-
-    container = Container(
-        TextDisplay(content=header_str),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=info_str)
-    )
-    status_view = LayoutView()
-    status_view.add_item(container)
-    await ctx.send(view=status_view, allowed_mentions=discord.AllowedMentions.none())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "verify", msg_type="status", guild_name=ctx.guild.name, active=(enabled and ch_id and role_id), enabled_str='Yes' if enabled else 'No', ch_display=ch_display, role_display=role_display, rem_display=rem_display, kick_str=kick_str, pending=len(config.get('pending_kicks', {})))
+    
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @verify_group.command(name="status", description="Check CAPTCHA verification configuration status.")
 @commands.has_permissions(manage_guild=True)

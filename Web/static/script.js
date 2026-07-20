@@ -881,8 +881,9 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             new CustomMultiSelect(settingsManagerRolesEl, globalRoles, "Select...", (item) => `<span class="role-badge" style="border-color: ${item.color !== '#000000' ? item.color : '#4E5058'}"><span class="role-dot" style="background-color: ${item.color !== '#000000' ? item.color : '#949BA4'}"></span>${item.name}</span>`);
         }
 
-        if (config.settings?.timezone) {
-            document.getElementById('settings_timezone').value = config.settings.timezone;
+        if (config.settings) {
+            document.getElementById('settings_timezone').value = config.settings.timezone || 'UTC';
+            document.getElementById('settings_embed_style').value = config.settings.embed_style || 'normal';
         }
 
         // Welcome
@@ -1925,7 +1926,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     const payload = {
         settings: {
             manager_roles: Array.from(document.getElementById('settings_manager_roles').selectedOptions).map(o => o.value),
-            timezone: document.getElementById('settings_timezone').value
+            timezone: document.getElementById('settings_timezone').value,
+            embed_style: document.getElementById('settings_embed_style').value
         },
         welcome: {
             enabled: document.getElementById('welcome_enabled').checked,

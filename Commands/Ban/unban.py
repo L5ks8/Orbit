@@ -1,14 +1,18 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Log._storage import log_event
 
-class UnbanConfirmLayout(LayoutView):
-    def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member):
+class UnbanConfirmView(LayoutView):
+    def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member, content_kwargs: dict):
         super().__init__(timeout=60.0)
         self.ban_entry = ban_entry
         self.reason = reason
         self.author = author
+
+        if "components" in content_kwargs:
+            for comp in content_kwargs["components"]:
+                self.add_item(comp)
 
         btn_confirm = Button(label="Confirm unban", style=discord.ButtonStyle.success, custom_id="unban_confirm")
         btn_cancel = Button(label="Cancel", style=discord.ButtonStyle.secondary, custom_id="unban_cancel")
@@ -18,22 +22,26 @@ class UnbanConfirmLayout(LayoutView):
                 return await interaction.response.send_message("You are not authorized to perform this action.", ephemeral=True)
             
             try:
+                from Embeds import get_command_embed
                 await interaction.guild.unban(self.ban_entry.user, reason=f"Unbanned by {self.author} | Reason: {self.reason}")
                 await log_event(
                     interaction.guild,
-        "moderation_action",
+                    "moderation_action",
                     "User Unbanned (`-unban`)",
                     f"**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Reason:** {self.reason}"
                 )
                 
-                success_container = Container(
-                    TextDisplay(content=f"### User unbanned\n**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)"),
-                    Separator(spacing=discord.SeparatorSpacing.small),
-                    TextDisplay(content=f"**Reason:** {self.reason}\n**Moderator:** {self.author.mention}")
-                )
-                self.clear_items()
-                self.add_item(success_container)
-                await interaction.response.edit_message(view=self)
+                kwargs = get_command_embed(interaction.guild_id, "unban", msg_type="success", ban_entry=self.ban_entry, reason=self.reason, author=self.author)
+                
+                if "embed" in kwargs:
+                    self.clear_items()
+                    await interaction.response.edit_message(embed=kwargs["embed"], view=self)
+                elif "components" in kwargs:
+                    self.clear_items()
+                    for comp in kwargs["components"]:
+                        self.add_item(comp)
+                    await interaction.response.edit_message(view=self)
+                
                 self.stop()
             except discord.Forbidden:
                 await interaction.response.send_message("I do not have sufficient permissions to unban this user.", ephemeral=True)
@@ -43,13 +51,16 @@ class UnbanConfirmLayout(LayoutView):
         async def cancel_callback(interaction: discord.Interaction):
             if interaction.user.id != self.author.id:
                 return await interaction.response.send_message("You are not authorized to perform this action.", ephemeral=True)
-            
-            cancel_container = Container(
-                TextDisplay(content="### Unban cancelled\nThe operation was cancelled.")
-            )
-            self.clear_items()
-            self.add_item(cancel_container)
-            await interaction.response.edit_message(view=self)
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(interaction.guild_id, "unban", msg_type="cancel")
+            if "embed" in kwargs:
+                self.clear_items()
+                await interaction.response.edit_message(embed=kwargs["embed"], view=self)
+            elif "components" in kwargs:
+                self.clear_items()
+                for comp in kwargs["components"]:
+                    self.add_item(comp)
+                await interaction.response.edit_message(view=self)
             self.stop()
 
         btn_confirm.callback = confirm_callback
@@ -57,14 +68,7 @@ class UnbanConfirmLayout(LayoutView):
 
         action_row = ActionRow(btn_confirm, btn_cancel)
 
-        self.container = Container(
-            TextDisplay(content=f"### Confirm unban\nAre you sure you want to unban **{self.ban_entry.user.name}**?"),
-            Separator(spacing=discord.SeparatorSpacing.large),
-            TextDisplay(content=f"**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)\n**Original Ban Reason:** {self.ban_entry.reason or 'None'}\n**New Reason:** {self.reason}"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            action_row
-        )
-        self.add_item(self.container)
+        self.add_item(ActionRow(btn_confirm, btn_cancel))
 
 class UnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -86,8 +90,14 @@ class UnbanCommand(commands.Cog):
         except discord.Forbidden:
             return await ctx.send("I do not have permission to view the ban list.", ephemeral=True)
 
-        view = UnbanConfirmLayout(ban_entry, reason, ctx.author)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(ctx.guild.id, "unban", msg_type="prompt", ban_entry=ban_entry, reason=reason)
+        view = UnbanConfirmView(ban_entry, reason, ctx.author, kwargs)
+        
+        if "embed" in kwargs:
+            await ctx.send(embed=kwargs["embed"], view=view, allowed_mentions=discord.AllowedMentions.none())
+        elif "components" in kwargs:
+            await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
 
     @unban.error
     async def unban_error(self, ctx: commands.Context, error):

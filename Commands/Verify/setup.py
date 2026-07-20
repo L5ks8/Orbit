@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
@@ -20,30 +20,20 @@ async def _do_verify_setup(
     remove_role_id = remove_role.id if remove_role else None
     config = setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
     
-    view = PersistentVerifyLayout()
+    from Embeds import get_command_embed
+    
+    panel_kwargs = get_command_embed(ctx.guild.id, "verify", msg_type="panel")
     try:
-        await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        await channel.send(**panel_kwargs, allowed_mentions=discord.AllowedMentions.none())
     except Exception as e:
         return await ctx.send(f"Could not post verification card inside {channel.mention}: {e}", ephemeral=True)
 
     kick_str = f"`{auto_kick_minutes} minutes`" if auto_kick_minutes > 0 else "`Disabled (No auto-kick)`"
     rem_str = remove_role.mention if remove_role else "`None (Disabled)`"
-    header_str = f"### CAPTCHA Verification Configured: **{ctx.guild.name}**\n**Verification Channel:** {channel.mention}"
-    info_str = (
-        f"**Granted Role:** {role.mention}\n"
-        f"**Removed Role (After Verify):** {rem_str}\n"
-        f"**Auto-Kick Timer:** {kick_str}\n\n"
-        f"-# The interactive verification panel is now live in {channel.mention}."
-    )
-
-    container = Container(
-        TextDisplay(content=header_str),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=info_str)
-    )
-    status_view = LayoutView()
-    status_view.add_item(container)
-    await ctx.send(view=status_view, allowed_mentions=discord.AllowedMentions.none())
+    
+    success_kwargs = get_command_embed(ctx.guild.id, "verify", msg_type="setup_success", guild_name=ctx.guild.name, channel_mention=channel.mention, role_mention=role.mention, rem_str=rem_str, kick_str=kick_str)
+    
+    await ctx.send(**success_kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @verify_group.command(name="setup", description="Configure the CAPTCHA verification channel and roles.")
 @commands.has_permissions(manage_guild=True)
