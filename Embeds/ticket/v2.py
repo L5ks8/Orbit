@@ -86,8 +86,9 @@ def get_embed(msg_type: str, **kwargs):
         )
         container = Container(TextDisplay(content=header_str), Separator(spacing=discord.SeparatorSpacing.small), TextDisplay(content=info_str))
         view = LayoutView(timeout=None)
+        if components:
+            container.add_item(ActionRow(*components))
         view.add_item(container)
-        for comp in components: view.add_item(comp)
         return {"view": view}
         
     elif msg_type == "claim":
