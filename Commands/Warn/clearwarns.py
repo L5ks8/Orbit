@@ -1,21 +1,11 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Warn._storage import clear_user_warnings
 from Commands.Log._storage import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
 
-class ClearWarningsLayout(LayoutView):
-    def __init__(self, member: discord.Member, cleared_count: int):
-        super().__init__()
-        header_str = f"### ⚠️ All Warnings Cleared\n**Target Member:** {member.mention} (`{member.id}`)"
-        content_str = f"**Total Removed:** `{cleared_count}` warnings\n**Current Remaining Warnings:** `0`"
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=content_str)
-        )
-        self.add_item(self.container)
+
 
 async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     await ctx.defer()
@@ -34,14 +24,16 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
         await ctx.message.delete()
     except Exception:
         pass
-    view = ClearWarningsLayout(user, cleared_count)
     await log_event(
         ctx.guild,
         "moderation_action",
         "All Warnings Cleared (`-clearwarns`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Total Cleared:** `{cleared_count}` warnings"
     )
-    await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "clearwarns", msg_type="clear", member_mention=user.mention, member_id=user.id, cleared_count=cleared_count)
+    await ctx.send(**kwargs, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 class ClearWarnsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

@@ -1,18 +1,9 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice._storage import remove_from_vcban
 from Commands.Voice.voice import voice_group
 
-class VcUnbanSuccessLayout(LayoutView):
-    def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### User Voice Unbanned\n**Target:** {target.mention} (`{target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}\n**Status:** `Revoked (Voice Access Restored)`")
-        )
-        self.add_item(self.container)
+
 
 async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     await ctx.defer()
@@ -23,8 +14,9 @@ async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     if not success:
         return await ctx.send("This user is not currently voice banned on this server.", ephemeral=True)
 
-    view = VcUnbanSuccessLayout(user, reason, ctx.author)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="unban", member_mention=user.mention, member_id=user.id, reason=reason, author_mention=ctx.author.mention)
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @voice_group.command(name="unban", description="Remove a voice ban from a user.")
 @commands.has_permissions(move_members=True)

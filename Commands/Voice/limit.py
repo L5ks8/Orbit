@@ -1,18 +1,6 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice.voice import voice_group
-
-class VcLimitSuccessLayout(LayoutView):
-    def __init__(self, channel: discord.VoiceChannel, limit: int, author: discord.Member):
-        super().__init__()
-        limit_text = f"`{limit} users`" if limit > 0 else "`Unlimited (No limit)`"
-        self.container = Container(
-            TextDisplay(content=f"### Voice Channel Limit Updated\n**Channel:** {channel.mention} (`{channel.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**User Limit:** {limit_text}\n**Moderator:** {author.mention}")
-        )
-        self.add_item(self.container)
 
 async def _do_vc_limit(ctx: commands.Context, limit: int, channel: discord.VoiceChannel | None):
     await ctx.defer()
@@ -25,8 +13,9 @@ async def _do_vc_limit(ctx: commands.Context, limit: int, channel: discord.Voice
 
     try:
         await target_channel.edit(user_limit=limit, reason=f"Voice limit updated by {ctx.author}")
-        view = VcLimitSuccessLayout(target_channel, limit, ctx.author)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="limit", channel_mention=target_channel.mention, limit=limit, author_mention=ctx.author.mention)
+        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to modify this voice channel.", ephemeral=True)
     except Exception as e:

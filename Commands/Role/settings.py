@@ -1,7 +1,7 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Role.role import role_group
 
 PERMISSION_MAP = {
@@ -22,23 +22,7 @@ PERMISSION_MAP = {
 
 PERMISSION_CHOICES = [app_commands.Choice(name=k, value=k) for k in PERMISSION_MAP]
 
-class RoleSettingsResultLayout(LayoutView):
-    def __init__(self, role: discord.Role, permission_label: str, state: str, success: int, failed: int, skipped: int, moderator: discord.Member):
-        super().__init__()
-        state_display = "Enabled" if state == "on" else ("Disabled" if state == "off" else "Reset (Neutral)")
-        header_str = f"### Role Channel Permission Updated\n**Role:** {role.mention} (`{role.id}`)"
-        info_str = (
-            f"**Permission:** `{permission_label}`\n"
-            f"**New State:** {state_display}\n"
-            f"**Channels Modified:** `{success}` | **Failed:** `{failed}` | **Skipped:** `{skipped}`\n"
-            f"**Moderator:** {moderator.mention}"
-        )
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_str)
-        )
-        self.add_item(self.container)
+
 
 async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission: str, state: str):
     await ctx.defer()
@@ -85,8 +69,16 @@ async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission
         except Exception:
             failed += 1
 
-    view = RoleSettingsResultLayout(role, permission, state.lower(), success, failed, skipped, ctx.author)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    state_display = "Enabled" if state.lower() == "on" else ("Disabled" if state.lower() == "off" else "Reset (Neutral)")
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(
+        ctx.guild.id, "role", msg_type="settings", 
+        role_mention=role.mention, role_id=role.id, role_color=role.color,
+        permission_label=permission, state=state_display,
+        success=success, failed=failed, skipped=skipped,
+        author_mention=ctx.author.mention
+    )
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @role_group.command(name="settings", description="Configure permissions for a role across all channels.")
 @commands.has_permissions(administrator=True)

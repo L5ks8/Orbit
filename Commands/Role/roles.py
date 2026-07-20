@@ -8,7 +8,7 @@ async def all_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
         await ctx.send("Please use `/all roles`.", ephemeral=True)
 
-class AllRolesLayout(LayoutView):
+class AllRolesLayout(discord.ui.View):
     def __init__(self, guild: discord.Guild, roles: list[discord.Role], author_id: int):
         super().__init__()
         self.guild = guild
@@ -21,22 +21,7 @@ class AllRolesLayout(LayoutView):
 
     def refresh_page(self):
         self.clear_items()
-        start_idx = (self.page - 1) * self.per_page
-        end_idx = start_idx + self.per_page
-        current_roles = self.roles[start_idx:end_idx]
 
-        lines = []
-        for index, r in enumerate(current_roles, start=start_idx + 1):
-            lines.append(f"`{index}.` {r.mention} - ID: `{r.id}` | Members: `{len(r.members)}`")
-
-        roles_text = "\n".join(lines) if lines else "No roles found on this page."
-        header_content = f"### Server Roles List (Page {self.page} of {self.total_pages})\n**Total Roles:** `{len(self.roles)}` on **{self.guild.name}**"
-
-        items = [
-            TextDisplay(content=header_content),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=roles_text)
-        ]
 
         btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
@@ -63,7 +48,7 @@ class AllRolesLayout(LayoutView):
                 if self.page > 1:
                     self.page -= 1
                     self.refresh_page()
-                    await interaction.response.edit_message(view=self)
+                    await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
 
             async def next_callback(interaction: discord.Interaction):
                 if interaction.user.id != self.author_id:
@@ -71,16 +56,36 @@ class AllRolesLayout(LayoutView):
                 if self.page < self.total_pages:
                     self.page += 1
                     self.refresh_page()
-                    await interaction.response.edit_message(view=self)
+                    await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
 
             btn_prev.callback = prev_callback
             btn_next.callback = next_callback
-            items.extend([Separator(spacing=discord.SeparatorSpacing.small), ActionRow(btn_prev, btn_next, btn_close)])
-        else:
-            items.extend([Separator(spacing=discord.SeparatorSpacing.small), ActionRow(btn_close)])
+        components = []
+        if self.total_pages > 1:
+            components.extend([btn_prev, btn_next])
+        components.append(btn_close)
 
-        self.container = Container(*items)
-        self.add_item(self.container)
+        for comp in components:
+            self.add_item(comp)
+
+    def get_kwargs(self, guild_id: int):
+        start_idx = (self.page - 1) * self.per_page
+        end_idx = start_idx + self.per_page
+        current_roles = self.roles[start_idx:end_idx]
+
+        lines = []
+        for index, r in enumerate(current_roles, start=start_idx + 1):
+            lines.append(f"`{index}.` {r.mention} - ID: `{r.id}` | Members: `{len(r.members)}`")
+
+        roles_text = "\n".join(lines) if lines else "No roles found on this page."
+        
+        from Embeds import get_command_embed
+        return get_command_embed(
+            guild_id, "role", msg_type="roles",
+            page=self.page, total_pages=self.total_pages,
+            total_roles=len(self.roles), roles_text=roles_text,
+            components=self.children
+        )
 
 async def _do_allroles(ctx: commands.Context):
     await ctx.defer()
@@ -92,7 +97,8 @@ async def _do_allroles(ctx: commands.Context):
         return await ctx.send("There are no custom roles on this server.", ephemeral=True)
 
     view = AllRolesLayout(ctx.guild, roles, ctx.author.id)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    kwargs = view.get_kwargs(ctx.guild.id)
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @all_group.command(name="roles", aliases=["allroles"], description="Display all roles on the server.")
 async def all_roles_cmd(ctx: commands.Context):

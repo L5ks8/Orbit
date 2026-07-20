@@ -1,21 +1,11 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Warn._storage import delete_warning, get_user_warnings
 from Commands.Log._storage import log_event
 from Commands._utils import MemberOrIDConverter, format_usage
 
-class DelWarnLayout(LayoutView):
-    def __init__(self, member: discord.Member, warn_id: str, remaining: int):
-        super().__init__()
-        header_str = f"### ⚠️ Warning Deleted\n**Target Member:** {member.mention} (`{member.id}`)"
-        content_str = f"**Removed ID:** `{warn_id}`\n\n**Current Remaining Warnings:** `{remaining}`"
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=content_str)
-        )
-        self.add_item(self.container)
+
 
 async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str):
     await ctx.defer()
@@ -30,14 +20,15 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
         await ctx.message.delete()
     except Exception:
         pass
-    view = DelWarnLayout(user, warn_id, remaining)
     await log_event(
         ctx.guild,
         "moderation_action",
         "Warning Deleted (`-delwarn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Removed Warn ID:** `{warn_id}`\n**Remaining Warnings:** `{remaining}`"
     )
-    await ctx.send(view=view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "delwarn", msg_type="delete", member_mention=user.mention, member_id=user.id, warn_id=warn_id, remaining=remaining)
+    await ctx.send(**kwargs, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 class DelWarnCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

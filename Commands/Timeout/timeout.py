@@ -1,19 +1,11 @@
-﻿import datetime
+import datetime
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 
-class TimeoutSuccessLayout(LayoutView):
-    def __init__(self, target: discord.Member, minutes: int, reason: str, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### User Timed Out\n**Target:** {target.mention} (`{target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Duration:** `{minutes} minutes`\n**Reason:** {reason}\n**Moderator:** {author.mention}")
-        )
-        self.add_item(self.container)
+
 
 class TimeoutCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -36,14 +28,15 @@ class TimeoutCommand(commands.Cog):
         try:
             duration = datetime.timedelta(minutes=minutes)
             await target.timeout(duration, reason=f"Timeout by {ctx.author} | Reason: {reason}")
-            view = TimeoutSuccessLayout(target, minutes, reason, ctx.author)
             await log_event(
                 ctx.guild,
         "moderation_action",
                 "User Timed Out (`-timeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Duration:** `{minutes} minutes`\n**Reason:** {reason}"
             )
-            await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(ctx.guild.id, "timeout", msg_type="timeout", member_mention=target.mention, member_id=target.id, minutes=minutes, reason=reason, author_mention=ctx.author.mention)
+            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to time out this user.", ephemeral=True)
         except Exception as e:

@@ -5,7 +5,7 @@ from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, Ac
 from Commands.Warn._storage import get_user_warnings
 from Commands._utils import MemberOrIDConverter, format_usage
 
-class WarningsListLayout(LayoutView):
+class WarningsListLayout(discord.ui.View):
     def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
         super().__init__(timeout=300)
         self.member = member
@@ -17,22 +17,7 @@ class WarningsListLayout(LayoutView):
         self._build_view()
 
     def _build_view(self):
-        self.clear_items()
-        start = (self.page - 1) * self.per_page
-        end = start + self.per_page
-        slice_warns = self.warnings[start:end]
 
-        lines = []
-        for w in slice_warns:
-            lines.append(
-                f"**ID:** `{w['warn_id']}` | **Mod:** <@{w['moderator_id']}>\n"
-                f"**Reason:** {w['reason']} (<t:{w['timestamp']}:R>)"
-            )
-        warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
-        header_content = (
-            f"### ⚠️ Warning History: {self.member.mention} (Page {self.page} of {self.total_pages})\n"
-            f"**Total Warnings:** `{len(self.warnings)}`"
-        )
         btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def close_cb(interaction: discord.Interaction):
@@ -54,33 +39,45 @@ class WarningsListLayout(LayoutView):
                     return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
                 self.page -= 1
                 self._build_view()
-                await interaction.response.edit_message(view=self)
+                await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
 
             async def next_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.author_id:
                     return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
                 self.page += 1
                 self._build_view()
-                await interaction.response.edit_message(view=self)
+                await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
 
             btn_prev.callback = prev_cb
             btn_next.callback = next_cb
-            self.container = Container(
-                TextDisplay(content=header_content),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=warns_text),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                ActionRow(btn_prev, btn_next, btn_close)
+        components = []
+        if self.total_pages > 1:
+            components.extend([btn_prev, btn_next])
+        components.append(btn_close)
+
+        for comp in components:
+            self.add_item(comp)
+
+    def get_kwargs(self, guild_id: int):
+        start = (self.page - 1) * self.per_page
+        end = start + self.per_page
+        slice_warns = self.warnings[start:end]
+
+        lines = []
+        for w in slice_warns:
+            lines.append(
+                f"**ID:** `{w['warn_id']}` | **Mod:** <@{w['moderator_id']}>\n"
+                f"**Reason:** {w['reason']} (<t:{w['timestamp']}:R>)"
             )
-        else:
-            self.container = Container(
-                TextDisplay(content=header_content),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=warns_text),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                ActionRow(btn_close)
-            )
-        self.add_item(self.container)
+        warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
+
+        from Embeds import get_command_embed
+        return get_command_embed(
+            guild_id, "checkwarns", msg_type="list",
+            member_mention=self.member.mention, page=self.page,
+            total_pages=self.total_pages, total_warnings=len(self.warnings),
+            warns_text=warns_text, components=self.children
+        )
 
 async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
     await ctx.defer()
@@ -91,7 +88,8 @@ async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
     if not warns:
         return await ctx.send(f"`{target.display_name}` has 0 formal warnings on this server.", ephemeral=True)
     view = WarningsListLayout(target, warns, ctx.author.id)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    kwargs = view.get_kwargs(ctx.guild.id)
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 class CheckWarnsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

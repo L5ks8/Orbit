@@ -1,17 +1,6 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Role.role import role_group
-
-class RoleRemoveAllSuccessLayout(LayoutView):
-    def __init__(self, role: discord.Role, count: int, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### Role Removed from All Members\n**Role:** {role.mention} (`{role.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Members Updated:** `{count}`\n**Moderator:** {author.mention}")
-        )
-        self.add_item(self.container)
 
 async def _do_rolerall(ctx: commands.Context, role: discord.Role, reason: str):
     await ctx.defer()
@@ -31,8 +20,9 @@ async def _do_rolerall(ctx: commands.Context, role: discord.Role, reason: str):
             except Exception:
                 pass
 
-    view = RoleRemoveAllSuccessLayout(role, updated_count, ctx.author)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "role", msg_type="rall", role_mention=role.mention, role_id=role.id, role_color=role.color, count=updated_count, author_mention=ctx.author.mention)
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @role_group.command(name="rall", aliases=["rolerall"], description="Remove a role from every member.")
 @commands.has_permissions(administrator=True)

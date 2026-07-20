@@ -1,17 +1,9 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Voice.voice import voice_group
 
-class VcUnmuteSuccessLayout(LayoutView):
-    def __init__(self, target: discord.Member, reason: str, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### Voice Unmuted\n**Target:** {target.mention} (`{target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}")
-        )
-        self.add_item(self.container)
+
 
 async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: str):
     await ctx.defer()
@@ -22,8 +14,9 @@ async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: s
 
     try:
         await target.edit(mute=False, reason=f"Voice unmuted by {ctx.author} | Reason: {reason}")
-        view = VcUnmuteSuccessLayout(target, reason, ctx.author)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="unmute", member_mention=target.mention, member_id=target.id, channel_mention=target.voice.channel.mention if target.voice.channel else "N/A", reason=reason, author_mention=ctx.author.mention)
+        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to voice unmute this user.", ephemeral=True)
     except Exception as e:

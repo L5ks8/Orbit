@@ -1,19 +1,8 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Voice._storage import add_to_vcban, is_vcbanned
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Voice.voice import voice_group
-
-class VcBanSuccessLayout(LayoutView):
-    def __init__(self, target: discord.Member | discord.User, reason: str, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### User Voice Banned\n**Target:** {target.mention} (`{target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}\n**Status:** `Active (Banned from Voice Channels)`")
-        )
-        self.add_item(self.container)
 
 async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     await ctx.defer()
@@ -28,14 +17,17 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     if not success:
         return await ctx.send("This user is already voice banned on this server.", ephemeral=True)
 
+    vc = None
     if user.voice and user.voice.channel:
+        vc = user.voice.channel
         try:
             await user.edit(voice_channel=None, reason=f"Voice banned by {ctx.author} | Reason: {reason}")
         except Exception:
             pass
 
-    view = VcBanSuccessLayout(user, reason, ctx.author)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="ban", member_mention=user.mention, member_id=user.id, channel_mention=vc.mention if vc else "N/A", reason=reason, author_mention=ctx.author.mention)
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @voice_group.command(name="ban", description="Ban a member from voice channels")
 @commands.has_permissions(move_members=True)

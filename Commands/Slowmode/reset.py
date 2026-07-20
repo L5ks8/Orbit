@@ -1,17 +1,9 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Slowmode.slowmode import slowmode_group
 
-class SlowmodeRemoveLayout(LayoutView):
-    def __init__(self, channel: discord.TextChannel, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### Slowmode Removed\n**Channel:** {channel.mention} (`{channel.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Status:** Regular messaging delay cleared (`0 seconds`)\n**Moderator:** {author.mention}")
-        )
-        self.add_item(self.container)
+
 
 async def _do_slowmode_remove(ctx: commands.Context, channel: discord.TextChannel | None):
     await ctx.defer()
@@ -24,8 +16,9 @@ async def _do_slowmode_remove(ctx: commands.Context, channel: discord.TextChanne
 
     try:
         await target_channel.edit(slowmode_delay=0, reason=f"Slowmode removed by {ctx.author}")
-        view = SlowmodeRemoveLayout(target_channel, ctx.author)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(ctx.guild.id, "slowmode", msg_type="reset", channel_mention=target_channel.mention, author_mention=ctx.author.mention)
+        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to edit slowmode in this channel.", ephemeral=True)
     except Exception as e:

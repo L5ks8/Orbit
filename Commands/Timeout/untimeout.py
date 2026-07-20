@@ -1,17 +1,9 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Log._storage import log_event
 
-class UntimeoutSuccessLayout(LayoutView):
-    def __init__(self, target: discord.Member, reason: str, author: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### User Timeout Removed\n**Target:** {target.mention} (`{target.id}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}")
-        )
-        self.add_item(self.container)
+
 
 class UntimeoutCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -27,14 +19,15 @@ class UntimeoutCommand(commands.Cog):
 
         try:
             await target.timeout(None, reason=f"Timeout removed by {ctx.author} | Reason: {reason}")
-            view = UntimeoutSuccessLayout(target, reason, ctx.author)
             await log_event(
                 ctx.guild,
         "moderation_action",
                 "User Timeout Removed (`-untimeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
-            await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(ctx.guild.id, "timeout", msg_type="untimeout", member_mention=target.mention, member_id=target.id, reason=reason, author_mention=ctx.author.mention)
+            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to remove the timeout.", ephemeral=True)
         except Exception as e:

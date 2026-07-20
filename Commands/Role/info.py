@@ -1,35 +1,23 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord.ui import Container, TextDisplay, Separator
 from Commands.Role.role import role_group
 
-class RoleInfoLayout(LayoutView):
-    def __init__(self, role: discord.Role):
-        super().__init__()
-        color_hex = str(role.color) if role.color.value != 0 else "#000000 (Default)"
-        created_ts = int(role.created_at.timestamp())
-        
-        info_content = (
-            f"**ID:** `{role.id}`\n"
-            f"**Color:** `{color_hex}`\n"
-            f"**Position:** `{role.position}`\n"
-            f"**Members:** `{len(role.members)} users`\n"
-            f"**Hoisted (Displayed separately):** `{role.hoist}`\n"
-            f"**Mentionable:** `{role.mentionable}`\n"
-            f"**Created:** <t:{created_ts}:F> (<t:{created_ts}:R>)"
-        )
 
-        self.container = Container(
-            TextDisplay(content=f"### Role Information\n**Role:** {role.mention} (`{role.name}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_content)
-        )
-        self.add_item(self.container)
 
 async def _do_roleinfo(ctx: commands.Context, role: discord.Role):
     await ctx.defer()
-    view = RoleInfoLayout(role)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    created_ts = int(role.created_at.timestamp())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(
+        ctx.guild.id, "role", msg_type="info", 
+        role_mention=role.mention, role_id=role.id, role_color=role.color,
+        role_created_at=f"<t:{created_ts}:F> (<t:{created_ts}:R>)",
+        role_members=len(role.members), role_position=role.position,
+        role_hoisted=role.hoist, role_mentionable=role.mentionable,
+        role_managed=role.managed
+    )
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @role_group.command(name="info", aliases=["roleinfo"], description="Display information about a role.")
 async def role_info_cmd(ctx: commands.Context, role: discord.Role):
