@@ -2837,16 +2837,16 @@ window.updateEmbedField = function(index, key, value) {
 function updateEmbedPreview() {
     if (!document.getElementById('section-messages')) return;
     
-    const content = document.getElementById('embed_content').value;
-    const authorName = document.getElementById('embed_author_name').value;
-    const authorIcon = document.getElementById('embed_author_icon').value;
-    const title = document.getElementById('embed_title').value;
-    const desc = document.getElementById('embed_description').value;
-    const color = document.getElementById('embed_color').value || '#5865F2';
-    const image = document.getElementById('embed_image').value;
-    const thumbnail = document.getElementById('embed_thumbnail').value;
-    const footerText = document.getElementById('embed_footer_text').value;
-    const footerIcon = document.getElementById('embed_footer_icon').value;
+    const content = document.getElementById('embed_content')?.value || '';
+    const authorName = document.getElementById('embed_author_name')?.value || '';
+    const authorIcon = document.getElementById('embed_author_icon')?.value || '';
+    const title = document.getElementById('embed_title')?.value || '';
+    const desc = document.getElementById('embed_description')?.value || '';
+    const color = document.getElementById('embed_color')?.value || '#5865F2';
+    const image = document.getElementById('embed_image')?.value || '';
+    const thumbnail = document.getElementById('embed_thumbnail')?.value || '';
+    const footerText = document.getElementById('embed_footer_text')?.value || '';
+    const footerIcon = document.getElementById('embed_footer_icon')?.value || '';
     
     document.getElementById('preview-content').textContent = content;
     document.getElementById('preview-content').style.display = content ? 'block' : 'none';
