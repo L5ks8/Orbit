@@ -56,21 +56,21 @@ class GeminiChatbot(commands.Cog):
                 prompt += "ALWAYS follow the user's instructions regarding language (e.g. if they say 'speak English' or 'speak German') and formatting. "
                 prompt += "You can execute bot commands if the user asks you to. "
                 prompt += "Allowed commands: ping, help, mute, unmute, warn, checkwarns, timeout, untimeout, vmove, vmute, vunmute. "
-                prompt += "To execute a command, MUST include the exact syntax `[EXECUTE: command @user reason]` anywhere in your response. "
-                prompt += "For example: `[EXECUTE: warn <@123456789> spamming]` or `[EXECUTE: ping]`. Do not use code blocks for the EXECUTE tag.\n\n"
+                prompt += "To execute a command, MUST include the exact syntax `[EXECUTE: command user_id reason]` anywhere in your response. "
+                prompt += "CRITICAL: The 'user_id' MUST be the exact numeric ID of the user, NOT their name! "
+                prompt += "If the user asks to warn/mute someone by name (e.g. 'warn light'), look at the conversation history below to find their ID. "
+                prompt += "If you are unsure who they mean, or if the person is not in the recent history, DO NOT execute the command. Instead, ask the user to clarify or ping the person. "
+                prompt += "Example of valid execution: `[EXECUTE: warn 123456789 spamming]`. Do not use code blocks for the EXECUTE tag.\n\n"
                 
                 prompt += "Here is the recent conversation history:\n\n"
                 
                 for msg in messages:
                     author_name = msg.author.display_name
-                    content = msg.clean_content
-                    # If the user mentioned someone, they might appear as @Name in clean_content. 
-                    # But the AI needs their raw ID to execute commands.
-                    # We will provide the raw content so the AI sees <@ID> instead of just @Name.
+                    author_id = msg.author.id
                     raw_content = msg.content
-                    prompt += f"{author_name}: {raw_content}\n"
+                    prompt += f"{author_name} (ID: {author_id}): {raw_content}\n"
 
-                prompt += f"\n{message.author.display_name}: {message.content}\n"
+                prompt += f"\n{message.author.display_name} (ID: {message.author.id}): {message.content}\n"
                 prompt += "Orbit:"
 
                 response = await self.client.chat.completions.create(
