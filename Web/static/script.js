@@ -2604,12 +2604,13 @@ function updateDropBackgrounds() {
         const drop = document.getElementById(b.dropId);
         const inp = document.getElementById(b.inputId);
         if (drop && inp) {
+            const svg = drop.querySelector('svg');
             if (inp.value) {
                 drop.style.backgroundImage = `url(${inp.value})`;
-                drop.querySelector('i').style.display = 'none';
+                if (svg) svg.style.display = 'none';
             } else {
                 drop.style.backgroundImage = 'none';
-                drop.querySelector('i').style.display = 'block';
+                if (svg) svg.style.display = 'block';
             }
         }
     });
@@ -2984,17 +2985,17 @@ if (btnSendEmbed) {
 
         const payload = {
             channel_id: channelId,
-            content: document.getElementById('embed_content').value,
-            author_name: document.getElementById('embed_author_name').value,
-            author_icon: document.getElementById('embed_author_icon').value,
-            title: document.getElementById('embed_title').value,
-            url: document.getElementById('embed_url').value,
-            description: document.getElementById('embed_description').value,
-            color: document.getElementById('embed_color').value,
-            image: document.getElementById('embed_image').value,
-            thumbnail: document.getElementById('embed_thumbnail').value,
-            footer_text: document.getElementById('embed_footer_text').value,
-            footer_icon: document.getElementById('embed_footer_icon').value,
+            content: document.getElementById('embed_content') ? document.getElementById('embed_content').value : '',
+            author_name: document.getElementById('embed_author_name') ? document.getElementById('embed_author_name').value : '',
+            author_icon: document.getElementById('embed_author_icon') ? document.getElementById('embed_author_icon').value : '',
+            title: document.getElementById('embed_title') ? document.getElementById('embed_title').value : '',
+            url: document.getElementById('embed_url') ? document.getElementById('embed_url').value : '',
+            description: document.getElementById('embed_description') ? document.getElementById('embed_description').value : '',
+            color: document.getElementById('embed_color') ? document.getElementById('embed_color').value : '#5865F2',
+            image: document.getElementById('embed_image') ? document.getElementById('embed_image').value : '',
+            thumbnail: document.getElementById('embed_thumbnail') ? document.getElementById('embed_thumbnail').value : '',
+            footer_text: document.getElementById('embed_footer_text') ? document.getElementById('embed_footer_text').value : '',
+            footer_icon: document.getElementById('embed_footer_icon') ? document.getElementById('embed_footer_icon').value : '',
             fields: embedFields,
             components: mode === 'components' ? embedComponents : [],
             mode: mode
