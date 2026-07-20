@@ -1499,6 +1499,32 @@
                             </div>
                         </div>
 
+                        <!-- Auto Ban Channel (Honeypot) -->
+                        <div class="config-card" style="margin-top: 20px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="font-size: 16px; color: #EF4444;">Auto Ban Channel (Honeypot)</label>
+                                <span style="display: block; font-size: 12px; color: var(--text-muted);">Users posting in this channel will be immediately banned. Ideal for catching compromised accounts.</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label>Honeypot Channel</label>
+                                <select id="auto_ban_channel">
+                                    <option value="">Select Channel...</option>
+                                </select>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Exempt Roles</label>
+                                    <span style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Members with these roles will not be banned.</span>
+                                    <select id="auto_ban_exempt_roles" multiple></select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Exempt User IDs</label>
+                                    <span style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Specific user IDs who will not be banned (comma-separated).</span>
+                                    <input type="text" id="auto_ban_exempt_users" class="form-input" placeholder="e.g. 123456789, 987654321">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- File Only -->
                         <div class="config-card" style="margin-top: 20px;">
                             <div style="margin-bottom: 15px;">

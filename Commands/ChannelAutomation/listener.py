@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Commands.ChannelAutomation._storage import load_automation_config
+from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 import re
 
 class ChannelAutomationListener(commands.Cog):
@@ -97,5 +97,74 @@ class ChannelAutomationListener(commands.Cog):
                             await message.add_reaction(emoji.strip())
                         except discord.HTTPException:
                             pass # Emoji not found or bot lacks permissions
+        # 5. Auto Ban Channel (Honeypot)
+        auto_ban_cfg = config.get("auto_ban", {})
+        ban_channel_id = auto_ban_cfg.get("channel_id")
+        if ban_channel_id and str(message.channel.id) == ban_channel_id:
+            if not message.author.bot:
+                exempt_users = auto_ban_cfg.get("exempt_users", [])
+                exempt_roles = auto_ban_cfg.get("exempt_roles", [])
+                
+                is_exempt = False
+                if str(message.author.id) in exempt_users:
+                    is_exempt = True
+                else:
+                    for role in message.author.roles:
+                        if str(role.id) in exempt_roles:
+                            is_exempt = True
+                            break
+                            
+                if not is_exempt:
+                    # Delete the message first
+                    try:
+                        await message.delete()
+                    except (discord.Forbidden, discord.NotFound):
+                        pass
+                        
+                    # Ban the user
+                    try:
+                        await message.author.ban(reason="Caught in Auto Ban Honeypot channel.")
+                    except discord.Forbidden:
+                        pass # Bot lacks permission
+                        
+                    # Update configuration
+                    ban_count = auto_ban_cfg.get("ban_count", 0) + 1
+                    auto_ban_cfg["ban_count"] = ban_count
+                    config["auto_ban"] = auto_ban_cfg
+                    save_automation_config(message.guild.id, config)
+                    
+                    # Update or send the honeypot message
+                    trap_text = (
+                        "# :warning: POSTING IN THIS CHANNEL WILL GET YOU BANNED. :hammer:\n"
+                        "## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n"
+                        ":no_entry_sign: THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
+                        ":information_source: Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n"
+                        "**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\n"
+                        f"Ban Counter: `{ban_count}`"
+                    )
+                    
+                    msg_id = auto_ban_cfg.get("message_id")
+                    trap_msg = None
+                    if msg_id:
+                        try:
+                            trap_msg = await message.channel.fetch_message(int(msg_id))
+                        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                            pass
+                            
+                    if trap_msg:
+                        try:
+                            await trap_msg.edit(content=trap_text)
+                        except discord.HTTPException:
+                            pass
+                    else:
+                        try:
+                            new_msg = await message.channel.send(content=trap_text)
+                            auto_ban_cfg["message_id"] = str(new_msg.id)
+                            config["auto_ban"] = auto_ban_cfg
+                            save_automation_config(message.guild.id, config)
+                        except discord.Forbidden:
+                            pass
+            return # Always return to prevent other automations running in this channel
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(ChannelAutomationListener(bot))

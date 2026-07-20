@@ -1093,6 +1093,32 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         new CustomMultiSelect(autoMediaChEl, globalChannels, "Select...", (item) => "# " + item.name);
         new CustomMultiSelect(autoCmdChEl, globalChannels, "Select...", (item) => "# " + item.name);
 
+        // Auto Ban Channel
+        const autoBanChEl = document.getElementById('auto_ban_channel');
+        autoBanChEl.innerHTML = '<option value="">Select Channel...</option>';
+        globalChannels.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = "# " + c.name;
+            if (config.automation?.auto_ban?.channel_id === c.id) opt.selected = true;
+            autoBanChEl.appendChild(opt);
+        });
+
+        const autoBanRolesEl = document.getElementById('auto_ban_exempt_roles');
+        autoBanRolesEl.innerHTML = "";
+        globalRoles.forEach(r => {
+            const opt = document.createElement("option");
+            opt.value = r.id;
+            if (config.automation?.auto_ban?.exempt_roles?.includes(r.id)) opt.selected = true;
+            autoBanRolesEl.appendChild(opt);
+        });
+        new CustomMultiSelect(autoBanRolesEl, globalRoles, "Select Roles...", (item) => `<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:${item.color !== '#000000' ? item.color : '#99aab5'};"></div>${item.name}</div>`);
+
+        const autoBanUsersEl = document.getElementById('auto_ban_exempt_users');
+        if (autoBanUsersEl) {
+            autoBanUsersEl.value = config.automation?.auto_ban?.exempt_users?.join(', ') || '';
+        }
+
         renderFileChannels(config.automation?.file_only || []);
         renderAutoReactions(config.automation?.auto_reaction || []);
 
@@ -1919,7 +1945,12 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
                 channels: Array.from(document.getElementById('auto_cmd_channels').selectedOptions).map(o => o.value)
             },
             file_only: fileChannels,
-            auto_reaction: autoReactions
+            auto_reaction: autoReactions,
+            auto_ban: {
+                channel_id: document.getElementById('auto_ban_channel').value,
+                exempt_roles: Array.from(document.getElementById('auto_ban_exempt_roles').selectedOptions).map(o => o.value),
+                exempt_users: document.getElementById('auto_ban_exempt_users').value.split(',').map(u => u.trim()).filter(u => u.length > 0)
+            }
         },
         tempvoice: {
             enabled: document.getElementById('tempvoice-enabled')?.checked || false,
