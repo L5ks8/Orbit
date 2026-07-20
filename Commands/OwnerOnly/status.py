@@ -1,33 +1,37 @@
-﻿import json
+import json
 import pathlib
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Select, Modal, TextInput
 
-STATUS_FILE = pathlib.Path("Storage") / "bot_status.json"
-
 def _save_status(act_type: str, text: str, status_str: str = "online"):
     try:
-        if not STATUS_FILE.parent.exists():
-            STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        existing = _load_status() or {}
-        existing["type"] = act_type
-        existing["text"] = text
-        if status_str:
-            existing["status"] = status_str
-        with open(STATUS_FILE, "w", encoding="utf-8") as f:
-            json.dump(existing, f, indent=4)
+        from Database.mongodb import get_db
+        db = get_db()
+        if db is not None:
+            db["OwnerOnly_BotStatus"].update_one(
+                {"_id": "GLOBAL"},
+                {"$set": {
+                    "type": act_type,
+                    "text": text,
+                    "status": status_str
+                }},
+                upsert=True
+            )
     except Exception:
         pass
 
 def _load_status() -> dict | None:
-    if not STATUS_FILE.exists():
-        return None
     try:
-        with open(STATUS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        from Database.mongodb import get_db
+        db = get_db()
+        if db is not None:
+            doc = db["OwnerOnly_BotStatus"].find_one({"_id": "GLOBAL"})
+            if doc:
+                return doc
     except Exception:
-        return None
+        pass
+    return None
 
 def _parse_discord_status(status_str: str) -> discord.Status:
     s = status_str.lower().strip()
