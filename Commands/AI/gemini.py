@@ -56,10 +56,10 @@ class GeminiChatbot(commands.Cog):
                 prompt += "ALWAYS follow the user's instructions regarding language (e.g. if they say 'speak English' or 'speak German') and formatting. "
                 prompt += "You can execute bot commands if the user asks you to. "
                 prompt += "Allowed commands: ping, help, mute, unmute, warn, checkwarns, timeout, untimeout, vmove, vmute, vunmute. "
-                prompt += "To execute a command, MUST include the exact syntax `[EXECUTE: command user_id reason]` anywhere in your response. "
-                prompt += "CRITICAL: The 'user_id' MUST be the exact numeric ID of the user, NOT their name! "
-                prompt += "If the user asks to warn/mute someone by name (e.g. 'warn light'), look at the conversation history below to find their ID. "
-                prompt += "If you are unsure who they mean, or if the person is not in the recent history, DO NOT execute the command. Instead, ask the user to clarify or ping the person. "
+                prompt += "To execute a command, MUST include the exact syntax `[EXECUTE: command target reason]` anywhere in your response. "
+                prompt += "CRITICAL: For the 'target', try to use their exact numeric ID if you see it in the chat history. "
+                prompt += "If the person is NOT in the chat history, use their exact username instead (e.g. `[EXECUTE: warn bububaby spamming]`). "
+                prompt += "The system will then search the entire server for that name. If you are completely unsure who they mean, DO NOT execute the command and ask for clarification. "
                 prompt += "Example of valid execution: `[EXECUTE: warn 123456789 spamming]`. Do not use code blocks for the EXECUTE tag.\n\n"
                 
                 # Add Permission and Hierarchy Context
