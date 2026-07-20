@@ -306,12 +306,8 @@ class TicketControlLayout(discord.ui.View):
         self.btn_claim.callback = claim_cb
         self.btn_close.callback = close_cb
 
-        row = ActionRow(self.btn_claim, self.btn_close)
-        if container:
-            container.add_item(row)
-            self.add_item(container)
-        else:
-            self.add_item(row)
+        self.add_item(self.btn_claim)
+        self.add_item(self.btn_close)
 
 class TicketSlotRenameModal(Modal, title="Rename Selected Option Slot"):
     name_input = TextInput(label="New Option Category Name", placeholder="e.g. Macro, Giveaway, or Billing...", min_length=2, max_length=50, required=True)
