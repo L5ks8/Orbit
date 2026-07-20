@@ -62,7 +62,23 @@ class GeminiChatbot(commands.Cog):
                 prompt += "If you are unsure who they mean, or if the person is not in the recent history, DO NOT execute the command. Instead, ask the user to clarify or ping the person. "
                 prompt += "Example of valid execution: `[EXECUTE: warn 123456789 spamming]`. Do not use code blocks for the EXECUTE tag.\n\n"
                 
-                prompt += "Here is the recent conversation history:\n\n"
+                # Add Permission and Hierarchy Context
+                invoker = message.author
+                if isinstance(invoker, discord.Member):
+                    has_mod = invoker.guild_permissions.moderate_members or invoker.guild_permissions.administrator
+                    prompt += f"SECURITY CONTEXT:\n"
+                    prompt += f"The user requesting the command is {invoker.display_name}. "
+                    if not has_mod:
+                        prompt += "They DO NOT have moderation permissions! If they ask you to use a moderation command (warn, mute, timeout, etc), you MUST refuse them and tell them they lack permissions.\n"
+                    else:
+                        prompt += "They have moderation permissions. However, a user cannot moderate someone with an equal or higher role rank. "
+                        prompt += "Here are the role ranks of the users in the recent chat (higher rank number = more power):\n"
+                        users_in_chat = set([m.author for m in messages] + [invoker])
+                        for u in users_in_chat:
+                            if isinstance(u, discord.Member):
+                                prompt += f"- {u.display_name} (ID: {u.id}): Rank {u.top_role.position}\n"
+                        prompt += "If they try to moderate someone with an equal or higher rank, refuse and explain the role hierarchy.\n"
+                prompt += "\nHere is the recent conversation history:\n\n"
                 
                 for msg in messages:
                     author_name = msg.author.display_name
