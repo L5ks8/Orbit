@@ -1,21 +1,17 @@
 import os
 import discord
 from discord.ext import commands
-import google.generativeai as genai
+import aiohttp
 
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.api_key = os.getenv("GEMINI_API_KEY")
-        if self.api_key:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-3.5-flash')
-        else:
-            self.model = None
+        self.model_name = "gemini-2.5-flash" # Use the model we know works
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot or self.model is None:
+        if message.author.bot or not self.api_key:
             return
 
         # Check if the bot is mentioned or if it's a reply to the bot
@@ -47,19 +43,29 @@ class GeminiChatbot(commands.Cog):
                 prompt += f"\n{message.author.display_name}: {message.clean_content}\n"
                 prompt += "Orbit:"
 
-                import asyncio
-                loop = asyncio.get_event_loop()
-                response = await loop.run_in_executor(None, self.model.generate_content, prompt)
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
+                headers = {'Content-Type': 'application/json'}
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}]
+                }
                 
-                try:
-                    text_response = response.text
-                except ValueError:
-                    text_response = None
-                    
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, headers=headers, json=payload) as resp:
+                        if resp.status != 200:
+                            error_text = await resp.text()
+                            raise Exception(f"HTTP {resp.status}: {error_text}")
+                            
+                        data = await resp.json()
+                        
+                        try:
+                            text_response = data['candidates'][0]['content']['parts'][0]['text']
+                        except (KeyError, IndexError):
+                            text_response = None
+                            
                 if text_response:
                     await self._send_chunked(message, text_response)
                 else:
-                    await message.reply("I'm sorry, my safety filters prevented me from responding to that.")
+                    await message.reply("I'm sorry, my safety filters prevented me from responding to that or the response was empty.")
                     
             except Exception as e:
                 await message.reply(f"An error occurred while communicating with Orbit: `{e}`")
