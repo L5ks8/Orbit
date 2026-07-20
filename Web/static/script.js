@@ -1003,10 +1003,6 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         });
         lucide.createIcons({ root: logsGrid });
 
-        // Clear existing custom selects
-        document.querySelectorAll('.custom-select').forEach(el => el.remove());
-        document.querySelectorAll('.custom-multiselect').forEach(el => el.remove());
-
         // Initialize Custom Selects for Logs
         LOGS_CATEGORIES.forEach(cat => {
             const selectedCh = config.logs?.channels?.[cat.id] || '';
