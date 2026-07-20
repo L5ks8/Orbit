@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.ui import LayoutView, Container, TextDisplay, Separator
 
 class CheckBanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -13,10 +14,15 @@ class CheckBanCommand(commands.Cog):
         try:
             ban_entry = await ctx.guild.fetch_ban(discord.Object(id=target_id))
             reason = ban_entry.reason or "No reason provided"
-            embed = discord.Embed(title="User is Banned", color=discord.Color.red())
-            embed.add_field(name="User", value=f"{ban_entry.user} (`{ban_entry.user.id}`)", inline=False)
-            embed.add_field(name="Reason", value=reason, inline=False)
-            await ctx.send(embed=embed)
+            
+            container = Container(
+                TextDisplay(content=f"### User is Banned\n**User:** {ban_entry.user.mention} (`{ban_entry.user.id}`)"),
+                Separator(spacing=discord.SeparatorSpacing.small),
+                TextDisplay(content=f"**Reason:** {reason}")
+            )
+            view = LayoutView()
+            view.add_item(container)
+            await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
         except discord.NotFound:
             await ctx.send(f"The user with ID `{target_id}` is **not** currently banned on this server.")
         except discord.Forbidden:
