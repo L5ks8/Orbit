@@ -7,10 +7,25 @@ class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.client = AsyncClient()
+        self.memory_resets = {}
+
+    @commands.group(invoke_without_command=True)
+    async def memory(self, ctx):
+        await ctx.reply("Benutze `-memory reset` um das Gedächtnis des Bots in diesem Kanal zu löschen.", mention_author=False)
+
+    @memory.command(name="reset")
+    async def memory_reset(self, ctx):
+        self.memory_resets[ctx.channel.id] = ctx.message.created_at
+        await ctx.reply("🧠 Mein Gedächtnis für diesen Kanal wurde erfolgreich gelöscht! Ich erinnere mich an nichts mehr von vorher.", mention_author=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
+            return
+
+        # Ignore if it's a command being executed (like -memory reset)
+        ctx = await self.bot.get_context(message)
+        if ctx.valid and ctx.command is not None:
             return
 
         # Check if the bot is mentioned or if it's a reply to the bot
@@ -27,8 +42,9 @@ class GeminiChatbot(commands.Cog):
 
         async with message.channel.typing():
             try:
-                # Fetch context (last 10 messages)
-                messages = [m async for m in message.channel.history(limit=10, before=message)]
+                # Fetch context (last 10 messages, but only after the last reset)
+                reset_time = self.memory_resets.get(message.channel.id)
+                messages = [m async for m in message.channel.history(limit=10, before=message, after=reset_time)]
                 messages.reverse()
 
                 prompt = "You are a helpful and friendly Discord bot named Orbit. "
