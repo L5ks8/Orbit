@@ -4,3 +4,5 @@ pillow>=10.0.0
 aiohttp>=3.9.0
 pymongo[srv]>=4.6.0
 cloudinary>=1.39.0
+
+google-generativeai>=0.4.0
