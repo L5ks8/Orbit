@@ -146,11 +146,26 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
 
 class OrbitBot(commands.Bot):
     def __init__(self):
+        try:
+            from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
+            data = _load_status()
+            if data and isinstance(data, dict):
+                act = _build_activity(data.get("type", "clear"), data.get("text", ""))
+                discord_status = _parse_discord_status(data.get("status", "online"))
+            else:
+                act = None
+                discord_status = None
+        except Exception:
+            act = None
+            discord_status = None
+            
         super().__init__(
             command_prefix=commands.when_mentioned_or(PREFIX),
             intents=intents,
             help_command=None,
-            tree_cls=OrbitCommandTree
+            tree_cls=OrbitCommandTree,
+            activity=act,
+            status=discord_status
         )
 
     async def setup_hook(self):
