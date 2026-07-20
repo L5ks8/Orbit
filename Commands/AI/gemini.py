@@ -11,12 +11,12 @@ class GeminiChatbot(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def memory(self, ctx):
-        await ctx.reply("Benutze `-memory reset` um das Gedächtnis des Bots in diesem Kanal zu löschen.", mention_author=False)
+        await ctx.reply("Use `-memory reset` to clear my memory in this channel.", mention_author=False)
 
     @memory.command(name="reset")
     async def memory_reset(self, ctx):
         self.memory_resets[ctx.channel.id] = ctx.message.created_at
-        await ctx.reply("🧠 Mein Gedächtnis für diesen Kanal wurde erfolgreich gelöscht! Ich erinnere mich an nichts mehr von vorher.", mention_author=False)
+        await ctx.reply("🧠 My memory for this channel has been successfully cleared! I won't remember anything said before this.", mention_author=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
