@@ -11,12 +11,12 @@ class GeminiChatbot(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def memory(self, ctx):
-        await ctx.reply("Use `-memory reset` to clear my memory in this channel.", mention_author=False)
+        await ctx.reply("Use `-memory reset` to clear the bot's memory in this channel.", mention_author=False)
 
     @memory.command(name="reset")
     async def memory_reset(self, ctx):
         self.memory_resets[ctx.channel.id] = ctx.message.created_at
-        await ctx.reply("My memory for this channel has been successfully cleared! I won't remember anything said before this.", mention_author=False)
+        await ctx.reply("🧠 My memory for this channel has been successfully cleared! I don't remember anything from before.", mention_author=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -47,47 +47,15 @@ class GeminiChatbot(commands.Cog):
                 messages = [m async for m in message.channel.history(limit=10, before=message, after=reset_time)]
                 messages.reverse()
 
-                import copy
-                import re
-
-                prompt = "You are a highly intelligent, direct, and helpful Discord bot named Orbit. "
-                prompt += "Personality rules: Be concise and keep your answers short unless asked for details. "
-                prompt += "Do NOT be sarcastic, dramatic, or edgy. Be strictly helpful and polite. "
-                prompt += "ALWAYS follow the user's instructions regarding language (e.g. if they say 'speak English' or 'speak German') and formatting. "
-                prompt += "You can execute bot commands if the user asks you to. "
-                prompt += "Allowed commands: ping, help, mute, unmute, warn, checkwarns, timeout, untimeout, vmove, vmute, vunmute, nick. "
-                prompt += "To execute a command, MUST include the exact syntax `[EXECUTE: command target args]` anywhere in your response. "
-                prompt += "CRITICAL: For the 'target', try to use their exact numeric ID if you see it in the chat history. "
-                prompt += "If the person is NOT in the chat history, use their exact username instead (e.g. `[EXECUTE: warn bububaby spamming]`). "
-                prompt += "The system will then search the entire server for that name. If you are completely unsure who they mean, DO NOT execute the command and ask for clarification. "
-                prompt += "To reset a nickname, use `[EXECUTE: nick 123456789 reset]`. "
-                prompt += "Example of valid execution: `[EXECUTE: warn 123456789 spamming]`. Do not use code blocks for the EXECUTE tag.\n\n"
-                
-                # Add Permission and Hierarchy Context
-                invoker = message.author
-                if isinstance(invoker, discord.Member):
-                    has_mod = invoker.guild_permissions.moderate_members or invoker.guild_permissions.administrator
-                    prompt += f"SECURITY CONTEXT:\n"
-                    prompt += f"The user requesting the command is {invoker.display_name}. "
-                    if not has_mod:
-                        prompt += "They DO NOT have moderation permissions! If they ask you to use a moderation command (warn, mute, timeout, etc), you MUST refuse them and tell them they lack permissions.\n"
-                    else:
-                        prompt += "They have moderation permissions. However, a user cannot moderate someone with an equal or higher role rank. "
-                        prompt += "Here are the role ranks of the users in the recent chat (higher rank number = more power):\n"
-                        users_in_chat = set([m.author for m in messages] + [invoker])
-                        for u in users_in_chat:
-                            if isinstance(u, discord.Member):
-                                prompt += f"- {u.display_name} (ID: {u.id}): Rank {u.top_role.position}\n"
-                        prompt += "If they try to moderate someone with an equal or higher rank, refuse and explain the role hierarchy.\n"
-                prompt += "\nHere is the recent conversation history:\n\n"
+                prompt = "You are a helpful and friendly Discord bot named Orbit. "
+                prompt += "You are talking in a Discord server. Here is the recent conversation history:\n\n"
                 
                 for msg in messages:
                     author_name = msg.author.display_name
-                    author_id = msg.author.id
-                    raw_content = msg.content
-                    prompt += f"{author_name} (ID: {author_id}): {raw_content}\n"
+                    content = msg.clean_content
+                    prompt += f"{author_name}: {content}\n"
 
-                prompt += f"\n{message.author.display_name} (ID: {message.author.id}): {message.content}\n"
+                prompt += f"\n{message.author.display_name}: {message.clean_content}\n"
                 prompt += "Orbit:"
 
                 response = await self.client.chat.completions.create(
@@ -98,32 +66,7 @@ class GeminiChatbot(commands.Cog):
                 text_response = response.choices[0].message.content
                             
                 if text_response:
-                    # Parse Tool Calling
-                    execute_match = re.search(r'\[EXECUTE:\s*([^\]]+)\]', text_response, re.IGNORECASE)
-                    if execute_match:
-                        cmd_string = execute_match.group(1).strip()
-                        text_response = text_response.replace(execute_match.group(0), '').strip()
-                        
-                        if text_response:
-                            await self._send_chunked(message, text_response)
-                            
-                        # Security Check
-                        allowed_commands = ["ping", "help", "mute", "unmute", "warn", "checkwarns", "timeout", "untimeout", "vmove", "vmute", "vunmute", "nick"]
-                        base_cmd = cmd_string.split(" ")[0].lower()
-                        
-                        if base_cmd in allowed_commands:
-                            fake_msg = copy.copy(message)
-                            # Prefix is globally '-' by default in Orbit
-                            fake_msg.content = f"-{cmd_string}"
-                            ctx = await self.bot.get_context(fake_msg)
-                            if ctx.valid:
-                                await self.bot.invoke(ctx)
-                            else:
-                                await message.reply(f"❌ Die KI hat versucht, den Befehl `{cmd_string}` auszuführen, aber dieser Befehl ist ungültig.", mention_author=False)
-                        else:
-                            await message.reply(f"⚠️ Die KI hat versucht, einen nicht autorisierten Befehl auszuführen: `{base_cmd}`", mention_author=False)
-                    else:
-                        await self._send_chunked(message, text_response)
+                    await self._send_chunked(message, text_response)
                 else:
                     await message.reply("I'm sorry, I couldn't generate a response.")
                     
