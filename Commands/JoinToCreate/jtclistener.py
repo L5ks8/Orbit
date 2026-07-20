@@ -107,9 +107,8 @@ class JTCListenerCog(commands.Cog):
                             try:
                                 msg = await before.channel.fetch_message(msg_id)
                                 if msg:
-                                    updated_container = build_jtc_container(active)
-                                    updated_view = PersistentJTCControlLayout(container=updated_container, data=active)
-                                    await msg.edit(view=updated_view, allowed_mentions=discord.AllowedMentions.none())
+                                    updated_view = PersistentJTCControlLayout(guild.id, active)
+                                    await msg.edit(**updated_view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
                             except Exception:
                                 pass
 
