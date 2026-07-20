@@ -47,7 +47,9 @@ class GeminiChatbot(commands.Cog):
                 prompt += f"\n{message.author.display_name}: {message.clean_content}\n"
                 prompt += "Orbit:"
 
-                response = await self.model.generate_content_async(prompt)
+                import asyncio
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(None, self.model.generate_content, prompt)
                 
                 try:
                     text_response = response.text
@@ -60,6 +62,7 @@ class GeminiChatbot(commands.Cog):
                     await message.reply("I'm sorry, my safety filters prevented me from responding to that.")
                     
             except Exception as e:
+                await message.reply(f"An error occurred while communicating with Orbit.")
                 print(f"Gemini API Error: {e}")
 
     async def _send_chunked(self, message: discord.Message, text: str):
