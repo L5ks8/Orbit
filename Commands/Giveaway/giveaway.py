@@ -1,4 +1,4 @@
-﻿import json
+import json
 import pathlib
 import random
 import time
@@ -15,32 +15,24 @@ from Commands.Giveaway._storage import (
     get_all_active_giveaways
 )
 
-def build_ended_giveaway_container(entry: dict, winners_display: str) -> Container:
+def build_ended_giveaway_kwargs(guild_id: int, entry: dict, winners_display: str) -> dict:
     reqs = []
     if entry.get("required_role_id"):
         reqs.append(f"Role: <@&{entry['required_role_id']}>")
     req_text = f"\n**Requirements:** {' | '.join(reqs)}" if reqs else ""
 
-    header = f"### GIVEAWAY ENDED: **{entry['prize']}**"
-    info = (
-        f"**Prize:** {entry['prize']}\n"
-        f"**Winner(s):** {winners_display}\n"
-        f"**Ended On:** <t:{entry['end_timestamp']}:f>\n"
-        f"**Hosted By:** <@{entry['author_id']}>{req_text}\n\n"
-        f"**Total Entries:** `{len(entry['entries'])}`"
-    )
     btn_ended = Button(label="Giveaway Ended", style=discord.ButtonStyle.secondary, disabled=True, custom_id="orbit:giveaway_ended")
-    return Container(
-        TextDisplay(content=header),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=info),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        ActionRow(btn_ended),
-        Separator(spacing=discord.SeparatorSpacing.small),
-        TextDisplay(content=f"**Giveaway ID:** `{entry['giveaway_id']}`")
+    
+    from Embeds import get_command_embed
+    return get_command_embed(
+        guild_id, "giveaway", msg_type="ended",
+        prize=entry['prize'], winners_display=winners_display,
+        end_timestamp=entry['end_timestamp'], author_id=entry['author_id'],
+        req_text=req_text, total_entries=len(entry['entries']),
+        giveaway_id=entry['giveaway_id'], components=[btn_ended]
     )
 
-class PersistentGiveawayLayout(LayoutView):
+class PersistentGiveawayLayout(discord.ui.View):
     def __init__(self, entry: dict = None):
         super().__init__(timeout=None)
         self.entry = entry
@@ -48,37 +40,32 @@ class PersistentGiveawayLayout(LayoutView):
 
     def build_ui(self):
         self.clear_items()
-        
-        btn_enter = Button(label="Enter Giveaway", style=discord.ButtonStyle.success, custom_id="orbit:giveaway_enter")
-        btn_enter.callback = self.enter_callback
+        self.btn_enter = Button(label="Enter Giveaway", style=discord.ButtonStyle.success, custom_id="orbit:giveaway_enter")
+        self.btn_enter.callback = self.enter_callback
 
         if not self.entry:
-            self.add_item(Container(TextDisplay(content="Interactive Giveaway"), ActionRow(btn_enter)))
+            self.add_item(self.btn_enter)
             return
 
-        header = f"### GIVEAWAY: **{self.entry['prize']}**\n**Winners:** `{self.entry['winners']}`"
+        self.add_item(self.btn_enter)
+
+    def get_kwargs(self, guild_id: int):
+        if not self.entry:
+            return {"content": "Interactive Giveaway", "view": self}
+
         reqs = []
         if self.entry.get("required_role_id"):
             reqs.append(f"Role: <@&{self.entry['required_role_id']}>")
         req_text = f"\n**Requirements:** {' | '.join(reqs)}" if reqs else ""
 
-        info = (
-            f"**Prize:** {self.entry['prize']}\n"
-            f"**Ends:** <t:{self.entry['end_timestamp']}:R> (<t:{self.entry['end_timestamp']}:f>)\n"
-            f"**Hosted By:** <@{self.entry['author_id']}>{req_text}\n\n"
-            f"**Total Entries:** `{len(self.entry['entries'])}`"
+        from Embeds import get_command_embed
+        return get_command_embed(
+            guild_id, "giveaway", msg_type="active",
+            prize=self.entry['prize'], winners=self.entry['winners'],
+            end_timestamp=self.entry['end_timestamp'], author_id=self.entry['author_id'],
+            req_text=req_text, total_entries=len(self.entry['entries']),
+            giveaway_id=self.entry['giveaway_id'], components=self.children
         )
-
-        container = Container(
-            TextDisplay(content=header),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            ActionRow(btn_enter),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Giveaway ID:** `{self.entry['giveaway_id']}`")
-        )
-        self.add_item(container)
 
     async def enter_callback(self, interaction: discord.Interaction):
         if not interaction.guild:
@@ -112,7 +99,7 @@ class PersistentGiveawayLayout(LayoutView):
         try:
             self.entry = entry
             self.build_ui()
-            await interaction.message.edit(view=self)
+            await interaction.message.edit(**self.get_kwargs(interaction.guild.id))
         except Exception:
             pass
 
@@ -167,9 +154,8 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
     try:
         msg = await channel.fetch_message(entry["message_id"])
         if msg:
-            closed_view = LayoutView(timeout=None)
-            closed_view.add_item(build_ended_giveaway_container(entry, winners_display))
-            await msg.edit(view=closed_view)
+            kwargs = build_ended_giveaway_kwargs(guild_id, entry, winners_display)
+            await msg.edit(**kwargs)
     except Exception:
         pass
 
@@ -250,7 +236,7 @@ class GiveawayCommand(commands.Cog):
         )
 
         view = PersistentGiveawayLayout(entry)
-        msg = await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        msg = await ctx.send(**view.get_kwargs(ctx.guild.id), allowed_mentions=discord.AllowedMentions.none())
         if msg:
             entry["message_id"] = msg.id
             entry["channel_id"] = msg.channel.id

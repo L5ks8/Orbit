@@ -8,20 +8,9 @@ from Commands.Warn._storage import add_warning, get_user_warnings
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 
-class AutoModNoticeLayout(LayoutView):
+class AutoModNoticeLayout(discord.ui.View):
     def __init__(self, user: discord.Member, reason: str, action_taken: str, warn_count: int, escalation_str: str = ""):
         super().__init__()
-        header = f"### Orbit AutoMod Triggered\n**Target:** {user.mention} (`{user.id}`)"
-        body = f"**Reason:** {reason}\n**Action Taken:** `{action_taken.upper()}` (`Total Warnings: {warn_count}`)"
-        if escalation_str:
-            body += f"\n**Escalation:** `{escalation_str}`"
-
-        self.container = Container(
-            TextDisplay(content=header),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=body)
-        )
-        self.add_item(self.container)
 
 class AutoModListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -145,9 +134,10 @@ class AutoModListener(commands.Cog):
             action = cfg.get("action", "warn")
             timeout_min = cfg.get("timeout_duration_min", 5)
             escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
-            view = AutoModNoticeLayout(message.author, reason, action, warn_count, escalation_str)
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(message.guild.id, "automod", msg_type="notice", user_mention=message.author.mention, user_id=message.author.id, reason=reason, action_taken=action, warn_count=warn_count, escalation_str=escalation_str)
             try:
-                await message.channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+                await message.channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
             except Exception:
                 pass
             try:

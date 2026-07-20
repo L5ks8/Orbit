@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
 
@@ -82,14 +82,14 @@ class AntiAltAgeModal(Modal, title="Configure Anti-Alt Minimum Age"):
         await interaction.response.edit_message(view=self.dashboard_view)
         await interaction.followup.send(f"Updated Anti-Alt minimum account age requirement to {age} days.", ephemeral=True)
 
-class AutoModDashboardLayout(LayoutView):
+class AutoModDashboardLayout(discord.ui.View):
     def __init__(self, guild_id: int):
         super().__init__(timeout=300.0)
         self.guild_id = guild_id
-        self.refresh_content(guild_id)
+        self.build_components()
 
-    def refresh_content(self, guild_id: int):
-        config = load_automod_config(guild_id)
+    def get_kwargs(self):
+        config = load_automod_config(self.guild_id)
         is_enabled = config.get("enabled", False)
         status_badge = "ACTIVE" if is_enabled else "INACTIVE"
 
@@ -102,61 +102,33 @@ class AutoModDashboardLayout(LayoutView):
 
         alt_cfg = config["anti_alt"]
         alt_str = f"Enabled (Min Age: {alt_cfg['min_age_days']} days | Action: {alt_cfg['action'].upper()})" if alt_cfg["enabled"] else "Disabled"
+        
+        self.btn_master.label = "Toggle AutoMod Master" if not is_enabled else "Disable AutoMod"
+        self.btn_master.style = discord.ButtonStyle.success if not is_enabled else discord.ButtonStyle.danger
+        
+        self.btn_link.style = discord.ButtonStyle.primary if link_cfg["enabled"] else discord.ButtonStyle.secondary
+        self.btn_spam.style = discord.ButtonStyle.primary if spam_cfg["enabled"] else discord.ButtonStyle.secondary
+        self.btn_alt.style = discord.ButtonStyle.primary if alt_cfg["enabled"] else discord.ButtonStyle.secondary
 
-        header_text = f"### Orbit AutoMod & Server Protection Dashboard\n**Master Status:** {status_badge}"
-        details_text = (
-            f"**1. Anti-Link / Anti-Invite**\n"
-            f"> {link_str}\n> Automatically deletes Discord invite links (`discord.gg/`) and unauthorized links.\n\n"
-            f"**2. Anti-Spam / Anti-Raid**\n"
-            f"> {spam_str}\n> Detects message flood across all channels. If action is `WARN`, accumulating 5+ warnings automatically locks the user in timeout (1 Day -> 3 Days -> 7 Days).\n\n"
-            f"**3. Anti-Alt (Account Age Defense)**\n"
-            f"> {alt_str}\n> Checks account age of joining members to block suspicious alts & bots before they raid."
-        )
+        from Embeds import get_command_embed
+        return get_command_embed(self.guild_id, "automod", msg_type="dashboard", status_badge=status_badge, link_str=link_str, spam_str=spam_str, alt_str=alt_str, components=self.children)
 
-        self.clear_items()
+    def build_components(self):
 
-        btn_master = Button(
-            label="Toggle AutoMod Master" if not is_enabled else "Disable AutoMod",
-            style=discord.ButtonStyle.success if not is_enabled else discord.ButtonStyle.danger,
-            custom_id="automod_btn_master"
-        )
-        btn_link = Button(
-            label="Cycle Anti-Link Action",
-            style=discord.ButtonStyle.primary if link_cfg["enabled"] else discord.ButtonStyle.secondary,
-            custom_id="automod_btn_link"
-        )
-        btn_spam = Button(
-            label="Cycle Anti-Spam Action",
-            style=discord.ButtonStyle.primary if spam_cfg["enabled"] else discord.ButtonStyle.secondary,
-            custom_id="automod_btn_spam"
-        )
-        btn_spam_cfg = Button(
-            label="Set Spam Thresholds",
-            style=discord.ButtonStyle.secondary,
-            custom_id="automod_btn_spam_cfg"
-        )
-        btn_alt = Button(
-            label="Cycle Anti-Alt Action",
-            style=discord.ButtonStyle.primary if alt_cfg["enabled"] else discord.ButtonStyle.secondary,
-            custom_id="automod_btn_alt"
-        )
-        btn_alt_cfg = Button(
-            label="Set Min Account Age",
-            style=discord.ButtonStyle.secondary,
-            custom_id="automod_btn_alt_cfg"
-        )
-        btn_close = Button(
-            label="Close Dashboard",
-            style=discord.ButtonStyle.danger,
-            custom_id="automod_btn_close"
-        )
+
+        self.btn_master = Button(label="Toggle AutoMod", custom_id="automod_btn_master")
+        self.btn_link = Button(label="Cycle Anti-Link Action", custom_id="automod_btn_link")
+        self.btn_spam = Button(label="Cycle Anti-Spam Action", custom_id="automod_btn_spam")
+        self.btn_spam_cfg = Button(label="Set Spam Thresholds", style=discord.ButtonStyle.secondary, custom_id="automod_btn_spam_cfg")
+        self.btn_alt = Button(label="Cycle Anti-Alt Action", custom_id="automod_btn_alt")
+        self.btn_alt_cfg = Button(label="Set Min Account Age", style=discord.ButtonStyle.secondary, custom_id="automod_btn_alt_cfg")
+        self.btn_close = Button(label="Close Dashboard", style=discord.ButtonStyle.danger, custom_id="automod_btn_close")
 
         async def master_cb(interaction: discord.Interaction):
             cfg = load_automod_config(self.guild_id)
             cfg["enabled"] = not cfg.get("enabled", False)
             save_automod_config(self.guild_id, cfg)
-            self.refresh_content(self.guild_id)
-            await interaction.response.edit_message(view=self)
+            await interaction.response.edit_message(**self.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
         async def link_cb(interaction: discord.Interaction):
             cfg = load_automod_config(self.guild_id)
@@ -168,8 +140,7 @@ class AutoModDashboardLayout(LayoutView):
             else:
                 cfg["anti_link"]["enabled"] = False
             save_automod_config(self.guild_id, cfg)
-            self.refresh_content(self.guild_id)
-            await interaction.response.edit_message(view=self)
+            await interaction.response.edit_message(**self.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
         async def spam_cb(interaction: discord.Interaction):
             cfg = load_automod_config(self.guild_id)
@@ -181,8 +152,7 @@ class AutoModDashboardLayout(LayoutView):
             else:
                 cfg["anti_spam"]["enabled"] = False
             save_automod_config(self.guild_id, cfg)
-            self.refresh_content(self.guild_id)
-            await interaction.response.edit_message(view=self)
+            await interaction.response.edit_message(**self.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
         async def spam_cfg_cb(interaction: discord.Interaction):
             modal = SpamThresholdsModal(self.guild_id, self)
@@ -198,8 +168,7 @@ class AutoModDashboardLayout(LayoutView):
             else:
                 cfg["anti_alt"]["enabled"] = False
             save_automod_config(self.guild_id, cfg)
-            self.refresh_content(self.guild_id)
-            await interaction.response.edit_message(view=self)
+            await interaction.response.edit_message(**self.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
         async def alt_cfg_cb(interaction: discord.Interaction):
             modal = AntiAltAgeModal(self.guild_id, self)
@@ -211,21 +180,19 @@ class AutoModDashboardLayout(LayoutView):
             except Exception:
                 await interaction.response.send_message("Dashboard closed.", ephemeral=True)
 
-        btn_master.callback = master_cb
-        btn_link.callback = link_cb
-        btn_spam.callback = spam_cb
-        btn_spam_cfg.callback = spam_cfg_cb
-        btn_alt.callback = alt_cb
-        btn_alt_cfg.callback = alt_cfg_cb
-        btn_close.callback = close_cb
+        self.btn_master.callback = master_cb
+        self.btn_link.callback = link_cb
+        self.btn_spam.callback = spam_cb
+        self.btn_spam_cfg.callback = spam_cfg_cb
+        self.btn_alt.callback = alt_cb
+        self.btn_alt_cfg.callback = alt_cfg_cb
+        self.btn_close.callback = close_cb
 
-        self.container = Container(
-            TextDisplay(content=header_text),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=details_text),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            ActionRow(btn_master, btn_link, btn_spam),
-            ActionRow(btn_spam_cfg, btn_alt, btn_alt_cfg, btn_close)
-        )
-        self.add_item(self.container)
+        self.add_item(self.btn_master)
+        self.add_item(self.btn_link)
+        self.add_item(self.btn_spam)
+        self.add_item(self.btn_spam_cfg)
+        self.add_item(self.btn_alt)
+        self.add_item(self.btn_alt_cfg)
+        self.add_item(self.btn_close)
 
