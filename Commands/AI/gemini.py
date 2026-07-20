@@ -7,7 +7,7 @@ class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model_name = "gemini-2.5-flash" # Use the model we know works
+        self.model_name = "gemini-3.5-flash"
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
