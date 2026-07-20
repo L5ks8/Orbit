@@ -2356,33 +2356,33 @@ function renderEmbedFields() {
         div.style.cssText = 'border: 1px solid #313338; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 8px;';
         
         // Inline icon logic
-        const inlineBg = field.inline ? '#006CE7' : 'transparent';
-        const inlineBorder = field.inline ? 'none' : '1px solid #4E5058';
-        const inlineColor = field.inline ? 'white' : '#949BA4';
+        const inlineBg = field.inline ? '#006CE7' : '#3B82F6';
+        const inlineBorder = field.inline ? 'none' : 'none';
+        const inlineColor = field.inline ? 'white' : 'white';
 
         div.innerHTML = `
             <div style="display: flex; gap: 8px; align-items: center;">
-                <div style="flex: 1; border: 1px solid #313338; border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between;">
-                    <input type="text" placeholder="Fieldname" value="${field.name}" oninput="updateEmbedField(${index}, 'name', this.value); updateCount(this, 256);" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0;">
-                    <span style="font-size: 10px; color: #949BA4;">${field.name.length}/256</span>
+                <div style="flex: 1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <input type="text" placeholder="Feldname" value="${field.name}" oninput="updateEmbedField(${index}, 'name', this.value); updateCount(this, 256);" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0; font-size: 13px;">
+                    <span style="font-size: 11px; color: var(--text-muted);">${field.name.length}/256</span>
                 </div>
                 
                 <button type="button" class="btn" title="Toggle Inline" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: ${inlineBg}; border: ${inlineBorder}; color: ${inlineColor}; border-radius: 4px;" onclick="updateEmbedField(${index}, 'inline', !${field.inline})">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
                 </button>
                 
-                <button type="button" class="btn" title="Edit Properties" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #4E5058; color: #949BA4; border-radius: 4px;">
+                <button type="button" class="btn" title="Edit Properties" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: #4B4D54; border: none; color: white; border-radius: 4px;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                 </button>
                 
-                <button type="button" class="btn-danger" title="Delete Field" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px;" onclick="removeEmbedField(${index})">
+                <button type="button" class="btn-danger" title="Delete Field" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #EF4444; border: none; color: white;" onclick="removeEmbedField(${index})">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </div>
             
-            <div style="border: 1px solid #313338; border-radius: 4px; padding: 8px 12px;">
-                <textarea rows="2" placeholder="Fieldwert" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none;" oninput="updateEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
-                <div style="text-align: right; font-size: 10px; color: #949BA4;">${field.value.length}/1024</div>
+            <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 8px 12px; position: relative;">
+                <textarea rows="2" placeholder="Feldwert" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none; font-size: 13px;" oninput="updateEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
+                <div style="text-align: right; font-size: 11px; color: var(--text-muted); position: absolute; bottom: 8px; right: 8px;">${field.value.length}/1024</div>
             </div>
         `;
         container.appendChild(div);

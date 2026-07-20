@@ -1666,7 +1666,7 @@
                                         <!-- Content -->
                                         <div style="margin-bottom: 16px;">
                                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                                <label class="form-label" style="font-size: 13px;">Content</label>
+                                                <label class="form-label" style="font-size: 13px;">Inhalt</label>
                                             </div>
                                             <div style="position: relative;">
                                                 <textarea id="embed_content" class="form-input" style="width: 100%; height: 80px; resize: none; background: #121315;"></textarea>
@@ -1684,25 +1684,28 @@
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                                     </div>
                                                     <div style="flex: 1; position: relative;">
-                                                        <input type="text" id="embed_author_name" class="form-input" placeholder="Author name" style="width: 100%; height: 28px; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1);">
+                                                        <input type="text" id="embed_author_name" class="form-input" placeholder="Autorname" style="width: 100%; height: 28px; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1);">
                                                         <span style="position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--text-muted);">0/256</span>
                                                     </div>
                                                 </div>
 
                                                 <!-- Title -->
                                                 <div style="margin-bottom: 12px; position: relative;">
-                                                    <input type="text" id="embed_title" class="form-input" placeholder="Title" style="width: 100%; height: 32px; font-size: 14px; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.1);">
+                                                    <input type="text" id="embed_title" class="form-input" placeholder="Titel" style="width: 100%; height: 32px; font-size: 14px; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.1);">
                                                     <span style="position: absolute; right: 8px; top: 8px; font-size: 11px; color: var(--text-muted);">0/256</span>
                                                 </div>
 
                                                 <!-- Description -->
                                                 <div style="margin-bottom: 16px; position: relative;">
-                                                    <textarea id="embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1);"></textarea>
+                                                    <textarea id="embed_description" class="form-input" placeholder="Beschreibung" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1);"></textarea>
                                                     <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
                                                 </div>
 
+                                                <!-- Embed Fields Container -->
+                                                <div id="embed-fields-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;"></div>
+
                                                 <!-- Add Field Button -->
-                                                <button id="btn-add-embed-field" class="btn-primary" style="width: 100%; background: #3B82F6; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: 600; margin-bottom: 24px; font-size: 13px;">Add field</button>
+                                                <button id="btn-add-embed-field" class="btn-primary" style="width: 100%; background: #3B82F6; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: 600; margin-bottom: 24px; font-size: 13px;">Feld hinzufügen</button>
 
                                                 <!-- Big Image Placeholder -->
                                                 <div class="image-placeholder-large" style="width: 100%; height: 120px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2);">
@@ -1715,7 +1718,7 @@
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                                     </div>
                                                     <div style="flex: 1; position: relative;">
-                                                        <input type="text" id="embed_footer_text" class="form-input" placeholder="Footer text" style="width: 100%; height: 28px; font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1);">
+                                                        <input type="text" id="embed_footer_text" class="form-input" placeholder="Fußzeilentext" style="width: 100%; height: 28px; font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1);">
                                                         <span style="position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--text-muted);">0/2048</span>
                                                     </div>
                                                 </div>
