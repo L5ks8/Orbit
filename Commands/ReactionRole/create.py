@@ -1,7 +1,7 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands.ReactionRole.reactionrole import reactionrole_group
-from Commands.ReactionRole._views import ReactionRolePanelLayout
+
 
 async def _do_create_panel(
     ctx: commands.Context,
@@ -21,8 +21,9 @@ async def _do_create_panel(
         if r >= ctx.guild.me.top_role and r != ctx.guild.me:
             return await ctx.send(f"I cannot assign the role `{r.name}` because it is equal to or higher than my highest role.", ephemeral=True)
 
-    view = ReactionRolePanelLayout(title=title, description=description, roles=valid_roles, image_url=image_url)
-    await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+    from Embeds import get_command_embed
+    kwargs = get_command_embed(ctx.guild.id, "reaction_role", title=title, description=description, image_url=image_url, roles=valid_roles)
+    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
 @reactionrole_group.command(name="create", description="Create a button role panel.")
 @commands.has_permissions(administrator=True)

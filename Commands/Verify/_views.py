@@ -1,7 +1,7 @@
 import time
 import io
 import discord
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
+from discord.ui import Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
 from Commands.Verify._storage import load_verify_config, remove_pending_kick
 from Commands.Verify._captcha import generate_captcha
 
@@ -90,15 +90,10 @@ class CaptchaInteractionLayout(discord.ui.View):
             from Embeds import get_command_embed
             kwargs = get_command_embed(interaction.guild_id, "verify", msg_type="captcha", filename=filename, role_id=self.role_id, remove_role_id=self.remove_role_id, components=new_view.children)
             
-            # The dispatcher returns the embed/components and optionally the view. Since we have a view attached, we just use kwargs
-            # However, if kwargs has 'components', we need to construct a LayoutView
             if "embed" in kwargs:
                 await interaction.response.edit_message(embed=kwargs["embed"], attachments=[file], view=kwargs.get("view", new_view))
-            elif "components" in kwargs:
-                v2_view = LayoutView(timeout=600)
-                for comp in kwargs["components"]: v2_view.add_item(comp)
-                v2_view.add_item(ActionRow(*new_view.children))
-                await interaction.response.edit_message(attachments=[file], view=v2_view)
+            elif "view" in kwargs:
+                await interaction.response.edit_message(attachments=[file], view=kwargs["view"])
 
         btn_enter.callback = enter_cb
         btn_refresh.callback = refresh_cb
@@ -162,9 +157,6 @@ class PersistentVerifyLayout(discord.ui.View):
         
         if "embed" in kwargs:
             await interaction.response.send_message(embed=kwargs["embed"], file=file, view=kwargs.get("view", view), ephemeral=True)
-        elif "components" in kwargs:
-            v2_view = LayoutView(timeout=600)
-            for comp in kwargs["components"]: v2_view.add_item(comp)
-            v2_view.add_item(ActionRow(*view.children))
-            await interaction.response.send_message(file=file, view=v2_view, ephemeral=True)
+        elif "view" in kwargs:
+            await interaction.response.send_message(file=file, view=kwargs["view"], ephemeral=True)
 

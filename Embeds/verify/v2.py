@@ -42,8 +42,16 @@ def get_embed(msg_type: str, **kwargs):
         return {"view": view}
         
     elif msg_type == "captcha":
-        # The view for this is ephemeral and not persistent, so the command handles creating the layout and components
-        return {"components": kwargs.get("components", [])}
+        container = Container(
+            TextDisplay(content="### CAPTCHA Security Check\nPlease enter the characters from the image below."),
+            Separator(spacing=discord.SeparatorSpacing.small)
+        )
+        components = kwargs.get("components", [])
+        if components:
+            container.add_item(ActionRow(*components))
+        view = LayoutView(timeout=600)
+        view.add_item(container)
+        return {"view": view}
         
     elif msg_type == "status":
         guild_name = kwargs.get("guild_name")

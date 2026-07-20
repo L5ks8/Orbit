@@ -1,8 +1,8 @@
-﻿import datetime
+import datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from discord.ui import Button
 from Commands.Poll._storage import generate_poll_id, create_poll_entry, get_poll_entry
 
 def make_bar(pct: int, length: int = 15) -> str:
@@ -11,36 +11,19 @@ def make_bar(pct: int, length: int = 15) -> str:
     empty = length - filled
     return "â–ˆ" * filled + "â–‘" * empty
 
-class ComponentsPollView(LayoutView):
-    def __init__(self, poll_id: str, question: str, options: list[str], author: discord.Member, duration_minutes: int):
-        super().__init__()
+class ComponentsPollView(discord.ui.View):
+    def __init__(self, guild_id: int, poll_id: str, question: str, options: list[str], author: discord.Member, duration_minutes: int):
+        super().__init__(timeout=None)
+        self.guild_id = guild_id
         self.poll_id = poll_id
         self.question = question
         self.options = options
         self.author = author
         self.duration_minutes = duration_minutes
         self.votes: dict[str, set[int]] = {opt: set() for opt in options}
-        self.build_ui()
-
-    def build_ui(self):
-        self.clear_items()
-        
-        total_votes = sum(len(v) for v in self.votes.values())
-        dur_str = f"{self.duration_minutes}m ({round(self.duration_minutes/60, 1)}h)" if self.duration_minutes >= 60 else f"{self.duration_minutes}m"
-        header = f"Community Poll\n**Question:** {self.question}\n**Author:** {self.author.mention} | **Duration:** `{dur_str}` | **Total Votes:** `{total_votes}`"
-
-        container_items = [
-            TextDisplay(content=header),
-            Separator(spacing=discord.SeparatorSpacing.small)
-        ]
-
-        has_section = hasattr(discord.ui, "Section")
+    def get_kwargs(self):
+        buttons = []
         for idx, opt in enumerate(self.options, 1):
-            v_count = len(self.votes[opt])
-            pct = int(round((v_count / total_votes) * 100)) if total_votes > 0 else 0
-            bar = make_bar(pct, length=12)
-            opt_text = f"**`#{idx}` {opt}**\n`{bar}` **`{pct}%`** (`{v_count} votes`)"
-            
             btn = Button(label=f"Vote #{idx}", style=discord.ButtonStyle.primary)
 
             async def vote_cb(interaction: discord.Interaction, o=opt):
@@ -52,26 +35,19 @@ class ComponentsPollView(LayoutView):
                 for s in self.votes.values():
                     s.discard(uid)
                 self.votes[o].add(uid)
-                self.build_ui()
-                await interaction.response.edit_message(view=self)
+                await interaction.response.edit_message(**self.get_kwargs())
 
             btn.callback = vote_cb
-            
-            if has_section:
-                try:
-                    container_items.append(discord.ui.Section(TextDisplay(content=opt_text), accessory=btn))
-                except Exception:
-                    container_items.extend([TextDisplay(content=opt_text), ActionRow(btn)])
-            else:
-                container_items.extend([TextDisplay(content=opt_text), ActionRow(btn)])
+            buttons.append(btn)
 
-        container_items.extend([
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Poll ID:** `{self.poll_id}`")
-        ])
-
-        self.container = Container(*container_items)
-        self.add_item(self.container)
+        from Embeds import get_command_embed
+        total_votes = sum(len(v) for v in self.votes.values())
+        return get_command_embed(
+            self.guild_id, "poll", msg_type="open",
+            poll_id=self.poll_id, question=self.question, options=self.options,
+            author_mention=self.author.mention, duration_minutes=self.duration_minutes,
+            votes_dict=self.votes, total_votes=total_votes, components=buttons
+        )
 
 class PollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -99,8 +75,8 @@ class PollCommand(commands.Cog):
             duration = 60
 
         poll_id = generate_poll_id(ctx.guild.id)
-        view = ComponentsPollView(poll_id, question, opts, ctx.author, duration)
-        msg = await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        view = ComponentsPollView(ctx.guild.id, poll_id, question, opts, ctx.author, duration)
+        msg = await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
         
         if msg:
             create_poll_entry(

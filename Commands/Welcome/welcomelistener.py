@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Commands.Welcome._storage import load_welcome_config
-from Commands.Welcome._views import format_welcome_string, WelcomeCardLayout
+from Commands.Welcome._views import format_welcome_string
 
 class WelcomeListener(commands.Cog):
     def __init__(self, bot: commands.Bot):

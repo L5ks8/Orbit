@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -28,8 +28,8 @@ class FastPollCommand(commands.Cog):
 
         opts = ["Yes", "No"]
         poll_id = generate_poll_id(ctx.guild.id)
-        view = ComponentsPollView(poll_id, question, opts, ctx.author, duration)
-        msg = await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        view = ComponentsPollView(ctx.guild.id, poll_id, question, opts, ctx.author, duration)
+        msg = await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
         if msg:
             create_poll_entry(

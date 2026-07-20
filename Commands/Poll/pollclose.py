@@ -1,18 +1,8 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Poll._storage import get_poll_entry, close_poll_entry
 
-class ClosedPollLayout(LayoutView):
-    def __init__(self, poll_id: str, question: str, closer: discord.Member):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content=f"### Community Poll Closed (ID: `{poll_id}`)\n**Question:** {question}"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Status:** Voting session has ended. Results locked.\n**Closed By:** {closer.mention}")
-        )
-        self.add_item(self.container)
 
 class PollCloseCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -50,8 +40,9 @@ class PollCloseCommand(commands.Cog):
             if channel:
                 msg = await channel.fetch_message(poll_data["message_id"])
                 if msg:
-                    closed_view = ClosedPollLayout(clean_pid, poll_data["question"], ctx.author)
-                    await msg.edit(view=closed_view)
+                    from Embeds import get_command_embed
+                    kwargs = get_command_embed(ctx.guild.id, "poll", msg_type="closed", poll_id=clean_pid, question=poll_data["question"], author_mention=ctx.author.mention)
+                    await msg.edit(**kwargs)
         except Exception:
             pass
 

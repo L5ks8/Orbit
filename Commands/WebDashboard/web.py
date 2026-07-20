@@ -869,6 +869,26 @@ class WebDashboard:
             footer_icon = data.get("footer_icon", "").strip()
             fields = data.get("fields", [])
             
+            member_count = guild.member_count or len(guild.members)
+            server_name = guild.name
+            
+            def replace_vars(text: str) -> str:
+                if not text: return text
+                text = text.replace("{count}", str(member_count))
+                text = text.replace("{server}", server_name)
+                # Note: {user} and {username} are not replaced because this command is triggered from dashboard, not by a joining user.
+                return text
+
+            content_text = replace_vars(content_text)
+            title = replace_vars(title)
+            desc = replace_vars(desc)
+            author_name = replace_vars(author_name)
+            footer_text = replace_vars(footer_text)
+            
+            for f in fields:
+                if "name" in f: f["name"] = replace_vars(f["name"])
+                if "value" in f: f["value"] = replace_vars(f["value"])
+            
             msg_kwargs = {}
             if content_text:
                 msg_kwargs["content"] = content_text

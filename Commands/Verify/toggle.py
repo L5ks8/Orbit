@@ -1,6 +1,6 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+
 from Commands.Verify._storage import toggle_verify_config
 from Commands.Verify.verify import verify_group
 

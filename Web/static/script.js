@@ -1234,15 +1234,7 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         // Initial Preview Update
         updateLivePreview();
 
-        // Capture initial state for checkDirty
-        document.querySelectorAll('input, textarea, select').forEach(el => {
-            if (el.id === 'chart_days_select' || el.classList.contains('custom-multiselect-input') || el.classList.contains('custom-select-input') || !el.id) return;
-            if (el.type === 'checkbox') {
-                el.dataset.initial = el.checked;
-            } else if (el.type !== 'file' && el.type !== 'hidden') {
-                el.dataset.initial = el.value;
-            }
-        });
+        updateInitialState();
         if (typeof window.clearDirtyTracking === 'function') {
             window.clearDirtyTracking();
         } else {
@@ -2068,6 +2060,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
 
         if (res.ok) {
             showToast('Settings saved successfully!');
+            updateInitialState();
             setDirty(false);
         } else {
             const data = await res.json();
@@ -2349,6 +2342,17 @@ window.clearDirtyTracking = function() {
     window.manualDirty = false;
     setDirty(false);
 };
+
+function updateInitialState() {
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+        if (el.id === 'chart_days_select' || el.classList.contains('custom-multiselect-input') || el.classList.contains('custom-select-input') || !el.id) return;
+        if (el.type === 'checkbox') {
+            el.dataset.initial = el.checked;
+        } else if (el.type !== 'file' && el.type !== 'hidden') {
+            el.dataset.initial = el.value;
+        }
+    });
+}
 
 function handleInputChange(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {

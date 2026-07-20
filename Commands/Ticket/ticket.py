@@ -3,7 +3,7 @@ import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+
 
 from Commands.Ticket._storage import (
     load_ticket_config,
@@ -13,7 +13,6 @@ from Commands.Ticket._storage import (
 from Commands.Ticket._views import (
     PersistentTicketPanelLayout,
     TicketControlLayout,
-    TicketConfigDynamicView,
     close_ticket_flow
 )
 

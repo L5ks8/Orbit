@@ -3,16 +3,13 @@ from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Log._storage import log_event
 
-class UnbanConfirmView(LayoutView):
+class UnbanConfirmView(discord.ui.View):
     def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member, content_kwargs: dict):
         super().__init__(timeout=60.0)
         self.ban_entry = ban_entry
         self.reason = reason
         self.author = author
-
-        if "components" in content_kwargs:
-            for comp in content_kwargs["components"]:
-                self.add_item(comp)
+        self.content_kwargs = content_kwargs
 
         btn_confirm = Button(label="Confirm unban", style=discord.ButtonStyle.success, custom_id="unban_confirm")
         btn_cancel = Button(label="Cancel", style=discord.ButtonStyle.secondary, custom_id="unban_cancel")
@@ -34,13 +31,11 @@ class UnbanConfirmView(LayoutView):
                 kwargs = get_command_embed(interaction.guild_id, "unban", msg_type="success", ban_entry=self.ban_entry, reason=self.reason, author=self.author)
                 
                 if "embed" in kwargs:
-                    self.clear_items()
-                    await interaction.response.edit_message(embed=kwargs["embed"], view=self)
+                    await interaction.response.edit_message(embed=kwargs["embed"], view=None)
                 elif "components" in kwargs:
-                    self.clear_items()
-                    for comp in kwargs["components"]:
-                        self.add_item(comp)
-                    await interaction.response.edit_message(view=self)
+                    lv = LayoutView()
+                    for comp in kwargs["components"]: lv.add_item(comp)
+                    await interaction.response.edit_message(view=lv)
                 
                 self.stop()
             except discord.Forbidden:
@@ -54,21 +49,30 @@ class UnbanConfirmView(LayoutView):
             from Embeds import get_command_embed
             kwargs = get_command_embed(interaction.guild_id, "unban", msg_type="cancel")
             if "embed" in kwargs:
-                self.clear_items()
-                await interaction.response.edit_message(embed=kwargs["embed"], view=self)
+                await interaction.response.edit_message(embed=kwargs["embed"], view=None)
             elif "components" in kwargs:
-                self.clear_items()
-                for comp in kwargs["components"]:
-                    self.add_item(comp)
-                await interaction.response.edit_message(view=self)
+                lv = LayoutView()
+                for comp in kwargs["components"]: lv.add_item(comp)
+                await interaction.response.edit_message(view=lv)
             self.stop()
 
         btn_confirm.callback = confirm_callback
         btn_cancel.callback = cancel_callback
 
-        action_row = ActionRow(btn_confirm, btn_cancel)
+        self.add_item(btn_confirm)
+        self.add_item(btn_cancel)
 
-        self.add_item(ActionRow(btn_confirm, btn_cancel))
+    def get_view(self):
+        if "components" in self.content_kwargs:
+            lv = LayoutView(timeout=60.0)
+            for comp in self.content_kwargs["components"]:
+                lv.add_item(comp)
+            ar = ActionRow()
+            for child in self.children:
+                ar.add_item(child)
+            lv.add_item(ar)
+            return lv
+        return self
 
 class UnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -95,9 +99,9 @@ class UnbanCommand(commands.Cog):
         view = UnbanConfirmView(ban_entry, reason, ctx.author, kwargs)
         
         if "embed" in kwargs:
-            await ctx.send(embed=kwargs["embed"], view=view, allowed_mentions=discord.AllowedMentions.none())
+            await ctx.send(embed=kwargs["embed"], view=view.get_view(), allowed_mentions=discord.AllowedMentions.none())
         elif "components" in kwargs:
-            await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+            await ctx.send(view=view.get_view(), allowed_mentions=discord.AllowedMentions.none())
 
     @unban.error
     async def unban_error(self, ctx: commands.Context, error):

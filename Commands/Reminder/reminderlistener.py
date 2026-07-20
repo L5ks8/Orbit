@@ -1,8 +1,8 @@
-﻿import time
+import time
 import discord
 from discord.ext import commands, tasks
 from Commands.Reminder._storage import remove_reminder, load_reminders
-from Commands.Reminder._views import ReminderAlertLayout
+from Embeds import get_command_embed
 
 class ReminderListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -26,7 +26,7 @@ class ReminderListener(commands.Cog):
         await self.bot.wait_until_ready()
 
     async def _deliver_alert(self, entry: dict):
-        view = ReminderAlertLayout(entry)
+        kwargs = get_command_embed(entry.get("guild_id"), "reminder", msg_type="alert", entry=entry)
         mention_str = f"<@{entry['user_id']}>"
         
         delivered = False
@@ -40,8 +40,7 @@ class ReminderListener(commands.Cog):
                     channel = None
             if channel and hasattr(channel, "send"):
                 try:
-                    await channel.send(mention_str, allowed_mentions=discord.AllowedMentions(users=True))
-                    await channel.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+                    await channel.send(mention_str, **kwargs, allowed_mentions=discord.AllowedMentions(users=True))
                     delivered = True
                 except Exception:
                     delivered = False
@@ -55,7 +54,7 @@ class ReminderListener(commands.Cog):
                     user = None
             if user:
                 try:
-                    await user.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+                    await user.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
                 except Exception:
                     pass
 

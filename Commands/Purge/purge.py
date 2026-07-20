@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from Commands.Purge._views import PurgeSuccessLayout
+
 from Commands._utils import MemberOrIDConverter, format_usage
 
 async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member = None):
@@ -30,8 +30,15 @@ async def _do_purge(ctx: commands.Context, count_str: str, user: discord.Member 
             deleted = await ctx.channel.purge(limit=limit, check=check)
         else:
             deleted = await ctx.channel.purge(limit=limit)
-        view = PurgeSuccessLayout(len(deleted), ctx.channel, ctx.author, filter_user=user, is_all=is_all)
-        await ctx.send(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none(), delete_after=5)
+        from Embeds import get_command_embed
+        kwargs = get_command_embed(
+            ctx.guild.id, "purge",
+            count=len(deleted), channel_mention=ctx.channel.mention,
+            author_mention=ctx.author.mention,
+            filter_user_mention=user.mention if user else None,
+            is_all=is_all
+        )
+        await ctx.send(**kwargs, ephemeral=True, allowed_mentions=discord.AllowedMentions.none(), delete_after=5)
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to delete messages in this channel.", ephemeral=True, delete_after=5)
     except discord.HTTPException as e:
