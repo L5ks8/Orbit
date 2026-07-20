@@ -817,6 +817,9 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         globalCategories = data.categories || [];
         globalChannels = data.channels || [];
         globalVoiceChannels = data.voice_channels || [];
+        
+        // Load messages for the embed builder UI
+        loadMessages();
 
         // Initialize Charts
         if (window.Chart) {

@@ -1648,7 +1648,7 @@
                             </div>
 
                             <!-- Name & Channel -->
-                            <div class="dash-card" style="margin-bottom: 24px; background: #111214; border: 1px solid rgba(255,255,255,0.05); padding: 24px; border-radius: 8px;">
+                            <div class="dash-card" style="margin-bottom: 24px; background: #1B1C20; border: 1px solid rgba(255,255,255,0.05); padding: 24px; border-radius: 8px;">
                                 <div style="margin-bottom: 16px;">
                                     <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600;">Embedded Message Name</label>
                                     <input type="text" id="embed_msg_name" class="form-input" placeholder="new embed" value="new embed" style="width: 100%; background: #121315;">
@@ -1741,6 +1741,50 @@
                                         <button id="btn-embed-save" class="btn-primary" style="width: 100%; background: #22C55E; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600; font-size: 13px;">Save message</button>
                                         <button id="btn-embed-send" class="btn-primary" style="width: 100%; background: #3B82F6; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600; font-size: 13px;">Send to channel</button>
                                         <button id="btn-embed-delete" class="btn-danger" style="width: 100%; background: #EF4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600; font-size: 13px;">Delete</button>
+                                    </div>
+
+                                    <!-- Right Column (Preview) -->
+                                    <div style="flex: 1; min-width: 400px; display: flex; flex-direction: column;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <span style="color: #F2F3F5; font-weight: 500; font-size: 16px;">Orbit</span>
+                                            <span style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
+                                            <span style="color: #949BA4; font-size: 12px;">Today at 12:00 PM</span>
+                                        </div>
+                                        <div id="preview-content" style="color: #DBDEE1; font-size: 14px; margin-bottom: 4px; white-space: pre-wrap; word-wrap: break-word;"></div>
+                                        
+                                        <!-- Components V2 Container -->
+                                        <div id="preview-v2-container" style="display: none; background: #2B2D31; border-radius: 4px; border-left: 4px solid #1E1F22; padding: 12px 16px; margin-top: 4px; max-width: 432px;">
+                                            <div id="preview-v2-title" style="color: #F2F3F5; font-size: 16px; font-weight: 600; margin-bottom: 8px; display: none; word-wrap: break-word;"></div>
+                                            <div id="preview-v2-divider" style="height: 1px; background: #313338; margin: 12px 0; display: none;"></div>
+                                            <div id="preview-v2-description" style="color: #DBDEE1; font-size: 14px; margin-bottom: 8px; display: none; white-space: pre-wrap; word-wrap: break-word;"></div>
+                                            <div id="preview-v2-fields" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;"></div>
+                                        </div>
+
+                                        <!-- Embed -->
+                                        <div id="preview-embed" style="background: #2B2D31; border-radius: 4px; border-left: 4px solid #5865F2; padding: 12px 16px; max-width: 432px; display: none; margin-top: 4px;">
+                                            <div id="preview-author" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; display: none;">
+                                                <img id="preview-author-icon" src="" style="width: 24px; height: 24px; border-radius: 50%; display: none;">
+                                                <span id="preview-author-name" style="color: #F2F3F5; font-size: 14px; font-weight: 600;"></span>
+                                            </div>
+                                            <div style="display: flex; gap: 16px;">
+                                                <div style="flex: 1; min-width: 0;">
+                                                    <div id="preview-title" style="color: #00A8FC; font-size: 16px; font-weight: 600; margin-bottom: 8px; display: none; word-wrap: break-word;"></div>
+                                                    <div id="preview-description" style="color: #DBDEE1; font-size: 14px; margin-bottom: 8px; display: none; white-space: pre-wrap; word-wrap: break-word;"></div>
+                                                    <div id="preview-fields" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;"></div>
+                                                    <img id="preview-image" src="" style="max-width: 100%; border-radius: 4px; margin-top: 8px; display: none;">
+                                                </div>
+                                                <div id="preview-thumbnail-container" style="flex-shrink: 0; display: none;">
+                                                    <img id="preview-thumbnail" src="" style="max-width: 80px; max-height: 80px; border-radius: 4px;">
+                                                </div>
+                                            </div>
+                                            <div id="preview-footer" style="display: flex; align-items: center; gap: 8px; margin-top: 8px; display: none;">
+                                                <img id="preview-footer-icon" src="" style="width: 20px; height: 20px; border-radius: 50%; display: none;">
+                                                <span id="preview-footer-text" style="color: #B5BAC1; font-size: 12px;"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Buttons Container -->
+                                        <div id="preview-components-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
                                     </div>
                                 </div>
                             </div>
