@@ -1628,13 +1628,17 @@ function formatDiscordPreviewText(str) {
 
     let text = str;
 
-    // 1. Custom animated emojis <a:name:id>
+    // 1. Channel mentions in user text (#channel or <#id>)
+    text = text.replace(/<#(\d+)>/g, '<span style="color: #5865F2; font-weight: 500;">#channel</span>');
+    text = text.replace(/(?<![&\w#])#([a-zA-Z0-9_-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');
+
+    // 2. Custom animated emojis <a:name:id>
     text = text.replace(/<a:([\w-]+):(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$2.gif?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
 
-    // 2. Custom static emojis <:name:id>
+    // 3. Custom static emojis <:name:id>
     text = text.replace(/<:([\w-]+):(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$2.png?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
 
-    // 3. User, Server, Count, Mention, Username, ID Placeholders
+    // 4. User, Server, Count, Mention, Username, ID Placeholders
     const mentionBadge = '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>';
     text = text
         .replace(/{user}/g, mentionBadge)
@@ -1643,9 +1647,6 @@ function formatDiscordPreviewText(str) {
         .replace(/{server}/g, '<b>Orbit</b>')
         .replace(/{count}/g, '<b>100</b>')
         .replace(/{id}/g, '<b>123456789</b>');
-
-    // 4. Channel mentions #channel
-    text = text.replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');
 
     // 5. Multiline Codeblock (```code```)
     text = text.replace(/```(?:[a-z]+)?\n?([\s\S]*?)```/g, '<pre style="background: #1E1F22; padding: 8px 12px; border-radius: 4px; border: 1px solid #2B2D31; font-family: Consolas, monospace; font-size: 12px; color: #DBDEE1; white-space: pre-wrap; margin: 4px 0;"><code>$1</code></pre>');
