@@ -962,7 +962,16 @@ class WebDashboard:
                 msg_kwargs["content"] = content_text
 
             if mode == "components":
-                from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+                try:
+                    from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button # type: ignore
+                except ImportError:
+                    LayoutView = getattr(discord.ui, "LayoutView", discord.ui.View)
+                    Container = getattr(discord.ui, "Container", lambda *a, **k: None)
+                    TextDisplay = getattr(discord.ui, "TextDisplay", lambda *a, **k: None)
+                    Separator = getattr(discord.ui, "Separator", lambda *a, **k: None)
+                    ActionRow = getattr(discord.ui, "ActionRow", lambda *a, **k: None)
+                    Button = discord.ui.Button
+
                 view = LayoutView(timeout=None)
                 elements = []
                 
