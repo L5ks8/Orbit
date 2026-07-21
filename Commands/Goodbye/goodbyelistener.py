@@ -37,11 +37,25 @@ class GoodbyeListener(commands.Cog):
                 return ch.mention
             return f"#{c_name}"
 
+        def replace_emoji(match):
+            key = match.group(1)
+            if key.isdigit():
+                em = discord.utils.get(member.guild.emojis, id=int(key))
+                if em:
+                    return str(em)
+            else:
+                em = discord.utils.get(member.guild.emojis, name=key)
+                if em:
+                    return str(em)
+            return f":{key}:"
+
         def fmt_text(text: str) -> str:
             if not text:
                 return ""
             formatted = format_goodbye_string(text, member)
-            return re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
+            formatted = re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
+            formatted = re.sub(r'(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
+            return formatted
 
         msg_mode = config.get("msg_mode", "image")
 

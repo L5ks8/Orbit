@@ -30,7 +30,20 @@ def format_boost_string(text: str, member: discord.Member) -> str:
             return channel.mention
         return f"#{c_name}"
         
+    def replace_emoji(match):
+        key = match.group(1)
+        if key.isdigit():
+            em = discord.utils.get(member.guild.emojis, id=int(key))
+            if em:
+                return str(em)
+        else:
+            em = discord.utils.get(member.guild.emojis, name=key)
+            if em:
+                return str(em)
+        return f":{key}:"
+
     formatted = re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
+    formatted = re.sub(r'(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
     
     return formatted
 
