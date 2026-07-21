@@ -74,8 +74,41 @@ def load_serverstats_config(guild_id: int) -> dict:
 
 def save_serverstats_config(guild_id: int, data: dict):
     path = get_config_path(guild_id)
+    current = load_serverstats_config(guild_id)
+
+    if "enabled" in data:
+        current["enabled"] = bool(data["enabled"])
+
+    cat_id = data.get("category_id")
+    if cat_id is not None and str(cat_id).strip():
+        current["category_id"] = str(cat_id).strip()
+    
+    cat_name = data.get("category_name")
+    if cat_name is not None and str(cat_name).strip():
+        current["category_name"] = str(cat_name).strip()
+
+    incoming_channels = data.get("channels", {})
+    if isinstance(incoming_channels, dict):
+        for key, incoming_ch in incoming_channels.items():
+            if not isinstance(incoming_ch, dict):
+                continue
+            if key not in current["channels"]:
+                current["channels"][key] = {
+                    "enabled": False,
+                    "channel_id": "",
+                    "format": ""
+                }
+            if "enabled" in incoming_ch:
+                current["channels"][key]["enabled"] = bool(incoming_ch["enabled"])
+            if "format" in incoming_ch:
+                current["channels"][key]["format"] = str(incoming_ch["format"])
+            # Preserve existing channel_id if not explicitly provided or if empty in incoming data
+            inc_ch_id = incoming_ch.get("channel_id")
+            if inc_ch_id is not None and str(inc_ch_id).strip():
+                current["channels"][key]["channel_id"] = str(inc_ch_id).strip()
+
     try:
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+            json.dump(current, f, indent=4, ensure_ascii=False)
     except Exception as e:
         print(f"[ServerStats] Error saving config for {guild_id}: {e}")

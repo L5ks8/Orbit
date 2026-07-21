@@ -1278,6 +1278,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('serverstats_enabled').checked = ssConfig.enabled || false;
         
         const ssCatSelect = document.getElementById('serverstats_category_id');
+        const catNameInput = document.getElementById('serverstats_category_name');
+        
         if (ssCatSelect) {
             ssCatSelect.innerHTML = '<option value="">-- Create New Category --</option>';
             globalCategories.forEach(cat => {
@@ -1287,8 +1289,24 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
                 if (String(cat.id) === String(ssConfig.category_id)) opt.selected = true;
                 ssCatSelect.appendChild(opt);
             });
+            ssCatSelect.value = ssConfig.category_id || '';
+            
+            if (!ssCatSelect.dataset.hasChangeListener) {
+                ssCatSelect.dataset.hasChangeListener = "true";
+                ssCatSelect.addEventListener('change', (e) => {
+                    const selId = e.target.value;
+                    const foundCat = globalCategories.find(c => String(c.id) === String(selId));
+                    if (foundCat && catNameInput) {
+                        catNameInput.value = foundCat.name;
+                    }
+                });
+            }
         }
-        document.getElementById('serverstats_category_name').value = ssConfig.category_name || '📊 SERVER STATS 📊';
+
+        if (catNameInput) {
+            const currentCat = globalCategories.find(c => String(c.id) === String(ssConfig.category_id));
+            catNameInput.value = ssConfig.category_name || (currentCat ? currentCat.name : '📊 SERVER STATS 📊');
+        }
 
         const ssChs = ssConfig.channels || {};
         const ssKeys = ['members', 'humans', 'bots', 'boosts', 'voice_users'];
