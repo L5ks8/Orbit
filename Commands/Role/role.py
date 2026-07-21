@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-@commands.hybrid_group(name="role", invoke_without_command=True, description="Server role management commands.")
+@commands.hybrid_group(name="role", description="Server role management commands.")
 @commands.has_permissions(manage_roles=True)
 async def role_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
@@ -17,11 +17,9 @@ async def role_group(ctx: commands.Context):
                         return await ctx.send(f"Member '{user_str}' not found.", ephemeral=True)
                     
                     found_role = None
-                    # First try standard RoleConverter (handles mentions <@&ID>, exact IDs, and exact names)
                     try:
                         found_role = await commands.RoleConverter().convert(ctx, role_query)
                     except commands.RoleNotFound:
-                        # Fallback to fuzzy substring search by name
                         role_query_lower = role_query.lower()
                         for r in ctx.guild.roles:
                             if r.name.lower() == role_query_lower:
@@ -36,7 +34,6 @@ async def role_group(ctx: commands.Context):
                     if not found_role:
                         return await ctx.send(f"Role `{role_query}` not found on this server.", ephemeral=True)
                         
-                    # Toggle logic: if user has role -> remove, else -> add
                     if found_role in target.roles:
                         from Commands.Role.remove import _do_removerole
                         return await _do_removerole(ctx, target, found_role, "Toggled via quick -role command")
