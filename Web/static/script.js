@@ -1628,9 +1628,11 @@ function formatDiscordPreviewText(str) {
 
     let text = str;
 
-    // 1. Channel mentions in user text (#channel or <#id>)
-    text = text.replace(/<#(\d+)>/g, '<span style="color: #5865F2; font-weight: 500;">#channel</span>');
-    text = text.replace(/(?<![&\w#])#([a-zA-Z0-9_-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');
+    // 1. Channel mentions in user text (<#id>, #channel-id, or #channel-name)
+    const channelBadge = '<span style="color: #5865F2; background: rgba(88, 101, 242, 0.15); padding: 0 4px; border-radius: 3px; font-weight: 500;">#channel</span>';
+    text = text.replace(/<#(\d+)>/g, channelBadge);
+    text = text.replace(/(?<![&\w#])#(\d+)/g, channelBadge);
+    text = text.replace(/(?<![&\w#])#([a-zA-Z_-][a-zA-Z0-9_-]*)/g, '<span style="color: #5865F2; background: rgba(88, 101, 242, 0.15); padding: 0 4px; border-radius: 3px; font-weight: 500;">#$1</span>');
 
     // 2. Custom animated emojis <a:name:id>
     text = text.replace(/<a:([\w-]+):(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$2.gif?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
