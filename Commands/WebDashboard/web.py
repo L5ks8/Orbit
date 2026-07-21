@@ -234,6 +234,9 @@ class WebDashboard:
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
 
+        from Commands.WebDashboard._storage import load_settings_config
+        settings_cfg = load_settings_config(guild_id)
+
         from Commands.ServerStats._storage import load_serverstats_config
         serverstats_cfg = load_serverstats_config(guild_id)
 
