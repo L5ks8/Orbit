@@ -20,7 +20,7 @@ def get_default_serverstats_config() -> dict:
             "members": {
                 "enabled": True,
                 "channel_id": "",
-                "format": "✧˚₊·≡⭐୧ | 𝐌𝐞𝐦𝐛𝐞𝐫𝐬: {count} | ✧⸝"
+                "format": "👥 | Members: {count}"
             },
             "humans": {
                 "enabled": False,

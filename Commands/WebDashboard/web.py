@@ -17,6 +17,7 @@ from Commands.Log._storage import load_log_config, save_log_config
 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Commands.Boost._storage import load_boost_config, save_boost_config
 from Commands.Level._storage import load_level_config, save_level_config
+from Commands.ServerStats._storage import load_serverstats_config
 
 SESSIONS: Dict[str, Any] = {}
 
@@ -384,7 +385,8 @@ class WebDashboard:
             "logs": logs_cfg,
             "automation": automation_cfg,
             "tempvoice": tempvoice_cfg,
-            "level": level_cfg
+            "level": level_cfg,
+            "serverstats": load_serverstats_config(guild_id)
         }
 
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
