@@ -59,4 +59,3 @@ async def setup(bot: commands.Bot):
         bot.add_command(role_group)
     await bot.add_cog(RoleRallCog(bot))
     await bot.add_cog(RoleRallFallback(bot))
-

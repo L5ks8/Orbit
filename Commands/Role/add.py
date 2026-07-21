@@ -1,9 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
-from Commands.Role.role import role_group
-
-
 
 async def _do_addrole(ctx: commands.Context, target: discord.Member, role: discord.Role, reason: str):
     await ctx.defer()
@@ -24,44 +20,6 @@ async def _do_addrole(ctx: commands.Context, target: discord.Member, role: disco
     except Exception as e:
         await ctx.send(f"Error adding role: {e}", ephemeral=True)
 
-@role_group.command(name="add", aliases=["addrole"], description="Assign a role to a member.")
-@commands.has_permissions(manage_roles=True)
-@commands.bot_has_permissions(manage_roles=True)
-async def role_add_cmd(ctx: commands.Context, target: discord.Member, role: discord.Role, *, reason: str = "No reason provided"):
-    await _do_addrole(ctx, target, role, reason)
-
-class RoleAddCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @role_add_cmd.error
-    async def role_add_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.RoleNotFound) and ctx.guild:
-            target = ctx.kwargs.get("target")
-            query = getattr(error, "argument", "")
-            reason = ctx.kwargs.get("reason", "No reason provided")
-            if target and query:
-                query_lower = query.lower()
-                found_role = None
-                for r in ctx.guild.roles:
-                    if r.name.lower() == query_lower:
-                        found_role = r
-                        break
-                if not found_role:
-                    for r in ctx.guild.roles:
-                        if query_lower in r.name.lower():
-                            found_role = r
-                            break
-                if found_role:
-                    return await _do_addrole(ctx, target, found_role, reason)
-
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Roles permission to assign roles.", ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-role add <@user> <@role> [reason]`", ephemeral=True)
-        else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
-
 class AddRoleFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -73,9 +31,4 @@ class AddRoleFallback(commands.Cog):
         await _do_addrole(ctx, target, role, reason)
 
 async def setup(bot: commands.Bot):
-    from Commands.Role.role import role_group
-    if "role" not in bot.all_commands:
-        bot.add_command(role_group)
-    await bot.add_cog(RoleAddCog(bot))
     await bot.add_cog(AddRoleFallback(bot))
-

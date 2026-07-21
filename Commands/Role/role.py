@@ -27,6 +27,11 @@ async def role_group(ctx: commands.Context):
                                 break
                         if not found_role:
                             for r in ctx.guild.roles:
+                                if r.name.lower().startswith(role_query_lower):
+                                    found_role = r
+                                    break
+                        if not found_role:
+                            for r in ctx.guild.roles:
                                 if role_query_lower in r.name.lower():
                                     found_role = r
                                     break
@@ -41,9 +46,8 @@ async def role_group(ctx: commands.Context):
                         from Commands.Role.add import _do_addrole
                         return await _do_addrole(ctx, target, found_role, "Toggled via quick -role command")
 
-        await ctx.send("Please use `/role add`, `/role remove`, `/role info`, `/role all`, `/role rall`, `/role create`, or `/role settings`.", ephemeral=True)
+        await ctx.send("Please use `/role info`, `/role all`, `/role rall`, `/role create`, `/role remove`, or `/role settings`.", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
-

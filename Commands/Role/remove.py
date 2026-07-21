@@ -1,9 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
 from Commands.Role.role import role_group
-
-
 
 async def _do_removerole(ctx: commands.Context, target: discord.Member, role: discord.Role, reason: str):
     await ctx.defer()
@@ -36,25 +33,6 @@ class RoleRemoveCog(commands.Cog):
 
     @role_remove_cmd.error
     async def role_remove_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.RoleNotFound) and ctx.guild:
-            target = ctx.kwargs.get("target")
-            query = getattr(error, "argument", "")
-            reason = ctx.kwargs.get("reason", "No reason provided")
-            if target and query:
-                query_lower = query.lower()
-                found_role = None
-                for r in ctx.guild.roles:
-                    if r.name.lower() == query_lower:
-                        found_role = r
-                        break
-                if not found_role:
-                    for r in ctx.guild.roles:
-                        if query_lower in r.name.lower():
-                            found_role = r
-                            break
-                if found_role:
-                    return await _do_removerole(ctx, target, found_role, reason)
-
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need Manage Roles permission to remove roles.", ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
@@ -78,4 +56,3 @@ async def setup(bot: commands.Bot):
         bot.add_command(role_group)
     await bot.add_cog(RoleRemoveCog(bot))
     await bot.add_cog(RemoveRoleFallback(bot))
-

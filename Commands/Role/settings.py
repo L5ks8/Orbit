@@ -1,7 +1,6 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
 from Commands.Role.role import role_group
 
 PERMISSION_MAP = {
@@ -21,8 +20,6 @@ PERMISSION_MAP = {
 }
 
 PERMISSION_CHOICES = [app_commands.Choice(name=k, value=k) for k in PERMISSION_MAP]
-
-
 
 async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission: str, state: str):
     await ctx.defer()
@@ -132,4 +129,3 @@ async def setup(bot: commands.Bot):
         bot.add_command(role_group)
     await bot.add_cog(RoleSettingsCog(bot))
     await bot.add_cog(RoleSettingsFallback(bot))
-
