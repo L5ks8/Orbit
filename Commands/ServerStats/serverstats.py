@@ -41,10 +41,9 @@ class ServerStats(commands.Cog):
                 print(f"Failed to create category for ServerStats in {guild.id}: {e}")
                 category = None
         elif category:
-            # Sync category name if category was created or updated
-            if config.get("category_name") and category.name != config.get("category_name"):
-                # If user saved a specific category name in config, edit category
-                pass
+            if category.name != config.get("category_name"):
+                config["category_name"] = category.name
+                changed = True
 
         if not category and not any_enabled:
             if changed:
