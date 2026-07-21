@@ -1612,11 +1612,54 @@ function renderBoostEmbedFields() {
 
 function formatDiscordPreviewText(str) {
     if (!str) return '';
-    return str
-        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
+
+    let text = str;
+
+    // 1. Custom animated emojis <a:name:id>
+    text = text.replace(/<a:([\w-]+):(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$2.gif?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
+
+    // 2. Custom static emojis <:name:id>
+    text = text.replace(/<:([\w-]+):(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$2.png?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
+
+    // 3. User, Server, Count Placeholders
+    text = text
         .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
         .replace(/{count}/g, '<b>100</b>');
+
+    // 4. Channel mentions #channel
+    text = text.replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');
+
+    // 5. Multiline Codeblock (```code```)
+    text = text.replace(/```(?:[a-z]+)?\n?([\s\S]*?)```/g, '<pre style="background: #1E1F22; padding: 8px 12px; border-radius: 4px; border: 1px solid #2B2D31; font-family: Consolas, monospace; font-size: 12px; color: #DBDEE1; white-space: pre-wrap; margin: 4px 0;"><code>$1</code></pre>');
+
+    // 6. Inline code (`code`)
+    text = text.replace(/`([^`]+)`/g, '<code style="background: #1E1F22; padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace; font-size: 12px; color: #E0E1E5;">$1</code>');
+
+    // 7. Spoilers (||spoiler||)
+    text = text.replace(/\|\|([\s\S]*?)\|\|/g, '<span style="background: #202225; color: transparent; border-radius: 3px; padding: 0 4px; cursor: pointer; transition: color 0.1s, background 0.1s;" onclick="this.style.color=\'#DBDEE1\'; this.style.background=\'rgba(255,255,255,0.1)\'" title="Click to reveal">$1</span>');
+
+    // 8. Bold + Italic (***text***)
+    text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+
+    // 9. Bold (**text**)
+    text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+    // 10. Underline (__text__)
+    text = text.replace(/__([^_]+)__/g, '<u>$1</u>');
+
+    // 11. Italic (*text* or _text_)
+    text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+    // 12. Strikethrough (~~text~~)
+    text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+
+    // 13. Quotes (> text)
+    text = text.replace(/^&gt;\s?(.*)$/gm, '<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1;">$1</blockquote>');
+    text = text.replace(/^>\s?(.*)$/gm, '<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1;">$1</blockquote>');
+
+    return text;
 }
 
 function updateLivePreview() {
