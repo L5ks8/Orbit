@@ -6,3 +6,4 @@ pymongo[srv]>=4.6.0
 cloudinary>=1.39.0
 
 
+g4f>=0.3.0
