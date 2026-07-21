@@ -1,35 +1,34 @@
 import os
-import json
-import re
-import asyncio
-import random
 import discord
 from discord.ext import commands
-import g4f
+from g4f.client import AsyncClient
 
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.client = AsyncClient()
         self.memory_resets = {}
 
     @commands.group(invoke_without_command=True)
     async def memory(self, ctx):
-        await ctx.reply("Use `-memory reset` to clear the bot's memory in this channel.", mention_author=False)
+        await ctx.reply("Benutze `-memory reset` um das Gedächtnis des Bots in diesem Kanal zu löschen.", mention_author=False)
 
     @memory.command(name="reset")
     async def memory_reset(self, ctx):
         self.memory_resets[ctx.channel.id] = ctx.message.created_at
-        await ctx.reply("Memory has been reset.", mention_author=False)
+        await ctx.reply("🧠 Mein Gedächtnis für diesen Kanal wurde erfolgreich gelöscht! Ich erinnere mich an nichts mehr von vorher.", mention_author=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
 
+        # Ignore if it's a command being executed (like -memory reset)
         ctx = await self.bot.get_context(message)
         if ctx.valid and ctx.command is not None:
             return
 
+        # Check if the bot is mentioned or if it's a reply to the bot
         is_mentioned = self.bot.user in message.mentions
         is_reply_to_bot = False
         
@@ -43,25 +42,14 @@ class GeminiChatbot(commands.Cog):
 
         async with message.channel.typing():
             try:
+                # Fetch context (last 10 messages, but only after the last reset)
                 reset_time = self.memory_resets.get(message.channel.id)
                 messages = [m async for m in message.channel.history(limit=10, before=message, after=reset_time)]
                 messages.reverse()
 
-                server_info = ""
-                if message.guild:
-                    server_info = (
-                        f"Server Name: {message.guild.name}\n"
-                        f"Member Count: {message.guild.member_count}\n"
-                        f"Roles Count: {len(message.guild.roles)}\n"
-                        f"Channels Count: {len(message.guild.channels)}\n"
-                        f"Owner: {message.guild.owner.display_name if message.guild.owner else 'Unknown'}\n"
-                    )
-
-                prefix_cmds = []
-                for cmd in self.bot.commands:
-                    prefix_cmds.append(f"{cmd.name}")
-                prefix_cmds_str = ", ".join(prefix_cmds)
-
+                server_info = f"Server Name: {message.guild.name}\nMember Count: {message.guild.member_count}" if message.guild else "Direct Message"
+                prefix_cmds_str = ", ".join([cmd.name for cmd in self.bot.commands if not cmd.hidden])
+                
                 system_prompt = (
                     "You are Orbit, an intelligent, direct, and efficient Discord bot. "
                     "Your tone is cool, concise, and somewhat sarcastic. You are not overly friendly, soft, or cutesy. "
@@ -86,41 +74,20 @@ class GeminiChatbot(commands.Cog):
                     "Answer user questions accurately based on this information."
                 )
 
-                prompt = f"{system_prompt}\n\nHere is the chat history:\n"
+                messages_payload = [{"role": "system", "content": system_prompt}]
                 
                 for msg in messages:
-                    author_name = msg.author.display_name
-                    content = msg.clean_content
-                    prompt += f"{author_name}: {content}\n"
+                    role = "assistant" if msg.author.id == self.bot.user.id else "user"
+                    messages_payload.append({"role": role, "content": f"{msg.author.display_name}: {msg.clean_content}"})
 
-                prompt += f"\n{message.author.display_name}: {message.content}\n"
-                prompt += "Orbit:"
+                messages_payload.append({"role": "user", "content": f"{message.author.display_name}: {message.clean_content}"})
 
-                def run_g4f_worker(messages):
-                    import subprocess, json
-                    try:
-                        result = subprocess.run(
-                            ['python', 'Commands/AI/g4f_worker.py'],
-                            input=json.dumps(messages).encode('utf-8'),
-                            capture_output=True,
-                            timeout=30
-                        )
-                        output = result.stdout.decode('utf-8')
-                        for line in output.split('\n'):
-                            if line.startswith('G4F_RESULT:'):
-                                data = json.loads(line[len('G4F_RESULT:'):])
-                                if data.get("success"):
-                                    return data["response"]
-                                else:
-                                    raise Exception(data.get("error"))
-                        raise Exception("No JSON response from worker. Output: " + output[:100])
-                    except subprocess.TimeoutExpired:
-                        raise Exception("Request timed out (30 seconds)")
-                    except Exception as e:
-                        raise Exception(f"Worker failed: {e}")
-
-                loop = asyncio.get_event_loop()
-                text_response = await loop.run_in_executor(None, run_g4f_worker, [{'role': 'user', 'content': prompt}])
+                response = await self.client.chat.completions.create(
+                    model='gpt-4o',
+                    messages=messages_payload
+                )
+                
+                text_response = response.choices[0].message.content
                             
                 if text_response:
                     await self._send_chunked(message, text_response)
