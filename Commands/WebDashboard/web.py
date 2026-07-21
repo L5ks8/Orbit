@@ -243,19 +243,40 @@ class WebDashboard:
                 "enabled": welcome_cfg.get("enabled", False),
                 "channel_id": str(welcome_cfg.get("channel_id")) if welcome_cfg.get("channel_id") else "",
                 "message": welcome_cfg.get("message", ""),
-                "image_url": welcome_cfg.get("image_url", "")
+                "image_url": welcome_cfg.get("image_url", ""),
+                "msg_mode": welcome_cfg.get("msg_mode", "image"),
+                "embed_color": welcome_cfg.get("embed_color", "#5865F2"),
+                "embed_title": welcome_cfg.get("embed_title", ""),
+                "embed_description": welcome_cfg.get("embed_description", ""),
+                "embed_thumbnail": welcome_cfg.get("embed_thumbnail", ""),
+                "embed_footer": welcome_cfg.get("embed_footer", ""),
+                "embed_author": welcome_cfg.get("embed_author", "")
             },
             "goodbye": {
                 "enabled": goodbye_cfg.get("enabled", False),
                 "channel_id": str(goodbye_cfg.get("channel_id")) if goodbye_cfg.get("channel_id") else "",
                 "message": goodbye_cfg.get("message", ""),
-                "image_url": goodbye_cfg.get("image_url", "")
+                "image_url": goodbye_cfg.get("image_url", ""),
+                "msg_mode": goodbye_cfg.get("msg_mode", "image"),
+                "embed_color": goodbye_cfg.get("embed_color", "#ED4245"),
+                "embed_title": goodbye_cfg.get("embed_title", ""),
+                "embed_description": goodbye_cfg.get("embed_description", ""),
+                "embed_thumbnail": goodbye_cfg.get("embed_thumbnail", ""),
+                "embed_footer": goodbye_cfg.get("embed_footer", ""),
+                "embed_author": goodbye_cfg.get("embed_author", "")
             },
             "boost": {
                 "enabled": boost_cfg.get("enabled", False),
                 "channel_id": str(boost_cfg.get("channel_id")) if boost_cfg.get("channel_id") else "",
                 "message": boost_cfg.get("message", ""),
-                "image_url": boost_cfg.get("image_url", "")
+                "image_url": boost_cfg.get("image_url", ""),
+                "msg_mode": boost_cfg.get("msg_mode", "image"),
+                "embed_color": boost_cfg.get("embed_color", "#EB459E"),
+                "embed_title": boost_cfg.get("embed_title", ""),
+                "embed_description": boost_cfg.get("embed_description", ""),
+                "embed_thumbnail": boost_cfg.get("embed_thumbnail", ""),
+                "embed_footer": boost_cfg.get("embed_footer", ""),
+                "embed_author": boost_cfg.get("embed_author", "")
             },
             "automod": {
                 "enabled": automod_cfg.get("enabled", False),
@@ -448,15 +469,21 @@ class WebDashboard:
 
             if user_perms.get("can_channels") and "welcome" in data:
                 welcome_cfg = load_welcome_config(guild_id)
-                welcome_cfg["enabled"] = bool(data.get("welcome", {}).get("enabled"))
-                cid = data.get("welcome", {}).get("channel_id")
+                w_data = data.get("welcome", {})
+                welcome_cfg["enabled"] = bool(w_data.get("enabled"))
+                cid = w_data.get("channel_id")
                 welcome_cfg["channel_id"] = int(cid) if cid else None
-                msg = data.get("welcome", {}).get("message", "")
-                if msg:
-                    welcome_cfg["message"] = msg
+                welcome_cfg["message"] = w_data.get("message", "")
+                welcome_cfg["msg_mode"] = w_data.get("msg_mode", "image")
+                welcome_cfg["embed_color"] = w_data.get("embed_color", "#5865F2")
+                welcome_cfg["embed_title"] = w_data.get("embed_title", "")
+                welcome_cfg["embed_description"] = w_data.get("embed_description", "")
+                welcome_cfg["embed_thumbnail"] = w_data.get("embed_thumbnail", "")
+                welcome_cfg["embed_footer"] = w_data.get("embed_footer", "")
+                welcome_cfg["embed_author"] = w_data.get("embed_author", "")
                 
-                if "image_url" in data.get("welcome", {}):
-                    img_url = data["welcome"]["image_url"]
+                if "image_url" in w_data:
+                    img_url = w_data["image_url"]
                     old_url = welcome_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url
@@ -467,15 +494,21 @@ class WebDashboard:
 
             if user_perms.get("can_channels") and "goodbye" in data:
                 goodbye_cfg = load_goodbye_config(guild_id)
-                goodbye_cfg["enabled"] = bool(data.get("goodbye", {}).get("enabled"))
-                cid = data.get("goodbye", {}).get("channel_id")
+                g_data = data.get("goodbye", {})
+                goodbye_cfg["enabled"] = bool(g_data.get("enabled"))
+                cid = g_data.get("channel_id")
                 goodbye_cfg["channel_id"] = int(cid) if cid else None
-                msg = data.get("goodbye", {}).get("message", "")
-                if msg:
-                    goodbye_cfg["message"] = msg
+                goodbye_cfg["message"] = g_data.get("message", "")
+                goodbye_cfg["msg_mode"] = g_data.get("msg_mode", "image")
+                goodbye_cfg["embed_color"] = g_data.get("embed_color", "#ED4245")
+                goodbye_cfg["embed_title"] = g_data.get("embed_title", "")
+                goodbye_cfg["embed_description"] = g_data.get("embed_description", "")
+                goodbye_cfg["embed_thumbnail"] = g_data.get("embed_thumbnail", "")
+                goodbye_cfg["embed_footer"] = g_data.get("embed_footer", "")
+                goodbye_cfg["embed_author"] = g_data.get("embed_author", "")
                     
-                if "image_url" in data.get("goodbye", {}):
-                    img_url = data["goodbye"]["image_url"]
+                if "image_url" in g_data:
+                    img_url = g_data["image_url"]
                     old_url = goodbye_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url
@@ -486,15 +519,21 @@ class WebDashboard:
 
             if user_perms.get("can_channels") and "boost" in data:
                 boost_cfg = load_boost_config(guild_id)
-                boost_cfg["enabled"] = bool(data.get("boost", {}).get("enabled"))
-                cid = data.get("boost", {}).get("channel_id")
+                b_data = data.get("boost", {})
+                boost_cfg["enabled"] = bool(b_data.get("enabled"))
+                cid = b_data.get("channel_id")
                 boost_cfg["channel_id"] = int(cid) if cid else None
-                msg = data.get("boost", {}).get("message", "")
-                if msg:
-                    boost_cfg["message"] = msg
+                boost_cfg["message"] = b_data.get("message", "")
+                boost_cfg["msg_mode"] = b_data.get("msg_mode", "image")
+                boost_cfg["embed_color"] = b_data.get("embed_color", "#EB459E")
+                boost_cfg["embed_title"] = b_data.get("embed_title", "")
+                boost_cfg["embed_description"] = b_data.get("embed_description", "")
+                boost_cfg["embed_thumbnail"] = b_data.get("embed_thumbnail", "")
+                boost_cfg["embed_footer"] = b_data.get("embed_footer", "")
+                boost_cfg["embed_author"] = b_data.get("embed_author", "")
                     
-                if "image_url" in data.get("boost", {}):
-                    img_url = data["boost"]["image_url"]
+                if "image_url" in b_data:
+                    img_url = b_data["image_url"]
                     old_url = boost_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url

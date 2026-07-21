@@ -895,6 +895,14 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         const imgUrl = config.welcome?.image_url || '';
         document.getElementById('welcome_image_url').value = imgUrl;
         syncDropzoneFromUrl(imgUrl);
+        document.getElementById('welcome_embed_color').value = config.welcome?.embed_color || '#5865F2';
+        document.getElementById('welcome_embed_color_hex').value = config.welcome?.embed_color || '#5865F2';
+        document.getElementById('welcome_embed_author').value = config.welcome?.embed_author || '';
+        document.getElementById('welcome_embed_title').value = config.welcome?.embed_title || '';
+        document.getElementById('welcome_embed_description').value = config.welcome?.embed_description || '';
+        document.getElementById('welcome_embed_thumbnail').value = config.welcome?.embed_thumbnail || '';
+        document.getElementById('welcome_embed_footer').value = config.welcome?.embed_footer || '';
+        setWelcomeMode(config.welcome?.msg_mode || 'image');
 
         // Goodbye
         if (!currentPermissions.can_channels) lockSection('section-goodbye', 'Manage Channels');
@@ -904,6 +912,14 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         const gbImgUrl = config.goodbye?.image_url || '';
         document.getElementById('goodbye_image_url').value = gbImgUrl;
         syncGoodbyeDropzoneFromUrl(gbImgUrl);
+        document.getElementById('goodbye_embed_color').value = config.goodbye?.embed_color || '#ED4245';
+        document.getElementById('goodbye_embed_color_hex').value = config.goodbye?.embed_color || '#ED4245';
+        document.getElementById('goodbye_embed_author').value = config.goodbye?.embed_author || '';
+        document.getElementById('goodbye_embed_title').value = config.goodbye?.embed_title || '';
+        document.getElementById('goodbye_embed_description').value = config.goodbye?.embed_description || '';
+        document.getElementById('goodbye_embed_thumbnail').value = config.goodbye?.embed_thumbnail || '';
+        document.getElementById('goodbye_embed_footer').value = config.goodbye?.embed_footer || '';
+        setGoodbyeMode(config.goodbye?.msg_mode || 'image');
 
         // Boost
         if (!currentPermissions.can_channels) lockSection('section-boost', 'Manage Channels');
@@ -913,6 +929,14 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         const boostImgUrl = config.boost?.image_url || '';
         document.getElementById('boost_image_url').value = boostImgUrl;
         syncBoostDropzoneFromUrl(boostImgUrl);
+        document.getElementById('boost_embed_color').value = config.boost?.embed_color || '#EB459E';
+        document.getElementById('boost_embed_color_hex').value = config.boost?.embed_color || '#EB459E';
+        document.getElementById('boost_embed_author').value = config.boost?.embed_author || '';
+        document.getElementById('boost_embed_title').value = config.boost?.embed_title || '';
+        document.getElementById('boost_embed_description').value = config.boost?.embed_description || '';
+        document.getElementById('boost_embed_thumbnail').value = config.boost?.embed_thumbnail || '';
+        document.getElementById('boost_embed_footer').value = config.boost?.embed_footer || '';
+        setBoostMode(config.boost?.msg_mode || 'image');
 
         // AutoMod
         if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
@@ -1295,51 +1319,217 @@ document.getElementById('btn-back').addEventListener('click', () => {
     loadDashboard();
 });
 
-function updateLivePreview() {
-    const msgInput = document.getElementById('welcome_message').value;
-    const imgInput = document.getElementById('welcome_image_url').value;
+function setWelcomeMode(mode) {
+    const hiddenEl = document.getElementById('welcome_msg_mode');
+    if (hiddenEl) hiddenEl.value = mode;
+    const imgBtn = document.getElementById('welcome_mode_image_btn');
+    const embBtn = document.getElementById('welcome_mode_embed_btn');
+    const imgContainer = document.getElementById('welcome_image_container');
+    const embContainer = document.getElementById('welcome_embed_container');
+    if (mode === 'embed') {
+        imgBtn?.classList.remove('active');
+        embBtn?.classList.add('active');
+        if (imgContainer) imgContainer.style.display = 'none';
+        if (embContainer) embContainer.style.display = 'block';
+    } else {
+        embBtn?.classList.remove('active');
+        imgBtn?.classList.add('active');
+        if (embContainer) embContainer.style.display = 'none';
+        if (imgContainer) imgContainer.style.display = 'block';
+    }
+    updateLivePreview();
+}
 
-    // Replace placeholders and #channel-name mentions
-    let formattedText = msgInput
+function setGoodbyeMode(mode) {
+    const hiddenEl = document.getElementById('goodbye_msg_mode');
+    if (hiddenEl) hiddenEl.value = mode;
+    const imgBtn = document.getElementById('goodbye_mode_image_btn');
+    const embBtn = document.getElementById('goodbye_mode_embed_btn');
+    const imgContainer = document.getElementById('goodbye_image_container');
+    const embContainer = document.getElementById('goodbye_embed_container');
+    if (mode === 'embed') {
+        imgBtn?.classList.remove('active');
+        embBtn?.classList.add('active');
+        if (imgContainer) imgContainer.style.display = 'none';
+        if (embContainer) embContainer.style.display = 'block';
+    } else {
+        embBtn?.classList.remove('active');
+        imgBtn?.classList.add('active');
+        if (embContainer) embContainer.style.display = 'none';
+        if (imgContainer) imgContainer.style.display = 'block';
+    }
+    updateGoodbyeLivePreview();
+}
+
+function setBoostMode(mode) {
+    const hiddenEl = document.getElementById('boost_msg_mode');
+    if (hiddenEl) hiddenEl.value = mode;
+    const imgBtn = document.getElementById('boost_mode_image_btn');
+    const embBtn = document.getElementById('boost_mode_embed_btn');
+    const imgContainer = document.getElementById('boost_image_container');
+    const embContainer = document.getElementById('boost_embed_container');
+    if (mode === 'embed') {
+        imgBtn?.classList.remove('active');
+        embBtn?.classList.add('active');
+        if (imgContainer) imgContainer.style.display = 'none';
+        if (embContainer) embContainer.style.display = 'block';
+    } else {
+        embBtn?.classList.remove('active');
+        imgBtn?.classList.add('active');
+        if (embContainer) embContainer.style.display = 'none';
+        if (imgContainer) imgContainer.style.display = 'block';
+    }
+    updateBoostLivePreview();
+}
+
+function setWelcomeEmbedColor(hex) {
+    const colorEl = document.getElementById('welcome_embed_color');
+    const hexEl = document.getElementById('welcome_embed_color_hex');
+    if (colorEl) colorEl.value = hex;
+    if (hexEl) hexEl.value = hex;
+    updateLivePreview();
+}
+
+function setGoodbyeEmbedColor(hex) {
+    const colorEl = document.getElementById('goodbye_embed_color');
+    const hexEl = document.getElementById('goodbye_embed_color_hex');
+    if (colorEl) colorEl.value = hex;
+    if (hexEl) hexEl.value = hex;
+    updateGoodbyeLivePreview();
+}
+
+function setBoostEmbedColor(hex) {
+    const colorEl = document.getElementById('boost_embed_color');
+    const hexEl = document.getElementById('boost_embed_color_hex');
+    if (colorEl) colorEl.value = hex;
+    if (hexEl) hexEl.value = hex;
+    updateBoostLivePreview();
+}
+
+function formatDiscordPreviewText(str) {
+    if (!str) return '';
+    return str
         .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
         .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
         .replace(/{server}/g, '<b>Orbit</b>')
         .replace(/{count}/g, '<b>100</b>');
+}
 
-    document.getElementById('welcome_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
+function updateLivePreview() {
+    const msgInput = document.getElementById('welcome_message')?.value || '';
+    const mode = document.getElementById('welcome_msg_mode')?.value || 'image';
+    const previewTextEl = document.getElementById('welcome_preview_text');
 
-    const imgElement = document.getElementById('welcome_preview_img');
+    if (previewTextEl) {
+        const text = formatDiscordPreviewText(msgInput);
+        previewTextEl.innerHTML = text || (mode === 'image' ? '<i>No message configured</i>' : '');
+        previewTextEl.style.display = (text || mode === 'image') ? 'block' : 'none';
+    }
 
-    if (imgInput) {
-        imgElement.src = imgInput;
-        imgElement.style.display = 'block';
+    const imgBox = document.getElementById('welcome_preview_img_box');
+    const embedBox = document.getElementById('welcome_preview_embed_box');
+
+    if (mode === 'embed') {
+        if (imgBox) imgBox.style.display = 'none';
+        if (embedBox) {
+            embedBox.style.display = 'block';
+            const hex = document.getElementById('welcome_embed_color')?.value || '#5865F2';
+            embedBox.style.borderLeftColor = hex;
+
+            const author = document.getElementById('welcome_embed_author')?.value || '';
+            const title = document.getElementById('welcome_embed_title')?.value || '';
+            const desc = document.getElementById('welcome_embed_description')?.value || '';
+            const thumb = document.getElementById('welcome_embed_thumbnail')?.value || '';
+            const footer = document.getElementById('welcome_embed_footer')?.value || '';
+            const imgUrl = document.getElementById('welcome_image_url')?.value || '';
+
+            const authorEl = document.getElementById('welcome_preview_embed_author');
+            const titleEl = document.getElementById('welcome_preview_embed_title');
+            const descEl = document.getElementById('welcome_preview_embed_desc');
+            const thumbEl = document.getElementById('welcome_preview_embed_thumb');
+            const imgEl = document.getElementById('welcome_preview_embed_img');
+            const footerEl = document.getElementById('welcome_preview_embed_footer');
+
+            if (authorEl) { authorEl.innerHTML = formatDiscordPreviewText(author); authorEl.style.display = author ? 'block' : 'none'; }
+            if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
+            if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
+            if (thumbEl) { thumbEl.src = thumb; thumbEl.style.display = thumb ? 'block' : 'none'; }
+            if (imgEl) { imgEl.src = imgUrl; imgEl.style.display = imgUrl ? 'block' : 'none'; }
+            if (footerEl) { footerEl.innerHTML = formatDiscordPreviewText(footer); footerEl.style.display = footer ? 'block' : 'none'; }
+        }
     } else {
-        imgElement.style.display = 'none';
-        imgElement.src = '';
+        if (embedBox) embedBox.style.display = 'none';
+        if (imgBox) {
+            imgBox.style.display = 'block';
+            const imgElement = document.getElementById('welcome_preview_img');
+            const imgInput = document.getElementById('welcome_image_url')?.value || '';
+            if (imgElement) {
+                if (imgInput) {
+                    imgElement.src = imgInput;
+                } else {
+                    imgElement.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop';
+                }
+            }
+        }
     }
 }
 
 function updateGoodbyeLivePreview() {
-    const msgInput = document.getElementById('goodbye_message').value;
-    const imgInput = document.getElementById('goodbye_image_url').value;
+    const msgInput = document.getElementById('goodbye_message')?.value || '';
+    const mode = document.getElementById('goodbye_msg_mode')?.value || 'image';
+    const previewTextEl = document.getElementById('goodbye_preview_text');
 
-    // Replace placeholders and #channel-name mentions
-    let formattedText = msgInput
-        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
-        .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
-        .replace(/{server}/g, '<b>Orbit</b>')
-        .replace(/{count}/g, '<b>100</b>');
+    if (previewTextEl) {
+        const text = formatDiscordPreviewText(msgInput);
+        previewTextEl.innerHTML = text || (mode === 'image' ? '<i>No message configured</i>' : '');
+        previewTextEl.style.display = (text || mode === 'image') ? 'block' : 'none';
+    }
 
-    document.getElementById('goodbye_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
+    const imgBox = document.getElementById('goodbye_preview_img_box');
+    const embedBox = document.getElementById('goodbye_preview_embed_box');
 
-    const imgElement = document.getElementById('goodbye_preview_img');
+    if (mode === 'embed') {
+        if (imgBox) imgBox.style.display = 'none';
+        if (embedBox) {
+            embedBox.style.display = 'block';
+            const hex = document.getElementById('goodbye_embed_color')?.value || '#ED4245';
+            embedBox.style.borderLeftColor = hex;
 
-    if (imgInput) {
-        imgElement.src = imgInput;
-        imgElement.style.display = 'block';
+            const author = document.getElementById('goodbye_embed_author')?.value || '';
+            const title = document.getElementById('goodbye_embed_title')?.value || '';
+            const desc = document.getElementById('goodbye_embed_description')?.value || '';
+            const thumb = document.getElementById('goodbye_embed_thumbnail')?.value || '';
+            const footer = document.getElementById('goodbye_embed_footer')?.value || '';
+            const imgUrl = document.getElementById('goodbye_image_url')?.value || '';
+
+            const authorEl = document.getElementById('goodbye_preview_embed_author');
+            const titleEl = document.getElementById('goodbye_preview_embed_title');
+            const descEl = document.getElementById('goodbye_preview_embed_desc');
+            const thumbEl = document.getElementById('goodbye_preview_embed_thumb');
+            const imgEl = document.getElementById('goodbye_preview_embed_img');
+            const footerEl = document.getElementById('goodbye_preview_embed_footer');
+
+            if (authorEl) { authorEl.innerHTML = formatDiscordPreviewText(author); authorEl.style.display = author ? 'block' : 'none'; }
+            if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
+            if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
+            if (thumbEl) { thumbEl.src = thumb; thumbEl.style.display = thumb ? 'block' : 'none'; }
+            if (imgEl) { imgEl.src = imgUrl; imgEl.style.display = imgUrl ? 'block' : 'none'; }
+            if (footerEl) { footerEl.innerHTML = formatDiscordPreviewText(footer); footerEl.style.display = footer ? 'block' : 'none'; }
+        }
     } else {
-        imgElement.style.display = 'none';
-        imgElement.src = '';
+        if (embedBox) embedBox.style.display = 'none';
+        if (imgBox) {
+            imgBox.style.display = 'block';
+            const imgElement = document.getElementById('goodbye_preview_img');
+            const imgInput = document.getElementById('goodbye_image_url')?.value || '';
+            if (imgElement) {
+                if (imgInput) {
+                    imgElement.src = imgInput;
+                } else {
+                    imgElement.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop';
+                }
+            }
+        }
     }
 }
 
@@ -1374,26 +1564,61 @@ function syncGoodbyeDropzoneFromUrl(url) {
 }
 
 function updateBoostLivePreview() {
-    const msgInput = document.getElementById('boost_message').value;
-    const imgInput = document.getElementById('boost_image_url').value;
+    const msgInput = document.getElementById('boost_message')?.value || '';
+    const mode = document.getElementById('boost_msg_mode')?.value || 'image';
+    const previewTextEl = document.getElementById('boost_preview_text');
 
-    // Replace placeholders and #channel-name mentions
-    let formattedText = msgInput
-        .replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>')
-        .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
-        .replace(/{server}/g, '<b>Orbit</b>')
-        .replace(/{count}/g, '<b>100</b>');
+    if (previewTextEl) {
+        const text = formatDiscordPreviewText(msgInput);
+        previewTextEl.innerHTML = text || (mode === 'image' ? '<i>No message configured</i>' : '');
+        previewTextEl.style.display = (text || mode === 'image') ? 'block' : 'none';
+    }
 
-    document.getElementById('boost_preview_text').innerHTML = formattedText || '<i>No message configured</i>';
+    const imgBox = document.getElementById('boost_preview_img_box');
+    const embedBox = document.getElementById('boost_preview_embed_box');
 
-    const imgElement = document.getElementById('boost_preview_img');
+    if (mode === 'embed') {
+        if (imgBox) imgBox.style.display = 'none';
+        if (embedBox) {
+            embedBox.style.display = 'block';
+            const hex = document.getElementById('boost_embed_color')?.value || '#EB459E';
+            embedBox.style.borderLeftColor = hex;
 
-    if (imgInput) {
-        imgElement.src = imgInput;
-        imgElement.style.display = 'block';
+            const author = document.getElementById('boost_embed_author')?.value || '';
+            const title = document.getElementById('boost_embed_title')?.value || '';
+            const desc = document.getElementById('boost_embed_description')?.value || '';
+            const thumb = document.getElementById('boost_embed_thumbnail')?.value || '';
+            const footer = document.getElementById('boost_embed_footer')?.value || '';
+            const imgUrl = document.getElementById('boost_image_url')?.value || '';
+
+            const authorEl = document.getElementById('boost_preview_embed_author');
+            const titleEl = document.getElementById('boost_preview_embed_title');
+            const descEl = document.getElementById('boost_preview_embed_desc');
+            const thumbEl = document.getElementById('boost_preview_embed_thumb');
+            const imgEl = document.getElementById('boost_preview_embed_img');
+            const footerEl = document.getElementById('boost_preview_embed_footer');
+
+            if (authorEl) { authorEl.innerHTML = formatDiscordPreviewText(author); authorEl.style.display = author ? 'block' : 'none'; }
+            if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
+            if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
+            if (thumbEl) { thumbEl.src = thumb; thumbEl.style.display = thumb ? 'block' : 'none'; }
+            if (imgEl) { imgEl.src = imgUrl; imgEl.style.display = imgUrl ? 'block' : 'none'; }
+            if (footerEl) { footerEl.innerHTML = formatDiscordPreviewText(footer); footerEl.style.display = footer ? 'block' : 'none'; }
+        }
     } else {
-        imgElement.style.display = 'none';
-        imgElement.src = '';
+        if (embedBox) embedBox.style.display = 'none';
+        if (imgBox) {
+            imgBox.style.display = 'block';
+            const imgElement = document.getElementById('boost_preview_img');
+            const imgInput = document.getElementById('boost_image_url')?.value || '';
+            if (imgElement) {
+                if (imgInput) {
+                    imgElement.src = imgInput;
+                } else {
+                    imgElement.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop';
+                }
+            }
+        }
     }
 }
 
@@ -1544,14 +1769,29 @@ bindDropzone('image-dropzone', 'image-file-input', 'welcome_image_url', syncDrop
 bindDropzone('goodbye-image-dropzone', 'goodbye-image-file-input', 'goodbye_image_url', syncGoodbyeDropzoneFromUrl);
 bindDropzone('boost-image-dropzone', 'boost-image-file-input', 'boost_image_url', syncBoostDropzoneFromUrl);
 
-document.getElementById('welcome_message').addEventListener('input', updateLivePreview);
-document.getElementById('welcome_image_url').addEventListener('input', () => syncDropzoneFromUrl(document.getElementById('welcome_image_url').value));
+['welcome_message', 'welcome_embed_author', 'welcome_embed_title', 'welcome_embed_description', 'welcome_embed_thumbnail', 'welcome_embed_footer'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateLivePreview);
+});
+document.getElementById('welcome_image_url').addEventListener('input', () => {
+    syncDropzoneFromUrl(document.getElementById('welcome_image_url').value);
+    updateLivePreview();
+});
 
-document.getElementById('goodbye_message').addEventListener('input', updateGoodbyeLivePreview);
-document.getElementById('goodbye_image_url').addEventListener('input', () => syncGoodbyeDropzoneFromUrl(document.getElementById('goodbye_image_url').value));
+['goodbye_message', 'goodbye_embed_author', 'goodbye_embed_title', 'goodbye_embed_description', 'goodbye_embed_thumbnail', 'goodbye_embed_footer'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateGoodbyeLivePreview);
+});
+document.getElementById('goodbye_image_url').addEventListener('input', () => {
+    syncGoodbyeDropzoneFromUrl(document.getElementById('goodbye_image_url').value);
+    updateGoodbyeLivePreview();
+});
 
-document.getElementById('boost_message').addEventListener('input', updateBoostLivePreview);
-document.getElementById('boost_image_url').addEventListener('input', () => syncBoostDropzoneFromUrl(document.getElementById('boost_image_url').value));
+['boost_message', 'boost_embed_author', 'boost_embed_title', 'boost_embed_description', 'boost_embed_thumbnail', 'boost_embed_footer'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateBoostLivePreview);
+});
+document.getElementById('boost_image_url').addEventListener('input', () => {
+    syncBoostDropzoneFromUrl(document.getElementById('boost_image_url').value);
+    updateBoostLivePreview();
+});
 
 document.getElementById('btn-send-ticket').addEventListener('click', async () => {
     if (!currentGuildId) return;
@@ -1923,19 +2163,40 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('welcome_enabled').checked,
             channel_id: document.getElementById('welcome_channel_id').value,
             message: document.getElementById('welcome_message').value,
-            image_url: document.getElementById('welcome_image_url').value
+            image_url: document.getElementById('welcome_image_url').value,
+            msg_mode: document.getElementById('welcome_msg_mode').value,
+            embed_color: document.getElementById('welcome_embed_color').value,
+            embed_author: document.getElementById('welcome_embed_author').value,
+            embed_title: document.getElementById('welcome_embed_title').value,
+            embed_description: document.getElementById('welcome_embed_description').value,
+            embed_thumbnail: document.getElementById('welcome_embed_thumbnail').value,
+            embed_footer: document.getElementById('welcome_embed_footer').value
         },
         goodbye: {
             enabled: document.getElementById('goodbye_enabled').checked,
             channel_id: document.getElementById('goodbye_channel_id').value,
             message: document.getElementById('goodbye_message').value,
-            image_url: document.getElementById('goodbye_image_url').value
+            image_url: document.getElementById('goodbye_image_url').value,
+            msg_mode: document.getElementById('goodbye_msg_mode').value,
+            embed_color: document.getElementById('goodbye_embed_color').value,
+            embed_author: document.getElementById('goodbye_embed_author').value,
+            embed_title: document.getElementById('goodbye_embed_title').value,
+            embed_description: document.getElementById('goodbye_embed_description').value,
+            embed_thumbnail: document.getElementById('goodbye_embed_thumbnail').value,
+            embed_footer: document.getElementById('goodbye_embed_footer').value
         },
         boost: {
             enabled: document.getElementById('boost_enabled').checked,
             channel_id: document.getElementById('boost_channel_id').value,
             message: document.getElementById('boost_message').value,
-            image_url: document.getElementById('boost_image_url').value
+            image_url: document.getElementById('boost_image_url').value,
+            msg_mode: document.getElementById('boost_msg_mode').value,
+            embed_color: document.getElementById('boost_embed_color').value,
+            embed_author: document.getElementById('boost_embed_author').value,
+            embed_title: document.getElementById('boost_embed_title').value,
+            embed_description: document.getElementById('boost_embed_description').value,
+            embed_thumbnail: document.getElementById('boost_embed_thumbnail').value,
+            embed_footer: document.getElementById('boost_embed_footer').value
         },
         automod: currentAutomodConfig,
         verify: {

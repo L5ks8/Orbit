@@ -704,9 +704,7 @@
                     <!-- WELCOME SECTION -->
                     <div id="section-welcome" class="dash-panel">
                         <h3>Welcome System</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Greet new members when they join
-                            the server. A beautiful custom welcome card is automatically generated for every new user!
-                        </p>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Greet new members when they join the server with a custom welcome card or embed message!</p>
 
                         <div class="toggle-container">
                             <div class="toggle-info">
@@ -726,90 +724,128 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Custom Welcome Message</label>
-                            <span class="help-text">You can use <b>{user}</b>, <b>{server}</b>, and <b>{count}</b> as
-                                placeholders. Use <b>#channel-name</b> to mention a channel.</span>
-                            <textarea id="welcome_message" rows="3"
-                                placeholder="Welcome {user} to {server}!"></textarea>
+                            <label>Message Mode</label>
+                            <div class="toggle-tabs" style="margin-top: 8px;">
+                                <button type="button" class="toggle-tab active" id="welcome_mode_image_btn" onclick="setWelcomeMode('image')">Image Card</button>
+                                <button type="button" class="toggle-tab" id="welcome_mode_embed_btn" onclick="setWelcomeMode('embed')">Embed Message</button>
+                            </div>
+                            <input type="hidden" id="welcome_msg_mode" value="image">
                         </div>
 
                         <div class="form-group">
-                            <label>Background Image</label>
-                            <span class="help-text">Upload an image (PNG/JPG) or paste a URL to use as the welcome card
-                                background.</span>
-                            <div id="image-dropzone" class="image-dropzone">
-                                <div class="dropzone-inner" id="dropzone-inner">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        style="color: var(--text-secondary); margin-bottom: 8px;">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="17 8 12 3 7 8"></polyline>
-                                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                                    </svg>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Drag &amp; Drop
-                                        image here, or <span
-                                            style="color: var(--text-primary); text-decoration: underline; cursor: pointer;"
-                                            onclick="document.getElementById('image-file-input').click()">browse</span>
-                                    </p>
-                                    <input type="file" id="image-file-input" accept="image/*" style="display:none;">
+                            <label>Content / Message Text</label>
+                            <span class="help-text">You can use <b>{user}</b>, <b>{server}</b>, and <b>{count}</b> as placeholders. Use <b>#channel-name</b> to mention a channel.</span>
+                            <textarea id="welcome_message" rows="3" placeholder="Welcome {user} to {server}!"></textarea>
+                        </div>
+
+                        <!-- IMAGE MODE CONTAINER -->
+                        <div id="welcome_image_container">
+                            <div class="form-group">
+                                <label>Background Image</label>
+                                <span class="help-text">Upload an image (PNG/JPG) or paste a URL to use as the welcome card background.</span>
+                                <div id="image-dropzone" class="image-dropzone">
+                                    <div class="dropzone-inner" id="dropzone-inner">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary); margin-bottom: 8px;">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                        <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Drag &amp; Drop image here, or <span style="color: var(--text-primary); text-decoration: underline; cursor: pointer;" onclick="document.getElementById('image-file-input').click()">browse</span></p>
+                                        <input type="file" id="image-file-input" accept="image/*" style="display:none;">
+                                    </div>
+                                    <img id="dropzone-preview" style="display:none; width:100%; border-radius:6px; max-height:200px; object-fit:cover;">
                                 </div>
-                                <img id="dropzone-preview"
-                                    style="display:none; width:100%; border-radius:6px; max-height:200px; object-fit:cover;">
+                                <input type="text" id="welcome_image_url" placeholder="https://example.com/image.png" style="margin-top: 8px;" oninput="syncDropzoneFromUrl(this.value)">
                             </div>
-                            <input type="text" id="welcome_image_url" placeholder="https://example.com/image.png"
-                                style="margin-top: 8px;" oninput="syncDropzoneFromUrl(this.value)">
+                        </div>
+
+                        <!-- EMBED MODE CONTAINER -->
+                        <div id="welcome_embed_container" style="display: none;">
+                            <div class="form-group">
+                                <label>Embed Color</label>
+                                <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px; flex-wrap: wrap;">
+                                    <input type="color" id="welcome_embed_color" value="#5865F2" style="width: 44px; height: 38px; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; cursor: pointer;" oninput="document.getElementById('welcome_embed_color_hex').value = this.value; updateLivePreview();">
+                                    <input type="text" id="welcome_embed_color_hex" value="#5865F2" placeholder="#5865F2" style="width: 100px; background: #000000; border: 1px solid var(--border-color); color: #DBDEE1; padding: 8px; border-radius: 4px;" oninput="document.getElementById('welcome_embed_color').value = this.value; updateLivePreview();">
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <button type="button" class="btn" style="background: #5865F2; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setWelcomeEmbedColor('#5865F2')"></button>
+                                        <button type="button" class="btn" style="background: #57F287; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setWelcomeEmbedColor('#57F287')"></button>
+                                        <button type="button" class="btn" style="background: #FEE75C; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setWelcomeEmbedColor('#FEE75C')"></button>
+                                        <button type="button" class="btn" style="background: #EB459E; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setWelcomeEmbedColor('#EB459E')"></button>
+                                        <button type="button" class="btn" style="background: #ED4245; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setWelcomeEmbedColor('#ED4245')"></button>
+                                        <button type="button" class="btn" style="background: #9B59B6; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setWelcomeEmbedColor('#9B59B6')"></button>
+                                        <button type="button" class="btn" style="background: #1ABC9C; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setWelcomeEmbedColor('#1ABC9C')"></button>
+                                        <button type="button" class="btn" style="background: #000000; width: 24px; height: 24px; border-radius: 50%; border: 1px solid #555; cursor: pointer;" onclick="setWelcomeEmbedColor('#000000')"></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Author / Header</label>
+                                <input type="text" id="welcome_embed_author" placeholder="Welcome Header" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Title</label>
+                                <input type="text" id="welcome_embed_title" placeholder="Welcome to {server}!" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Description</label>
+                                <textarea id="welcome_embed_description" rows="3" placeholder="We are happy to have you as member #{count}."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Thumbnail URL</label>
+                                <input type="text" id="welcome_embed_thumbnail" placeholder="https://example.com/thumb.png" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Footer</label>
+                                <input type="text" id="welcome_embed_footer" placeholder="Member #{count}" class="input-field">
+                            </div>
                         </div>
 
                         <!-- Discord Live Preview -->
                         <div class="form-group" style="margin-top: 30px;">
                             <label>Live Preview</label>
-                            <div class="discord-preview"
-                                style="background: #313338; border-radius: 8px; padding: 16px; margin-top: 10px; display: flex; gap: 16px; font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-                                <div class="dp-avatar"
-                                    style="width: 40px; height: 40px; border-radius: 50%; background: #5865F2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            <div class="discord-preview" style="background: #313338; border-radius: 8px; padding: 16px; margin-top: 10px; display: flex; gap: 16px; font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                                <div class="dp-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: #5865F2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
                                     O
                                 </div>
                                 <div class="dp-content" style="flex: 1;">
-                                    <div class="dp-header"
-                                        style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <div class="dp-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                         <span style="color: #F2F3F5; font-weight: 500; font-size: 16px;">Orbit</span>
-                                        <span
-                                            style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
+                                        <span style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
                                         <span style="color: #949BA4; font-size: 12px;">Today at 12:00 PM</span>
                                     </div>
-                                    <div class="dp-text" id="welcome_preview_text"
-                                        style="color: #DBDEE1; font-size: 14px; margin-bottom: 10px; white-space: pre-wrap;">
+                                    <div class="dp-text" id="welcome_preview_text" style="color: #DBDEE1; font-size: 14px; margin-bottom: 10px; white-space: pre-wrap;">
                                         Welcome @user to the server!</div>
-                                    <div class="dp-image"
-                                        style="max-width: 400px; border-radius: 8px; overflow: hidden; position: relative;">
-                                        <img id="welcome_preview_img"
-                                            src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"
-                                            style="width: 100%; display: block;"
-                                            onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'">
-                                        <div
-                                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.2)); display: flex; flex-direction: column; justify-content: center; padding: 30px;">
-                                            <div
-                                                style="width: 80px; height: 80px; border-radius: 50%; background: #313338; margin-bottom: 15px; border: 4px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                                <img src="https://cdn.discordapp.com/embed/avatars/0.png"
-                                                    style="width: 100%;">
+                                    
+                                    <!-- Image Card Preview -->
+                                    <div class="dp-image" id="welcome_preview_img_box" style="max-width: 400px; border-radius: 8px; overflow: hidden; position: relative;">
+                                        <img id="welcome_preview_img" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" style="width: 100%; display: block;" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'">
+                                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.2)); display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                                            <div style="width: 80px; height: 80px; border-radius: 50%; background: #313338; margin-bottom: 15px; border: 4px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                <img src="https://cdn.discordapp.com/embed/avatars/0.png" style="width: 100%;">
                                             </div>
-                                            <div
-                                                style="color: #fff; font-size: 24px; font-weight: 800; font-style: italic;">
-                                                WELCOME</div>
+                                            <div style="color: #fff; font-size: 24px; font-weight: 800; font-style: italic;">WELCOME</div>
                                             <div style="color: #fff; font-size: 16px; opacity: 0.8;">@user</div>
                                         </div>
+                                    </div>
+
+                                    <!-- Embed Preview -->
+                                    <div id="welcome_preview_embed_box" style="display: none; background: #2B2D31; border-radius: 4px; border-left: 4px solid #5865F2; padding: 12px 16px; max-width: 420px; font-size: 14px; position: relative;">
+                                        <div id="welcome_preview_embed_author" style="color: #F2F3F5; font-size: 12px; font-weight: 600; margin-bottom: 4px;"></div>
+                                        <div id="welcome_preview_embed_title" style="color: #FFFFFF; font-size: 15px; font-weight: 700; margin-bottom: 6px;"></div>
+                                        <div id="welcome_preview_embed_desc" style="color: #DBDEE1; font-size: 13.5px; white-space: pre-wrap; margin-bottom: 8px;"></div>
+                                        <img id="welcome_preview_embed_thumb" style="display: none; position: absolute; top: 12px; right: 16px; width: 60px; height: 60px; border-radius: 4px; object-fit: cover;">
+                                        <img id="welcome_preview_embed_img" style="display: none; width: 100%; border-radius: 4px; margin-top: 8px; max-height: 220px; object-fit: cover;">
+                                        <div id="welcome_preview_embed_footer" style="color: #949BA4; font-size: 11px; margin-top: 8px;"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <!-- GOODBYE SECTION -->
                     <div id="section-goodbye" class="dash-panel">
                         <h3>Goodbye System</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Say farewell to members when they
-                            leave the server. A beautiful custom goodbye card is automatically generated for every
-                            departing user!</p>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Say farewell to members when they leave the server with a custom goodbye card or embed message!</p>
 
                         <div class="toggle-container">
                             <div class="toggle-info">
@@ -829,80 +865,118 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Custom Goodbye Message</label>
-                            <span class="help-text">You can use <b>{user}</b>, <b>{server}</b>, and <b>{count}</b> as
-                                placeholders.</span>
-                            <textarea id="goodbye_message" rows="3"
-                                placeholder="We're sad to see you go, {user}!"></textarea>
+                            <label>Message Mode</label>
+                            <div class="toggle-tabs" style="margin-top: 8px;">
+                                <button type="button" class="toggle-tab active" id="goodbye_mode_image_btn" onclick="setGoodbyeMode('image')">Image Card</button>
+                                <button type="button" class="toggle-tab" id="goodbye_mode_embed_btn" onclick="setGoodbyeMode('embed')">Embed Message</button>
+                            </div>
+                            <input type="hidden" id="goodbye_msg_mode" value="image">
                         </div>
 
                         <div class="form-group">
-                            <label>Background Image</label>
-                            <span class="help-text">Upload an image (PNG/JPG) or paste a URL to use as the goodbye card
-                                background.</span>
-                            <div id="goodbye-image-dropzone" class="image-dropzone">
-                                <div class="dropzone-inner" id="goodbye-dropzone-inner">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        style="color: var(--text-secondary); margin-bottom: 8px;">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="17 8 12 3 7 8"></polyline>
-                                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                                    </svg>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Drag &amp; Drop
-                                        image here, or <span
-                                            style="color: var(--text-primary); text-decoration: underline; cursor: pointer;"
-                                            onclick="document.getElementById('goodbye-image-file-input').click()">browse</span>
-                                    </p>
-                                    <input type="file" id="goodbye-image-file-input" accept="image/*"
-                                        style="display:none;">
+                            <label>Content / Message Text</label>
+                            <span class="help-text">You can use <b>{user}</b>, <b>{server}</b>, and <b>{count}</b> as placeholders.</span>
+                            <textarea id="goodbye_message" rows="3" placeholder="We're sad to see you go, {user}!"></textarea>
+                        </div>
+
+                        <!-- IMAGE MODE CONTAINER -->
+                        <div id="goodbye_image_container">
+                            <div class="form-group">
+                                <label>Background Image</label>
+                                <span class="help-text">Upload an image (PNG/JPG) or paste a URL to use as the goodbye card background.</span>
+                                <div id="goodbye-image-dropzone" class="image-dropzone">
+                                    <div class="dropzone-inner" id="goodbye-dropzone-inner">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary); margin-bottom: 8px;">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                        <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Drag &amp; Drop image here, or <span style="color: var(--text-primary); text-decoration: underline; cursor: pointer;" onclick="document.getElementById('goodbye-image-file-input').click()">browse</span></p>
+                                        <input type="file" id="goodbye-image-file-input" accept="image/*" style="display:none;">
+                                    </div>
+                                    <img id="goodbye-dropzone-preview" style="display:none; width:100%; border-radius:6px; max-height:200px; object-fit:cover;">
                                 </div>
-                                <img id="goodbye-dropzone-preview"
-                                    style="display:none; width:100%; border-radius:6px; max-height:200px; object-fit:cover;">
+                                <input type="text" id="goodbye_image_url" placeholder="https://example.com/image.png" style="margin-top: 8px;" oninput="syncGoodbyeDropzoneFromUrl(this.value)">
                             </div>
-                            <input type="text" id="goodbye_image_url" placeholder="https://example.com/image.png"
-                                style="margin-top: 8px;" oninput="syncGoodbyeDropzoneFromUrl(this.value)">
+                        </div>
+
+                        <!-- EMBED MODE CONTAINER -->
+                        <div id="goodbye_embed_container" style="display: none;">
+                            <div class="form-group">
+                                <label>Embed Color</label>
+                                <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px; flex-wrap: wrap;">
+                                    <input type="color" id="goodbye_embed_color" value="#ED4245" style="width: 44px; height: 38px; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; cursor: pointer;" oninput="document.getElementById('goodbye_embed_color_hex').value = this.value; updateGoodbyeLivePreview();">
+                                    <input type="text" id="goodbye_embed_color_hex" value="#ED4245" placeholder="#ED4245" style="width: 100px; background: #000000; border: 1px solid var(--border-color); color: #DBDEE1; padding: 8px; border-radius: 4px;" oninput="document.getElementById('goodbye_embed_color').value = this.value; updateGoodbyeLivePreview();">
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <button type="button" class="btn" style="background: #ED4245; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setGoodbyeEmbedColor('#ED4245')"></button>
+                                        <button type="button" class="btn" style="background: #5865F2; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setGoodbyeEmbedColor('#5865F2')"></button>
+                                        <button type="button" class="btn" style="background: #57F287; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setGoodbyeEmbedColor('#57F287')"></button>
+                                        <button type="button" class="btn" style="background: #FEE75C; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setGoodbyeEmbedColor('#FEE75C')"></button>
+                                        <button type="button" class="btn" style="background: #EB459E; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setGoodbyeEmbedColor('#EB459E')"></button>
+                                        <button type="button" class="btn" style="background: #9B59B6; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setGoodbyeEmbedColor('#9B59B6')"></button>
+                                        <button type="button" class="btn" style="background: #1ABC9C; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setGoodbyeEmbedColor('#1ABC9C')"></button>
+                                        <button type="button" class="btn" style="background: #000000; width: 24px; height: 24px; border-radius: 50%; border: 1px solid #555; cursor: pointer;" onclick="setGoodbyeEmbedColor('#000000')"></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Author / Header</label>
+                                <input type="text" id="goodbye_embed_author" placeholder="Goodbye Header" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Title</label>
+                                <input type="text" id="goodbye_embed_title" placeholder="Goodbye from {server}" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Description</label>
+                                <textarea id="goodbye_embed_description" rows="3" placeholder="We're sad to see you go, {user}!"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Thumbnail URL</label>
+                                <input type="text" id="goodbye_embed_thumbnail" placeholder="https://example.com/thumb.png" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Footer</label>
+                                <input type="text" id="goodbye_embed_footer" placeholder="Departed member" class="input-field">
+                            </div>
                         </div>
 
                         <!-- Discord Live Preview -->
                         <div class="form-group" style="margin-top: 30px;">
                             <label>Live Preview</label>
-                            <div class="discord-preview"
-                                style="background: #313338; border-radius: 8px; padding: 16px; margin-top: 10px; display: flex; gap: 16px; font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-                                <div class="dp-avatar"
-                                    style="width: 40px; height: 40px; border-radius: 50%; background: #5865F2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            <div class="discord-preview" style="background: #313338; border-radius: 8px; padding: 16px; margin-top: 10px; display: flex; gap: 16px; font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                                <div class="dp-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: #5865F2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
                                     O
                                 </div>
                                 <div class="dp-content" style="flex: 1;">
-                                    <div class="dp-header"
-                                        style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <div class="dp-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                         <span style="color: #F2F3F5; font-weight: 500; font-size: 16px;">Orbit</span>
-                                        <span
-                                            style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
+                                        <span style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
                                         <span style="color: #949BA4; font-size: 12px;">Today at 12:00 PM</span>
                                     </div>
-                                    <div class="dp-text" id="goodbye_preview_text"
-                                        style="color: #DBDEE1; font-size: 14px; margin-bottom: 10px; white-space: pre-wrap;">
+                                    <div class="dp-text" id="goodbye_preview_text" style="color: #DBDEE1; font-size: 14px; margin-bottom: 10px; white-space: pre-wrap;">
                                         We're sad to see you go, @user!</div>
-                                    <div class="dp-image"
-                                        style="max-width: 400px; border-radius: 8px; overflow: hidden; position: relative;">
-                                        <img id="goodbye_preview_img"
-                                            src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"
-                                            style="width: 100%; display: block;"
-                                            onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'">
-                                        <div
-                                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.2)); display: flex; flex-direction: column; justify-content: center; padding: 30px;">
-                                            <div
-                                                style="width: 80px; height: 80px; border-radius: 50%; background: #313338; margin-bottom: 15px; border: 4px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                                <img src="https://cdn.discordapp.com/embed/avatars/0.png"
-                                                    style="width: 100%;">
+
+                                    <!-- Image Card Preview -->
+                                    <div class="dp-image" id="goodbye_preview_img_box" style="max-width: 400px; border-radius: 8px; overflow: hidden; position: relative;">
+                                        <img id="goodbye_preview_img" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" style="width: 100%; display: block;" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'">
+                                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.2)); display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                                            <div style="width: 80px; height: 80px; border-radius: 50%; background: #313338; margin-bottom: 15px; border: 4px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                <img src="https://cdn.discordapp.com/embed/avatars/0.png" style="width: 100%;">
                                             </div>
-                                            <div
-                                                style="color: #fff; font-size: 24px; font-weight: 800; font-style: italic;">
-                                                GOODBYE</div>
+                                            <div style="color: #fff; font-size: 24px; font-weight: 800; font-style: italic;">GOODBYE</div>
                                             <div style="color: #fff; font-size: 16px; opacity: 0.8;">@user</div>
                                         </div>
+                                    </div>
+
+                                    <!-- Embed Preview -->
+                                    <div id="goodbye_preview_embed_box" style="display: none; background: #2B2D31; border-radius: 4px; border-left: 4px solid #ED4245; padding: 12px 16px; max-width: 420px; font-size: 14px; position: relative;">
+                                        <div id="goodbye_preview_embed_author" style="color: #F2F3F5; font-size: 12px; font-weight: 600; margin-bottom: 4px;"></div>
+                                        <div id="goodbye_preview_embed_title" style="color: #FFFFFF; font-size: 15px; font-weight: 700; margin-bottom: 6px;"></div>
+                                        <div id="goodbye_preview_embed_desc" style="color: #DBDEE1; font-size: 13.5px; white-space: pre-wrap; margin-bottom: 8px;"></div>
+                                        <img id="goodbye_preview_embed_thumb" style="display: none; position: absolute; top: 12px; right: 16px; width: 60px; height: 60px; border-radius: 4px; object-fit: cover;">
+                                        <img id="goodbye_preview_embed_img" style="display: none; width: 100%; border-radius: 4px; margin-top: 8px; max-height: 220px; object-fit: cover;">
+                                        <div id="goodbye_preview_embed_footer" style="color: #949BA4; font-size: 11px; margin-top: 8px;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -912,8 +986,7 @@
                     <!-- BOOST SECTION -->
                     <div id="section-boost" class="dash-panel">
                         <h3>Boost Messages</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Celebrate when members boost your
-                            server! A beautiful custom boost card is automatically generated.</p>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Celebrate when members boost your server with a custom card or embed message!</p>
 
                         <div class="toggle-container">
                             <div class="toggle-info">
@@ -933,80 +1006,118 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Custom Boost Message</label>
-                            <span class="help-text">You can use <b>{user}</b>, <b>{server}</b>, and <b>{count}</b> as
-                                placeholders.</span>
-                            <textarea id="boost_message" rows="3"
-                                placeholder="Thank you for boosting the server, {user}!"></textarea>
+                            <label>Message Mode</label>
+                            <div class="toggle-tabs" style="margin-top: 8px;">
+                                <button type="button" class="toggle-tab active" id="boost_mode_image_btn" onclick="setBoostMode('image')">Image Card</button>
+                                <button type="button" class="toggle-tab" id="boost_mode_embed_btn" onclick="setBoostMode('embed')">Embed Message</button>
+                            </div>
+                            <input type="hidden" id="boost_msg_mode" value="image">
                         </div>
 
                         <div class="form-group">
-                            <label>Background Image</label>
-                            <span class="help-text">Upload an image (PNG/JPG) or paste a URL to use as the boost card
-                                background.</span>
-                            <div id="boost-image-dropzone" class="image-dropzone">
-                                <div class="dropzone-inner" id="boost-dropzone-inner">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        style="color: var(--text-secondary); margin-bottom: 8px;">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="17 8 12 3 7 8"></polyline>
-                                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                                    </svg>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Drag &amp; Drop
-                                        image here, or <span
-                                            style="color: var(--text-primary); text-decoration: underline; cursor: pointer;"
-                                            onclick="document.getElementById('boost-image-file-input').click()">browse</span>
-                                    </p>
-                                    <input type="file" id="boost-image-file-input" accept="image/*"
-                                        style="display:none;">
+                            <label>Content / Message Text</label>
+                            <span class="help-text">You can use <b>{user}</b>, <b>{server}</b>, and <b>{count}</b> as placeholders.</span>
+                            <textarea id="boost_message" rows="3" placeholder="Thank you for boosting the server, {user}!"></textarea>
+                        </div>
+
+                        <!-- IMAGE MODE CONTAINER -->
+                        <div id="boost_image_container">
+                            <div class="form-group">
+                                <label>Background Image</label>
+                                <span class="help-text">Upload an image (PNG/JPG) or paste a URL to use as the boost card background.</span>
+                                <div id="boost-image-dropzone" class="image-dropzone">
+                                    <div class="dropzone-inner" id="boost-dropzone-inner">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary); margin-bottom: 8px;">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                        <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Drag &amp; Drop image here, or <span style="color: var(--text-primary); text-decoration: underline; cursor: pointer;" onclick="document.getElementById('boost-image-file-input').click()">browse</span></p>
+                                        <input type="file" id="boost-image-file-input" accept="image/*" style="display:none;">
+                                    </div>
+                                    <img id="boost-dropzone-preview" style="display:none; width:100%; border-radius:6px; max-height:200px; object-fit:cover;">
                                 </div>
-                                <img id="boost-dropzone-preview"
-                                    style="display:none; width:100%; border-radius:6px; max-height:200px; object-fit:cover;">
+                                <input type="text" id="boost_image_url" placeholder="https://example.com/image.png" style="margin-top: 8px;" oninput="syncBoostDropzoneFromUrl(this.value)">
                             </div>
-                            <input type="text" id="boost_image_url" placeholder="https://example.com/image.png"
-                                style="margin-top: 8px;" oninput="syncBoostDropzoneFromUrl(this.value)">
+                        </div>
+
+                        <!-- EMBED MODE CONTAINER -->
+                        <div id="boost_embed_container" style="display: none;">
+                            <div class="form-group">
+                                <label>Embed Color</label>
+                                <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px; flex-wrap: wrap;">
+                                    <input type="color" id="boost_embed_color" value="#EB459E" style="width: 44px; height: 38px; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; cursor: pointer;" oninput="document.getElementById('boost_embed_color_hex').value = this.value; updateBoostLivePreview();">
+                                    <input type="text" id="boost_embed_color_hex" value="#EB459E" placeholder="#EB459E" style="width: 100px; background: #000000; border: 1px solid var(--border-color); color: #DBDEE1; padding: 8px; border-radius: 4px;" oninput="document.getElementById('boost_embed_color').value = this.value; updateBoostLivePreview();">
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <button type="button" class="btn" style="background: #EB459E; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setBoostEmbedColor('#EB459E')"></button>
+                                        <button type="button" class="btn" style="background: #5865F2; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setBoostEmbedColor('#5865F2')"></button>
+                                        <button type="button" class="btn" style="background: #57F287; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setBoostEmbedColor('#57F287')"></button>
+                                        <button type="button" class="btn" style="background: #FEE75C; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setBoostEmbedColor('#FEE75C')"></button>
+                                        <button type="button" class="btn" style="background: #ED4245; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setBoostEmbedColor('#ED4245')"></button>
+                                        <button type="button" class="btn" style="background: #9B59B6; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setBoostEmbedColor('#9B59B6')"></button>
+                                        <button type="button" class="btn" style="background: #1ABC9C; width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;" onclick="setBoostEmbedColor('#1ABC9C')"></button>
+                                        <button type="button" class="btn" style="background: #000000; width: 24px; height: 24px; border-radius: 50%; border: 1px solid #555; cursor: pointer;" onclick="setBoostEmbedColor('#000000')"></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Author / Header</label>
+                                <input type="text" id="boost_embed_author" placeholder="Boost Header" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Title</label>
+                                <input type="text" id="boost_embed_title" placeholder="Server Boost!" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Description</label>
+                                <textarea id="boost_embed_description" rows="3" placeholder="Thank you for boosting the server, {user}!"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Thumbnail URL</label>
+                                <input type="text" id="boost_embed_thumbnail" placeholder="https://example.com/thumb.png" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Embed Footer</label>
+                                <input type="text" id="boost_embed_footer" placeholder="Boost Level {count}" class="input-field">
+                            </div>
                         </div>
 
                         <!-- Discord Live Preview -->
                         <div class="form-group" style="margin-top: 30px;">
                             <label>Live Preview</label>
-                            <div class="discord-preview"
-                                style="background: #313338; border-radius: 8px; padding: 16px; margin-top: 10px; display: flex; gap: 16px; font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-                                <div class="dp-avatar"
-                                    style="width: 40px; height: 40px; border-radius: 50%; background: #ff73fa; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;">
+                            <div class="discord-preview" style="background: #313338; border-radius: 8px; padding: 16px; margin-top: 10px; display: flex; gap: 16px; font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                                <div class="dp-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: #ff73fa; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;">
                                     O
                                 </div>
                                 <div class="dp-content" style="flex: 1;">
-                                    <div class="dp-header"
-                                        style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <div class="dp-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                         <span style="color: #F2F3F5; font-weight: 500; font-size: 16px;">Orbit</span>
-                                        <span
-                                            style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
+                                        <span style="background: #5865F2; color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; text-transform: uppercase;">Bot</span>
                                         <span style="color: #949BA4; font-size: 12px;">Today at 12:00 PM</span>
                                     </div>
-                                    <div class="dp-text" id="boost_preview_text"
-                                        style="color: #DBDEE1; font-size: 14px; margin-bottom: 10px; white-space: pre-wrap;">
+                                    <div class="dp-text" id="boost_preview_text" style="color: #DBDEE1; font-size: 14px; margin-bottom: 10px; white-space: pre-wrap;">
                                         Thank you for boosting the server, @user!</div>
-                                    <div class="dp-image"
-                                        style="max-width: 400px; border-radius: 8px; overflow: hidden; position: relative;">
-                                        <img id="boost_preview_img"
-                                            src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"
-                                            style="width: 100%; display: block;"
-                                            onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'">
-                                        <div
-                                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to right, rgba(255,115,250,0.3), rgba(0,0,0,0.4)); display: flex; flex-direction: column; justify-content: center; padding: 30px;">
-                                            <div
-                                                style="width: 80px; height: 80px; border-radius: 50%; background: #313338; margin-bottom: 15px; border: 4px solid #ff73fa; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                                <img src="https://cdn.discordapp.com/embed/avatars/0.png"
-                                                    style="width: 100%;">
+
+                                    <!-- Image Card Preview -->
+                                    <div class="dp-image" id="boost_preview_img_box" style="max-width: 400px; border-radius: 8px; overflow: hidden; position: relative;">
+                                        <img id="boost_preview_img" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" style="width: 100%; display: block;" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'">
+                                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to right, rgba(255,115,250,0.3), rgba(0,0,0,0.4)); display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                                            <div style="width: 80px; height: 80px; border-radius: 50%; background: #313338; margin-bottom: 15px; border: 4px solid #ff73fa; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                <img src="https://cdn.discordapp.com/embed/avatars/0.png" style="width: 100%;">
                                             </div>
-                                            <div
-                                                style="color: #fff; font-size: 24px; font-weight: 800; font-style: italic;">
-                                                SERVER BOOST</div>
+                                            <div style="color: #fff; font-size: 24px; font-weight: 800; font-style: italic;">SERVER BOOST</div>
                                             <div style="color: #fff; font-size: 16px; opacity: 0.8;">@user</div>
                                         </div>
+                                    </div>
+
+                                    <!-- Embed Preview -->
+                                    <div id="boost_preview_embed_box" style="display: none; background: #2B2D31; border-radius: 4px; border-left: 4px solid #EB459E; padding: 12px 16px; max-width: 420px; font-size: 14px; position: relative;">
+                                        <div id="boost_preview_embed_author" style="color: #F2F3F5; font-size: 12px; font-weight: 600; margin-bottom: 4px;"></div>
+                                        <div id="boost_preview_embed_title" style="color: #FFFFFF; font-size: 15px; font-weight: 700; margin-bottom: 6px;"></div>
+                                        <div id="boost_preview_embed_desc" style="color: #DBDEE1; font-size: 13.5px; white-space: pre-wrap; margin-bottom: 8px;"></div>
+                                        <img id="boost_preview_embed_thumb" style="display: none; position: absolute; top: 12px; right: 16px; width: 60px; height: 60px; border-radius: 4px; object-fit: cover;">
+                                        <img id="boost_preview_embed_img" style="display: none; width: 100%; border-radius: 4px; margin-top: 8px; max-height: 220px; object-fit: cover;">
+                                        <div id="boost_preview_embed_footer" style="color: #949BA4; font-size: 11px; margin-top: 8px;"></div>
                                     </div>
                                 </div>
                             </div>

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from Commands.Welcome._storage import load_welcome_config
 from Commands.Welcome._views import format_welcome_string
+import re
 
 class WelcomeListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -26,9 +27,6 @@ class WelcomeListener(commands.Cog):
         if not channel:
             return
 
-        formatted = format_welcome_string(config.get("message", ""), member)
-        
-        import re
         def replace_channel(match):
             name_or_id = match.group(1)
             if name_or_id.isdigit():
@@ -38,11 +36,60 @@ class WelcomeListener(commands.Cog):
             if ch:
                 return ch.mention
             return f"#{c_name}"
-            
-        formatted = re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
-        
+
+        def fmt_text(text: str) -> str:
+            if not text:
+                return ""
+            formatted = format_welcome_string(text, member)
+            return re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
+
+        msg_mode = config.get("msg_mode", "image")
+
+        if msg_mode == "embed":
+            embed_color_hex = config.get("embed_color", "#5865F2")
+            try:
+                color_val = int(embed_color_hex.replace("#", ""), 16)
+            except Exception:
+                color_val = 0x5865F2
+
+            embed = discord.Embed(color=discord.Color(color_val))
+
+            title = fmt_text(config.get("embed_title", ""))
+            if title:
+                embed.title = title
+
+            desc = fmt_text(config.get("embed_description", ""))
+            if desc:
+                embed.description = desc
+
+            thumb = config.get("embed_thumbnail", "")
+            if thumb:
+                embed.set_thumbnail(url=thumb)
+
+            img = config.get("image_url", "")
+            if img:
+                embed.set_image(url=img)
+
+            footer = fmt_text(config.get("embed_footer", ""))
+            if footer:
+                embed.set_footer(text=footer)
+
+            author = fmt_text(config.get("embed_author", ""))
+            if author:
+                embed.set_author(name=author)
+
+            content_text = fmt_text(config.get("message", ""))
+
+            try:
+                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            except Exception:
+                pass
+            return
+
+        # Default Image mode
+        formatted = fmt_text(config.get("message", ""))
+
         from Commands.Welcome.image_gen import generate_welcome_image
-        import discord
         import aiohttp
         import pathlib
 
@@ -87,4 +134,3 @@ class WelcomeListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(WelcomeListener(bot))
-

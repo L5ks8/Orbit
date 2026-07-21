@@ -15,20 +15,21 @@ def load_boost_config(guild_id: int) -> Dict[str, Any]:
         "enabled": False,
         "channel_id": "",
         "message": "Thank you for boosting the server, {user}!",
-        "image_url": ""
+        "image_url": "",
+        "msg_mode": "image",
+        "embed_color": "#EB459E",
+        "embed_title": "",
+        "embed_description": "",
+        "embed_thumbnail": "",
+        "embed_footer": "",
+        "embed_author": ""
     }
     
-    if False: # os.path.exists(file):
-        return default_config
-        
     try:
-        if True:
-            data = get_config("Boost", guild_id)
-            return {**default_config, **data}
+        data = get_config("Boost", guild_id)
+        return {**default_config, **data}
     except Exception:
         return default_config
 
 def save_boost_config(guild_id: int, config: Dict[str, Any]) -> None:
-    file = get_boost_file(guild_id)
-    if True:
-        set_config("Boost", guild_id, config)
+    set_config("Boost", guild_id, config)

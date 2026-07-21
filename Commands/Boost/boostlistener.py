@@ -35,8 +35,6 @@ class BoostListener(commands.Cog):
         if before.bot:
             return
 
-        # Check if the member started boosting the server
-        # premium_since is None if not boosting, and a datetime object if boosting
         if before.premium_since is not None or after.premium_since is None:
             return
 
@@ -54,10 +52,53 @@ class BoostListener(commands.Cog):
         if not channel:
             return
 
+        msg_mode = config.get("msg_mode", "image")
+
+        if msg_mode == "embed":
+            embed_color_hex = config.get("embed_color", "#EB459E")
+            try:
+                color_val = int(embed_color_hex.replace("#", ""), 16)
+            except Exception:
+                color_val = 0xEB459E
+
+            embed = discord.Embed(color=discord.Color(color_val))
+
+            title = format_boost_string(config.get("embed_title", ""), after)
+            if title:
+                embed.title = title
+
+            desc = format_boost_string(config.get("embed_description", ""), after)
+            if desc:
+                embed.description = desc
+
+            thumb = config.get("embed_thumbnail", "")
+            if thumb:
+                embed.set_thumbnail(url=thumb)
+
+            img = config.get("image_url", "")
+            if img:
+                embed.set_image(url=img)
+
+            footer = format_boost_string(config.get("embed_footer", ""), after)
+            if footer:
+                embed.set_footer(text=footer)
+
+            author = format_boost_string(config.get("embed_author", ""), after)
+            if author:
+                embed.set_author(name=author)
+
+            content_text = format_boost_string(config.get("message", ""), after)
+
+            try:
+                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            except Exception:
+                pass
+            return
+
+        # Default Image mode
         formatted = format_boost_string(config.get("message", ""), after)
-        
+
         from Commands.Boost._image_gen import generate_boost_image
-        import discord
         import aiohttp
         import pathlib
         import asyncio

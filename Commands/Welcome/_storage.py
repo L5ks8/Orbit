@@ -1,4 +1,4 @@
-﻿from Database.mongodb import get_config, set_config
+from Database.mongodb import get_config, set_config
 import json
 import pathlib
 from typing import Dict, Any
@@ -15,24 +15,45 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_welcome_config(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
-    default_config = {"enabled": False, "channel_id": None, "message": DEFAULT_MESSAGE, "image_url": ""}
-    if False: # path.exists():
-        return default_config
+    default_config = {
+        "enabled": False, 
+        "channel_id": None, 
+        "message": DEFAULT_MESSAGE, 
+        "image_url": "",
+        "msg_mode": "image",
+        "embed_color": "#5865F2",
+        "embed_title": "",
+        "embed_description": "",
+        "embed_thumbnail": "",
+        "embed_footer": "",
+        "embed_author": ""
+    }
     try:
-        if True:
-            data = get_config("Welcome", guild_id)
-            if "message" not in data or not data["message"]:
-                data["message"] = DEFAULT_MESSAGE
-            if "image_url" not in data:
-                data["image_url"] = ""
-            return data
+        data = get_config("Welcome", guild_id)
+        if "message" not in data or not data["message"]:
+            data["message"] = DEFAULT_MESSAGE
+        if "image_url" not in data:
+            data["image_url"] = ""
+        if "msg_mode" not in data:
+            data["msg_mode"] = "image"
+        if "embed_color" not in data:
+            data["embed_color"] = "#5865F2"
+        if "embed_title" not in data:
+            data["embed_title"] = ""
+        if "embed_description" not in data:
+            data["embed_description"] = ""
+        if "embed_thumbnail" not in data:
+            data["embed_thumbnail"] = ""
+        if "embed_footer" not in data:
+            data["embed_footer"] = ""
+        if "embed_author" not in data:
+            data["embed_author"] = ""
+        return data
     except Exception:
         return default_config
 
 def save_welcome_config(guild_id: int, config: Dict[str, Any]) -> None:
-    path = _get_file_path(guild_id)
-    if True:
-        set_config("Welcome", guild_id, config)
+    set_config("Welcome", guild_id, config)
 
 def setup_welcome(guild_id: int, channel_id: int, message: str = None, image_url: str = None) -> Dict[str, Any]:
     config = load_welcome_config(guild_id)
@@ -52,7 +73,18 @@ def set_welcome_status(guild_id: int, enabled: bool) -> Dict[str, Any]:
     return config
 
 def reset_welcome(guild_id: int) -> Dict[str, Any]:
-    config = {"enabled": False, "channel_id": None, "message": DEFAULT_MESSAGE, "image_url": ""}
+    config = {
+        "enabled": False, 
+        "channel_id": None, 
+        "message": DEFAULT_MESSAGE, 
+        "image_url": "",
+        "msg_mode": "image",
+        "embed_color": "#5865F2",
+        "embed_title": "",
+        "embed_description": "",
+        "embed_thumbnail": "",
+        "embed_footer": "",
+        "embed_author": ""
+    }
     save_welcome_config(guild_id, config)
     return config
-
