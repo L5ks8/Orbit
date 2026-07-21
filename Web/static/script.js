@@ -1634,14 +1634,14 @@ function formatDiscordPreviewText(str) {
     text = text.replace(/(?<![&\w#])#(\d+)/g, channelBadge);
     text = text.replace(/(?<![&\w#])#([a-zA-Z_-][a-zA-Z0-9_-]*)/g, '<span style="color: #5865F2; background: rgba(88, 101, 242, 0.15); padding: 0 4px; border-radius: 3px; font-weight: 500;">#$1</span>');
 
-    // 2. Custom animated emojis <a:name:id>
-    text = text.replace(/<a:([\w-]+):(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$2.gif?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
+    // 2. Custom animated emojis (<a:name:id> or <a:id>)
+    text = text.replace(/<a:(?:[\w-]+:)?(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$1.gif?size=48&quality=lossless" alt="emoji" title="emoji" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
 
-    // 3. Custom static emojis <:name:id>
-    text = text.replace(/<:([\w-]+):(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$2.png?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
+    // 3. Custom static emojis (<:name:id> or <:id>)
+    text = text.replace(/<:(?:[\w-]+:)?(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$1.png?size=48&quality=lossless" alt="emoji" title="emoji" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
 
     // 4. Emoji by ID :123456789012345678:
-    text = text.replace(/(?<!<):(\d{15,21}):(?![\d>])/g, '<img src="https://cdn.discordapp.com/emojis/$1.png?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
+    text = text.replace(/(?<!<):(\d{15,21}):(?![\d>])/g, '<img src="https://cdn.discordapp.com/emojis/$1.png?size=48&quality=lossless" alt="emoji" title="emoji" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
 
     // 4. User, Server, Count, Mention, Username, ID Placeholders
     const mentionBadge = '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>';
