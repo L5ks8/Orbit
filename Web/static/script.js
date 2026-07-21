@@ -1621,11 +1621,15 @@ function formatDiscordPreviewText(str) {
     // 2. Custom static emojis <:name:id>
     text = text.replace(/<:([\w-]+):(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$2.png?size=48&quality=lossless" alt=":$1:" title=":$1:" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
 
-    // 3. User, Server, Count Placeholders
+    // 3. User, Server, Count, Mention, Username, ID Placeholders
+    const mentionBadge = '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>';
     text = text
-        .replace(/{user}/g, '<span style="background: rgba(88, 101, 242, 0.3); color: #C9CDFB; padding: 0 2px; border-radius: 3px;">@user</span>')
+        .replace(/{user}/g, mentionBadge)
+        .replace(/{mention}/g, mentionBadge)
+        .replace(/{username}/g, '<b>User</b>')
         .replace(/{server}/g, '<b>Orbit</b>')
-        .replace(/{count}/g, '<b>100</b>');
+        .replace(/{count}/g, '<b>100</b>')
+        .replace(/{id}/g, '<b>123456789</b>');
 
     // 4. Channel mentions #channel
     text = text.replace(/#([\w-]+)/g, '<span style="color: #5865F2; font-weight: 500;">#$1</span>');

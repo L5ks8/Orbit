@@ -7,10 +7,18 @@ def format_boost_string(text: str, member: discord.Member) -> str:
     if not text:
         return ""
     
-    formatted = text
-    formatted = formatted.replace("{user}", member.mention)
-    formatted = formatted.replace("{server}", member.guild.name)
-    formatted = formatted.replace("{count}", str(member.guild.premium_subscription_count))
+    count = member.guild.premium_subscription_count or 0
+    replacements = {
+        "{user}": member.mention,
+        "{mention}": member.mention,
+        "{username}": member.name,
+        "{server}": member.guild.name,
+        "{count}": str(count),
+        "{id}": str(member.id)
+    }
+    formatted = str(text)
+    for key, val in replacements.items():
+        formatted = formatted.replace(key, str(val))
     
     def replace_channel(match):
         name_or_id = match.group(1)
