@@ -3,7 +3,7 @@ import secrets
 import json
 import asyncio
 from aiohttp import web
-import aiohttp 
+import aiohttp
 import discord
 from typing import Dict, Any
 
@@ -17,7 +17,7 @@ from Commands.Log._storage import load_log_config, save_log_config
 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Commands.Boost._storage import load_boost_config, save_boost_config
 from Commands.Level._storage import load_level_config, save_level_config
-from Commands.ServerStats._storage import load_serverstats_config
+from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
 
 SESSIONS: Dict[str, Any] = {}
 
@@ -234,16 +234,13 @@ class WebDashboard:
         from Commands.JoinToCreate._storage import load_jtc_config
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
+        serverstats_cfg = load_serverstats_config(guild_id)
 
         from Commands.WebDashboard._storage import load_settings_config
         settings_cfg = load_settings_config(guild_id)
 
-        from Commands.ServerStats._storage import load_serverstats_config
-        serverstats_cfg = load_serverstats_config(guild_id)
-
         config_data = {
             "settings": settings_cfg,
-            "serverstats": serverstats_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
                 "channel_id": str(welcome_cfg.get("channel_id")) if welcome_cfg.get("channel_id") else "",
@@ -386,7 +383,7 @@ class WebDashboard:
             "automation": automation_cfg,
             "tempvoice": tempvoice_cfg,
             "level": level_cfg,
-            "serverstats": load_serverstats_config(guild_id)
+            "serverstats": serverstats_cfg
         }
 
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
@@ -482,6 +479,21 @@ class WebDashboard:
                 from Commands.WebDashboard._storage import save_settings_config
                 save_settings_config(guild_id, data["settings"])
 
+            if user_perms.get("can_channels") and "serverstats" in data:
+                s_data = data.get("serverstats", {})
+                ss_cfg = load_serverstats_config(guild_id)
+                ss_cfg["category_id"] = str(s_data.get("category_id", "") or "")
+                ss_cfg["category_name"] = str(s_data.get("category_name", "📊 Server Stats") or "📊 Server Stats")
+                ss_cfg["users_enabled"] = bool(s_data.get("users_enabled"))
+                ss_cfg["users_name"] = str(s_data.get("users_name", "Users: {count}") or "Users: {count}")
+                ss_cfg["boosts_enabled"] = bool(s_data.get("boosts_enabled"))
+                ss_cfg["boosts_name"] = str(s_data.get("boosts_name", "Boosts: {count}") or "Boosts: {count}")
+                ss_cfg["bots_enabled"] = bool(s_data.get("bots_enabled"))
+                ss_cfg["bots_name"] = str(s_data.get("bots_name", "Bots: {count}") or "Bots: {count}")
+                ss_cfg["roles_enabled"] = bool(s_data.get("roles_enabled"))
+                ss_cfg["roles_name"] = str(s_data.get("roles_name", "Roles: {count}") or "Roles: {count}")
+                save_serverstats_config(guild_id, ss_cfg)
+
             if user_perms.get("can_channels") and "welcome" in data:
                 welcome_cfg = load_welcome_config(guild_id)
                 w_data = data.get("welcome", {})
@@ -505,6 +517,7 @@ class WebDashboard:
                     old_url = welcome_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url
+                        import asyncio
                         asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     welcome_cfg["image_url"] = img_url
                 save_welcome_config(guild_id, welcome_cfg)
@@ -532,6 +545,7 @@ class WebDashboard:
                     old_url = goodbye_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url
+                        import asyncio
                         asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     goodbye_cfg["image_url"] = img_url
                 save_goodbye_config(guild_id, goodbye_cfg)
@@ -559,16 +573,10 @@ class WebDashboard:
                     old_url = boost_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url
+                        import asyncio
                         asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     boost_cfg["image_url"] = img_url
                 save_boost_config(guild_id, boost_cfg)
-
-            if user_perms.get("can_channels") and "serverstats" in data:
-                from Commands.ServerStats._storage import save_serverstats_config
-                from Commands.ServerStats.statslistener import update_server_stats
-                ss_data = data.get("serverstats", {})
-                save_serverstats_config(guild_id, ss_data)
-                asyncio.create_task(update_server_stats(guild, ss_data))
 
             if user_perms.get("can_messages") and "automod" in data:
                 automod_cfg = load_automod_config(guild_id)
@@ -961,16 +969,7 @@ class WebDashboard:
                 msg_kwargs["content"] = content_text
 
             if mode == "components":
-                try:
-                    from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button # type: ignore
-                except ImportError:
-                    LayoutView = getattr(discord.ui, "LayoutView", discord.ui.View)
-                    Container = getattr(discord.ui, "Container", lambda *a, **k: None)
-                    TextDisplay = getattr(discord.ui, "TextDisplay", lambda *a, **k: None)
-                    Separator = getattr(discord.ui, "Separator", lambda *a, **k: None)
-                    ActionRow = getattr(discord.ui, "ActionRow", lambda *a, **k: None)
-                    Button = discord.ui.Button
-
+                from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
                 view = LayoutView(timeout=None)
                 elements = []
                 
@@ -1257,6 +1256,27 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 
+    async def api_action_setup_serverstats(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        try:
+            cog = self.bot.get_cog("ServerStats")
+            if not cog:
+                from Commands.ServerStats.serverstats import ServerStats
+                cog = ServerStats(self.bot)
+            
+            updated_config = await cog.sync_guild_stats(guild)
+            return web.json_response({"success": True, "config": updated_config})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_support_invite(self, request: web.Request):
         SUPPORT_GUILD_ID = 1525603130358759575
         guild = self.bot.get_guild(SUPPORT_GUILD_ID)
@@ -1272,43 +1292,6 @@ class WebDashboard:
                     continue
             return web.json_response({"error": "No suitable channel found"}, status=500)
         except Exception as e:
-            return web.json_response({"error": str(e)}, status=500)
-
-    async def api_sync_serverstats(self, request: web.Request):
-        guild_id_str = request.match_info.get("id")
-        if not guild_id_str.isdigit():
-            return web.json_response({"error": "Invalid guild ID"}, status=400)
-        guild_id = int(guild_id_str)
-        
-        guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild:
-            return web.json_response({"error": "Unauthorized or not found"}, status=403)
-            
-        if not user_perms.get("can_channels"):
-            return web.json_response({"error": "Missing Manage Channels permission"}, status=403)
-            
-        try:
-            from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
-            from Commands.ServerStats.statslistener import update_server_stats
-            
-            data = {}
-            if request.has_body:
-                try:
-                    data = await request.json()
-                except Exception:
-                    pass
-            
-            cfg = load_serverstats_config(guild_id)
-            if data and "serverstats" in data:
-                cfg = data["serverstats"]
-            
-            cfg["enabled"] = True
-            save_serverstats_config(guild_id, cfg)
-            
-            updated_cfg = await update_server_stats(guild, cfg)
-            return web.json_response({"success": True, "config": updated_cfg})
-        except Exception as e:
-            print(f"[ServerStats] Error syncing stats: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
@@ -1328,11 +1311,11 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/api/config/{id}", dashboard.api_get_config)
     app.router.add_get("/api/guild_stats/{id}", dashboard.api_guild_stats)
     app.router.add_post("/api/config/{id}", dashboard.api_post_config)
+    app.router.add_post("/api/action/{id}/setup_serverstats", dashboard.api_action_setup_serverstats)
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
     app.router.add_post("/api/action/{id}/send_embed", dashboard.api_action_send_embed)
     app.router.add_post("/api/action/{id}/send_honeypot", dashboard.api_action_send_honeypot)
-    app.router.add_post("/api/action/{id}/sync_serverstats", dashboard.api_sync_serverstats)
     app.router.add_get("/api/messages/{id}", dashboard.api_get_messages)
     app.router.add_post("/api/messages/{id}", dashboard.api_save_message)
     app.router.add_delete("/api/messages/{id}/{msg_id}", dashboard.api_delete_message)

@@ -1272,60 +1272,25 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         renderBoosters('role', config.level?.role_boosters || []);
         renderBoosters('channel', config.level?.channel_boosters || []);
 
-        // Server Stats Load
-        if (!currentPermissions.can_channels) lockSection('section-serverstats', 'Manage Channels');
-        const ssConfig = config.serverstats || {};
-        document.getElementById('serverstats_enabled').checked = ssConfig.enabled || false;
-        
-        const ssCatSelect = document.getElementById('serverstats_category_id');
-        const catNameInput = document.getElementById('serverstats_category_name');
-        
-        if (ssCatSelect) {
-            ssCatSelect.innerHTML = '<option value="">-- Create New Category --</option>';
-            globalCategories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.id;
-                opt.textContent = '📁 ' + cat.name;
-                if (String(cat.id) === String(ssConfig.category_id)) opt.selected = true;
-                ssCatSelect.appendChild(opt);
+        // Populate Server Stats Category & Fields
+        const serverStatsCatSelect = document.getElementById('serverstats_category_id');
+        if (serverStatsCatSelect) {
+            serverStatsCatSelect.innerHTML = '<option value="">Select category...</option>';
+            globalCategories.forEach(c => {
+                const sel = (String(config.serverstats?.category_id || '') === String(c.id)) ? 'selected' : '';
+                serverStatsCatSelect.innerHTML += `<option value="${c.id}" ${sel}>${c.name}</option>`;
             });
-            ssCatSelect.value = ssConfig.category_id || '';
-            
-            if (!ssCatSelect.dataset.hasChangeListener) {
-                ssCatSelect.dataset.hasChangeListener = "true";
-                ssCatSelect.addEventListener('change', (e) => {
-                    const selId = e.target.value;
-                    const foundCat = globalCategories.find(c => String(c.id) === String(selId));
-                    if (foundCat && catNameInput) {
-                        catNameInput.value = foundCat.name;
-                    }
-                });
-            }
         }
-
-        if (catNameInput) {
-            const currentCat = globalCategories.find(c => String(c.id) === String(ssConfig.category_id));
-            catNameInput.value = ssConfig.category_name || (currentCat ? currentCat.name : '📊 SERVER STATS 📊');
+        if (config.serverstats) {
+            if (document.getElementById('serverstats_users_enabled')) document.getElementById('serverstats_users_enabled').checked = !!config.serverstats.users_enabled;
+            if (document.getElementById('serverstats_users_name')) document.getElementById('serverstats_users_name').value = config.serverstats.users_name || 'Users: {count}';
+            if (document.getElementById('serverstats_boosts_enabled')) document.getElementById('serverstats_boosts_enabled').checked = !!config.serverstats.boosts_enabled;
+            if (document.getElementById('serverstats_boosts_name')) document.getElementById('serverstats_boosts_name').value = config.serverstats.boosts_name || 'Boosts: {count}';
+            if (document.getElementById('serverstats_bots_enabled')) document.getElementById('serverstats_bots_enabled').checked = !!config.serverstats.bots_enabled;
+            if (document.getElementById('serverstats_bots_name')) document.getElementById('serverstats_bots_name').value = config.serverstats.bots_name || 'Bots: {count}';
+            if (document.getElementById('serverstats_roles_enabled')) document.getElementById('serverstats_roles_enabled').checked = !!config.serverstats.roles_enabled;
+            if (document.getElementById('serverstats_roles_name')) document.getElementById('serverstats_roles_name').value = config.serverstats.roles_name || 'Roles: {count}';
         }
-
-        const ssChs = ssConfig.channels || {};
-        const ssKeys = ['members', 'humans', 'bots', 'boosts', 'voice_users'];
-        const ssDefaults = {
-            members: '✧˚₊·≡⭐୧ | 𝐌𝐞𝐦𝐛𝐞𝐫𝐬: {count} | ✧⸝',
-            humans: '👥 | Humans: {humans}',
-            bots: '🤖 | Bots: {bots}',
-            boosts: '🚀 | Boosts: {boosts}',
-            voice_users: '🎙️ | In Voice: {voice_users}'
-        };
-
-        ssKeys.forEach(k => {
-            const chCfg = ssChs[k] || {};
-            const enEl = document.getElementById(`serverstats_ch_${k}_enabled`);
-            const fmtEl = document.getElementById(`serverstats_ch_${k}_format`);
-            if (enEl) enEl.checked = chCfg.enabled !== undefined ? chCfg.enabled : (k === 'members');
-            if (fmtEl) fmtEl.value = chCfg.format || ssDefaults[k];
-        });
-        updateServerStatsLivePreviews();
 
         // Initial Preview Update
         updateLivePreview();
@@ -1344,52 +1309,6 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('config-layout').style.display = 'block';
     }
 }
-
-// Action: Sync / Create Server Stats Channels
-document.getElementById('btn-create-serverstats')?.addEventListener('click', async () => {
-    if (!currentGuildId) return;
-    const btn = document.getElementById('btn-create-serverstats');
-    const originalHTML = btn.innerHTML;
-    btn.innerHTML = 'Creating Channels...';
-    btn.disabled = true;
-
-    const ssChKeys = ['members', 'humans', 'bots', 'boosts', 'voice_users'];
-    const ssChannelsData = {};
-    ssChKeys.forEach(k => {
-        ssChannelsData[k] = {
-            enabled: document.getElementById(`serverstats_ch_${k}_enabled`)?.checked || false,
-            format: document.getElementById(`serverstats_ch_${k}_format`)?.value || ''
-        };
-    });
-
-    const serverstatsData = {
-        enabled: true,
-        category_id: document.getElementById('serverstats_category_id')?.value || '',
-        category_name: document.getElementById('serverstats_category_name')?.value || '📊 SERVER STATS 📊',
-        channels: ssChannelsData
-    };
-
-    try {
-        const res = await fetch(`/api/action/${currentGuildId}/sync_serverstats`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ serverstats: serverstatsData })
-        });
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById('serverstats_enabled').checked = true;
-            showToast('Server Stats channels successfully created / synced in Discord!');
-            await loadConfig(currentGuildId, undefined, undefined, true);
-        } else {
-            showToast('Failed: ' + (data.error || 'Unknown error'));
-        }
-    } catch (e) {
-        showToast('An error occurred while creating channels.');
-    } finally {
-        btn.innerHTML = originalHTML;
-        btn.disabled = false;
-    }
-});
 
 // Action: Send Verify Panel
 document.getElementById('btn-send-verify').addEventListener('click', async () => {
@@ -1526,30 +1445,6 @@ function setBoostEmbedColor(hex) {
     if (hexEl) hexEl.value = hex;
     updateBoostLivePreview();
 }
-
-window.updateServerStatsLivePreviews = function() {
-    const ssKeys = ['members', 'humans', 'bots', 'boosts', 'voice_users'];
-    const sampleValues = {
-        '{count}': '6882',
-        '{members}': '6882',
-        '{humans}': '6500',
-        '{bots}': '382',
-        '{boosts}': '14',
-        '{voice_users}': '42'
-    };
-
-    ssKeys.forEach(k => {
-        const fmtEl = document.getElementById(`serverstats_ch_${k}_format`);
-        const prevEl = document.getElementById(`ss_preview_${k}`);
-        if (fmtEl && prevEl) {
-            let val = fmtEl.value || '';
-            for (const [tag, sample] of Object.entries(sampleValues)) {
-                val = val.replace(new RegExp(tag.replace(/[{}]/g, '\\$&'), 'g'), sample);
-            }
-            prevEl.textContent = '🔊 ' + val;
-        }
-    });
-};
 
 let welcomeEmbedFields = [];
 let goodbyeEmbedFields = [];
@@ -2843,33 +2738,6 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('tempvoice-enabled')?.checked || false,
             hubs: tvHubs
         },
-        serverstats: {
-            enabled: document.getElementById('serverstats_enabled')?.checked || false,
-            category_id: document.getElementById('serverstats_category_id')?.value || '',
-            category_name: document.getElementById('serverstats_category_name')?.value || '📊 SERVER STATS 📊',
-            channels: {
-                members: {
-                    enabled: document.getElementById('serverstats_ch_members_enabled')?.checked || false,
-                    format: document.getElementById('serverstats_ch_members_format')?.value || ''
-                },
-                humans: {
-                    enabled: document.getElementById('serverstats_ch_humans_enabled')?.checked || false,
-                    format: document.getElementById('serverstats_ch_humans_format')?.value || ''
-                },
-                bots: {
-                    enabled: document.getElementById('serverstats_ch_bots_enabled')?.checked || false,
-                    format: document.getElementById('serverstats_ch_bots_format')?.value || ''
-                },
-                boosts: {
-                    enabled: document.getElementById('serverstats_ch_boosts_enabled')?.checked || false,
-                    format: document.getElementById('serverstats_ch_boosts_format')?.value || ''
-                },
-                voice_users: {
-                    enabled: document.getElementById('serverstats_ch_voice_users_enabled')?.checked || false,
-                    format: document.getElementById('serverstats_ch_voice_users_format')?.value || ''
-                }
-            }
-        },
         level: {
             enabled: document.getElementById('level_enabled').checked,
             msg_xp_enabled: document.getElementById('level_msg_xp_enabled').checked,
@@ -2920,6 +2788,17 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             role_boosters_stack: document.getElementById('level_role_boosters_stack').checked,
             role_boosters: collectBoosters('role'),
             channel_boosters: collectBoosters('channel'),
+        },
+        serverstats: {
+            category_id: document.getElementById('serverstats_category_id')?.value || '',
+            users_enabled: document.getElementById('serverstats_users_enabled')?.checked || false,
+            users_name: document.getElementById('serverstats_users_name')?.value || 'Users: {count}',
+            boosts_enabled: document.getElementById('serverstats_boosts_enabled')?.checked || false,
+            boosts_name: document.getElementById('serverstats_boosts_name')?.value || 'Boosts: {count}',
+            bots_enabled: document.getElementById('serverstats_bots_enabled')?.checked || false,
+            bots_name: document.getElementById('serverstats_bots_name')?.value || 'Bots: {count}',
+            roles_enabled: document.getElementById('serverstats_roles_enabled')?.checked || false,
+            roles_name: document.getElementById('serverstats_roles_name')?.value || 'Roles: {count}'
         },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,
@@ -2972,6 +2851,31 @@ function showToast(msg) {
         toast.classList.remove('show');
     }, 3000);
 }
+
+document.getElementById('btn-setup-serverstats')?.addEventListener('click', async function() {
+    if (!currentGuildId) return;
+    const btn = this;
+    const oldHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerText = 'Creating Channels...';
+    try {
+        const res = await fetch(`/api/action/${currentGuildId}/setup_serverstats`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            showToast('Server Stats channels created and updated successfully!');
+            if (data.config && document.getElementById('serverstats_category_id')) {
+                document.getElementById('serverstats_category_id').value = data.config.category_id || '';
+            }
+        } else {
+            showToast('Error: ' + (data.error || 'Failed to create channels'));
+        }
+    } catch (e) {
+        showToast('Failed to create server stat channels.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+    }
+});
 
 init();
 // Workaround for multiple selects on Windows to behave like toggles
