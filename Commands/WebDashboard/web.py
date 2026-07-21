@@ -2,8 +2,8 @@ import os
 import secrets
 import json
 import asyncio
-from aiohttp import web
-import aiohttp
+from aiohttp import web  # type: ignore
+import aiohttp  # type: ignore
 import discord
 from typing import Dict, Any
 
