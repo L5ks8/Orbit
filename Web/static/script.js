@@ -947,6 +947,11 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         if (document.getElementById('boost_embed_footer_icon')) document.getElementById('boost_embed_footer_icon').value = config.boost?.embed_footer_icon || '';
         setBoostMode(config.boost?.msg_mode || 'image');
 
+        updateDropBackgrounds();
+        updateLivePreview();
+        updateGoodbyeLivePreview();
+        updateBoostLivePreview();
+
         // AutoMod
         if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
         currentAutomodConfig = config.automod || {};
@@ -2118,6 +2123,25 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     btn.innerText = 'Saving...';
     btn.disabled = true;
 
+    // Process pending image uploads
+    const uploadTargets = Object.keys(window.pendingMessageUploads);
+    for (let targetId of uploadTargets) {
+        const file = window.pendingMessageUploads[targetId];
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await fetch(`/api/upload/image`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success && data.url) {
+                const el = document.getElementById(targetId);
+                if (el) el.value = data.url;
+            }
+        } catch(e) {
+            console.error("Upload failed", e);
+        }
+    }
+    window.pendingMessageUploads = {};
+
     // Update AutoMod global options
     currentAutomodConfig.exempt_channels = Array.from(document.getElementById('automod_global_channels').selectedOptions).map(o => o.value);
     currentAutomodConfig.exempt_roles = Array.from(document.getElementById('automod_global_roles').selectedOptions).map(o => o.value);
@@ -3032,7 +3056,22 @@ function updateDropBackgrounds() {
         { dropId: 'drop-author-icon', inputId: 'embed_author_icon' },
         { dropId: 'drop-thumbnail', inputId: 'embed_thumbnail' },
         { dropId: 'drop-image', inputId: 'embed_image' },
-        { dropId: 'drop-footer-icon', inputId: 'embed_footer_icon' }
+        { dropId: 'drop-footer-icon', inputId: 'embed_footer_icon' },
+
+        { dropId: 'drop-welcome-author-icon', inputId: 'welcome_embed_author_icon' },
+        { dropId: 'drop-welcome-thumbnail', inputId: 'welcome_embed_thumbnail' },
+        { dropId: 'drop-welcome-image', inputId: 'welcome_embed_image' },
+        { dropId: 'drop-welcome-footer-icon', inputId: 'welcome_embed_footer_icon' },
+
+        { dropId: 'drop-goodbye-author-icon', inputId: 'goodbye_embed_author_icon' },
+        { dropId: 'drop-goodbye-thumbnail', inputId: 'goodbye_embed_thumbnail' },
+        { dropId: 'drop-goodbye-image', inputId: 'goodbye_embed_image' },
+        { dropId: 'drop-goodbye-footer-icon', inputId: 'goodbye_embed_footer_icon' },
+
+        { dropId: 'drop-boost-author-icon', inputId: 'boost_embed_author_icon' },
+        { dropId: 'drop-boost-thumbnail', inputId: 'boost_embed_thumbnail' },
+        { dropId: 'drop-boost-image', inputId: 'boost_embed_image' },
+        { dropId: 'drop-boost-footer-icon', inputId: 'boost_embed_footer_icon' }
     ];
     bgs.forEach(b => {
         const drop = document.getElementById(b.dropId);
@@ -3061,10 +3100,13 @@ async function uploadFile(file, targetInputId) {
     // Defer the upload until save
     window.pendingMessageUploads[targetInputId] = file;
     const blobUrl = URL.createObjectURL(file);
-    document.getElementById(targetInputId).value = blobUrl;
+    const inp = document.getElementById(targetInputId);
+    if (inp) inp.value = blobUrl;
     
     updateDropBackgrounds();
-    updateEmbedPreview();
+    updateLivePreview();
+    updateGoodbyeLivePreview();
+    updateBoostLivePreview();
     setDirty(true);
     showToast("Image added (will upload on save)");
 }
@@ -3083,9 +3125,8 @@ function setupDropZone(dropId, inputId) {
     if (!drop) return;
     
     drop.addEventListener('click', () => {
-        // Just trigger file input
         currentUploadTarget = inputId;
-        fileInput.click();
+        if (fileInput) fileInput.click();
     });
     
     drop.addEventListener('dragover', (e) => {
@@ -3110,6 +3151,21 @@ setupDropZone('drop-author-icon', 'embed_author_icon');
 setupDropZone('drop-thumbnail', 'embed_thumbnail');
 setupDropZone('drop-image', 'embed_image');
 setupDropZone('drop-footer-icon', 'embed_footer_icon');
+
+setupDropZone('drop-welcome-author-icon', 'welcome_embed_author_icon');
+setupDropZone('drop-welcome-thumbnail', 'welcome_embed_thumbnail');
+setupDropZone('drop-welcome-image', 'welcome_embed_image');
+setupDropZone('drop-welcome-footer-icon', 'welcome_embed_footer_icon');
+
+setupDropZone('drop-goodbye-author-icon', 'goodbye_embed_author_icon');
+setupDropZone('drop-goodbye-thumbnail', 'goodbye_embed_thumbnail');
+setupDropZone('drop-goodbye-image', 'goodbye_embed_image');
+setupDropZone('drop-goodbye-footer-icon', 'goodbye_embed_footer_icon');
+
+setupDropZone('drop-boost-author-icon', 'boost_embed_author_icon');
+setupDropZone('drop-boost-thumbnail', 'boost_embed_thumbnail');
+setupDropZone('drop-boost-image', 'boost_embed_image');
+setupDropZone('drop-boost-footer-icon', 'boost_embed_footer_icon');
 
 // Replace the old promptUrl logic
 window.promptUrl = function(inputId) {

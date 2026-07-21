@@ -74,6 +74,8 @@ class BoostListener(commands.Cog):
             thumb = config.get("embed_thumbnail", "")
             if thumb:
                 embed.set_thumbnail(url=thumb)
+            elif after.display_avatar:
+                embed.set_thumbnail(url=after.display_avatar.url)
 
             img = config.get("image_url", "")
             if img:

@@ -65,6 +65,8 @@ class GoodbyeListener(commands.Cog):
             thumb = config.get("embed_thumbnail", "")
             if thumb:
                 embed.set_thumbnail(url=thumb)
+            elif member.display_avatar:
+                embed.set_thumbnail(url=member.display_avatar.url)
 
             img = config.get("image_url", "")
             if img:
