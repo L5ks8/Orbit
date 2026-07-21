@@ -1629,13 +1629,17 @@ function formatDiscordPreviewText(str) {
     let text = str;
 
     // 1. Channel mentions in user text (<#id>, #channel-id, or #channel-name)
-    const channelBadge = '<span style="color: #5865F2; background: rgba(88, 101, 242, 0.15); padding: 0 4px; border-radius: 3px; font-weight: 500;">#channel</span>';
-    text = text.replace(/<#(\d+)>/g, channelBadge);
-    text = text.replace(/(?<![&\w#])#(\d+)/g, channelBadge);
-    text = text.replace(/(?<![&\w#])#([a-zA-Z_-][a-zA-Z0-9_-]*)/g, '<span style="color: #5865F2; background: rgba(88, 101, 242, 0.15); padding: 0 4px; border-radius: 3px; font-weight: 500;">#$1</span>');
+    text = text.replace(/(?:<#(\d+)>|(?<![&\w#])#(\d+)|(?<![&\w#])#([a-zA-Z_-][a-zA-Z0-9_-]*))/g, (match, p1, p2, p3) => {
+        if (p1 || p2) {
+            return '<span style="color: #5865F2; background: rgba(88, 101, 242, 0.15); padding: 0 4px; border-radius: 3px; font-weight: 500;">#channel</span>';
+        } else if (p3) {
+            return `<span style="color: #5865F2; background: rgba(88, 101, 242, 0.15); padding: 0 4px; border-radius: 3px; font-weight: 500;">#${p3}</span>`;
+        }
+        return match;
+    });
 
     // 2. Custom animated emojis (<a:name:id> or <a:id>)
-    text = text.replace(/<a:(?:[\w-]+:)?(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$1.gif?size=48&quality=lossless" alt="emoji" title="emoji" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
+    text = text.replace(/<a:(?:[\w-]+:)?(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$1.gif?size=48&quality=lossless" alt="emoji" title="emoji" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;" onerror="this.src=\'https://cdn.discordapp.com/emojis/$1.png?size=48&quality=lossless\'; this.onerror=null;">');
 
     // 3. Custom static emojis (<:name:id> or <:id>)
     text = text.replace(/<:(?:[\w-]+:)?(\d+)>/g, '<img src="https://cdn.discordapp.com/emojis/$1.png?size=48&quality=lossless" alt="emoji" title="emoji" style="width: 1.375em; height: 1.375em; vertical-align: -0.2em; display: inline-block;">');
