@@ -806,7 +806,7 @@
 
                                         <!-- Description -->
                                         <div style="position: relative;">
-                                            <textarea id="welcome_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateLivePreview();"></textarea>
+                                            <textarea id="welcome_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: vertical; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="autoResizeTextarea(this); updateCount(this, 4096); updateLivePreview();"></textarea>
                                             <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
                                         </div>
 
@@ -1078,7 +1078,7 @@
 
                                         <!-- Description -->
                                         <div style="position: relative;">
-                                            <textarea id="goodbye_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateGoodbyeLivePreview();"></textarea>
+                                            <textarea id="goodbye_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: vertical; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="autoResizeTextarea(this); updateCount(this, 4096); updateGoodbyeLivePreview();"></textarea>
                                             <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
                                         </div>
 
@@ -1350,7 +1350,7 @@
 
                                         <!-- Description -->
                                         <div style="position: relative;">
-                                            <textarea id="boost_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateBoostLivePreview();"></textarea>
+                                            <textarea id="boost_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: vertical; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="autoResizeTextarea(this); updateCount(this, 4096); updateBoostLivePreview();"></textarea>
                                             <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
                                         </div>
 
@@ -2235,7 +2235,7 @@
                                                 <label class="form-label" style="font-size: 13px;">Inhalt</label>
                                             </div>
                                             <div style="position: relative;">
-                                                <textarea id="embed_content" class="form-input" style="width: 100%; height: 80px; resize: none; background: #121315;" oninput="updateCount(this, 2000); updateEmbedPreview(); setDirty(true);"></textarea>
+                                                <textarea id="embed_content" class="form-input" style="width: 100%; height: 80px; resize: vertical; background: #121315;" oninput="autoResizeTextarea(this); updateCount(this, 2000); updateEmbedPreview(); setDirty(true);"></textarea>
                                                 <span style="position: absolute; bottom: 8px; right: 12px; font-size: 11px; color: var(--text-muted);">0/2000</span>
                                             </div>
                                         </div>
@@ -2263,7 +2263,7 @@
 
                                                 <!-- Description -->
                                                 <div style="margin-bottom: 16px; position: relative;">
-                                                    <textarea id="embed_description" class="form-input" placeholder="Beschreibung" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1);" oninput="updateCount(this, 4096); updateEmbedPreview(); setDirty(true);"></textarea>
+                                                    <textarea id="embed_description" class="form-input" placeholder="Beschreibung" style="width: 100%; height: 80px; resize: vertical; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1);" oninput="autoResizeTextarea(this); updateCount(this, 4096); updateEmbedPreview(); setDirty(true);"></textarea>
                                                     <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
                                                 </div>
 

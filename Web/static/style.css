@@ -339,9 +339,17 @@ select, input[type="text"], input[type="number"], textarea {
     padding: 10px 12px;
     border-radius: var(--radius-md);
     font-size: 14px;
-    outline: none;
-    transition: border-color 0.15s;
-    resize: none;
+    resize: vertical;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-y: hidden;
+}
+textarea {
+    resize: vertical !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
     border-color: #444;

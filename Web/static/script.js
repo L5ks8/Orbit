@@ -1482,7 +1482,7 @@ function renderWelcomeEmbedFields() {
             </div>
             
             <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 8px; position: relative;">
-                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none; font-size: 13px;" oninput="updateWelcomeEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
+                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: vertical; font-size: 13px;" oninput="autoResizeTextarea(this); updateWelcomeEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
                 <div style="text-align: right; font-size: 11px; color: var(--text-muted); position: absolute; bottom: 6px; right: 8px;">${field.value.length}/1024</div>
             </div>
         `;
@@ -1542,7 +1542,7 @@ function renderGoodbyeEmbedFields() {
             </div>
             
             <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 8px; position: relative;">
-                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none; font-size: 13px;" oninput="updateGoodbyeEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
+                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: vertical; font-size: 13px;" oninput="autoResizeTextarea(this); updateGoodbyeEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
                 <div style="text-align: right; font-size: 11px; color: var(--text-muted); position: absolute; bottom: 6px; right: 8px;">${field.value.length}/1024</div>
             </div>
         `;
@@ -1602,7 +1602,7 @@ function renderBoostEmbedFields() {
             </div>
             
             <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 8px; position: relative;">
-                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none; font-size: 13px;" oninput="updateBoostEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
+                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: vertical; font-size: 13px;" oninput="autoResizeTextarea(this); updateBoostEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
                 <div style="text-align: right; font-size: 11px; color: var(--text-muted); position: absolute; bottom: 6px; right: 8px;">${field.value.length}/1024</div>
             </div>
         `;
@@ -1622,6 +1622,18 @@ window.copyToClipboard = function(str) {
         }
     });
 };
+
+window.autoResizeTextarea = function(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.max(el.scrollHeight + 4, 60) + 'px';
+};
+
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'textarea') {
+        window.autoResizeTextarea(e.target);
+    }
+});
 
 function formatDiscordPreviewText(str) {
     if (!str) return '';
