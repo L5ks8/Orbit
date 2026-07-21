@@ -322,6 +322,7 @@ class CustomSelect {
 
 class CustomMultiSelect {
     constructor(selectElement, items, placeholder, renderTag) {
+        if (!selectElement || !selectElement.parentNode) return;
         this.select = selectElement;
         this.select.style.display = 'none';
 
