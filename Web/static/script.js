@@ -1327,6 +1327,52 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
     }
 }
 
+// Action: Sync / Create Server Stats Channels
+document.getElementById('btn-create-serverstats')?.addEventListener('click', async () => {
+    if (!currentGuildId) return;
+    const btn = document.getElementById('btn-create-serverstats');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = 'Creating Channels...';
+    btn.disabled = true;
+
+    const ssChKeys = ['members', 'humans', 'bots', 'boosts', 'voice_users'];
+    const ssChannelsData = {};
+    ssChKeys.forEach(k => {
+        ssChannelsData[k] = {
+            enabled: document.getElementById(`serverstats_ch_${k}_enabled`)?.checked || false,
+            format: document.getElementById(`serverstats_ch_${k}_format`)?.value || ''
+        };
+    });
+
+    const serverstatsData = {
+        enabled: true,
+        category_id: document.getElementById('serverstats_category_id')?.value || '',
+        category_name: document.getElementById('serverstats_category_name')?.value || '📊 SERVER STATS 📊',
+        channels: ssChannelsData
+    };
+
+    try {
+        const res = await fetch(`/api/action/${currentGuildId}/sync_serverstats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ serverstats: serverstatsData })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('serverstats_enabled').checked = true;
+            showToast('Server Stats channels successfully created / synced in Discord!');
+            await loadConfig(currentGuildId, undefined, undefined, true);
+        } else {
+            showToast('Failed: ' + (data.error || 'Unknown error'));
+        }
+    } catch (e) {
+        showToast('An error occurred while creating channels.');
+    } finally {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
+});
+
 // Action: Send Verify Panel
 document.getElementById('btn-send-verify').addEventListener('click', async () => {
     const channelId = document.getElementById('verify_panel_channel').value;

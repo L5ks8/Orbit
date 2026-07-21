@@ -1266,6 +1266,43 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
+    async def api_sync_serverstats(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        if not user_perms.get("can_channels"):
+            return web.json_response({"error": "Missing Manage Channels permission"}, status=403)
+            
+        try:
+            from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
+            from Commands.ServerStats.statslistener import update_server_stats
+            
+            data = {}
+            if request.has_body:
+                try:
+                    data = await request.json()
+                except Exception:
+                    pass
+            
+            cfg = load_serverstats_config(guild_id)
+            if data and "serverstats" in data:
+                cfg = data["serverstats"]
+            
+            cfg["enabled"] = True
+            save_serverstats_config(guild_id, cfg)
+            
+            updated_cfg = await update_server_stats(guild, cfg)
+            return web.json_response({"success": True, "config": updated_cfg})
+        except Exception as e:
+            print(f"[ServerStats] Error syncing stats: {e}")
+            return web.json_response({"error": str(e)}, status=500)
+
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application(client_max_size=10 * 1024 * 1024)  
@@ -1287,6 +1324,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
     app.router.add_post("/api/action/{id}/send_embed", dashboard.api_action_send_embed)
     app.router.add_post("/api/action/{id}/send_honeypot", dashboard.api_action_send_honeypot)
+    app.router.add_post("/api/action/{id}/sync_serverstats", dashboard.api_sync_serverstats)
     app.router.add_get("/api/messages/{id}", dashboard.api_get_messages)
     app.router.add_post("/api/messages/{id}", dashboard.api_save_message)
     app.router.add_delete("/api/messages/{id}/{msg_id}", dashboard.api_delete_message)
