@@ -5,12 +5,13 @@ import asyncio
 import random
 import discord
 from discord.ext import commands
-from g4f.client import AsyncClient
+import aiohttp
 
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.client = AsyncClient()
+        self.api_key = os.getenv("GEMINI_API_KEY")
+        self.model_name = "gemini-3.5-flash"
         self.memory_resets = {}
 
     @commands.group(invoke_without_command=True)
@@ -24,7 +25,7 @@ class GeminiChatbot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
+        if message.author.bot or not self.api_key:
             return
 
         # Ignore if it's a command being executed (like -memory reset)
@@ -63,7 +64,6 @@ class GeminiChatbot(commands.Cog):
 
                 prefix_cmds = []
                 for cmd in self.bot.commands:
-                    # Ignore some internal or hidden commands if needed, but we just list them all
                     prefix_cmds.append(f"{cmd.name}")
                 prefix_cmds_str = ", ".join(prefix_cmds)
 
@@ -102,12 +102,23 @@ class GeminiChatbot(commands.Cog):
                 prompt += f"\n{message.author.display_name}: {message.content}\n"
                 prompt += "Orbit:"
 
-                response = await self.client.chat.completions.create(
-                    model='gpt-4o',
-                    messages=[{'role': 'user', 'content': prompt}]
-                )
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
+                headers = {'Content-Type': 'application/json'}
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}]
+                }
                 
-                text_response = response.choices[0].message.content
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, headers=headers, json=payload) as resp:
+                        if resp.status != 200:
+                            error_text = await resp.text()
+                            raise Exception(f"HTTP {resp.status}: {error_text}")
+                            
+                        data = await resp.json()
+                        try:
+                            text_response = data['candidates'][0]['content']['parts'][0]['text']
+                        except (KeyError, IndexError):
+                            text_response = None
                             
                 if text_response:
                     await self._send_chunked(message, text_response)
