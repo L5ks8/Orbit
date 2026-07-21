@@ -16,23 +16,33 @@ async def role_group(ctx: commands.Context):
                     except commands.MemberNotFound:
                         return await ctx.send(f"Member '{user_str}' not found.", ephemeral=True)
                     
-                    role_query_lower = role_query.lower()
                     found_role = None
-                    for r in ctx.guild.roles:
-                        if r.name.lower() == role_query_lower:
-                            found_role = r
-                            break
-                    if not found_role:
+                    # First try standard RoleConverter (handles mentions <@&ID>, exact IDs, and exact names)
+                    try:
+                        found_role = await commands.RoleConverter().convert(ctx, role_query)
+                    except commands.RoleNotFound:
+                        # Fallback to fuzzy substring search by name
+                        role_query_lower = role_query.lower()
                         for r in ctx.guild.roles:
-                            if role_query_lower in r.name.lower():
+                            if r.name.lower() == role_query_lower:
                                 found_role = r
                                 break
+                        if not found_role:
+                            for r in ctx.guild.roles:
+                                if role_query_lower in r.name.lower():
+                                    found_role = r
+                                    break
                                 
                     if not found_role:
                         return await ctx.send(f"Role `{role_query}` not found on this server.", ephemeral=True)
                         
-                    from Commands.Role.add import _do_addrole
-                    return await _do_addrole(ctx, target, found_role, "Added via quick -role command")
+                    # Toggle logic: if user has role -> remove, else -> add
+                    if found_role in target.roles:
+                        from Commands.Role.remove import _do_removerole
+                        return await _do_removerole(ctx, target, found_role, "Toggled via quick -role command")
+                    else:
+                        from Commands.Role.add import _do_addrole
+                        return await _do_addrole(ctx, target, found_role, "Toggled via quick -role command")
 
         await ctx.send("Please use `/role add`, `/role remove`, `/role info`, `/role all`, `/role rall`, `/role create`, or `/role settings`.", ephemeral=True)
 
