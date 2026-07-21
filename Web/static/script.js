@@ -1678,16 +1678,21 @@ function formatDiscordPreviewText(str) {
     // 12. Strikethrough (~~text~~)
     text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
 
-    // 13. Quotes (> text)
-    const lines = text.split('\n');
-    const processedLines = lines.map(line => {
-        if (line.startsWith('&gt; ') || line.startsWith('> ')) {
-            const content = line.replace(/^(&gt;|>)\s?/, '');
-            return `<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1; display: block;">${content}</blockquote>`;
-        }
-        return line;
-    });
-    text = processedLines.join('\n');
+    // 13. Quotes (>>> multiline or > single line)
+    if (text.includes('&gt;&gt;&gt;') || text.includes('>>>')) {
+        const multilineRegex = /(?:&gt;&gt;&gt;|>>>)\s?([\s\S]*)/;
+        text = text.replace(multilineRegex, '<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1; display: block; white-space: pre-wrap;">$1</blockquote>');
+    } else {
+        const lines = text.split('\n');
+        const processedLines = lines.map(line => {
+            if (line.startsWith('&gt; ') || line.startsWith('> ')) {
+                const content = line.replace(/^(&gt;|>)\s?/, '');
+                return `<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1; display: block;">${content}</blockquote>`;
+            }
+            return line;
+        });
+        text = processedLines.join('\n');
+    }
 
     return text;
 }
