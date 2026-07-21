@@ -80,7 +80,7 @@ def save_serverstats_config(guild_id: int, data: dict):
         current["enabled"] = bool(data["enabled"])
 
     cat_id = data.get("category_id")
-    if cat_id is not None and str(cat_id).strip():
+    if cat_id is not None:
         current["category_id"] = str(cat_id).strip()
     
     cat_name = data.get("category_name")
