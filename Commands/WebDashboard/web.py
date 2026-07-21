@@ -2,8 +2,8 @@ import os
 import secrets
 import json
 import asyncio
-from aiohttp import web  # type: ignore
-import aiohttp  # type: ignore
+from aiohttp import web
+import aiohttp 
 import discord
 from typing import Dict, Any
 
@@ -503,7 +503,6 @@ class WebDashboard:
                     old_url = welcome_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url
-                        import asyncio
                         asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     welcome_cfg["image_url"] = img_url
                 save_welcome_config(guild_id, welcome_cfg)
@@ -531,7 +530,6 @@ class WebDashboard:
                     old_url = goodbye_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url
-                        import asyncio
                         asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     goodbye_cfg["image_url"] = img_url
                 save_goodbye_config(guild_id, goodbye_cfg)
@@ -559,7 +557,6 @@ class WebDashboard:
                     old_url = boost_cfg.get("image_url", "")
                     if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
                         from Database.cloudinary_storage import delete_image_by_url
-                        import asyncio
                         asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     boost_cfg["image_url"] = img_url
                 save_boost_config(guild_id, boost_cfg)
