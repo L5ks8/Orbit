@@ -779,63 +779,130 @@
                                 </div>
                             </div>
 
-                            <!-- Screenshot Style Embed Box -->
-                            <div style="display: flex; gap: 16px; background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-top: 15px; position: relative; max-width: 520px;">
-                                <div id="welcome_embed_sidebar" class="embed-sidebar" style="width: 4px; border-radius: 4px; background: #5865F2; align-self: stretch; flex-shrink: 0;"></div>
-                                
-                                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px;">
-                                    <!-- Author Name & Icon -->
-                                    <div style="display: flex; gap: 12px; align-items: center;">
-                                        <div id="drop-welcome-author-icon" class="image-placeholder-small" title="Click to upload Author Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <!-- Wrapper for Embed Box & Helper Card -->
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; margin-top: 15px;">
+                                <!-- Screenshot Style Embed Box -->
+                                <div style="display: flex; gap: 16px; background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); position: relative; max-width: 520px; flex: 1; min-width: 300px;">
+                                    <div id="welcome_embed_sidebar" class="embed-sidebar" style="width: 4px; border-radius: 4px; background: #5865F2; align-self: stretch; flex-shrink: 0;"></div>
+                                    
+                                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px;">
+                                        <!-- Author Name & Icon -->
+                                        <div style="display: flex; gap: 12px; align-items: center;">
+                                            <div id="drop-welcome-author-icon" class="image-placeholder-small" title="Click to upload Author Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            </div>
+                                            <div style="flex: 1; position: relative;">
+                                                <input type="text" id="welcome_embed_author" class="form-input" placeholder="Author Name" style="width: 100%; height: 32px; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateLivePreview();">
+                                                <span style="position: absolute; right: 8px; top: 8px; font-size: 11px; color: var(--text-muted);">0/256</span>
+                                            </div>
                                         </div>
-                                        <div style="flex: 1; position: relative;">
-                                            <input type="text" id="welcome_embed_author" class="form-input" placeholder="Author Name" style="width: 100%; height: 32px; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateLivePreview();">
-                                            <span style="position: absolute; right: 8px; top: 8px; font-size: 11px; color: var(--text-muted);">0/256</span>
+                                        <input type="hidden" id="welcome_embed_author_icon">
+
+                                        <!-- Title -->
+                                        <div style="position: relative;">
+                                            <input type="text" id="welcome_embed_title" class="form-input" placeholder="Title" style="width: 100%; height: 36px; font-size: 14px; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateLivePreview();">
+                                            <span style="position: absolute; right: 8px; top: 10px; font-size: 11px; color: var(--text-muted);">0/256</span>
                                         </div>
-                                    </div>
-                                    <input type="hidden" id="welcome_embed_author_icon">
 
-                                    <!-- Title -->
-                                    <div style="position: relative;">
-                                        <input type="text" id="welcome_embed_title" class="form-input" placeholder="Title" style="width: 100%; height: 36px; font-size: 14px; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateLivePreview();">
-                                        <span style="position: absolute; right: 8px; top: 10px; font-size: 11px; color: var(--text-muted);">0/256</span>
-                                    </div>
-
-                                    <!-- Description -->
-                                    <div style="position: relative;">
-                                        <textarea id="welcome_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateLivePreview();"></textarea>
-                                        <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
-                                    </div>
-
-                                    <!-- Add Field Section Button & Fields -->
-                                    <button type="button" class="btn" style="width: 100%; background: #5865F2; color: #fff; padding: 10px; border-radius: 4px; font-weight: 600; font-size: 14px; border: none; cursor: pointer;" onclick="addWelcomeEmbedField()">Add Field</button>
-                                    <div id="welcome_embed_fields_container" style="display: flex; flex-direction: column; gap: 8px;"></div>
-
-                                    <!-- Big Image Dropzone -->
-                                    <div id="drop-welcome-image" class="image-placeholder-large" title="Click to upload Big Image" style="width: 100%; height: 120px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                    </div>
-                                    <input type="hidden" id="welcome_embed_image">
-
-                                    <!-- Footer Text & Icon -->
-                                    <div style="display: flex; gap: 12px; align-items: center;">
-                                        <div id="drop-welcome-footer-icon" class="image-placeholder-small" title="Click to upload Footer Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                        <!-- Description -->
+                                        <div style="position: relative;">
+                                            <textarea id="welcome_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateLivePreview();"></textarea>
+                                            <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
                                         </div>
-                                        <div style="flex: 1; position: relative;">
-                                            <input type="text" id="welcome_embed_footer" class="form-input" placeholder="Footer Text" style="width: 100%; height: 28px; font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 2048); updateLivePreview();">
-                                            <span style="position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--text-muted);">0/2048</span>
+
+                                        <!-- Add Field Section Button & Fields -->
+                                        <button type="button" class="btn" style="width: 100%; background: #5865F2; color: #fff; padding: 10px; border-radius: 4px; font-weight: 600; font-size: 14px; border: none; cursor: pointer;" onclick="addWelcomeEmbedField()">Add Field</button>
+                                        <div id="welcome_embed_fields_container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+
+                                        <!-- Big Image Dropzone -->
+                                        <div id="drop-welcome-image" class="image-placeholder-large" title="Click to upload Big Image" style="width: 100%; height: 120px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                         </div>
+                                        <input type="hidden" id="welcome_embed_image">
+
+                                        <!-- Footer Text & Icon -->
+                                        <div style="display: flex; gap: 12px; align-items: center;">
+                                            <div id="drop-welcome-footer-icon" class="image-placeholder-small" title="Click to upload Footer Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            </div>
+                                            <div style="flex: 1; position: relative;">
+                                                <input type="text" id="welcome_embed_footer" class="form-input" placeholder="Footer Text" style="width: 100%; height: 28px; font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 2048); updateLivePreview();">
+                                                <span style="position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--text-muted);">0/2048</span>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="welcome_embed_footer_icon">
                                     </div>
-                                    <input type="hidden" id="welcome_embed_footer_icon">
+
+                                    <!-- Thumbnail Dropzone (Top Right) -->
+                                    <div id="drop-welcome-thumbnail" class="image-placeholder-thumb" title="Click to upload Thumbnail. If empty, user profile avatar will be used." style="width: 60px; height: 60px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    </div>
+                                    <input type="hidden" id="welcome_embed_thumbnail">
                                 </div>
 
-                                <!-- Thumbnail Dropzone (Top Right) -->
-                                <div id="drop-welcome-thumbnail" class="image-placeholder-thumb" title="Click to upload Thumbnail. If empty, user profile avatar will be used." style="width: 60px; height: 60px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <!-- Helper Menu Box -->
+                                <div class="embed-helper-card" style="width: 280px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px; font-size: 12px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0;">
+                                    <div style="font-weight: 700; color: #FFFFFF; font-size: 13.5px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5865F2" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        Variables & Formatting
+                                    </div>
+                                    
+                                    <div>
+                                        <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">Variables (Click to copy)</div>
+                                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #5865F2; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{mention}')" title="Click to copy">{mention} / {user}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">@User</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #5865F2; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{username}')" title="Click to copy">{username}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">User Name</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #5865F2; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{server}')" title="Click to copy">{server}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">Server Name</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #5865F2; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{count}')" title="Click to copy">{count}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">Member Count</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #5865F2; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{id}')" title="Click to copy">{id}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">User ID</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">Text Formatting</div>
+                                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('**Text**')" title="Click to copy">**Text**</code>
+                                                <strong style="color: #FFF; font-size: 11px;">Bold</strong>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('*Text*')" title="Click to copy">*Text*</code>
+                                                <em style="color: #FFF; font-size: 11px;">Italic</em>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('__Text__')" title="Click to copy">__Text__</code>
+                                                <u style="color: #FFF; font-size: 11px;">Underline</u>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('~~Text~~')" title="Click to copy">~~Text~~</code>
+                                                <del style="color: #FFF; font-size: 11px;">Strike</del>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('> Text')" title="Click to copy">&gt; Text</code>
+                                                <span style="color: #B5BAC1; font-size: 11px; border-left: 3px solid #4E5058; padding-left: 4px;">Quote Line</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('||Text||')" title="Click to copy">||Text||</code>
+                                                <span style="background: #202225; color: #DBDEE1; padding: 0 4px; border-radius: 2px; font-size: 11px;">Spoiler</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <input type="hidden" id="welcome_embed_thumbnail">
                             </div>
                         </div>
 
@@ -972,63 +1039,130 @@
                                 </div>
                             </div>
 
-                            <!-- Screenshot Style Embed Box -->
-                            <div style="display: flex; gap: 16px; background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-top: 15px; position: relative; max-width: 520px;">
-                                <div id="goodbye_embed_sidebar" class="embed-sidebar" style="width: 4px; border-radius: 4px; background: #ED4245; align-self: stretch; flex-shrink: 0;"></div>
-                                
-                                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px;">
-                                    <!-- Author Name & Icon -->
-                                    <div style="display: flex; gap: 12px; align-items: center;">
-                                        <div id="drop-goodbye-author-icon" class="image-placeholder-small" title="Click to upload Author Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <!-- Wrapper for Embed Box & Helper Card -->
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; margin-top: 15px;">
+                                <!-- Screenshot Style Embed Box -->
+                                <div style="display: flex; gap: 16px; background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); position: relative; max-width: 520px; flex: 1; min-width: 300px;">
+                                    <div id="goodbye_embed_sidebar" class="embed-sidebar" style="width: 4px; border-radius: 4px; background: #ED4245; align-self: stretch; flex-shrink: 0;"></div>
+                                    
+                                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px;">
+                                        <!-- Author Name & Icon -->
+                                        <div style="display: flex; gap: 12px; align-items: center;">
+                                            <div id="drop-goodbye-author-icon" class="image-placeholder-small" title="Click to upload Author Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            </div>
+                                            <div style="flex: 1; position: relative;">
+                                                <input type="text" id="goodbye_embed_author" class="form-input" placeholder="Author Name" style="width: 100%; height: 32px; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateGoodbyeLivePreview();">
+                                                <span style="position: absolute; right: 8px; top: 8px; font-size: 11px; color: var(--text-muted);">0/256</span>
+                                            </div>
                                         </div>
-                                        <div style="flex: 1; position: relative;">
-                                            <input type="text" id="goodbye_embed_author" class="form-input" placeholder="Author Name" style="width: 100%; height: 32px; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateGoodbyeLivePreview();">
-                                            <span style="position: absolute; right: 8px; top: 8px; font-size: 11px; color: var(--text-muted);">0/256</span>
+                                        <input type="hidden" id="goodbye_embed_author_icon">
+
+                                        <!-- Title -->
+                                        <div style="position: relative;">
+                                            <input type="text" id="goodbye_embed_title" class="form-input" placeholder="Title" style="width: 100%; height: 36px; font-size: 14px; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateGoodbyeLivePreview();">
+                                            <span style="position: absolute; right: 8px; top: 10px; font-size: 11px; color: var(--text-muted);">0/256</span>
                                         </div>
-                                    </div>
-                                    <input type="hidden" id="goodbye_embed_author_icon">
 
-                                    <!-- Title -->
-                                    <div style="position: relative;">
-                                        <input type="text" id="goodbye_embed_title" class="form-input" placeholder="Title" style="width: 100%; height: 36px; font-size: 14px; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateGoodbyeLivePreview();">
-                                        <span style="position: absolute; right: 8px; top: 10px; font-size: 11px; color: var(--text-muted);">0/256</span>
-                                    </div>
-
-                                    <!-- Description -->
-                                    <div style="position: relative;">
-                                        <textarea id="goodbye_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateGoodbyeLivePreview();"></textarea>
-                                        <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
-                                    </div>
-
-                                    <!-- Add Field Section Button & Fields -->
-                                    <button type="button" class="btn" style="width: 100%; background: #5865F2; color: #fff; padding: 10px; border-radius: 4px; font-weight: 600; font-size: 14px; border: none; cursor: pointer;" onclick="addGoodbyeEmbedField()">Add Field</button>
-                                    <div id="goodbye_embed_fields_container" style="display: flex; flex-direction: column; gap: 8px;"></div>
-
-                                    <!-- Big Image Dropzone -->
-                                    <div id="drop-goodbye-image" class="image-placeholder-large" title="Click to upload Big Image" style="width: 100%; height: 120px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                    </div>
-                                    <input type="hidden" id="goodbye_embed_image">
-
-                                    <!-- Footer Text & Icon -->
-                                    <div style="display: flex; gap: 12px; align-items: center;">
-                                        <div id="drop-goodbye-footer-icon" class="image-placeholder-small" title="Click to upload Footer Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                        <!-- Description -->
+                                        <div style="position: relative;">
+                                            <textarea id="goodbye_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateGoodbyeLivePreview();"></textarea>
+                                            <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
                                         </div>
-                                        <div style="flex: 1; position: relative;">
-                                            <input type="text" id="goodbye_embed_footer" class="form-input" placeholder="Footer Text" style="width: 100%; height: 28px; font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 2048); updateGoodbyeLivePreview();">
-                                            <span style="position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--text-muted);">0/2048</span>
+
+                                        <!-- Add Field Section Button & Fields -->
+                                        <button type="button" class="btn" style="width: 100%; background: #5865F2; color: #fff; padding: 10px; border-radius: 4px; font-weight: 600; font-size: 14px; border: none; cursor: pointer;" onclick="addGoodbyeEmbedField()">Add Field</button>
+                                        <div id="goodbye_embed_fields_container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+
+                                        <!-- Big Image Dropzone -->
+                                        <div id="drop-goodbye-image" class="image-placeholder-large" title="Click to upload Big Image" style="width: 100%; height: 120px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                         </div>
+                                        <input type="hidden" id="goodbye_embed_image">
+
+                                        <!-- Footer Text & Icon -->
+                                        <div style="display: flex; gap: 12px; align-items: center;">
+                                            <div id="drop-goodbye-footer-icon" class="image-placeholder-small" title="Click to upload Footer Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            </div>
+                                            <div style="flex: 1; position: relative;">
+                                                <input type="text" id="goodbye_embed_footer" class="form-input" placeholder="Footer Text" style="width: 100%; height: 28px; font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 2048); updateGoodbyeLivePreview();">
+                                                <span style="position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--text-muted);">0/2048</span>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="goodbye_embed_footer_icon">
                                     </div>
-                                    <input type="hidden" id="goodbye_embed_footer_icon">
+
+                                    <!-- Thumbnail Dropzone (Top Right) -->
+                                    <div id="drop-goodbye-thumbnail" class="image-placeholder-thumb" title="Click to upload Thumbnail. If empty, user profile avatar will be used." style="width: 60px; height: 60px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    </div>
+                                    <input type="hidden" id="goodbye_embed_thumbnail">
                                 </div>
 
-                                <!-- Thumbnail Dropzone (Top Right) -->
-                                <div id="drop-goodbye-thumbnail" class="image-placeholder-thumb" title="Click to upload Thumbnail. If empty, user profile avatar will be used." style="width: 60px; height: 60px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <!-- Helper Menu Box -->
+                                <div class="embed-helper-card" style="width: 280px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px; font-size: 12px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0;">
+                                    <div style="font-weight: 700; color: #FFFFFF; font-size: 13.5px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ED4245" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        Variables & Formatting
+                                    </div>
+                                    
+                                    <div>
+                                        <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">Variables (Click to copy)</div>
+                                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #ED4245; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{mention}')" title="Click to copy">{mention} / {user}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">@User</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #ED4245; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{username}')" title="Click to copy">{username}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">User Name</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #ED4245; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{server}')" title="Click to copy">{server}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">Server Name</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #ED4245; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{count}')" title="Click to copy">{count}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">Member Count</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #ED4245; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{id}')" title="Click to copy">{id}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">User ID</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">Text Formatting</div>
+                                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('**Text**')" title="Click to copy">**Text**</code>
+                                                <strong style="color: #FFF; font-size: 11px;">Bold</strong>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('*Text*')" title="Click to copy">*Text*</code>
+                                                <em style="color: #FFF; font-size: 11px;">Italic</em>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('__Text__')" title="Click to copy">__Text__</code>
+                                                <u style="color: #FFF; font-size: 11px;">Underline</u>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('~~Text~~')" title="Click to copy">~~Text~~</code>
+                                                <del style="color: #FFF; font-size: 11px;">Strike</del>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('> Text')" title="Click to copy">&gt; Text</code>
+                                                <span style="color: #B5BAC1; font-size: 11px; border-left: 3px solid #4E5058; padding-left: 4px;">Quote Line</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('||Text||')" title="Click to copy">||Text||</code>
+                                                <span style="background: #202225; color: #DBDEE1; padding: 0 4px; border-radius: 2px; font-size: 11px;">Spoiler</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <input type="hidden" id="goodbye_embed_thumbnail">
                             </div>
                         </div>
 
@@ -1165,63 +1299,130 @@
                                 </div>
                             </div>
 
-                            <!-- Screenshot Style Embed Box -->
-                            <div style="display: flex; gap: 16px; background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-top: 15px; position: relative; max-width: 520px;">
-                                <div id="boost_embed_sidebar" class="embed-sidebar" style="width: 4px; border-radius: 4px; background: #EB459E; align-self: stretch; flex-shrink: 0;"></div>
-                                
-                                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px;">
-                                    <!-- Author Name & Icon -->
-                                    <div style="display: flex; gap: 12px; align-items: center;">
-                                        <div id="drop-boost-author-icon" class="image-placeholder-small" title="Click to upload Author Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <!-- Wrapper for Embed Box & Helper Card -->
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; margin-top: 15px;">
+                                <!-- Screenshot Style Embed Box -->
+                                <div style="display: flex; gap: 16px; background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); position: relative; max-width: 520px; flex: 1; min-width: 300px;">
+                                    <div id="boost_embed_sidebar" class="embed-sidebar" style="width: 4px; border-radius: 4px; background: #EB459E; align-self: stretch; flex-shrink: 0;"></div>
+                                    
+                                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px;">
+                                        <!-- Author Name & Icon -->
+                                        <div style="display: flex; gap: 12px; align-items: center;">
+                                            <div id="drop-boost-author-icon" class="image-placeholder-small" title="Click to upload Author Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            </div>
+                                            <div style="flex: 1; position: relative;">
+                                                <input type="text" id="boost_embed_author" class="form-input" placeholder="Author Name" style="width: 100%; height: 32px; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateBoostLivePreview();">
+                                                <span style="position: absolute; right: 8px; top: 8px; font-size: 11px; color: var(--text-muted);">0/256</span>
+                                            </div>
                                         </div>
-                                        <div style="flex: 1; position: relative;">
-                                            <input type="text" id="boost_embed_author" class="form-input" placeholder="Author Name" style="width: 100%; height: 32px; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateBoostLivePreview();">
-                                            <span style="position: absolute; right: 8px; top: 8px; font-size: 11px; color: var(--text-muted);">0/256</span>
+                                        <input type="hidden" id="boost_embed_author_icon">
+
+                                        <!-- Title -->
+                                        <div style="position: relative;">
+                                            <input type="text" id="boost_embed_title" class="form-input" placeholder="Title" style="width: 100%; height: 36px; font-size: 14px; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateBoostLivePreview();">
+                                            <span style="position: absolute; right: 8px; top: 10px; font-size: 11px; color: var(--text-muted);">0/256</span>
                                         </div>
-                                    </div>
-                                    <input type="hidden" id="boost_embed_author_icon">
 
-                                    <!-- Title -->
-                                    <div style="position: relative;">
-                                        <input type="text" id="boost_embed_title" class="form-input" placeholder="Title" style="width: 100%; height: 36px; font-size: 14px; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 256); updateBoostLivePreview();">
-                                        <span style="position: absolute; right: 8px; top: 10px; font-size: 11px; color: var(--text-muted);">0/256</span>
-                                    </div>
-
-                                    <!-- Description -->
-                                    <div style="position: relative;">
-                                        <textarea id="boost_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateBoostLivePreview();"></textarea>
-                                        <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
-                                    </div>
-
-                                    <!-- Add Field Section Button & Fields -->
-                                    <button type="button" class="btn" style="width: 100%; background: #5865F2; color: #fff; padding: 10px; border-radius: 4px; font-weight: 600; font-size: 14px; border: none; cursor: pointer;" onclick="addBoostEmbedField()">Add Field</button>
-                                    <div id="boost_embed_fields_container" style="display: flex; flex-direction: column; gap: 8px;"></div>
-
-                                    <!-- Big Image Dropzone -->
-                                    <div id="drop-boost-image" class="image-placeholder-large" title="Click to upload Big Image" style="width: 100%; height: 120px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                    </div>
-                                    <input type="hidden" id="boost_embed_image">
-
-                                    <!-- Footer Text & Icon -->
-                                    <div style="display: flex; gap: 12px; align-items: center;">
-                                        <div id="drop-boost-footer-icon" class="image-placeholder-small" title="Click to upload Footer Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                        <!-- Description -->
+                                        <div style="position: relative;">
+                                            <textarea id="boost_embed_description" class="form-input" placeholder="Description" style="width: 100%; height: 80px; resize: none; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;" oninput="updateCount(this, 4096); updateBoostLivePreview();"></textarea>
+                                            <span style="position: absolute; right: 8px; bottom: 8px; font-size: 11px; color: var(--text-muted);">0/4096</span>
                                         </div>
-                                        <div style="flex: 1; position: relative;">
-                                            <input type="text" id="boost_embed_footer" class="form-input" placeholder="Footer Text" style="width: 100%; height: 28px; font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 2048); updateBoostLivePreview();">
-                                            <span style="position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--text-muted);">0/2048</span>
+
+                                        <!-- Add Field Section Button & Fields -->
+                                        <button type="button" class="btn" style="width: 100%; background: #5865F2; color: #fff; padding: 10px; border-radius: 4px; font-weight: 600; font-size: 14px; border: none; cursor: pointer;" onclick="addBoostEmbedField()">Add Field</button>
+                                        <div id="boost_embed_fields_container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+
+                                        <!-- Big Image Dropzone -->
+                                        <div id="drop-boost-image" class="image-placeholder-large" title="Click to upload Big Image" style="width: 100%; height: 120px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                         </div>
+                                        <input type="hidden" id="boost_embed_image">
+
+                                        <!-- Footer Text & Icon -->
+                                        <div style="display: flex; gap: 12px; align-items: center;">
+                                            <div id="drop-boost-footer-icon" class="image-placeholder-small" title="Click to upload Footer Icon" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            </div>
+                                            <div style="flex: 1; position: relative;">
+                                                <input type="text" id="boost_embed_footer" class="form-input" placeholder="Footer Text" style="width: 100%; height: 28px; font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); padding-right: 50px;" oninput="updateCount(this, 2048); updateBoostLivePreview();">
+                                                <span style="position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--text-muted);">0/2048</span>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="boost_embed_footer_icon">
                                     </div>
-                                    <input type="hidden" id="boost_embed_footer_icon">
+
+                                    <!-- Thumbnail Dropzone (Top Right) -->
+                                    <div id="drop-boost-thumbnail" class="image-placeholder-thumb" title="Click to upload Thumbnail. If empty, user profile avatar will be used." style="width: 60px; height: 60px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    </div>
+                                    <input type="hidden" id="boost_embed_thumbnail">
                                 </div>
 
-                                <!-- Thumbnail Dropzone (Top Right) -->
-                                <div id="drop-boost-thumbnail" class="image-placeholder-thumb" title="Click to upload Thumbnail. If empty, user profile avatar will be used." style="width: 60px; height: 60px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-size: cover; background-position: center; flex-shrink: 0;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <!-- Helper Menu Box -->
+                                <div class="embed-helper-card" style="width: 280px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px; font-size: 12px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0;">
+                                    <div style="font-weight: 700; color: #FFFFFF; font-size: 13.5px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EB459E" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        Variables & Formatting
+                                    </div>
+                                    
+                                    <div>
+                                        <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">Variables (Click to copy)</div>
+                                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #EB459E; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{mention}')" title="Click to copy">{mention} / {user}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">@User</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #EB459E; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{username}')" title="Click to copy">{username}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">User Name</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #EB459E; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{server}')" title="Click to copy">{server}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">Server Name</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #EB459E; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{count}')" title="Click to copy">{count}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">Boost Count</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #EB459E; cursor: pointer; font-weight: 600;" onclick="copyToClipboard('{id}')" title="Click to copy">{id}</code>
+                                                <span style="color: #949BA4; font-size: 11px;">User ID</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">Text Formatting</div>
+                                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('**Text**')" title="Click to copy">**Text**</code>
+                                                <strong style="color: #FFF; font-size: 11px;">Bold</strong>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('*Text*')" title="Click to copy">*Text*</code>
+                                                <em style="color: #FFF; font-size: 11px;">Italic</em>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('__Text__')" title="Click to copy">__Text__</code>
+                                                <u style="color: #FFF; font-size: 11px;">Underline</u>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('~~Text~~')" title="Click to copy">~~Text~~</code>
+                                                <del style="color: #FFF; font-size: 11px;">Strike</del>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('> Text')" title="Click to copy">&gt; Text</code>
+                                                <span style="color: #B5BAC1; font-size: 11px; border-left: 3px solid #4E5058; padding-left: 4px;">Quote Line</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                                                <code style="color: #DBDEE1; cursor: pointer;" onclick="copyToClipboard('||Text||')" title="Click to copy">||Text||</code>
+                                                <span style="background: #202225; color: #DBDEE1; padding: 0 4px; border-radius: 2px; font-size: 11px;">Spoiler</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <input type="hidden" id="boost_embed_thumbnail">
                             </div>
                         </div>
 

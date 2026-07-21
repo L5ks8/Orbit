@@ -1610,6 +1610,19 @@ function renderBoostEmbedFields() {
     });
 }
 
+window.copyToClipboard = function(str) {
+    if (!str) return;
+    navigator.clipboard.writeText(str).then(() => {
+        if (typeof showToast === 'function') {
+            showToast(`Copied "${str}" to clipboard!`);
+        }
+    }).catch(() => {
+        if (typeof showToast === 'function') {
+            showToast("Failed to copy");
+        }
+    });
+};
+
 function formatDiscordPreviewText(str) {
     if (!str) return '';
 
@@ -1660,8 +1673,15 @@ function formatDiscordPreviewText(str) {
     text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
 
     // 13. Quotes (> text)
-    text = text.replace(/^&gt;\s?(.*)$/gm, '<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1;">$1</blockquote>');
-    text = text.replace(/^>\s?(.*)$/gm, '<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1;">$1</blockquote>');
+    const lines = text.split('\n');
+    const processedLines = lines.map(line => {
+        if (line.startsWith('&gt; ') || line.startsWith('> ')) {
+            const content = line.replace(/^(&gt;|>)\s?/, '');
+            return `<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1; display: block;">${content}</blockquote>`;
+        }
+        return line;
+    });
+    text = processedLines.join('\n');
 
     return text;
 }
