@@ -898,10 +898,13 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('welcome_embed_color').value = config.welcome?.embed_color || '#5865F2';
         document.getElementById('welcome_embed_color_hex').value = config.welcome?.embed_color || '#5865F2';
         document.getElementById('welcome_embed_author').value = config.welcome?.embed_author || '';
+        if (document.getElementById('welcome_embed_author_icon')) document.getElementById('welcome_embed_author_icon').value = config.welcome?.embed_author_icon || '';
         document.getElementById('welcome_embed_title').value = config.welcome?.embed_title || '';
         document.getElementById('welcome_embed_description').value = config.welcome?.embed_description || '';
         document.getElementById('welcome_embed_thumbnail').value = config.welcome?.embed_thumbnail || '';
+        if (document.getElementById('welcome_embed_image')) document.getElementById('welcome_embed_image').value = imgUrl;
         document.getElementById('welcome_embed_footer').value = config.welcome?.embed_footer || '';
+        if (document.getElementById('welcome_embed_footer_icon')) document.getElementById('welcome_embed_footer_icon').value = config.welcome?.embed_footer_icon || '';
         setWelcomeMode(config.welcome?.msg_mode || 'image');
 
         // Goodbye
@@ -915,10 +918,13 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('goodbye_embed_color').value = config.goodbye?.embed_color || '#ED4245';
         document.getElementById('goodbye_embed_color_hex').value = config.goodbye?.embed_color || '#ED4245';
         document.getElementById('goodbye_embed_author').value = config.goodbye?.embed_author || '';
+        if (document.getElementById('goodbye_embed_author_icon')) document.getElementById('goodbye_embed_author_icon').value = config.goodbye?.embed_author_icon || '';
         document.getElementById('goodbye_embed_title').value = config.goodbye?.embed_title || '';
         document.getElementById('goodbye_embed_description').value = config.goodbye?.embed_description || '';
         document.getElementById('goodbye_embed_thumbnail').value = config.goodbye?.embed_thumbnail || '';
+        if (document.getElementById('goodbye_embed_image')) document.getElementById('goodbye_embed_image').value = gbImgUrl;
         document.getElementById('goodbye_embed_footer').value = config.goodbye?.embed_footer || '';
+        if (document.getElementById('goodbye_embed_footer_icon')) document.getElementById('goodbye_embed_footer_icon').value = config.goodbye?.embed_footer_icon || '';
         setGoodbyeMode(config.goodbye?.msg_mode || 'image');
 
         // Boost
@@ -932,10 +938,13 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('boost_embed_color').value = config.boost?.embed_color || '#EB459E';
         document.getElementById('boost_embed_color_hex').value = config.boost?.embed_color || '#EB459E';
         document.getElementById('boost_embed_author').value = config.boost?.embed_author || '';
+        if (document.getElementById('boost_embed_author_icon')) document.getElementById('boost_embed_author_icon').value = config.boost?.embed_author_icon || '';
         document.getElementById('boost_embed_title').value = config.boost?.embed_title || '';
         document.getElementById('boost_embed_description').value = config.boost?.embed_description || '';
         document.getElementById('boost_embed_thumbnail').value = config.boost?.embed_thumbnail || '';
+        if (document.getElementById('boost_embed_image')) document.getElementById('boost_embed_image').value = boostImgUrl;
         document.getElementById('boost_embed_footer').value = config.boost?.embed_footer || '';
+        if (document.getElementById('boost_embed_footer_icon')) document.getElementById('boost_embed_footer_icon').value = config.boost?.embed_footer_icon || '';
         setBoostMode(config.boost?.msg_mode || 'image');
 
         // AutoMod
@@ -1435,27 +1444,57 @@ function updateLivePreview() {
             embedBox.style.display = 'block';
             const hex = document.getElementById('welcome_embed_color')?.value || '#5865F2';
             embedBox.style.borderLeftColor = hex;
+            const sidebar = document.getElementById('welcome_embed_sidebar');
+            if (sidebar) sidebar.style.background = hex;
 
             const author = document.getElementById('welcome_embed_author')?.value || '';
+            const authorIcon = document.getElementById('welcome_embed_author_icon')?.value || '';
             const title = document.getElementById('welcome_embed_title')?.value || '';
             const desc = document.getElementById('welcome_embed_description')?.value || '';
             const thumb = document.getElementById('welcome_embed_thumbnail')?.value || '';
+            const bigImg = document.getElementById('welcome_embed_image')?.value || document.getElementById('welcome_image_url')?.value || '';
             const footer = document.getElementById('welcome_embed_footer')?.value || '';
-            const imgUrl = document.getElementById('welcome_image_url')?.value || '';
+            const footerIcon = document.getElementById('welcome_embed_footer_icon')?.value || '';
 
+            const authorBox = document.getElementById('welcome_preview_embed_author_box');
             const authorEl = document.getElementById('welcome_preview_embed_author');
+            const authorIconEl = document.getElementById('welcome_preview_embed_author_icon');
             const titleEl = document.getElementById('welcome_preview_embed_title');
             const descEl = document.getElementById('welcome_preview_embed_desc');
+            const thumbBox = document.getElementById('welcome_preview_embed_thumb_box');
             const thumbEl = document.getElementById('welcome_preview_embed_thumb');
             const imgEl = document.getElementById('welcome_preview_embed_img');
+            const footerBox = document.getElementById('welcome_preview_embed_footer_box');
             const footerEl = document.getElementById('welcome_preview_embed_footer');
+            const footerIconEl = document.getElementById('welcome_preview_embed_footer_icon');
 
-            if (authorEl) { authorEl.innerHTML = formatDiscordPreviewText(author); authorEl.style.display = author ? 'block' : 'none'; }
+            if (authorBox && authorEl) {
+                authorEl.innerHTML = formatDiscordPreviewText(author);
+                if (authorIconEl) {
+                    authorIconEl.src = authorIcon;
+                    authorIconEl.style.display = authorIcon ? 'inline-block' : 'none';
+                }
+                authorBox.style.display = (author || authorIcon) ? 'flex' : 'none';
+            }
+
             if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
             if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
-            if (thumbEl) { thumbEl.src = thumb; thumbEl.style.display = thumb ? 'block' : 'none'; }
-            if (imgEl) { imgEl.src = imgUrl; imgEl.style.display = imgUrl ? 'block' : 'none'; }
-            if (footerEl) { footerEl.innerHTML = formatDiscordPreviewText(footer); footerEl.style.display = footer ? 'block' : 'none'; }
+
+            if (thumbBox && thumbEl) {
+                thumbEl.src = thumb;
+                thumbBox.style.display = thumb ? 'block' : 'none';
+            }
+
+            if (imgEl) { imgEl.src = bigImg; imgEl.style.display = bigImg ? 'block' : 'none'; }
+
+            if (footerBox && footerEl) {
+                footerEl.innerHTML = formatDiscordPreviewText(footer);
+                if (footerIconEl) {
+                    footerIconEl.src = footerIcon;
+                    footerIconEl.style.display = footerIcon ? 'inline-block' : 'none';
+                }
+                footerBox.style.display = (footer || footerIcon) ? 'flex' : 'none';
+            }
         }
     } else {
         if (embedBox) embedBox.style.display = 'none';
@@ -1494,27 +1533,57 @@ function updateGoodbyeLivePreview() {
             embedBox.style.display = 'block';
             const hex = document.getElementById('goodbye_embed_color')?.value || '#ED4245';
             embedBox.style.borderLeftColor = hex;
+            const sidebar = document.getElementById('goodbye_embed_sidebar');
+            if (sidebar) sidebar.style.background = hex;
 
             const author = document.getElementById('goodbye_embed_author')?.value || '';
+            const authorIcon = document.getElementById('goodbye_embed_author_icon')?.value || '';
             const title = document.getElementById('goodbye_embed_title')?.value || '';
             const desc = document.getElementById('goodbye_embed_description')?.value || '';
             const thumb = document.getElementById('goodbye_embed_thumbnail')?.value || '';
+            const bigImg = document.getElementById('goodbye_embed_image')?.value || document.getElementById('goodbye_image_url')?.value || '';
             const footer = document.getElementById('goodbye_embed_footer')?.value || '';
-            const imgUrl = document.getElementById('goodbye_image_url')?.value || '';
+            const footerIcon = document.getElementById('goodbye_embed_footer_icon')?.value || '';
 
+            const authorBox = document.getElementById('goodbye_preview_embed_author_box');
             const authorEl = document.getElementById('goodbye_preview_embed_author');
+            const authorIconEl = document.getElementById('goodbye_preview_embed_author_icon');
             const titleEl = document.getElementById('goodbye_preview_embed_title');
             const descEl = document.getElementById('goodbye_preview_embed_desc');
+            const thumbBox = document.getElementById('goodbye_preview_embed_thumb_box');
             const thumbEl = document.getElementById('goodbye_preview_embed_thumb');
             const imgEl = document.getElementById('goodbye_preview_embed_img');
+            const footerBox = document.getElementById('goodbye_preview_embed_footer_box');
             const footerEl = document.getElementById('goodbye_preview_embed_footer');
+            const footerIconEl = document.getElementById('goodbye_preview_embed_footer_icon');
 
-            if (authorEl) { authorEl.innerHTML = formatDiscordPreviewText(author); authorEl.style.display = author ? 'block' : 'none'; }
+            if (authorBox && authorEl) {
+                authorEl.innerHTML = formatDiscordPreviewText(author);
+                if (authorIconEl) {
+                    authorIconEl.src = authorIcon;
+                    authorIconEl.style.display = authorIcon ? 'inline-block' : 'none';
+                }
+                authorBox.style.display = (author || authorIcon) ? 'flex' : 'none';
+            }
+
             if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
             if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
-            if (thumbEl) { thumbEl.src = thumb; thumbEl.style.display = thumb ? 'block' : 'none'; }
-            if (imgEl) { imgEl.src = imgUrl; imgEl.style.display = imgUrl ? 'block' : 'none'; }
-            if (footerEl) { footerEl.innerHTML = formatDiscordPreviewText(footer); footerEl.style.display = footer ? 'block' : 'none'; }
+
+            if (thumbBox && thumbEl) {
+                thumbEl.src = thumb;
+                thumbBox.style.display = thumb ? 'block' : 'none';
+            }
+
+            if (imgEl) { imgEl.src = bigImg; imgEl.style.display = bigImg ? 'block' : 'none'; }
+
+            if (footerBox && footerEl) {
+                footerEl.innerHTML = formatDiscordPreviewText(footer);
+                if (footerIconEl) {
+                    footerIconEl.src = footerIcon;
+                    footerIconEl.style.display = footerIcon ? 'inline-block' : 'none';
+                }
+                footerBox.style.display = (footer || footerIcon) ? 'flex' : 'none';
+            }
         }
     } else {
         if (embedBox) embedBox.style.display = 'none';
@@ -1583,27 +1652,57 @@ function updateBoostLivePreview() {
             embedBox.style.display = 'block';
             const hex = document.getElementById('boost_embed_color')?.value || '#EB459E';
             embedBox.style.borderLeftColor = hex;
+            const sidebar = document.getElementById('boost_embed_sidebar');
+            if (sidebar) sidebar.style.background = hex;
 
             const author = document.getElementById('boost_embed_author')?.value || '';
+            const authorIcon = document.getElementById('boost_embed_author_icon')?.value || '';
             const title = document.getElementById('boost_embed_title')?.value || '';
             const desc = document.getElementById('boost_embed_description')?.value || '';
             const thumb = document.getElementById('boost_embed_thumbnail')?.value || '';
+            const bigImg = document.getElementById('boost_embed_image')?.value || document.getElementById('boost_image_url')?.value || '';
             const footer = document.getElementById('boost_embed_footer')?.value || '';
-            const imgUrl = document.getElementById('boost_image_url')?.value || '';
+            const footerIcon = document.getElementById('boost_embed_footer_icon')?.value || '';
 
+            const authorBox = document.getElementById('boost_preview_embed_author_box');
             const authorEl = document.getElementById('boost_preview_embed_author');
+            const authorIconEl = document.getElementById('boost_preview_embed_author_icon');
             const titleEl = document.getElementById('boost_preview_embed_title');
             const descEl = document.getElementById('boost_preview_embed_desc');
+            const thumbBox = document.getElementById('boost_preview_embed_thumb_box');
             const thumbEl = document.getElementById('boost_preview_embed_thumb');
             const imgEl = document.getElementById('boost_preview_embed_img');
+            const footerBox = document.getElementById('boost_preview_embed_footer_box');
             const footerEl = document.getElementById('boost_preview_embed_footer');
+            const footerIconEl = document.getElementById('boost_preview_embed_footer_icon');
 
-            if (authorEl) { authorEl.innerHTML = formatDiscordPreviewText(author); authorEl.style.display = author ? 'block' : 'none'; }
+            if (authorBox && authorEl) {
+                authorEl.innerHTML = formatDiscordPreviewText(author);
+                if (authorIconEl) {
+                    authorIconEl.src = authorIcon;
+                    authorIconEl.style.display = authorIcon ? 'inline-block' : 'none';
+                }
+                authorBox.style.display = (author || authorIcon) ? 'flex' : 'none';
+            }
+
             if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
             if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
-            if (thumbEl) { thumbEl.src = thumb; thumbEl.style.display = thumb ? 'block' : 'none'; }
-            if (imgEl) { imgEl.src = imgUrl; imgEl.style.display = imgUrl ? 'block' : 'none'; }
-            if (footerEl) { footerEl.innerHTML = formatDiscordPreviewText(footer); footerEl.style.display = footer ? 'block' : 'none'; }
+
+            if (thumbBox && thumbEl) {
+                thumbEl.src = thumb;
+                thumbBox.style.display = thumb ? 'block' : 'none';
+            }
+
+            if (imgEl) { imgEl.src = bigImg; imgEl.style.display = bigImg ? 'block' : 'none'; }
+
+            if (footerBox && footerEl) {
+                footerEl.innerHTML = formatDiscordPreviewText(footer);
+                if (footerIconEl) {
+                    footerIconEl.src = footerIcon;
+                    footerIconEl.style.display = footerIcon ? 'inline-block' : 'none';
+                }
+                footerBox.style.display = (footer || footerIcon) ? 'flex' : 'none';
+            }
         }
     } else {
         if (embedBox) embedBox.style.display = 'none';
@@ -2163,40 +2262,46 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('welcome_enabled').checked,
             channel_id: document.getElementById('welcome_channel_id').value,
             message: document.getElementById('welcome_message').value,
-            image_url: document.getElementById('welcome_image_url').value,
+            image_url: (document.getElementById('welcome_msg_mode').value === 'embed' && document.getElementById('welcome_embed_image')?.value) ? document.getElementById('welcome_embed_image').value : document.getElementById('welcome_image_url').value,
             msg_mode: document.getElementById('welcome_msg_mode').value,
             embed_color: document.getElementById('welcome_embed_color').value,
             embed_author: document.getElementById('welcome_embed_author').value,
+            embed_author_icon: document.getElementById('welcome_embed_author_icon')?.value || '',
             embed_title: document.getElementById('welcome_embed_title').value,
             embed_description: document.getElementById('welcome_embed_description').value,
             embed_thumbnail: document.getElementById('welcome_embed_thumbnail').value,
-            embed_footer: document.getElementById('welcome_embed_footer').value
+            embed_footer: document.getElementById('welcome_embed_footer').value,
+            embed_footer_icon: document.getElementById('welcome_embed_footer_icon')?.value || ''
         },
         goodbye: {
             enabled: document.getElementById('goodbye_enabled').checked,
             channel_id: document.getElementById('goodbye_channel_id').value,
             message: document.getElementById('goodbye_message').value,
-            image_url: document.getElementById('goodbye_image_url').value,
+            image_url: (document.getElementById('goodbye_msg_mode').value === 'embed' && document.getElementById('goodbye_embed_image')?.value) ? document.getElementById('goodbye_embed_image').value : document.getElementById('goodbye_image_url').value,
             msg_mode: document.getElementById('goodbye_msg_mode').value,
             embed_color: document.getElementById('goodbye_embed_color').value,
             embed_author: document.getElementById('goodbye_embed_author').value,
+            embed_author_icon: document.getElementById('goodbye_embed_author_icon')?.value || '',
             embed_title: document.getElementById('goodbye_embed_title').value,
             embed_description: document.getElementById('goodbye_embed_description').value,
             embed_thumbnail: document.getElementById('goodbye_embed_thumbnail').value,
-            embed_footer: document.getElementById('goodbye_embed_footer').value
+            embed_footer: document.getElementById('goodbye_embed_footer').value,
+            embed_footer_icon: document.getElementById('goodbye_embed_footer_icon')?.value || ''
         },
         boost: {
             enabled: document.getElementById('boost_enabled').checked,
             channel_id: document.getElementById('boost_channel_id').value,
             message: document.getElementById('boost_message').value,
-            image_url: document.getElementById('boost_image_url').value,
+            image_url: (document.getElementById('boost_msg_mode').value === 'embed' && document.getElementById('boost_embed_image')?.value) ? document.getElementById('boost_embed_image').value : document.getElementById('boost_image_url').value,
             msg_mode: document.getElementById('boost_msg_mode').value,
             embed_color: document.getElementById('boost_embed_color').value,
             embed_author: document.getElementById('boost_embed_author').value,
+            embed_author_icon: document.getElementById('boost_embed_author_icon')?.value || '',
             embed_title: document.getElementById('boost_embed_title').value,
             embed_description: document.getElementById('boost_embed_description').value,
             embed_thumbnail: document.getElementById('boost_embed_thumbnail').value,
-            embed_footer: document.getElementById('boost_embed_footer').value
+            embed_footer: document.getElementById('boost_embed_footer').value,
+            embed_footer_icon: document.getElementById('boost_embed_footer_icon')?.value || ''
         },
         automod: currentAutomodConfig,
         verify: {

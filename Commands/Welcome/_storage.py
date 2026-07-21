@@ -26,7 +26,9 @@ def load_welcome_config(guild_id: int) -> Dict[str, Any]:
         "embed_description": "",
         "embed_thumbnail": "",
         "embed_footer": "",
-        "embed_author": ""
+        "embed_author": "",
+        "embed_author_icon": "",
+        "embed_footer_icon": ""
     }
     try:
         data = get_config("Welcome", guild_id)
@@ -48,6 +50,10 @@ def load_welcome_config(guild_id: int) -> Dict[str, Any]:
             data["embed_footer"] = ""
         if "embed_author" not in data:
             data["embed_author"] = ""
+        if "embed_author_icon" not in data:
+            data["embed_author_icon"] = ""
+        if "embed_footer_icon" not in data:
+            data["embed_footer_icon"] = ""
         return data
     except Exception:
         return default_config
@@ -84,7 +90,9 @@ def reset_welcome(guild_id: int) -> Dict[str, Any]:
         "embed_description": "",
         "embed_thumbnail": "",
         "embed_footer": "",
-        "embed_author": ""
+        "embed_author": "",
+        "embed_author_icon": "",
+        "embed_footer_icon": ""
     }
     save_welcome_config(guild_id, config)
     return config

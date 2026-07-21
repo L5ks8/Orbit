@@ -22,7 +22,9 @@ def load_boost_config(guild_id: int) -> Dict[str, Any]:
         "embed_description": "",
         "embed_thumbnail": "",
         "embed_footer": "",
-        "embed_author": ""
+        "embed_author": "",
+        "embed_author_icon": "",
+        "embed_footer_icon": ""
     }
     
     try:

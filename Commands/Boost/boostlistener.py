@@ -80,12 +80,20 @@ class BoostListener(commands.Cog):
                 embed.set_image(url=img)
 
             footer = format_boost_string(config.get("embed_footer", ""), after)
+            footer_icon = config.get("embed_footer_icon", "")
             if footer:
-                embed.set_footer(text=footer)
+                if footer_icon:
+                    embed.set_footer(text=footer, icon_url=footer_icon)
+                else:
+                    embed.set_footer(text=footer)
 
             author = format_boost_string(config.get("embed_author", ""), after)
+            author_icon = config.get("embed_author_icon", "")
             if author:
-                embed.set_author(name=author)
+                if author_icon:
+                    embed.set_author(name=author, icon_url=author_icon)
+                else:
+                    embed.set_author(name=author)
 
             content_text = format_boost_string(config.get("message", ""), after)
 

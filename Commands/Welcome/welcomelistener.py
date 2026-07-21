@@ -71,12 +71,20 @@ class WelcomeListener(commands.Cog):
                 embed.set_image(url=img)
 
             footer = fmt_text(config.get("embed_footer", ""))
+            footer_icon = config.get("embed_footer_icon", "")
             if footer:
-                embed.set_footer(text=footer)
+                if footer_icon:
+                    embed.set_footer(text=footer, icon_url=footer_icon)
+                else:
+                    embed.set_footer(text=footer)
 
             author = fmt_text(config.get("embed_author", ""))
+            author_icon = config.get("embed_author_icon", "")
             if author:
-                embed.set_author(name=author)
+                if author_icon:
+                    embed.set_author(name=author, icon_url=author_icon)
+                else:
+                    embed.set_author(name=author)
 
             content_text = fmt_text(config.get("message", ""))
 

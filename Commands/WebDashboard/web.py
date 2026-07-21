@@ -250,7 +250,9 @@ class WebDashboard:
                 "embed_description": welcome_cfg.get("embed_description", ""),
                 "embed_thumbnail": welcome_cfg.get("embed_thumbnail", ""),
                 "embed_footer": welcome_cfg.get("embed_footer", ""),
-                "embed_author": welcome_cfg.get("embed_author", "")
+                "embed_author": welcome_cfg.get("embed_author", ""),
+                "embed_author_icon": welcome_cfg.get("embed_author_icon", ""),
+                "embed_footer_icon": welcome_cfg.get("embed_footer_icon", "")
             },
             "goodbye": {
                 "enabled": goodbye_cfg.get("enabled", False),
@@ -263,7 +265,9 @@ class WebDashboard:
                 "embed_description": goodbye_cfg.get("embed_description", ""),
                 "embed_thumbnail": goodbye_cfg.get("embed_thumbnail", ""),
                 "embed_footer": goodbye_cfg.get("embed_footer", ""),
-                "embed_author": goodbye_cfg.get("embed_author", "")
+                "embed_author": goodbye_cfg.get("embed_author", ""),
+                "embed_author_icon": goodbye_cfg.get("embed_author_icon", ""),
+                "embed_footer_icon": goodbye_cfg.get("embed_footer_icon", "")
             },
             "boost": {
                 "enabled": boost_cfg.get("enabled", False),
@@ -276,7 +280,9 @@ class WebDashboard:
                 "embed_description": boost_cfg.get("embed_description", ""),
                 "embed_thumbnail": boost_cfg.get("embed_thumbnail", ""),
                 "embed_footer": boost_cfg.get("embed_footer", ""),
-                "embed_author": boost_cfg.get("embed_author", "")
+                "embed_author": boost_cfg.get("embed_author", ""),
+                "embed_author_icon": boost_cfg.get("embed_author_icon", ""),
+                "embed_footer_icon": boost_cfg.get("embed_footer_icon", "")
             },
             "automod": {
                 "enabled": automod_cfg.get("enabled", False),
@@ -481,6 +487,8 @@ class WebDashboard:
                 welcome_cfg["embed_thumbnail"] = w_data.get("embed_thumbnail", "")
                 welcome_cfg["embed_footer"] = w_data.get("embed_footer", "")
                 welcome_cfg["embed_author"] = w_data.get("embed_author", "")
+                welcome_cfg["embed_author_icon"] = w_data.get("embed_author_icon", "")
+                welcome_cfg["embed_footer_icon"] = w_data.get("embed_footer_icon", "")
                 
                 if "image_url" in w_data:
                     img_url = w_data["image_url"]
@@ -506,6 +514,8 @@ class WebDashboard:
                 goodbye_cfg["embed_thumbnail"] = g_data.get("embed_thumbnail", "")
                 goodbye_cfg["embed_footer"] = g_data.get("embed_footer", "")
                 goodbye_cfg["embed_author"] = g_data.get("embed_author", "")
+                goodbye_cfg["embed_author_icon"] = g_data.get("embed_author_icon", "")
+                goodbye_cfg["embed_footer_icon"] = g_data.get("embed_footer_icon", "")
                     
                 if "image_url" in g_data:
                     img_url = g_data["image_url"]
@@ -531,6 +541,8 @@ class WebDashboard:
                 boost_cfg["embed_thumbnail"] = b_data.get("embed_thumbnail", "")
                 boost_cfg["embed_footer"] = b_data.get("embed_footer", "")
                 boost_cfg["embed_author"] = b_data.get("embed_author", "")
+                boost_cfg["embed_author_icon"] = b_data.get("embed_author_icon", "")
+                boost_cfg["embed_footer_icon"] = b_data.get("embed_footer_icon", "")
                     
                 if "image_url" in b_data:
                     img_url = b_data["image_url"]
