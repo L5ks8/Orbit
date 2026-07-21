@@ -31,8 +31,14 @@ def get_embed(msg_type: str, **kwargs):
         title = "### User Limit Set"
     elif msg_type == "move":
         title = "### Moved User"
+    elif msg_type == "moveall":
+        title = "### Moved All Voice Users"
+
+    count = kwargs.get("count", 0)
 
     lines = []
+    if count > 0:
+        lines.append(f"**Moved Members:** `{count}`")
     if member_mention:
         lines.append(f"**Target:** {member_mention} (`{member_id}`)")
     if channel_mention:

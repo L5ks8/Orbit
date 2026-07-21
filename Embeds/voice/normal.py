@@ -39,12 +39,19 @@ def get_embed(msg_type: str, **kwargs):
     elif msg_type == "move":
         title = "Moved User"
         color = discord.Color.blue()
+    elif msg_type == "moveall":
+        title = "Moved All Voice Users"
+        color = discord.Color.blue()
+
+    count = kwargs.get("count", 0)
 
     embed = discord.Embed(title=title, color=color)
+    if count > 0:
+        embed.add_field(name="Moved Members", value=f"`{count}`", inline=False)
     if member_mention:
         embed.add_field(name="Target", value=f"{member_mention} (`{member_id}`)", inline=False)
     if channel_mention:
-        embed.add_field(name="Channel", value=channel_mention, inline=False)
+        embed.add_field(name="Destination Channel", value=channel_mention, inline=False)
     if limit > 0:
         embed.add_field(name="New Limit", value=f"`{limit}`", inline=False)
     elif msg_type == "limit" and limit == 0:
