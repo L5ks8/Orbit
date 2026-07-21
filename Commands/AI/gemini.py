@@ -46,22 +46,15 @@ class GeminiChatbot(commands.Cog):
 
                 server_info = f"Server Name: {message.guild.name}\nMember Count: {message.guild.member_count}" if message.guild else "Direct Message"
                 
-                prefix_cmds_details = []
-                for cmd in self.bot.commands:
-                    if not cmd.hidden:
-                        usage = f"- {cmd.name} {cmd.signature}".strip()
-                        desc = cmd.help or cmd.description or "No description"
-                        prefix_cmds_details.append(f"{usage}: {desc}")
-                prefix_cmds_str = "\n".join(prefix_cmds_details)
+                prefix_cmds_details = [cmd.name for cmd in self.bot.commands if not cmd.hidden]
+                prefix_cmds_str = ", ".join(prefix_cmds_details)
 
                 slash_cmds_details = []
                 for cmd in self.bot.tree.walk_commands():
                     if isinstance(cmd, discord.app_commands.Group):
                         continue
-                    full_name = f"/{cmd.qualified_name}"
-                    desc = cmd.description or "No description"
-                    slash_cmds_details.append(f"- {full_name}: {desc}")
-                slash_cmds_str = "\n".join(slash_cmds_details)
+                    slash_cmds_details.append(f"/{cmd.qualified_name}")
+                slash_cmds_str = ", ".join(slash_cmds_details)
                 
                 system_prompt = (
                     "You are Orbit, an extremely intelligent, highly efficient, but very arrogant and sarcastic Discord bot. "
