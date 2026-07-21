@@ -11,24 +11,21 @@ class GeminiChatbot(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def memory(self, ctx):
-        await ctx.reply("Benutze `-memory reset` um das Gedächtnis des Bots in diesem Kanal zu löschen.", mention_author=False)
+        await ctx.reply("Use `-memory reset` to delete the bot's memory in this channel.", mention_author=False)
 
     @memory.command(name="reset")
     async def memory_reset(self, ctx):
         self.memory_resets[ctx.channel.id] = ctx.message.created_at
-        await ctx.reply("🧠 Mein Gedächtnis für diesen Kanal wurde erfolgreich gelöscht! Ich erinnere mich an nichts mehr von vorher.", mention_author=False)
+        await ctx.reply("Memory reset.", mention_author=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
 
-        # Ignore if it's a command being executed (like -memory reset)
         ctx = await self.bot.get_context(message)
         if ctx.valid and ctx.command is not None:
             return
-
-        # Check if the bot is mentioned or if it's a reply to the bot
         is_mentioned = self.bot.user in message.mentions
         is_reply_to_bot = False
         
@@ -42,14 +39,12 @@ class GeminiChatbot(commands.Cog):
 
         async with message.channel.typing():
             try:
-                # Fetch context (last 10 messages, but only after the last reset)
                 reset_time = self.memory_resets.get(message.channel.id)
                 messages = [m async for m in message.channel.history(limit=10, before=message, after=reset_time)]
                 messages.reverse()
 
                 server_info = f"Server Name: {message.guild.name}\nMember Count: {message.guild.member_count}" if message.guild else "Direct Message"
                 
-                # Generate detailed prefix commands
                 prefix_cmds_details = []
                 for cmd in self.bot.commands:
                     if not cmd.hidden:
@@ -58,7 +53,6 @@ class GeminiChatbot(commands.Cog):
                         prefix_cmds_details.append(f"{usage}: {desc}")
                 prefix_cmds_str = "\n".join(prefix_cmds_details)
 
-                # Generate detailed slash commands
                 slash_cmds_details = []
                 for cmd in self.bot.tree.walk_commands():
                     if isinstance(cmd, discord.app_commands.Group):
