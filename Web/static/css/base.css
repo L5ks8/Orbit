@@ -226,3 +226,29 @@ body::after {
     width: 100%;
     flex-grow: 1;
 }
+
+.dropzone-remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(237, 66, 69, 0.95);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    z-index: 100;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.dropzone-remove-btn:hover {
+    transform: scale(1.15);
+    background: #ed4245;
+}

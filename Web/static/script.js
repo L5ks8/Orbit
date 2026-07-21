@@ -3516,13 +3516,43 @@ function updateDropBackgrounds() {
         const drop = document.getElementById(b.dropId);
         const inp = document.getElementById(b.inputId);
         if (drop && inp) {
+            drop.style.position = 'relative';
             const svg = drop.querySelector('svg');
+            let removeBtn = drop.querySelector('.dropzone-remove-btn');
+
             if (inp.value) {
-                drop.style.backgroundImage = `url(${inp.value})`;
+                drop.style.backgroundImage = `url("${inp.value}")`;
+                drop.style.backgroundSize = 'cover';
+                drop.style.backgroundPosition = 'center';
                 if (svg) svg.style.display = 'none';
+
+                if (!removeBtn) {
+                    removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'dropzone-remove-btn';
+                    removeBtn.title = 'Remove Image';
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (window.pendingMessageUploads) {
+                            delete window.pendingMessageUploads[b.inputId];
+                        }
+                        inp.value = '';
+                        updateDropBackgrounds();
+                        updateLivePreview();
+                        updateGoodbyeLivePreview();
+                        updateBoostLivePreview();
+                        if (typeof setDirty === 'function') setDirty(true);
+                        if (typeof showToast === 'function') showToast('Image removed');
+                    };
+                    drop.appendChild(removeBtn);
+                }
+                removeBtn.style.display = 'flex';
             } else {
                 drop.style.backgroundImage = 'none';
                 if (svg) svg.style.display = 'block';
+                if (removeBtn) removeBtn.style.display = 'none';
             }
         }
     });
