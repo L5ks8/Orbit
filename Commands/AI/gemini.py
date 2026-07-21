@@ -51,13 +51,31 @@ class GeminiChatbot(commands.Cog):
                 messages = [m async for m in message.channel.history(limit=10, before=message, after=reset_time)]
                 messages.reverse()
 
+                server_info = ""
+                if message.guild:
+                    server_info = (
+                        f"Server Name: {message.guild.name}\n"
+                        f"Member Count: {message.guild.member_count}\n"
+                        f"Roles Count: {len(message.guild.roles)}\n"
+                        f"Channels Count: {len(message.guild.channels)}\n"
+                        f"Owner: {message.guild.owner.display_name if message.guild.owner else 'Unknown'}\n"
+                    )
+
+                prefix_cmds = []
+                for cmd in self.bot.commands:
+                    # Ignore some internal or hidden commands if needed, but we just list them all
+                    prefix_cmds.append(f"{cmd.name}")
+                prefix_cmds_str = ", ".join(prefix_cmds)
+
                 system_prompt = (
                     "You are Orbit, an intelligent, direct, and efficient Discord bot. "
                     "Your tone is cool, concise, and somewhat sarcastic. You are not overly friendly, soft, or cutesy. "
                     "You are talking with users in a Discord server. "
-                    "You are an all-in-one Discord bot. If users ask you how to do something on the server or what your commands are, "
-                    "you should confidently answer based on your capabilities. "
-                    "Here are your main command categories and features:\n"
+                    "Your purpose is to answer questions about the server and about your own capabilities. "
+                    "You CANNOT execute commands yourself. If a user wants to do something, just tell them the correct command to use. "
+                    "Here is information about the current server:\n"
+                    f"{server_info}\n"
+                    "Here are your main slash command categories and features:\n"
                     "- Moderation: /ban, /kick, /mute, /timeout, /warn, /purge\n"
                     "- Roles: /role add, /role remove, /reactionrole create, /joinrole\n"
                     "- Tickets: /ticket setup to create a ticket system\n"
@@ -66,21 +84,9 @@ class GeminiChatbot(commands.Cog):
                     "- Voice: /voice lock, /voice limit, /jointocreate (creates temporary voice channels)\n"
                     "- Utilities: /poll, /giveaway, /reminder, /afk\n"
                     "- Memory: -memory reset (clears your chat history in a channel)\n\n"
-                    "You also have the ability to execute certain actions when commanded by the user. "
-                    "Available actions:\n"
-                    "1. 'dm_user' - Sends a DM to a user. (Parameters: 'target' as mention, 'message' as text)\n"
-                    "2. 'spam_ping' - Pings a user multiple times. (Parameters: 'target' as mention, 'count' max 10)\n"
-                    "To execute an action, your response MUST contain a JSON block AT THE VERY END, e.g.:\n"
-                    "```json\n"
-                    "{\n"
-                    '  "action": "spam_ping",\n'
-                    '  "target": "<@123456789>",\n'
-                    '  "count": 5,\n'
-                    '  "message": "optional"\n'
-                    "}\n"
-                    "```\n"
-                    "Replace <@123456789> with the actual ping the user provides. "
-                    "Only execute these actions if the user explicitly asks you to!"
+                    "Here are all your available prefix commands:\n"
+                    f"{prefix_cmds_str}\n\n"
+                    "Answer user questions accurately based on this information."
                 )
 
                 prompt = f"{system_prompt}\n\nHere is the chat history:\n"
@@ -102,24 +108,7 @@ class GeminiChatbot(commands.Cog):
                 text_response = response.choices[0].message.content
                             
                 if text_response:
-                    # Extract JSON block
-                    json_match = re.search(r'```json\s*(\{.*?\})\s*```', text_response, re.DOTALL)
-                    action_data = None
-                    if json_match:
-                        try:
-                            action_data = json.loads(json_match.group(1))
-                            text_response = text_response[:json_match.start()].strip()
-                        except json.JSONDecodeError:
-                            pass
-
-                    # Send text response
-                    if text_response:
-                        await self._send_chunked(message, text_response)
-
-                    # Execute action
-                    if action_data:
-                        await self._execute_action(message, action_data)
-
+                    await self._send_chunked(message, text_response)
                 else:
                     await message.reply("I'm sorry, I couldn't generate a response.")
                     
@@ -132,47 +121,6 @@ class GeminiChatbot(commands.Cog):
         reply_to = message
         for chunk in chunks:
             reply_to = await reply_to.reply(chunk)
-
-    async def _execute_action(self, message: discord.Message, action_data: dict):
-        action = action_data.get("action")
-        target_str = action_data.get("target", "")
-        
-        # Check permissions
-        if not (message.author.guild_permissions.administrator or message.author.guild_permissions.manage_guild):
-            await message.channel.send(f"{message.author.mention} Du hast keine Berechtigung f├╝r diese Aktion!")
-            return
-
-        # Extract user ID
-        user_id_match = re.search(r'<@!?(\d+)>', target_str)
-        if not user_id_match:
-            await message.channel.send("Fehler: Konnte den Ziel-User nicht finden.")
-            return
-            
-        user_id = int(user_id_match.group(1))
-        
-        try:
-            target_member = message.guild.get_member(user_id) or await message.guild.fetch_member(user_id)
-        except discord.NotFound:
-            target_member = None
-
-        if not target_member:
-            await message.channel.send("Fehler: User nicht im Server gefunden.")
-            return
-
-        if action == "dm_user":
-            msg_content = action_data.get("message", "Hallo!")
-            try:
-                await target_member.send(msg_content)
-                await message.channel.send(f"Ô£à DM an {target_member.mention} gesendet.")
-            except discord.Forbidden:
-                await message.channel.send(f"ÔØî Konnte keine DM an {target_member.mention} senden (DMs deaktiviert?).")
-                
-        elif action == "spam_ping":
-            count = min(action_data.get("count", 1), 10)
-            await message.channel.send(f"Spam-Ping gestartet f├╝r {target_member.mention} ({count} mal)...")
-            for _ in range(count):
-                await message.channel.send(target_member.mention)
-                await asyncio.sleep(1)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GeminiChatbot(bot))
