@@ -15,14 +15,23 @@ async def update_server_stats(guild: discord.Guild, config: dict = None) -> dict
 
     config_changed = False
 
-    # 1. Resolve or Create Category
+    # 1. Resolve, Rename or Create Category
     cat = None
     cat_id_str = str(config.get("category_id", ""))
     if cat_id_str.isdigit():
         cat = discord.utils.get(guild.categories, id=int(cat_id_str))
 
-    if not cat:
-        cat_name = config.get("category_name", "📊 SERVER STATS 📊")
+    cat_name = config.get("category_name", "").strip()
+
+    if cat:
+        if cat_name and cat.name != cat_name:
+            try:
+                await cat.edit(name=cat_name)
+            except Exception as e:
+                print(f"[ServerStats] Failed to rename category in {guild.name}: {e}")
+    else:
+        if not cat_name:
+            cat_name = "📊 SERVER STATS 📊"
         try:
             cat = await guild.create_category(name=cat_name, position=0)
             config["category_id"] = str(cat.id)
