@@ -494,14 +494,27 @@ class WebDashboard:
                 ss_cfg["roles_name"] = str(s_data.get("roles_name", "Roles: {count}") or "Roles: {count}")
                 save_serverstats_config(guild_id, ss_cfg)
 
+            def _clean_cloudinary(old_url: str, new_url: str):
+                if old_url and old_url != new_url and "res.cloudinary.com" in old_url:
+                    from Database.cloudinary_storage import delete_image_by_url
+                    import asyncio
+                    asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
+
             if user_perms.get("can_channels") and "welcome" in data:
                 welcome_cfg = load_welcome_config(guild_id)
                 w_data = data.get("welcome", {})
+                
+                _clean_cloudinary(welcome_cfg.get("image_url", ""), w_data.get("image_url", ""))
+                _clean_cloudinary(welcome_cfg.get("embed_thumbnail", ""), w_data.get("embed_thumbnail", ""))
+                _clean_cloudinary(welcome_cfg.get("embed_author_icon", ""), w_data.get("embed_author_icon", ""))
+                _clean_cloudinary(welcome_cfg.get("embed_footer_icon", ""), w_data.get("embed_footer_icon", ""))
+
                 welcome_cfg["enabled"] = bool(w_data.get("enabled"))
                 cid = w_data.get("channel_id")
                 welcome_cfg["channel_id"] = int(cid) if cid else None
                 welcome_cfg["message"] = w_data.get("message", "")
                 welcome_cfg["msg_mode"] = w_data.get("msg_mode", "image")
+                welcome_cfg["image_url"] = w_data.get("image_url", "")
                 welcome_cfg["embed_color"] = w_data.get("embed_color", "#5865F2")
                 welcome_cfg["embed_title"] = w_data.get("embed_title", "")
                 welcome_cfg["embed_description"] = w_data.get("embed_description", "")
@@ -512,24 +525,23 @@ class WebDashboard:
                 welcome_cfg["embed_footer_icon"] = w_data.get("embed_footer_icon", "")
                 welcome_cfg["embed_fields"] = w_data.get("embed_fields", [])
                 
-                if "image_url" in w_data:
-                    img_url = w_data["image_url"]
-                    old_url = welcome_cfg.get("image_url", "")
-                    if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
-                        from Database.cloudinary_storage import delete_image_by_url
-                        import asyncio
-                        asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
-                    welcome_cfg["image_url"] = img_url
                 save_welcome_config(guild_id, welcome_cfg)
 
             if user_perms.get("can_channels") and "goodbye" in data:
                 goodbye_cfg = load_goodbye_config(guild_id)
                 g_data = data.get("goodbye", {})
+
+                _clean_cloudinary(goodbye_cfg.get("image_url", ""), g_data.get("image_url", ""))
+                _clean_cloudinary(goodbye_cfg.get("embed_thumbnail", ""), g_data.get("embed_thumbnail", ""))
+                _clean_cloudinary(goodbye_cfg.get("embed_author_icon", ""), g_data.get("embed_author_icon", ""))
+                _clean_cloudinary(goodbye_cfg.get("embed_footer_icon", ""), g_data.get("embed_footer_icon", ""))
+
                 goodbye_cfg["enabled"] = bool(g_data.get("enabled"))
                 cid = g_data.get("channel_id")
                 goodbye_cfg["channel_id"] = int(cid) if cid else None
                 goodbye_cfg["message"] = g_data.get("message", "")
                 goodbye_cfg["msg_mode"] = g_data.get("msg_mode", "image")
+                goodbye_cfg["image_url"] = g_data.get("image_url", "")
                 goodbye_cfg["embed_color"] = g_data.get("embed_color", "#ED4245")
                 goodbye_cfg["embed_title"] = g_data.get("embed_title", "")
                 goodbye_cfg["embed_description"] = g_data.get("embed_description", "")
@@ -540,24 +552,23 @@ class WebDashboard:
                 goodbye_cfg["embed_footer_icon"] = g_data.get("embed_footer_icon", "")
                 goodbye_cfg["embed_fields"] = g_data.get("embed_fields", [])
                     
-                if "image_url" in g_data:
-                    img_url = g_data["image_url"]
-                    old_url = goodbye_cfg.get("image_url", "")
-                    if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
-                        from Database.cloudinary_storage import delete_image_by_url
-                        import asyncio
-                        asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
-                    goodbye_cfg["image_url"] = img_url
                 save_goodbye_config(guild_id, goodbye_cfg)
 
             if user_perms.get("can_channels") and "boost" in data:
                 boost_cfg = load_boost_config(guild_id)
                 b_data = data.get("boost", {})
+
+                _clean_cloudinary(boost_cfg.get("image_url", ""), b_data.get("image_url", ""))
+                _clean_cloudinary(boost_cfg.get("embed_thumbnail", ""), b_data.get("embed_thumbnail", ""))
+                _clean_cloudinary(boost_cfg.get("embed_author_icon", ""), b_data.get("embed_author_icon", ""))
+                _clean_cloudinary(boost_cfg.get("embed_footer_icon", ""), b_data.get("embed_footer_icon", ""))
+
                 boost_cfg["enabled"] = bool(b_data.get("enabled"))
                 cid = b_data.get("channel_id")
                 boost_cfg["channel_id"] = int(cid) if cid else None
                 boost_cfg["message"] = b_data.get("message", "")
                 boost_cfg["msg_mode"] = b_data.get("msg_mode", "image")
+                boost_cfg["image_url"] = b_data.get("image_url", "")
                 boost_cfg["embed_color"] = b_data.get("embed_color", "#EB459E")
                 boost_cfg["embed_title"] = b_data.get("embed_title", "")
                 boost_cfg["embed_description"] = b_data.get("embed_description", "")
@@ -568,14 +579,6 @@ class WebDashboard:
                 boost_cfg["embed_footer_icon"] = b_data.get("embed_footer_icon", "")
                 boost_cfg["embed_fields"] = b_data.get("embed_fields", [])
                     
-                if "image_url" in b_data:
-                    img_url = b_data["image_url"]
-                    old_url = boost_cfg.get("image_url", "")
-                    if old_url and old_url != img_url and "res.cloudinary.com" in old_url:
-                        from Database.cloudinary_storage import delete_image_by_url
-                        import asyncio
-                        asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
-                    boost_cfg["image_url"] = img_url
                 save_boost_config(guild_id, boost_cfg)
 
             if user_perms.get("can_messages") and "automod" in data:

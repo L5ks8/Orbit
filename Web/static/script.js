@@ -2108,6 +2108,39 @@ function syncBoostDropzoneFromUrl(url) {
     updateBoostLivePreview();
 }
 
+function clearWelcomeImage() {
+    const urlInput = document.getElementById('welcome_image_url');
+    if (urlInput) urlInput.value = '';
+    const embedImgInput = document.getElementById('welcome_embed_image');
+    if (embedImgInput) embedImgInput.value = '';
+    const fileInput = document.getElementById('image-file-input');
+    if (fileInput) fileInput.value = '';
+    syncDropzoneFromUrl('');
+    if (typeof setDirty === 'function') setDirty(true);
+}
+
+function clearGoodbyeImage() {
+    const urlInput = document.getElementById('goodbye_image_url');
+    if (urlInput) urlInput.value = '';
+    const embedImgInput = document.getElementById('goodbye_embed_image');
+    if (embedImgInput) embedImgInput.value = '';
+    const fileInput = document.getElementById('goodbye-image-file-input');
+    if (fileInput) fileInput.value = '';
+    syncGoodbyeDropzoneFromUrl('');
+    if (typeof setDirty === 'function') setDirty(true);
+}
+
+function clearBoostImage() {
+    const urlInput = document.getElementById('boost_image_url');
+    if (urlInput) urlInput.value = '';
+    const embedImgInput = document.getElementById('boost_embed_image');
+    if (embedImgInput) embedImgInput.value = '';
+    const fileInput = document.getElementById('boost-image-file-input');
+    if (fileInput) fileInput.value = '';
+    syncBoostDropzoneFromUrl('');
+    if (typeof setDirty === 'function') setDirty(true);
+}
+
 function renderTempVoiceHubs(tvConfig) {
     const container = document.getElementById('tempvoice-hubs-container');
     if (!container) return;
