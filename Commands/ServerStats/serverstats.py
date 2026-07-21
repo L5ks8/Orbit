@@ -1,3 +1,4 @@
+import re
 import discord
 from discord.ext import commands, tasks
 import asyncio
@@ -39,10 +40,10 @@ class ServerStats(commands.Cog):
             except Exception as e:
                 print(f"Failed to create category for ServerStats in {guild.id}: {e}")
                 category = None
-        elif category and category.name != category_name:
-            try:
-                await category.edit(name=category_name)
-            except Exception:
+        elif category:
+            # Sync category name if category was created or updated
+            if config.get("category_name") and category.name != config.get("category_name"):
+                # If user saved a specific category name in config, edit category
                 pass
 
         if not category and not any_enabled:
@@ -71,7 +72,6 @@ class ServerStats(commands.Cog):
             enabled = bool(config.get(enabled_key, False))
             ch_id_str = str(config.get(channel_id_key, "")).strip()
             template = str(config.get(name_key, default_template)).strip() or default_template
-            target_name = template.replace("{count}", str(count))
 
             channel: Optional[discord.VoiceChannel] = None
             if ch_id_str.isdigit():
@@ -82,13 +82,21 @@ class ServerStats(commands.Cog):
             if enabled:
                 if not channel:
                     if category:
+                        initial_name = template.replace("{count}", str(count))
                         try:
-                            channel = await category.create_voice_channel(target_name, overwrites=overwrites)
+                            channel = await category.create_voice_channel(initial_name, overwrites=overwrites)
                             config[channel_id_key] = str(channel.id)
                             changed = True
                         except Exception as e:
                             print(f"Failed to create {key} stat channel in {guild.id}: {e}")
                 else:
+                    # Dynamically preserve user's channel name by searching for numbers in channel.name
+                    match = re.search(r'\d+', channel.name)
+                    if match:
+                        target_name = channel.name[:match.start()] + str(count) + channel.name[match.end():]
+                    else:
+                        target_name = template.replace("{count}", str(count))
+
                     try:
                         edits = {}
                         if channel.name != target_name:
