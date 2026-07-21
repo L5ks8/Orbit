@@ -62,7 +62,7 @@ class GeminiChatbot(commands.Cog):
                     f"{server_info}\n"
                     "Here are your main slash command categories and features:\n"
                     "- Moderation: /ban, /kick, /mute, /timeout, /warn, /purge\n"
-                    "- Roles: /role add, /role remove, /reactionrole create, /joinrole\n"
+                    "- Roles: /role add, /role remove, /role create, /reactionrole create, /joinrole\n"
                     "- Tickets: /ticket setup to create a ticket system\n"
                     "- Verification: /verify setup to create a captcha/button verification system\n"
                     "- Levelling: /level, /rank to check activity ranks\n"
