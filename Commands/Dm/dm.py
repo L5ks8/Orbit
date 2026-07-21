@@ -31,10 +31,11 @@ class DmComposeModal(Modal, title="Compose Direct Message"):
             await interaction.response.send_message(f"Error sending DM: {e}", ephemeral=True)
 
 class DmComposerLayout(discord.ui.View):
-    def __init__(self, target: discord.User | discord.Member, author_id: int):
+    def __init__(self, target: discord.User | discord.Member, author_id: int, guild_id: int):
         super().__init__(timeout=180.0)
         self.target = target
         self.author_id = author_id
+        self.guild_id = guild_id
 
     def get_kwargs(self):
         btn_write = discord.ui.Button(label="Write DM", style=discord.ButtonStyle.primary, custom_id="dm_write")
@@ -48,7 +49,7 @@ class DmComposerLayout(discord.ui.View):
 
         from Embeds import get_command_embed
         return get_command_embed(
-            self.target.guild.id if hasattr(self.target, "guild") else 0,
+            self.guild_id,
             "dm", msg_type="composer", target=self.target, components=[btn_write]
         )
 
@@ -62,7 +63,8 @@ class DmCommand(commands.Cog):
         if user.bot:
             return await ctx.send("You cannot send DMs to bot accounts.", ephemeral=True)
 
-        view = DmComposerLayout(user, ctx.author.id)
+        guild_id = ctx.guild.id if ctx.guild else 0
+        view = DmComposerLayout(user, ctx.author.id, guild_id)
         await ctx.send(**view.get_kwargs(), ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 
     @dm.error
