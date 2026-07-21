@@ -497,6 +497,15 @@
                             </svg>
                         </span> Temp Voice
                     </div>
+                    <div class="dash-nav-item" data-target="section-serverstats">
+                        <span class="nav-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                        </span> Server Stats
+                    </div>
 
                     <!-- MODERATION -->
                     <div class="nav-category">MODERATION</div>
@@ -1514,6 +1523,170 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- SERVER STATS SECTION -->
+                    <div id="section-serverstats" class="dash-panel">
+                        <h3>Server Stats</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Automatically display live server statistics in dedicated voice channel names under a category.</p>
+
+                        <!-- Master Switch -->
+                        <div class="toggle-container" style="margin-bottom: 24px;">
+                            <div class="toggle-info">
+                                <h4>Enable Server Stats</h4>
+                                <p>Master switch for automatic voice stats channel updates.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="serverstats_enabled">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Category Card -->
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                            <h4 style="margin-top: 0; margin-bottom: 6px; font-size: 15px; color: #F2F3F5;">Category Settings</h4>
+                            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Select an existing category or enter a category name. The bot stores category IDs so you can rename channels and categories anytime in Discord!</p>
+
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="font-size: 13px; font-weight: 600;">Category <span style="color: #ED4245;">*</span></label>
+                                <span class="help-text">Category in which stat channels will be created</span>
+                                <select id="serverstats_category_id" class="form-input" style="width: 100%; height: 38px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #F2F3F5; padding: 0 10px;"></select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 13px; font-weight: 600;">Category Name (Fallback for new category)</label>
+                                <input type="text" id="serverstats_category_name" class="form-input" placeholder="📊 SERVER STATS 📊" value="📊 SERVER STATS 📊" style="width: 100%; height: 36px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #F2F3F5; padding: 0 10px;">
+                            </div>
+                        </div>
+
+                        <!-- Quick Symbols Helper Toolbar -->
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Quick Symbols (Click to copy)</span>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button type="button" class="btn" style="background: rgba(88,101,242,0.15); color: #C9CDFB; border: 1px solid rgba(88,101,242,0.3); padding: 4px 10px; font-size: 12px; border-radius: 4px; cursor: pointer;" onclick="copyToClipboard('✧˚₊·≡⭐୧ |')">✧˚₊·≡⭐୧ |</button>
+                                <button type="button" class="btn" style="background: rgba(88,101,242,0.15); color: #C9CDFB; border: 1px solid rgba(88,101,242,0.3); padding: 4px 10px; font-size: 12px; border-radius: 4px; cursor: pointer;" onclick="copyToClipboard('| ✧⸝')">| ✧⸝</button>
+                                <button type="button" class="btn" style="background: rgba(255,255,255,0.05); color: #FFF; border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; font-size: 12px; border-radius: 4px; cursor: pointer;" onclick="copyToClipboard('👥')">👥</button>
+                                <button type="button" class="btn" style="background: rgba(255,255,255,0.05); color: #FFF; border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; font-size: 12px; border-radius: 4px; cursor: pointer;" onclick="copyToClipboard('🤖')">🤖</button>
+                                <button type="button" class="btn" style="background: rgba(255,255,255,0.05); color: #FFF; border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; font-size: 12px; border-radius: 4px; cursor: pointer;" onclick="copyToClipboard('🚀')">🚀</button>
+                                <button type="button" class="btn" style="background: rgba(255,255,255,0.05); color: #FFF; border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; font-size: 12px; border-radius: 4px; cursor: pointer;" onclick="copyToClipboard('🎙️')">🎙️</button>
+                            </div>
+                        </div>
+
+                        <!-- Stats Channels Cards Grid -->
+                        <h4 style="margin-top: 0; margin-bottom: 14px; font-size: 15px; color: #F2F3F5;">Stats Channels Configuration</h4>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            
+                            <!-- 1. Total Members -->
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div>
+                                        <h5 style="margin: 0; font-size: 14px; color: #FFF;">Total Members Channel</h5>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Displays total members on the server (placeholder: {count})</span>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="serverstats_ch_members_enabled" onchange="updateServerStatsLivePreviews();">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 8px;">
+                                    <label style="font-size: 12px;">Channel Name Format</label>
+                                    <input type="text" id="serverstats_ch_members_format" class="form-input" value="✧˚₊·≡⭐୧ | 𝐌𝐞𝐦𝐛𝐞𝐫𝐬: {count} | ✧⸝" style="width: 100%; height: 36px; background: transparent; border: 1px solid rgba(255,255,255,0.1); font-size: 13px;" oninput="updateServerStatsLivePreviews();">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #949BA4;">
+                                    <span>Discord Channel Preview:</span>
+                                    <span id="ss_preview_members" style="background: #2B2D31; color: #DBDEE1; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: 500;">🔊 ✧˚₊·≡⭐୧ | 𝐌𝐞𝐦𝐛𝐞𝐫𝐬: 6882 | ✧⸝</span>
+                                </div>
+                            </div>
+
+                            <!-- 2. Humans -->
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div>
+                                        <h5 style="margin: 0; font-size: 14px; color: #FFF;">Humans Channel</h5>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Displays human member count (excluding bots) (placeholder: {humans})</span>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="serverstats_ch_humans_enabled" onchange="updateServerStatsLivePreviews();">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 8px;">
+                                    <label style="font-size: 12px;">Channel Name Format</label>
+                                    <input type="text" id="serverstats_ch_humans_format" class="form-input" value="👥 | Humans: {humans}" style="width: 100%; height: 36px; background: transparent; border: 1px solid rgba(255,255,255,0.1); font-size: 13px;" oninput="updateServerStatsLivePreviews();">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #949BA4;">
+                                    <span>Discord Channel Preview:</span>
+                                    <span id="ss_preview_humans" style="background: #2B2D31; color: #DBDEE1; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: 500;">🔊 👥 | Humans: 6500</span>
+                                </div>
+                            </div>
+
+                            <!-- 3. Bots -->
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div>
+                                        <h5 style="margin: 0; font-size: 14px; color: #FFF;">Bots Channel</h5>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Displays total bot count on the server (placeholder: {bots})</span>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="serverstats_ch_bots_enabled" onchange="updateServerStatsLivePreviews();">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 8px;">
+                                    <label style="font-size: 12px;">Channel Name Format</label>
+                                    <input type="text" id="serverstats_ch_bots_format" class="form-input" value="🤖 | Bots: {bots}" style="width: 100%; height: 36px; background: transparent; border: 1px solid rgba(255,255,255,0.1); font-size: 13px;" oninput="updateServerStatsLivePreviews();">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #949BA4;">
+                                    <span>Discord Channel Preview:</span>
+                                    <span id="ss_preview_bots" style="background: #2B2D31; color: #DBDEE1; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: 500;">🔊 🤖 | Bots: 382</span>
+                                </div>
+                            </div>
+
+                            <!-- 4. Boosts -->
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div>
+                                        <h5 style="margin: 0; font-size: 14px; color: #FFF;">Server Boosts Channel</h5>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Displays total server boost count (placeholder: {boosts})</span>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="serverstats_ch_boosts_enabled" onchange="updateServerStatsLivePreviews();">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 8px;">
+                                    <label style="font-size: 12px;">Channel Name Format</label>
+                                    <input type="text" id="serverstats_ch_boosts_format" class="form-input" value="🚀 | Boosts: {boosts}" style="width: 100%; height: 36px; background: transparent; border: 1px solid rgba(255,255,255,0.1); font-size: 13px;" oninput="updateServerStatsLivePreviews();">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #949BA4;">
+                                    <span>Discord Channel Preview:</span>
+                                    <span id="ss_preview_boosts" style="background: #2B2D31; color: #DBDEE1; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: 500;">🔊 🚀 | Boosts: 14</span>
+                                </div>
+                            </div>
+
+                            <!-- 5. Voice Users -->
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div>
+                                        <h5 style="margin: 0; font-size: 14px; color: #FFF;">Voice Channel Users</h5>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Displays members currently in voice channels (placeholder: {voice_users})</span>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="serverstats_ch_voice_users_enabled" onchange="updateServerStatsLivePreviews();">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 8px;">
+                                    <label style="font-size: 12px;">Channel Name Format</label>
+                                    <input type="text" id="serverstats_ch_voice_users_format" class="form-input" value="🎙️ | In Voice: {voice_users}" style="width: 100%; height: 36px; background: transparent; border: 1px solid rgba(255,255,255,0.1); font-size: 13px;" oninput="updateServerStatsLivePreviews();">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #949BA4;">
+                                    <span>Discord Channel Preview:</span>
+                                    <span id="ss_preview_voice_users" style="background: #2B2D31; color: #DBDEE1; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: 500;">🔊 🎙️ | In Voice: 42</span>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 

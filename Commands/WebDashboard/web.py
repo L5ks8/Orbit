@@ -234,11 +234,12 @@ class WebDashboard:
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
 
-        from Commands.WebDashboard._storage import load_settings_config
-        settings_cfg = load_settings_config(guild_id)
+        from Commands.ServerStats._storage import load_serverstats_config
+        serverstats_cfg = load_serverstats_config(guild_id)
 
         config_data = {
             "settings": settings_cfg,
+            "serverstats": serverstats_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
                 "channel_id": str(welcome_cfg.get("channel_id")) if welcome_cfg.get("channel_id") else "",
@@ -559,6 +560,13 @@ class WebDashboard:
                         asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
                     boost_cfg["image_url"] = img_url
                 save_boost_config(guild_id, boost_cfg)
+
+            if user_perms.get("can_channels") and "serverstats" in data:
+                from Commands.ServerStats._storage import save_serverstats_config
+                from Commands.ServerStats.statslistener import update_server_stats
+                ss_data = data.get("serverstats", {})
+                save_serverstats_config(guild_id, ss_data)
+                asyncio.create_task(update_server_stats(guild, ss_data))
 
             if user_perms.get("can_messages") and "automod" in data:
                 automod_cfg = load_automod_config(guild_id)

@@ -1272,6 +1272,43 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         renderBoosters('role', config.level?.role_boosters || []);
         renderBoosters('channel', config.level?.channel_boosters || []);
 
+        // Server Stats Load
+        if (!currentPermissions.can_channels) lockSection('section-serverstats', 'Manage Channels');
+        const ssConfig = config.serverstats || {};
+        document.getElementById('serverstats_enabled').checked = ssConfig.enabled || false;
+        
+        const ssCatSelect = document.getElementById('serverstats_category_id');
+        if (ssCatSelect) {
+            ssCatSelect.innerHTML = '<option value="">-- Create New Category --</option>';
+            globalCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.textContent = '📁 ' + cat.name;
+                if (String(cat.id) === String(ssConfig.category_id)) opt.selected = true;
+                ssCatSelect.appendChild(opt);
+            });
+        }
+        document.getElementById('serverstats_category_name').value = ssConfig.category_name || '📊 SERVER STATS 📊';
+
+        const ssChs = ssConfig.channels || {};
+        const ssKeys = ['members', 'humans', 'bots', 'boosts', 'voice_users'];
+        const ssDefaults = {
+            members: '✧˚₊·≡⭐୧ | 𝐌𝐞𝐦𝐛𝐞𝐫𝐬: {count} | ✧⸝',
+            humans: '👥 | Humans: {humans}',
+            bots: '🤖 | Bots: {bots}',
+            boosts: '🚀 | Boosts: {boosts}',
+            voice_users: '🎙️ | In Voice: {voice_users}'
+        };
+
+        ssKeys.forEach(k => {
+            const chCfg = ssChs[k] || {};
+            const enEl = document.getElementById(`serverstats_ch_${k}_enabled`);
+            const fmtEl = document.getElementById(`serverstats_ch_${k}_format`);
+            if (enEl) enEl.checked = chCfg.enabled !== undefined ? chCfg.enabled : (k === 'members');
+            if (fmtEl) fmtEl.value = chCfg.format || ssDefaults[k];
+        });
+        updateServerStatsLivePreviews();
+
         // Initial Preview Update
         updateLivePreview();
 
@@ -1425,6 +1462,30 @@ function setBoostEmbedColor(hex) {
     if (hexEl) hexEl.value = hex;
     updateBoostLivePreview();
 }
+
+window.updateServerStatsLivePreviews = function() {
+    const ssKeys = ['members', 'humans', 'bots', 'boosts', 'voice_users'];
+    const sampleValues = {
+        '{count}': '6882',
+        '{members}': '6882',
+        '{humans}': '6500',
+        '{bots}': '382',
+        '{boosts}': '14',
+        '{voice_users}': '42'
+    };
+
+    ssKeys.forEach(k => {
+        const fmtEl = document.getElementById(`serverstats_ch_${k}_format`);
+        const prevEl = document.getElementById(`ss_preview_${k}`);
+        if (fmtEl && prevEl) {
+            let val = fmtEl.value || '';
+            for (const [tag, sample] of Object.entries(sampleValues)) {
+                val = val.replace(new RegExp(tag.replace(/[{}]/g, '\\$&'), 'g'), sample);
+            }
+            prevEl.textContent = '🔊 ' + val;
+        }
+    });
+};
 
 let welcomeEmbedFields = [];
 let goodbyeEmbedFields = [];
@@ -2717,6 +2778,33 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         tempvoice: {
             enabled: document.getElementById('tempvoice-enabled')?.checked || false,
             hubs: tvHubs
+        },
+        serverstats: {
+            enabled: document.getElementById('serverstats_enabled')?.checked || false,
+            category_id: document.getElementById('serverstats_category_id')?.value || '',
+            category_name: document.getElementById('serverstats_category_name')?.value || '📊 SERVER STATS 📊',
+            channels: {
+                members: {
+                    enabled: document.getElementById('serverstats_ch_members_enabled')?.checked || false,
+                    format: document.getElementById('serverstats_ch_members_format')?.value || ''
+                },
+                humans: {
+                    enabled: document.getElementById('serverstats_ch_humans_enabled')?.checked || false,
+                    format: document.getElementById('serverstats_ch_humans_format')?.value || ''
+                },
+                bots: {
+                    enabled: document.getElementById('serverstats_ch_bots_enabled')?.checked || false,
+                    format: document.getElementById('serverstats_ch_bots_format')?.value || ''
+                },
+                boosts: {
+                    enabled: document.getElementById('serverstats_ch_boosts_enabled')?.checked || false,
+                    format: document.getElementById('serverstats_ch_boosts_format')?.value || ''
+                },
+                voice_users: {
+                    enabled: document.getElementById('serverstats_ch_voice_users_enabled')?.checked || false,
+                    format: document.getElementById('serverstats_ch_voice_users_format')?.value || ''
+                }
+            }
         },
         level: {
             enabled: document.getElementById('level_enabled').checked,
