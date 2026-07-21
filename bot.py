@@ -352,8 +352,21 @@ async def global_devmode_prefix_check(ctx: commands.Context):
         pass
     return False
 
+async def main():
+    async with bot:
+        await bot.start(TOKEN)
+
 if __name__ == "__main__":
     if not TOKEN:
         print("Error: No TOKEN found in .env file.")
     else:
-        bot.run(TOKEN)
+        import time
+        import asyncio
+        while True:
+            try:
+                asyncio.run(main())
+                break
+            except (discord.HTTPException, discord.GatewayNotFound, Exception) as e:
+                print(f"Network error / Cloudflare 522 occurred: {e}")
+                print("Retrying connection in 10 seconds...")
+                time.sleep(10)
