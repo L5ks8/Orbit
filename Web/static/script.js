@@ -1169,6 +1169,45 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             autoBanMsgEl.value = config.automation?.auto_ban?.message || "# :warning: POSTING IN THIS CHANNEL WILL GET YOU BANNED. :hammer:\n## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n:no_entry_sign: THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n:information_source: Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\nBan Counter: `{count}`";
         }
 
+        // Counting Channel
+        const countingChEl = document.getElementById('counting_channel_id');
+        if (countingChEl) {
+            countingChEl.innerHTML = '<option value="">Select Channel...</option>';
+            globalChannels.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c.id;
+                opt.textContent = "# " + c.name;
+                if (config.automation?.counting?.channel_id === c.id) opt.selected = true;
+                countingChEl.appendChild(opt);
+            });
+        }
+
+        if (document.getElementById('counting_enabled')) {
+            document.getElementById('counting_enabled').checked = config.automation?.counting?.enabled || false;
+        }
+
+        window.currentCountingVal = config.automation?.counting?.current_count || 0;
+        window.currentCountingLastUser = config.automation?.counting?.last_user_id || null;
+
+        if (document.getElementById('counting_current_count_display')) {
+            document.getElementById('counting_current_count_display').textContent = window.currentCountingVal;
+        }
+        if (document.getElementById('counting_next_count_display')) {
+            document.getElementById('counting_next_count_display').textContent = window.currentCountingVal + 1;
+        }
+
+        const countingRolesEl = document.getElementById('counting_whitelisted_roles');
+        if (countingRolesEl) {
+            countingRolesEl.innerHTML = "";
+            globalRoles.forEach(r => {
+                const opt = document.createElement("option");
+                opt.value = r.id;
+                if (config.automation?.counting?.whitelisted_roles?.includes(r.id)) opt.selected = true;
+                countingRolesEl.appendChild(opt);
+            });
+            new CustomMultiSelect(countingRolesEl, globalRoles, "Select Roles...", (item) => `<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;background:${item.color !== '#000000' ? item.color : '#99aab5'};"></div>${item.name}</div>`);
+        }
+
         const btnSendHoneypot = document.getElementById('btn-send-honeypot');
         if (btnSendHoneypot) {
             btnSendHoneypot.onclick = async () => {
@@ -2771,6 +2810,13 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
                 exempt_roles: Array.from(document.getElementById('auto_ban_exempt_roles').selectedOptions).map(o => o.value),
                 exempt_users: document.getElementById('auto_ban_exempt_users').value.split(',').map(u => u.trim()).filter(u => u.length > 0),
                 message: document.getElementById('auto_ban_message').value
+            },
+            counting: {
+                enabled: document.getElementById('counting_enabled')?.checked || false,
+                channel_id: document.getElementById('counting_channel_id')?.value || '',
+                whitelisted_roles: document.getElementById('counting_whitelisted_roles') ? Array.from(document.getElementById('counting_whitelisted_roles').selectedOptions).map(o => o.value) : [],
+                current_count: window.currentCountingVal || 0,
+                last_user_id: window.currentCountingLastUser || null
             }
         },
         tempvoice: {
@@ -4206,4 +4252,17 @@ async function fetchAndRenderStats(days) {
     } catch (e) {
         console.error("Failed to fetch stats", e);
     }
+}
+
+function resetCountingNumber() {
+    window.currentCountingVal = 0;
+    window.currentCountingLastUser = null;
+    if (document.getElementById('counting_current_count_display')) {
+        document.getElementById('counting_current_count_display').textContent = 0;
+    }
+    if (document.getElementById('counting_next_count_display')) {
+        document.getElementById('counting_next_count_display').textContent = 1;
+    }
+    if (typeof setDirty === 'function') setDirty(true);
+    if (typeof showToast === 'function') showToast("Counting reset to 0. Click Save Changes to apply.");
 }

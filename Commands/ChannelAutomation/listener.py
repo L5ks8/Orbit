@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 import re
+import asyncio
 
 class ChannelAutomationListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -168,6 +169,117 @@ class ChannelAutomationListener(commands.Cog):
                         except discord.Forbidden:
                             pass
             return # Always return to prevent other automations running in this channel
+
+        # 6. Counting Channel
+        counting_cfg = config.get("counting", {})
+        counting_enabled = counting_cfg.get("enabled", False)
+        counting_channel_id = str(counting_cfg.get("channel_id", "") or "").strip()
+
+        if counting_enabled and counting_channel_id and str(message.channel.id) == counting_channel_id:
+            if message.author.bot:
+                return
+
+            whitelisted_roles = counting_cfg.get("whitelisted_roles", [])
+            # Check if member has any whitelisted role
+            is_whitelisted = False
+            if hasattr(message.author, "roles"):
+                for role in message.author.roles:
+                    if str(role.id) in whitelisted_roles:
+                        is_whitelisted = True
+                        break
+
+            if is_whitelisted:
+                return # Whitelisted role can chat freely without affecting count!
+
+            content_clean = message.content.strip()
+            current_count = int(counting_cfg.get("current_count", 0))
+            last_user_id = str(counting_cfg.get("last_user_id", "") or "").strip()
+            expected_number = current_count + 1
+
+            is_number = content_clean.isdigit()
+            parsed_number = int(content_clean) if is_number else None
+
+            is_same_user = (str(message.author.id) == last_user_id and current_count > 0)
+            is_correct = is_number and (parsed_number == expected_number) and not is_same_user
+
+            if is_correct:
+                try:
+                    await message.add_reaction("✅")
+                except Exception:
+                    pass
+
+                counting_cfg["current_count"] = expected_number
+                counting_cfg["last_user_id"] = str(message.author.id)
+                config["counting"] = counting_cfg
+                save_automation_config(message.guild.id, config)
+            else:
+                try:
+                    await message.add_reaction("❌")
+                except Exception:
+                    pass
+
+                if is_same_user:
+                    fail_reason = f"{message.author.mention} counted twice in a row!"
+                elif not is_number:
+                    fail_reason = f"{message.author.mention} sent non-number text!"
+                else:
+                    fail_reason = f"{message.author.mention} sent wrong number (expected **{expected_number}**, got **{parsed_number}**)!"
+
+                fail_embed = discord.Embed(
+                    title="❌ Counting Failed!",
+                    description=f"{fail_reason}\n\n**Count has been reset to 0.**",
+                    color=discord.Color.red()
+                )
+
+                try:
+                    await message.channel.send(
+                        embed=fail_embed,
+                        allowed_mentions=discord.AllowedMentions.none()
+                    )
+                except Exception:
+                    pass
+
+                # Temporarily lock channel for everyone
+                try:
+                    await message.channel.set_permissions(message.guild.default_role, send_messages=False, reason="Counting failed - temporary lock")
+                except Exception:
+                    pass
+
+                # Countdown: 3, 2, 1, 0
+                countdown_msg = None
+                try:
+                    countdown_msg = await message.channel.send("🔒 Channel locked! Restarting count in **3...**")
+                    for i in [2, 1, 0]:
+                        await asyncio.sleep(1)
+                        if countdown_msg:
+                            try:
+                                await countdown_msg.edit(content=f"🔒 Channel locked! Restarting count in **{i}...**")
+                            except Exception:
+                                pass
+                except Exception:
+                    await asyncio.sleep(3)
+
+                # Reset count in config
+                counting_cfg["current_count"] = 0
+                counting_cfg["last_user_id"] = ""
+                config["counting"] = counting_cfg
+                save_automation_config(message.guild.id, config)
+
+                # Unlock channel
+                try:
+                    await message.channel.set_permissions(message.guild.default_role, send_messages=None, reason="Counting reset - unlocked")
+                except Exception:
+                    pass
+
+                try:
+                    if countdown_msg:
+                        await countdown_msg.edit(content="🔓 **Channel unlocked!** Next number is **1**.")
+                    else:
+                        await message.channel.send("🔓 **Channel unlocked!** Next number is **1**.")
+                except Exception:
+                    pass
+
+            return
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ChannelAutomationListener(bot))

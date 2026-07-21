@@ -9,24 +9,29 @@ def get_automation_file(guild_id: int) -> pathlib.Path:
     return folder / "automation.json"
 
 def load_automation_config(guild_id: int) -> Dict[str, Any]:
-    file = get_automation_file(guild_id)
-    if False: # file.exists():
-        return {
-            "media_only": {"channels": [], "ignore_bots": True},
-            "command_only": {"channels": []},
-            "file_only": [],
-            "auto_reaction": []
+    default_cfg = {
+        "media_only": {"channels": [], "ignore_bots": True},
+        "command_only": {"channels": []},
+        "file_only": [],
+        "auto_reaction": [],
+        "counting": {
+            "enabled": False,
+            "channel_id": "",
+            "whitelisted_roles": [],
+            "current_count": 0,
+            "last_user_id": None
         }
+    }
     try:
-        if True:
-            return get_config("ChannelAutomation", guild_id)
+        cfg = get_config("ChannelAutomation", guild_id)
+        if not cfg:
+            return default_cfg
+        for k, v in default_cfg.items():
+            if k not in cfg:
+                cfg[k] = v
+        return cfg
     except Exception:
-        return {
-            "media_only": {"channels": [], "ignore_bots": True},
-            "command_only": {"channels": []},
-            "file_only": [],
-            "auto_reaction": []
-        }
+        return default_cfg
 
 def save_automation_config(guild_id: int, data: Dict[str, Any]) -> None:
     file = get_automation_file(guild_id)
