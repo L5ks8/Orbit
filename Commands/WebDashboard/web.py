@@ -505,6 +505,7 @@ class WebDashboard:
                 w_data = data.get("welcome", {})
                 
                 _clean_cloudinary(welcome_cfg.get("image_url", ""), w_data.get("image_url", ""))
+                _clean_cloudinary(welcome_cfg.get("embed_image", ""), w_data.get("embed_image", ""))
                 _clean_cloudinary(welcome_cfg.get("embed_thumbnail", ""), w_data.get("embed_thumbnail", ""))
                 _clean_cloudinary(welcome_cfg.get("embed_author_icon", ""), w_data.get("embed_author_icon", ""))
                 _clean_cloudinary(welcome_cfg.get("embed_footer_icon", ""), w_data.get("embed_footer_icon", ""))
@@ -515,6 +516,7 @@ class WebDashboard:
                 welcome_cfg["message"] = w_data.get("message", "")
                 welcome_cfg["msg_mode"] = w_data.get("msg_mode", "image")
                 welcome_cfg["image_url"] = w_data.get("image_url", "")
+                welcome_cfg["embed_image"] = w_data.get("embed_image", "")
                 welcome_cfg["embed_color"] = w_data.get("embed_color", "#5865F2")
                 welcome_cfg["embed_title"] = w_data.get("embed_title", "")
                 welcome_cfg["embed_description"] = w_data.get("embed_description", "")
@@ -532,6 +534,7 @@ class WebDashboard:
                 g_data = data.get("goodbye", {})
 
                 _clean_cloudinary(goodbye_cfg.get("image_url", ""), g_data.get("image_url", ""))
+                _clean_cloudinary(goodbye_cfg.get("embed_image", ""), g_data.get("embed_image", ""))
                 _clean_cloudinary(goodbye_cfg.get("embed_thumbnail", ""), g_data.get("embed_thumbnail", ""))
                 _clean_cloudinary(goodbye_cfg.get("embed_author_icon", ""), g_data.get("embed_author_icon", ""))
                 _clean_cloudinary(goodbye_cfg.get("embed_footer_icon", ""), g_data.get("embed_footer_icon", ""))
@@ -542,6 +545,7 @@ class WebDashboard:
                 goodbye_cfg["message"] = g_data.get("message", "")
                 goodbye_cfg["msg_mode"] = g_data.get("msg_mode", "image")
                 goodbye_cfg["image_url"] = g_data.get("image_url", "")
+                goodbye_cfg["embed_image"] = g_data.get("embed_image", "")
                 goodbye_cfg["embed_color"] = g_data.get("embed_color", "#ED4245")
                 goodbye_cfg["embed_title"] = g_data.get("embed_title", "")
                 goodbye_cfg["embed_description"] = g_data.get("embed_description", "")
@@ -559,6 +563,7 @@ class WebDashboard:
                 b_data = data.get("boost", {})
 
                 _clean_cloudinary(boost_cfg.get("image_url", ""), b_data.get("image_url", ""))
+                _clean_cloudinary(boost_cfg.get("embed_image", ""), b_data.get("embed_image", ""))
                 _clean_cloudinary(boost_cfg.get("embed_thumbnail", ""), b_data.get("embed_thumbnail", ""))
                 _clean_cloudinary(boost_cfg.get("embed_author_icon", ""), b_data.get("embed_author_icon", ""))
                 _clean_cloudinary(boost_cfg.get("embed_footer_icon", ""), b_data.get("embed_footer_icon", ""))
@@ -569,6 +574,7 @@ class WebDashboard:
                 boost_cfg["message"] = b_data.get("message", "")
                 boost_cfg["msg_mode"] = b_data.get("msg_mode", "image")
                 boost_cfg["image_url"] = b_data.get("image_url", "")
+                boost_cfg["embed_image"] = b_data.get("embed_image", "")
                 boost_cfg["embed_color"] = b_data.get("embed_color", "#EB459E")
                 boost_cfg["embed_title"] = b_data.get("embed_title", "")
                 boost_cfg["embed_description"] = b_data.get("embed_description", "")

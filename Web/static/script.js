@@ -902,7 +902,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('welcome_embed_title').value = config.welcome?.embed_title || '';
         document.getElementById('welcome_embed_description').value = config.welcome?.embed_description || '';
         document.getElementById('welcome_embed_thumbnail').value = config.welcome?.embed_thumbnail || '';
-        if (document.getElementById('welcome_embed_image')) document.getElementById('welcome_embed_image').value = imgUrl;
+        const welcomeEmbedImg = config.welcome?.embed_image || '';
+        if (document.getElementById('welcome_embed_image')) document.getElementById('welcome_embed_image').value = welcomeEmbedImg;
         document.getElementById('welcome_embed_footer').value = config.welcome?.embed_footer || '';
         if (document.getElementById('welcome_embed_footer_icon')) document.getElementById('welcome_embed_footer_icon').value = config.welcome?.embed_footer_icon || '';
         welcomeEmbedFields = config.welcome?.embed_fields || [];
@@ -924,7 +925,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('goodbye_embed_title').value = config.goodbye?.embed_title || '';
         document.getElementById('goodbye_embed_description').value = config.goodbye?.embed_description || '';
         document.getElementById('goodbye_embed_thumbnail').value = config.goodbye?.embed_thumbnail || '';
-        if (document.getElementById('goodbye_embed_image')) document.getElementById('goodbye_embed_image').value = gbImgUrl;
+        const goodbyeEmbedImg = config.goodbye?.embed_image || '';
+        if (document.getElementById('goodbye_embed_image')) document.getElementById('goodbye_embed_image').value = goodbyeEmbedImg;
         document.getElementById('goodbye_embed_footer').value = config.goodbye?.embed_footer || '';
         if (document.getElementById('goodbye_embed_footer_icon')) document.getElementById('goodbye_embed_footer_icon').value = config.goodbye?.embed_footer_icon || '';
         goodbyeEmbedFields = config.goodbye?.embed_fields || [];
@@ -946,7 +948,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('boost_embed_title').value = config.boost?.embed_title || '';
         document.getElementById('boost_embed_description').value = config.boost?.embed_description || '';
         document.getElementById('boost_embed_thumbnail').value = config.boost?.embed_thumbnail || '';
-        if (document.getElementById('boost_embed_image')) document.getElementById('boost_embed_image').value = boostImgUrl;
+        const boostEmbedImg = config.boost?.embed_image || '';
+        if (document.getElementById('boost_embed_image')) document.getElementById('boost_embed_image').value = boostEmbedImg;
         document.getElementById('boost_embed_footer').value = config.boost?.embed_footer || '';
         if (document.getElementById('boost_embed_footer_icon')) document.getElementById('boost_embed_footer_icon').value = config.boost?.embed_footer_icon || '';
         boostEmbedFields = config.boost?.embed_fields || [];
@@ -1761,7 +1764,7 @@ function updateLivePreview() {
             const title = document.getElementById('welcome_embed_title')?.value || '';
             const desc = document.getElementById('welcome_embed_description')?.value || '';
             const thumb = document.getElementById('welcome_embed_thumbnail')?.value || '';
-            const bigImg = document.getElementById('welcome_embed_image')?.value || document.getElementById('welcome_image_url')?.value || '';
+            const bigImg = (mode === 'embed') ? (document.getElementById('welcome_embed_image')?.value || '') : (document.getElementById('welcome_image_url')?.value || '');
             const footer = document.getElementById('welcome_embed_footer')?.value || '';
             const footerIcon = document.getElementById('welcome_embed_footer_icon')?.value || '';
 
@@ -1871,7 +1874,7 @@ function updateGoodbyeLivePreview() {
             const title = document.getElementById('goodbye_embed_title')?.value || '';
             const desc = document.getElementById('goodbye_embed_description')?.value || '';
             const thumb = document.getElementById('goodbye_embed_thumbnail')?.value || '';
-            const bigImg = document.getElementById('goodbye_embed_image')?.value || document.getElementById('goodbye_image_url')?.value || '';
+            const bigImg = (mode === 'embed') ? (document.getElementById('goodbye_embed_image')?.value || '') : (document.getElementById('goodbye_image_url')?.value || '');
             const footer = document.getElementById('goodbye_embed_footer')?.value || '';
             const footerIcon = document.getElementById('goodbye_embed_footer_icon')?.value || '';
 
@@ -2011,7 +2014,7 @@ function updateBoostLivePreview() {
             const title = document.getElementById('boost_embed_title')?.value || '';
             const desc = document.getElementById('boost_embed_description')?.value || '';
             const thumb = document.getElementById('boost_embed_thumbnail')?.value || '';
-            const bigImg = document.getElementById('boost_embed_image')?.value || document.getElementById('boost_image_url')?.value || '';
+            const bigImg = (mode === 'embed') ? (document.getElementById('boost_embed_image')?.value || '') : (document.getElementById('boost_image_url')?.value || '');
             const footer = document.getElementById('boost_embed_footer')?.value || '';
             const footerIcon = document.getElementById('boost_embed_footer_icon')?.value || '';
 
@@ -2686,7 +2689,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('welcome_enabled').checked,
             channel_id: document.getElementById('welcome_channel_id').value,
             message: document.getElementById('welcome_message').value,
-            image_url: (document.getElementById('welcome_msg_mode').value === 'embed' && document.getElementById('welcome_embed_image')?.value) ? document.getElementById('welcome_embed_image').value : document.getElementById('welcome_image_url').value,
+            image_url: document.getElementById('welcome_image_url')?.value || '',
+            embed_image: document.getElementById('welcome_embed_image')?.value || '',
             msg_mode: document.getElementById('welcome_msg_mode').value,
             embed_color: document.getElementById('welcome_embed_color').value,
             embed_author: document.getElementById('welcome_embed_author').value,
@@ -2702,7 +2706,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('goodbye_enabled').checked,
             channel_id: document.getElementById('goodbye_channel_id').value,
             message: document.getElementById('goodbye_message').value,
-            image_url: (document.getElementById('goodbye_msg_mode').value === 'embed' && document.getElementById('goodbye_embed_image')?.value) ? document.getElementById('goodbye_embed_image').value : document.getElementById('goodbye_image_url').value,
+            image_url: document.getElementById('goodbye_image_url')?.value || '',
+            embed_image: document.getElementById('goodbye_embed_image')?.value || '',
             msg_mode: document.getElementById('goodbye_msg_mode').value,
             embed_color: document.getElementById('goodbye_embed_color').value,
             embed_author: document.getElementById('goodbye_embed_author').value,
@@ -2718,7 +2723,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             enabled: document.getElementById('boost_enabled').checked,
             channel_id: document.getElementById('boost_channel_id').value,
             message: document.getElementById('boost_message').value,
-            image_url: (document.getElementById('boost_msg_mode').value === 'embed' && document.getElementById('boost_embed_image')?.value) ? document.getElementById('boost_embed_image').value : document.getElementById('boost_image_url').value,
+            image_url: document.getElementById('boost_image_url')?.value || '',
+            embed_image: document.getElementById('boost_embed_image')?.value || '',
             msg_mode: document.getElementById('boost_msg_mode').value,
             embed_color: document.getElementById('boost_embed_color').value,
             embed_author: document.getElementById('boost_embed_author').value,
