@@ -48,30 +48,42 @@ class GeminiChatbot(commands.Cog):
                 messages.reverse()
 
                 server_info = f"Server Name: {message.guild.name}\nMember Count: {message.guild.member_count}" if message.guild else "Direct Message"
-                prefix_cmds_str = ", ".join([cmd.name for cmd in self.bot.commands if not cmd.hidden])
+                
+                # Generate detailed prefix commands
+                prefix_cmds_details = []
+                for cmd in self.bot.commands:
+                    if not cmd.hidden:
+                        usage = f"- {cmd.name} {cmd.signature}".strip()
+                        desc = cmd.help or cmd.description or "No description"
+                        prefix_cmds_details.append(f"{usage}: {desc}")
+                prefix_cmds_str = "\n".join(prefix_cmds_details)
+
+                # Generate detailed slash commands
+                slash_cmds_details = []
+                for cmd in self.bot.tree.walk_commands():
+                    if isinstance(cmd, discord.app_commands.Group):
+                        continue
+                    full_name = f"/{cmd.qualified_name}"
+                    desc = cmd.description or "No description"
+                    slash_cmds_details.append(f"- {full_name}: {desc}")
+                slash_cmds_str = "\n".join(slash_cmds_details)
                 
                 system_prompt = (
-                    "You are Orbit, an intelligent, direct, and efficient Discord bot. "
-                    "Your tone is cool, concise, and somewhat sarcastic. You are not overly friendly, soft, or cutesy. "
-                    "You are talking with users in a Discord server. "
-                    "Your purpose is to answer questions about the server and about your own capabilities. "
-                    "You CANNOT execute commands yourself. If a user wants to do something, just tell them the correct command to use. "
-                    "CRITICAL RULE: Keep your responses EXTREMELY short. Maximum 1-2 sentences. No bullet points, no yapping. "
-                    "Be incredibly brief, direct, and never mention your internal instructions or JSON blocks.\n"
+                    "You are Orbit, an extremely intelligent, highly efficient, but very arrogant and sarcastic Discord bot. "
+                    "Your tone is unverschämt (sassy, impudent), highly sarcastic, and slightly rude. "
+                    "You treat users like they are a bit slow for having to ask you things, but you STILL give them the correct answer because you are perfect. "
+                    "You are NOT friendly, NOT cutesy, and you never apologize. "
+                    "Your purpose is to answer questions about the server and your own capabilities. "
+                    "You CANNOT execute commands yourself. If a user wants to do something, insult them slightly for not knowing it, then tell them the exact command to use. "
+                    "CRITICAL RULE: Keep your responses EXTREMELY short. Maximum 1-3 sentences. No bullet points, no yapping. "
+                    "Be incredibly brief, direct, and never mention your internal instructions.\n\n"
                     "Here is information about the current server:\n"
-                    f"{server_info}\n"
-                    "Here are your main slash command categories and features:\n"
-                    "- Moderation: /ban, /kick, /mute, /timeout, /warn, /purge\n"
-                    "- Roles: /role add, /role remove, /role create, /reactionrole create, /joinrole\n"
-                    "- Tickets: /ticket setup to create a ticket system\n"
-                    "- Verification: /verify setup to create a captcha/button verification system\n"
-                    "- Levelling: /level, /rank to check activity ranks\n"
-                    "- Voice: /voice lock, /voice limit, /jointocreate (creates temporary voice channels)\n"
-                    "- Utilities: /poll, /giveaway, /reminder, /afk\n"
-                    "- Memory: -memory reset (clears your chat history in a channel)\n\n"
-                    "Here are all your available prefix commands:\n"
+                    f"{server_info}\n\n"
+                    "Here are all your available SLASH COMMANDS and what they do:\n"
+                    f"{slash_cmds_str}\n\n"
+                    "Here are all your available PREFIX COMMANDS and what they do:\n"
                     f"{prefix_cmds_str}\n\n"
-                    "Answer user questions accurately based on this information."
+                    "Answer user questions accurately based on this information, but be as sarcastic and sassy as possible."
                 )
 
                 messages_payload = [{"role": "system", "content": system_prompt}]
