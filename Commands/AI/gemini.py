@@ -2,6 +2,7 @@ import os
 import discord
 from discord.ext import commands
 from g4f.client import AsyncClient
+import asyncio
 
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -88,9 +89,12 @@ class GeminiChatbot(commands.Cog):
 
                 messages_payload.append({"role": "user", "content": f"{message.author.display_name}: {message.clean_content}"})
 
-                response = await self.client.chat.completions.create(
-                    model='gpt-4o',
-                    messages=messages_payload
+                response = await asyncio.wait_for(
+                    self.client.chat.completions.create(
+                        model='gpt-4o',
+                        messages=messages_payload
+                    ),
+                    timeout=15.0
                 )
                 
                 text_response = response.choices[0].message.content
