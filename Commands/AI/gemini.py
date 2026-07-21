@@ -5,13 +5,11 @@ import asyncio
 import random
 import discord
 from discord.ext import commands
-import aiohttp
+import g4f
 
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model_name = "gemini-3.5-flash"
         self.memory_resets = {}
 
     @commands.group(invoke_without_command=True)
@@ -25,7 +23,7 @@ class GeminiChatbot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot or not self.api_key:
+        if message.author.bot:
             return
 
         # Ignore if it's a command being executed (like -memory reset)
@@ -98,27 +96,17 @@ class GeminiChatbot(commands.Cog):
                     content = msg.clean_content
                     prompt += f"{author_name}: {content}\n"
 
-                # Use message.content instead of clean_content to preserve pings
                 prompt += f"\n{message.author.display_name}: {message.content}\n"
                 prompt += "Orbit:"
 
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
-                headers = {'Content-Type': 'application/json'}
-                payload = {
-                    "contents": [{"parts": [{"text": prompt}]}]
-                }
-                
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, headers=headers, json=payload) as resp:
-                        if resp.status != 200:
-                            error_text = await resp.text()
-                            raise Exception(f"HTTP {resp.status}: {error_text}")
-                            
-                        data = await resp.json()
-                        try:
-                            text_response = data['candidates'][0]['content']['parts'][0]['text']
-                        except (KeyError, IndexError):
-                            text_response = None
+                def fetch_g4f():
+                    return g4f.ChatCompletion.create(
+                        model='gpt-4o',
+                        messages=[{'role': 'user', 'content': prompt}]
+                    )
+
+                loop = asyncio.get_event_loop()
+                text_response = await loop.run_in_executor(None, fetch_g4f)
                             
                 if text_response:
                     await self._send_chunked(message, text_response)
