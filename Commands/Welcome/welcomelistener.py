@@ -88,6 +88,19 @@ class WelcomeListener(commands.Cog):
                 else:
                     embed.set_author(name=author)
 
+            fields = config.get("embed_fields", [])
+            if isinstance(fields, list):
+                for f in fields:
+                    if isinstance(f, dict):
+                        f_name = fmt_text(f.get("name", ""))
+                        f_val = fmt_text(f.get("value", ""))
+                        if f_name or f_val:
+                            embed.add_field(
+                                name=f_name if f_name else "\u200b",
+                                value=f_val if f_val else "\u200b",
+                                inline=bool(f.get("inline", False))
+                            )
+
             content_text = fmt_text(config.get("message", ""))
 
             try:

@@ -28,7 +28,8 @@ def load_goodbye_config(guild_id: int) -> Dict[str, Any]:
         "embed_footer": "",
         "embed_author": "",
         "embed_author_icon": "",
-        "embed_footer_icon": ""
+        "embed_footer_icon": "",
+        "embed_fields": []
     }
     try:
         data = get_config("Goodbye", guild_id)
@@ -54,6 +55,8 @@ def load_goodbye_config(guild_id: int) -> Dict[str, Any]:
             data["embed_author_icon"] = ""
         if "embed_footer_icon" not in data:
             data["embed_footer_icon"] = ""
+        if "embed_fields" not in data or not isinstance(data["embed_fields"], list):
+            data["embed_fields"] = []
         return data
     except Exception:
         return default_config

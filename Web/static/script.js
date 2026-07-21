@@ -905,6 +905,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         if (document.getElementById('welcome_embed_image')) document.getElementById('welcome_embed_image').value = imgUrl;
         document.getElementById('welcome_embed_footer').value = config.welcome?.embed_footer || '';
         if (document.getElementById('welcome_embed_footer_icon')) document.getElementById('welcome_embed_footer_icon').value = config.welcome?.embed_footer_icon || '';
+        welcomeEmbedFields = config.welcome?.embed_fields || [];
+        renderWelcomeEmbedFields();
         setWelcomeMode(config.welcome?.msg_mode || 'image');
 
         // Goodbye
@@ -925,6 +927,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         if (document.getElementById('goodbye_embed_image')) document.getElementById('goodbye_embed_image').value = gbImgUrl;
         document.getElementById('goodbye_embed_footer').value = config.goodbye?.embed_footer || '';
         if (document.getElementById('goodbye_embed_footer_icon')) document.getElementById('goodbye_embed_footer_icon').value = config.goodbye?.embed_footer_icon || '';
+        goodbyeEmbedFields = config.goodbye?.embed_fields || [];
+        renderGoodbyeEmbedFields();
         setGoodbyeMode(config.goodbye?.msg_mode || 'image');
 
         // Boost
@@ -945,6 +949,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         if (document.getElementById('boost_embed_image')) document.getElementById('boost_embed_image').value = boostImgUrl;
         document.getElementById('boost_embed_footer').value = config.boost?.embed_footer || '';
         if (document.getElementById('boost_embed_footer_icon')) document.getElementById('boost_embed_footer_icon').value = config.boost?.embed_footer_icon || '';
+        boostEmbedFields = config.boost?.embed_fields || [];
+        renderBoostEmbedFields();
         setBoostMode(config.boost?.msg_mode || 'image');
 
         updateDropBackgrounds();
@@ -1420,6 +1426,190 @@ function setBoostEmbedColor(hex) {
     updateBoostLivePreview();
 }
 
+let welcomeEmbedFields = [];
+let goodbyeEmbedFields = [];
+let boostEmbedFields = [];
+
+window.addWelcomeEmbedField = function() {
+    if (welcomeEmbedFields.length >= 25) {
+        showToast("Maximum 25 fields allowed");
+        return;
+    }
+    welcomeEmbedFields.push({ name: '', value: '', inline: false });
+    renderWelcomeEmbedFields();
+    updateLivePreview();
+};
+
+window.removeWelcomeEmbedField = function(index) {
+    welcomeEmbedFields.splice(index, 1);
+    renderWelcomeEmbedFields();
+    updateLivePreview();
+};
+
+window.updateWelcomeEmbedField = function(index, key, val) {
+    if (welcomeEmbedFields[index]) {
+        welcomeEmbedFields[index][key] = val;
+        updateLivePreview();
+    }
+};
+
+function renderWelcomeEmbedFields() {
+    const container = document.getElementById('welcome_embed_fields_container');
+    if (!container) return;
+    container.innerHTML = '';
+    welcomeEmbedFields.forEach((field, index) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;';
+        
+        const inlineBg = field.inline ? '#5865F2' : 'transparent';
+        const inlineColor = field.inline ? '#FFFFFF' : '#949BA4';
+        const inlineBorder = field.inline ? 'none' : '1px solid rgba(255,255,255,0.2)';
+
+        div.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 4px 8px; display: flex; align-items: center;">
+                    <input type="text" placeholder="Field Name" value="${field.name}" oninput="updateWelcomeEmbedField(${index}, 'name', this.value); updateCount(this, 256);" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0; font-size: 13px;">
+                    <span style="font-size: 11px; color: var(--text-muted);">${field.name.length}/256</span>
+                </div>
+                
+                <button type="button" class="btn" title="Toggle Inline" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: ${inlineBg}; border: ${inlineBorder}; color: ${inlineColor}; border-radius: 4px; cursor: pointer;" onclick="updateWelcomeEmbedField(${index}, 'inline', !${field.inline}); renderWelcomeEmbedFields();">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+                </button>
+                
+                <button type="button" class="btn-danger" title="Delete Field" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #EF4444; border: none; color: white; cursor: pointer;" onclick="removeWelcomeEmbedField(${index})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            </div>
+            
+            <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 8px; position: relative;">
+                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none; font-size: 13px;" oninput="updateWelcomeEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
+                <div style="text-align: right; font-size: 11px; color: var(--text-muted); position: absolute; bottom: 6px; right: 8px;">${field.value.length}/1024</div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+window.addGoodbyeEmbedField = function() {
+    if (goodbyeEmbedFields.length >= 25) {
+        showToast("Maximum 25 fields allowed");
+        return;
+    }
+    goodbyeEmbedFields.push({ name: '', value: '', inline: false });
+    renderGoodbyeEmbedFields();
+    updateGoodbyeLivePreview();
+};
+
+window.removeGoodbyeEmbedField = function(index) {
+    goodbyeEmbedFields.splice(index, 1);
+    renderGoodbyeEmbedFields();
+    updateGoodbyeLivePreview();
+};
+
+window.updateGoodbyeEmbedField = function(index, key, val) {
+    if (goodbyeEmbedFields[index]) {
+        goodbyeEmbedFields[index][key] = val;
+        updateGoodbyeLivePreview();
+    }
+};
+
+function renderGoodbyeEmbedFields() {
+    const container = document.getElementById('goodbye_embed_fields_container');
+    if (!container) return;
+    container.innerHTML = '';
+    goodbyeEmbedFields.forEach((field, index) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;';
+        
+        const inlineBg = field.inline ? '#ED4245' : 'transparent';
+        const inlineColor = field.inline ? '#FFFFFF' : '#949BA4';
+        const inlineBorder = field.inline ? 'none' : '1px solid rgba(255,255,255,0.2)';
+
+        div.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 4px 8px; display: flex; align-items: center;">
+                    <input type="text" placeholder="Field Name" value="${field.name}" oninput="updateGoodbyeEmbedField(${index}, 'name', this.value); updateCount(this, 256);" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0; font-size: 13px;">
+                    <span style="font-size: 11px; color: var(--text-muted);">${field.name.length}/256</span>
+                </div>
+                
+                <button type="button" class="btn" title="Toggle Inline" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: ${inlineBg}; border: ${inlineBorder}; color: ${inlineColor}; border-radius: 4px; cursor: pointer;" onclick="updateGoodbyeEmbedField(${index}, 'inline', !${field.inline}); renderGoodbyeEmbedFields();">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+                </button>
+                
+                <button type="button" class="btn-danger" title="Delete Field" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #EF4444; border: none; color: white; cursor: pointer;" onclick="removeGoodbyeEmbedField(${index})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            </div>
+            
+            <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 8px; position: relative;">
+                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none; font-size: 13px;" oninput="updateGoodbyeEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
+                <div style="text-align: right; font-size: 11px; color: var(--text-muted); position: absolute; bottom: 6px; right: 8px;">${field.value.length}/1024</div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+window.addBoostEmbedField = function() {
+    if (boostEmbedFields.length >= 25) {
+        showToast("Maximum 25 fields allowed");
+        return;
+    }
+    boostEmbedFields.push({ name: '', value: '', inline: false });
+    renderBoostEmbedFields();
+    updateBoostLivePreview();
+};
+
+window.removeBoostEmbedField = function(index) {
+    boostEmbedFields.splice(index, 1);
+    renderBoostEmbedFields();
+    updateBoostLivePreview();
+};
+
+window.updateBoostEmbedField = function(index, key, val) {
+    if (boostEmbedFields[index]) {
+        boostEmbedFields[index][key] = val;
+        updateBoostLivePreview();
+    }
+};
+
+function renderBoostEmbedFields() {
+    const container = document.getElementById('boost_embed_fields_container');
+    if (!container) return;
+    container.innerHTML = '';
+    boostEmbedFields.forEach((field, index) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;';
+        
+        const inlineBg = field.inline ? '#EB459E' : 'transparent';
+        const inlineColor = field.inline ? '#FFFFFF' : '#949BA4';
+        const inlineBorder = field.inline ? 'none' : '1px solid rgba(255,255,255,0.2)';
+
+        div.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 4px 8px; display: flex; align-items: center;">
+                    <input type="text" placeholder="Field Name" value="${field.name}" oninput="updateBoostEmbedField(${index}, 'name', this.value); updateCount(this, 256);" style="background: transparent; border: none; color: #DBDEE1; flex: 1; padding: 0; font-size: 13px;">
+                    <span style="font-size: 11px; color: var(--text-muted);">${field.name.length}/256</span>
+                </div>
+                
+                <button type="button" class="btn" title="Toggle Inline" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: ${inlineBg}; border: ${inlineBorder}; color: ${inlineColor}; border-radius: 4px; cursor: pointer;" onclick="updateBoostEmbedField(${index}, 'inline', !${field.inline}); renderBoostEmbedFields();">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+                </button>
+                
+                <button type="button" class="btn-danger" title="Delete Field" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #EF4444; border: none; color: white; cursor: pointer;" onclick="removeBoostEmbedField(${index})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            </div>
+            
+            <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 8px; position: relative;">
+                <textarea rows="2" placeholder="Field Value" style="background: transparent; border: none; color: #DBDEE1; width: 100%; padding: 0; resize: none; font-size: 13px;" oninput="updateBoostEmbedField(${index}, 'value', this.value); updateCount(this, 1024);">${field.value}</textarea>
+                <div style="text-align: right; font-size: 11px; color: var(--text-muted); position: absolute; bottom: 6px; right: 8px;">${field.value.length}/1024</div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
 function formatDiscordPreviewText(str) {
     if (!str) return '';
     return str
@@ -1485,9 +1675,30 @@ function updateLivePreview() {
             if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
             if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
 
+            const fieldsEl = document.getElementById('welcome_preview_embed_fields');
+            if (fieldsEl) {
+                fieldsEl.innerHTML = '';
+                if (welcomeEmbedFields && welcomeEmbedFields.length > 0) {
+                    fieldsEl.style.display = 'grid';
+                    welcomeEmbedFields.forEach(f => {
+                        if (!f.name && !f.value) return;
+                        const fDiv = document.createElement('div');
+                        if (f.inline) fDiv.style.gridColumn = 'span 1';
+                        else fDiv.style.gridColumn = '1 / -1';
+                        fDiv.innerHTML = `
+                            <div style="color: #FFFFFF; font-size: 13px; font-weight: 600;">${formatDiscordPreviewText(f.name || '\u200b')}</div>
+                            <div style="color: #DBDEE1; font-size: 13px; white-space: pre-wrap;">${formatDiscordPreviewText(f.value || '\u200b')}</div>
+                        `;
+                        fieldsEl.appendChild(fDiv);
+                    });
+                } else {
+                    fieldsEl.style.display = 'none';
+                }
+            }
+
             if (thumbBox && thumbEl) {
-                thumbEl.src = thumb;
-                thumbBox.style.display = thumb ? 'block' : 'none';
+                thumbEl.src = thumb || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                thumbBox.style.display = 'block';
             }
 
             if (imgEl) { imgEl.src = bigImg; imgEl.style.display = bigImg ? 'block' : 'none'; }
@@ -1574,9 +1785,30 @@ function updateGoodbyeLivePreview() {
             if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
             if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
 
+            const fieldsEl = document.getElementById('goodbye_preview_embed_fields');
+            if (fieldsEl) {
+                fieldsEl.innerHTML = '';
+                if (goodbyeEmbedFields && goodbyeEmbedFields.length > 0) {
+                    fieldsEl.style.display = 'grid';
+                    goodbyeEmbedFields.forEach(f => {
+                        if (!f.name && !f.value) return;
+                        const fDiv = document.createElement('div');
+                        if (f.inline) fDiv.style.gridColumn = 'span 1';
+                        else fDiv.style.gridColumn = '1 / -1';
+                        fDiv.innerHTML = `
+                            <div style="color: #FFFFFF; font-size: 13px; font-weight: 600;">${formatDiscordPreviewText(f.name || '\u200b')}</div>
+                            <div style="color: #DBDEE1; font-size: 13px; white-space: pre-wrap;">${formatDiscordPreviewText(f.value || '\u200b')}</div>
+                        `;
+                        fieldsEl.appendChild(fDiv);
+                    });
+                } else {
+                    fieldsEl.style.display = 'none';
+                }
+            }
+
             if (thumbBox && thumbEl) {
-                thumbEl.src = thumb;
-                thumbBox.style.display = thumb ? 'block' : 'none';
+                thumbEl.src = thumb || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                thumbBox.style.display = 'block';
             }
 
             if (imgEl) { imgEl.src = bigImg; imgEl.style.display = bigImg ? 'block' : 'none'; }
@@ -1693,9 +1925,30 @@ function updateBoostLivePreview() {
             if (titleEl) { titleEl.innerHTML = formatDiscordPreviewText(title); titleEl.style.display = title ? 'block' : 'none'; }
             if (descEl) { descEl.innerHTML = formatDiscordPreviewText(desc); descEl.style.display = desc ? 'block' : 'none'; }
 
+            const fieldsEl = document.getElementById('boost_preview_embed_fields');
+            if (fieldsEl) {
+                fieldsEl.innerHTML = '';
+                if (boostEmbedFields && boostEmbedFields.length > 0) {
+                    fieldsEl.style.display = 'grid';
+                    boostEmbedFields.forEach(f => {
+                        if (!f.name && !f.value) return;
+                        const fDiv = document.createElement('div');
+                        if (f.inline) fDiv.style.gridColumn = 'span 1';
+                        else fDiv.style.gridColumn = '1 / -1';
+                        fDiv.innerHTML = `
+                            <div style="color: #FFFFFF; font-size: 13px; font-weight: 600;">${formatDiscordPreviewText(f.name || '\u200b')}</div>
+                            <div style="color: #DBDEE1; font-size: 13px; white-space: pre-wrap;">${formatDiscordPreviewText(f.value || '\u200b')}</div>
+                        `;
+                        fieldsEl.appendChild(fDiv);
+                    });
+                } else {
+                    fieldsEl.style.display = 'none';
+                }
+            }
+
             if (thumbBox && thumbEl) {
-                thumbEl.src = thumb;
-                thumbBox.style.display = thumb ? 'block' : 'none';
+                thumbEl.src = thumb || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                thumbBox.style.display = 'block';
             }
 
             if (imgEl) { imgEl.src = bigImg; imgEl.style.display = bigImg ? 'block' : 'none'; }
@@ -2295,7 +2548,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             embed_description: document.getElementById('welcome_embed_description').value,
             embed_thumbnail: document.getElementById('welcome_embed_thumbnail').value,
             embed_footer: document.getElementById('welcome_embed_footer').value,
-            embed_footer_icon: document.getElementById('welcome_embed_footer_icon')?.value || ''
+            embed_footer_icon: document.getElementById('welcome_embed_footer_icon')?.value || '',
+            embed_fields: welcomeEmbedFields
         },
         goodbye: {
             enabled: document.getElementById('goodbye_enabled').checked,
@@ -2310,7 +2564,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             embed_description: document.getElementById('goodbye_embed_description').value,
             embed_thumbnail: document.getElementById('goodbye_embed_thumbnail').value,
             embed_footer: document.getElementById('goodbye_embed_footer').value,
-            embed_footer_icon: document.getElementById('goodbye_embed_footer_icon')?.value || ''
+            embed_footer_icon: document.getElementById('goodbye_embed_footer_icon')?.value || '',
+            embed_fields: goodbyeEmbedFields
         },
         boost: {
             enabled: document.getElementById('boost_enabled').checked,
@@ -2325,7 +2580,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             embed_description: document.getElementById('boost_embed_description').value,
             embed_thumbnail: document.getElementById('boost_embed_thumbnail').value,
             embed_footer: document.getElementById('boost_embed_footer').value,
-            embed_footer_icon: document.getElementById('boost_embed_footer_icon')?.value || ''
+            embed_footer_icon: document.getElementById('boost_embed_footer_icon')?.value || '',
+            embed_fields: boostEmbedFields
         },
         automod: currentAutomodConfig,
         verify: {

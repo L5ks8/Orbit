@@ -97,6 +97,19 @@ class BoostListener(commands.Cog):
                 else:
                     embed.set_author(name=author)
 
+            fields = config.get("embed_fields", [])
+            if isinstance(fields, list):
+                for f in fields:
+                    if isinstance(f, dict):
+                        f_name = format_boost_string(f.get("name", ""), after)
+                        f_val = format_boost_string(f.get("value", ""), after)
+                        if f_name or f_val:
+                            embed.add_field(
+                                name=f_name if f_name else "\u200b",
+                                value=f_val if f_val else "\u200b",
+                                inline=bool(f.get("inline", False))
+                            )
+
             content_text = format_boost_string(config.get("message", ""), after)
 
             try:
