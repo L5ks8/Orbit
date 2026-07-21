@@ -1311,7 +1311,7 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         const ssChs = ssConfig.channels || {};
         const ssKeys = ['members', 'humans', 'bots', 'boosts', 'voice_users'];
         const ssDefaults = {
-            members: '✧˚₊·≡⭐୧ | 𝐌𝐞𝐦𝐛𝐞𝐫𝐬: {count} | ✧⸝',
+            members: '👥 | Members: {count}',
             humans: '👥 | Humans: {humans}',
             bots: '🤖 | Bots: {bots}',
             boosts: '🚀 | Boosts: {boosts}',
@@ -1322,8 +1322,22 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             const chCfg = ssChs[k] || {};
             const enEl = document.getElementById(`serverstats_ch_${k}_enabled`);
             const fmtEl = document.getElementById(`serverstats_ch_${k}_format`);
+            const chSelect = document.getElementById(`serverstats_ch_${k}_channel_id`);
+
             if (enEl) enEl.checked = chCfg.enabled !== undefined ? chCfg.enabled : (k === 'members');
             if (fmtEl) fmtEl.value = chCfg.format || ssDefaults[k];
+
+            if (chSelect) {
+                chSelect.innerHTML = '<option value="">-- Auto Create Channel --</option>';
+                globalVoiceChannels.forEach(vc => {
+                    const opt = document.createElement('option');
+                    opt.value = vc.id;
+                    opt.textContent = '🔊 ' + vc.name;
+                    if (String(vc.id) === String(chCfg.channel_id)) opt.selected = true;
+                    chSelect.appendChild(opt);
+                });
+                chSelect.value = chCfg.channel_id || '';
+            }
         });
         updateServerStatsLivePreviews();
 
@@ -1358,6 +1372,7 @@ document.getElementById('btn-create-serverstats')?.addEventListener('click', asy
     ssChKeys.forEach(k => {
         ssChannelsData[k] = {
             enabled: document.getElementById(`serverstats_ch_${k}_enabled`)?.checked || false,
+            channel_id: document.getElementById(`serverstats_ch_${k}_channel_id`)?.value || '',
             format: document.getElementById(`serverstats_ch_${k}_format`)?.value || ''
         };
     });
@@ -2850,22 +2865,27 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             channels: {
                 members: {
                     enabled: document.getElementById('serverstats_ch_members_enabled')?.checked || false,
+                    channel_id: document.getElementById('serverstats_ch_members_channel_id')?.value || '',
                     format: document.getElementById('serverstats_ch_members_format')?.value || ''
                 },
                 humans: {
                     enabled: document.getElementById('serverstats_ch_humans_enabled')?.checked || false,
+                    channel_id: document.getElementById('serverstats_ch_humans_channel_id')?.value || '',
                     format: document.getElementById('serverstats_ch_humans_format')?.value || ''
                 },
                 bots: {
                     enabled: document.getElementById('serverstats_ch_bots_enabled')?.checked || false,
+                    channel_id: document.getElementById('serverstats_ch_bots_channel_id')?.value || '',
                     format: document.getElementById('serverstats_ch_bots_format')?.value || ''
                 },
                 boosts: {
                     enabled: document.getElementById('serverstats_ch_boosts_enabled')?.checked || false,
+                    channel_id: document.getElementById('serverstats_ch_boosts_channel_id')?.value || '',
                     format: document.getElementById('serverstats_ch_boosts_format')?.value || ''
                 },
                 voice_users: {
                     enabled: document.getElementById('serverstats_ch_voice_users_enabled')?.checked || false,
+                    channel_id: document.getElementById('serverstats_ch_voice_users_channel_id')?.value || '',
                     format: document.getElementById('serverstats_ch_voice_users_format')?.value || ''
                 }
             }
