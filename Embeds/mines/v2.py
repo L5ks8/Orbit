@@ -1,5 +1,5 @@
 import discord
-from Embeds.v2_components import LayoutView, Container, TextDisplay, Separator
+from discord.ui import LayoutView, Container, TextDisplay, Separator
 
 def get_embed(msg_type: str, **kwargs):
     if msg_type == "game":
