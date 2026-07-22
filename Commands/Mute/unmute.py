@@ -13,7 +13,7 @@ class UnmuteCommand(commands.Cog):
 
     @commands.hybrid_command(name="unmute", description="Removes the Muted role from a user.")
     @commands.has_permissions(manage_roles=True)
-    @commands.bot_has_permissions(manage_roles=True, manage_channels=True)
+    @commands.bot_has_permissions(manage_roles=True)
     async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
         await ctx.defer()
         role = await get_or_create_muted_role(ctx.guild)
@@ -27,27 +27,14 @@ class UnmuteCommand(commands.Cog):
         except Exception as e:
             return await ctx.send(f"Error removing muted role: {e}", ephemeral=True)
 
-        channels_restored = 0
-        for channel in ctx.guild.channels:
-            try:
-                if target in channel.overwrites:
-                    await channel.set_permissions(
-                        target,
-                        overwrite=None,
-                        reason=f"Unmuted by {ctx.author}: {reason}"
-                    )
-                    channels_restored += 1
-            except Exception:
-                pass
-
         from Embeds import get_command_embed
         await log_event(
             ctx.guild,
             "moderation_action",
             "User Unmuted (`-unmute`)",
-            f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Channels Restored:** `{channels_restored}`"
+            f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Removed Role:** {role.mention}"
         )
-        kwargs = get_command_embed(ctx.guild.id, "unmute", msg_type="success", target=target, reason=reason, author=ctx.author, channels_restored=channels_restored)
+        kwargs = get_command_embed(ctx.guild.id, "unmute", msg_type="success", target=target, reason=reason, author=ctx.author, role=role)
         await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
     @unmute.error

@@ -6,13 +6,14 @@ def get_embed(msg_type: str, **kwargs):
         target = kwargs.get("target")
         reason = kwargs.get("reason")
         author = kwargs.get("author")
-        channels_count = kwargs.get("channels_count")
+        role = kwargs.get("role")
+        role_str = f"\n**Role Assigned:** {role.mention}" if role else ""
         
         view = LayoutView()
         container = Container(
             TextDisplay(content=f"### User Muted\n**Target:** {target.mention} (`{target.id}`)"),
             Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}\n**Channel Overrides:** User permissions disabled in `{channels_count}` channel(s).")
+            TextDisplay(content=f"**Reason:** {reason}\n**Moderator:** {author.mention}{role_str}")
         )
         view.add_item(container)
         return {"view": view}

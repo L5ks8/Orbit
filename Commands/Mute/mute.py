@@ -15,12 +15,19 @@ async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
 
     role = discord.utils.get(guild.roles, name="Muted")
     if not role:
-        role = await guild.create_role(name="Muted", reason="Orbit Mute Role")
+        permissions = discord.Permissions(
+            send_messages=False,
+            send_messages_in_threads=False,
+            create_public_threads=False,
+            create_private_threads=False,
+            add_reactions=False,
+            speak=False,
+            stream=False
+        )
+        role = await guild.create_role(name="Muted", permissions=permissions, reason="Orbit Mute Role")
 
     set_muted_role_id(guild.id, role.id)
     return role
-
-
 
 class MuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -28,7 +35,7 @@ class MuteCommand(commands.Cog):
 
     @commands.hybrid_command(name="mute", description="Mutes a user.")
     @commands.has_permissions(manage_roles=True)
-    @commands.bot_has_permissions(manage_roles=True, manage_channels=True)
+    @commands.bot_has_permissions(manage_roles=True)
     async def mute(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
         await ctx.defer()
         if target.id == ctx.author.id:
@@ -49,33 +56,14 @@ class MuteCommand(commands.Cog):
         except Exception as e:
             return await ctx.send(f"Error assigning muted role: {e}", ephemeral=True)
 
-        channels_affected = 0
-        for channel in ctx.guild.channels:
-            try:
-                if isinstance(channel, (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel)):
-                    await channel.set_permissions(
-                        target,
-                        send_messages=False,
-                        send_messages_in_threads=False,
-                        create_public_threads=False,
-                        create_private_threads=False,
-                        add_reactions=False,
-                        speak=False,
-                        connect=False,
-                        reason=f"Muted by {ctx.author}: {reason}"
-                    )
-                    channels_affected += 1
-            except Exception:
-                pass
-
         from Embeds import get_command_embed
         await log_event(
             ctx.guild,
             "moderation_action",
             "User Muted (`-mute`)",
-            f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Affected Channels:** `{channels_affected}`"
+            f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Muted Role:** {role.mention}"
         )
-        kwargs = get_command_embed(ctx.guild.id, "mute", msg_type="success", target=target, reason=reason, author=ctx.author, channels_count=channels_affected)
+        kwargs = get_command_embed(ctx.guild.id, "mute", msg_type="success", target=target, reason=reason, author=ctx.author, role=role)
         await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
     @mute.error
