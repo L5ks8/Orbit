@@ -3258,7 +3258,12 @@ You reached **Level {level}**.</textarea>
                                         <label class="form-label mb-0">Base Daily Reward</label>
                                         <span class="help-text">Fixed reward for Day 1.</span>
                                     </div>
-                                    <label class="switch"><input type="checkbox" id="economy_daily_base_reward_enabled" checked><span class="slider"></span></label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <label class="switch"><input type="checkbox" id="economy_daily_base_reward_enabled" checked><span class="slider"></span></label>
+                                        <div class="number-input-group" style="width: 120px;">
+                                            <input type="number" id="economy_daily_base_reward" value="250" min="1" max="100000">
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group toggle-group">
                                     <div>

@@ -1281,70 +1281,61 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
 
         // Economy System
         if (document.getElementById('economy_enabled')) {
-            document.getElementById('economy_enabled').checked = config.economy?.enabled ?? true;
-            document.getElementById('economy_currency_symbol').value = config.economy?.currency_symbol || '🪙';
-            const monMul = config.economy?.money_multiplier ?? 1.0;
-            document.getElementById('economy_money_multiplier').value = monMul;
+            const eco = config.economy || {};
+            const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+            const setChk = (id, b) => { const el = document.getElementById(id); if (el) el.checked = b; };
+
+            setChk('economy_enabled', eco.enabled ?? true);
+            setVal('economy_currency_symbol', eco.currency_symbol || '🪙');
+            const monMul = eco.money_multiplier ?? 1.0;
+            setVal('economy_money_multiplier', monMul);
             if (document.getElementById('economy_money_multiplier_val')) {
                 document.getElementById('economy_money_multiplier_val').textContent = 'x' + parseFloat(monMul).toFixed(2);
             }
-            document.getElementById('economy_bet_limit_enabled').checked = config.economy?.bet_limit_enabled ?? true;
-            document.getElementById('economy_bet_limit_amount').value = config.economy?.bet_limit_amount ?? 10000;
-            document.getElementById('economy_reset_on_leave').checked = config.economy?.reset_on_leave ?? false;
+            setChk('economy_bet_limit_enabled', eco.bet_limit_enabled ?? true);
+            setVal('economy_bet_limit_amount', eco.bet_limit_amount ?? 10000);
+            setChk('economy_reset_on_leave', eco.reset_on_leave ?? false);
 
-            document.getElementById('economy_msg_money_enabled').checked = config.economy?.msg_money_enabled ?? true;
-            document.getElementById('economy_msg_money_amount').value = config.economy?.msg_money_amount ?? 8;
-            document.getElementById('economy_msg_money_cooldown').value = config.economy?.msg_money_cooldown ?? 60;
+            setChk('economy_msg_money_enabled', eco.msg_money_enabled ?? true);
+            setVal('economy_msg_money_amount', eco.msg_money_amount ?? 8);
+            setVal('economy_msg_money_cooldown', eco.msg_money_cooldown ?? 60);
 
-            document.getElementById('economy_voice_money_enabled').checked = config.economy?.voice_money_enabled ?? false;
-            document.getElementById('economy_voice_money_ignore_muted').checked = config.economy?.voice_money_ignore_muted ?? true;
-            document.getElementById('economy_voice_money_ignore_solo').checked = config.economy?.voice_money_ignore_solo ?? false;
-            document.getElementById('economy_voice_money_amount').value = config.economy?.voice_money_amount ?? 4;
+            setChk('economy_voice_money_enabled', eco.voice_money_enabled ?? false);
+            setChk('economy_voice_money_ignore_muted', eco.voice_money_ignore_muted ?? true);
+            setChk('economy_voice_money_ignore_solo', eco.voice_money_ignore_solo ?? false);
+            setVal('economy_voice_money_amount', eco.voice_money_amount ?? 4);
 
-            document.getElementById('economy_cmd_money_enabled').checked = config.economy?.cmd_money_enabled ?? true;
-            document.getElementById('economy_cmd_money_amount').value = config.economy?.cmd_money_amount ?? 8;
-            document.getElementById('economy_cmd_money_cooldown').value = config.economy?.cmd_money_cooldown ?? 60;
+            setChk('economy_cmd_money_enabled', eco.cmd_money_enabled ?? true);
+            setVal('economy_cmd_money_amount', eco.cmd_money_amount ?? 8);
+            setVal('economy_cmd_money_cooldown', eco.cmd_money_cooldown ?? 60);
 
-            document.getElementById('economy_react_money_enabled').checked = config.economy?.react_money_enabled ?? true;
-            document.getElementById('economy_react_money_amount').value = config.economy?.react_money_amount ?? 20;
-            document.getElementById('economy_react_money_cooldown').value = config.economy?.react_money_cooldown ?? 300;
+            setChk('economy_react_money_enabled', eco.react_money_enabled ?? true);
+            setVal('economy_react_money_amount', eco.react_money_amount ?? 20);
+            setVal('economy_react_money_cooldown', eco.react_money_cooldown ?? 300);
 
-            document.getElementById('economy_daily_base_reward').value = config.economy?.daily_base_reward ?? 250;
-            document.getElementById('economy_daily_streak_limit').value = config.economy?.daily_streak_limit ?? 5;
-            document.getElementById('economy_daily_streak_bonus').value = config.economy?.daily_streak_bonus ?? 10;
-            if (document.getElementById('economy_daily_base_reward_enabled')) {
-                document.getElementById('economy_daily_base_reward_enabled').checked = config.economy?.daily_base_reward_enabled ?? true;
+            setVal('economy_daily_base_reward', eco.daily_base_reward ?? 250);
+            setVal('economy_daily_streak_limit', eco.daily_streak_limit ?? 5);
+            setVal('economy_daily_streak_bonus', eco.daily_streak_bonus ?? 10);
+            setChk('economy_daily_base_reward_enabled', eco.daily_base_reward_enabled ?? true);
+            setChk('economy_daily_tier_reward_enabled', eco.daily_tier_reward_enabled ?? true);
+
+            setVal('economy_work_min_amount', eco.work_min_amount ?? 300);
+            setVal('economy_work_max_amount', eco.work_max_amount ?? 500);
+            setVal('economy_work_cooldown_min', eco.work_cooldown_min ?? 240);
+            setChk('economy_work_use_default_responses', eco.work_use_default_responses ?? true);
+
+            setVal('economy_baltop_custom_url', eco.baltop_custom_url || '');
+            const baltopSelect = document.getElementById('economy_baltop_auto_channel_id');
+            if (baltopSelect) {
+                baltopSelect.innerHTML = '<option value="">Select Channel...</option>';
+                (data.channels || globalChannels || []).forEach(c => {
+                    const sel = (c.id === (eco.baltop_auto_channel_id || '')) ? 'selected' : '';
+                    baltopSelect.innerHTML += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
+                });
             }
-            if (document.getElementById('economy_daily_tier_reward_enabled')) {
-                document.getElementById('economy_daily_tier_reward_enabled').checked = config.economy?.daily_tier_reward_enabled ?? true;
-            }
-
-            if (document.getElementById('economy_work_min_amount')) {
-                document.getElementById('economy_work_min_amount').value = config.economy?.work_min_amount ?? 300;
-                document.getElementById('economy_work_max_amount').value = config.economy?.work_max_amount ?? 500;
-                document.getElementById('economy_work_cooldown_min').value = config.economy?.work_cooldown_min ?? 240;
-                document.getElementById('economy_work_use_default_responses').checked = config.economy?.work_use_default_responses ?? true;
-            }
-
-            if (document.getElementById('economy_baltop_custom_url')) {
-                document.getElementById('economy_baltop_custom_url').value = config.economy?.baltop_custom_url || '';
-                const baltopSelect = document.getElementById('economy_baltop_auto_channel_id');
-                if (baltopSelect) {
-                    baltopSelect.innerHTML = '<option value="">Select Channel...</option>';
-                    data.channels.forEach(c => {
-                        const sel = (c.id === (config.economy?.baltop_auto_channel_id || '')) ? 'selected' : '';
-                        baltopSelect.innerHTML += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
-                    });
-                }
-                document.getElementById('economy_baltop_embed_color').value = config.economy?.baltop_embed_color || '#5865F2';
-                if (document.getElementById('economy_baltop_embed_color_hex')) {
-                    document.getElementById('economy_baltop_embed_color_hex').value = config.economy?.baltop_embed_color || '#5865F2';
-                }
-            }
-
-            if (document.getElementById('economy_role_boosters_stack')) {
-                document.getElementById('economy_role_boosters_stack').checked = config.economy?.role_boosters_stack ?? true;
-            }
+            setVal('economy_baltop_embed_color', eco.baltop_embed_color || '#5865F2');
+            setVal('economy_baltop_embed_color_hex', eco.baltop_embed_color || '#5865F2');
+            setChk('economy_role_boosters_stack', eco.role_boosters_stack ?? true);
         }
         document.getElementById('level_stat_roles_msg_cooldown').value = config.level?.stat_roles_msg_cooldown ?? 5;
         document.getElementById('level_stat_roles_voice_stack').checked = config.level?.stat_roles_voice_stack ?? false;
