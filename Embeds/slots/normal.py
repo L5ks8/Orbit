@@ -21,7 +21,7 @@ def get_embed(msg_type: str, **kwargs):
     elif msg_type == "closed":
         player = kwargs.get("player")
         
-        embed = discord.Embed(title="Orbit V2 Casino: Slot Machine", description="**Thanks for playing at the Orbit V2 Casino!** Machine closed.", color=discord.Color.red())
+        embed = discord.Embed(title="Orbit V2 Casino: Slot Machine", description="slots", color=discord.Color.red())
         embed.add_field(name="Player", value=player.mention, inline=False)
         
         return {"embed": embed}

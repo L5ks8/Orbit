@@ -33,7 +33,7 @@ def get_embed(msg_type: str, **kwargs):
         container = Container(
             TextDisplay(content=f"### Orbit V2 Casino: Slot Machine\n**Player:** {player.mention}"),
             Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content="**Thanks for playing at the Orbit V2 Casino!** Machine closed.")
+            TextDisplay(content="slots")
         )
         view.add_item(container)
         return {"view": view}
