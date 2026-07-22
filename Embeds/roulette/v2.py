@@ -1,5 +1,5 @@
 import discord
-from Embeds.v2_layout import LayoutView, Container, TextDisplay, Separator
+from discord.ui import LayoutView, Container, TextDisplay, Separator
 
 def get_embed(**kwargs):
     msg_type = kwargs.get("msg_type")

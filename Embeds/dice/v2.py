@@ -1,5 +1,5 @@
 import discord
-from Embeds.v2_layout import LayoutView, Container, TextDisplay, Separator
+from discord.ui import LayoutView, Container, TextDisplay, Separator
 
 DICE_FACES = {
     1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅"
