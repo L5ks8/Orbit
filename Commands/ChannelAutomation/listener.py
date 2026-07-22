@@ -204,20 +204,11 @@ class ChannelAutomationListener(commands.Cog):
             is_correct = is_number and (parsed_number == expected_number) and not is_same_user
 
             if is_correct:
-                try:
-                    await message.add_reaction("✅")
-                except Exception:
-                    pass
-
                 counting_cfg["current_count"] = expected_number
                 counting_cfg["last_user_id"] = str(message.author.id)
                 config["counting"] = counting_cfg
                 save_automation_config(message.guild.id, config)
             else:
-                try:
-                    await message.add_reaction("❌")
-                except Exception:
-                    pass
 
                 if is_same_user:
                     fail_reason = f"{message.author.mention} counted twice in a row!"
