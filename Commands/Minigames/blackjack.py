@@ -189,51 +189,57 @@ class BlackjackLayoutView(discord.ui.View):
         async def _hit_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+            
+            await interaction.response.defer()
             self.session.hit_player()
             await self.process_payout_and_xp(interaction)
-            await interaction.response.edit_message(**self.get_kwargs())
+            await interaction.edit_original_response(**self.get_kwargs())
 
         async def _stand_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+            
+            await interaction.response.defer()
             self.session.stand_player()
             await self.process_payout_and_xp(interaction)
-            await interaction.response.edit_message(**self.get_kwargs())
+            await interaction.edit_original_response(**self.get_kwargs())
 
         async def _double_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
 
+            await interaction.response.defer()
             gid = interaction.guild_id or self.guild_id
             cfg = load_economy_config(gid)
             sym = cfg.get("currency_symbol", "🪙")
 
             bal = get_user_balance(gid, interaction.user.id)
             if bal < self.session.bet_amount:
-                return await interaction.response.send_message(f"You don't have enough money to double down! Balance: **{sym} {bal:,}**", ephemeral=True)
+                return await interaction.followup.send(f"You don't have enough money to double down! Balance: **{sym} {bal:,}**", ephemeral=True)
 
             remove_user_balance(gid, interaction.user.id, self.session.bet_amount)
             self.session.total_bet += self.session.bet_amount
             self.session.double_down()
             await self.process_payout_and_xp(interaction)
-            await interaction.response.edit_message(**self.get_kwargs())
+            await interaction.edit_original_response(**self.get_kwargs())
 
         async def _new_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
 
+            await interaction.response.defer()
             gid = interaction.guild_id or self.guild_id
             cfg = load_economy_config(gid)
             sym = cfg.get("currency_symbol", "🪙")
 
             bal = get_user_balance(gid, interaction.user.id)
             if bal < self.session.bet_amount:
-                return await interaction.response.send_message(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**", ephemeral=True)
+                return await interaction.followup.send(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**", ephemeral=True)
 
             remove_user_balance(gid, interaction.user.id, self.session.bet_amount)
             self.session = BlackjackSession(self.session.player, bet_amount=self.session.bet_amount, guild_id=self.guild_id)
             await self.process_payout_and_xp(interaction)
-            await interaction.response.edit_message(**self.get_kwargs())
+            await interaction.edit_original_response(**self.get_kwargs())
 
         btn_hit.callback = _hit_cb
         btn_stand.callback = _stand_cb
@@ -256,11 +262,13 @@ class BlackjackCommand(commands.Cog):
     @commands.hybrid_command(name="blackjack", description="Bet money and play an interactive V2 Blackjack game (`/blackjack <bet>`).")
     @app_commands.describe(bet="Amount of money to bet (e.g. 50)")
     async def blackjack_cmd(self, ctx: commands.Context, bet: int = 10):
+        await ctx.defer()
+        
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send("This command must be run inside a server.")
 
         if bet < 1:
-            return await ctx.send("Bet amount must be at least 1.", ephemeral=True)
+            return await ctx.send("Bet amount must be at least 1.")
 
         cfg = load_economy_config(ctx.guild.id)
         sym = cfg.get("currency_symbol", "🪙")
@@ -268,11 +276,11 @@ class BlackjackCommand(commands.Cog):
         if cfg.get("bet_limit_enabled", True):
             max_bet = cfg.get("bet_limit_amount", 10000)
             if bet > max_bet:
-                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.", ephemeral=True)
+                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.")
 
         bal = get_user_balance(ctx.guild.id, ctx.author.id)
         if bal < bet:
-            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.", ephemeral=True)
+            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
 
         remove_user_balance(ctx.guild.id, ctx.author.id, bet)
 

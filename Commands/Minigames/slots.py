@@ -81,8 +81,9 @@ class SlotsLayoutView(discord.ui.View):
 
         async def _spin_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
+                return await interaction.response.send_message("This is not your slot machine! Use `/slots` to spin your own.", ephemeral=True)
             
+            await interaction.response.defer()
             gid = interaction.guild_id or self.guild_id
             cfg = load_economy_config(gid)
             sym = cfg.get("currency_symbol", "🪙")
@@ -90,9 +91,10 @@ class SlotsLayoutView(discord.ui.View):
 
             bal = get_user_balance(gid, interaction.user.id)
             if bal < bet:
-                return await interaction.response.send_message(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**", ephemeral=True)
+                return await interaction.followup.send(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**")
 
             remove_user_balance(gid, interaction.user.id, bet)
+            self.session = SlotsSession(self.session.player, bet_amount=self.session.bet_amount, guild_id=self.guild_id)
             self.session.spin()
 
             payout = int(bet * self.session.payout_mult)
@@ -113,7 +115,7 @@ class SlotsLayoutView(discord.ui.View):
                 if xp_earned > 0:
                     self.session.outcome_text += f" *(✨ +{xp_earned} XP)*"
 
-            await interaction.response.edit_message(**self.get_kwargs())
+            await interaction.edit_original_response(**self.get_kwargs())
 
         async def _exit_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
@@ -140,11 +142,13 @@ class SlotsCommand(commands.Cog):
     @commands.hybrid_command(name="slots", description="Bet money and spin the interactive V2 Casino Slot Machine (`/slots <bet>`).")
     @app_commands.describe(bet="Amount of money to bet (e.g. 50)")
     async def slots_cmd(self, ctx: commands.Context, bet: int = 10):
+        await ctx.defer()
+        
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send("This command must be run inside a server.")
 
         if bet < 1:
-            return await ctx.send("Bet amount must be at least 1.", ephemeral=True)
+            return await ctx.send("Bet amount must be at least 1.")
 
         cfg = load_economy_config(ctx.guild.id)
         sym = cfg.get("currency_symbol", "🪙")
@@ -152,11 +156,11 @@ class SlotsCommand(commands.Cog):
         if cfg.get("bet_limit_enabled", True):
             max_bet = cfg.get("bet_limit_amount", 10000)
             if bet > max_bet:
-                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.", ephemeral=True)
+                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.")
 
         bal = get_user_balance(ctx.guild.id, ctx.author.id)
         if bal < bet:
-            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.", ephemeral=True)
+            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
 
         remove_user_balance(ctx.guild.id, ctx.author.id, bet)
 
