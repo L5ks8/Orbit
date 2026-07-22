@@ -3228,12 +3228,12 @@ You reached **Level {level}**.</textarea>
 
                         <!-- Work Command Options Card -->
                         <div class="card mb-4" style="background: var(--bg-elevated); border-radius: 8px; border: 1px solid var(--border-color); padding: 24px; margin-top: 24px;">
-                            <h4 style="margin-top:0; margin-bottom: 24px; color: var(--text-primary); font-size: 18px; font-weight: 700;">Arbeitsbefehlsoptionen</h4>
+                            <h4 style="margin-top:0; margin-bottom: 24px; color: var(--text-primary); font-size: 18px; font-weight: 700;">Work Command Options</h4>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px;">
                                 <div class="form-group">
-                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Arbeitsgeld</label>
-                                    <span class="help-text" style="display: block; margin-bottom: 24px;">Der Geldbereich, der mit dem Befehl work verdient werden kann.</span>
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Work Money</label>
+                                    <span class="help-text" style="display: block; margin-bottom: 24px;">The range of money that can be earned with the work command.</span>
                                     
                                     <div style="display: flex; gap: 15px; align-items: center;">
                                         <span id="work_min_display" style="font-size: 14px; font-weight: 500; color: var(--text-primary);">300</span>
@@ -3248,8 +3248,8 @@ You reached **Level {level}**.</textarea>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Arbeits-Cooldown</label>
-                                    <span class="help-text" style="display: block; margin-bottom: 20px;">Die Abklingzeit für den Befehl work in Minuten.</span>
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Work Cooldown</label>
+                                    <span class="help-text" style="display: block; margin-bottom: 20px;">The cooldown for the work command in minutes.</span>
                                     <div class="blue-num-group">
                                         <button type="button" class="blue-num-btn minus" data-target="economy_work_cooldown_min">-</button>
                                         <input type="number" id="economy_work_cooldown_min" value="240" min="1" max="1440" class="blue-num-input">
@@ -3262,35 +3262,35 @@ You reached **Level {level}**.</textarea>
                             
                             <div style="margin-bottom: 16px;">
                                 <h4 style="margin: 0 0 6px 0; color: var(--text-primary); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                                    Arbeitsantworten (<span id="economy_work_responses_count">0</span>/500)
+                                    Work Responses (<span id="economy_work_responses_count">0</span>/500)
                                 </h4>
-                                <span class="help-text" style="display: block;">Antworten, die verwendet werden können, wenn ein Nutzer den work-Befehl benutzt.</span>
+                                <span class="help-text" style="display: block;">Responses that can be used when a user uses the work command.</span>
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                                 <div>
-                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Standard-Arbeitsantworten</label>
-                                    <span class="help-text" style="display: block;">Sollen die Standard-Arbeitsantworten verwendet werden?</span>
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Default Work Responses</label>
+                                    <span class="help-text" style="display: block;">Should the default work responses be used?</span>
                                 </div>
                                 <label class="switch"><input type="checkbox" id="economy_work_use_default_responses" checked><span class="slider"></span></label>
                             </div>
                             
-                            <button type="button" id="btn_add_work_response" class="btn-primary" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer;">Antwort hinzufügen</button>
+                            <button type="button" id="btn_add_work_response" class="btn-primary" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer;">Add Response</button>
                             <div id="economy_work_responses_container" style="margin-top: 15px;"></div>
                         </div>
 
                         <!-- Daily Command Options Card -->
                         <div class="card mb-4" style="background: var(--bg-elevated); border-radius: 8px; border: 1px solid var(--border-color); padding: 24px; margin-top: 24px;">
                             <h4 style="margin-top:0; margin-bottom: 30px; color: var(--text-primary); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                                Tägliche Befehlsoptionen
+                                Daily Command Options
                             </h4>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px 40px;">
                                 <!-- Top Left -->
                                 <div class="form-group" style="display: flex; justify-content: space-between; align-items: flex-start;">
                                     <div style="padding-right: 20px;">
-                                        <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Grundbelohnung</label>
-                                        <span class="help-text" style="display: block;">Feste Belohnung für Tag 1. Wenn deaktiviert, wird die Stufenbelohnung als Basis für Tag 1 verwendet.</span>
+                                        <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Base Reward</label>
+                                        <span class="help-text" style="display: block;">Fixed reward for day 1. If disabled, tier reward is used as a base for day 1.</span>
                                     </div>
                                     <label class="switch" style="flex-shrink: 0; margin-top: 2px;"><input type="checkbox" id="economy_daily_base_reward_enabled"><span class="slider"></span></label>
                                     <input type="number" id="economy_daily_base_reward" value="250" style="display:none;">
@@ -3299,8 +3299,8 @@ You reached **Level {level}**.</textarea>
                                 <!-- Top Right -->
                                 <div class="form-group" style="display: flex; justify-content: space-between; align-items: flex-start;">
                                     <div style="padding-right: 20px;">
-                                        <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Stufenbelohnung</label>
-                                        <span class="help-text" style="display: block;">Betrag, der pro Streak-Tag hinzugefügt wird und bis zum Limit ansteigt. Wenn deaktiviert, werden 80 % des kombinierten Arbeitsbelohnungsbereichs verwendet.</span>
+                                        <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Tier Reward</label>
+                                        <span class="help-text" style="display: block;">Amount added per streak day ramping up to the limit. If disabled, uses 80% of the combined work reward range.</span>
                                     </div>
                                     <label class="switch" style="flex-shrink: 0; margin-top: 2px;"><input type="checkbox" id="economy_daily_tier_reward_enabled"><span class="slider"></span></label>
                                     <input type="number" id="economy_daily_tier_reward" value="50" style="display:none;">
@@ -3308,8 +3308,8 @@ You reached **Level {level}**.</textarea>
                                 
                                 <!-- Bottom Left -->
                                 <div class="form-group">
-                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Streak-Limit</label>
-                                    <span class="help-text" style="display: block; margin-bottom: 12px;">Die Anzahl der Tage, bevor die primäre Skalierung stoppt und der flache Streak-Bonus greift.</span>
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Streak Limit</label>
+                                    <span class="help-text" style="display: block; margin-bottom: 12px;">The amount of days before the primary scaling stops and the flat streak bonus kicks in.</span>
                                     <div class="blue-num-group">
                                         <button type="button" class="blue-num-btn minus" data-target="economy_daily_streak_limit">-</button>
                                         <input type="number" id="economy_daily_streak_limit" value="5" min="1" max="30" class="blue-num-input">
@@ -3319,8 +3319,8 @@ You reached **Level {level}**.</textarea>
                                 
                                 <!-- Bottom Right -->
                                 <div class="form-group">
-                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Streak-Bonus</label>
-                                    <span class="help-text" style="display: block; margin-bottom: 12px;">Der Betrag, der pro Tag über das Streak-Limit hinaus hinzugefügt wird.</span>
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Streak Bonus</label>
+                                    <span class="help-text" style="display: block; margin-bottom: 12px;">The amount added per day past the streak limit.</span>
                                     <div class="blue-num-group">
                                         <button type="button" class="blue-num-btn minus" data-target="economy_daily_streak_bonus">-</button>
                                         <input type="number" id="economy_daily_streak_bonus" value="10" min="0" max="10000" class="blue-num-input">
@@ -3420,41 +3420,41 @@ You reached **Level {level}**.</textarea>
 
                         <!-- Role Boosters -->
                         <div class="level-card" style="margin-top: 24px; margin-bottom: 24px;">
-                            <div class="level-card-title">Rollen-Booster (<span id="economy_role_boosters_count">0</span>/10)</div>
+                            <div class="level-card-title">Role Boosters (<span id="economy_role_boosters_count">0</span>/10)</div>
                             <div class="form-group toggle-group">
                                 <div>
-                                    <label class="form-label mb-0">Booster stapeln</label>
-                                    <span class="help-text">Sollen sich mehrere Booster stapeln (addieren)?</span>
+                                    <label class="form-label mb-0">Stack Boosters</label>
+                                    <span class="help-text">Should multiple boosters stack (add up)?</span>
                                 </div>
                                 <label class="switch"><input type="checkbox" id="economy_role_boosters_stack" checked><span class="slider"></span></label>
                             </div>
                             <div class="reward-table" style="margin-top: 15px;">
                                 <div class="reward-table-header">
-                                    <span>Geld Multiplikator</span>
-                                    <span>Rolle</span>
-                                    <span>Aktion</span>
+                                    <span>Money Multiplier</span>
+                                    <span>Role</span>
+                                    <span>Action</span>
                                 </div>
                                 <div id="economy_role_boosters_container" class="reward-table-body">
-                                    <div class="reward-empty">Keine Booster konfiguriert.</div>
+                                    <div class="reward-empty">No boosters configured.</div>
                                 </div>
                             </div>
-                            <button type="button" id="btn_add_economy_role_booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Rolle hinzufügen</button>
+                            <button type="button" id="btn_add_economy_role_booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Role</button>
                         </div>
 
                         <!-- Channel Boosters -->
                         <div class="level-card" style="margin-top: 24px; margin-bottom: 24px;">
-                            <div class="level-card-title">Kanal-Booster (<span id="economy_channel_boosters_count">0</span>/10)</div>
+                            <div class="level-card-title">Channel Boosters (<span id="economy_channel_boosters_count">0</span>/10)</div>
                             <div class="reward-table" style="margin-top: 15px;">
                                 <div class="reward-table-header">
-                                    <span>Geld Multiplikator</span>
-                                    <span>Kanal</span>
-                                    <span>Aktion</span>
+                                    <span>Money Multiplier</span>
+                                    <span>Channel</span>
+                                    <span>Action</span>
                                 </div>
                                 <div id="economy_channel_boosters_container" class="reward-table-body">
-                                    <div class="reward-empty">Keine Booster konfiguriert.</div>
+                                    <div class="reward-empty">No boosters configured.</div>
                                 </div>
                             </div>
-                            <button type="button" id="btn_add_economy_channel_booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Kanal hinzufügen</button>
+                            <button type="button" id="btn_add_economy_channel_booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Channel</button>
                         </div>
 
                     </div>

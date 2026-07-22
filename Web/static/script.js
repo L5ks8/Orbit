@@ -1346,14 +1346,14 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             if (ecoRoleCont) {
                 ecoRoleCont.innerHTML = '';
                 (eco.role_boosters || []).forEach(b => { if (window.addEconomyRoleBooster) window.addEconomyRoleBooster(b.multiplier, b.role_id); });
-                if (ecoRoleCont.innerHTML === '') ecoRoleCont.innerHTML = '<div class="reward-empty">Keine Booster konfiguriert.</div>';
+                if (ecoRoleCont.innerHTML === '') ecoRoleCont.innerHTML = '<div class="reward-empty">No boosters configured.</div>';
                 if (window.updateEconomyRoleBoosterCount) window.updateEconomyRoleBoosterCount();
             }
             const ecoChanCont = document.getElementById('economy_channel_boosters_container');
             if (ecoChanCont) {
                 ecoChanCont.innerHTML = '';
                 (eco.channel_boosters || []).forEach(b => { if (window.addEconomyChannelBooster) window.addEconomyChannelBooster(b.multiplier, b.channel_id); });
-                if (ecoChanCont.innerHTML === '') ecoChanCont.innerHTML = '<div class="reward-empty">Keine Booster konfiguriert.</div>';
+                if (ecoChanCont.innerHTML === '') ecoChanCont.innerHTML = '<div class="reward-empty">No boosters configured.</div>';
                 if (window.updateEconomyChannelBoosterCount) window.updateEconomyChannelBoosterCount();
             }
         }
@@ -4422,7 +4422,7 @@ window.addEconomyWorkResponse = function(text = "") {
     const row = document.createElement('div');
     row.style.cssText = 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);';
     row.innerHTML = `
-        <input type="text" class="work-response-input form-input" value="${text.replace(/"/g, '&quot;')}" style="flex: 1;" placeholder="z.B. Du hast 100 Münzen durch harte Arbeit verdient!">
+        <input type="text" class="work-response-input form-input" value="${text.replace(/"/g, '&quot;')}" style="flex: 1;" placeholder="e.g. You earned 100 coins from hard work!">
         <button type="button" class="btn-danger" onclick="this.parentElement.remove(); if(typeof setDirty === 'function') setDirty(true); window.updateEconomyWorkResponseCount();"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
     `;
     container.appendChild(row);
@@ -4442,13 +4442,13 @@ window.addEconomyRoleBooster = function(multiplier = 1.1, roleId = "") {
     const row = document.createElement('div');
     row.className = 'reward-row';
     
-    let options = '<option value="">Rolle auswählen...</option>';
+    let options = '<option value="">Select Role...</option>';
     if (typeof globalRoles !== 'undefined' && globalRoles) {
         globalRoles.forEach(r => {
             options += `<option value="${r.id}" ${r.id === roleId ? 'selected' : ''}>${r.name}</option>`;
         });
     } else if (roleId) {
-        options += `<option value="${roleId}" selected>Rolle ${roleId}</option>`;
+        options += `<option value="${roleId}" selected>Role ${roleId}</option>`;
     }
     
     row.innerHTML = `
@@ -4461,7 +4461,7 @@ window.addEconomyRoleBooster = function(multiplier = 1.1, roleId = "") {
             </select>
         </div>
         <div>
-            <button type="button" class="btn-danger" onclick="this.closest('.reward-row').remove(); if(typeof setDirty === 'function') setDirty(true); window.updateEconomyRoleBoosterCount();">Löschen</button>
+            <button type="button" class="btn-danger" onclick="this.closest('.reward-row').remove(); if(typeof setDirty === 'function') setDirty(true); window.updateEconomyRoleBoosterCount();">Delete</button>
         </div>
     `;
     container.appendChild(row);
@@ -4482,13 +4482,13 @@ window.addEconomyChannelBooster = function(multiplier = 1.1, channelId = "") {
     const row = document.createElement('div');
     row.className = 'reward-row';
     
-    let options = '<option value="">Kanal auswählen...</option>';
+    let options = '<option value="">Select Channel...</option>';
     if (typeof globalChannels !== 'undefined' && globalChannels) {
         globalChannels.forEach(c => {
             options += `<option value="${c.id}" ${c.id === channelId ? 'selected' : ''}>#${c.name}</option>`;
         });
     } else if (channelId) {
-        options += `<option value="${channelId}" selected>Kanal ${channelId}</option>`;
+        options += `<option value="${channelId}" selected>Channel ${channelId}</option>`;
     }
 
     row.innerHTML = `
@@ -4501,7 +4501,7 @@ window.addEconomyChannelBooster = function(multiplier = 1.1, channelId = "") {
             </select>
         </div>
         <div>
-            <button type="button" class="btn-danger" onclick="this.closest('.reward-row').remove(); if(typeof setDirty === 'function') setDirty(true); window.updateEconomyChannelBoosterCount();">Löschen</button>
+            <button type="button" class="btn-danger" onclick="this.closest('.reward-row').remove(); if(typeof setDirty === 'function') setDirty(true); window.updateEconomyChannelBoosterCount();">Delete</button>
         </div>
     `;
     container.appendChild(row);
@@ -4517,13 +4517,15 @@ window.updateEconomyChannelBoosterCount = function() {
 };
 
 document.addEventListener('click', function(e) {
-    if (e.target.id === 'btn_add_work_response') {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.id === 'btn_add_work_response') {
         window.addEconomyWorkResponse();
         if(typeof setDirty === 'function') setDirty(true);
-    } else if (e.target.id === 'btn_add_economy_role_booster') {
+    } else if (btn.id === 'btn_add_economy_role_booster') {
         window.addEconomyRoleBooster();
         if(typeof setDirty === 'function') setDirty(true);
-    } else if (e.target.id === 'btn_add_economy_channel_booster') {
+    } else if (btn.id === 'btn_add_economy_channel_booster') {
         window.addEconomyChannelBooster();
         if(typeof setDirty === 'function') setDirty(true);
     }
