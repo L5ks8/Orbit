@@ -199,7 +199,8 @@ class ChannelAutomationListener(commands.Cog):
             is_number = content_clean.isdigit()
             parsed_number = int(content_clean) if is_number else None
 
-            is_same_user = (str(message.author.id) == last_user_id and current_count > 0)
+            allow_solo = counting_cfg.get("allow_solo_counting", True)
+            is_same_user = (not allow_solo) and (str(message.author.id) == last_user_id and current_count > 0)
             is_correct = is_number and (parsed_number == expected_number) and not is_same_user
 
             if is_correct:

@@ -19,7 +19,8 @@ def load_automation_config(guild_id: int) -> Dict[str, Any]:
             "channel_id": "",
             "whitelisted_roles": [],
             "current_count": 0,
-            "last_user_id": None
+            "last_user_id": None,
+            "allow_solo_counting": True
         }
     }
     try:

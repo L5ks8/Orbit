@@ -1187,6 +1187,10 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             document.getElementById('counting_enabled').checked = config.automation?.counting?.enabled || false;
         }
 
+        if (document.getElementById('counting_allow_solo')) {
+            document.getElementById('counting_allow_solo').checked = config.automation?.counting?.allow_solo_counting ?? true;
+        }
+
         window.currentCountingVal = config.automation?.counting?.current_count || 0;
         window.currentCountingLastUser = config.automation?.counting?.last_user_id || null;
 
@@ -2816,8 +2820,8 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
                 enabled: document.getElementById('counting_enabled')?.checked || false,
                 channel_id: document.getElementById('counting_channel_id')?.value || '',
                 whitelisted_roles: document.getElementById('counting_whitelisted_roles') ? Array.from(document.getElementById('counting_whitelisted_roles').selectedOptions).map(o => o.value) : [],
-                current_count: window.currentCountingVal || 0,
-                last_user_id: window.currentCountingLastUser || null
+                allow_solo_counting: document.getElementById('counting_allow_solo')?.checked ?? true,
+                reset_count_requested: window.resetCountingRequested || false
             }
         },
         tempvoice: {
@@ -4258,6 +4262,7 @@ async function fetchAndRenderStats(days) {
 function resetCountingNumber() {
     window.currentCountingVal = 0;
     window.currentCountingLastUser = null;
+    window.resetCountingRequested = true;
     if (document.getElementById('counting_current_count_display')) {
         document.getElementById('counting_current_count_display').textContent = 0;
     }

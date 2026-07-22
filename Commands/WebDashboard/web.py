@@ -710,7 +710,21 @@ class WebDashboard:
                 save_ticket_config(guild_id, ticket_cfg)
 
             if user_perms.get("can_channels") and "automation" in data:
-                save_automation_config(guild_id, data["automation"])
+                from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
+                current_auto = load_automation_config(guild_id)
+                new_auto = data["automation"]
+                if isinstance(new_auto, dict) and "counting" in new_auto:
+                    c_data = new_auto["counting"]
+                    if not c_data.get("reset_count_requested"):
+                        curr_cnt = current_auto.get("counting", {})
+                        c_data["current_count"] = curr_cnt.get("current_count", 0)
+                        c_data["last_user_id"] = curr_cnt.get("last_user_id", None)
+                    else:
+                        c_data["current_count"] = 0
+                        c_data["last_user_id"] = None
+                        if "reset_count_requested" in c_data:
+                            del c_data["reset_count_requested"]
+                save_automation_config(guild_id, new_auto)
 
             if user_perms.get("can_channels") and "logs" in data:
                 l_cfg = load_log_config(guild_id)
