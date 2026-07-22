@@ -21,7 +21,7 @@ class JTCListenerCog(commands.Cog):
         if after.channel:
             joined_hub = None
             for hub in config.get("hubs", []):
-                if hub.get("hub_channel_id") == after.channel.id:
+                if str(hub.get("hub_channel_id")) == str(after.channel.id):
                     joined_hub = hub
                     break
             
@@ -74,8 +74,8 @@ class JTCListenerCog(commands.Cog):
                 except Exception as e:
                     print(f"Failed to send JTC control container: {e}")
 
-        hub_ids = [h.get("hub_channel_id") for h in config.get("hubs", [])]
-        if before.channel and before.channel.id not in hub_ids:
+        hub_ids = [str(h.get("hub_channel_id")) for h in config.get("hubs", []) if h.get("hub_channel_id")]
+        if before.channel and str(before.channel.id) not in hub_ids:
             active = get_active_channel(guild.id, before.channel.id)
             if active:
                 remaining_members = [m for m in before.channel.members if not m.bot]

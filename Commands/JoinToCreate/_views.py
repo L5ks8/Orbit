@@ -67,7 +67,7 @@ class LimitVoiceModal(Modal, title="Set Voice User Limit"):
             await interaction.followup.send(f"Failed to change user limit: {e}", ephemeral=True)
 
 class PersistentJTCControlLayout(discord.ui.View):
-    def __init__(self, guild_id: int, data: dict = None):
+    def __init__(self, guild_id: int = 0, data: dict = None):
         super().__init__(timeout=None)
         self.guild_id = guild_id
         self.data = data or {}
