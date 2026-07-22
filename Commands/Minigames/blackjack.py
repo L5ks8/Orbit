@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 
-SUITS = ["â™ ï¸", "â™¥ï¸", "â™¦ï¸", "â™£ï¸"]
+SUITS = ["♠️", "♥️", "♦️", "♣️"]
 RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 
 class Card:
@@ -31,8 +31,9 @@ def calculate_score(hand: list[Card]) -> int:
     return total
 
 class BlackjackSession:
-    def __init__(self, player: discord.abc.User):
+    def __init__(self, player: discord.abc.User, guild_id: int = 0):
         self.player = player
+        self.guild_id = guild_id
         self.deck = [Card(r, s) for s in SUITS for r in RANKS]
         random.shuffle(self.deck)
         self.player_hand: list[Card] = []
@@ -96,9 +97,10 @@ class BlackjackSession:
             self.stand_player()
 
 class BlackjackLayoutView(discord.ui.View):
-    def __init__(self, session: BlackjackSession):
+    def __init__(self, session: BlackjackSession, guild_id: int = 0):
         super().__init__(timeout=300)
         self.session = session
+        self.guild_id = guild_id or session.guild_id
 
     def get_kwargs(self):
         p_score = calculate_score(self.session.player_hand)
@@ -143,7 +145,7 @@ class BlackjackLayoutView(discord.ui.View):
         async def _new_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
-            self.session = BlackjackSession(self.session.player)
+            self.session = BlackjackSession(self.session.player, guild_id=self.guild_id)
             await interaction.response.edit_message(**self.get_kwargs())
 
         btn_hit.callback = _hit_cb
@@ -155,7 +157,7 @@ class BlackjackLayoutView(discord.ui.View):
 
         from Embeds import get_command_embed
         return get_command_embed(
-            0, "blackjack", msg_type="game",
+            self.guild_id, "blackjack", msg_type="game",
             player=self.session.player, d_info=d_info, p_info=p_info,
             status_text=status_text, components=components
         )
@@ -166,8 +168,9 @@ class BlackjackCommand(commands.Cog):
 
     @commands.hybrid_command(name="blackjack", description="Play an interactive V2 Blackjack game (`/blackjack`).")
     async def blackjack_cmd(self, ctx: commands.Context):
-        session = BlackjackSession(ctx.author)
-        view = BlackjackLayoutView(session)
+        guild_id = ctx.guild.id if ctx.guild else 0
+        session = BlackjackSession(ctx.author, guild_id=guild_id)
+        view = BlackjackLayoutView(session, guild_id=guild_id)
         await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):

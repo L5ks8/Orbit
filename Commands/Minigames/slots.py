@@ -6,8 +6,9 @@ from discord.ext import commands
 SYMBOLS = ["🍒", "🍋", "🍉", "🍇", "🔔", "💎", "7️⃣"]
 
 class SlotsSession:
-    def __init__(self, player: discord.abc.User):
+    def __init__(self, player: discord.abc.User, guild_id: int = 0):
         self.player = player
+        self.guild_id = guild_id
         self.grid = []
         self.outcome_text = ""
         self.spin()
@@ -33,16 +34,17 @@ class SlotsSession:
             self.outcome_text = "**NO MATCH!** Better luck on the next spin!"
 
 class SlotsLayoutView(discord.ui.View):
-    def __init__(self, session: SlotsSession):
+    def __init__(self, session: SlotsSession, guild_id: int = 0):
         super().__init__(timeout=300)
         self.session = session
+        self.guild_id = guild_id or session.guild_id
         self.closed = False
 
     def get_kwargs(self):
         if self.closed:
             from Embeds import get_command_embed
             return get_command_embed(
-                0, "slots", msg_type="closed",
+                self.guild_id, "slots", msg_type="closed",
                 player=self.session.player
             )
             
@@ -78,7 +80,7 @@ class SlotsLayoutView(discord.ui.View):
         
         from Embeds import get_command_embed
         return get_command_embed(
-            0, "slots", msg_type="game",
+            self.guild_id, "slots", msg_type="game",
             player=self.session.player, reels_str=reels_str,
             outcome_text=self.session.outcome_text, components=components
         )
@@ -89,8 +91,9 @@ class SlotsCommand(commands.Cog):
 
     @commands.hybrid_command(name="slots", description="Spin the interactive V2 Casino Slot Machine (`/slots`).")
     async def slots_cmd(self, ctx: commands.Context):
-        session = SlotsSession(ctx.author)
-        view = SlotsLayoutView(session)
+        guild_id = ctx.guild.id if ctx.guild else 0
+        session = SlotsSession(ctx.author, guild_id=guild_id)
+        view = SlotsLayoutView(session, guild_id=guild_id)
         await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
