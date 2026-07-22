@@ -191,3 +191,31 @@ def delete_user_xp(guild_id: int, user_id: int) -> None:
     db = get_db()
     col = db["LevelData"]
     col.delete_one({"_id": f"{guild_id}_{user_id}"})
+
+async def grant_minigame_xp(guild: Optional[Any], member: Optional[Any], channel: Optional[Any], base_amount: int) -> int:
+    """
+    Grants minigame XP to a member if the Leveling system is enabled for the guild.
+    Returns the final XP awarded (after multiplier).
+    """
+    if not guild or not member or getattr(member, "bot", False) or base_amount <= 0:
+        return 0
+
+    config = load_level_config(guild.id)
+    if not config.get("enabled", False):
+        return 0
+
+    mult = config.get("xp_multiplier", 1.0)
+    final_amount = max(1, int(base_amount * mult))
+
+    leveled_up, old_level, new_level, new_xp = add_xp(guild.id, member.id, final_amount)
+
+    if leveled_up and channel and hasattr(guild, "_state") and guild._state:
+        try:
+            bot = guild._state._get_client()
+            cog = bot.get_cog("LevelListenerCog")
+            if cog:
+                await cog._handle_level_up(member, channel, old_level, new_level, config)
+        except Exception:
+            pass
+
+    return final_amount

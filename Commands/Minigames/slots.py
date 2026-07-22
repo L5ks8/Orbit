@@ -11,6 +11,7 @@ class SlotsSession:
         self.guild_id = guild_id
         self.grid = []
         self.outcome_text = ""
+        self.base_xp = 0
         self.spin()
 
     def spin(self):
@@ -24,14 +25,19 @@ class SlotsSession:
 
         if s1 == s2 == s3 == "7️⃣":
             self.outcome_text = "**JACKPOT 777!** Mega Casino Payout (`10x Win`)!"
+            self.base_xp = 500
         elif s1 == s2 == s3 == "💎":
             self.outcome_text = "**DIAMOND TRIPLE!** High Roller Payout (`5x Win`)!"
+            self.base_xp = 300
         elif s1 == s2 == s3:
             self.outcome_text = f"**TRIPLE MATCH (`{s1}`)!** Classic Payout (`3x Win`)!"
+            self.base_xp = 150
         elif s1 == s2 or s2 == s3 or s1 == s3:
             self.outcome_text = "**DOUBLE MATCH!** Small Payout (`1.5x Win`)!"
+            self.base_xp = 50
         else:
             self.outcome_text = "**NO MATCH!** Better luck on the next spin!"
+            self.base_xp = 0
 
 class SlotsLayoutView(discord.ui.View):
     def __init__(self, session: SlotsSession, guild_id: int = 0):
@@ -65,6 +71,11 @@ class SlotsLayoutView(discord.ui.View):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
             self.session.spin()
+            if self.session.base_xp > 0 and interaction.guild and interaction.user:
+                from Commands.Level._storage import grant_minigame_xp
+                xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, self.session.base_xp)
+                if xp_earned > 0:
+                    self.session.outcome_text += f" *(✨ +{xp_earned} XP)*"
             await interaction.response.edit_message(**self.get_kwargs())
 
         async def _exit_cb(interaction: discord.Interaction):
@@ -93,6 +104,11 @@ class SlotsCommand(commands.Cog):
     async def slots_cmd(self, ctx: commands.Context):
         guild_id = ctx.guild.id if ctx.guild else 0
         session = SlotsSession(ctx.author, guild_id=guild_id)
+        if session.base_xp > 0 and ctx.guild and ctx.author:
+            from Commands.Level._storage import grant_minigame_xp
+            xp_earned = await grant_minigame_xp(ctx.guild, ctx.author, ctx.channel, session.base_xp)
+            if xp_earned > 0:
+                session.outcome_text += f" *(✨ +{xp_earned} XP)*"
         view = SlotsLayoutView(session, guild_id=guild_id)
         await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 

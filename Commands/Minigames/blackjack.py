@@ -41,6 +41,8 @@ class BlackjackSession:
         self.game_over = False
         self.outcome_text = ""
         self.can_double = True
+        self.base_xp = 0
+        self.xp_awarded = False
 
         self.player_hand.append(self.deck.pop())
         self.dealer_hand.append(self.deck.pop())
@@ -55,10 +57,13 @@ class BlackjackSession:
             self.can_double = False
             if p_score == 21 and d_score == 21:
                 self.outcome_text = "**Push!** Both you and the dealer hit natural Blackjack (21). It's a draw!"
+                self.base_xp = 10
             elif p_score == 21:
                 self.outcome_text = "**BLACKJACK!** You dealt 21 right out of the gate! You win!"
+                self.base_xp = 80
             else:
                 self.outcome_text = "**Dealer Blackjack!** The dealer opened with 21. Dealer wins!"
+                self.base_xp = 0
 
     def hit_player(self):
         self.player_hand.append(self.deck.pop())
@@ -66,6 +71,7 @@ class BlackjackSession:
         if calculate_score(self.player_hand) > 21:
             self.game_over = True
             self.outcome_text = "**BUST!** Your hand exceeded 21. Dealer wins!"
+            self.base_xp = 0
         elif calculate_score(self.player_hand) == 21:
             self.stand_player()
 
@@ -80,12 +86,16 @@ class BlackjackSession:
 
         if d_score > 21:
             self.outcome_text = f"**Dealer BUST (`{d_score}`)!** You win the hand!"
+            self.base_xp = 40
         elif p_score > d_score:
             self.outcome_text = f"**YOU WIN!** Your hand (`{p_score}`) beat the dealer's (`{d_score}`)!"
+            self.base_xp = 40
         elif d_score > p_score:
             self.outcome_text = f"**DEALER WINS!** Dealer's (`{d_score}`) beat your hand (`{p_score}`)!"
+            self.base_xp = 0
         else:
             self.outcome_text = f"**PUSH!** Both hands tied at `{p_score}`. It's a draw!"
+            self.base_xp = 10
 
     def double_down(self):
         self.player_hand.append(self.deck.pop())
@@ -93,14 +103,26 @@ class BlackjackSession:
         if calculate_score(self.player_hand) > 21:
             self.game_over = True
             self.outcome_text = "**DOUBLE DOWN BUST!** You drew one card and went over 21. Dealer wins!"
+            self.base_xp = 0
         else:
             self.stand_player()
+            if self.base_xp == 40:
+                self.base_xp = 60
 
 class BlackjackLayoutView(discord.ui.View):
     def __init__(self, session: BlackjackSession, guild_id: int = 0):
         super().__init__(timeout=300)
         self.session = session
         self.guild_id = guild_id or session.guild_id
+
+    async def process_xp(self, interaction: discord.Interaction):
+        if self.session.game_over and self.session.base_xp > 0 and not self.session.xp_awarded:
+            self.session.xp_awarded = True
+            if interaction.guild and interaction.user:
+                from Commands.Level._storage import grant_minigame_xp
+                earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, self.session.base_xp)
+                if earned > 0:
+                    self.session.outcome_text += f" *(✨ +{earned} XP)*"
 
     def get_kwargs(self):
         p_score = calculate_score(self.session.player_hand)
@@ -128,24 +150,28 @@ class BlackjackLayoutView(discord.ui.View):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.hit_player()
+            await self.process_xp(interaction)
             await interaction.response.edit_message(**self.get_kwargs())
 
         async def _stand_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.stand_player()
+            await self.process_xp(interaction)
             await interaction.response.edit_message(**self.get_kwargs())
 
         async def _double_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session.double_down()
+            await self.process_xp(interaction)
             await interaction.response.edit_message(**self.get_kwargs())
 
         async def _new_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
                 return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
             self.session = BlackjackSession(self.session.player, guild_id=self.guild_id)
+            await self.process_xp(interaction)
             await interaction.response.edit_message(**self.get_kwargs())
 
         btn_hit.callback = _hit_cb
@@ -170,6 +196,12 @@ class BlackjackCommand(commands.Cog):
     async def blackjack_cmd(self, ctx: commands.Context):
         guild_id = ctx.guild.id if ctx.guild else 0
         session = BlackjackSession(ctx.author, guild_id=guild_id)
+        if session.game_over and session.base_xp > 0 and not session.xp_awarded and ctx.guild and ctx.author:
+            session.xp_awarded = True
+            from Commands.Level._storage import grant_minigame_xp
+            earned = await grant_minigame_xp(ctx.guild, ctx.author, ctx.channel, session.base_xp)
+            if earned > 0:
+                session.outcome_text += f" *(✨ +{earned} XP)*"
         view = BlackjackLayoutView(session, guild_id=guild_id)
         await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
