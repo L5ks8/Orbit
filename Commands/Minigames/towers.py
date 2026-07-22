@@ -182,6 +182,14 @@ class TowersLayoutView(discord.ui.View):
         if payout > 0:
             add_user_balance(gid, interaction.user.id, payout)
 
+        if payout > self.session.bet_amount:
+            profit = payout - self.session.bet_amount
+            # Only append if not already in the text (like cashout)
+            if "Cashed Out!" not in self.session.outcome_text:
+                self.session.outcome_text += f"\n💰 **Won:** {sym} {payout:,} *(Net: +{sym} {profit:,})*"
+        elif payout == self.session.bet_amount:
+            self.session.outcome_text += f"\n💰 **Returned:** {sym} {payout:,}"
+
         if self.session.base_xp > 0 and interaction.guild and interaction.user:
             from Commands.Level._storage import grant_minigame_xp
             xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, self.session.base_xp)
