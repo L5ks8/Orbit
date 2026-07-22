@@ -207,8 +207,8 @@ async def grant_minigame_xp(guild: Optional[Any], member: Optional[Any], channel
     mult = config.get("xp_multiplier", 1.0)
     final_amount = max(1, int(base_amount * mult))
 
-    leveled_up, old_level, new_level, new_xp = add_xp(guild.id, member.id, final_amount)
-
+    old_level, new_level, new_xp = add_xp(guild.id, member.id, final_amount)
+    leveled_up = new_level > old_level
     if leveled_up and channel and hasattr(guild, "_state") and guild._state:
         try:
             bot = guild._state._get_client()
