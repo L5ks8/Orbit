@@ -1336,6 +1336,26 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             setVal('economy_baltop_embed_color', eco.baltop_embed_color || '#5865F2');
             setVal('economy_baltop_embed_color_hex', eco.baltop_embed_color || '#5865F2');
             setChk('economy_role_boosters_stack', eco.role_boosters_stack ?? true);
+
+            const ecoWorkCont = document.getElementById('economy_work_responses_container');
+            if (ecoWorkCont) {
+                ecoWorkCont.innerHTML = '';
+                (eco.work_custom_responses || []).forEach(r => { if (window.addEconomyWorkResponse) window.addEconomyWorkResponse(r); });
+            }
+            const ecoRoleCont = document.getElementById('economy_role_boosters_container');
+            if (ecoRoleCont) {
+                ecoRoleCont.innerHTML = '';
+                (eco.role_boosters || []).forEach(b => { if (window.addEconomyRoleBooster) window.addEconomyRoleBooster(b.multiplier, b.role_id); });
+                if (ecoRoleCont.innerHTML === '') ecoRoleCont.innerHTML = '<div class="reward-empty">Keine Booster konfiguriert.</div>';
+                if (window.updateEconomyRoleBoosterCount) window.updateEconomyRoleBoosterCount();
+            }
+            const ecoChanCont = document.getElementById('economy_channel_boosters_container');
+            if (ecoChanCont) {
+                ecoChanCont.innerHTML = '';
+                (eco.channel_boosters || []).forEach(b => { if (window.addEconomyChannelBooster) window.addEconomyChannelBooster(b.multiplier, b.channel_id); });
+                if (ecoChanCont.innerHTML === '') ecoChanCont.innerHTML = '<div class="reward-empty">Keine Booster konfiguriert.</div>';
+                if (window.updateEconomyChannelBoosterCount) window.updateEconomyChannelBoosterCount();
+            }
         }
         document.getElementById('level_stat_roles_msg_cooldown').value = config.level?.stat_roles_msg_cooldown ?? 5;
         document.getElementById('level_stat_roles_voice_stack').checked = config.level?.stat_roles_voice_stack ?? false;
@@ -3001,7 +3021,16 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             baltop_custom_url: document.getElementById('economy_baltop_custom_url')?.value || '',
             baltop_auto_channel_id: document.getElementById('economy_baltop_auto_channel_id')?.value || null,
             baltop_embed_color: document.getElementById('economy_baltop_embed_color')?.value || '#5865F2',
-            role_boosters_stack: document.getElementById('economy_role_boosters_stack')?.checked ?? true
+            role_boosters_stack: document.getElementById('economy_role_boosters_stack')?.checked ?? true,
+            work_custom_responses: Array.from(document.querySelectorAll('#economy_work_responses_container .work-response-input')).map(el => el.value).filter(v => v.trim() !== ''),
+            role_boosters: Array.from(document.querySelectorAll('#economy_role_boosters_container .reward-row')).map(row => ({
+                multiplier: parseFloat(row.querySelector('.eco-booster-mult')?.value) || 1.1,
+                role_id: row.querySelector('.eco-booster-role')?.value || ''
+            })).filter(b => b.role_id !== ''),
+            channel_boosters: Array.from(document.querySelectorAll('#economy_channel_boosters_container .reward-row')).map(row => ({
+                multiplier: parseFloat(row.querySelector('.eco-booster-mult')?.value) || 1.1,
+                channel_id: row.querySelector('.eco-booster-channel')?.value || ''
+            })).filter(b => b.channel_id !== '')
         },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,
@@ -4385,3 +4414,118 @@ function resetCountingNumber() {
     if (typeof setDirty === 'function') setDirty(true);
     if (typeof showToast === 'function') showToast("Counting reset to 0. Click Save Changes to apply.");
 }
+
+// Economy System List Logic
+window.addEconomyWorkResponse = function(text = "") {
+    const container = document.getElementById('economy_work_responses_container');
+    if(!container) return;
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);';
+    row.innerHTML = `
+        <input type="text" class="work-response-input form-input" value="${text.replace(/"/g, '&quot;')}" style="flex: 1;" placeholder="z.B. Du hast 100 Münzen durch harte Arbeit verdient!">
+        <button type="button" class="btn-danger" onclick="this.parentElement.remove(); if(typeof setDirty === 'function') setDirty(true); window.updateEconomyWorkResponseCount();"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+    `;
+    container.appendChild(row);
+    window.updateEconomyWorkResponseCount();
+};
+
+window.updateEconomyWorkResponseCount = function() {
+    const container = document.getElementById('economy_work_responses_container');
+    if(!container) return;
+    const countEl = document.getElementById('economy_work_responses_count');
+    if(countEl) countEl.textContent = container.children.length;
+};
+
+window.addEconomyRoleBooster = function(multiplier = 1.1, roleId = "") {
+    const container = document.getElementById('economy_role_boosters_container');
+    if(!container) return;
+    const row = document.createElement('div');
+    row.className = 'reward-row';
+    
+    let options = '<option value="">Rolle auswählen...</option>';
+    if (typeof globalRoles !== 'undefined' && globalRoles) {
+        globalRoles.forEach(r => {
+            options += `<option value="${r.id}" ${r.id === roleId ? 'selected' : ''}>${r.name}</option>`;
+        });
+    } else if (roleId) {
+        options += `<option value="${roleId}" selected>Rolle ${roleId}</option>`;
+    }
+    
+    row.innerHTML = `
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="number" class="eco-booster-mult form-input" value="${multiplier}" step="0.1" min="1.1" style="width: 80px;">
+        </div>
+        <div>
+            <select class="eco-booster-role form-select">
+                ${options}
+            </select>
+        </div>
+        <div>
+            <button type="button" class="btn-danger" onclick="this.closest('.reward-row').remove(); if(typeof setDirty === 'function') setDirty(true); window.updateEconomyRoleBoosterCount();">Löschen</button>
+        </div>
+    `;
+    container.appendChild(row);
+    if(container.querySelector('.reward-empty')) container.querySelector('.reward-empty').remove();
+    window.updateEconomyRoleBoosterCount();
+};
+
+window.updateEconomyRoleBoosterCount = function() {
+    const container = document.getElementById('economy_role_boosters_container');
+    if(!container) return;
+    const countEl = document.getElementById('economy_role_boosters_count');
+    if(countEl) countEl.textContent = container.querySelectorAll('.reward-row').length;
+};
+
+window.addEconomyChannelBooster = function(multiplier = 1.1, channelId = "") {
+    const container = document.getElementById('economy_channel_boosters_container');
+    if(!container) return;
+    const row = document.createElement('div');
+    row.className = 'reward-row';
+    
+    let options = '<option value="">Kanal auswählen...</option>';
+    if (typeof globalChannels !== 'undefined' && globalChannels) {
+        globalChannels.forEach(c => {
+            options += `<option value="${c.id}" ${c.id === channelId ? 'selected' : ''}>#${c.name}</option>`;
+        });
+    } else if (channelId) {
+        options += `<option value="${channelId}" selected>Kanal ${channelId}</option>`;
+    }
+
+    row.innerHTML = `
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="number" class="eco-booster-mult form-input" value="${multiplier}" step="0.1" min="1.1" style="width: 80px;">
+        </div>
+        <div>
+            <select class="eco-booster-channel form-select">
+                ${options}
+            </select>
+        </div>
+        <div>
+            <button type="button" class="btn-danger" onclick="this.closest('.reward-row').remove(); if(typeof setDirty === 'function') setDirty(true); window.updateEconomyChannelBoosterCount();">Löschen</button>
+        </div>
+    `;
+    container.appendChild(row);
+    if(container.querySelector('.reward-empty')) container.querySelector('.reward-empty').remove();
+    window.updateEconomyChannelBoosterCount();
+};
+
+window.updateEconomyChannelBoosterCount = function() {
+    const container = document.getElementById('economy_channel_boosters_container');
+    if(!container) return;
+    const countEl = document.getElementById('economy_channel_boosters_count');
+    if(countEl) countEl.textContent = container.querySelectorAll('.reward-row').length;
+};
+
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'btn_add_work_response') {
+        window.addEconomyWorkResponse();
+        if(typeof setDirty === 'function') setDirty(true);
+    } else if (e.target.id === 'btn_add_economy_role_booster') {
+        window.addEconomyRoleBooster();
+        if(typeof setDirty === 'function') setDirty(true);
+    } else if (e.target.id === 'btn_add_economy_channel_booster') {
+        window.addEconomyChannelBooster();
+        if(typeof setDirty === 'function') setDirty(true);
+    }
+});
+
