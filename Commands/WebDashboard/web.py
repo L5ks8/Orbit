@@ -970,11 +970,25 @@ class WebDashboard:
             member_count = guild.member_count or len(guild.members)
             server_name = guild.name
             
-            def replace_vars(text: str) -> str:
+            def replace_vars(text: str, target_user=None) -> str:
                 if not text: return text
+                u = target_user or guild.me
+                text = text.replace("{user}", u.mention if u else "")
+                text = text.replace("{user.mention}", u.mention if u else "")
+                text = text.replace("{user.name}", u.name if u else "")
+                text = text.replace("{user.id}", str(u.id) if u else "")
+                text = text.replace("{user.avatar}", u.display_avatar.url if (u and getattr(u, "display_avatar", None)) else "")
+                text = text.replace("{user.tag}", str(u) if u else "")
+                text = text.replace("{username}", u.name if u else "")
+                text = text.replace("{mention}", u.mention if u else "")
+                text = text.replace("{id}", str(u.id) if u else "")
+                text = text.replace("{user_globalname}", getattr(u, "global_name", None) or (u.display_name if u else ""))
                 text = text.replace("{count}", str(member_count))
                 text = text.replace("{server}", server_name)
-                # Note: {user} and {username} are not replaced because this command is triggered from dashboard, not by a joining user.
+                text = text.replace("{server.name}", server_name)
+                text = text.replace("{server.id}", str(guild.id))
+                text = text.replace("{server.members}", str(member_count))
+                text = text.replace("{server.icon}", guild.icon.url if guild.icon else "")
                 return text
 
             content_text = replace_vars(content_text)

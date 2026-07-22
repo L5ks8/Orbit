@@ -2018,16 +2018,35 @@ function syncDropzoneFromUrl(url) {
 function syncGoodbyeDropzoneFromUrl(url) {
     const preview = document.getElementById('goodbye-dropzone-preview');
     const inner = document.getElementById('goodbye-dropzone-inner');
-    if (url) {
-        preview.src = url;
-        preview.style.display = 'block';
-        if (inner) inner.style.display = 'none';
-    } else {
-        preview.style.display = 'none';
-        preview.src = '';
-        if (inner) inner.style.display = 'flex';
+    if (preview) {
+        if (url) {
+            preview.src = url;
+            preview.style.display = 'block';
+            if (inner) inner.style.display = 'none';
+        } else {
+            preview.style.display = 'none';
+            preview.src = '';
+            if (inner) inner.style.display = 'flex';
+        }
     }
     updateGoodbyeLivePreview();
+}
+
+function syncBoostDropzoneFromUrl(url) {
+    const preview = document.getElementById('boost-dropzone-preview');
+    const inner = document.getElementById('boost-dropzone-inner');
+    if (preview) {
+        if (url) {
+            preview.src = url;
+            preview.style.display = 'block';
+            if (inner) inner.style.display = 'none';
+        } else {
+            preview.style.display = 'none';
+            preview.src = '';
+            if (inner) inner.style.display = 'flex';
+        }
+    }
+    updateBoostLivePreview();
 }
 
 function updateBoostLivePreview() {
