@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 
-SYMBOLS = ["ðŸ’", "ðŸ‹", "ðŸŠ", "ðŸ‡", "ðŸ””", "ðŸ’Ž", "7ï¸âƒ£"]
+SYMBOLS = ["🍒", "🍋", "🍉", "🍇", "🔔", "💎", "7️⃣"]
 
 class SlotsSession:
     def __init__(self, player: discord.abc.User):
@@ -21,9 +21,9 @@ class SlotsSession:
         center = self.grid[1]
         s1, s2, s3 = center[0], center[1], center[2]
 
-        if s1 == s2 == s3 == "7ï¸âƒ£":
+        if s1 == s2 == s3 == "7️⃣":
             self.outcome_text = "**JACKPOT 777!** Mega Casino Payout (`10x Win`)!"
-        elif s1 == s2 == s3 == "ðŸ’Ž":
+        elif s1 == s2 == s3 == "💎":
             self.outcome_text = "**DIAMOND TRIPLE!** High Roller Payout (`5x Win`)!"
         elif s1 == s2 == s3:
             self.outcome_text = f"**TRIPLE MATCH (`{s1}`)!** Classic Payout (`3x Win`)!"

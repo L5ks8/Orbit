@@ -12,7 +12,7 @@ def get_embed(msg_type: str, **kwargs):
         giveaway_id = kwargs.get("giveaway_id", "")
         components = kwargs.get("components", [])
 
-        embed = discord.Embed(title=f"ðŸŽ‰ GIVEAWAY: {prize} ðŸŽ‰", color=discord.Color.purple())
+        embed = discord.Embed(title=f"🎉 GIVEAWAY: {prize} 🎉", color=discord.Color.purple())
         embed.description = (
             f"**Prize:** {prize}\n"
             f"**Winners:** `{winners}`\n"
@@ -36,7 +36,7 @@ def get_embed(msg_type: str, **kwargs):
         giveaway_id = kwargs.get("giveaway_id", "")
         components = kwargs.get("components", [])
 
-        embed = discord.Embed(title=f"ðŸŽ‰ GIVEAWAY ENDED: {prize} ðŸŽ‰", color=discord.Color.dark_grey())
+        embed = discord.Embed(title=f"🎉 GIVEAWAY ENDED: {prize} 🎉", color=discord.Color.dark_grey())
         embed.description = (
             f"**Prize:** {prize}\n"
             f"**Winner(s):** {winners_display}\n"
