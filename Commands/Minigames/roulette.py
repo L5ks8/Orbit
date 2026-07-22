@@ -120,8 +120,13 @@ class RouletteCommand(commands.Cog):
         app_commands.Choice(name="Black (2x)", value="black"),
         app_commands.Choice(name="Green (14x)", value="green")
     ])
-    async def roulette_cmd(self, ctx: commands.Context, bet: int, choice: app_commands.Choice[str]):
+    async def roulette_cmd(self, ctx: commands.Context, bet: int, choice: str):
         await ctx.defer()
+        
+        choice_val = getattr(choice, "value", choice).lower()
+        if choice_val not in ["red", "black", "green"]:
+            return await ctx.send("Choice must be Red, Black, or Green.")
+
         
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.")
@@ -142,13 +147,13 @@ class RouletteCommand(commands.Cog):
             return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
 
         # Create view and simulate first spin
-        view = RouletteView(ctx.guild.id, ctx.author, bet, choice.value)
+        view = RouletteView(ctx.guild.id, ctx.author, bet, choice_val)
         
         from Embeds import get_command_embed
         initial_kwargs = get_command_embed(
             ctx.guild.id, "roulette", msg_type="spin",
             player=ctx.author,
-            choice=choice.value,
+            choice=choice_val,
             bet=bet
         )
         msg = await ctx.send(**initial_kwargs)

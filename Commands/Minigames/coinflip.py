@@ -98,8 +98,14 @@ class CoinflipCommand(commands.Cog):
         app_commands.Choice(name="Heads", value="heads"),
         app_commands.Choice(name="Tails", value="tails")
     ])
-    async def coinflip_cmd(self, ctx: commands.Context, bet: int, choice: app_commands.Choice[str]):
+    async def coinflip_cmd(self, ctx: commands.Context, bet: int, choice: str):
         await ctx.defer()
+        
+        # In hybrid commands, slash commands might pass the raw string if type hint is str
+        choice_val = getattr(choice, "value", choice).lower()
+        if choice_val not in ["heads", "tails"]:
+            return await ctx.send("Choice must be Heads or Tails.")
+
         
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.")
@@ -120,13 +126,13 @@ class CoinflipCommand(commands.Cog):
             return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
 
         # Create view and simulate first flip
-        view = CoinflipView(ctx.guild.id, ctx.author, bet, choice.value)
+        view = CoinflipView(ctx.guild.id, ctx.author, bet, choice_val)
         
         from Embeds import get_command_embed
         initial_kwargs = get_command_embed(
             ctx.guild.id, "coinflip", msg_type="spin",
             player=ctx.author,
-            choice=choice.value,
+            choice=choice_val,
             bet=bet
         )
         msg = await ctx.send(**initial_kwargs)
