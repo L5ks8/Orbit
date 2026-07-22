@@ -98,17 +98,18 @@ class MinesLayoutView(discord.ui.View):
         # 4x4 Grid
         for i in range(16):
             state = self.session.grid_state[i]
+            ui_row = i // 4
             
             if state == "hidden":
-                btn = discord.ui.Button(style=discord.ButtonStyle.secondary, label="?", custom_id=f"mine_{i}", disabled=self.session.game_over)
+                btn = discord.ui.Button(style=discord.ButtonStyle.secondary, label="?", custom_id=f"mine_{i}", disabled=self.session.game_over, row=ui_row)
             elif state == "safe":
-                btn = discord.ui.Button(style=discord.ButtonStyle.success, emoji="💎", custom_id=f"mine_{i}", disabled=True)
+                btn = discord.ui.Button(style=discord.ButtonStyle.success, emoji="💎", custom_id=f"mine_{i}", disabled=True, row=ui_row)
             elif state == "mine":
-                btn = discord.ui.Button(style=discord.ButtonStyle.danger, emoji="💣", custom_id=f"mine_{i}", disabled=True)
+                btn = discord.ui.Button(style=discord.ButtonStyle.danger, emoji="💣", custom_id=f"mine_{i}", disabled=True, row=ui_row)
             elif state == "safe_revealed":
-                btn = discord.ui.Button(style=discord.ButtonStyle.secondary, emoji="💎", custom_id=f"mine_{i}", disabled=True)
+                btn = discord.ui.Button(style=discord.ButtonStyle.secondary, emoji="💎", custom_id=f"mine_{i}", disabled=True, row=ui_row)
             elif state == "mine_revealed":
-                btn = discord.ui.Button(style=discord.ButtonStyle.secondary, emoji="💣", custom_id=f"mine_{i}", disabled=True)
+                btn = discord.ui.Button(style=discord.ButtonStyle.secondary, emoji="💣", custom_id=f"mine_{i}", disabled=True, row=ui_row)
                 
             # Attach callback for hidden buttons
             if state == "hidden" and not self.session.game_over:
@@ -119,7 +120,7 @@ class MinesLayoutView(discord.ui.View):
         # 5th Row: Cashout / Play Again
         if not self.session.game_over:
             payout = int(self.session.bet_amount * self.session.current_mult)
-            btn_cashout = discord.ui.Button(label=f"Cashout ({payout:,})", style=discord.ButtonStyle.primary, custom_id="cashout", disabled=(self.session.clicks == 0))
+            btn_cashout = discord.ui.Button(label=f"Cashout ({payout:,})", style=discord.ButtonStyle.primary, custom_id="cashout", disabled=(self.session.clicks == 0), row=4)
             
             async def _cashout_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.session.player.id:
@@ -133,7 +134,7 @@ class MinesLayoutView(discord.ui.View):
             btn_cashout.callback = _cashout_cb
             self.add_item(btn_cashout)
         else:
-            btn_new = discord.ui.Button(label=f"Play Again ({self.session.bet_amount:,})", style=discord.ButtonStyle.primary, custom_id="play_again")
+            btn_new = discord.ui.Button(label=f"Play Again ({self.session.bet_amount:,})", style=discord.ButtonStyle.primary, custom_id="play_again", row=4)
             
             async def _new_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.session.player.id:
