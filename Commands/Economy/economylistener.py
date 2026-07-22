@@ -3,7 +3,9 @@ import discord
 from discord.ext import commands, tasks
 from Commands.Economy._storage import (
     load_economy_config,
-    add_user_balance
+    save_economy_config,
+    add_user_balance,
+    get_economy_leaderboard
 )
 
 class EconomyListenerCog(commands.Cog):
@@ -13,9 +15,11 @@ class EconomyListenerCog(commands.Cog):
         self._cmd_cooldowns = {}
         self._react_cooldowns = {}
         self.voice_money_loop.start()
+        self.auto_leaderboard_loop.start()
 
     def cog_unload(self):
         self.voice_money_loop.cancel()
+        self.auto_leaderboard_loop.cancel()
 
     def _check_cooldown(self, cooldowns: dict, guild_id: int, user_id: int, cooldown_seconds: int) -> bool:
         key = (guild_id, user_id)
@@ -44,6 +48,39 @@ class EconomyListenerCog(commands.Cog):
                 return True
         return False
 
+    def _get_booster_multiplier(self, config: dict, member: discord.Member, channel_id: int | None = None) -> float:
+        total_mult = 1.0
+        member_role_ids = set(str(r.id) for r in member.roles)
+
+        role_boosters = config.get("role_boosters", [])
+        stack_roles = config.get("role_boosters_stack", True)
+
+        matched_role_mults = []
+        for rb in role_boosters:
+            if isinstance(rb, dict) and str(rb.get("role_id")) in member_role_ids:
+                try:
+                    matched_role_mults.append(float(rb.get("multiplier", 1.0)))
+                except (ValueError, TypeError):
+                    pass
+
+        if matched_role_mults:
+            if stack_roles:
+                for m in matched_role_mults:
+                    total_mult *= m
+            else:
+                total_mult *= max(matched_role_mults)
+
+        if channel_id:
+            channel_boosters = config.get("channel_boosters", [])
+            for cb in channel_boosters:
+                if isinstance(cb, dict) and str(cb.get("channel_id")) == str(channel_id):
+                    try:
+                        total_mult *= float(cb.get("multiplier", 1.0))
+                    except (ValueError, TypeError):
+                        pass
+
+        return total_mult
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if not message.guild or message.author.bot:
@@ -61,8 +98,9 @@ class EconomyListenerCog(commands.Cog):
             return
 
         base_amount = config.get("msg_money_amount", 8)
-        mult = config.get("money_multiplier", 1.0)
-        amount = int(base_amount * mult)
+        global_mult = config.get("money_multiplier", 1.0)
+        booster_mult = self._get_booster_multiplier(config, message.author, message.channel.id)
+        amount = int(base_amount * global_mult * booster_mult)
 
         if amount > 0:
             add_user_balance(message.guild.id, message.author.id, amount)
@@ -84,8 +122,9 @@ class EconomyListenerCog(commands.Cog):
             return
 
         base_amount = config.get("cmd_money_amount", 8)
-        mult = config.get("money_multiplier", 1.0)
-        amount = int(base_amount * mult)
+        global_mult = config.get("money_multiplier", 1.0)
+        booster_mult = self._get_booster_multiplier(config, ctx.author, ctx.channel.id)
+        amount = int(base_amount * global_mult * booster_mult)
 
         if amount > 0:
             add_user_balance(ctx.guild.id, ctx.author.id, amount)
@@ -115,8 +154,9 @@ class EconomyListenerCog(commands.Cog):
             return
 
         base_amount = config.get("react_money_amount", 20)
-        mult = config.get("money_multiplier", 1.0)
-        amount = int(base_amount * mult)
+        global_mult = config.get("money_multiplier", 1.0)
+        booster_mult = self._get_booster_multiplier(config, member, payload.channel_id)
+        amount = int(base_amount * global_mult * booster_mult)
 
         if amount > 0:
             add_user_balance(guild.id, member.id, amount)
@@ -132,10 +172,9 @@ class EconomyListenerCog(commands.Cog):
                 ignore_muted = config.get("voice_money_ignore_muted", True)
                 ignore_solo = config.get("voice_money_ignore_solo", False)
                 base_amount = config.get("voice_money_amount", 4)
-                mult = config.get("money_multiplier", 1.0)
-                amount = int(base_amount * mult)
+                global_mult = config.get("money_multiplier", 1.0)
 
-                if amount <= 0:
+                if base_amount <= 0:
                     continue
 
                 for vc in guild.voice_channels:
@@ -148,12 +187,79 @@ class EconomyListenerCog(commands.Cog):
                             continue
                         if ignore_muted and (member.voice.self_mute or member.voice.self_deaf or member.voice.mute or member.voice.deaf):
                             continue
-                        add_user_balance(guild.id, member.id, amount)
+                        booster_mult = self._get_booster_multiplier(config, member, vc.id)
+                        amount = int(base_amount * global_mult * booster_mult)
+                        if amount > 0:
+                            add_user_balance(guild.id, member.id, amount)
+        except Exception:
+            pass
+
+    @tasks.loop(hours=1)
+    async def auto_leaderboard_loop(self):
+        try:
+            for guild in self.bot.guilds:
+                config = load_economy_config(guild.id)
+                if not config.get("enabled", True):
+                    continue
+                auto_ch_id = config.get("baltop_auto_channel_id")
+                if not auto_ch_id:
+                    continue
+
+                channel = guild.get_channel(int(auto_ch_id))
+                if not channel:
+                    continue
+
+                leaderboard_data = get_economy_leaderboard(guild.id, limit=10)
+                if not leaderboard_data:
+                    continue
+
+                symbol = config.get("currency_symbol", "🪙")
+                medals = ["🥇", "🥈", "🥉"]
+                lines = []
+
+                for idx, entry in enumerate(leaderboard_data, 1):
+                    uid = entry.get("user_id")
+                    bal = entry.get("balance", 0)
+                    prefix = medals[idx - 1] if idx <= 3 else f"`{idx}.`"
+                    member = guild.get_member(uid)
+                    display_name = member.display_name if member else f"User ID {uid}"
+                    lines.append(f"{prefix} **{display_name}** — {symbol} `{bal:,}`")
+
+                color_hex = config.get("baltop_embed_color", "#5865F2")
+                try:
+                    embed_color = discord.Color.from_str(color_hex)
+                except Exception:
+                    embed_color = discord.Color.gold()
+
+                embed = discord.Embed(
+                    title=f"🏆 {guild.name} — Money Leaderboard",
+                    description="\n".join(lines),
+                    color=embed_color
+                )
+                embed.set_thumbnail(url=guild.icon.url if guild.icon else "")
+                embed.set_footer(text="Updated automatically every hour • Use /daily & /work")
+
+                msg_id = config.get("baltop_message_id")
+                if msg_id:
+                    try:
+                        msg = await channel.fetch_message(int(msg_id))
+                        await msg.edit(embed=embed)
+                        continue
+                    except Exception:
+                        pass
+
+                new_msg = await channel.send(embed=embed)
+                config["baltop_message_id"] = new_msg.id
+                save_economy_config(guild.id, config)
         except Exception:
             pass
 
     @voice_money_loop.before_loop
     async def before_voice_loop(self):
+        await self.bot.wait_until_ready()
+
+    @auto_leaderboard_loop.before_loop
+    async def before_leaderboard_loop(self):
         await self.bot.wait_until_ready()
 
 async def setup(bot: commands.Bot):

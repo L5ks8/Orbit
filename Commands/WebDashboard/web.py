@@ -866,9 +866,38 @@ class WebDashboard:
                 e_cfg["react_money_amount"] = int(ed.get("react_money_amount", 20))
                 e_cfg["react_money_cooldown"] = int(ed.get("react_money_cooldown", 300))
 
+                e_cfg["daily_base_reward_enabled"] = bool(ed.get("daily_base_reward_enabled", True))
                 e_cfg["daily_base_reward"] = int(ed.get("daily_base_reward", 250))
+                e_cfg["daily_tier_reward_enabled"] = bool(ed.get("daily_tier_reward_enabled", True))
                 e_cfg["daily_streak_limit"] = int(ed.get("daily_streak_limit", 5))
-                e_cfg["daily_streak_bonus"] = int(ed.get("daily_streak_bonus", 50))
+                e_cfg["daily_streak_bonus"] = int(ed.get("daily_streak_bonus", 10))
+
+                e_cfg["work_enabled"] = bool(ed.get("work_enabled", True))
+                e_cfg["work_min_amount"] = int(ed.get("work_min_amount", 300))
+                e_cfg["work_max_amount"] = int(ed.get("work_max_amount", 500))
+                e_cfg["work_cooldown_min"] = int(ed.get("work_cooldown_min", 240))
+                e_cfg["work_use_default_responses"] = bool(ed.get("work_use_default_responses", True))
+                if "work_custom_responses" in ed:
+                    e_cfg["work_custom_responses"] = ed["work_custom_responses"]
+
+                e_cfg["baltop_custom_url"] = str(ed.get("baltop_custom_url", "") or "")
+                baltop_ch = ed.get("baltop_auto_channel_id")
+                e_cfg["baltop_auto_channel_id"] = int(baltop_ch) if baltop_ch else None
+                e_cfg["baltop_embed_color"] = str(ed.get("baltop_embed_color", "#5865F2") or "#5865F2")
+
+                e_cfg["role_boosters_stack"] = bool(ed.get("role_boosters_stack", True))
+                if "role_boosters" in ed:
+                    e_cfg["role_boosters"] = ed["role_boosters"]
+                if "channel_boosters" in ed:
+                    e_cfg["channel_boosters"] = ed["channel_boosters"]
+                if "items" in ed:
+                    e_cfg["items"] = ed["items"]
+                if "chests" in ed:
+                    e_cfg["chests"] = ed["chests"]
+                if "rarities" in ed:
+                    e_cfg["rarities"] = ed["rarities"]
+                if "recipes" in ed:
+                    e_cfg["recipes"] = ed["recipes"]
 
                 save_economy_config(guild_id, e_cfg)
 

@@ -1311,7 +1311,40 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
 
             document.getElementById('economy_daily_base_reward').value = config.economy?.daily_base_reward ?? 250;
             document.getElementById('economy_daily_streak_limit').value = config.economy?.daily_streak_limit ?? 5;
-            document.getElementById('economy_daily_streak_bonus').value = config.economy?.daily_streak_bonus ?? 50;
+            document.getElementById('economy_daily_streak_bonus').value = config.economy?.daily_streak_bonus ?? 10;
+            if (document.getElementById('economy_daily_base_reward_enabled')) {
+                document.getElementById('economy_daily_base_reward_enabled').checked = config.economy?.daily_base_reward_enabled ?? true;
+            }
+            if (document.getElementById('economy_daily_tier_reward_enabled')) {
+                document.getElementById('economy_daily_tier_reward_enabled').checked = config.economy?.daily_tier_reward_enabled ?? true;
+            }
+
+            if (document.getElementById('economy_work_min_amount')) {
+                document.getElementById('economy_work_min_amount').value = config.economy?.work_min_amount ?? 300;
+                document.getElementById('economy_work_max_amount').value = config.economy?.work_max_amount ?? 500;
+                document.getElementById('economy_work_cooldown_min').value = config.economy?.work_cooldown_min ?? 240;
+                document.getElementById('economy_work_use_default_responses').checked = config.economy?.work_use_default_responses ?? true;
+            }
+
+            if (document.getElementById('economy_baltop_custom_url')) {
+                document.getElementById('economy_baltop_custom_url').value = config.economy?.baltop_custom_url || '';
+                const baltopSelect = document.getElementById('economy_baltop_auto_channel_id');
+                if (baltopSelect) {
+                    baltopSelect.innerHTML = '<option value="">Select Channel...</option>';
+                    data.channels.forEach(c => {
+                        const sel = (c.id === (config.economy?.baltop_auto_channel_id || '')) ? 'selected' : '';
+                        baltopSelect.innerHTML += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
+                    });
+                }
+                document.getElementById('economy_baltop_embed_color').value = config.economy?.baltop_embed_color || '#5865F2';
+                if (document.getElementById('economy_baltop_embed_color_hex')) {
+                    document.getElementById('economy_baltop_embed_color_hex').value = config.economy?.baltop_embed_color || '#5865F2';
+                }
+            }
+
+            if (document.getElementById('economy_role_boosters_stack')) {
+                document.getElementById('economy_role_boosters_stack').checked = config.economy?.role_boosters_stack ?? true;
+            }
         }
         document.getElementById('level_stat_roles_msg_cooldown').value = config.level?.stat_roles_msg_cooldown ?? 5;
         document.getElementById('level_stat_roles_voice_stack').checked = config.level?.stat_roles_voice_stack ?? false;
@@ -2964,9 +2997,20 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             react_money_enabled: document.getElementById('economy_react_money_enabled')?.checked ?? true,
             react_money_amount: parseInt(document.getElementById('economy_react_money_amount')?.value) || 20,
             react_money_cooldown: parseInt(document.getElementById('economy_react_money_cooldown')?.value) || 300,
+            daily_base_reward_enabled: document.getElementById('economy_daily_base_reward_enabled')?.checked ?? true,
             daily_base_reward: parseInt(document.getElementById('economy_daily_base_reward')?.value) || 250,
+            daily_tier_reward_enabled: document.getElementById('economy_daily_tier_reward_enabled')?.checked ?? true,
             daily_streak_limit: parseInt(document.getElementById('economy_daily_streak_limit')?.value) || 5,
-            daily_streak_bonus: parseInt(document.getElementById('economy_daily_streak_bonus')?.value) || 50
+            daily_streak_bonus: parseInt(document.getElementById('economy_daily_streak_bonus')?.value) || 10,
+            work_enabled: document.getElementById('economy_enabled')?.checked ?? true,
+            work_min_amount: parseInt(document.getElementById('economy_work_min_amount')?.value) || 300,
+            work_max_amount: parseInt(document.getElementById('economy_work_max_amount')?.value) || 500,
+            work_cooldown_min: parseInt(document.getElementById('economy_work_cooldown_min')?.value) || 240,
+            work_use_default_responses: document.getElementById('economy_work_use_default_responses')?.checked ?? true,
+            baltop_custom_url: document.getElementById('economy_baltop_custom_url')?.value || '',
+            baltop_auto_channel_id: document.getElementById('economy_baltop_auto_channel_id')?.value || null,
+            baltop_embed_color: document.getElementById('economy_baltop_embed_color')?.value || '#5865F2',
+            role_boosters_stack: document.getElementById('economy_role_boosters_stack')?.checked ?? true
         },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,

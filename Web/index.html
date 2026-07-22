@@ -3213,6 +3213,42 @@ You reached **Level {level}**.</textarea>
                             </div>
                         </div>
 
+                        <!-- Work Command Options Card -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 15px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Work Command Options</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                <div class="form-group">
+                                    <label class="form-label">Work Pay Range (Min - Max)</label>
+                                    <span class="help-text">Amount of money earned when using /work.</span>
+                                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                                        <input type="number" id="economy_work_min_amount" value="300" min="1" max="100000" class="form-input">
+                                        <span style="color: var(--text-secondary);">to</span>
+                                        <input type="number" id="economy_work_max_amount" value="500" min="1" max="100000" class="form-input">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Work Cooldown (Minutes)</label>
+                                    <span class="help-text">Cooldown in minutes before using /work again.</span>
+                                    <div class="number-input-group" style="margin-top: 8px;">
+                                        <button type="button" class="num-btn minus" data-target="economy_work_cooldown_min">-</button>
+                                        <input type="number" id="economy_work_cooldown_min" value="240" min="1" max="1440">
+                                        <button type="button" class="num-btn plus" data-target="economy_work_cooldown_min">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Work Responses Card -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h4 style="margin: 0; color: var(--text-primary); font-size: 16px; font-weight: 600;">Work Responses (<span id="economy_work_responses_count">0</span>/500)</h4>
+                                <label class="switch"><input type="checkbox" id="economy_work_use_default_responses" checked><span class="slider"></span></label>
+                            </div>
+                            <span class="help-text">Should standard work response templates be used? Custom responses can also be added below.</span>
+                            <div id="economy_work_responses_container" style="margin-top: 15px;"></div>
+                            <button type="button" id="btn_add_work_response" class="btn-primary" style="margin-top: 12px; padding: 8px 16px; font-size: 13px;">+ Add Response</button>
+                        </div>
+
                         <!-- Daily Command Options Card -->
                         <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
                             <h4 style="margin-top:0; margin-bottom: 15px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Daily Command Options</h4>
@@ -3220,19 +3256,21 @@ You reached **Level {level}**.</textarea>
                                 <div class="form-group toggle-group">
                                     <div>
                                         <label class="form-label mb-0">Base Daily Reward</label>
-                                        <span class="help-text">Base money reward granted on Day 1 of /daily.</span>
+                                        <span class="help-text">Fixed reward for Day 1.</span>
                                     </div>
-                                    <div class="number-input-group">
-                                        <button type="button" class="num-btn minus" data-target="economy_daily_base_reward">-</button>
-                                        <input type="number" id="economy_daily_base_reward" value="250" min="1" max="100000">
-                                        <button type="button" class="num-btn plus" data-target="economy_daily_base_reward">+</button>
-                                    </div>
+                                    <label class="switch"><input type="checkbox" id="economy_daily_base_reward_enabled" checked><span class="slider"></span></label>
                                 </div>
-
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Tier Reward</label>
+                                        <span class="help-text">Amount added per streak day up to limit.</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="economy_daily_tier_reward_enabled" checked><span class="slider"></span></label>
+                                </div>
                                 <div class="form-group toggle-group">
                                     <div>
                                         <label class="form-label mb-0">Streak Limit (Days)</label>
-                                        <span class="help-text">Max streak days before bonus cap is reached.</span>
+                                        <span class="help-text">Max streak days before primary scaling caps.</span>
                                     </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="economy_daily_streak_limit">-</button>
@@ -3240,19 +3278,100 @@ You reached **Level {level}**.</textarea>
                                         <button type="button" class="num-btn plus" data-target="economy_daily_streak_limit">+</button>
                                     </div>
                                 </div>
-
                                 <div class="form-group toggle-group">
                                     <div>
-                                        <label class="form-label mb-0">Streak Bonus Amount</label>
-                                        <span class="help-text">Additional bonus money added per streak day.</span>
+                                        <label class="form-label mb-0">Streak Bonus</label>
+                                        <span class="help-text">Flat amount added per day over streak limit.</span>
                                     </div>
                                     <div class="number-input-group">
                                         <button type="button" class="num-btn minus" data-target="economy_daily_streak_bonus">-</button>
-                                        <input type="number" id="economy_daily_streak_bonus" value="50" min="0" max="10000">
+                                        <input type="number" id="economy_daily_streak_bonus" value="10" min="0" max="10000">
                                         <button type="button" class="num-btn plus" data-target="economy_daily_streak_bonus">+</button>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Money Leaderboard Card (Geld Top) -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 15px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Money Leaderboard (Auto Geld Top)</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                <div class="form-group">
+                                    <label class="form-label">Custom Leaderboard URL</label>
+                                    <span class="help-text">Custom vanity URL for public leaderboard view.</span>
+                                    <input type="text" id="economy_baltop_custom_url" class="form-input" placeholder="e.g. noctaly" style="margin-top: 6px;">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Automatic Leaderboard Channel</label>
+                                    <span class="help-text">Channel where the wealth leaderboard is updated hourly.</span>
+                                    <select id="economy_baltop_auto_channel_id" class="form-select" style="margin-top: 6px;">
+                                        <option value="">Select Channel...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Embed Message Color</label>
+                                    <span class="help-text">Color of the automatic leaderboard embed.</span>
+                                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
+                                        <input type="color" id="economy_baltop_embed_color" value="#5865F2" style="width: 40px; height: 38px; border-radius: 4px; border: none; cursor: pointer; background: transparent;">
+                                        <input type="text" id="economy_baltop_embed_color_hex" class="form-input" value="#5865F2" style="width: 110px;" oninput="document.getElementById('economy_baltop_embed_color').value = this.value">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Items Card (0/25) -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 5px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Items (<span id="economy_items_count">0</span>/25)</h4>
+                            <p class="section-desc mb-3">Custom items used to grant roles, money, or XP. Color and symbol items allow users to customize their profile.</p>
+                            <div id="economy_items_container"></div>
+                            <button type="button" id="btn_add_economy_item" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Create Item</button>
+                        </div>
+
+                        <!-- Chests Card (0/3) -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 5px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Chests (<span id="economy_chests_count">0</span>/3)</h4>
+                            <p class="section-desc mb-3">Chests opened by users to receive items. Each chest can contain multiple rarities and items.</p>
+                            <div id="economy_chests_container"></div>
+                            <button type="button" id="btn_add_economy_chest" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Create Chest</button>
+                        </div>
+
+                        <!-- Rarities Card (2/3) -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 5px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Rarities (<span id="economy_rarities_count">2</span>/3)</h4>
+                            <p class="section-desc mb-3">Rarities define the chances of receiving an item from a chest using a weighting algorithm.</p>
+                            <div style="background: rgba(255, 255, 255, 0.04); border-radius: 6px; padding: 12px; margin-bottom: 15px; font-size: 13px; color: var(--text-secondary); display: flex; gap: 10px; align-items: flex-start;">
+                                <span style="font-size: 16px;">🛍️</span>
+                                <div>The weight determines the chances of getting an item from a chest. Higher weight means item appears more often. To use percentage weights, make total weight equal 100.</div>
+                            </div>
+                            <div id="economy_rarities_container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;"></div>
+                            <button type="button" id="btn_add_economy_rarity" class="btn-primary" style="padding: 8px 16px; font-size: 13px;">+ Create Rarity</button>
+                        </div>
+
+                        <!-- Crafting Recipes Card (0/5) -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 5px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Crafting Recipes (<span id="economy_recipes_count">0</span>/5)</h4>
+                            <p class="section-desc mb-3">Crafting recipes allow users to combine items to craft new ones.</p>
+                            <div id="economy_recipes_container"></div>
+                            <button type="button" id="btn_add_economy_recipe" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Create Recipe</button>
+                        </div>
+
+                        <!-- Role Boosters Card (0/10) -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <h4 style="margin:0; color: var(--text-primary); font-size: 16px; font-weight: 600;">Role Boosters (<span id="economy_role_boosters_count">0</span>/10)</h4>
+                                <label class="switch"><input type="checkbox" id="economy_role_boosters_stack" checked><span class="slider"></span></label>
+                            </div>
+                            <p class="section-desc mb-3">Role boosters allow specific roles to earn more money. Stack Multipliers toggle controls if bonuses from multiple roles stack.</p>
+                            <div id="economy_role_boosters_container"></div>
+                            <button type="button" id="btn_add_economy_role_booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Role</button>
+                        </div>
+
+                        <!-- Channel Boosters Card (0/10) -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 5px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Channel Boosters (<span id="economy_channel_boosters_count">0</span>/10)</h4>
+                            <p class="section-desc mb-3">Channel boosters allow users to earn more money when chatting or using voice in specific channels.</p>
+                            <div id="economy_channel_boosters_container"></div>
+                            <button type="button" id="btn_add_economy_channel_booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Channel</button>
                         </div>
 
                     </div>
