@@ -431,6 +431,14 @@
                             </svg>
                         </span> Level System
                     </div>
+                    <div class="dash-nav-item" data-target="section-economy">
+                        <span class="nav-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v12M15 9.5a2.5 2.5 0 0 0-5 0c0 1.5 1.5 2 2.5 2.5s2.5 1 2.5 2.5a2.5 2.5 0 0 1-5 0"></path>
+                            </svg>
+                        </span> Economy System
+                    </div>
                     
                     <!-- MANAGEMENT -->
                     <div class="nav-category">MANAGEMENT</div>
@@ -3005,6 +3013,246 @@ You reached **Level {level}**.</textarea>
                                 </div>
                             </div>
                             <button type="button" id="btn-add-channel-booster" class="btn-primary" style="margin-top: 10px; padding: 8px 16px; font-size: 13px;">+ Add Channel</button>
+                        </div>
+
+                    </div>
+
+                    <!-- ECONOMY SYSTEM SECTION -->
+                    <div id="section-economy" class="dash-panel">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <h3>Economy System</h3>
+                            <label class="switch">
+                                <input type="checkbox" id="economy_enabled">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p class="section-desc">Manage server currency, betting limits, daily rewards, and earning options for members.</p>
+
+                        <!-- Money Options Card -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-bottom: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 15px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Money Options</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                <!-- Currency Symbol -->
+                                <div class="form-group">
+                                    <label class="form-label">Currency Symbol</label>
+                                    <span class="help-text">The currency symbol used in commands and responses.</span>
+                                    <input type="text" id="economy_currency_symbol" class="form-input" placeholder="🪙" style="margin-top: 6px;">
+                                </div>
+
+                                <!-- Money Multiplier -->
+                                <div class="form-group">
+                                    <label class="form-label">Money Multiplier (<span id="economy_money_multiplier_val">x1.00</span>)</label>
+                                    <span class="help-text">Global multiplier for all earned money.</span>
+                                    <input type="range" id="economy_money_multiplier" min="0.1" max="5.0" step="0.05" value="1.00" class="form-range" style="margin-top: 10px; width: 100%;" oninput="document.getElementById('economy_money_multiplier_val').textContent = 'x' + parseFloat(this.value).toFixed(2);">
+                                </div>
+
+                                <!-- Bet Limit -->
+                                <div class="form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label class="form-label mb-0">Bet Limit</label>
+                                        <label class="switch"><input type="checkbox" id="economy_bet_limit_enabled"><span class="slider"></span></label>
+                                    </div>
+                                    <span class="help-text">Maximum amount of money allowed for gambling bets.</span>
+                                    <div class="number-input-group" style="margin-top: 8px;">
+                                        <button type="button" class="num-btn minus" data-target="economy_bet_limit_amount">-</button>
+                                        <input type="number" id="economy_bet_limit_amount" value="10000" min="1" max="10000000">
+                                        <button type="button" class="num-btn plus" data-target="economy_bet_limit_amount">+</button>
+                                    </div>
+                                </div>
+
+                                <!-- Reset on Leave -->
+                                <div class="form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label class="form-label mb-0">Reset Money On Leave</label>
+                                        <label class="switch"><input type="checkbox" id="economy_reset_on_leave"><span class="slider"></span></label>
+                                    </div>
+                                    <span class="help-text">Should members lose all their money when leaving the server?</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Economy Earning Modules Grid -->
+                        <div class="level-card-grid">
+                            <!-- Message Money Card -->
+                            <div class="level-card">
+                                <div class="level-card-title">Message Money</div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Message Money Enabled</label>
+                                        <span class="help-text">Earn money by sending text messages.</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="economy_msg_money_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Message Money Amount</label>
+                                        <span class="help-text">Money granted per message.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_msg_money_amount">-</button>
+                                        <input type="number" id="economy_msg_money_amount" value="8" min="1" max="1000">
+                                        <button type="button" class="num-btn plus" data-target="economy_msg_money_amount">+</button>
+                                    </div>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Message Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between message rewards.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_msg_money_cooldown">-</button>
+                                        <input type="number" id="economy_msg_money_cooldown" value="60" min="1" max="3600">
+                                        <button type="button" class="num-btn plus" data-target="economy_msg_money_cooldown">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Voice Money Card -->
+                            <div class="level-card">
+                                <div class="level-card-title">Voice Money</div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Voice Money Enabled</label>
+                                        <span class="help-text">Earn money by spending time in voice channels.</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="economy_voice_money_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Ignore Muted Members</label>
+                                        <span class="help-text">Ignore self-muted or deafened users.</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="economy_voice_money_ignore_muted"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Ignore Solo Members</label>
+                                        <span class="help-text">Ignore users alone in a voice channel.</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="economy_voice_money_ignore_solo"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Voice Money Amount</label>
+                                        <span class="help-text">Money granted per minute in voice channels.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_voice_money_amount">-</button>
+                                        <input type="number" id="economy_voice_money_amount" value="4" min="1" max="1000">
+                                        <button type="button" class="num-btn plus" data-target="economy_voice_money_amount">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Command Money Card -->
+                            <div class="level-card">
+                                <div class="level-card-title">Command Money</div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Command Money Enabled</label>
+                                        <span class="help-text">Earn money when executing bot commands.</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="economy_cmd_money_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Command Money Amount</label>
+                                        <span class="help-text">Money granted per command execution.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_cmd_money_amount">-</button>
+                                        <input type="number" id="economy_cmd_money_amount" value="8" min="1" max="1000">
+                                        <button type="button" class="num-btn plus" data-target="economy_cmd_money_amount">+</button>
+                                    </div>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Command Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between command rewards.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_cmd_money_cooldown">-</button>
+                                        <input type="number" id="economy_cmd_money_cooldown" value="60" min="1" max="3600">
+                                        <button type="button" class="num-btn plus" data-target="economy_cmd_money_cooldown">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reaction Money Card -->
+                            <div class="level-card">
+                                <div class="level-card-title">Reaction Money</div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Reaction Money Enabled</label>
+                                        <span class="help-text">Earn money when adding reactions to messages.</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="economy_react_money_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Reaction Money Amount</label>
+                                        <span class="help-text">Money granted per reaction.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_react_money_amount">-</button>
+                                        <input type="number" id="economy_react_money_amount" value="20" min="1" max="1000">
+                                        <button type="button" class="num-btn plus" data-target="economy_react_money_amount">+</button>
+                                    </div>
+                                </div>
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Reaction Cooldown</label>
+                                        <span class="help-text">Cooldown in seconds between reaction rewards.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_react_money_cooldown">-</button>
+                                        <input type="number" id="economy_react_money_cooldown" value="300" min="1" max="3600">
+                                        <button type="button" class="num-btn plus" data-target="economy_react_money_cooldown">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Daily Command Options Card -->
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-top:0; margin-bottom: 15px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Daily Command Options</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Base Daily Reward</label>
+                                        <span class="help-text">Base money reward granted on Day 1 of /daily.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_daily_base_reward">-</button>
+                                        <input type="number" id="economy_daily_base_reward" value="250" min="1" max="100000">
+                                        <button type="button" class="num-btn plus" data-target="economy_daily_base_reward">+</button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Streak Limit (Days)</label>
+                                        <span class="help-text">Max streak days before bonus cap is reached.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_daily_streak_limit">-</button>
+                                        <input type="number" id="economy_daily_streak_limit" value="5" min="1" max="30">
+                                        <button type="button" class="num-btn plus" data-target="economy_daily_streak_limit">+</button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group toggle-group">
+                                    <div>
+                                        <label class="form-label mb-0">Streak Bonus Amount</label>
+                                        <span class="help-text">Additional bonus money added per streak day.</span>
+                                    </div>
+                                    <div class="number-input-group">
+                                        <button type="button" class="num-btn minus" data-target="economy_daily_streak_bonus">-</button>
+                                        <input type="number" id="economy_daily_streak_bonus" value="50" min="0" max="10000">
+                                        <button type="button" class="num-btn plus" data-target="economy_daily_streak_bonus">+</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                     </div>

@@ -1278,6 +1278,41 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('level_roles_rejoin').checked = config.level?.level_roles_rejoin ?? false;
         document.getElementById('level_role_boosters_stack').checked = config.level?.role_boosters_stack ?? true;
         document.getElementById('level_stat_roles_msg_stack').checked = config.level?.stat_roles_msg_stack ?? false;
+
+        // Economy System
+        if (document.getElementById('economy_enabled')) {
+            document.getElementById('economy_enabled').checked = config.economy?.enabled ?? true;
+            document.getElementById('economy_currency_symbol').value = config.economy?.currency_symbol || '🪙';
+            const monMul = config.economy?.money_multiplier ?? 1.0;
+            document.getElementById('economy_money_multiplier').value = monMul;
+            if (document.getElementById('economy_money_multiplier_val')) {
+                document.getElementById('economy_money_multiplier_val').textContent = 'x' + parseFloat(monMul).toFixed(2);
+            }
+            document.getElementById('economy_bet_limit_enabled').checked = config.economy?.bet_limit_enabled ?? true;
+            document.getElementById('economy_bet_limit_amount').value = config.economy?.bet_limit_amount ?? 10000;
+            document.getElementById('economy_reset_on_leave').checked = config.economy?.reset_on_leave ?? false;
+
+            document.getElementById('economy_msg_money_enabled').checked = config.economy?.msg_money_enabled ?? true;
+            document.getElementById('economy_msg_money_amount').value = config.economy?.msg_money_amount ?? 8;
+            document.getElementById('economy_msg_money_cooldown').value = config.economy?.msg_money_cooldown ?? 60;
+
+            document.getElementById('economy_voice_money_enabled').checked = config.economy?.voice_money_enabled ?? false;
+            document.getElementById('economy_voice_money_ignore_muted').checked = config.economy?.voice_money_ignore_muted ?? true;
+            document.getElementById('economy_voice_money_ignore_solo').checked = config.economy?.voice_money_ignore_solo ?? false;
+            document.getElementById('economy_voice_money_amount').value = config.economy?.voice_money_amount ?? 4;
+
+            document.getElementById('economy_cmd_money_enabled').checked = config.economy?.cmd_money_enabled ?? true;
+            document.getElementById('economy_cmd_money_amount').value = config.economy?.cmd_money_amount ?? 8;
+            document.getElementById('economy_cmd_money_cooldown').value = config.economy?.cmd_money_cooldown ?? 60;
+
+            document.getElementById('economy_react_money_enabled').checked = config.economy?.react_money_enabled ?? true;
+            document.getElementById('economy_react_money_amount').value = config.economy?.react_money_amount ?? 20;
+            document.getElementById('economy_react_money_cooldown').value = config.economy?.react_money_cooldown ?? 300;
+
+            document.getElementById('economy_daily_base_reward').value = config.economy?.daily_base_reward ?? 250;
+            document.getElementById('economy_daily_streak_limit').value = config.economy?.daily_streak_limit ?? 5;
+            document.getElementById('economy_daily_streak_bonus').value = config.economy?.daily_streak_bonus ?? 50;
+        }
         document.getElementById('level_stat_roles_msg_cooldown').value = config.level?.stat_roles_msg_cooldown ?? 5;
         document.getElementById('level_stat_roles_voice_stack').checked = config.level?.stat_roles_voice_stack ?? false;
         document.getElementById('level_stat_roles_voice_cooldown').value = config.level?.stat_roles_voice_cooldown ?? 5;
@@ -2908,6 +2943,30 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             bots_name: document.getElementById('serverstats_bots_name')?.value || 'Bots: {count}',
             roles_enabled: document.getElementById('serverstats_roles_enabled')?.checked || false,
             roles_name: document.getElementById('serverstats_roles_name')?.value || 'Roles: {count}'
+        },
+        economy: {
+            enabled: document.getElementById('economy_enabled')?.checked ?? true,
+            currency_symbol: document.getElementById('economy_currency_symbol')?.value || '🪙',
+            money_multiplier: parseFloat(document.getElementById('economy_money_multiplier')?.value) || 1.0,
+            bet_limit_enabled: document.getElementById('economy_bet_limit_enabled')?.checked ?? true,
+            bet_limit_amount: parseInt(document.getElementById('economy_bet_limit_amount')?.value) || 10000,
+            reset_on_leave: document.getElementById('economy_reset_on_leave')?.checked ?? false,
+            msg_money_enabled: document.getElementById('economy_msg_money_enabled')?.checked ?? true,
+            msg_money_amount: parseInt(document.getElementById('economy_msg_money_amount')?.value) || 8,
+            msg_money_cooldown: parseInt(document.getElementById('economy_msg_money_cooldown')?.value) || 60,
+            voice_money_enabled: document.getElementById('economy_voice_money_enabled')?.checked ?? false,
+            voice_money_ignore_muted: document.getElementById('economy_voice_money_ignore_muted')?.checked ?? true,
+            voice_money_ignore_solo: document.getElementById('economy_voice_money_ignore_solo')?.checked ?? false,
+            voice_money_amount: parseInt(document.getElementById('economy_voice_money_amount')?.value) || 4,
+            cmd_money_enabled: document.getElementById('economy_cmd_money_enabled')?.checked ?? true,
+            cmd_money_amount: parseInt(document.getElementById('economy_cmd_money_amount')?.value) || 8,
+            cmd_money_cooldown: parseInt(document.getElementById('economy_cmd_money_cooldown')?.value) || 60,
+            react_money_enabled: document.getElementById('economy_react_money_enabled')?.checked ?? true,
+            react_money_amount: parseInt(document.getElementById('economy_react_money_amount')?.value) || 20,
+            react_money_cooldown: parseInt(document.getElementById('economy_react_money_cooldown')?.value) || 300,
+            daily_base_reward: parseInt(document.getElementById('economy_daily_base_reward')?.value) || 250,
+            daily_streak_limit: parseInt(document.getElementById('economy_daily_streak_limit')?.value) || 5,
+            daily_streak_bonus: parseInt(document.getElementById('economy_daily_streak_bonus')?.value) || 50
         },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,

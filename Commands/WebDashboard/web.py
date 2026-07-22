@@ -234,6 +234,8 @@ class WebDashboard:
         from Commands.JoinToCreate._storage import load_jtc_config
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
+        from Commands.Economy._storage import load_economy_config
+        economy_cfg = load_economy_config(guild_id)
         serverstats_cfg = load_serverstats_config(guild_id)
 
         from Commands.WebDashboard._storage import load_settings_config
@@ -383,6 +385,7 @@ class WebDashboard:
             "automation": automation_cfg,
             "tempvoice": tempvoice_cfg,
             "level": level_cfg,
+            "economy": economy_cfg,
             "serverstats": serverstats_cfg
         }
 
@@ -831,6 +834,43 @@ class WebDashboard:
                 level_cfg["role_boosters"] = ld.get("role_boosters", [])
                 level_cfg["channel_boosters"] = ld.get("channel_boosters", [])
                 save_level_config(guild_id, level_cfg)
+
+            if "economy" in data:
+                from Commands.Economy._storage import load_economy_config, save_economy_config
+                e_cfg = load_economy_config(guild_id)
+                ed = data["economy"]
+                e_cfg["enabled"] = bool(ed.get("enabled", True))
+                e_cfg["currency_symbol"] = str(ed.get("currency_symbol", "🪙") or "🪙")
+                try:
+                    e_cfg["money_multiplier"] = float(ed.get("money_multiplier", 1.0))
+                except (ValueError, TypeError):
+                    e_cfg["money_multiplier"] = 1.0
+                e_cfg["bet_limit_enabled"] = bool(ed.get("bet_limit_enabled", True))
+                e_cfg["bet_limit_amount"] = int(ed.get("bet_limit_amount", 10000))
+                e_cfg["reset_on_leave"] = bool(ed.get("reset_on_leave", False))
+
+                e_cfg["msg_money_enabled"] = bool(ed.get("msg_money_enabled", True))
+                e_cfg["msg_money_amount"] = int(ed.get("msg_money_amount", 8))
+                e_cfg["msg_money_cooldown"] = int(ed.get("msg_money_cooldown", 60))
+
+                e_cfg["voice_money_enabled"] = bool(ed.get("voice_money_enabled", False))
+                e_cfg["voice_money_ignore_muted"] = bool(ed.get("voice_money_ignore_muted", True))
+                e_cfg["voice_money_ignore_solo"] = bool(ed.get("voice_money_ignore_solo", False))
+                e_cfg["voice_money_amount"] = int(ed.get("voice_money_amount", 4))
+
+                e_cfg["cmd_money_enabled"] = bool(ed.get("cmd_money_enabled", True))
+                e_cfg["cmd_money_amount"] = int(ed.get("cmd_money_amount", 8))
+                e_cfg["cmd_money_cooldown"] = int(ed.get("cmd_money_cooldown", 60))
+
+                e_cfg["react_money_enabled"] = bool(ed.get("react_money_enabled", True))
+                e_cfg["react_money_amount"] = int(ed.get("react_money_amount", 20))
+                e_cfg["react_money_cooldown"] = int(ed.get("react_money_cooldown", 300))
+
+                e_cfg["daily_base_reward"] = int(ed.get("daily_base_reward", 250))
+                e_cfg["daily_streak_limit"] = int(ed.get("daily_streak_limit", 5))
+                e_cfg["daily_streak_bonus"] = int(ed.get("daily_streak_bonus", 50))
+
+                save_economy_config(guild_id, e_cfg)
 
                 pid = ticket_cfg.get("panel_channel_id")
                 mid = ticket_cfg.get("panel_message_id")
