@@ -16,6 +16,19 @@
     <link rel="stylesheet" href="/static/css/components.css">
     <link rel="stylesheet" href="/static/css/animations.css">
 <style>
+    .dual-slider-container { position: relative; width: 100%; height: 24px; display: flex; align-items: center; }
+    .dual-slider-track { position: absolute; width: 100%; height: 4px; background: #3b3f46; border-radius: 2px; z-index: 1; }
+    .dual-slider-fill { position: absolute; height: 4px; background: #3b82f6; border-radius: 2px; z-index: 2; }
+    .dual-slider-input { position: absolute; width: 100%; -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none; z-index: 3; outline: none; margin: 0; padding: 0; }
+    .dual-slider-input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #ffffff; cursor: pointer; pointer-events: auto; }
+    .dual-slider-input::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #ffffff; cursor: pointer; pointer-events: auto; border: none; }
+    
+    .blue-num-btn { background: #3b82f6; color: white; border: none; border-radius: 4px; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+    .blue-num-btn:hover { background: #2563eb; }
+    .blue-num-input { background: transparent; border: none; color: white; width: 36px; text-align: center; font-size: 14px; -moz-appearance: textfield; outline: none; }
+    .blue-num-input::-webkit-outer-spin-button, .blue-num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .blue-num-group { display: inline-flex; align-items: center; background: #1e2124; border-radius: 6px; padding: 3px; gap: 4px; }
+
     .nav-category {
         color: #949BA4;
         font-size: 12px;
@@ -3214,88 +3227,156 @@ You reached **Level {level}**.</textarea>
                         </div>
 
                         <!-- Work Command Options Card -->
-                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
-                            <h4 style="margin-top:0; margin-bottom: 15px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Work Command Options</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 24px; margin-top: 24px;">
+                            <h4 style="margin-top:0; margin-bottom: 24px; color: var(--text-primary); font-size: 18px; font-weight: 700;">Arbeitsbefehlsoptionen</h4>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px;">
                                 <div class="form-group">
-                                    <label class="form-label">Work Pay Range (Min - Max)</label>
-                                    <span class="help-text">Amount of money earned when using /work.</span>
-                                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
-                                        <input type="number" id="economy_work_min_amount" value="300" min="1" max="100000" class="form-input">
-                                        <span style="color: var(--text-secondary);">to</span>
-                                        <input type="number" id="economy_work_max_amount" value="500" min="1" max="100000" class="form-input">
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Arbeitsgeld</label>
+                                    <span class="help-text" style="display: block; margin-bottom: 24px;">Der Geldbereich, der mit dem Befehl work verdient werden kann.</span>
+                                    
+                                    <div style="display: flex; gap: 15px; align-items: center;">
+                                        <span id="work_min_display" style="font-size: 14px; font-weight: 500; color: var(--text-primary);">300</span>
+                                        <div class="dual-slider-container">
+                                            <div class="dual-slider-track"></div>
+                                            <div class="dual-slider-fill" id="work_slider_fill"></div>
+                                            <input type="range" id="economy_work_min_amount" min="1" max="2000" value="300" class="dual-slider-input" oninput="document.getElementById('work_min_display').innerText = this.value; window.updateDualSlider && window.updateDualSlider()">
+                                            <input type="range" id="economy_work_max_amount" min="1" max="2000" value="500" class="dual-slider-input" oninput="document.getElementById('work_max_display').innerText = this.value; window.updateDualSlider && window.updateDualSlider()">
+                                        </div>
+                                        <span id="work_max_display" style="font-size: 14px; font-weight: 500; color: var(--text-primary);">500</span>
                                     </div>
                                 </div>
+                                
                                 <div class="form-group">
-                                    <label class="form-label">Work Cooldown (Minutes)</label>
-                                    <span class="help-text">Cooldown in minutes before using /work again.</span>
-                                    <div class="number-input-group" style="margin-top: 8px;">
-                                        <button type="button" class="num-btn minus" data-target="economy_work_cooldown_min">-</button>
-                                        <input type="number" id="economy_work_cooldown_min" value="240" min="1" max="1440">
-                                        <button type="button" class="num-btn plus" data-target="economy_work_cooldown_min">+</button>
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Arbeits-Cooldown</label>
+                                    <span class="help-text" style="display: block; margin-bottom: 20px;">Die Abklingzeit für den Befehl work in Minuten.</span>
+                                    <div class="blue-num-group">
+                                        <button type="button" class="blue-num-btn minus" data-target="economy_work_cooldown_min">-</button>
+                                        <input type="number" id="economy_work_cooldown_min" value="240" min="1" max="1440" class="blue-num-input">
+                                        <button type="button" class="blue-num-btn plus" data-target="economy_work_cooldown_min">+</button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Work Responses Card -->
-                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <h4 style="margin: 0; color: var(--text-primary); font-size: 16px; font-weight: 600;">Work Responses (<span id="economy_work_responses_count">0</span>/500)</h4>
+                            
+                            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0 0 24px 0;">
+                            
+                            <div style="margin-bottom: 16px;">
+                                <h4 style="margin: 0 0 6px 0; color: var(--text-primary); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                    Arbeitsantworten (<span id="economy_work_responses_count">0</span>/500)
+                                    <span style="background: rgba(250, 204, 21, 0.15); color: #facc15; padding: 2px 6px; border-radius: 4px; font-size: 11px;">👑</span>
+                                </h4>
+                                <span class="help-text" style="display: block;">Antworten, die verwendet werden können, wenn ein Nutzer den work-Befehl benutzt.</span>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                                <div>
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Standard-Arbeitsantworten</label>
+                                    <span class="help-text" style="display: block;">Sollen die Standard-Arbeitsantworten verwendet werden?</span>
+                                </div>
                                 <label class="switch"><input type="checkbox" id="economy_work_use_default_responses" checked><span class="slider"></span></label>
                             </div>
-                            <span class="help-text">Should standard work response templates be used? Custom responses can also be added below.</span>
+                            
+                            <button type="button" id="btn_add_work_response" class="btn-primary" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer;">Antwort hinzufügen</button>
                             <div id="economy_work_responses_container" style="margin-top: 15px;"></div>
-                            <button type="button" id="btn_add_work_response" class="btn-primary" style="margin-top: 12px; padding: 8px 16px; font-size: 13px;">+ Add Response</button>
                         </div>
 
                         <!-- Daily Command Options Card -->
-                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
-                            <h4 style="margin-top:0; margin-bottom: 15px; color: var(--text-primary); font-size: 16px; font-weight: 600;">Daily Command Options</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                                <div class="form-group toggle-group">
-                                    <div>
-                                        <label class="form-label mb-0">Base Daily Reward</label>
-                                        <span class="help-text">Fixed reward for Day 1.</span>
+                        <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 24px; margin-top: 24px;">
+                            <h4 style="margin-top:0; margin-bottom: 30px; color: var(--text-primary); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                Tägliche Befehlsoptionen
+                                <span style="background: rgba(250, 204, 21, 0.15); color: #facc15; padding: 2px 6px; border-radius: 4px; font-size: 11px;">👑</span>
+                            </h4>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px 40px;">
+                                <!-- Top Left -->
+                                <div class="form-group" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="padding-right: 20px;">
+                                        <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Grundbelohnung</label>
+                                        <span class="help-text" style="display: block;">Feste Belohnung für Tag 1. Wenn deaktiviert, wird die Stufenbelohnung als Basis für Tag 1 verwendet.</span>
                                     </div>
-                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                        <label class="switch"><input type="checkbox" id="economy_daily_base_reward_enabled" checked><span class="slider"></span></label>
-                                        <div class="number-input-group" style="width: 120px;">
-                                            <input type="number" id="economy_daily_base_reward" value="250" min="1" max="100000">
-                                        </div>
+                                    <label class="switch" style="flex-shrink: 0; margin-top: 2px;"><input type="checkbox" id="economy_daily_base_reward_enabled"><span class="slider"></span></label>
+                                    <input type="number" id="economy_daily_base_reward" value="250" style="display:none;">
+                                </div>
+                                
+                                <!-- Top Right -->
+                                <div class="form-group" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="padding-right: 20px;">
+                                        <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Stufenbelohnung</label>
+                                        <span class="help-text" style="display: block;">Betrag, der pro Streak-Tag hinzugefügt wird und bis zum Limit ansteigt. Wenn deaktiviert, werden 80 % des kombinierten Arbeitsbelohnungsbereichs verwendet.</span>
+                                    </div>
+                                    <label class="switch" style="flex-shrink: 0; margin-top: 2px;"><input type="checkbox" id="economy_daily_tier_reward_enabled"><span class="slider"></span></label>
+                                    <input type="number" id="economy_daily_tier_reward" value="50" style="display:none;">
+                                </div>
+                                
+                                <!-- Bottom Left -->
+                                <div class="form-group">
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Streak-Limit</label>
+                                    <span class="help-text" style="display: block; margin-bottom: 12px;">Die Anzahl der Tage, bevor die primäre Skalierung stoppt und der flache Streak-Bonus greift.</span>
+                                    <div class="blue-num-group">
+                                        <button type="button" class="blue-num-btn minus" data-target="economy_daily_streak_limit">-</button>
+                                        <input type="number" id="economy_daily_streak_limit" value="5" min="1" max="30" class="blue-num-input">
+                                        <button type="button" class="blue-num-btn plus" data-target="economy_daily_streak_limit">+</button>
                                     </div>
                                 </div>
-                                <div class="form-group toggle-group">
-                                    <div>
-                                        <label class="form-label mb-0">Tier Reward</label>
-                                        <span class="help-text">Amount added per streak day up to limit.</span>
-                                    </div>
-                                    <label class="switch"><input type="checkbox" id="economy_daily_tier_reward_enabled" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="form-group toggle-group">
-                                    <div>
-                                        <label class="form-label mb-0">Streak Limit (Days)</label>
-                                        <span class="help-text">Max streak days before primary scaling caps.</span>
-                                    </div>
-                                    <div class="number-input-group">
-                                        <button type="button" class="num-btn minus" data-target="economy_daily_streak_limit">-</button>
-                                        <input type="number" id="economy_daily_streak_limit" value="5" min="1" max="30">
-                                        <button type="button" class="num-btn plus" data-target="economy_daily_streak_limit">+</button>
-                                    </div>
-                                </div>
-                                <div class="form-group toggle-group">
-                                    <div>
-                                        <label class="form-label mb-0">Streak Bonus</label>
-                                        <span class="help-text">Flat amount added per day over streak limit.</span>
-                                    </div>
-                                    <div class="number-input-group">
-                                        <button type="button" class="num-btn minus" data-target="economy_daily_streak_bonus">-</button>
-                                        <input type="number" id="economy_daily_streak_bonus" value="10" min="0" max="10000">
-                                        <button type="button" class="num-btn plus" data-target="economy_daily_streak_bonus">+</button>
+                                
+                                <!-- Bottom Right -->
+                                <div class="form-group">
+                                    <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: block; color: var(--text-primary);">Streak-Bonus</label>
+                                    <span class="help-text" style="display: block; margin-bottom: 12px;">Der Betrag, der pro Tag über das Streak-Limit hinaus hinzugefügt wird.</span>
+                                    <div class="blue-num-group">
+                                        <button type="button" class="blue-num-btn minus" data-target="economy_daily_streak_bonus">-</button>
+                                        <input type="number" id="economy_daily_streak_bonus" value="10" min="0" max="10000" class="blue-num-input">
+                                        <button type="button" class="blue-num-btn plus" data-target="economy_daily_streak_bonus">+</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <script>
+                            window.updateDualSlider = function() {
+                                var minInput = document.getElementById('economy_work_min_amount');
+                                var maxInput = document.getElementById('economy_work_max_amount');
+                                if (!minInput || !maxInput) return;
+                                var minVal = parseInt(minInput.value);
+                                var maxVal = parseInt(maxInput.value);
+                                if (minVal > maxVal) {
+                                    var tmp = minVal;
+                                    minVal = maxVal;
+                                    maxVal = tmp;
+                                }
+                                var minPercent = ((minVal - minInput.min) / (minInput.max - minInput.min)) * 100;
+                                var maxPercent = ((maxVal - maxInput.min) / (maxInput.max - maxInput.min)) * 100;
+                                var fill = document.getElementById('work_slider_fill');
+                                if(fill) {
+                                    fill.style.left = minPercent + '%';
+                                    fill.style.width = (maxPercent - minPercent) + '%';
+                                }
+                            };
+                            setTimeout(window.updateDualSlider, 500);
+                            
+                            // Initialize standard minus/plus buttons for the new UI elements
+                            document.querySelectorAll('.blue-num-btn').forEach(btn => {
+                                btn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    const targetId = this.getAttribute('data-target');
+                                    const input = document.getElementById(targetId);
+                                    if(!input) return;
+                                    let val = parseInt(input.value) || 0;
+                                    const step = parseInt(input.getAttribute('step')) || 1;
+                                    const min = input.hasAttribute('min') ? parseInt(input.getAttribute('min')) : null;
+                                    const max = input.hasAttribute('max') ? parseInt(input.getAttribute('max')) : null;
+                                    
+                                    if(this.classList.contains('plus')) val += step;
+                                    if(this.classList.contains('minus')) val -= step;
+                                    
+                                    if(min !== null && val < min) val = min;
+                                    if(max !== null && val > max) val = max;
+                                    
+                                    input.value = val;
+                                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                                });
+                            });
+                        </script>
 
                         <!-- Money Leaderboard Card (Geld Top) -->
                         <div class="card mb-4" style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); padding: 20px; margin-top: 20px;">
