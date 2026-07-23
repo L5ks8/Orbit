@@ -5,89 +5,48 @@ from discord.ext import commands
 from Commands._utils import MemberOrIDConverter, format_usage
 from Commands.Log._storage import log_event
 
-class DMCommand(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.hybrid_command(
-        name="dm",
-        aliases=["directmessage", "pm"],
-        description="Send a direct message to a user, User ID, or all members of a role (`-dm <target> <message>`)."
+class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
+    message_input = discord.ui.TextInput(
+        label="Message Content",
+        style=discord.TextStyle.paragraph,
+        placeholder="Type your message here... You can use formatting like **bold**.",
+        required=True,
+        max_length=2000
     )
-    @app_commands.describe(
-        target="Role mention/ID, Member mention, or User ID",
-        message="The message content to send via DM"
-    )
-    @commands.has_permissions(manage_messages=True)
-    async def dm_cmd(self, ctx: commands.Context, target: str = None, *, message: str = None):
-        if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
 
-        if not target:
-            return await ctx.send(format_usage("-dm", "<@member/ID/@role>", "<message>"), ephemeral=True)
+    def __init__(self, target_type, target_obj, context_msg, guild, author, original_message=""):
+        super().__init__()
+        self.target_type = target_type  # 'role' or 'user'
+        self.target_obj = target_obj
+        self.context_msg = context_msg  # the message containing the compose button (if any)
+        self.guild = guild
+        self.author = author
+        if original_message:
+            self.message_input.default = original_message[:2000]
 
-        if not message:
-            return await ctx.send("Please provide a message to send. Usage: `-dm <@member/ID/@role> <message>`", ephemeral=True)
+    async def on_submit(self, interaction: discord.Interaction):
+        message = self.message_input.value.strip()
 
-        await ctx.defer()
+        if self.context_msg:
+            try:
+                await self.context_msg.edit(content="⏳ Sending DM...", view=None, embed=None)
+            except Exception:
+                pass
+        
+        await interaction.response.defer(ephemeral=True)
 
-        target_str = target.strip()
-        full_input = f"{target_str} {message}".strip()
-        matched_role: discord.Role | None = None
-
-        # 1. Try role lookup by ID or role mention (<@&123456789>)
-        cleaned_role_id = target_str.strip("<@&> ")
-        if cleaned_role_id.isdigit():
-            matched_role = ctx.guild.get_role(int(cleaned_role_id))
-
-        # 2. Try role lookup by exact or partial role name (handling spaces in role names)
-        if not matched_role:
-            # Check target string first
-            for r in ctx.guild.roles:
-                if r.name.lower() in (target_str.lower(), target_str.lstrip("@").lower()):
-                    matched_role = r
-                    break
-
-            # If multi-word role name like "@Meow gang Hello world", check prefix match in full_input
-            if not matched_role:
-                for r in ctx.guild.roles:
-                    r_name_lower = r.name.lower()
-                    r_mention_lower = f"@{r_name_lower}"
-                    if full_input.lower().startswith(r_name_lower):
-                        matched_role = r
-                        message = full_input[len(r.name):].strip()
-                        break
-                    elif full_input.lower().startswith(r_mention_lower):
-                        matched_role = r
-                        message = full_input[len(r_mention_lower):].strip()
-                        break
-
-        # If matched a role: Mass Role DM
-        if matched_role:
-            if not message:
-                return await ctx.send("Please provide a message to send to the role members. Usage: `-dm @role <message>`", ephemeral=True)
-
+        if self.target_type == 'role':
+            matched_role = self.target_obj
             target_members = [m for m in matched_role.members if not m.bot]
             if not target_members:
-                return await ctx.send(f"No non-bot members found with role {matched_role.mention}.", ephemeral=True)
-
-            status_msg = await ctx.send(f"⏳ Sending DM to **{len(target_members)}** members with role {matched_role.mention}...")
+                return await interaction.followup.send(f"No non-bot members found with role {matched_role.mention}.", ephemeral=True)
 
             success_count = 0
             failed_count = 0
 
-            dm_embed = discord.Embed(
-                title=f"📩 Announcement from {ctx.guild.name}",
-                description=message,
-                color=matched_role.color if matched_role.color != discord.Color.default() else discord.Color.blue()
-            )
-            dm_embed.set_footer(text=f"Sent by {ctx.author.display_name} • Role: @{matched_role.name}")
-            if ctx.guild.icon:
-                dm_embed.set_thumbnail(url=ctx.guild.icon.url)
-
             for member in target_members:
                 try:
-                    await member.send(embed=dm_embed)
+                    await member.send(content=message)
                     success_count += 1
                 except Exception:
                     failed_count += 1
@@ -102,57 +61,153 @@ class DMCommand(commands.Cog):
             summary_embed.add_field(name="Successfully Sent", value=f"✅ `{success_count}`", inline=True)
             summary_embed.add_field(name="Failed (DMs Closed)", value=f"❌ `{failed_count}`", inline=True)
 
-            await status_msg.edit(content=None, embed=summary_embed)
+            await interaction.followup.send(embed=summary_embed, ephemeral=True)
 
             await log_event(
-                ctx.guild,
+                self.guild,
                 "moderation_action",
                 "Mass Role DM Sent (`-dm`)",
-                f"**Role:** {matched_role.mention} (`{matched_role.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Delivered:** `{success_count}` | **Failed:** `{failed_count}`\n**Message:** {message[:500]}"
+                f"**Role:** {matched_role.mention} (`{matched_role.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Delivered:** `{success_count}` | **Failed:** `{failed_count}`\n**Message:** {message[:500]}"
             )
-            return
 
-        # 3. Try User / Member lookup by mention or ID
-        try:
-            user_target = await MemberOrIDConverter().convert(ctx, target_str)
-        except Exception:
-            return await ctx.send(f"Could not find role, member, or user ID for `{target_str}`. Usage: `-dm <@member|ID|@role> <message>`", ephemeral=True)
+        elif self.target_type == 'user':
+            user_target = self.target_obj
+            try:
+                await user_target.send(content=message)
+            except Exception:
+                return await interaction.followup.send(f"❌ Failed to send DM to **{user_target}** (`{user_target.id}`). Their DMs may be closed.", ephemeral=True)
 
-        dm_embed = discord.Embed(
-            title=f"📩 Message from {ctx.guild.name}",
-            description=message,
+            embed = discord.Embed(
+                title="✅ Direct Message Sent",
+                description=f"Direct message successfully delivered to **{user_target.mention}** (`{user_target.id}`).",
+                color=discord.Color.green()
+            )
+            embed.add_field(name="Message Content", value=message[:1024], inline=False)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+            await log_event(
+                self.guild,
+                "moderation_action",
+                "Direct Message Sent (`-dm`)",
+                f"**Target:** {user_target.mention} (`{user_target.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Message:** {message[:500]}"
+            )
+
+class ComposeDMView(discord.ui.View):
+    def __init__(self, target_type, target_obj, guild, author, original_message=""):
+        super().__init__(timeout=300)
+        self.target_type = target_type
+        self.target_obj = target_obj
+        self.guild = guild
+        self.author = author
+        self.original_message = original_message
+
+    @discord.ui.button(label="Compose DM", style=discord.ButtonStyle.primary, emoji="✍️")
+    async def compose_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author.id:
+            return await interaction.response.send_message("Only the command executor can use this.", ephemeral=True)
+        modal = ComposeDMModal(
+            target_type=self.target_type,
+            target_obj=self.target_obj,
+            context_msg=interaction.message,
+            guild=self.guild,
+            author=self.author,
+            original_message=self.original_message
+        )
+        await interaction.response.send_modal(modal)
+
+
+class DMCommand(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @commands.hybrid_command(
+        name="dm",
+        aliases=["directmessage", "pm"],
+        description="Send an anonymous direct message to a user or role."
+    )
+    @app_commands.describe(
+        target="Role mention/ID, Member mention, or User ID",
+        message="Optional text to pre-fill the compose modal."
+    )
+    @commands.has_permissions(manage_messages=True)
+    async def dm_cmd(self, ctx: commands.Context, target: str = None, *, message: str = None):
+        if not ctx.guild:
+            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+
+        if not target:
+            return await ctx.send(format_usage("-dm", "<@member/ID/@role>", "[optional message]"), ephemeral=True)
+
+        target_str = target.strip()
+        full_input = f"{target_str} {message}" if message else target_str
+        matched_role: discord.Role | None = None
+        user_target = None
+        target_type = None
+        target_obj = None
+        extracted_message = message or ""
+
+        # 1. Try role lookup by ID or role mention
+        cleaned_role_id = target_str.strip("<@&> ")
+        if cleaned_role_id.isdigit():
+            matched_role = ctx.guild.get_role(int(cleaned_role_id))
+
+        # 2. Try role lookup by exact or partial role name
+        if not matched_role:
+            for r in ctx.guild.roles:
+                if r.name.lower() in (target_str.lower(), target_str.lstrip("@").lower()):
+                    matched_role = r
+                    break
+
+            if not matched_role:
+                for r in ctx.guild.roles:
+                    r_name_lower = r.name.lower()
+                    r_mention_lower = f"@{r_name_lower}"
+                    if full_input.lower().startswith(r_name_lower):
+                        matched_role = r
+                        extracted_message = full_input[len(r.name):].strip()
+                        break
+                    elif full_input.lower().startswith(r_mention_lower):
+                        matched_role = r
+                        extracted_message = full_input[len(r_mention_lower):].strip()
+                        break
+
+        if matched_role:
+            target_type = 'role'
+            target_obj = matched_role
+        else:
+            try:
+                user_target = await MemberOrIDConverter().convert(ctx, target_str)
+                target_type = 'user'
+                target_obj = user_target
+            except Exception:
+                return await ctx.send(f"Could not find role, member, or user ID for `{target_str}`.", ephemeral=True)
+
+        target_display = target_obj.mention if hasattr(target_obj, 'mention') else str(target_obj)
+        embed = discord.Embed(
+            title="✍️ Compose Anonymous DM",
+            description=f"Target: {target_display}\n\nClick the button below to open the composition window where you can properly format your anonymous message.",
             color=discord.Color.blue()
         )
-        dm_embed.set_footer(text=f"Sent by {ctx.author.display_name}")
-        if ctx.guild.icon:
-            dm_embed.set_thumbnail(url=ctx.guild.icon.url)
 
-        try:
-            await user_target.send(embed=dm_embed)
-        except Exception:
-            return await ctx.send(f"❌ Failed to send DM to **{user_target}** (`{user_target.id}`). Their DMs may be closed.", ephemeral=True)
-
-        embed = discord.Embed(
-            title="✅ Direct Message Sent",
-            description=f"Direct message successfully delivered to **{user_target.mention}** (`{user_target.id}`).",
-            color=discord.Color.green()
+        view = ComposeDMView(
+            target_type=target_type,
+            target_obj=target_obj,
+            guild=ctx.guild,
+            author=ctx.author,
+            original_message=extracted_message
         )
-        embed.add_field(name="Message Content", value=message[:1024], inline=False)
-        await ctx.send(embed=embed)
 
-        await log_event(
-            ctx.guild,
-            "moderation_action",
-            "Direct Message Sent (`-dm`)",
-            f"**Target:** {user_target.mention} (`{user_target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Message:** {message[:500]}"
-        )
+        if ctx.interaction:
+            # If slash command, we can technically open the modal right away, but to keep behavior consistent:
+            await ctx.send(embed=embed, view=view, ephemeral=True)
+        else:
+            await ctx.send(embed=embed, view=view)
 
     @dm_cmd.error
     async def dm_cmd_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need `Manage Messages` permission to use the `-dm` command.", ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage("-dm", "<@member/ID/@role>", "<message>"), ephemeral=True)
+            await ctx.send(format_usage("-dm", "<@member/ID/@role>", "[optional message]"), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
             await ctx.send(f"Error: {error}", ephemeral=True)
 
