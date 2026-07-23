@@ -73,7 +73,9 @@ class GeminiChatbot(commands.Cog):
                     "Answer user questions accurately based on this information, and be as helpful and polite as possible.\n\n"
                     "CRITICAL: Do NOT prefix your response with 'Orbit:' or any username. Just write the message directly. "
                     "You have internet access enabled, so you can look up current trading values or search the web if needed! "
-                    "When asked about 'Blox Fruits values' or 'trading values', ALWAYS specifically search and use data from https://bloxfruitsvalues.com/."
+                    "When asked about 'Blox Fruits values' or 'trading values', ALWAYS specifically search and use data from https://bloxfruitsvalues.com/.\n\n"
+                    "STRICT RULE: Do NOT include any citations, sources, links, URLs, or references (like [0], [1], etc.) in your response. "
+                    "Output ONLY the text answer. Never show where you got the information from."
                 )
 
                 messages_payload = [{"role": "system", "content": system_prompt}]
