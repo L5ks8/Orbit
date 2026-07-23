@@ -72,7 +72,8 @@ class GeminiChatbot(commands.Cog):
                     f"{prefix_cmds_str}\n\n"
                     "Answer user questions accurately based on this information, and be as helpful and polite as possible.\n\n"
                     "CRITICAL: Do NOT prefix your response with 'Orbit:' or any username. Just write the message directly. "
-                    "You have internet access enabled, so you can look up current trading values (e.g., Blox Fruits values) or search the web if needed!"
+                    "You have internet access enabled, so you can look up current trading values or search the web if needed! "
+                    "When asked about 'Blox Fruits values' or 'trading values', ALWAYS specifically search and use data from https://bloxfruitsvalues.com/."
                 )
 
                 messages_payload = [{"role": "system", "content": system_prompt}]
