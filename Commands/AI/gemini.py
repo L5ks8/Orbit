@@ -70,23 +70,34 @@ class GeminiChatbot(commands.Cog):
                     f"{slash_cmds_str}\n\n"
                     "Here are all your available PREFIX COMMANDS:\n"
                     f"{prefix_cmds_str}\n\n"
-                    "Answer user questions accurately based on this information, and be as helpful and polite as possible."
+                    "Answer user questions accurately based on this information, and be as helpful and polite as possible.\n\n"
+                    "CRITICAL: Do NOT prefix your response with 'Orbit:' or any username. Just write the message directly. "
+                    "You have internet access enabled, so you can look up current trading values (e.g., Blox Fruits values) or search the web if needed!"
                 )
 
                 messages_payload = [{"role": "system", "content": system_prompt}]
                 
                 for msg in messages:
-                    role = "assistant" if msg.author.id == self.bot.user.id else "user"
-                    messages_payload.append({"role": role, "content": f"{msg.author.display_name}: {msg.clean_content}"})
+                    if msg.author.id == self.bot.user.id:
+                        content = msg.clean_content
+                        # Clean up old messages that might have the prefix
+                        if content.startswith(f"{self.bot.user.display_name}:"):
+                            content = content[len(self.bot.user.display_name)+1:].strip()
+                        elif content.startswith("Orbit:"):
+                            content = content[len("Orbit:"):].strip()
+                        messages_payload.append({"role": "assistant", "content": content})
+                    else:
+                        messages_payload.append({"role": "user", "content": f"{msg.author.display_name}: {msg.clean_content}"})
 
                 messages_payload.append({"role": "user", "content": f"{message.author.display_name}: {message.clean_content}"})
 
                 response = await asyncio.wait_for(
                     self.client.chat.completions.create(
                         model='gpt-4o',
-                        messages=messages_payload
+                        messages=messages_payload,
+                        web_search=True
                     ),
-                    timeout=15.0
+                    timeout=20.0
                 )
                 
                 text_response = response.choices[0].message.content
