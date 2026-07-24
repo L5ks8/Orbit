@@ -90,8 +90,9 @@ class BlacklistListLayout(discord.ui.View):
         btn_add.callback = add_cb
         btn_remove.callback = remove_cb
         btn_close.callback = close_cb
-
-        self.add_item(ActionRow(btn_add, btn_remove, btn_close))
+        self.add_item(btn_add)
+        self.add_item(btn_remove)
+        self.add_item(btn_close)
 
     def update_view(self, data: dict):
         self.data = data
