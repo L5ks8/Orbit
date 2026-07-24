@@ -8,22 +8,16 @@ async def _do_bl_list(ctx: commands.Context):
     view = BlacklistListLayout(ctx.guild, ctx.bot, ctx.author.id)
     await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
-@commands.hybrid_command(name="checkblacklist", aliases=["bl_list", "blacklist_view"], description="Lists all blacklisted users with options to add/remove IDs.")
-@commands.has_permissions(administrator=True)
-async def checkblacklist_cmd(ctx: commands.Context):
-    await _do_bl_list(ctx)
-
 class BlacklistListCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="bl_list_prefix", hidden=True)
+    @commands.hybrid_command(name="checkblacklist", aliases=["bl_list", "blacklist_view"], description="Lists all blacklisted users with options to add/remove IDs.")
     @commands.has_permissions(administrator=True)
-    async def bl_list_prefix(self, ctx: commands.Context):
+    async def checkblacklist(self, ctx: commands.Context):
         await _do_bl_list(ctx)
 
 async def setup(bot: commands.Bot):
-    if "checkblacklist" not in bot.all_commands:
-        bot.add_command(checkblacklist_cmd)
+    bot.remove_command("checkblacklist")
     await bot.add_cog(BlacklistListCog(bot))
 
