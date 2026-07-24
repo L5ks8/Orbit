@@ -30,7 +30,7 @@ class AddBlacklistModal(Modal, title="Add ID to Blacklist"):
 
         data = load_blacklist(interaction.guild_id)
         self.parent_view.update_view(data)
-        await interaction.response.edit_message(view=self.parent_view)
+        await interaction.response.edit_message(**self.parent_view.get_kwargs())
         await interaction.followup.send(f"Added ID `{user_id}` to the command blacklist.", ephemeral=True)
 
 class RemoveBlacklistModal(Modal, title="Remove ID from Blacklist"):
@@ -52,7 +52,7 @@ class RemoveBlacklistModal(Modal, title="Remove ID from Blacklist"):
 
         data = load_blacklist(interaction.guild_id)
         self.parent_view.update_view(data)
-        await interaction.response.edit_message(view=self.parent_view)
+        await interaction.response.edit_message(**self.parent_view.get_kwargs())
         await interaction.followup.send(f"Removed ID `{user_id}` from the command blacklist.", ephemeral=True)
 
 class BlacklistListLayout(discord.ui.View):
@@ -62,20 +62,9 @@ class BlacklistListLayout(discord.ui.View):
         self.bot = bot
         self.author_id = author_id
         self.data = load_blacklist(guild.id)
+        self._setup_ui()
 
-    def update_view(self, data: dict):
-        self.data = data
-
-    def get_kwargs(self):
-        count = len(self.data)
-        lines = []
-        if count > 0:
-            for i, (uid_str, info) in enumerate(list(self.data.items())[:15], 1):
-                reason = info.get("reason", "No reason")
-                user = self.guild.get_member(int(uid_str)) or self.bot.get_user(int(uid_str))
-                mention_display = f"<@{uid_str}>" + (f" (`@{user.name}`)" if user and hasattr(user, "name") else "")
-                lines.append(f"**{i}.** {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
-
+    def _setup_ui(self):
         btn_add = discord.ui.Button(label="Add ID", style=discord.ButtonStyle.success)
         btn_remove = discord.ui.Button(label="Remove ID", style=discord.ButtonStyle.secondary)
         btn_close = discord.ui.Button(label="Close", style=discord.ButtonStyle.danger)
@@ -103,4 +92,25 @@ class BlacklistListLayout(discord.ui.View):
         btn_close.callback = close_cb
 
         self.add_item(ActionRow(btn_add, btn_remove, btn_close))
+
+    def update_view(self, data: dict):
+        self.data = data
+
+    def get_kwargs(self):
+        count = len(self.data)
+        lines = []
+        if count > 0:
+            for i, (uid_str, info) in enumerate(list(self.data.items())[:15], 1):
+                reason = info.get("reason", "No reason")
+                user = self.guild.get_member(int(uid_str)) or self.bot.get_user(int(uid_str))
+                mention_display = f"<@{uid_str}>" + (f" (`@{user.name}`)" if user and hasattr(user, "name") else "")
+                lines.append(f"**{i}.** {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
+
+        embed = discord.Embed(title="Command Blacklist", color=discord.Color.red())
+        if lines:
+            embed.description = "\n".join(lines)
+        else:
+            embed.description = "The blacklist is currently empty."
+            
+        return {"embed": embed, "view": self}
 
