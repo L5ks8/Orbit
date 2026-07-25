@@ -71,7 +71,7 @@ class ModLogCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="modlog", description="View the complete moderation history for a user.")
+    @commands.hybrid_command(name="modlog", aliases=["modlogs"], description="View the complete moderation history for a user.")
     @app_commands.describe(user="The member or user ID to check")
     @commands.has_permissions(moderate_members=True)
     async def modlog_cmd(self, ctx: commands.Context, user: str = None):
