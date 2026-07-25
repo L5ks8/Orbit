@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
+from Commands.Log._modlog_storage import add_modlog
 from Commands._utils import MemberOrIDConverter, format_usage
 
 class SoftbanCommand(commands.Cog):
@@ -32,6 +33,7 @@ class SoftbanCommand(commands.Cog):
             
             from Commands.Ban._storage import add_ban_history
             add_ban_history(ctx.guild.id, target.id, f"[SOFTBAN] {reason}", ctx.author.id)
+            add_modlog(ctx.guild.id, target.id, ctx.author.id, "Softban", reason)
             
             await log_event(
                 ctx.guild,

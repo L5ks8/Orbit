@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Log._storage import log_event
+from Commands.Log._modlog_storage import add_modlog
 
 class UnbanConfirmView(discord.ui.View):
     def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member, content_kwargs: dict):
@@ -21,6 +22,7 @@ class UnbanConfirmView(discord.ui.View):
             try:
                 from Embeds import get_command_embed
                 await interaction.guild.unban(self.ban_entry.user, reason=f"Unbanned by {self.author} | Reason: {self.reason}")
+                add_modlog(interaction.guild.id, self.ban_entry.user.id, self.author.id, "Unban", self.reason)
                 await log_event(
                     interaction.guild,
                     "moderation_action",

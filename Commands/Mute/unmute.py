@@ -4,6 +4,7 @@ from discord.ui import Container, TextDisplay, Separator
 from Commands.Mute._storage import get_muted_role_id
 from Commands.Mute.mute import get_or_create_muted_role
 from Commands.Log._storage import log_event
+from Commands.Log._modlog_storage import add_modlog
 
 
 
@@ -22,6 +23,7 @@ class UnmuteCommand(commands.Cog):
 
         try:
             await target.remove_roles(role, reason=f"Unmuted by {ctx.author} | Reason: {reason}")
+            add_modlog(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
         except discord.Forbidden:
             return await ctx.send("I do not have permissions to remove the Muted role.", ephemeral=True)
         except Exception as e:

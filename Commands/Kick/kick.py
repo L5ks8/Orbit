@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
+from Commands.Log._modlog_storage import add_modlog
 from Commands._utils import MemberOrIDConverter, format_usage
 
 
@@ -25,6 +26,7 @@ class KickCommand(commands.Cog):
 
         try:
             await ctx.guild.kick(target, reason=f"Kicked by {ctx.author} | Reason: {reason}")
+            add_modlog(ctx.guild.id, target.id, ctx.author.id, "Kick", reason)
             from Embeds import get_command_embed
             await log_event(
                 ctx.guild,

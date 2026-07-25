@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import add_warning, get_user_warnings
-from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
+from Commands.Log._modlog_storage import add_modlog
 from Commands._utils import MemberOrIDConverter, format_usage
 
 
@@ -21,6 +21,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
             return await ctx.send("You cannot warn a user with an equal or higher role.", ephemeral=True)
 
     warn_entry = add_warning(ctx.guild.id, user.id, reason, ctx.author.id)
+    add_modlog(ctx.guild.id, user.id, ctx.author.id, "Warn", reason)
     warns = get_user_warnings(ctx.guild.id, user.id)
     total_warns = len(warns)
     

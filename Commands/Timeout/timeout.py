@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
+from Commands.Log._modlog_storage import add_modlog
 
 
 
@@ -28,6 +29,7 @@ class TimeoutCommand(commands.Cog):
         try:
             duration = datetime.timedelta(minutes=minutes)
             await target.timeout(duration, reason=f"Timeout by {ctx.author} | Reason: {reason}")
+            add_modlog(ctx.guild.id, target.id, ctx.author.id, "Timeout", f"{minutes}m - {reason}")
             await log_event(
                 ctx.guild,
         "moderation_action",

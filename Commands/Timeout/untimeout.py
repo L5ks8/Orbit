@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Commands.Log._storage import log_event
+from Commands.Log._modlog_storage import add_modlog
 
 
 
@@ -18,7 +19,9 @@ class UntimeoutCommand(commands.Cog):
             return await ctx.send("This user is not currently timed out.", ephemeral=True)
 
         try:
-            await target.timeout(None, reason=f"Timeout removed by {ctx.author} | Reason: {reason}")
+            await target.timeout(None, reason=f"Untimeout by {ctx.author} | Reason: {reason}")
+            add_modlog(ctx.guild.id, target.id, ctx.author.id, "Untimeout", reason)
+            
             await log_event(
                 ctx.guild,
         "moderation_action",
