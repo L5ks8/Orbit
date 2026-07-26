@@ -821,6 +821,11 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         
         // Load messages for the embed builder UI
         loadMessages();
+        
+        // Load Reaction Roles
+        if (typeof loadReactionRoles === 'function') {
+            loadReactionRoles(guildId);
+        }
 
         // Initialize Charts
         if (window.Chart) {
@@ -4531,3 +4536,585 @@ document.addEventListener('click', function(e) {
     }
 });
 
+
+
+
+// -----------------------------------------------------------------------------
+// REACTION ROLES MODULE
+// -----------------------------------------------------------------------------
+
+let currentReactionRoles = [];
+let currentRRMsgId = null;
+
+async function loadReactionRoles(guildId) {
+    try {
+        const res = await fetch(`/api/reactionroles/${guildId}`);
+        if (res.ok) {
+            currentReactionRoles = await res.json();
+            renderReactionRolesList();
+        }
+    } catch (e) {
+        console.error("Failed to load reaction roles:", e);
+    }
+}
+
+function renderReactionRolesList() {
+    const container = document.getElementById('reactionroles-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const query = document.getElementById('search-reactionroles-input')?.value.toLowerCase() || '';
+
+    currentReactionRoles.forEach(rr => {
+        if (query && !rr.name?.toLowerCase().includes(query)) return;
+
+        const el = document.createElement('div');
+        el.className = 'msg-list-item';
+        el.style.width = '280px';
+        el.style.display = 'flex';
+        el.style.flexDirection = 'column';
+        el.style.gap = '8px';
+        el.style.padding = '16px';
+        
+        el.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 32px; height: 32px; background: rgba(59, 130, 246, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #3B82F6;">
+                        <i data-lucide="mouse-pointer-click" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px; color: #F2F3F5;">${escapeHtml(rr.name || 'Unnamed')}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">${rr.channel_id ? `<i data-lucide="hash" style="width:10px; height:10px; display:inline-block; vertical-align:middle;"></i> ${rr.channel_id}` : 'No channel'}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        el.onclick = () => openReactionRoleBuilder(rr);
+        container.appendChild(el);
+    });
+    
+    lucide.createIcons();
+}
+
+document.getElementById('search-reactionroles-input')?.addEventListener('input', renderReactionRolesList);
+
+function openReactionRoleBuilder(rr) {
+    document.getElementById('reactionroles-list-view').style.display = 'none';
+    document.getElementById('reactionroles-builder-view').style.display = 'block';
+
+    const chSelect = document.getElementById('rr_embed_channel_id');
+    chSelect.innerHTML = '<option value="">Select Channel...</option>';
+    if (globalChannels) {
+        globalChannels.forEach(c => {
+            if (c.type === 0 || c.type === 5) {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `#${c.name}`;
+                chSelect.appendChild(opt);
+            }
+        });
+    }
+
+    if (rr) {
+        currentRRMsgId = rr.id;
+        document.getElementById('rr_embed_msg_name').value = rr.name || '';
+        document.getElementById('rr_embed_channel_id').value = rr.channel_id || '';
+        
+        const embed = rr.embed || {};
+        document.getElementById('rr_embed_content').value = rr.content || '';
+        document.getElementById('rr_embed_author_name').value = embed.author_name || '';
+        document.getElementById('rr_embed_author_icon').value = embed.author_icon_url || '';
+        if (embed.author_icon_url) {
+            document.getElementById('rr-drop-author-icon').style.backgroundImage = `url("${embed.author_icon_url}")`;
+            document.getElementById('rr-drop-author-icon').innerHTML = '';
+        } else {
+            document.getElementById('rr-drop-author-icon').style.backgroundImage = 'none';
+            document.getElementById('rr-drop-author-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        }
+
+        document.getElementById('rr_embed_title').value = embed.title || '';
+        document.getElementById('rr_embed_description').value = embed.description || '';
+        
+        document.getElementById('rr_embed_thumbnail').value = embed.thumbnail_url || '';
+        if (embed.thumbnail_url) {
+            document.getElementById('rr-drop-thumbnail').style.backgroundImage = `url("${embed.thumbnail_url}")`;
+            document.getElementById('rr-drop-thumbnail').innerHTML = '';
+        } else {
+            document.getElementById('rr-drop-thumbnail').style.backgroundImage = 'none';
+            document.getElementById('rr-drop-thumbnail').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        }
+
+        document.getElementById('rr_embed_image').value = embed.image_url || '';
+        if (embed.image_url) {
+            document.getElementById('rr-drop-image').style.backgroundImage = `url("${embed.image_url}")`;
+            document.getElementById('rr-drop-image').innerHTML = '';
+        } else {
+            document.getElementById('rr-drop-image').style.backgroundImage = 'none';
+            document.getElementById('rr-drop-image').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        }
+
+        document.getElementById('rr_embed_footer_text').value = embed.footer_text || '';
+        document.getElementById('rr_embed_footer_icon').value = embed.footer_icon_url || '';
+        if (embed.footer_icon_url) {
+            document.getElementById('rr-drop-footer-icon').style.backgroundImage = `url("${embed.footer_icon_url}")`;
+            document.getElementById('rr-drop-footer-icon').innerHTML = '';
+        } else {
+            document.getElementById('rr-drop-footer-icon').style.backgroundImage = 'none';
+            document.getElementById('rr-drop-footer-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        }
+
+        const btnType = rr.button_type || 'toggle';
+        const typeInputs = document.querySelectorAll('input[name="rr_button_type"]');
+        typeInputs.forEach(input => {
+            input.checked = (input.value === btnType);
+        });
+
+        // Load fields
+        document.getElementById('rr-embed-fields-container').innerHTML = '';
+        if (embed.fields && embed.fields.length > 0) {
+            embed.fields.forEach(f => {
+                rrAddField(f.name, f.value, f.inline);
+            });
+        }
+        
+        // Load buttons
+        document.getElementById('rr_buttons_list').innerHTML = '';
+        if (rr.components && rr.components.length > 0) {
+            rr.components.forEach(btn => {
+                rrAddButtonConfig(btn.role_id, btn.color, btn.emoji);
+            });
+        }
+
+    } else {
+        currentRRMsgId = null;
+        document.getElementById('rr_embed_msg_name').value = 'New Reaction Role';
+        document.getElementById('rr_embed_channel_id').value = '';
+        document.getElementById('rr_embed_content').value = '';
+        document.getElementById('rr_embed_author_name').value = '';
+        document.getElementById('rr_embed_author_icon').value = '';
+        document.getElementById('rr-drop-author-icon').style.backgroundImage = 'none';
+        document.getElementById('rr-drop-author-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        
+        document.getElementById('rr_embed_title').value = '';
+        document.getElementById('rr_embed_description').value = '';
+        
+        document.getElementById('rr_embed_thumbnail').value = '';
+        document.getElementById('rr-drop-thumbnail').style.backgroundImage = 'none';
+        document.getElementById('rr-drop-thumbnail').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        
+        document.getElementById('rr_embed_image').value = '';
+        document.getElementById('rr-drop-image').style.backgroundImage = 'none';
+        document.getElementById('rr-drop-image').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        
+        document.getElementById('rr_embed_footer_text').value = '';
+        document.getElementById('rr_embed_footer_icon').value = '';
+        document.getElementById('rr-drop-footer-icon').style.backgroundImage = 'none';
+        document.getElementById('rr-drop-footer-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        
+        document.getElementById('rr-embed-fields-container').innerHTML = '';
+        document.getElementById('rr_buttons_list').innerHTML = '';
+        
+        const typeInputs = document.querySelectorAll('input[name="rr_button_type"]');
+        typeInputs.forEach(input => input.checked = (input.value === 'toggle'));
+        rrAddButtonConfig(); // Default empty button
+    }
+    
+    // Auto resize textareas
+    autoResizeTextarea(document.getElementById('rr_embed_content'));
+    autoResizeTextarea(document.getElementById('rr_embed_description'));
+    
+    rrSetDirty(false);
+    updateRRPreview();
+}
+
+function closeReactionRoleBuilder() {
+    document.getElementById('reactionroles-builder-view').style.display = 'none';
+    document.getElementById('reactionroles-list-view').style.display = 'block';
+}
+
+function rrSetDirty(isDirty) {
+    // Optional unsaved state logic
+}
+
+function rrUpdateCount(el, max) {
+    if (el.nextElementSibling) {
+        el.nextElementSibling.innerText = `${el.value.length}/${max}`;
+        el.nextElementSibling.style.color = el.value.length > max ? '#EF4444' : 'var(--text-muted)';
+    }
+}
+
+function rrAddField(name = '', value = '', inline = false) {
+    const container = document.getElementById('rr-embed-fields-container');
+    const fieldDiv = document.createElement('div');
+    fieldDiv.style.display = 'flex';
+    fieldDiv.style.flexDirection = 'column';
+    fieldDiv.style.gap = '8px';
+    fieldDiv.style.background = 'rgba(255,255,255,0.02)';
+    fieldDiv.style.padding = '12px';
+    fieldDiv.style.borderRadius = '6px';
+    fieldDiv.style.border = '1px solid rgba(255,255,255,0.05)';
+    fieldDiv.style.position = 'relative';
+
+    fieldDiv.innerHTML = `
+        <div style="position: absolute; top: 12px; right: 12px; cursor: pointer; color: var(--text-muted);" onclick="this.parentElement.remove(); updateRRPreview(); rrSetDirty(true);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <div style="padding-right: 24px;">
+            <input type="text" class="form-input rr-field-name" placeholder="Field Name" value="${escapeHtml(name)}" style="width: 100%; height: 28px; font-size: 13px; margin-bottom: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.1);" oninput="updateRRPreview(); rrSetDirty(true);">
+            <textarea class="form-input rr-field-value" placeholder="Field Value" style="width: 100%; height: 60px; resize: vertical; font-size: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1);" oninput="updateRRPreview(); rrSetDirty(true);">${escapeHtml(value)}</textarea>
+        </div>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer;">
+            <input type="checkbox" class="rr-field-inline" ${inline ? 'checked' : ''} onchange="updateRRPreview(); rrSetDirty(true);">
+            Inline
+        </label>
+    `;
+    container.appendChild(fieldDiv);
+    updateRRPreview();
+}
+
+function rrAddButtonConfig(roleId = '', color = 'blue', emoji = '') {
+    const container = document.getElementById('rr_buttons_list');
+    const bDiv = document.createElement('div');
+    bDiv.className = 'rr-button-config dash-card';
+    bDiv.style.display = 'flex';
+    bDiv.style.flexDirection = 'column';
+    bDiv.style.gap = '8px';
+    bDiv.style.padding = '16px';
+    bDiv.style.background = '#121315';
+    bDiv.style.border = '1px solid rgba(255,255,255,0.05)';
+    bDiv.style.position = 'relative';
+
+    const colors = ['blue', 'gray', 'green', 'red'];
+    let colorOptions = '';
+    colors.forEach(c => {
+        colorOptions += `<option value="${c}" ${color === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`;
+    });
+
+    let roleOptions = '<option value="">Select Role...</option>';
+    if (globalRoles) {
+        globalRoles.forEach(r => {
+            roleOptions += `<option value="${r.id}" ${roleId === r.id ? 'selected' : ''} style="color: ${r.color || '#fff'}">${escapeHtml(r.name)}</option>`;
+        });
+    }
+
+    bDiv.innerHTML = `
+        <div style="position: absolute; top: 12px; right: 12px; cursor: pointer; color: var(--text-muted);" onclick="this.parentElement.remove(); updateRRPreview(); rrSetDirty(true);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+                <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Role</label>
+                <select class="form-select rr-btn-role" style="width: 100%; height: 32px;" onchange="updateRRPreview(); rrSetDirty(true);">
+                    ${roleOptions}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Button Color</label>
+                <select class="form-select rr-btn-color" style="width: 100%; height: 32px;" onchange="updateRRPreview(); rrSetDirty(true);">
+                    ${colorOptions}
+                </select>
+            </div>
+        </div>
+        <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Emoji (Optional)</label>
+            <input type="text" class="form-input rr-btn-emoji" placeholder="e.g. 🐶" value="${escapeHtml(emoji)}" style="width: 100%; height: 32px;" oninput="updateRRPreview(); rrSetDirty(true);">
+        </div>
+    `;
+
+    container.appendChild(bDiv);
+    updateRRPreview();
+}
+
+function getReactionRolePayload() {
+    const payload = {
+        name: document.getElementById('rr_embed_msg_name').value || 'Unnamed RR',
+        channel_id: document.getElementById('rr_embed_channel_id').value,
+        content: document.getElementById('rr_embed_content').value,
+        button_type: document.querySelector('input[name="rr_button_type"]:checked')?.value || 'toggle',
+        embed: {
+            author_name: document.getElementById('rr_embed_author_name').value,
+            author_icon_url: document.getElementById('rr_embed_author_icon').value,
+            title: document.getElementById('rr_embed_title').value,
+            description: document.getElementById('rr_embed_description').value,
+            thumbnail_url: document.getElementById('rr_embed_thumbnail').value,
+            image_url: document.getElementById('rr_embed_image').value,
+            footer_text: document.getElementById('rr_embed_footer_text').value,
+            footer_icon_url: document.getElementById('rr_embed_footer_icon').value,
+            fields: []
+        },
+        components: []
+    };
+
+    const fieldsContainer = document.getElementById('rr-embed-fields-container');
+    const fieldElems = fieldsContainer.querySelectorAll('div[style*="relative"]');
+    fieldElems.forEach(el => {
+        const name = el.querySelector('.rr-field-name').value;
+        const val = el.querySelector('.rr-field-value').value;
+        const inl = el.querySelector('.rr-field-inline').checked;
+        if (name || val) {
+            payload.embed.fields.push({ name, value: val, inline: inl });
+        }
+    });
+    
+    const btnConfigs = document.querySelectorAll('.rr-button-config');
+    btnConfigs.forEach(b => {
+        const role_id = b.querySelector('.rr-btn-role').value;
+        const color = b.querySelector('.rr-btn-color').value;
+        const emoji = b.querySelector('.rr-btn-emoji').value;
+        if (role_id) {
+            payload.components.push({ role_id, color, emoji });
+        }
+    });
+
+    return payload;
+}
+
+async function saveReactionRole() {
+    const payload = getReactionRolePayload();
+    if (!payload.name) {
+        showToast("Name is required", "error");
+        return;
+    }
+    
+    const btnSave = document.getElementById('btn-rrembed-save');
+    const oldText = btnSave.innerText;
+    btnSave.innerText = 'Saving...';
+    btnSave.disabled = true;
+
+    try {
+        const url = currentRRMsgId ? `/api/reactionroles/${currentGuildId}?id=${currentRRMsgId}` : `/api/reactionroles/${currentGuildId}`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            currentRRMsgId = data.id;
+            showToast("Reaction Role saved!", "success");
+            rrSetDirty(false);
+            loadReactionRoles(currentGuildId);
+        } else {
+            showToast("Failed to save Reaction Role", "error");
+        }
+    } catch (e) {
+        showToast("Error saving: " + e, "error");
+    } finally {
+        btnSave.innerText = oldText;
+        btnSave.disabled = false;
+    }
+}
+
+async function sendReactionRole() {
+    if (!currentRRMsgId) {
+        showToast("You must save the Reaction Role first!", "error");
+        return;
+    }
+    const channel_id = document.getElementById('rr_embed_channel_id').value;
+    if (!channel_id) {
+        showToast("Please select a channel first.", "error");
+        return;
+    }
+
+    const btn = document.getElementById('btn-rrembed-send');
+    btn.innerText = 'Sending...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`/api/action/${currentGuildId}/send_reactionrole`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentRRMsgId, channel_id })
+        });
+        if (res.ok) {
+            showToast("Reaction Role sent to Discord!", "success");
+        } else {
+            const err = await res.text();
+            showToast("Failed to send: " + err, "error");
+        }
+    } catch(e) {
+        showToast("Error sending: " + e, "error");
+    } finally {
+        btn.innerText = 'Send to channel';
+        btn.disabled = false;
+    }
+}
+
+async function deleteReactionRole() {
+    if (!currentRRMsgId) {
+        closeReactionRoleBuilder();
+        return;
+    }
+    
+    if (confirm("Are you sure you want to delete this Reaction Role?")) {
+        try {
+            const res = await fetch(`/api/reactionroles/${currentGuildId}/${currentRRMsgId}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                showToast("Deleted Reaction Role.", "success");
+                closeReactionRoleBuilder();
+                loadReactionRoles(currentGuildId);
+            } else {
+                showToast("Failed to delete.", "error");
+            }
+        } catch(e) {
+            showToast("Error: " + e, "error");
+        }
+    }
+}
+
+function updateRRPreview() {
+    const payload = getReactionRolePayload();
+    
+    const pContent = document.getElementById('rr-preview-content');
+    const pEmbed = document.getElementById('rr-preview-embed');
+    
+    // Content
+    pContent.style.display = payload.content ? 'block' : 'none';
+    if (payload.content) pContent.innerText = payload.content;
+
+    // Embed
+    let hasEmbed = false;
+    if (payload.embed.author_name || payload.embed.title || payload.embed.description || 
+        payload.embed.fields.length > 0 || payload.embed.image_url || payload.embed.footer_text) {
+        hasEmbed = true;
+    }
+    
+    pEmbed.style.display = hasEmbed ? 'block' : 'none';
+    
+    if (hasEmbed) {
+        // Author
+        const pAuthor = document.getElementById('rr-preview-author');
+        if (payload.embed.author_name) {
+            pAuthor.style.display = 'flex';
+            document.getElementById('rr-preview-author-name').innerText = payload.embed.author_name;
+            const aIcon = document.getElementById('rr-preview-author-icon');
+            if (payload.embed.author_icon_url) {
+                aIcon.src = payload.embed.author_icon_url;
+                aIcon.style.display = 'block';
+            } else {
+                aIcon.style.display = 'none';
+            }
+        } else {
+            pAuthor.style.display = 'none';
+        }
+
+        // Title
+        const pTitle = document.getElementById('rr-preview-title');
+        if (payload.embed.title) {
+            pTitle.style.display = 'block';
+            pTitle.innerText = payload.embed.title;
+        } else {
+            pTitle.style.display = 'none';
+        }
+
+        // Desc
+        const pDesc = document.getElementById('rr-preview-description');
+        if (payload.embed.description) {
+            pDesc.style.display = 'block';
+            pDesc.innerText = payload.embed.description;
+        } else {
+            pDesc.style.display = 'none';
+        }
+
+        // Fields
+        const pFields = document.getElementById('rr-preview-fields');
+        pFields.innerHTML = '';
+        if (payload.embed.fields.length > 0) {
+            pFields.style.display = 'flex';
+            payload.embed.fields.forEach(f => {
+                const fDiv = document.createElement('div');
+                fDiv.style.flex = f.inline ? '1 1 30%' : '1 1 100%';
+                fDiv.style.minWidth = f.inline ? '150px' : '100%';
+                fDiv.innerHTML = `
+                    <div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${escapeHtml(f.name)}</div>
+                    <div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${escapeHtml(f.value)}</div>
+                `;
+                pFields.appendChild(fDiv);
+            });
+        } else {
+            pFields.style.display = 'none';
+        }
+
+        // Image
+        const pImage = document.getElementById('rr-preview-image');
+        if (payload.embed.image_url) {
+            pImage.src = payload.embed.image_url;
+            pImage.style.display = 'block';
+        } else {
+            pImage.style.display = 'none';
+        }
+
+        // Thumbnail
+        const pThumbCont = document.getElementById('rr-preview-thumbnail-container');
+        const pThumb = document.getElementById('rr-preview-thumbnail');
+        if (payload.embed.thumbnail_url) {
+            pThumbCont.style.display = 'block';
+            pThumb.src = payload.embed.thumbnail_url;
+        } else {
+            pThumbCont.style.display = 'none';
+        }
+
+        // Footer
+        const pFooter = document.getElementById('rr-preview-footer');
+        if (payload.embed.footer_text) {
+            pFooter.style.display = 'flex';
+            document.getElementById('rr-preview-footer-text').innerText = payload.embed.footer_text;
+            const fIcon = document.getElementById('rr-preview-footer-icon');
+            if (payload.embed.footer_icon_url) {
+                fIcon.src = payload.embed.footer_icon_url;
+                fIcon.style.display = 'block';
+            } else {
+                fIcon.style.display = 'none';
+            }
+        } else {
+            pFooter.style.display = 'none';
+        }
+    }
+    
+    // Components
+    const compContainer = document.getElementById('rr-preview-components-container');
+    compContainer.innerHTML = '';
+    
+    const typeLabelMap = {
+        'toggle': 'Toggle',
+        'add': 'Add'
+    };
+    
+    const colorMap = {
+        'blue': '#5865F2',
+        'gray': '#4E5058',
+        'green': '#248046',
+        'red': '#DA373C'
+    };
+
+    payload.components.forEach(btn => {
+        const btnRole = globalRoles?.find(r => r.id === btn.role_id);
+        const roleName = btnRole ? btnRole.name : 'Unknown Role';
+        
+        const b = document.createElement('div');
+        b.style.display = 'inline-flex';
+        b.style.alignItems = 'center';
+        b.style.gap = '8px';
+        b.style.background = colorMap[btn.color] || colorMap['blue'];
+        b.style.padding = '8px 16px';
+        b.style.borderRadius = '3px';
+        b.style.color = 'white';
+        b.style.fontSize = '14px';
+        b.style.fontWeight = '500';
+        b.style.cursor = 'default';
+        
+        let html = '';
+        if (btn.emoji) {
+            html += `<span>${escapeHtml(btn.emoji)}</span>`;
+        }
+        html += `<span>${escapeHtml(roleName)}</span>`;
+        
+        b.innerHTML = html;
+        compContainer.appendChild(b);
+    });
+}
