@@ -4915,8 +4915,8 @@ async function saveReactionRole() {
     btnSave.disabled = true;
 
     try {
-        const url = currentRRMsgId ? `/api/reactionroles/${currentGuildId}?id=${currentRRMsgId}` : `/api/reactionroles/${currentGuildId}`;
-        const res = await fetch(url, {
+        if (currentRRMsgId) payload.id = currentRRMsgId;
+        const res = await fetch(`/api/reactionroles/${currentGuildId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
