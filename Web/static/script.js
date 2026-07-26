@@ -4539,6 +4539,7 @@ document.addEventListener('click', function(e) {
 
 
 
+
 // -----------------------------------------------------------------------------
 // REACTION ROLES MODULE
 // -----------------------------------------------------------------------------
@@ -4608,12 +4609,10 @@ function openReactionRoleBuilder(rr) {
     chSelect.innerHTML = '<option value="">Select Channel...</option>';
     if (globalChannels) {
         globalChannels.forEach(c => {
-            if (c.type === 0 || c.type === 5) {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = `#${c.name}`;
-                chSelect.appendChild(opt);
-            }
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = `#${c.name}`;
+            chSelect.appendChild(opt);
         });
     }
 
@@ -4683,7 +4682,7 @@ function openReactionRoleBuilder(rr) {
         document.getElementById('rr_buttons_list').innerHTML = '';
         if (rr.components && rr.components.length > 0) {
             rr.components.forEach(btn => {
-                rrAddButtonConfig(btn.role_id, btn.color, btn.emoji);
+                rrAddButtonConfig(btn.role_id, btn.color, btn.emoji, btn.label);
             });
         }
 
@@ -4774,25 +4773,29 @@ function rrAddField(name = '', value = '', inline = false) {
     updateRRPreview();
 }
 
-function rrAddButtonConfig(roleId = '', color = 'blue', emoji = '') {
+function rrAddButtonConfig(roleId = '', color = 'blue', emoji = '', label = 'New Button') {
     const container = document.getElementById('rr_buttons_list');
     const bDiv = document.createElement('div');
-    bDiv.className = 'rr-button-config dash-card';
+    bDiv.className = 'rr-button-config';
     bDiv.style.display = 'flex';
-    bDiv.style.flexDirection = 'column';
-    bDiv.style.gap = '8px';
-    bDiv.style.padding = '16px';
-    bDiv.style.background = '#121315';
-    bDiv.style.border = '1px solid rgba(255,255,255,0.05)';
+    bDiv.style.alignItems = 'center';
+    bDiv.style.gap = '12px';
+    bDiv.style.padding = '8px 12px';
+    bDiv.style.background = '#111214';
+    bDiv.style.border = '1px solid #1E1F22';
+    bDiv.style.borderRadius = '6px';
     bDiv.style.position = 'relative';
 
     const colors = ['blue', 'gray', 'green', 'red'];
-    let colorOptions = '';
+    
+    let colorCircles = '';
     colors.forEach(c => {
-        colorOptions += `<option value="${c}" ${color === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`;
+        const hex = c === 'blue' ? '#5865F2' : c === 'gray' ? '#4E5058' : c === 'green' ? '#248046' : '#DA373C';
+        const isSelected = color === c;
+        colorCircles += `<div class="rr-color-circle" data-color="${c}" onclick="rrSelectColor(this)" style="width: 20px; height: 20px; border-radius: 50%; background: ${hex}; cursor: pointer; border: ${isSelected ? '3px solid rgba(255,255,255,0.3)' : 'none'}; box-sizing: border-box; box-shadow: 0 0 0 1px #111214;"></div>`;
     });
 
-    let roleOptions = '<option value="">Select Role...</option>';
+    let roleOptions = '<option value="">+ Add Role</option>';
     if (globalRoles) {
         globalRoles.forEach(r => {
             roleOptions += `<option value="${r.id}" ${roleId === r.id ? 'selected' : ''} style="color: ${r.color || '#fff'}">${escapeHtml(r.name)}</option>`;
@@ -4800,31 +4803,58 @@ function rrAddButtonConfig(roleId = '', color = 'blue', emoji = '') {
     }
 
     bDiv.innerHTML = `
-        <div style="position: absolute; top: 12px; right: 12px; cursor: pointer; color: var(--text-muted);" onclick="this.parentElement.remove(); updateRRPreview(); rrSetDirty(true);">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <input type="hidden" class="rr-btn-color-val" value="${color}">
+        
+        <!-- Drag Handle Icon -->
+        <div style="color: #4E5058; cursor: grab; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div>
-                <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Role</label>
-                <select class="form-select rr-btn-role" style="width: 100%; height: 32px;" onchange="updateRRPreview(); rrSetDirty(true);">
-                    ${roleOptions}
-                </select>
+        
+        <!-- Label/Emoji Input Box -->
+        <div style="display: flex; align-items: center; background: #2B2D31; border: 2px solid #5865F2; border-radius: 4px; overflow: hidden; height: 32px;">
+            <div style="width: 32px; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-right: 1px solid rgba(255,255,255,0.05); position: relative;">
+                <input type="text" class="rr-btn-emoji" placeholder="+" value="${escapeHtml(emoji)}" style="width: 100%; height: 100%; background: transparent; border: none; text-align: center; color: white; outline: none; font-size: 14px; position: absolute; top:0; left:0; padding:0;" oninput="updateRRPreview(); rrSetDirty(true);">
             </div>
-            <div>
-                <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Button Color</label>
-                <select class="form-select rr-btn-color" style="width: 100%; height: 32px;" onchange="updateRRPreview(); rrSetDirty(true);">
-                    ${colorOptions}
-                </select>
-            </div>
+            <input type="text" class="rr-btn-label" value="${escapeHtml(label)}" placeholder="New Button" style="background: transparent; border: none; color: white; padding: 0 8px; font-size: 13px; font-weight: 500; outline: none; width: 120px;" oninput="updateRRPreview(); rrSetDirty(true);">
         </div>
-        <div>
-            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Emoji (Optional)</label>
-            <input type="text" class="form-input rr-btn-emoji" placeholder="e.g. 🐶" value="${escapeHtml(emoji)}" style="width: 100%; height: 32px;" oninput="updateRRPreview(); rrSetDirty(true);">
+        
+        <!-- Colors -->
+        <div style="display: flex; gap: 8px; align-items: center; margin: 0 16px;">
+            ${colorCircles}
         </div>
+        
+        <!-- Role Dropdown -->
+        <div style="flex: 1;">
+            <select class="form-select rr-btn-role" style="height: 32px; background: transparent; border: 1px solid rgba(255,255,255,0.1); font-size: 13px; padding: 0 8px; border-radius: 16px;" onchange="updateRRPreview(); rrSetDirty(true);">
+                ${roleOptions}
+            </select>
+        </div>
+        
+        <!-- Delete Button -->
+        <button type="button" class="btn-danger" style="background: #EF4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer;" onclick="this.closest('.rr-button-config').remove(); updateRRPreview(); rrSetDirty(true);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Delete
+        </button>
     `;
 
     container.appendChild(bDiv);
     updateRRPreview();
+}
+
+function rrSelectColor(el) {
+    const parent = el.closest('.rr-button-config');
+    const color = el.getAttribute('data-color');
+    parent.querySelector('.rr-btn-color-val').value = color;
+    
+    // Reset all borders
+    parent.querySelectorAll('.rr-color-circle').forEach(circle => {
+        circle.style.border = 'none';
+    });
+    // Set border on selected
+    el.style.border = '3px solid rgba(255,255,255,0.3)';
+    
+    updateRRPreview();
+    rrSetDirty(true);
 }
 
 function getReactionRolePayload() {
@@ -4861,10 +4891,11 @@ function getReactionRolePayload() {
     const btnConfigs = document.querySelectorAll('.rr-button-config');
     btnConfigs.forEach(b => {
         const role_id = b.querySelector('.rr-btn-role').value;
-        const color = b.querySelector('.rr-btn-color').value;
+        const color = b.querySelector('.rr-btn-color-val').value;
         const emoji = b.querySelector('.rr-btn-emoji').value;
+        const label = b.querySelector('.rr-btn-label').value;
         if (role_id) {
-            payload.components.push({ role_id, color, emoji });
+            payload.components.push({ role_id, color, emoji, label });
         }
     });
 
@@ -5093,8 +5124,6 @@ function updateRRPreview() {
     };
 
     payload.components.forEach(btn => {
-        const btnRole = globalRoles?.find(r => r.id === btn.role_id);
-        const roleName = btnRole ? btnRole.name : 'Unknown Role';
         
         const b = document.createElement('div');
         b.style.display = 'inline-flex';
@@ -5112,7 +5141,7 @@ function updateRRPreview() {
         if (btn.emoji) {
             html += `<span>${escapeHtml(btn.emoji)}</span>`;
         }
-        html += `<span>${escapeHtml(roleName)}</span>`;
+        html += `<span>${escapeHtml(btn.label || 'New Button')}</span>`;
         
         b.innerHTML = html;
         compContainer.appendChild(b);

@@ -1330,6 +1330,142 @@ class WebDashboard:
         db["CustomMessages"].delete_one({"id": msg_id, "guild_id": str(guild_id)})
         return web.json_response({"success": True})
 
+    async def api_get_reactionroles(self, request: web.Request):
+        user = await self.get_user_session(request)
+        if not user: return web.json_response({"error": "Unauthorized"}, status=401)
+        guild_id = int(request.match_info['id'])
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild: return web.json_response({"error": "Forbidden"}, status=403)
+        from Commands.ReactionRole._storage import load_reaction_roles
+        return web.json_response(load_reaction_roles(guild_id))
+
+    async def api_save_reactionrole(self, request: web.Request):
+        user = await self.get_user_session(request)
+        if not user: return web.json_response({"error": "Unauthorized"}, status=401)
+        guild_id = int(request.match_info['id'])
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild: return web.json_response({"error": "Forbidden"}, status=403)
+        try:
+            data = await request.json()
+            import uuid
+            msg_id = data.get("id")
+            if not msg_id:
+                msg_id = str(uuid.uuid4())
+                data["id"] = msg_id
+            data["guild_id"] = str(guild_id)
+            if not data.get("name"): data["name"] = "Untitled Reaction Role"
+            from Commands.ReactionRole._storage import save_reaction_role
+            save_reaction_role(guild_id, data)
+            return web.json_response({"success": True, "id": msg_id})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def api_delete_reactionrole(self, request: web.Request):
+        user = await self.get_user_session(request)
+        if not user: return web.json_response({"error": "Unauthorized"}, status=401)
+        guild_id = int(request.match_info['id'])
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild: return web.json_response({"error": "Forbidden"}, status=403)
+        msg_id = request.match_info['msg_id']
+        from Commands.ReactionRole._storage import delete_reaction_role
+        delete_reaction_role(guild_id, msg_id)
+        return web.json_response({"success": True})
+        
+    async def api_action_send_reactionrole(self, request: web.Request):
+        user = await self.get_user_session(request)
+        if not user: return web.json_response({"error": "Unauthorized"}, status=401)
+        guild_id = int(request.match_info['id'])
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("can_channels"):
+            return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+        try:
+            req_data = await request.json()
+            msg_id = req_data.get("id")
+            channel_id = req_data.get("channel_id")
+            if not channel_id: return web.json_response({"error": "No channel_id provided"}, status=400)
+            channel = guild.get_channel(int(channel_id))
+            if not channel: return web.json_response({"error": "Channel not found"}, status=404)
+            
+            from Commands.ReactionRole._storage import load_reaction_roles
+            rrs = load_reaction_roles(guild_id)
+            rr = next((r for r in rrs if r.get("id") == msg_id), None)
+            if not rr: return web.json_response({"error": "Reaction Role not found in database"}, status=404)
+            
+            import discord
+            content = rr.get("content", "")
+            embed_data = rr.get("embed", {})
+            title = embed_data.get("title", "")
+            desc = embed_data.get("description", "")
+            url = embed_data.get("url", "")
+            color = embed_data.get("color", "")
+            author_name = embed_data.get("author_name", "")
+            author_icon = embed_data.get("author_icon_url", "")
+            image = embed_data.get("image_url", "")
+            thumbnail = embed_data.get("thumbnail_url", "")
+            footer_text = embed_data.get("footer_text", "")
+            footer_icon = embed_data.get("footer_icon_url", "")
+            fields = embed_data.get("fields", [])
+            
+            embed = discord.Embed()
+            if title: embed.title = title
+            if desc: embed.description = desc
+            if url: embed.url = url
+            if color:
+                try: embed.color = discord.Color(int(color.replace("#", ""), 16))
+                except: pass
+            if author_name:
+                kwargs = {"name": author_name}
+                if author_icon: kwargs["icon_url"] = author_icon
+                embed.set_author(**kwargs)
+            if image: embed.set_image(url=image)
+            if thumbnail: embed.set_thumbnail(url=thumbnail)
+            if footer_text:
+                kwargs = {"text": footer_text}
+                if footer_icon: kwargs["icon_url"] = footer_icon
+                embed.set_footer(**kwargs)
+            for f in fields:
+                embed.add_field(name=f.get("name","​") or "​", value=f.get("value","​") or "​", inline=f.get("inline",False))
+                
+            msg_kwargs = {}
+            if embed.title or embed.description or embed.author or embed.image or embed.footer or embed.fields:
+                msg_kwargs["embed"] = embed
+            if content: msg_kwargs["content"] = content
+            
+            button_mode = rr.get("button_type", "toggle")
+            buttons_data = rr.get("components", [])
+            
+            view = discord.ui.View(timeout=None)
+            for btn in buttons_data:
+                label = btn.get("label", "Role")
+                emoji = btn.get("emoji")
+                color_str = btn.get("color", "blue")
+                role_id = btn.get("role_id")
+                if not role_id: continue
+                
+                style = discord.ButtonStyle.primary
+                if color_str == "gray": style = discord.ButtonStyle.secondary
+                elif color_str == "green": style = discord.ButtonStyle.success
+                elif color_str == "red": style = discord.ButtonStyle.danger
+                
+                custom_id = f"rr_{role_id}_{button_mode}"
+                kwargs = {"style": style, "label": label, "custom_id": custom_id}
+                if emoji: kwargs["emoji"] = emoji
+                
+                view.add_item(discord.ui.Button(**kwargs))
+            
+            if len(view.children) > 0:
+                msg_kwargs["view"] = view
+            
+            if not msg_kwargs:
+                return web.json_response({"error": "Message cannot be empty"}, status=400)
+                
+            await channel.send(**msg_kwargs)
+            return web.json_response({"success": True})
+        except discord.Forbidden:
+            return web.json_response({"error": "Bot missing permissions to send message in that channel"}, status=403)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_upload_image(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user:
@@ -1430,7 +1566,10 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_delete("/api/messages/{id}/{msg_id}", dashboard.api_delete_message)
     app.router.add_post("/api/server/{id}/test-levelup", dashboard.api_action_test_levelup)
     app.router.add_post("/api/upload/image", dashboard.api_upload_image)
-    app.router.add_get("/api/support-invite", dashboard.api_support_invite)
+    app.router.add_get("/api/reactionroles/{id}", dashboard.api_get_reactionroles)
+    app.router.add_post("/api/reactionroles/{id}", dashboard.api_save_reactionrole)
+    app.router.add_delete("/api/reactionroles/{id}/{msg_id}", dashboard.api_delete_reactionrole)
+    app.router.add_post("/api/action/{id}/send_reactionrole", dashboard.api_action_send_reactionrole)
     
     return app
 
