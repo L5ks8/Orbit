@@ -5,6 +5,7 @@ from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
 from Commands._utils import MemberOrIDConverter, format_usage
+import typing
 
 class SoftbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -17,13 +18,13 @@ class SoftbanCommand(commands.Cog):
         target="The member to softban",
         reason="Reason for the softban"
     )
-    async def softban(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+    async def softban(self, ctx: commands.Context, target: typing.Union[discord.Member, discord.User], *, reason: str = "No reason provided"):
         await ctx.defer()
         if target.id == ctx.author.id:
             return await ctx.send("You cannot softban yourself.", ephemeral=True)
         if is_whitelisted(ctx.guild.id, target.id):
             return await ctx.send("This user is on the global moderation whitelist (`Immune to Softban`).", ephemeral=True)
-        if target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+        if isinstance(target, discord.Member) and target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
             return await ctx.send("You cannot softban a user with an equal or higher role.", ephemeral=True)
 
         try:

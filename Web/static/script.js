@@ -5,6 +5,16 @@ let activeAutomodRule = null;
 let autoresponder = {};
 let joinroles = [];
 
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
 const LOGS_CATEGORIES = [
     { id: "moderation_action", title: "Moderation Action", icon: '<i data-lucide="shield"></i>' },
     { id: "auto_moderation", title: "Auto Moderation", icon: '<i data-lucide="bot"></i>' },

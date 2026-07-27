@@ -24,7 +24,7 @@ class ModLogPaginationView(View):
 
     def generate_embed(self):
         embed = discord.Embed(
-            title=f"Moderation Log: {self.user_target.display_name if hasattr(self.user_target, 'display_name') else str(self.user_target)}",
+            title=f"Actions by: {self.user_target.display_name if hasattr(self.user_target, 'display_name') else str(self.user_target)}",
             color=discord.Color.gold()
         )
         if hasattr(self.user_target, 'avatar') and self.user_target.avatar:
@@ -43,11 +43,11 @@ class ModLogPaginationView(View):
             reason = log.get('reason', 'No reason provided')
             ts = log.get('timestamp', 0)
             date_str = f"<t:{int(ts)}:f>" if ts else "Unknown date"
-            mod_id = log.get('moderator_id', 'Unknown')
+            target_id = log.get('user_id', 'Unknown')
             
             embed.add_field(
                 name=f"{i}. {action}",
-                value=f"**Date:** {date_str}\n**Moderator:** <@{mod_id}>\n**Reason:** {reason}",
+                value=f"**Date:** {date_str}\n**Target:** <@{target_id}>\n**Reason:** {reason}",
                 inline=False
             )
             
@@ -71,12 +71,12 @@ class ModLogCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="modlog", aliases=["modlogs"], description="View the complete moderation history for a user.")
-    @app_commands.describe(user="The member or user ID to check")
+    @commands.hybrid_command(name="modlog", aliases=["modlogs"], description="View the moderation actions performed by an admin/moderator.")
+    @app_commands.describe(user="The moderator or admin to check")
     @commands.has_permissions(moderate_members=True)
     async def modlog_cmd(self, ctx: commands.Context, user: str = None):
         if not user:
-            return await ctx.send(format_usage("-modlog", "<@user/ID>"), ephemeral=True)
+            return await ctx.send(format_usage("-modlog", "<@mention/ID>"), ephemeral=True)
             
         await ctx.defer()
         
@@ -86,16 +86,34 @@ class ModLogCommand(commands.Cog):
             return await ctx.send("Could not find user.", ephemeral=True)
 
         guild_id = ctx.guild.id
-        user_id = user_target.id if hasattr(user_target, 'id') else int(user_target)
+        moderator_id = user_target.id if hasattr(user_target, 'id') else int(user_target)
 
-        # 1. Fetch unified ModLogs
-        unified_logs = get_modlogs(guild_id, user_id)
+        # 1. Fetch unified ModLogs by moderator
+        from Commands.Log._modlog_storage import get_modlogs_by_moderator
+        unified_logs = get_modlogs_by_moderator(guild_id, moderator_id)
 
-        # 2. Fetch old warnings
-        old_warns = load_warnings(guild_id).get(str(user_id), [])
+        # 2. Fetch old warnings by this moderator
+        all_warns = load_warnings(guild_id)
+        old_warns = []
+        for target_uid, warns in all_warns.items():
+            for w in warns:
+                # Some old storages use "moderator" and some use "moderator_id"
+                mod_val = w.get("moderator") or w.get("moderator_id")
+                if str(mod_val) == str(moderator_id):
+                    w_copy = dict(w)
+                    w_copy["target_id"] = target_uid
+                    old_warns.append(w_copy)
         
-        # 3. Fetch old bans
-        old_bans = load_ban_history(guild_id).get(str(user_id), [])
+        # 3. Fetch old bans by this moderator
+        all_bans = load_ban_history(guild_id)
+        old_bans = []
+        for target_uid, bans in all_bans.items():
+            for b in bans:
+                mod_val = b.get("moderator") or b.get("moderator_id")
+                if str(mod_val) == str(moderator_id):
+                    b_copy = dict(b)
+                    b_copy["target_id"] = target_uid
+                    old_bans.append(b_copy)
 
         # Combine all logs
         all_logs = []
@@ -105,7 +123,7 @@ class ModLogCommand(commands.Cog):
             all_logs.append({
                 "action_type": "Warn (Legacy)",
                 "reason": w.get("reason", "No reason"),
-                "moderator_id": w.get("moderator", "Unknown"),
+                "user_id": w.get("target_id", "Unknown"),
                 "timestamp": w.get("timestamp", 0)
             })
             
@@ -113,16 +131,14 @@ class ModLogCommand(commands.Cog):
             all_logs.append({
                 "action_type": "Ban/Softban (Legacy)",
                 "reason": b.get("reason", "No reason"),
-                "moderator_id": b.get("moderator", "Unknown"),
+                "user_id": b.get("target_id", "Unknown"),
                 "timestamp": b.get("timestamp", 0)
             })
 
-        # Remove possible exact duplicates if a command logged to both systems just now
-        # We can loosely filter by timestamp and reason
         seen = set()
         unique_logs = []
         for log in all_logs:
-            identifier = f"{log.get('timestamp')}-{log.get('reason')}"
+            identifier = f"{log.get('timestamp')}-{log.get('reason')}-{log.get('user_id')}"
             if identifier not in seen:
                 seen.add(identifier)
                 unique_logs.append(log)

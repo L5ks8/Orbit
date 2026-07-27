@@ -7,6 +7,7 @@ from Commands.Log._modlog_storage import add_modlog
 from Commands._utils import MemberOrIDConverter, format_usage
 
 
+import typing
 
 class BanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -15,13 +16,13 @@ class BanCommand(commands.Cog):
     @commands.hybrid_command(name="ban", description="Bans a member permanently from the server.")
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+    async def ban(self, ctx: commands.Context, target: typing.Union[discord.Member, discord.User], *, reason: str = "No reason provided"):
         await ctx.defer()
         if target.id == ctx.author.id:
             return await ctx.send("You cannot ban yourself.", ephemeral=True)
         if is_whitelisted(ctx.guild.id, target.id):
             return await ctx.send("This user is on the global moderation whitelist (`Immune to Ban`).", ephemeral=True)
-        if target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+        if isinstance(target, discord.Member) and target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
             return await ctx.send("You cannot ban a user with an equal or higher role.", ephemeral=True)
 
         try:

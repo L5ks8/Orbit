@@ -46,3 +46,13 @@ def get_modlogs(guild_id: int, user_id: int) -> List[Dict[str, Any]]:
     except Exception as e:
         print(f"ModLog Error: Failed to retrieve entries: {e}")
         return []
+
+def get_modlogs_by_moderator(guild_id: int, moderator_id: int) -> List[Dict[str, Any]]:
+    if modlogs_col is None:
+        return []
+    try:
+        cursor = modlogs_col.find({"guild_id": guild_id, "moderator_id": moderator_id}).sort("timestamp", pymongo.DESCENDING)
+        return list(cursor)
+    except Exception as e:
+        print(f"ModLog Error: Failed to retrieve entries for moderator: {e}")
+        return []
