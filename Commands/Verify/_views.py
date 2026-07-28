@@ -53,9 +53,7 @@ class CaptchaInputModal(Modal, title="CAPTCHA Security Check"):
             if interaction.user.id in CAPTCHA_SESSIONS:
                 del CAPTCHA_SESSIONS[interaction.user.id]
 
-            msg = f"**Verification Successful!** You now have the {role.mention} role and full server access."
-            if remove_role:
-                msg += f" (`Removed: {remove_role.name}`)"
+            msg = "You are Successfully Verified now"
             await interaction.response.send_message(msg, ephemeral=True)
         except discord.Forbidden:
             await interaction.response.send_message(f"I do not have permission to modify roles ({role.mention}). Please contact a server administrator.", ephemeral=True)
@@ -135,9 +133,7 @@ class PersistentVerifyLayout(discord.ui.View):
                     except Exception:
                         pass
                 remove_pending_kick(interaction.guild.id, interaction.user.id)
-                msg = f"**Verification Successful!** You now have the {role.mention} role and full server access."
-                if remove_role:
-                    msg += f" (`Removed: {remove_role.name}`)"
+                msg = "You are Successfully Verified now"
                 await interaction.response.send_message(msg, ephemeral=True)
             except discord.Forbidden:
                 await interaction.response.send_message(f"I do not have permission to modify roles ({role.mention}). Please contact a server administrator.", ephemeral=True)
