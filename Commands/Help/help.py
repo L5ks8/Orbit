@@ -96,6 +96,7 @@ PAGES = [
             "• `/say <message>` — Repeat a message (`-say Hello world`).\n"
             "• `/dm <user> <message>` — Direct message a member (`-dm @user Check this out`).\n"
             "• `/afk [reason]` & `/afkremove` — Set or clear your AFK status (`-afk Sleeping`)."
+        )
     },
     {
         "title": "Invite Tracking & Management",
