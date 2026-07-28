@@ -43,7 +43,8 @@ const LOGS_CATEGORIES = [
     { id: "scheduled_event_deleted", title: "Event Deleted", icon: '<i data-lucide="calendar-minus"></i>' },
     { id: "scheduled_event_updated", title: "Event Updated", icon: '<i data-lucide="calendar"></i>' },
     { id: "mod_command_used", title: "Mod Command Used", icon: '<i data-lucide="terminal"></i>' },
-    { id: "invite_tracking", title: "Invite Tracking", icon: '<i data-lucide="link"></i>' }
+    { id: "invite_tracking", title: "Invite Tracking", icon: '<i data-lucide="link"></i>' },
+    { id: "invite_created", title: "Invite Created", icon: '<i data-lucide="link-2"></i>' }
 ];
 
 // Views

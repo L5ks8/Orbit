@@ -35,7 +35,8 @@ DEFAULT_CATEGORIES = {
     "scheduled_event_deleted": False,
     "scheduled_event_updated": False,
     "mod_command_used": False,
-    "invite_tracking": False
+    "invite_tracking": False,
+    "invite_created": False
 }
 
 def _get_file_path(guild_id: int) -> pathlib.Path:

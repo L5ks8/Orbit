@@ -27,6 +27,19 @@ class InviteTrackerListener(commands.Cog):
     async def on_invite_create(self, invite: discord.Invite):
         if invite.guild:
             await refresh_invite_cache(invite.guild)
+            
+            await log_event(
+                invite.guild,
+                "invite_created",
+                "Invite Created",
+                f"**Inviter:** {invite.inviter.mention if invite.inviter else 'Unknown'} (`{invite.inviter.id if invite.inviter else 'Unknown'}`)\n"
+                f"**Code:** `{invite.code}`\n"
+                f"**Channel:** {invite.channel.mention if invite.channel else 'Unknown'}\n"
+                f"**Max Uses:** {invite.max_uses if invite.max_uses else 'Unlimited'}\n"
+                f"**Max Age:** {invite.max_age if invite.max_age else 'Unlimited'} seconds\n"
+                f"**Temporary:** {'Yes' if invite.temporary else 'No'}",
+                executor=invite.inviter
+            )
 
     @commands.Cog.listener()
     async def on_invite_delete(self, invite: discord.Invite):
