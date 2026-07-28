@@ -27,6 +27,9 @@ class TimeoutCommand(commands.Cog):
             return await ctx.send("Duration must be between 1 minute and 28 days (40320 minutes).", ephemeral=True)
 
         try:
+            from Commands._utils import send_moderation_dm
+            await send_moderation_dm(target, ctx.guild.name, "timed out", reason, f"{minutes} minutes")
+
             duration = datetime.timedelta(minutes=minutes)
             await target.timeout(duration, reason=f"Timeout by {ctx.author} | Reason: {reason}")
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Timeout", f"{minutes}m - {reason}")

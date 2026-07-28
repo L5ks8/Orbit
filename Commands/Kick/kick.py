@@ -25,6 +25,9 @@ class KickCommand(commands.Cog):
             return await ctx.send("You cannot kick a user with an equal or higher role.", ephemeral=True)
 
         try:
+            from Commands._utils import send_moderation_dm
+            await send_moderation_dm(target, ctx.guild.name, "kicked", reason)
+            
             await ctx.guild.kick(target, reason=f"Kicked by {ctx.author} | Reason: {reason}")
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Kick", reason)
             from Embeds import get_command_embed

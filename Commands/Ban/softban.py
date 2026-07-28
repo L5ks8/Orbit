@@ -28,6 +28,13 @@ class SoftbanCommand(commands.Cog):
             return await ctx.send("You cannot softban a user with an equal or higher role.", ephemeral=True)
 
         try:
+            ban_entry = await ctx.guild.fetch_ban(target)
+            if ban_entry:
+                return await ctx.send("This user is already banned. Softban is not possible.", ephemeral=True)
+        except discord.NotFound:
+            pass
+
+        try:
             # Delete messages from the last 7 days (7 * 24 * 60 * 60 = 604800 seconds)
             await ctx.guild.ban(target, reason=f"Softbanned by {ctx.author} | Reason: {reason}", delete_message_seconds=604800)
             await ctx.guild.unban(target, reason="Softban (automatic unban)")

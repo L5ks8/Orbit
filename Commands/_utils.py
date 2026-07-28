@@ -61,4 +61,13 @@ class UserOrIDConverter(commands.Converter):
 
         raise commands.BadArgument(f"Could not find user '{argument}'. Please provide a valid @mention or user ID.")
 
+async def send_moderation_dm(user: discord.Member | discord.User, guild_name: str, action: str, reason: str, duration: str = None):
+    try:
+        embed = discord.Embed(
+            description=f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}",
+            color=discord.Color.red()
+        )
+        await user.send(embed=embed)
+    except Exception:
+        pass
 

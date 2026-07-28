@@ -16,6 +16,8 @@ async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str
         return await ctx.send("This user is already voice muted.", ephemeral=True)
 
     try:
+        from Commands._utils import send_moderation_dm
+        await send_moderation_dm(target, ctx.guild.name, "voice muted", reason)
         await target.edit(mute=True, reason=f"Voice muted by {ctx.author} | Reason: {reason}")
         from Embeds import get_command_embed
         kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="mute", member_mention=target.mention, member_id=target.id, channel_mention=target.voice.channel.mention if target.voice.channel else "N/A", reason=reason, author_mention=ctx.author.mention)

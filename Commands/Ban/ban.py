@@ -26,6 +26,16 @@ class BanCommand(commands.Cog):
             return await ctx.send("You cannot ban a user with an equal or higher role.", ephemeral=True)
 
         try:
+            ban_entry = await ctx.guild.fetch_ban(target)
+            if ban_entry:
+                return await ctx.send("This user is already banned.", ephemeral=True)
+        except discord.NotFound:
+            pass
+
+        try:
+            from Commands._utils import send_moderation_dm
+            await send_moderation_dm(target, ctx.guild.name, "banned", reason)
+            
             await ctx.guild.ban(target, reason=f"Banned by {ctx.author} | Reason: {reason}")
             from Commands.Ban._storage import add_ban_history
             add_ban_history(ctx.guild.id, target.id, reason, ctx.author.id)

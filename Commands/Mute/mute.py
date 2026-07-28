@@ -51,6 +51,9 @@ class MuteCommand(commands.Cog):
             return await ctx.send("This user is already muted.", ephemeral=True)
 
         try:
+            from Commands._utils import send_moderation_dm
+            await send_moderation_dm(target, ctx.guild.name, "muted", reason)
+
             await target.add_roles(role, reason=f"Muted by {ctx.author} | Reason: {reason}")
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Mute", reason)
         except discord.Forbidden:
