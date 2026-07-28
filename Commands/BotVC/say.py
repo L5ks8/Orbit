@@ -11,6 +11,8 @@ try:
 except ImportError:
     HAS_EDGE_TTS = False
 
+from Commands.Voice.voice import voice_group
+
 
 class VCSay(commands.Cog):
 
@@ -18,8 +20,6 @@ class VCSay(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    vc_group = commands.HybridGroup(name="vc", description="Voice channel commands.")
 
     async def _text_to_speech(self, text: str) -> bytes | None:
         if not HAS_EDGE_TTS:
@@ -34,7 +34,7 @@ class VCSay(commands.Cog):
             return None
         return audio_buffer.read()
 
-    @vc_group.command(name="say", description="Bot speaks your text in the voice channel.")
+    @voice_group.command(name="say", description="Bot speaks your text in the voice channel.")
     async def say_cmd(self, ctx: commands.Context, *, text: str):
         voice_client = ctx.guild.voice_client if ctx.guild else None
 
