@@ -1831,10 +1831,10 @@ function formatDiscordPreviewText(str) {
         .replace(/{id}/g, '<b>123456789</b>');
 
     // 5. Multiline Codeblock (```code```)
-    text = text.replace(/```(?:[a-z]+)?\n?([\s\S]*?)```/g, '<pre style="background: #1E1F22; padding: 8px 12px; border-radius: 4px; border: 1px solid #2B2D31; font-family: Consolas, monospace; font-size: 12px; color: #DBDEE1; white-space: pre-wrap; margin: 4px 0;"><code>$1</code></pre>');
+    text = text.replace(/```(?:[a-z]+)?\n?([\s\S]*?)```/g, '<pre style="background: #2B2D31; padding: 8px 12px; border-radius: 4px; border: 1px solid #2B2D31; font-family: Consolas, monospace; font-size: 12px; color: #DBDEE1; white-space: pre-wrap; margin: 4px 0;"><code>$1</code></pre>');
 
     // 6. Inline code (`code`)
-    text = text.replace(/`([^`]+)`/g, '<code style="background: #1E1F22; padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace; font-size: 12px; color: #E0E1E5;">$1</code>');
+    text = text.replace(/`([^`]+)`/g, '<code style="background: #2B2D31; padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace; font-size: 12px; color: #E0E1E5;">$1</code>');
 
     // 7. Spoilers (||spoiler||)
     text = text.replace(/\|\|([\s\S]*?)\|\|/g, '<span style="background: #202225; color: transparent; border-radius: 3px; padding: 0 4px; cursor: pointer; transition: color 0.1s, background 0.1s;" onclick="this.style.color=\'#DBDEE1\'; this.style.background=\'rgba(255,255,255,0.1)\'" title="Click to reveal">$1</span>');
