@@ -15,6 +15,8 @@ function escapeHtml(text) {
          .replace(/'/g, "&#039;");
 }
 
+
+
 const LOGS_CATEGORIES = [
     { id: "moderation_action", title: "Moderation Action", icon: '<i data-lucide="shield"></i>' },
     { id: "auto_moderation", title: "Auto Moderation", icon: '<i data-lucide="bot"></i>' },
@@ -1418,11 +1420,7 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         // Populate Server Stats Category & Fields
         const serverStatsCatSelect = document.getElementById('serverstats_category_id');
         if (serverStatsCatSelect) {
-            serverStatsCatSelect.innerHTML = '<option value="">Select category...</option>';
-            globalCategories.forEach(c => {
-                const sel = (String(config.serverstats?.category_id || '') === String(c.id)) ? 'selected' : '';
-                serverStatsCatSelect.innerHTML += `<option value="${c.id}" ${sel}>${c.name}</option>`;
-            });
+            new CustomSelect(serverStatsCatSelect, globalCategories, config.serverstats?.category_id || '', 'Select category...');
         }
         if (config.serverstats) {
             if (document.getElementById('serverstats_users_enabled')) document.getElementById('serverstats_users_enabled').checked = !!config.serverstats.users_enabled;
@@ -4020,7 +4018,7 @@ function updateEmbedPreview() {
     const footerText = document.getElementById('embed_footer_text')?.value || '';
     const footerIcon = document.getElementById('embed_footer_icon')?.value || '';
     
-    document.getElementById('preview-content').textContent = content;
+    document.getElementById('preview-content').innerHTML = formatDiscordPreviewText(content);
     document.getElementById('preview-content').style.display = content ? 'block' : 'none';
     
     const modeRadio = document.querySelector('input[name="embed_mode"]:checked');
@@ -4039,8 +4037,9 @@ function updateEmbedPreview() {
             const v2Title = document.getElementById('preview-v2-title');
             if (title) { v2Title.style.display = 'block'; v2Title.textContent = title; } else { v2Title.style.display = 'none'; }
             
+            document.getElementById('preview-v2-description').innerHTML = formatDiscordPreviewText(desc);
             const v2Desc = document.getElementById('preview-v2-description');
-            if (desc) { v2Desc.style.display = 'block'; v2Desc.textContent = desc; } else { v2Desc.style.display = 'none'; }
+            if (desc) { v2Desc.style.display = 'block'; } else { v2Desc.style.display = 'none'; }
             
             const v2Div = document.getElementById('preview-v2-divider');
             if (title && (desc || embedFields.length > 0)) { v2Div.style.display = 'block'; } else { v2Div.style.display = 'none'; }
@@ -4054,7 +4053,7 @@ function updateEmbedPreview() {
                 
                 embedFields.forEach(f => {
                     const fd = document.createElement('div');
-                    fd.innerHTML = `<div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div><div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${f.value || '​'}</div>`;
+                    fd.innerHTML = `<div style="color: #F2F3F5; font-size: 14px; font-weight: 600; margin-bottom: 2px;">${f.name || '​'}</div><div style="color: #DBDEE1; font-size: 14px; white-space: pre-wrap;">${formatDiscordPreviewText(f.value || '​')}</div>`;
                     v2Fields.appendChild(fd);
                 });
             } else { v2Fields.style.display = 'none'; }
@@ -4083,7 +4082,7 @@ function updateEmbedPreview() {
             if (title) { titleEl.style.display = 'block'; titleEl.textContent = title; } else { titleEl.style.display = 'none'; }
             
             const descEl = document.getElementById('preview-description');
-            if (desc) { descEl.style.display = 'block'; descEl.textContent = desc; } else { descEl.style.display = 'none'; }
+            if (desc) { descEl.style.display = 'block'; descEl.innerHTML = formatDiscordPreviewText(desc); } else { descEl.style.display = 'none'; }
             
             const imageEl = document.getElementById('preview-image');
             if (image) { imageEl.style.display = 'block'; imageEl.src = image; } else { imageEl.style.display = 'none'; }
