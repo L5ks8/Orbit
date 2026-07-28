@@ -15,7 +15,7 @@ class InviteTrackerListener(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        """Cache all invites for every guild on startup."""
+
         for guild in self.bot.guilds:
             await refresh_invite_cache(guild)
 

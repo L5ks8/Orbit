@@ -110,6 +110,17 @@ class RouletteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    async def cog_check(self, ctx):
+        if not ctx.guild:
+            return True
+        from Commands.Economy._storage import load_economy_config
+        config = load_economy_config(ctx.guild.id)
+        if not config.get("enabled", True):
+            await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
+            return False
+        return True
+
+
     @commands.hybrid_command(name="roulette", description="Bet money and spin the roulette wheel (`/roulette <bet> <color>`).")
     @app_commands.describe(
         bet="Amount of money to bet",

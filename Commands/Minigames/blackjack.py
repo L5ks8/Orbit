@@ -259,6 +259,17 @@ class BlackjackCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    async def cog_check(self, ctx):
+        if not ctx.guild:
+            return True
+        from Commands.Economy._storage import load_economy_config
+        config = load_economy_config(ctx.guild.id)
+        if not config.get("enabled", True):
+            await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
+            return False
+        return True
+
+
     @commands.hybrid_command(name="blackjack", description="Bet money and play an interactive V2 Blackjack game (`/blackjack <bet>`).")
     @app_commands.describe(bet="Amount of money to bet (e.g. 50)")
     async def blackjack_cmd(self, ctx: commands.Context, bet: int = 10):
