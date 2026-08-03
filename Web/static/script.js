@@ -302,7 +302,12 @@ class CustomSelect {
             this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
         }
         lucide.createIcons({ root: this.trigger });
-        this.select.value = this.value;
+        if (this.select.value !== this.value) {
+            this.select.value = this.value;
+            this.select.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+            this.select.value = this.value;
+        }
     }
 
     renderOptions(filter) {
