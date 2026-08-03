@@ -1,4 +1,4 @@
-﻿from Database.mongodb import get_config, set_config
+from Database.mongodb import get_config, set_config
 import json
 import pathlib
 from typing import Dict, Any
@@ -18,7 +18,9 @@ def load_responses(guild_id: int) -> Dict[str, dict]:
             
             for k, v in data.items():
                 if isinstance(v, str):
-                    data[k] = {"response": v, "channel_id": None}
+                    data[k] = {"response": v, "channel_id": None, "use_ai": False}
+                elif isinstance(v, dict) and "use_ai" not in v:
+                    data[k]["use_ai"] = False
             return data
     except Exception:
         return {}
@@ -28,9 +30,9 @@ def save_responses(guild_id: int, data: Dict[str, dict]) -> None:
     if True:
         set_config("AutoResponder", guild_id, data)
 
-def add_response(guild_id: int, trigger: str, response: str, channel_id: int | None = None) -> None:
+def add_response(guild_id: int, trigger: str, response: str, channel_id: int | None = None, use_ai: bool = False) -> None:
     data = load_responses(guild_id)
-    data[trigger.lower()] = {"response": response, "channel_id": channel_id}
+    data[trigger.lower()] = {"response": response, "channel_id": channel_id, "use_ai": use_ai}
     save_responses(guild_id, data)
 
 def remove_response(guild_id: int, trigger: str) -> bool:

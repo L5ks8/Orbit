@@ -25,9 +25,10 @@ class AutoResponderCommand(commands.Cog):
     @app_commands.describe(
         trigger="The exact word or phrase to trigger the response",
         response="The message the bot should reply with",
-        channel="Optional channel to restrict this auto-response to"
+        channel="Optional channel to restrict this auto-response to",
+        use_ai="Check if the trigger word context actually makes sense in the sentence"
     )
-    async def addreply(self, ctx: commands.Context, channel: discord.TextChannel = None, trigger: str = None, *, response: str = None):
+    async def addreply(self, ctx: commands.Context, channel: discord.TextChannel = None, trigger: str = None, *, response: str = None, use_ai: bool = False):
         if not trigger or not response:
             return await ctx.send(format_usage("-addreply", "[#channel]", "<trigger_word>", "<response_message>"), ephemeral=True)
         
@@ -36,10 +37,11 @@ class AutoResponderCommand(commands.Cog):
             return await ctx.send("This command must be run inside a server.", ephemeral=True)
         
         channel_id = channel.id if channel else None
-        add_response(ctx.guild.id, trigger, response, channel_id)
+        add_response(ctx.guild.id, trigger, response, channel_id, use_ai)
         
         chan_text = f"<#{channel.id}>" if channel else "All Channels"
-        await ctx.send(f"âœ… Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Channel:** {chan_text}\n**Response:** {response}")
+        ai_text = "Enabled" if use_ai else "Disabled"
+        await ctx.send(f"âœ… Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Channel:** {chan_text}\n**AI Context Check:** {ai_text}\n**Response:** {response}")
 
     @commands.hybrid_command(name="delreply", aliases=["removereply"], description="Removes an auto-response.")
     @commands.has_permissions(manage_guild=True)
@@ -72,7 +74,8 @@ class AutoResponderCommand(commands.Cog):
         lines = []
         for trigger, entry in data.items():
             chan = f"<#{entry['channel_id']}>" if entry.get("channel_id") else "All Channels"
-            lines.append(f"**Trigger:** `{trigger}`\n**Channel:** {chan}\n**Response:** {entry['response']}")
+            ai = "Yes" if entry.get("use_ai") else "No"
+            lines.append(f"**Trigger:** `{trigger}`\n**Channel:** {chan}\n**AI Check:** {ai}\n**Response:** {entry['response']}")
             
         content = "### Active Auto-Responses\n" + "\n\n".join(lines)
         if len(content) > 2000:
@@ -92,9 +95,31 @@ class AutoResponderCommand(commands.Cog):
         def can_respond(entry_data: dict) -> bool:
             cid = entry_data.get("channel_id")
             return not cid or str(cid) == str(message.channel.id)
+            
+        async def check_ai_context(trigger: str, text: str) -> bool:
+            try:
+                from g4f.client import AsyncClient
+                client = AsyncClient()
+                prompt = (f"You are a strict context checker. The trigger word is '{trigger}'. "
+                          f"Does the following message use this word in its primary semantic context meant by the trigger? "
+                          f"For example, if trigger is 'war', the sentence should be about conflict, not the German word for 'was'. "
+                          f"Message: '{text}'. "
+                          f"Answer only with YES or NO.")
+                response = await client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                answer = response.choices[0].message.content.strip().lower()
+                return "yes" in answer
+            except Exception as e:
+                print(f"[AutoResponder AI] Error: {e}")
+                return True # Fallback to True if AI fails
 
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
+            if entry.get("use_ai"):
+                if not await check_ai_context(content, message.content):
+                    return
             try:
                 response_text = self._resolve_channel_mentions(entry["response"], message.guild)
                 return await message.reply(content=response_text, mention_author=False)
@@ -105,6 +130,9 @@ class AutoResponderCommand(commands.Cog):
         data = load_responses(message.guild.id)
         for trigger, entry_data in data.items():
             if trigger in words and can_respond(entry_data):
+                if entry_data.get("use_ai"):
+                    if not await check_ai_context(trigger, message.content):
+                        continue
                 try:
                     response_text = self._resolve_channel_mentions(entry_data["response"], message.guild)
                     await message.reply(content=response_text, mention_author=False)

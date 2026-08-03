@@ -533,11 +533,11 @@ function renderAutoReplies(replies) {
     }
 
     for (const [trigger, data] of Object.entries(replies)) {
-        addAutoReplyRow(trigger, data.response, data.channel_id || '');
+        addAutoReplyRow(trigger, data.response, data.channel_id || '', data.use_ai || false);
     }
 }
 
-function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
+function addAutoReplyRow(triggerText = '', responseText = '', channelId = '', useAi = false) {
     const list = document.getElementById('autoreply-list');
     if (list.querySelector('p')) list.innerHTML = ''; // Clear empty message
 
@@ -564,11 +564,16 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '') {
         const sel = String(channelId) === String(c.id) ? 'selected' : '';
         channelOptionsHTML += `<option value="${c.id}" ${sel}>#${c.name}</option>`;
     });
+    const aiId = `ai_chk_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     botRow.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M4 9h16M4 15h16"/><path d="M10 3 8 21M16 3l-2 18"/></svg>
         <select class="ar-channel" style="background: #000000; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; font-size: 13px; outline: none; flex:1; max-width: 260px;">
             ${channelOptionsHTML}
         </select>
+        <div style="display:flex; align-items:center; gap:6px; margin-left: 10px;">
+            <input type="checkbox" class="ar-ai" ${useAi ? 'checked' : ''} id="${aiId}">
+            <label for="${aiId}" style="color:var(--text-secondary); font-size: 13px; cursor: pointer;" title="Checks if the word is used in its intended context before replying">AI Context Check</label>
+        </div>
     `;
 
     row.appendChild(topRow);
@@ -2753,8 +2758,9 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         const trigger = row.querySelector('.ar-trigger').value.trim();
         const response = row.querySelector('.ar-response').value.trim();
         const channelVal = row.querySelector('.ar-channel')?.value || '';
+        const useAi = row.querySelector('.ar-ai')?.checked || false;
         if (trigger && response) {
-            localAutoresponder[trigger] = { response: response, channel_id: channelVal ? channelVal : null };
+            localAutoresponder[trigger] = { response: response, channel_id: channelVal ? channelVal : null, use_ai: useAi };
         }
     });
 
