@@ -1475,6 +1475,7 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
 
         // Initial Preview Update
         updateLivePreview();
+        setTimeout(() => { upgradeAllSelects(); }, 100);
 
         updateInitialState();
         if (typeof window.clearDirtyTracking === 'function') {
@@ -5248,3 +5249,78 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- Global Select Upgrader ---
+function upgradeNativeSelect(sel) {
+    if (sel.dataset.customized === 'true' || sel.style.display === 'none' || sel.closest('.custom-select') || sel.closest('.custom-multiselect') || sel.classList.contains('select2-roles')) return;
+
+    let isRoleOrChannel = false;
+    let isRole = false;
+    
+    for (let opt of sel.options) {
+        if (opt.value && typeof globalRoles !== 'undefined' && globalRoles.some(gr => String(gr.id) === String(opt.value))) {
+            isRoleOrChannel = true;
+            isRole = true;
+            break;
+        }
+        if (opt.value && typeof globalChannels !== 'undefined' && (globalChannels.some(gc => String(gc.id) === String(opt.value)) || (typeof globalCategories !== 'undefined' && globalCategories.some(gc => String(gc.id) === String(opt.value))))) {
+            isRoleOrChannel = true;
+            break;
+        }
+    }
+    
+    if (!isRoleOrChannel && (sel.classList.contains('lr-role') || sel.classList.contains('sr-role') || sel.classList.contains('b-item') || sel.classList.contains('eco-booster-role') || sel.classList.contains('eco-booster-channel') || sel.classList.contains('rr-btn-role'))) {
+        isRoleOrChannel = true;
+        if (sel.classList.contains('lr-role') || sel.classList.contains('sr-role') || sel.classList.contains('eco-booster-role') || sel.classList.contains('rr-btn-role')) {
+            isRole = true;
+        }
+    }
+
+    if (!isRoleOrChannel) return;
+
+    sel.dataset.customized = 'true';
+    const isMulti = sel.hasAttribute('multiple');
+    
+    const items = Array.from(sel.options).map(o => {
+        let color = '#4E5058';
+        if (typeof globalRoles !== 'undefined') {
+            const gr = globalRoles.find(r => String(r.id) === String(o.value));
+            if (gr) color = gr.color;
+        }
+        let name = o.text.replace(/^[@#]\s*/, '').replace(/^[└\s]*/, '');
+        return {
+            id: o.value,
+            name: name,
+            color: color,
+            origText: o.text
+        };
+    });
+    
+    if (isMulti) {
+        new CustomMultiSelect(sel, items, sel.getAttribute('placeholder') || 'Select...', (item) => {
+            if (isRole) return `<span class="color-dot" style="background:${item.color !== '#000000' ? item.color : '#949BA4'}"></span> @ ` + item.name;
+            return item.origText;
+        });
+    } else {
+        new CustomSelect(sel, items, sel.value, sel.getAttribute('placeholder') || 'Select...', isRole);
+    }
+}
+
+function upgradeAllSelects() {
+    document.querySelectorAll('select').forEach(sel => upgradeNativeSelect(sel));
+}
+
+const selectObserver = new MutationObserver((mutations) => {
+    mutations.forEach(mut => {
+        mut.addedNodes.forEach(node => {
+            if (node.nodeType === 1) {
+                if (node.tagName === 'SELECT') {
+                    upgradeNativeSelect(node);
+                } else {
+                    node.querySelectorAll('select').forEach(sel => upgradeNativeSelect(sel));
+                }
+            }
+        });
+    });
+});
+selectObserver.observe(document.body, { childList: true, subtree: true });
