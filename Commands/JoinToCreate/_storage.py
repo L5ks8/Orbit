@@ -42,8 +42,8 @@ def load_jtc_config(guild_id: int) -> Dict[str, Any]:
                             "category_id": data.get("category_id"),
                             "default_user_limit": data.get("default_user_limit", 0)
                         })
-                _jtc_config_cache[guild_id] = data
-                return data
+            _jtc_config_cache[guild_id] = data
+            return data
         except Exception:
             default_cfg = {
                 "enabled": False,

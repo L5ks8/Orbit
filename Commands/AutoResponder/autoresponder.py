@@ -142,8 +142,11 @@ class AutoResponderCommand(commands.Cog):
         for trigger, entry_data in data.items():
             if trigger in words and can_respond(entry_data):
                 if entry_data.get("use_ai"):
+                    print(f"[AutoResponder AI] Checking context for trigger='{trigger}' in message='{message.content}'")
                     if not await check_ai_context(trigger, message.content, entry_data["response"]):
+                        print(f"[AutoResponder AI] Context check REJECTED for trigger='{trigger}'")
                         continue
+                    print(f"[AutoResponder AI] Context check APPROVED for trigger='{trigger}'")
                 try:
                     response_text = self._resolve_channel_mentions(entry_data["response"], message.guild)
                     await message.reply(content=response_text, mention_author=False)

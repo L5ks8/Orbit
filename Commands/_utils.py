@@ -2,14 +2,12 @@ import discord
 from discord.ext import commands
 
 def format_usage(command: str, *args: str) -> str:
-    """Build a short command usage string in a consistent format."""
     usage = f"Usage: {command}"
     if args:
         usage += " " + " ".join(args)
     return usage
 
 class MemberOrIDConverter(commands.Converter):
-    """Resolve a guild member or user from a mention, name, or ID."""
     async def convert(self, ctx: commands.Context, argument: str) -> discord.Member | discord.User:
         if isinstance(argument, (discord.Member, discord.User)):
             return argument
@@ -40,7 +38,6 @@ class MemberOrIDConverter(commands.Converter):
         raise commands.BadArgument(f"Could not find member or user '{argument}'. Please provide a valid @mention or user ID.")
 
 class UserOrIDConverter(commands.Converter):
-    """Resolve a user from a mention, name, or ID."""
     async def convert(self, ctx: commands.Context, argument: str) -> discord.User:
         if isinstance(argument, discord.User):
             return argument
@@ -72,16 +69,15 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
         pass
 
 def is_immune(guild_id: int, target: discord.User | discord.Member) -> bool:
-    """Check if the target is immune to moderation actions based on Moderation config."""
-    from Database.mongodb import get_config
-    mod_cfg = get_config("Moderation", guild_id) or {}
+    from Commands.WebDashboard._storage import load_settings_config
+    settings_cfg = load_settings_config(guild_id)
     
-    immune_users = mod_cfg.get("immune_users", [])
+    immune_users = settings_cfg.get("immune_users", [])
     if str(target.id) in immune_users:
         return True
         
     if isinstance(target, discord.Member):
-        immune_roles = mod_cfg.get("immune_roles", [])
+        immune_roles = settings_cfg.get("immune_roles", [])
         for role in target.roles:
             if str(role.id) in immune_roles:
                 return True
