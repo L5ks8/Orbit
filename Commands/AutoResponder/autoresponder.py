@@ -9,7 +9,6 @@ class AutoResponderCommand(commands.Cog):
         self.bot = bot
 
     def _resolve_channel_mentions(self, text: str, guild: discord.Guild) -> str:
-        """Replace #channel-name with <#id> if the channel exists in the guild."""
         import re
         def replace_match(m):
             name_or_id = m.group(1)

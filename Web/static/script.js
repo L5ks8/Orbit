@@ -1008,15 +1008,7 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
                 if (botAdders.includes(r.id)) opt.selected = true;
                 botAddersEl.appendChild(opt);
             });
-            globalUsers.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.text = `${u.name} (User)`;
-                if (botAdders.includes(u.id)) opt.selected = true;
-                botAddersEl.appendChild(opt);
-            });
-            new CustomMultiSelect(botAddersEl, [...globalRoles, ...globalUsers.map(u => ({id: u.id, name: u.name + ' (User)', color: '#DBDEE1'}))], "Select Roles or Users...", (item) => {
-                if(item.name.endsWith('(User)')) return `@ ${item.name}`;
+            new CustomMultiSelect(botAddersEl, globalRoles, "Select Roles...", (item) => {
                 return `<span class="color-dot" style="background:${item.color || '#DBDEE1'}"></span> @ ${item.name}`;
             });
         }

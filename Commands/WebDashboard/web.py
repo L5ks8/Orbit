@@ -263,14 +263,7 @@ class WebDashboard:
         from Commands.WebDashboard._storage import load_settings_config
         settings_cfg = load_settings_config(guild_id)
 
-        from Database.mongodb import get_config
-        moderation_cfg = get_config("Moderation", guild_id) or {}
-
         config_data = {
-            "moderation": {
-                "immune_users": moderation_cfg.get("immune_users", []),
-                "immune_roles": moderation_cfg.get("immune_roles", [])
-            },
             "settings": settings_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
@@ -513,10 +506,6 @@ class WebDashboard:
             if user_perms.get("is_admin") and "settings" in data:
                 from Commands.WebDashboard._storage import save_settings_config
                 save_settings_config(guild_id, data["settings"])
-
-            if user_perms.get("is_admin") and "moderation" in data:
-                from Database.mongodb import set_config
-                set_config("Moderation", guild_id, data["moderation"])
 
             if user_perms.get("can_channels") and "serverstats" in data:
                 s_data = data.get("serverstats", {})
