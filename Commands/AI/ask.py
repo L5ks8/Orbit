@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from g4f.client import AsyncClient
+import g4f
 
 try:
     import edge_tts
@@ -20,7 +21,18 @@ class AskVoice(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.client = AsyncClient()
+        providers = [
+            getattr(g4f.Provider, "Blackbox", None),
+            getattr(g4f.Provider, "DDG", None),
+            getattr(g4f.Provider, "DuckDuckGo", None),
+            getattr(g4f.Provider, "FreeGpt", None),
+            getattr(g4f.Provider, "ChatGptEs", None),
+        ]
+        valid_providers = [p for p in providers if p is not None]
+        if hasattr(g4f.Provider, "RetryProvider") and valid_providers:
+            self.client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
+        else:
+            self.client = AsyncClient()
 
 
 

@@ -778,7 +778,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .reward-table {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    overflow: hidden;
+    overflow: visible;
 }
 .reward-table-header {
     display: grid;
@@ -791,6 +791,8 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     color: #3B82F6;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
 }
 .reward-table-body {
     min-height: 40px;

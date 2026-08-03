@@ -96,14 +96,26 @@ class AutoResponderCommand(commands.Cog):
             cid = entry_data.get("channel_id")
             return not cid or str(cid) == str(message.channel.id)
             
-        async def check_ai_context(trigger: str, text: str) -> bool:
+        async def check_ai_context(trigger: str, text: str, response: str) -> bool:
             try:
                 from g4f.client import AsyncClient
-                client = AsyncClient()
-                prompt = (f"You are a strict context checker. The trigger word is '{trigger}'. "
-                          f"Does the following message use this word in its primary semantic context meant by the trigger? "
-                          f"For example, if trigger is 'war', the sentence should be about conflict, not the German word for 'was'. "
-                          f"Message: '{text}'. "
+                import g4f
+                providers = [
+                    getattr(g4f.Provider, "Blackbox", None),
+                    getattr(g4f.Provider, "DDG", None),
+                    getattr(g4f.Provider, "DuckDuckGo", None),
+                    getattr(g4f.Provider, "FreeGpt", None),
+                    getattr(g4f.Provider, "ChatGptEs", None),
+                ]
+                valid_providers = [p for p in providers if p is not None]
+                if hasattr(g4f.Provider, "RetryProvider") and valid_providers:
+                    client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
+                else:
+                    client = AsyncClient()
+                prompt = (f"You are a strict context checker. The user's message contains the trigger word '{trigger}'. "
+                          f"The bot is configured to reply with: '{response}'. "
+                          f"Based on this reply, does the context of the user's message match the intended context for the trigger? "
+                          f"User's Message: '{text}'. "
                           f"Answer only with YES or NO.")
                 response = await client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -118,7 +130,7 @@ class AutoResponderCommand(commands.Cog):
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
             if entry.get("use_ai"):
-                if not await check_ai_context(content, message.content):
+                if not await check_ai_context(content, message.content, entry["response"]):
                     return
             try:
                 response_text = self._resolve_channel_mentions(entry["response"], message.guild)
@@ -131,7 +143,7 @@ class AutoResponderCommand(commands.Cog):
         for trigger, entry_data in data.items():
             if trigger in words and can_respond(entry_data):
                 if entry_data.get("use_ai"):
-                    if not await check_ai_context(trigger, message.content):
+                    if not await check_ai_context(trigger, message.content, entry_data["response"]):
                         continue
                 try:
                     response_text = self._resolve_channel_mentions(entry_data["response"], message.guild)

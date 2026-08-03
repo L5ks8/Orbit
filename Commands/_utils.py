@@ -87,3 +87,19 @@ def is_immune(guild_id: int, target: discord.User | discord.Member) -> bool:
                 return True
                 
     return False
+
+def build_embed(guild: discord.Guild | None, title: str = None, description: str = None, color: discord.Color = discord.Color.blurple(), **kwargs) -> discord.Embed:
+    from Database.mongodb import get_config
+    settings = get_config("Settings", guild.id) if guild else {}
+    style = settings.get("embed_style", "normal")
+    
+    if style == "v2":
+        embed = discord.Embed(description=description, color=color, **kwargs)
+        if title:
+            embed.set_author(name=title, icon_url=guild.icon.url if guild and guild.icon else None)
+        if guild:
+            embed.set_footer(text=f"{guild.name} • Orbit")
+        return embed
+    else:
+        embed = discord.Embed(title=title, description=description, color=color, **kwargs)
+        return embed

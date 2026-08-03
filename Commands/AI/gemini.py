@@ -2,12 +2,24 @@ import os
 import discord
 from discord.ext import commands
 from g4f.client import AsyncClient
+import g4f
 import asyncio
 
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.client = AsyncClient()
+        providers = [
+            getattr(g4f.Provider, "Blackbox", None),
+            getattr(g4f.Provider, "DDG", None),
+            getattr(g4f.Provider, "DuckDuckGo", None),
+            getattr(g4f.Provider, "FreeGpt", None),
+            getattr(g4f.Provider, "ChatGptEs", None),
+        ]
+        valid_providers = [p for p in providers if p is not None]
+        if hasattr(g4f.Provider, "RetryProvider") and valid_providers:
+            self.client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
+        else:
+            self.client = AsyncClient()
         self.memory_resets = {}
 
     @commands.group(invoke_without_command=True)
@@ -78,6 +90,25 @@ class GeminiChatbot(commands.Cog):
                     "Output ONLY the text answer. Never show where you got the information from."
                 )
 
+                is_admin = getattr(message.author.guild_permissions, "administrator", False) if message.guild else False
+                if is_admin:
+                    system_prompt += (
+                        "\n\n[ADMINISTRATOR TOOLS AVAILABLE]\n"
+                        "Because the user is an Administrator, you CAN execute server configuration commands for them! "
+                        "If they ask you to change a setting, you MUST output EXACTLY one of the following commands in your response, and then reply to them normally.\n"
+                        "Tools:\n"
+                        "- To change Embed Style to v1/normal: [CONFIG_UPDATE: embed_style = \"normal\"]\n"
+                        "- To change Embed Style to v2/modern: [CONFIG_UPDATE: embed_style = \"v2\"]\n"
+                        "- To add a level role (e.g., Level 5 gets Role ID 123): [CONFIG_UPDATE: add_level_role = {\"level\": 5, \"role_id\": 123}]\n"
+                        "- To remove a level role: [CONFIG_UPDATE: remove_level_role = {\"level\": 5, \"role_id\": 123}]\n"
+                        "Only use these tools if explicitly requested by the administrator."
+                    )
+                else:
+                    system_prompt += (
+                        "\n\nThe user speaking to you does NOT have Administrator permissions. "
+                        "You CANNOT change server settings for them. If they ask, tell them they need Administrator permissions."
+                    )
+
                 messages_payload = [{"role": "system", "content": system_prompt}]
                 
                 for msg in messages:
@@ -106,7 +137,49 @@ class GeminiChatbot(commands.Cog):
                 text_response = response.choices[0].message.content
                             
                 if text_response:
-                    await self._send_chunked(message, text_response)
+                    # Parse tool calls
+                    if "[CONFIG_UPDATE:" in text_response and is_admin:
+                        import re
+                        import json
+                        from Database.mongodb import get_config, set_config
+                        
+                        match = re.search(r"\[CONFIG_UPDATE:\s*(.+?)\s*=\s*(.+)\]", text_response)
+                        if match:
+                            action = match.group(1).strip()
+                            val_str = match.group(2).strip()
+                            if val_str.endswith("]"):
+                                val_str = val_str[:-1]
+                            
+                            try:
+                                if action == "embed_style":
+                                    val = val_str.strip('"').strip("'")
+                                    cfg = get_config("Settings", message.guild.id) or {}
+                                    cfg["embed_style"] = val
+                                    set_config("Settings", message.guild.id, cfg)
+                                elif action == "add_level_role":
+                                    val = json.loads(val_str)
+                                    cfg = get_config("Leveling", message.guild.id) or {}
+                                    roles = cfg.get("level_roles", [])
+                                    roles.append({"level": val["level"], "role_id": str(val["role_id"])})
+                                    cfg["level_roles"] = roles
+                                    set_config("Leveling", message.guild.id, cfg)
+                                elif action == "remove_level_role":
+                                    val = json.loads(val_str)
+                                    cfg = get_config("Leveling", message.guild.id) or {}
+                                    roles = cfg.get("level_roles", [])
+                                    roles = [r for r in roles if str(r.get("level")) != str(val["level"]) or str(r.get("role_id")) != str(val["role_id"])]
+                                    cfg["level_roles"] = roles
+                                    set_config("Leveling", message.guild.id, cfg)
+                            except Exception as e:
+                                print(f"[Config AI] Failed to execute config: {e}")
+                            
+                            # Clean response for user
+                            text_response = re.sub(r"\[CONFIG_UPDATE:.*?\]", "", text_response).strip()
+
+                    if text_response:
+                        await self._send_chunked(message, text_response)
+                    else:
+                        await message.add_reaction("✅")
                 else:
                     await message.reply("I'm sorry, I couldn't generate a response.")
                     

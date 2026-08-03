@@ -91,6 +91,13 @@ class AutoModListener(commands.Cog):
                 await member.ban(reason=reason, delete_message_days=0)
             except Exception:
                 pass
+        elif action == "softban" and member.id != member.guild.owner_id:
+            escalation_str = "Softbanned (Banned and unbanned to delete messages)"
+            try:
+                await member.ban(reason=reason, delete_message_days=7)
+                await member.unban(reason="AutoMod: Softban unban")
+            except Exception:
+                pass
 
         return escalation_str, warn_count
 
@@ -224,16 +231,111 @@ class AutoModListener(commands.Cog):
                 await do_action(spam_cfg, f"AutoMod: Message flood ({m_msgs}+ messages in {t_win}s)")
                 return
 
+        ai_cfg = config.get("ai_automod", {})
+        if ai_cfg.get("enabled", False) and not is_exempt(ai_cfg):
+            min_words = ai_cfg.get("min_words", 3)
+            words_len = len(message.content.split())
+            if words_len >= min_words:
+                async def check_ai_automod():
+                    try:
+                        import g4f
+                        from g4f.client import AsyncClient
+                        providers = [
+                            getattr(g4f.Provider, "Blackbox", None),
+                            getattr(g4f.Provider, "DDG", None),
+                            getattr(g4f.Provider, "DuckDuckGo", None),
+                            getattr(g4f.Provider, "FreeGpt", None),
+                            getattr(g4f.Provider, "ChatGptEs", None),
+                        ]
+                        valid_providers = [p for p in providers if p is not None]
+                        if hasattr(g4f.Provider, "RetryProvider") and valid_providers:
+                            client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
+                        else:
+                            client = AsyncClient()
+                        prompt = (f"You are a strict Discord server automoderator. Analyze this message for extreme toxicity, "
+                                  f"severe insults, slurs, blatant rule violations, OR sharing sensitive information (e.g., IP addresses, doxxing). "
+                                  f"Be aware of bypassed insults (e.g., 'f*ck'). "
+                                  f"Do NOT flag mild banter or normal words. "
+                                  f"Message: '{message.content}'. "
+                                  f"Answer ONLY with YES if it must be deleted for toxicity or doxxing, or NO if it is acceptable.")
+                        response = await client.chat.completions.create(
+                            model="gpt-3.5-turbo",
+                            messages=[{"role": "user", "content": prompt}],
+                        )
+                        answer = response.choices[0].message.content.strip().lower()
+                        return "yes" in answer
+                    except Exception as e:
+                        print(f"[Automod AI] Error: {e}")
+                        return False # Fail open
+
+                # Check asynchronously without fully blocking if possible, but we must block to delete
+                is_toxic = await check_ai_automod()
+                if is_toxic:
+                    await do_action(ai_cfg, "AutoMod: AI Content Filter detected severe toxicity")
+                    return
+
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        if not member.guild or member.bot:
-            return
-
-        if is_whitelisted(member.guild.id, member.id):
+        if not member.guild:
             return
 
         config = load_automod_config(member.guild.id)
         if not config.get("enabled", False):
+            return
+
+        # Anti-Bot Add
+        if member.bot:
+            bot_cfg = config.get("anti_bot", {})
+            if bot_cfg.get("enabled", False):
+                from Database.mongodb import get_config
+                settings = get_config("Settings", member.guild.id) or {}
+                bot_adders = settings.get("bot_adders", [])
+                
+                # Check audit logs for bot add
+                try:
+                    inviter = None
+                    async for entry in member.guild.audit_logs(limit=5, action=discord.AuditLogAction.bot_add):
+                        if entry.target.id == member.id:
+                            inviter = entry.user
+                            break
+                    
+                    if inviter:
+                        if str(inviter.id) not in bot_adders and inviter.id != member.guild.owner_id:
+                            # Kick the bot immediately
+                            try:
+                                await member.kick(reason="AutoMod: Anti-Bot Add triggered")
+                            except:
+                                pass
+                            
+                            # Punish the inviter
+                            action = bot_cfg.get("action", "kick")
+                            escalation_str, warn_count = await self._apply_action(inviter, action, 5, "AutoMod: Unauthorized bot invite")
+                            from Embeds import get_command_embed
+                            kwargs = get_command_embed(member.guild.id, "automod", msg_type="notice", user_mention=inviter.mention, user_id=inviter.id, reason="Unauthorized Bot Invite", action_taken=action, warn_count=warn_count, escalation_str=escalation_str)
+                            
+                            try:
+                                # Try to find a system channel to send notice to, or general
+                                channel = member.guild.system_channel
+                                if not channel:
+                                    for c in member.guild.text_channels:
+                                        if c.permissions_for(member.guild.me).send_messages:
+                                            channel = c
+                                            break
+                                if channel:
+                                    await channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+                            except Exception:
+                                pass
+                            
+                            try:
+                                await log_event(member.guild, "auto_moderation", "AutoMod Triggered (Anti-Bot)", f"**User:** {inviter.mention}\n**Reason:** Unauthorized Bot Invite\n**Action Taken:** {action.upper()}\n**Escalation:** {escalation_str}")
+                            except Exception:
+                                pass
+                except Exception as e:
+                    print(f"Error checking anti-bot: {e}")
+
+            return
+
+        if is_whitelisted(member.guild.id, member.id):
             return
 
         alt_cfg = config["anti_alt"]

@@ -31,6 +31,15 @@ DEFAULT_AUTOMOD_CONFIG = {
         "enabled": True,
         "min_age_days": 3,
         "action": "kick"
+    },
+    "ai_automod": {
+        "enabled": False,
+        "action": "delete",
+        "min_words": 3
+    },
+    "anti_bot": {
+        "enabled": False,
+        "action": "kick"
     }
 }
 

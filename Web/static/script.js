@@ -991,9 +991,36 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         updateBoostLivePreview();
 
         // Moderation
-        const modImmuneUsers = config.moderation?.immune_users || [];
-        const modImmuneRoles = config.moderation?.immune_roles || [];
+        const settingsConfig = config.settings || {};
+        const modImmuneUsers = settingsConfig.immune_users || [];
+        const modImmuneRoles = settingsConfig.immune_roles || [];
+        const botAdders = settingsConfig.bot_adders || [];
         
+        const botAddersEl = document.getElementById('settings_bot_adders');
+        if (botAddersEl) {
+            if (botAddersEl.nextElementSibling?.classList.contains('custom-multiselect')) botAddersEl.nextElementSibling.remove();
+            botAddersEl.innerHTML = '';
+            
+            globalRoles.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.text = `@${r.name}`;
+                if (botAdders.includes(r.id)) opt.selected = true;
+                botAddersEl.appendChild(opt);
+            });
+            globalUsers.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.text = `${u.name} (User)`;
+                if (botAdders.includes(u.id)) opt.selected = true;
+                botAddersEl.appendChild(opt);
+            });
+            new CustomMultiSelect(botAddersEl, [...globalRoles, ...globalUsers.map(u => ({id: u.id, name: u.name + ' (User)', color: '#DBDEE1'}))], "Select Roles or Users...", (item) => {
+                if(item.name.endsWith('(User)')) return `@ ${item.name}`;
+                return `<span class="color-dot" style="background:${item.color || '#DBDEE1'}"></span> @ ${item.name}`;
+            });
+        }
+
         const modRolesEl = document.getElementById('mod_immune_roles');
         if (modRolesEl) {
             if (modRolesEl.nextElementSibling?.classList.contains('custom-multiselect')) modRolesEl.nextElementSibling.remove();
@@ -1038,6 +1065,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('automod_anti_caps_enabled').checked = currentAutomodConfig.anti_caps?.enabled || false;
         document.getElementById('automod_mention_spam_enabled').checked = currentAutomodConfig.mention_spam?.enabled || false;
         document.getElementById('automod_anti_alt_enabled').checked = currentAutomodConfig.anti_alt?.enabled || false;
+        document.getElementById('automod_anti_bot_enabled').checked = currentAutomodConfig.anti_bot?.enabled || false;
+        document.getElementById('automod_ai_automod_enabled').checked = currentAutomodConfig.ai_automod?.enabled || false;
 
         const amGlobalChEl = document.getElementById('automod_global_channels');
         if (amGlobalChEl.nextElementSibling?.classList.contains('custom-multiselect')) amGlobalChEl.nextElementSibling.remove();
@@ -2540,6 +2569,7 @@ function openAutoModModal(ruleId) {
                 <option value="warn" ${ruleCfg.action === 'warn' ? 'selected' : ''}>Warning</option>
                 <option value="timeout" ${ruleCfg.action === 'timeout' ? 'selected' : ''}>Timeout</option>
                 <option value="kick" ${ruleCfg.action === 'kick' ? 'selected' : ''}>Kick</option>
+                <option value="softban" ${ruleCfg.action === 'softban' ? 'selected' : ''}>Softban</option>
                 <option value="ban" ${ruleCfg.action === 'ban' ? 'selected' : ''}>Ban</option>
             </select>
         </div>
@@ -2651,8 +2681,45 @@ function openAutoModModal(ruleId) {
                 <label>Action on Violation</label>
                 <select id="am-modal-action-alt">
                     <option value="kick" ${ruleCfg.action === 'kick' ? 'selected' : ''}>Kick</option>
+                    <option value="softban" ${ruleCfg.action === 'softban' ? 'selected' : ''}>Softban</option>
                     <option value="ban" ${ruleCfg.action === 'ban' ? 'selected' : ''}>Ban</option>
                     <option value="verify" ${ruleCfg.action === 'verify' ? 'selected' : ''}>Force Verify (Quarantine Role)</option>
+                </select>
+            </div>
+            ${exceptionsHtml}
+        `;
+    } else if (ruleId === 'anti_bot') {
+        title = 'Anti-Bot Add';
+        html = `
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Action on Inviter</label>
+                <select id="am-modal-action-bot">
+                    <option value="warn" ${ruleCfg.action === 'warn' ? 'selected' : ''}>Warn</option>
+                    <option value="timeout" ${ruleCfg.action === 'timeout' ? 'selected' : ''}>Timeout (5m)</option>
+                    <option value="kick" ${ruleCfg.action === 'kick' ? 'selected' : ''}>Kick</option>
+                    <option value="softban" ${ruleCfg.action === 'softban' ? 'selected' : ''}>Softban</option>
+                    <option value="ban" ${ruleCfg.action === 'ban' ? 'selected' : ''}>Ban</option>
+                </select>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">The unauthorized bot will always be kicked or banned automatically.</p>
+        `;
+    } else if (ruleId === 'ai_automod') {
+        title = 'AI Content Filter';
+        html = `
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Minimum Words Trigger</label>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">Messages with fewer words will be skipped to save processing time.</div>
+                <input type="number" id="am-modal-min-words" value="${ruleCfg.min_words || 3}" min="1" max="10">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Action</label>
+                <select id="am-modal-action-ai">
+                    <option value="delete" ${ruleCfg.action === 'delete' ? 'selected' : ''}>Delete Message Only</option>
+                    <option value="warn" ${ruleCfg.action === 'warn' ? 'selected' : ''}>Delete & Warn</option>
+                    <option value="timeout" ${ruleCfg.action === 'timeout' ? 'selected' : ''}>Delete & Timeout</option>
+                    <option value="kick" ${ruleCfg.action === 'kick' ? 'selected' : ''}>Delete & Kick</option>
+                    <option value="softban" ${ruleCfg.action === 'softban' ? 'selected' : ''}>Delete & Softban</option>
+                    <option value="ban" ${ruleCfg.action === 'ban' ? 'selected' : ''}>Delete & Ban</option>
                 </select>
             </div>
         `;
@@ -2661,7 +2728,7 @@ function openAutoModModal(ruleId) {
     document.getElementById('am-modal-title').innerText = title;
     document.getElementById('am-modal-body').innerHTML = html;
 
-    if (ruleId !== 'anti_alt') {
+    if (ruleId !== 'anti_alt' && ruleId !== 'anti_bot') {
         new CustomMultiSelect(document.getElementById('am-modal-channels'), globalChannels, "Select...", (item) => "# " + item.name);
         new CustomMultiSelect(document.getElementById('am-modal-roles'), globalRoles, "Select...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
     }
@@ -2689,8 +2756,7 @@ function closeAutoModModal() {
         const actionEl = document.getElementById('am-modal-action');
         if (actionEl) ruleCfg.action = actionEl.value;
 
-        const toEl = document.getElementById('am-modal-timeout');
-        if (toEl) ruleCfg.timeout_duration_min = parseInt(toEl.value) || 5;
+        if (document.getElementById('am-modal-timeout')) ruleCfg.timeout_duration_min = parseInt(document.getElementById('am-modal-timeout').value) || 5;
 
         if (activeAutomodRule === 'banned_words') {
             ruleCfg.words = document.getElementById('am-modal-words').value.split(',').map(s => s.trim()).filter(s => s);
@@ -2705,9 +2771,14 @@ function closeAutoModModal() {
             ruleCfg.min_age_days = parseInt(document.getElementById('am-modal-age').value) || 3;
             const act = document.getElementById('am-modal-action-alt');
             if (act) ruleCfg.action = act.value;
+        } else if (activeAutomodRule === 'anti_bot') {
+            ruleCfg.action = document.getElementById('am-modal-action-bot').value;
+        } else if (activeAutomodRule === 'ai_automod') {
+            ruleCfg.min_words = parseInt(document.getElementById('am-modal-min-words').value) || 3;
+            ruleCfg.action = document.getElementById('am-modal-action-ai').value;
         }
 
-        if (activeAutomodRule !== 'anti_alt') {
+        if (activeAutomodRule !== 'anti_alt' && activeAutomodRule !== 'anti_bot') {
             const chEl = document.getElementById('am-modal-channels');
             if (chEl) ruleCfg.exempt_channels = Array.from(chEl.selectedOptions).map(o => o.value);
             const roEl = document.getElementById('am-modal-roles');
@@ -2865,6 +2936,10 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     currentAutomodConfig.mention_spam.enabled = document.getElementById('automod_mention_spam_enabled').checked;
     if (!currentAutomodConfig.anti_alt) currentAutomodConfig.anti_alt = {};
     currentAutomodConfig.anti_alt.enabled = document.getElementById('automod_anti_alt_enabled').checked;
+    if (!currentAutomodConfig.anti_bot) currentAutomodConfig.anti_bot = {};
+    currentAutomodConfig.anti_bot.enabled = document.getElementById('automod_anti_bot_enabled').checked;
+    if (!currentAutomodConfig.ai_automod) currentAutomodConfig.ai_automod = {};
+    currentAutomodConfig.ai_automod.enabled = document.getElementById('automod_ai_automod_enabled').checked;
 
 
 
@@ -2887,7 +2962,10 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             manager_roles: Array.from(document.getElementById('settings_manager_roles').selectedOptions).map(o => o.value),
             timezone: document.getElementById('settings_timezone').value,
             embed_style: document.getElementById('settings_embed_style').value,
-            prefix: document.getElementById('settings_prefix').value
+            prefix: document.getElementById('settings_prefix').value,
+            immune_users: modImmuneUsersList,
+            immune_roles: Array.from(document.getElementById('mod_immune_roles').selectedOptions).map(o => o.value),
+            bot_adders: Array.from(document.getElementById('settings_bot_adders').selectedOptions).map(o => o.value)
         },
         welcome: {
             enabled: document.getElementById('welcome_enabled').checked,
@@ -2939,10 +3017,6 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             embed_footer: document.getElementById('boost_embed_footer').value,
             embed_footer_icon: document.getElementById('boost_embed_footer_icon')?.value || '',
             embed_fields: boostEmbedFields
-        },
-        moderation: {
-            immune_users: modImmuneUsersList,
-            immune_roles: Array.from(document.getElementById('mod_immune_roles').selectedOptions).map(o => o.value)
         },
         automod: currentAutomodConfig,
         verify: {
