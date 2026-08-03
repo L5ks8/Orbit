@@ -71,3 +71,19 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
     except Exception:
         pass
 
+def is_immune(guild_id: int, target: discord.User | discord.Member) -> bool:
+    """Check if the target is immune to moderation actions based on Moderation config."""
+    from Database.mongodb import get_config
+    mod_cfg = get_config("Moderation", guild_id) or {}
+    
+    immune_users = mod_cfg.get("immune_users", [])
+    if str(target.id) in immune_users:
+        return True
+        
+    if isinstance(target, discord.Member):
+        immune_roles = mod_cfg.get("immune_roles", [])
+        for role in target.roles:
+            if str(role.id) in immune_roles:
+                return True
+                
+    return False

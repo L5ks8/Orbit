@@ -20,6 +20,11 @@ class BanCommand(commands.Cog):
         await ctx.defer()
         if target.id == ctx.author.id:
             return await ctx.send("You cannot ban yourself.", ephemeral=True)
+            
+        from Commands._utils import is_immune
+        if is_immune(ctx.guild.id, target):
+            return await ctx.send("This user is immune to moderation actions.", ephemeral=True)
+            
         if is_whitelisted(ctx.guild.id, target.id):
             return await ctx.send("This user is on the global moderation whitelist (`Immune to Ban`).", ephemeral=True)
         if isinstance(target, discord.Member) and target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:

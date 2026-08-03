@@ -985,6 +985,42 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         updateGoodbyeLivePreview();
         updateBoostLivePreview();
 
+        // Moderation
+        const modImmuneUsers = config.moderation?.immune_users || [];
+        const modImmuneRoles = config.moderation?.immune_roles || [];
+        
+        const modRolesEl = document.getElementById('mod_immune_roles');
+        if (modRolesEl) {
+            if (modRolesEl.nextElementSibling?.classList.contains('custom-multiselect')) modRolesEl.nextElementSibling.remove();
+            modRolesEl.innerHTML = "";
+            globalRoles.forEach(r => {
+                const opt = document.createElement("option");
+                opt.value = r.id;
+                if (modImmuneRoles.includes(r.id)) opt.selected = true;
+                modRolesEl.appendChild(opt);
+            });
+            new CustomMultiSelect(modRolesEl, globalRoles, "Select Roles...", (item) => `<span class="color-dot" style="background:${item.color}"></span> @ ` + item.name);
+        }
+
+        const modUsersList = document.getElementById('mod_immune_users_list');
+        modImmuneUsersList = [];
+        if (modUsersList) {
+            modUsersList.innerHTML = '';
+            modImmuneUsers.forEach(async userId => {
+                try {
+                    const r = await fetch(`/api/user/${userId}`);
+                    if (r.ok) {
+                        const u = await r.json();
+                        addImmuneUserChip(u.id, u.name, u.avatar);
+                    } else {
+                        addImmuneUserChip(userId, "Unknown User", "");
+                    }
+                } catch (e) {
+                    addImmuneUserChip(userId, "Unknown User", "");
+                }
+            });
+        }
+
         // AutoMod
         if (!currentPermissions.can_messages) lockSection('section-automod', 'Manage Messages');
         currentAutomodConfig = config.automod || {};
@@ -2896,6 +2932,10 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             embed_footer: document.getElementById('boost_embed_footer').value,
             embed_footer_icon: document.getElementById('boost_embed_footer_icon')?.value || '',
             embed_fields: boostEmbedFields
+        },
+        moderation: {
+            immune_users: modImmuneUsersList,
+            immune_roles: Array.from(document.getElementById('mod_immune_roles').selectedOptions).map(o => o.value)
         },
         automod: currentAutomodConfig,
         verify: {
@@ -5160,3 +5200,51 @@ function updateRRPreview() {
         compContainer.appendChild(b);
     });
 }
+
+// --- Moderation Immunity UI ---
+let modImmuneUsersList = [];
+
+function addImmuneUserChip(id, name, avatar) {
+    if(modImmuneUsersList.includes(id)) return;
+    modImmuneUsersList.push(id);
+    const container = document.getElementById('mod_immune_users_list');
+    if(!container) return;
+    const chip = document.createElement('div');
+    chip.className = 'user-chip';
+    chip.style.cssText = 'display:flex;align-items:center;gap:6px;background:#1E1F22;border:1px solid #313338;padding:4px 8px;border-radius:4px;color:#DBDEE1;font-size:13px;';
+    chip.dataset.id = id;
+    let img = avatar ? `<img src="${avatar}" style="width:16px;height:16px;border-radius:50%;">` : `<div style="width:16px;height:16px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;font-size:10px;">?</div>`;
+    chip.innerHTML = `${img}<span>${name}</span><button type="button" onclick="removeImmuneUserChip(this, '${id}')" style="background:none;border:none;color:#F23F43;cursor:pointer;padding:0 2px;margin-left:4px;font-weight:bold;">&times;</button>`;
+    container.appendChild(chip);
+}
+
+function removeImmuneUserChip(btn, id) {
+    modImmuneUsersList = modImmuneUsersList.filter(u => u !== id);
+    btn.parentElement.remove();
+    setDirty(true);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const addBtn = document.getElementById('btn_add_mod_immune_user');
+    const input = document.getElementById('mod_immune_user_input');
+    if(addBtn && input) {
+        addBtn.addEventListener('click', async () => {
+            const id = input.value.trim();
+            if(!id) return;
+            if(modImmuneUsersList.includes(id)) { input.value = ''; return; }
+            try {
+                const res = await fetch(`/api/user/${id}`);
+                if(res.ok) {
+                    const u = await res.json();
+                    addImmuneUserChip(u.id, u.name, u.avatar);
+                    input.value = '';
+                    setDirty(true);
+                } else {
+                    alert('User not found!');
+                }
+            } catch(e) {
+                alert('Error fetching user');
+            }
+        });
+    }
+});

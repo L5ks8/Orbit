@@ -15,6 +15,11 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
         return await ctx.send("This command must be run inside a server.", ephemeral=True)
     if user.id == ctx.author.id:
         return await ctx.send("You cannot warn yourself.", ephemeral=True)
+        
+    from Commands._utils import is_immune
+    if is_immune(ctx.guild.id, user):
+        return await ctx.send("This user is immune to moderation actions.", ephemeral=True)
+        
     if is_whitelisted(ctx.guild.id, user.id):
         return await ctx.send("This user is on the global moderation whitelist (`Immune to Warnings`).", ephemeral=True)
     if isinstance(user, discord.Member):

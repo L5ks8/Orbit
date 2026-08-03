@@ -530,6 +530,13 @@
 
                     <!-- MODERATION -->
                     <div class="nav-category">MODERATION</div>
+                    <div class="dash-nav-item" data-target="section-moderation">
+                        <span class="nav-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                        </span> Moderation
+                    </div>
                     <div class="dash-nav-item" data-target="section-automod">
                         <span class="nav-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1645,6 +1652,33 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- MODERATION SETTINGS SECTION -->
+                    <div id="section-moderation" class="dash-panel">
+                        <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 700; color: #F2F3F5;">Moderation Settings</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Configure immunity settings for bans, kicks, and warns.</p>
+                        
+                        <div style="background: #2B2D31; border: 1px solid #313338; border-radius: 8px; padding: 24px; max-width: 900px; margin-bottom: 24px;">
+                            <h4 style="margin: 0 0 16px 0; color: #F2F3F5; font-size: 16px;">Immune Users</h4>
+                            <p style="color: #949BA4; font-size: 13px; margin-top: 0; margin-bottom: 16px;">Users who cannot be banned, kicked, or warned.</p>
+                            
+                            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                                <input type="text" id="mod_immune_user_input" class="form-input" placeholder="User ID (e.g. 123456789012345678)" style="flex: 1; background: #111214; border: 1px solid #313338; color: #DBDEE1; padding: 10px 12px; border-radius: 4px;">
+                                <button type="button" id="btn_add_mod_immune_user" class="btn-primary" style="background: #5865F2; color: white; border: none; padding: 10px 16px; border-radius: 4px; font-weight: 600; cursor: pointer;">Add User</button>
+                            </div>
+                            
+                            <div id="mod_immune_users_list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <!-- User chips will be inserted here -->
+                            </div>
+                        </div>
+
+                        <div style="background: #2B2D31; border: 1px solid #313338; border-radius: 8px; padding: 24px; max-width: 900px;">
+                            <h4 style="margin: 0 0 16px 0; color: #F2F3F5; font-size: 16px;">Immune Roles</h4>
+                            <p style="color: #949BA4; font-size: 13px; margin-top: 0; margin-bottom: 16px;">Roles that cannot be banned, kicked, or warned.</p>
+                            
+                            <select id="mod_immune_roles" multiple style="width: 100%; display: none;"></select>
                         </div>
                     </div>
 

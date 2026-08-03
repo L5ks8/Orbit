@@ -117,6 +117,28 @@ class WebDashboard:
             "avatar": user["avatar"]
         })
 
+    async def api_resolve_user(self, request: web.Request):
+        user_id_str = request.match_info.get("id", "")
+        if not user_id_str.isdigit():
+            return web.json_response({"error": "Invalid User ID"}, status=400)
+        
+        user_id = int(user_id_str)
+        try:
+            user = self.bot.get_user(user_id)
+            if not user:
+                user = await self.bot.fetch_user(user_id)
+            
+            return web.json_response({
+                "id": str(user.id),
+                "name": user.name,
+                "global_name": user.global_name or user.name,
+                "avatar": user.avatar.url if user.avatar else user.default_avatar.url
+            })
+        except discord.NotFound:
+            return web.json_response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_stats(self, request: web.Request):
         return web.json_response({
             "servers": len(self.bot.guilds),
@@ -241,7 +263,14 @@ class WebDashboard:
         from Commands.WebDashboard._storage import load_settings_config
         settings_cfg = load_settings_config(guild_id)
 
+        from Database.mongodb import get_config
+        moderation_cfg = get_config("Moderation", guild_id) or {}
+
         config_data = {
+            "moderation": {
+                "immune_users": moderation_cfg.get("immune_users", []),
+                "immune_roles": moderation_cfg.get("immune_roles", [])
+            },
             "settings": settings_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
@@ -484,6 +513,10 @@ class WebDashboard:
             if user_perms.get("is_admin") and "settings" in data:
                 from Commands.WebDashboard._storage import save_settings_config
                 save_settings_config(guild_id, data["settings"])
+
+            if user_perms.get("is_admin") and "moderation" in data:
+                from Database.mongodb import set_config
+                set_config("Moderation", guild_id, data["moderation"])
 
             if user_perms.get("can_channels") and "serverstats" in data:
                 s_data = data.get("serverstats", {})
@@ -1555,6 +1588,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/auth/logout", dashboard.handle_logout)
     
     app.router.add_get("/api/user", dashboard.api_user)
+    app.router.add_get("/api/user/{id}", dashboard.api_resolve_user)
     app.router.add_get("/api/stats", dashboard.api_stats)
     app.router.add_get("/api/guilds", dashboard.api_guilds)
     app.router.add_get("/api/config/{id}", dashboard.api_get_config)
