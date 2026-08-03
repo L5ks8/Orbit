@@ -111,10 +111,10 @@ class AutoResponderCommand(commands.Cog):
                     client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
                 else:
                     client = AsyncClient()
-                prompt = (f"You are a strict context checker. The user's message contains the trigger word '{trigger}'. "
-                          f"The bot is configured to reply with: '{response}'. "
-                          f"Based on this reply, does the context of the user's message match the intended context for the trigger? "
-                          f"User's Message: '{text}'. "
+                prompt = (f"You are a strict context checker. The bot is triggered by the word '{trigger}' and responds with: '{response}'.\n"
+                          f"User's Message: '{text}'\n"
+                          f"Does the context of the user's message logically match the trigger word in the way the bot's response expects? "
+                          f"Consider the language of the user's message. If the trigger word is used in a completely different meaning (e.g. as a verb in another language, like German 'war' = 'was'), you must answer NO.\n"
                           f"Answer only with YES or NO.")
                 response = await client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -124,7 +124,7 @@ class AutoResponderCommand(commands.Cog):
                 return "yes" in answer
             except Exception as e:
                 print(f"[AutoResponder AI] Error: {e}")
-                return True # Fallback to True if AI fails
+                return False # Fallback to False if AI fails, so we don't send false positives
 
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):

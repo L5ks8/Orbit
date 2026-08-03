@@ -376,6 +376,15 @@ class WebDashboard:
                     "enabled": automod_cfg.get("anti_alt", {}).get("enabled", False),
                     "min_age_days": automod_cfg.get("anti_alt", {}).get("min_age_days", 3),
                     "action": automod_cfg.get("anti_alt", {}).get("action", "kick")
+                },
+                "anti_bot": {
+                    "enabled": automod_cfg.get("anti_bot", {}).get("enabled", False),
+                    "action": automod_cfg.get("anti_bot", {}).get("action", "kick")
+                },
+                "ai_automod": {
+                    "enabled": automod_cfg.get("ai_automod", {}).get("enabled", False),
+                    "min_words": automod_cfg.get("ai_automod", {}).get("min_words", 3),
+                    "action": automod_cfg.get("ai_automod", {}).get("action", "delete")
                 }
             },
             "verify": {

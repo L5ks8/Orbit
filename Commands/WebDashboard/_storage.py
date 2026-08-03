@@ -3,10 +3,10 @@ from Database.mongodb import get_db
 def load_settings_config(guild_id: int) -> dict:
     db = get_db()
     if db is None:
-        return {"manager_roles": [], "timezone": "Europe/Berlin", "embed_style": "normal", "prefix": ""}
+        return {"manager_roles": [], "timezone": "Europe/Berlin", "embed_style": "normal", "prefix": "", "immune_users": [], "immune_roles": [], "bot_adders": []}
     doc = db["GuildSettings"].find_one({"_id": guild_id})
     if not doc:
-        return {"manager_roles": [], "timezone": "Europe/Berlin", "embed_style": "normal", "prefix": ""}
+        return {"manager_roles": [], "timezone": "Europe/Berlin", "embed_style": "normal", "prefix": "", "immune_users": [], "immune_roles": [], "bot_adders": []}
     return {
         "manager_roles": doc.get("manager_roles", []),
         "timezone": doc.get("timezone", "Europe/Berlin"),
