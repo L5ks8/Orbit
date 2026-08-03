@@ -292,7 +292,7 @@ class CustomSelect {
         this.updateTrigger(placeholder);
     }
 
-    updateTrigger(placeholder) {
+    updateTrigger(placeholder, dispatch = false) {
         const item = this.items.find(i => String(i.id) === String(this.value));
         if (item) {
             const prefix = this.isRole ? '@' : '#';
@@ -302,11 +302,10 @@ class CustomSelect {
             this.trigger.innerHTML = `<div class="content" style="color:var(--text-secondary); font-weight:600;">${placeholder}</div> <i data-lucide="chevron-down" style="width: 14px; height: 14px; flex-shrink: 0;"></i>`;
         }
         lucide.createIcons({ root: this.trigger });
-        if (this.select.value !== this.value) {
-            this.select.value = this.value;
+        this.select.innerHTML = `<option value="${this.value}">${this.value}</option>`;
+        this.select.value = this.value;
+        if (dispatch) {
             this.select.dispatchEvent(new Event('change', { bubbles: true }));
-        } else {
-            this.select.value = this.value;
         }
     }
 
@@ -318,7 +317,7 @@ class CustomSelect {
         noneOption.innerHTML = `<div class="content" style="color:var(--text-secondary)">None</div>`;
         noneOption.addEventListener('click', () => {
             this.value = '';
-            this.updateTrigger('None');
+            this.updateTrigger('None', true);
             this.container.classList.remove('open');
         });
         this.optionsContainer.appendChild(noneOption);
@@ -331,7 +330,7 @@ class CustomSelect {
             opt.innerHTML = `${colorHtml}${prefix}${item.name}`;
             opt.addEventListener('click', () => {
                 this.value = item.id;
-                this.updateTrigger(this.placeholder);
+                this.updateTrigger(this.placeholder, true);
                 this.container.classList.remove('open');
             });
             this.optionsContainer.appendChild(opt);
