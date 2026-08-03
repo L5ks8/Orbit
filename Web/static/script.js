@@ -3110,9 +3110,7 @@ document.getElementById('btn-setup-serverstats')?.addEventListener('click', asyn
         const data = await res.json();
         if (res.ok && data.success) {
             showToast('Server Stats channels created and updated successfully!');
-            if (data.config && document.getElementById('serverstats_category_id')) {
-                document.getElementById('serverstats_category_id').value = data.config.category_id || '';
-            }
+            setTimeout(() => window.location.reload(), 1500);
         } else {
             showToast('Error: ' + (data.error || 'Failed to create channels'));
         }

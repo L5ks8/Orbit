@@ -499,6 +499,10 @@ class WebDashboard:
                 ss_cfg["roles_enabled"] = bool(s_data.get("roles_enabled"))
                 ss_cfg["roles_name"] = str(s_data.get("roles_name", "Roles: {count}") or "Roles: {count}")
                 save_serverstats_config(guild_id, ss_cfg)
+                cog = self.bot.get_cog("ServerStats")
+                if cog:
+                    import asyncio
+                    asyncio.create_task(cog.sync_guild_stats(guild))
 
             def _clean_cloudinary(old_url: str, new_url: str):
                 if old_url and old_url != new_url and "res.cloudinary.com" in old_url:

@@ -89,12 +89,8 @@ class ServerStats(commands.Cog):
                         except Exception as e:
                             print(f"Failed to create {key} stat channel in {guild.id}: {e}")
                 else:
-                    # Dynamically preserve user's channel name by searching for numbers in channel.name
-                    match = re.search(r'\d+', channel.name)
-                    if match:
-                        target_name = channel.name[:match.start()] + str(count) + channel.name[match.end():]
-                    else:
-                        target_name = template.replace("{count}", str(count))
+                    # Use the template from the website settings
+                    target_name = template.replace("{count}", str(count))
 
                     try:
                         edits = {}
