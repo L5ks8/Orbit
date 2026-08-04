@@ -111,17 +111,24 @@ class AutoResponderCommand(commands.Cog):
                     client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
                 else:
                     client = AsyncClient()
-                prompt = (f"You are a strict context checker. The bot is triggered by the word '{trigger}' and responds with: '{response}'.\n"
-                          f"User's Message: '{text}'\n"
-                          f"Does the context of the user's message logically match the trigger word in the way the bot's response expects? "
-                          f"Consider the language of the user's message. If the trigger word is used in a completely different meaning (e.g. as a verb in another language, like German 'war' = 'was'), you must answer NO.\n"
-                          f"Answer only with YES or NO.")
-                response = await client.chat.completions.create(
+                
+                prompt = (f"You are a strict context checker.\n"
+                          f"Trigger Word: '{trigger}'\n"
+                          f"Bot's intended Response: '{response}'\n"
+                          f"User's Message: '{text}'\n\n"
+                          f"Task: Check if the User's Message uses the Trigger Word in the same context as the Bot's Response.\n"
+                          f"CRITICAL: If the Trigger Word is used in a different language or has a different meaning (e.g. German 'war' meaning 'was', but Bot's Response implies English 'war' meaning conflict), you MUST output NO.\n"
+                          f"Respond ONLY with YES or NO. Do not explain.")
+                
+                res = await client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": prompt}],
                 )
-                answer = response.choices[0].message.content.strip().lower()
-                return "yes" in answer
+                answer = res.choices[0].message.content.strip().lower()
+                
+                import re
+                clean_answer = re.sub(r'[^a-z]', '', answer)
+                return clean_answer.startswith("yes")
             except Exception as e:
                 print(f"[AutoResponder AI] Error: {e}")
                 return False # Fallback to False if AI fails, so we don't send false positives
