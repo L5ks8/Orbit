@@ -24,8 +24,10 @@ class TicketListenerCog(commands.Cog):
             val = interaction.data.get("values", ["General Support"])[0]
             from Commands.Ticket._views import _user_ticket_selections
             _user_ticket_selections[interaction.user.id] = val
-            try: await interaction.response.defer()
-            except Exception: pass
+            try: 
+                await interaction.response.send_message(f"Selected category: **{val}**. You can now click **Create Ticket**.", ephemeral=True)
+            except Exception: 
+                pass
         elif custom_id == "orbit:ticket_create_btn":
             from Commands.Ticket._storage import is_blacklisted, load_ticket_config
             if interaction.guild and is_blacklisted(interaction.guild.id, interaction.user.id):
