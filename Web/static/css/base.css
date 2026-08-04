@@ -44,7 +44,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Subtle noise texture overlay */
+
 body::after {
     content: '';
     position: fixed;
@@ -60,13 +60,13 @@ body::after {
     background-size: 256px 256px;
 }
 
-/* Hide scrollbar */
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #333; }
 
-/* ===== AMBIENT GLOW EFFECTS ===== */
+
 .ambient-bg {
     position: fixed;
     top: 0;
@@ -111,7 +111,7 @@ body::after {
     50% { opacity: 1; transform: scale(1.1); }
 }
 
-/* ===== NAVBAR ===== */
+
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -157,7 +157,7 @@ body::after {
 }
 .avatar:hover { border-color: var(--text-primary); }
 
-/* ===== BUTTONS ===== */
+
 .btn-primary {
     background: #fff;
     color: #000;

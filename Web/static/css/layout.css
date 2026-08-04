@@ -1,4 +1,4 @@
-/* ===== SERVER SELECTION ===== */
+
 .page-header { margin-bottom: 32px; text-align: center; }
 .page-header h2 { font-size: 32px; font-weight: 700; letter-spacing: -1px; margin-bottom: 6px; }
 .page-header p { color: var(--text-secondary); font-size: 14px; }
@@ -43,7 +43,7 @@
 .server-info h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
 .server-info p { color: var(--text-secondary); font-size: 12px; }
 
-/* ===== DASHBOARD LAYOUT ===== */
+
 .dashboard-grid {
     display: flex;
     flex-direction: row;
@@ -132,7 +132,7 @@
 }
 .dash-nav-item.active svg { opacity: 1; color: var(--text-primary); }
 
-/* ===== MAIN CONTENT ===== */
+
 .dash-main {
     background: none;
     border: none;
@@ -165,9 +165,9 @@
 .dash-panel h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
 
 
-/* ===== LANDING PAGE ===== */
+
 .landing-wrapper {
-    margin-top: -32px; /* Negate container padding */
+    margin-top: -32px; 
     margin-left: calc(50% - 50vw);
     width: 100vw;
     min-height: calc(100vh - 56px);
@@ -175,7 +175,7 @@
     background: var(--bg-base);
 }
 
-/* --- Dot grid background for hero --- */
+
 .lp-hero {
     max-width: 860px;
     margin: 0 auto;
@@ -198,7 +198,7 @@
     z-index: 0;
 }
 
-/* Glow accents behind hero */
+
 .lp-glow {
     position: absolute;
     border-radius: 50%;
@@ -307,7 +307,7 @@
 }
 .lp-btn-ghost:hover { color: #fff; }
 
-/* Stats row — glassmorphic pills */
+
 .lp-stats-row {
     display: flex; justify-content: center; align-items: center;
     margin-top: 72px; gap: 16px;
@@ -342,7 +342,7 @@
 }
 .lp-stat-divider { display: none; }
 
-/* ===== FEATURES SECTION ===== */
+
 .lp-section { max-width: 1060px; margin: 0 auto; padding: 100px 24px; }
 
 .lp-section-label {
@@ -430,7 +430,7 @@
     color: var(--text-secondary);
 }
 
-/* ===== CTA ===== */
+
 .lp-cta-section {
     position: relative; padding: 120px 24px; text-align: center;
     border-top: 1px solid rgba(255,255,255,0.06);
@@ -454,7 +454,7 @@
     max-width: 420px; margin: 0 auto; line-height: 1.6;
 }
 
-/* ===== FOOTER ===== */
+
 .lp-footer {
     border-top: 1px solid rgba(255,255,255,0.06);
     padding: 36px 24px;
@@ -492,7 +492,7 @@
     width: 100%; text-align: center; margin-top: 20px;
 }
 
-/* ===== MOBILE ===== */
+
 @media (max-width: 900px) {
     .lp-bento { grid-template-columns: 1fr; }
     .lp-bento-wide { grid-column: span 1; }
@@ -515,7 +515,7 @@
     .dash-main { padding: 20px 0 0 0; }
 }
 
-/* ─── Level System Styles ─────────────────────────────────────────────────── */
+
 .level-card-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -540,7 +540,7 @@
     border-bottom: 1px solid var(--border-color);
 }
 
-/* Number +/- input group */
+
 .number-input-group {
     display: flex;
     align-items: center;
@@ -583,7 +583,7 @@
 .num-btn.minus { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
 .num-btn.plus { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 
-/* Reward Tables */
+
 .reward-table {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -673,7 +673,7 @@
     color: white;
 }
 
-/* Toggle Tabs */
+
 .toggle-tabs {
     display: inline-flex;
     gap: 0;
@@ -700,7 +700,7 @@
     color: var(--text-primary);
 }
 
-/* Embed Builder Preview */
+
 .embed-builder-preview {
     background: var(--bg-input);
     border-left: 3px solid #3B82F6;
@@ -708,7 +708,7 @@
     padding: 15px;
 }
 
-/* Range slider */
+
 input[type="range"] {
     -webkit-appearance: none;
     appearance: none;

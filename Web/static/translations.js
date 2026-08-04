@@ -83,7 +83,7 @@ function applyTranslations(lang) {
     localStorage.setItem('orbit_lang', lang);
 
     if (lang === 'en') {
-        // If Google Translate is active, let it handle or reset
+        
         var selectField = document.querySelector("select.goog-te-combo");
         if (selectField) {
             selectField.value = 'en';
@@ -109,7 +109,7 @@ function applyTranslations(lang) {
         });
     }
 
-    // Trigger Google Translate as fallback for unmapped text
+    
     var selectField = document.querySelector("select.goog-te-combo");
     if (selectField) {
         selectField.value = lang;
@@ -118,7 +118,7 @@ function applyTranslations(lang) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial lang sync
+    
     const savedLang = localStorage.getItem('orbit_lang') || 'de';
     const langInfo = {
         'de': { text: 'DE', flag: 'https://flagcdn.com/w40/de.png' },

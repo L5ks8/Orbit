@@ -1,24 +1,18 @@
 import sys
 sys.dont_write_bytecode = True
-
 import os
 import asyncio
 import pathlib
 import discord
 from discord.ext import commands
 import discord.ext.commands.core as core
-
 def custom_has_permissions(**perms: bool):
     def decorator(func):
         async def predicate(ctx: commands.Context) -> bool:
-            # 1. Bypass if server owner
             if ctx.guild and ctx.author.id == ctx.guild.owner_id:
                 return True
-            # 2. Bypass if bot owner
             if await ctx.bot.is_owner(ctx.author):
                 return True
-            
-            # 3. Standard check
             ch = ctx.channel
             permissions = ch.permissions_for(ctx.author)
             missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
@@ -27,14 +21,12 @@ def custom_has_permissions(**perms: bool):
             raise commands.MissingPermissions(missing)
         return commands.check(predicate)(func)
     return decorator
-
 def custom_bot_has_permissions(**perms: bool):
     def decorator(func):
         async def predicate(ctx: commands.Context) -> bool:
             return True
         return commands.check(predicate)(func)
     return decorator
-
 commands.has_permissions = custom_has_permissions
 core.has_permissions = custom_has_permissions
 commands.bot_has_permissions = custom_bot_has_permissions
@@ -50,18 +42,14 @@ except ImportError:
                 if line and not line.startswith("#") and "=" in line:
                     key, value = line.split("=", 1)
                     os.environ[key.strip()] = value.strip()
-
 TOKEN = os.getenv("TOKEN", "")
 PREFIX = os.getenv("PREFIX", "-").replace("=", "").strip()
 if not PREFIX:
     PREFIX = "-"
-
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-
 DEV_ERROR_CHANNEL_ID = 1527101969750167743
-
 async def send_dev_error(bot, source: str, error):
     try:
         channel = bot.get_channel(DEV_ERROR_CHANNEL_ID)
@@ -69,7 +57,6 @@ async def send_dev_error(bot, source: str, error):
             channel = await bot.fetch_channel(DEV_ERROR_CHANNEL_ID)
         if not channel:
             return
-        
         import traceback
         if isinstance(error, Exception):
             tb_lines = traceback.format_exception(type(error), error, error.__traceback__)
@@ -78,7 +65,6 @@ async def send_dev_error(bot, source: str, error):
         else:
             err_str = str(error)[:1800]
             msg = str(error)[:300]
-            
         embed = discord.Embed(
             title="⚠️ System Error Captured", 
             description=f"**Source:** {source}\n**Message:** {msg}", 
@@ -88,7 +74,6 @@ async def send_dev_error(bot, source: str, error):
         await channel.send(embed=embed)
     except Exception:
         pass
-
 class DevmodeNoticeLayout(discord.ui.LayoutView):
     def __init__(self, reason: str):
         super().__init__()
@@ -98,7 +83,6 @@ class DevmodeNoticeLayout(discord.ui.LayoutView):
             discord.ui.TextDisplay(content=f"**Status:** Developer Mode Activated (`Restricted Access`)\n**Reason:** {reason}\n\n*-# All regular bot interactions are temporarily paused while our developer deploys updates or performs maintenance. Please check back shortly!*")
         )
         self.add_item(self.container)
-
 class OrbitCommandTree(discord.app_commands.CommandTree):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.guild:
@@ -112,7 +96,6 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
                 except Exception:
                     pass
                 return False
-
         from Commands.OwnerOnly._storage import is_devmode_enabled
         enabled, reason = is_devmode_enabled()
         if not enabled:
@@ -128,7 +111,6 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
         except Exception:
             pass
         return False
-
     async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
         try:
             from Commands.OwnerOnly._monitor import record_error
@@ -143,21 +125,16 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
                 await interaction.response.send_message(f"An error occurred: `{error}`", ephemeral=True)
         except Exception:
             pass
-
 PREFIX_CACHE = {}
-
 async def get_prefix(bot, message: discord.Message):
     if not message.guild:
         return commands.when_mentioned_or(PREFIX)(bot, message)
-        
     guild_id = message.guild.id
     if guild_id in PREFIX_CACHE:
         pfx = PREFIX_CACHE[guild_id]
         if not pfx:
             pfx = PREFIX
         return commands.when_mentioned_or(pfx)(bot, message)
-        
-    # Fetch from DB
     try:
         from Database.mongodb import get_db
         db = get_db()
@@ -169,11 +146,8 @@ async def get_prefix(bot, message: discord.Message):
                 return commands.when_mentioned_or(pfx)(bot, message)
     except Exception:
         pass
-        
-    # Cache the default so we don't spam DB queries
     PREFIX_CACHE[guild_id] = PREFIX
     return commands.when_mentioned_or(PREFIX)(bot, message)
-
 class OrbitBot(commands.Bot):
     def __init__(self):
         try:
@@ -188,7 +162,6 @@ class OrbitBot(commands.Bot):
         except Exception:
             act = None
             discord_status = None
-            
         super().__init__(
             command_prefix=get_prefix,
             intents=intents,
@@ -197,7 +170,6 @@ class OrbitBot(commands.Bot):
             activity=act,
             status=discord_status
         )
-
     async def setup_hook(self):
         try:
             from aiohttp import web
@@ -211,18 +183,14 @@ class OrbitBot(commands.Bot):
             print(f"Web Dashboard started on 0.0.0.0:{port}")
         except Exception as e:
             print(f"Failed to start Web Dashboard: {e}")
-
         commands_dir = pathlib.Path("Commands")
         if not commands_dir.exists():
             commands_dir.mkdir(parents=True, exist_ok=True)
-            
         try:
             from Commands.Verify._views import PersistentVerifyLayout
             self.add_view(PersistentVerifyLayout())
         except Exception as e:
             print(f"Failed to add PersistentVerifyLayout: {e}")
-
-        # Load root command group modules first (e.g. Commands/Role/role.py, Commands/Ticket/ticket.py)
         for file_path in commands_dir.rglob("*.py"):
             if file_path.name.startswith("_"):
                 continue
@@ -233,8 +201,6 @@ class OrbitBot(commands.Bot):
                     print(f"Loaded Root Group: {extension}")
                 except Exception as e:
                     print(f"Failed to load root group {extension}: {e}")
-
-        # Load subcommands and remaining modules
         for file_path in commands_dir.rglob("*.py"):
             if file_path.name.startswith("_"):
                 continue
@@ -246,7 +212,6 @@ class OrbitBot(commands.Bot):
                 print(f"Loaded: {extension}")
             except Exception as e:
                 print(f"Failed to load {extension}: {e}")
-
         try:
             synced = await self.tree.sync()
             total_cmds = 0
@@ -258,7 +223,6 @@ class OrbitBot(commands.Bot):
             print(f"Synced {len(synced)} top-level command group(s) ({total_cmds} total subcommands & commands across all modules)")
         except Exception as e:
             print(f"Failed to sync commands: {e}")
-
         _old_view_error = discord.ui.View.on_error
         async def _global_view_error(view_self, error, item, interaction: discord.Interaction):
             try:
@@ -270,7 +234,6 @@ class OrbitBot(commands.Bot):
                 pass
             await _old_view_error(view_self, error, item, interaction)
         discord.ui.View.on_error = _global_view_error
-
         _old_modal_error = discord.ui.Modal.on_error
         async def _global_modal_error(modal_self, error, interaction: discord.Interaction):
             try:
@@ -282,7 +245,6 @@ class OrbitBot(commands.Bot):
                 pass
             await _old_modal_error(modal_self, error, interaction)
         discord.ui.Modal.on_error = _global_modal_error
-
     async def on_error(self, event_method: str, *args, **kwargs):
         try:
             from Commands.OwnerOnly._monitor import record_error
@@ -295,12 +257,10 @@ class OrbitBot(commands.Bot):
         except Exception:
             pass
         await super().on_error(event_method, *args, **kwargs)
-
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print(f"Prefix: '{PREFIX}'")
         print(f"Loaded cogs: {len(self.cogs)}")
-
     async def on_message(self, message: discord.Message):
         if not message.author.bot:
             try:
@@ -309,7 +269,6 @@ class OrbitBot(commands.Bot):
             except Exception:
                 pass
         await super().on_message(message)
-
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
         if isinstance(error, (commands.CommandNotFound, commands.CheckFailure)):
             return
@@ -327,9 +286,7 @@ class OrbitBot(commands.Bot):
         except Exception:
             pass
         raise error
-
 bot = OrbitBot()
-
 @bot.check
 async def global_blacklist_prefix_check(ctx: commands.Context):
     if not ctx.guild:
@@ -342,7 +299,6 @@ async def global_blacklist_prefix_check(ctx: commands.Context):
             pass
         return False
     return True
-
 @bot.check
 async def global_devmode_prefix_check(ctx: commands.Context):
     from Commands.OwnerOnly._storage import is_devmode_enabled
@@ -357,11 +313,9 @@ async def global_devmode_prefix_check(ctx: commands.Context):
     except Exception:
         pass
     return False
-
 async def main():
     async with bot:
         await bot.start(TOKEN)
-
 if __name__ == "__main__":
     if not TOKEN:
         print("Error: No TOKEN found in .env file.")

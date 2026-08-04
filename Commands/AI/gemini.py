@@ -4,7 +4,6 @@ from discord.ext import commands
 from g4f.client import AsyncClient
 import g4f
 import asyncio
-
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -21,53 +20,42 @@ class GeminiChatbot(commands.Cog):
         else:
             self.client = AsyncClient()
         self.memory_resets = {}
-
     @commands.group(invoke_without_command=True)
     async def memory(self, ctx):
         await ctx.reply("Use `-memory reset` to delete the bot's memory in this channel.", mention_author=False)
-
     @memory.command(name="reset")
     async def memory_reset(self, ctx):
         self.memory_resets[ctx.channel.id] = ctx.message.created_at
         await ctx.reply("Memory reset.", mention_author=False)
-
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-
         ctx = await self.bot.get_context(message)
         if ctx.valid and ctx.command is not None:
             return
         is_mentioned = self.bot.user in message.mentions
         is_reply_to_bot = False
-        
         if message.reference and message.reference.resolved:
             if isinstance(message.reference.resolved, discord.Message):
                 if message.reference.resolved.author.id == self.bot.user.id:
                     is_reply_to_bot = True
-
         if not (is_mentioned or is_reply_to_bot):
             return
-
         async with message.channel.typing():
             try:
                 reset_time = self.memory_resets.get(message.channel.id)
                 messages = [m async for m in message.channel.history(limit=10, before=message, after=reset_time)]
                 messages.reverse()
-
                 server_info = f"Server Name: {message.guild.name}\nMember Count: {message.guild.member_count}" if message.guild else "Direct Message"
-                
                 prefix_cmds_details = [cmd.name for cmd in self.bot.commands if not cmd.hidden]
                 prefix_cmds_str = ", ".join(prefix_cmds_details)
-
                 slash_cmds_details = []
                 for cmd in self.bot.tree.walk_commands():
                     if isinstance(cmd, discord.app_commands.Group):
                         continue
                     slash_cmds_details.append(f"/{cmd.qualified_name}")
                 slash_cmds_str = ", ".join(slash_cmds_details)
-                
                 system_prompt = (
                     "You are Orbit, an intelligent, helpful, and patient Discord bot. "
                     "Your tone is calm, friendly, and explanatory. "
@@ -89,7 +77,6 @@ class GeminiChatbot(commands.Cog):
                     "STRICT RULE: Do NOT include any citations, sources, links, URLs, or references (like [0], [1], etc.) in your response. "
                     "Output ONLY the text answer. Never show where you got the information from."
                 )
-
                 is_admin = getattr(message.author.guild_permissions, "administrator", False) if message.guild else False
                 if is_admin:
                     system_prompt += (
@@ -108,13 +95,10 @@ class GeminiChatbot(commands.Cog):
                         "\n\nThe user speaking to you does NOT have Administrator permissions. "
                         "You CANNOT change server settings for them. If they ask, tell them they need Administrator permissions."
                     )
-
                 messages_payload = [{"role": "system", "content": system_prompt}]
-                
                 for msg in messages:
                     if msg.author.id == self.bot.user.id:
                         content = msg.clean_content
-                        # Clean up old messages that might have the prefix
                         if content.startswith(f"{self.bot.user.display_name}:"):
                             content = content[len(self.bot.user.display_name)+1:].strip()
                         elif content.startswith("Orbit:"):
@@ -122,9 +106,7 @@ class GeminiChatbot(commands.Cog):
                         messages_payload.append({"role": "assistant", "content": content})
                     else:
                         messages_payload.append({"role": "user", "content": f"{msg.author.display_name}: {msg.clean_content}"})
-
                 messages_payload.append({"role": "user", "content": f"{message.author.display_name}: {message.clean_content}"})
-
                 response = await asyncio.wait_for(
                     self.client.chat.completions.create(
                         model='gpt-4o',
@@ -133,23 +115,18 @@ class GeminiChatbot(commands.Cog):
                     ),
                     timeout=20.0
                 )
-                
                 text_response = response.choices[0].message.content
-                            
                 if text_response:
-                    # Parse tool calls
                     if "[CONFIG_UPDATE:" in text_response and is_admin:
                         import re
                         import json
                         from Database.mongodb import get_config, set_config
-                        
                         match = re.search(r"\[CONFIG_UPDATE:\s*(.+?)\s*=\s*(.+)\]", text_response)
                         if match:
                             action = match.group(1).strip()
                             val_str = match.group(2).strip()
                             if val_str.endswith("]"):
                                 val_str = val_str[:-1]
-                            
                             try:
                                 if action == "embed_style":
                                     val = val_str.strip('"').strip("'")
@@ -172,26 +149,20 @@ class GeminiChatbot(commands.Cog):
                                     set_config("Leveling", message.guild.id, cfg)
                             except Exception as e:
                                 print(f"[Config AI] Failed to execute config: {e}")
-                            
-                            # Clean response for user
                             text_response = re.sub(r"\[CONFIG_UPDATE:.*?\]", "", text_response).strip()
-
                     if text_response:
                         await self._send_chunked(message, text_response)
                     else:
                         await message.add_reaction("✅")
                 else:
                     await message.reply("I'm sorry, I couldn't generate a response.")
-                    
             except Exception as e:
                 await message.reply(f"An error occurred while communicating with Orbit: `{e}`")
                 print(f"AI Error: {e}")
-
     async def _send_chunked(self, message: discord.Message, text: str):
         chunks = [text[i:i+1950] for i in range(0, len(text), 1950)]
         reply_to = message
         for chunk in chunks:
             reply_to = await reply_to.reply(chunk)
-
 async def setup(bot: commands.Bot):
     await bot.add_cog(GeminiChatbot(bot))
