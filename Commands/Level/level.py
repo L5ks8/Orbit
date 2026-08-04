@@ -105,7 +105,7 @@ class LevelCommandsCog(commands.Cog):
             entries.append({
                 "name": name,
                 "level": lvl,
-                "value_label": stat2,
+                "value_label": stat2 if sort_key == "total_xp" else stat1,
                 "avatar_bytes": avatar_bytes,
                 "rank": i
             })
@@ -120,7 +120,7 @@ class LevelCommandsCog(commands.Cog):
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
         embed = discord.Embed(
             title=cat["title"],
-            description="[Want to see more than Top 10?](https://orbit-bot.xyz)",
+            description=f"[Want to see more than Top 10?](https://orbit-bot.xyz/leaderboard/{guild.id})",
             color=0x2B2D31
         )
         embed.set_image(url="attachment://leaderboard.png")
