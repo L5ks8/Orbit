@@ -233,6 +233,47 @@ class AutoModListener(commands.Cog):
 
         ai_cfg = config.get("ai_automod", {})
         if ai_cfg.get("enabled", False) and not is_exempt(ai_cfg):
+            import re
+
+            def check_personal_info(text: str) -> str | None:
+                ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
+                ip_matches = re.findall(ip_pattern, text)
+                for ip in ip_matches:
+                    parts = ip.split(".")
+                    if all(0 <= int(p) <= 255 for p in parts):
+                        if not ip.startswith("127.") and ip != "0.0.0.0" and not ip.startswith("192.168."):
+                            return "IP address detected"
+
+                phone_pattern = r'(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}'
+                phone_matches = re.findall(phone_pattern, text)
+                for match in phone_matches:
+                    digits = re.sub(r'\D', '', match)
+                    if 7 <= len(digits) <= 15:
+                        return "Phone number detected"
+
+                email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+                if re.search(email_pattern, text):
+                    return "Email address detected"
+
+                ssn_pattern = r'\b\d{3}[-.\s]?\d{2}[-.\s]?\d{4}\b'
+                if re.search(ssn_pattern, text):
+                    digits_only = re.sub(r'\D', '', text)
+                    if len(digits_only) == 9:
+                        return "SSN/ID number detected"
+
+                address_indicators = ["wohnt in", "lives at", "address is", "adresse ist", "wohnort"]
+                text_lower = text.lower()
+                for indicator in address_indicators:
+                    if indicator in text_lower:
+                        return "Personal address detected"
+
+                return None
+
+            personal_info = check_personal_info(message.content)
+            if personal_info:
+                await do_action(ai_cfg, f"AutoMod: AI Content Filter - {personal_info}")
+                return
+
             min_words = ai_cfg.get("min_words", 3)
             words_len = len(message.content.split())
             if words_len >= min_words:
@@ -253,22 +294,20 @@ class AutoModListener(commands.Cog):
                         else:
                             client = AsyncClient()
                         prompt = (f"You are a strict Discord server automoderator. Analyze this message for extreme toxicity, "
-                                  f"severe insults, slurs, blatant rule violations, OR sharing sensitive information (e.g., IP addresses, doxxing). "
+                                  f"severe insults, slurs, blatant rule violations, OR sharing sensitive information. "
                                   f"Be aware of bypassed insults (e.g., 'f*ck'). "
                                   f"Do NOT flag mild banter or normal words. "
                                   f"Message: '{message.content}'. "
-                                  f"Answer ONLY with YES if it must be deleted for toxicity or doxxing, or NO if it is acceptable.")
+                                  f"Answer ONLY with YES if it must be deleted, or NO if it is acceptable.")
                         response = await client.chat.completions.create(
                             model="gpt-3.5-turbo",
                             messages=[{"role": "user", "content": prompt}],
                         )
                         answer = response.choices[0].message.content.strip().lower()
                         return "yes" in answer
-                    except Exception as e:
-                        print(f"[Automod AI] Error: {e}")
-                        return False # Fail open
+                    except Exception:
+                        return False
 
-                # Check asynchronously without fully blocking if possible, but we must block to delete
                 is_toxic = await check_ai_automod()
                 if is_toxic:
                     await do_action(ai_cfg, "AutoMod: AI Content Filter detected severe toxicity")
