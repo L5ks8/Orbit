@@ -113,7 +113,8 @@ class LevelCommandsCog(commands.Cog):
         from Commands.Level.leaderboard_card import generate_leaderboard_card
         
         img_bytes = generate_leaderboard_card(
-            entries=entries
+            entries=entries,
+            sort_key=sort_key
         )
         
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
