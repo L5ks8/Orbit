@@ -3,13 +3,98 @@ from discord import app_commands
 from discord.ext import commands
 from Commands.Level._storage import (
     load_level_config, get_user_xp, xp_progress,
-    get_leaderboard, get_user_rank, level_from_xp
+    get_leaderboard, get_leaderboard_by, get_user_rank, level_from_xp
 )
 import io
+
+# ── Leaderboard category config ──
+LB_CATEGORIES = {
+    "total_xp": {"label": "Level", "emoji": "⭐", "title": "Level Leaderboard", "format": lambda e, g: _lb_level_line(e, g)},
+    "message_count": {"label": "Messages", "emoji": "💬", "title": "Messages Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "message_count", "messages")},
+    "voice_minutes": {"label": "Voice Hours", "emoji": "🎙️", "title": "Voice Hours Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "voice_minutes", "min")},
+    "reaction_count": {"label": "Reactions", "emoji": "😄", "title": "Reactions Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "reaction_count", "reactions")},
+}
+
+def _lb_level_line(entry, guild):
+    uid = entry.get("user_id")
+    xp = entry.get("total_xp", 0)
+    lvl = level_from_xp(xp)
+    member = guild.get_member(uid)
+    name = member.display_name if member else f"User#{uid}"
+    return name, f"Level {lvl}", f"XP {_format_lb_number(xp)}"
+
+def _lb_stat_line(entry, guild, key, unit):
+    uid = entry.get("user_id")
+    val = entry.get(key, 0)
+    lvl = level_from_xp(entry.get("total_xp", 0))
+    member = guild.get_member(uid)
+    name = member.display_name if member else f"User#{uid}"
+    return name, f"Level {lvl}", f"{_format_lb_number(val)} {unit}"
+
+def _format_lb_number(n):
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.1f}M"
+    elif n >= 1_000:
+        return f"{n / 1_000:.1f}k"
+    return str(n)
+
+
+class LeaderboardSelect(discord.ui.Select):
+    def __init__(self, cog, guild, current_key="total_xp"):
+        self.cog = cog
+        self.guild = guild
+        options = []
+        for key, cat in LB_CATEGORIES.items():
+            options.append(discord.SelectOption(
+                label=cat["label"],
+                value=key,
+                emoji=cat["emoji"],
+                default=(key == current_key)
+            ))
+        super().__init__(placeholder="Level", min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        chosen = self.values[0]
+        embed = self.cog._build_leaderboard_embed(self.guild, chosen)
+        if embed is None:
+            return await interaction.response.send_message("No data available.", ephemeral=True)
+        view = LeaderboardView(self.cog, self.guild, chosen)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class LeaderboardView(discord.ui.View):
+    def __init__(self, cog, guild, current_key="total_xp"):
+        super().__init__(timeout=120)
+        self.add_item(LeaderboardSelect(cog, guild, current_key))
+
 
 class LevelCommandsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    def _build_leaderboard_embed(self, guild, sort_key="total_xp"):
+        """Build a leaderboard embed for the given sort key. Returns None if empty."""
+        top = get_leaderboard_by(guild.id, sort_key, 10)
+        if not top:
+            return None
+
+        cat = LB_CATEGORIES.get(sort_key, LB_CATEGORIES["total_xp"])
+        desc_lines = []
+        desc_lines.append(f"[Want to see more than Top 10?](https://orbit-bot.xyz)\n")
+
+        for i, entry in enumerate(top, 1):
+            name, stat1, stat2 = cat["format"](entry, guild)
+            member = guild.get_member(entry.get("user_id"))
+            avatar_emoji = ""
+            rank_str = f"**#{i}**"
+            desc_lines.append(f"{rank_str} · **{name}**{'':>20}**{stat1}**\n{'':>10}{stat2}")
+
+        embed = discord.Embed(
+            title=cat["title"],
+            description="\n".join(desc_lines),
+            color=0x2B2D31
+        )
+        return embed
 
     @app_commands.command(name="rank", description="View your or another member's rank card.")
     @app_commands.describe(member="The member to check")
@@ -82,28 +167,12 @@ class LevelCommandsCog(commands.Cog):
         if not config.get("enabled", False):
             return await interaction.response.send_message("The Level System is not enabled on this server.", ephemeral=True)
 
-        top = get_leaderboard(interaction.guild.id, 10)
-        if not top:
+        embed = self._build_leaderboard_embed(interaction.guild, "total_xp")
+        if embed is None:
             return await interaction.response.send_message("No one has earned XP yet!", ephemeral=True)
 
-        desc_lines = []
-        for i, entry in enumerate(top, 1):
-            uid = entry.get("user_id")
-            xp = entry.get("total_xp", 0)
-            lvl = level_from_xp(xp)
-            member = interaction.guild.get_member(uid)
-            name = member.display_name if member else f"User#{uid}"
-            medal = ["🥇", "🥈", "🥉"][i-1] if i <= 3 else f"`#{i}`"
-            desc_lines.append(f"{medal} **{name}** — Level {lvl} • {xp:,} XP")
-
-        embed = discord.Embed(
-            title="🏆 XP Leaderboard",
-            description="\n".join(desc_lines),
-            color=0x3B82F6
-        )
-        embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon.url if interaction.guild.icon else None)
-
-        await interaction.response.send_message(embed=embed)
+        view = LeaderboardView(self, interaction.guild)
+        await interaction.response.send_message(embed=embed, view=view)
 
     @app_commands.command(name="addxp", description="Add XP to a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to add")
@@ -224,6 +293,18 @@ class LevelCommandsCog(commands.Cog):
         except Exception as e:
             await ctx.send("Failed to generate rank card.")
 
+    @commands.command(name="leaderboard", aliases=["lb", "top"])
+    async def leaderboard_prefix(self, ctx: commands.Context):
+        config = load_level_config(ctx.guild.id)
+        if not config.get("enabled", False):
+            return await ctx.send("The Level System is not enabled on this server.")
+
+        embed = self._build_leaderboard_embed(ctx.guild, "total_xp")
+        if embed is None:
+            return await ctx.send("No one has earned XP yet!")
+
+        view = LeaderboardView(self, ctx.guild)
+        await ctx.send(embed=embed, view=view)
 
     @commands.command(name="addxp")
     @commands.has_permissions(administrator=True)

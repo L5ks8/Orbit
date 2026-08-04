@@ -179,6 +179,18 @@ def get_leaderboard(guild_id: int, limit: int = 10) -> List[Dict[str, Any]]:
         results.append(doc)
     return results
 
+def get_leaderboard_by(guild_id: int, sort_key: str = "total_xp", limit: int = 10) -> List[Dict[str, Any]]:
+    db = get_db()
+    col = db["LevelData"]
+    cursor = col.find(
+        {"guild_id": guild_id}
+    ).sort(sort_key, -1).limit(limit)
+    results = []
+    for doc in cursor:
+        doc.pop("_id", None)
+        results.append(doc)
+    return results
+
 def get_user_rank(guild_id: int, user_id: int) -> int:
     db = get_db()
     col = db["LevelData"]
