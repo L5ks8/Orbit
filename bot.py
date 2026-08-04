@@ -197,8 +197,8 @@ class OrbitBot(commands.Bot):
             act = None
             discord_status = None
             
-        owner_ids = {1195055294380781629} # Hardcoded fallback for user
-        env_owners = os.environ.get("OWNER_IDS") or os.environ.get("BOT_OWNER_ID")
+        owner_ids = set()
+        env_owners = os.environ.get("OWNER_IDS") or os.environ.get("BOT_OWNER_ID") or os.environ.get("OWNER")
         if env_owners:
             try:
                 parsed = {int(x.strip()) for x in env_owners.split(",") if x.strip().isdigit()}
