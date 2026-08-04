@@ -55,6 +55,9 @@ class LevelCommandsCog(commands.Cog):
                 current_xp=current_xp,
                 needed_xp=needed_xp,
                 total_xp=total_xp,
+                message_count=msg_count,
+                voice_minutes=voice_mins,
+                reaction_count=react_count,
                 bar_color=bar_color
             )
             file = discord.File(io.BytesIO(img_bytes), filename="rank_card.png")
@@ -186,6 +189,10 @@ class LevelCommandsCog(commands.Cog):
         level, current_xp, needed_xp = xp_progress(total_xp)
         rank = get_user_rank(ctx.guild.id, target.id)
 
+        msg_count = data.get("message_count", 0)
+        voice_mins = data.get("voice_minutes", 0)
+        react_count = data.get("reaction_count", 0)
+
         try:
             from Commands.Level.rank_card import generate_rank_card
             avatar_bytes = await target.display_avatar.read()
@@ -207,6 +214,9 @@ class LevelCommandsCog(commands.Cog):
                 current_xp=current_xp,
                 needed_xp=needed_xp,
                 total_xp=total_xp,
+                message_count=msg_count,
+                voice_minutes=voice_mins,
+                reaction_count=react_count,
                 bar_color=bar_color
             )
             file = discord.File(io.BytesIO(img_bytes), filename="rank_card.png")
