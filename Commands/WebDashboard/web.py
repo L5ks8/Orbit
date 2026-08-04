@@ -37,14 +37,50 @@ class WebDashboard:
             return None
         return SESSIONS[session_id]
 
+    def _render_template(self, filepath: str) -> str:
+        import re
+        import os
+        
+        def resolve_includes(content: str, base_dir: str) -> str:
+            pattern = r'<!--\s*INCLUDE:\s*(.*?)\s*-->'
+            def replacer(match):
+                include_path = os.path.join(base_dir, match.group(1).strip())
+                try:
+                    with open(include_path, "r", encoding="utf-8") as f:
+                        return resolve_includes(f.read(), base_dir)
+                except Exception as e:
+                    return f"<!-- ERROR INCLUDING {match.group(1)}: {e} -->"
+            
+            return re.sub(pattern, replacer, content)
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+            return resolve_includes(content, os.path.dirname(filepath))
+        except Exception as e:
+            raise e
+
     async def handle_index(self, request: web.Request):
         try:
-            with open("Web/index.html", "r", encoding="utf-8") as f:
-                content = f.read()
+            content = self._render_template("Web/index.html")
             return web.Response(text=content, content_type="text/html")
         except Exception as e:
             print(f"Index HTML Error: {e}")
             return web.Response(text="Orbit Dashboard: Error loading index.html", status=500)
+
+    async def handle_privacy(self, request: web.Request):
+        try:
+            content = self._render_template("Web/privacy.html")
+            return web.Response(text=content, content_type="text/html")
+        except Exception as e:
+            return web.Response(text="Error loading privacy policy", status=500)
+
+    async def handle_terms(self, request: web.Request):
+        try:
+            content = self._render_template("Web/terms.html")
+            return web.Response(text=content, content_type="text/html")
+        except Exception as e:
+            return web.Response(text="Error loading terms of service", status=500)
 
     async def handle_login(self, request: web.Request):
         if not self.client_id:
@@ -1581,6 +1617,9 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app = web.Application(client_max_size=10 * 1024 * 1024)  
     
     app.router.add_get("/", dashboard.handle_index)
+    app.router.add_get("/privacy", dashboard.handle_privacy)
+    app.router.add_get("/terms", dashboard.handle_terms)
+    
     app.router.add_static("/static", "Web/static")
     
     app.router.add_get("/auth/login", dashboard.handle_login)

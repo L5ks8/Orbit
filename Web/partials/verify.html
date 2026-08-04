@@ -1,0 +1,66 @@
+<div id="section-verify" class="dash-panel">
+                        <h3>Verification</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Require users to solve a CAPTCHA
+                            or click to verify before accessing channels.</p>
+
+                        <div class="toggle-container">
+                            <div class="toggle-info">
+                                <h4>Enable Verification</h4>
+                                <p>Activate the verification gate.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="verify_enabled">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Verification Mode</label>
+                            <span class="help-text">Choose how users verify. One-Click is faster, CAPTCHA is more
+                                secure.</span>
+                            <select id="verify_type">
+                                <option value="captcha">CAPTCHA (Solve Image)</option>
+                                <option value="oneclick">One-Click (Instant Verify)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Verified Role (Add)</label>
+                            <span class="help-text">The role granted upon successful verification.</span>
+                            <input type="hidden" id="verify_role_id">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Unverified Role (Remove)</label>
+                            <span class="help-text">Optional: A role that is REMOVED when the user verifies (e.g.
+                                Quarantine role).</span>
+                            <input type="hidden" id="verify_remove_role_id">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Timeout Penalty</label>
+                            <span class="help-text">Action to take if the user fails to verify within a specific timeframe.</span>
+                            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                                <select id="verify_timeout_action" style="flex: 1;">
+                                    <option value="none">None (Stay in server)</option>
+                                    <option value="kick">Kick User</option>
+                                    <option value="ban">Ban User</option>
+                                </select>
+                                <input type="number" id="verify_timeout_minutes" placeholder="Minutes (e.g. 15)" min="0" style="width: 150px;">
+                            </div>
+                        </div>
+
+                        <div class="form-group"
+                            style="margin-top: 40px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
+                            <label>Send Verification Panel</label>
+                            <span class="help-text">Deploy the verification message to a channel so users can click
+                                it.</span>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="verify_panel_channel" style="flex: 1;">
+                                    <option value="">Select Channel...</option>
+                                </select>
+                                <button type="button" id="btn-send-verify" class="btn-secondary">Send Panel</button>
+                            </div>
+                        </div>
+                    </div>
+

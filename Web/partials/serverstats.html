@@ -1,0 +1,88 @@
+<div id="section-serverstats" class="dash-panel">
+                        <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 700; color: #F2F3F5;">Select Server Data</h3>
+                        
+                        <div style="background: #2B2D31; border: 1px solid #313338; border-radius: 8px; padding: 24px; max-width: 900px;">
+                            
+                            <!-- Category Field -->
+                            <div class="form-group" style="margin-bottom: 24px;">
+                                <label style="font-weight: 600; color: #F2F3F5; display: block; margin-bottom: 4px;">
+                                    Category <span style="color: #F23F43;">*</span>
+                                </label>
+                                <span class="help-text" style="display: block; color: #949BA4; font-size: 13px; margin-bottom: 8px;">
+                                    Category in which the channels will be created
+                                </span>
+                                <select id="serverstats_category_id" style="width: 100%; background: #2B2D31; border: 1px solid #313338; border-radius: 4px; padding: 10px 12px; color: #DBDEE1; font-size: 14px;">
+                                    <option value="">Select category...</option>
+                                </select>
+                            </div>
+
+                            <!-- Users Toggle -->
+                            <div style="margin-bottom: 24px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+                                <div class="form-group toggle-group" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                    <div>
+                                        <label class="form-label mb-0" style="font-weight: 600; color: #F2F3F5;">Users</label>
+                                        <span class="help-text" style="display: block; color: #949BA4; font-size: 13px;">Show the total number of users on the server</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="serverstats_users_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <input type="text" id="serverstats_users_name" placeholder="Users: {count}" class="form-input" style="width: 100%; max-width: 400px; background: var(--bg-input);">
+                                </div>
+                            </div>
+
+                            <!-- Boosts Toggle -->
+                            <div style="margin-bottom: 24px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+                                <div class="form-group toggle-group" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                    <div>
+                                        <label class="form-label mb-0" style="font-weight: 600; color: #F2F3F5;">Boosts</label>
+                                        <span class="help-text" style="display: block; color: #949BA4; font-size: 13px;">Show the total number of boosts on the server</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="serverstats_boosts_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <input type="text" id="serverstats_boosts_name" placeholder="Boosts: {count}" class="form-input" style="width: 100%; max-width: 400px; background: var(--bg-input);">
+                                </div>
+                            </div>
+
+                            <!-- Bots Toggle -->
+                            <div style="margin-bottom: 24px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+                                <div class="form-group toggle-group" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                    <div>
+                                        <label class="form-label mb-0" style="font-weight: 600; color: #F2F3F5;">Bots</label>
+                                        <span class="help-text" style="display: block; color: #949BA4; font-size: 13px;">Show the total number of bots on the server</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="serverstats_bots_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <input type="text" id="serverstats_bots_name" placeholder="Bots: {count}" class="form-input" style="width: 100%; max-width: 400px; background: var(--bg-input);">
+                                </div>
+                            </div>
+
+                            <!-- Roles Toggle -->
+                            <div style="margin-bottom: 24px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+                                <div class="form-group toggle-group" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                    <div>
+                                        <label class="form-label mb-0" style="font-weight: 600; color: #F2F3F5;">Roles</label>
+                                        <span class="help-text" style="display: block; color: #949BA4; font-size: 13px;">Show the total number of roles on the server</span>
+                                    </div>
+                                    <label class="switch"><input type="checkbox" id="serverstats_roles_enabled"><span class="slider"></span></label>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <input type="text" id="serverstats_roles_name" placeholder="Roles: {count}" class="form-input" style="width: 100%; max-width: 400px; background: var(--bg-input);">
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            <div style="margin-top: 28px;">
+                                <button type="button" id="btn-setup-serverstats" class="btn-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                    Create Channels
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+

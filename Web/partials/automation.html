@@ -1,0 +1,197 @@
+<div id="section-automation" class="dash-panel">
+                        <h3 style="margin-bottom: 20px;">Channel Automation</h3>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                            <!-- Media Only -->
+                            <div class="config-card" style="margin-bottom: 0;">
+                                <div class="form-group" style="margin-bottom: 12px;">
+                                    <label style="font-size: 16px;">Media-Only Channels</label>
+                                    <span
+                                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Channels
+                                        where only images, GIFs, and videos can be posted.</span>
+                                    <select id="auto_media_channels" multiple></select>
+                                </div>
+                                <div class="form-group"
+                                    style="margin-bottom: 0; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <label style="margin-bottom: 4px;">Ignore Bots</label>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Do not enforce media
+                                            restriction on messages from bots.</span>
+                                    </div>
+                                    <label class="switch" style="margin-left: 20px;">
+                                        <input type="checkbox" id="auto_media_ignore_bots">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Command Only -->
+                            <div class="config-card" style="margin-bottom: 0;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size: 16px;">Command-Only Channels</label>
+                                    <span
+                                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Channels
+                                        where regular text messages are deleted to keep chat clean.</span>
+                                    <select id="auto_cmd_channels" multiple></select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Ban Channel (Honeypot) -->
+                        <div class="config-card" style="margin-top: 20px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="font-size: 16px; color: #EF4444;">Auto Ban Channel (Honeypot)</label>
+                                <span style="display: block; font-size: 12px; color: var(--text-muted);">Users posting in this channel will be immediately banned. Ideal for catching compromised accounts.</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label>Honeypot Channel</label>
+                                <select id="auto_ban_channel">
+                                    <option value="">Select Channel...</option>
+                                </select>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Exempt Roles</label>
+                                    <span style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Members with these roles will not be banned.</span>
+                                    <select id="auto_ban_exempt_roles" multiple></select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Exempt User IDs</label>
+                                    <span style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Specific user IDs who will not be banned (comma-separated).</span>
+                                    <input type="text" id="auto_ban_exempt_users" class="form-input" placeholder="e.g. 123456789, 987654321">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
+                                <label>Honeypot Warning Message</label>
+                                <span style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">The warning message sent by the bot. You can use <code>{count}</code> to display the number of banned accounts.</span>
+                                <textarea id="auto_ban_message" class="form-input" style="width: 100%; height: 160px; resize: vertical;" placeholder="# ⚠️ POSTING IN THIS CHANNEL WILL GET YOU BANNED..."></textarea>
+                                <button type="button" class="btn-primary" id="btn-send-honeypot">Send Message to Channel</button>
+                            </div>
+                        </div>
+
+                        <!-- File Only -->
+                        <div class="config-card" style="margin-top: 20px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="font-size: 16px;">File-Only Channels</label>
+                                <span style="display: block; font-size: 12px; color: var(--text-muted);">Channels where
+                                    only files can be uploaded.</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table"
+                                    style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                                            <th
+                                                style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                Channel</th>
+                                            <th
+                                                style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                Allowed Extensions</th>
+                                            <th
+                                                style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                Ignore Bots</th>
+                                            <th
+                                                style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="file-channels-body">
+                                        <!-- Dynamically populated -->
+                                        <tr id="empty-file-channels">
+                                            <td colspan="4"
+                                                style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">
+                                                No File-Channels found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn-primary" id="btn-add-file-channel">+ Add File-Channel</button>
+                        </div>
+
+                        <!-- Auto-Reaction -->
+                        <div class="config-card" style="margin-top: 20px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="font-size: 16px;">Auto-Reaction Channels</label>
+                                <span style="display: block; font-size: 12px; color: var(--text-muted);">Automatically
+                                    add a reaction to messages in specific channels.</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table"
+                                    style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                                            <th
+                                                style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                Channel</th>
+                                            <th
+                                                style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                Emoji</th>
+                                            <th
+                                                style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                Ignore Bots</th>
+                                            <th
+                                                style="padding: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auto-reaction-body">
+                                        <!-- Dynamically populated -->
+                                        <tr id="empty-auto-reaction">
+                                            <td colspan="4"
+                                                style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">
+                                                No Reaction-Channels found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn-primary" id="btn-add-auto-reaction">+ Add Reaction-Channel</button>
+                        </div>
+
+                        <!-- Counting Channel -->
+                        <div class="config-card" style="margin-top: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div>
+                                    <label style="font-size: 16px;">Counting Channel</label>
+                                    <span style="display: block; font-size: 12px; color: var(--text-muted);">Enforce consecutive number counting. Messing up locks the channel and resets count to 0.</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="counting_enabled">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Counting Channel</label>
+                                    <select id="counting_channel_id">
+                                        <option value="">Select Channel...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Whitelisted Roles</label>
+                                    <span style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Members with these roles can chat without breaking count.</span>
+                                    <select id="counting_whitelisted_roles" multiple></select>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 15px; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <label style="margin-bottom: 2px;">Allow Solo Counting</label>
+                                    <span style="display: block; font-size: 11px; color: var(--text-muted);">Allow the same user to count consecutive numbers in a row.</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="counting_allow_solo" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                <div>
+                                    <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Current Count: <span id="counting_current_count_display" style="color: #5865F2;">0</span></span>
+                                    <span style="display: block; font-size: 11px; color: var(--text-muted);">Next number expected: <span id="counting_next_count_display">1</span></span>
+                                </div>
+                                <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="resetCountingNumber()">Reset Count to 0</button>
+                            </div>
+                        </div>
+                    </div>
+

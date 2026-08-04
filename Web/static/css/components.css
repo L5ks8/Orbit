@@ -1,4 +1,51 @@
 /* ===== FORM ELEMENTS ===== */
+/* Base Button */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+.btn-primary {
+    background: #5865F2;
+    color: white;
+}
+.btn-primary:hover {
+    background: #4752C4;
+}
+.btn-danger {
+    background: #EF4444;
+    color: white;
+}
+.btn-danger:hover {
+    background: #DC2626;
+}
+.btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+.btn-icon {
+    padding: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+}
+.btn-icon:hover {
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+}
+
 .form-group { margin-bottom: 24px; }
 .form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
 .form-group .help-text { display: block; color: var(--text-muted); font-size: 12px; margin-bottom: 10px; }
