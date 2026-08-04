@@ -2,32 +2,79 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import io
 import os
 
-def _format_number(n: int) -> str:
+def _format_number(n) -> str:
     if n >= 1_000_000:
         return f"{n / 1_000_000:.1f}M"
     elif n >= 1_000:
         return f"{n / 1_000:.1f}K"
     return str(n)
 
-def _draw_chat_icon(draw, x, y):
-    draw.rounded_rectangle([(x, y), (x + 15, y + 10)], radius=3, outline=(255, 255, 255), width=2)
-    draw.polygon([(x + 2, y + 9), (x - 1, y + 14), (x + 6, y + 9)], fill=(255, 255, 255))
+# ── Icon drawing functions (designed for ~16px at 2x = 32px canvas) ──
 
-def _draw_mic_icon(draw, x, y):
-    draw.rounded_rectangle([(x + 4, y), (x + 9, y + 8)], radius=2, outline=(255, 255, 255), width=2)
-    draw.arc([(x + 1, y + 3), (x + 12, y + 11)], start=0, end=180, fill=(255, 255, 255), width=2)
-    draw.line([(x + 6, y + 11), (x + 6, y + 14)], fill=(255, 255, 255), width=2)
+def _draw_chat_icon(draw, x, y, s=28, col=(255, 255, 255)):
+    """Speech bubble icon."""
+    w = int(s * 1.1)
+    h = int(s * 0.75)
+    r = int(s * 0.2)
+    lw = max(2, int(s * 0.12))
+    draw.rounded_rectangle([(x, y), (x + w, y + h)], radius=r, outline=col, width=lw)
+    # Tail
+    tx = x + int(w * 0.15)
+    ty = y + h - 1
+    draw.polygon([
+        (tx, ty),
+        (tx - int(s * 0.15), ty + int(s * 0.35)),
+        (tx + int(s * 0.3), ty)
+    ], fill=col)
 
-def _draw_smile_icon(draw, x, y):
-    draw.ellipse([(x, y), (x + 14, y + 14)], outline=(255, 255, 255), width=2)
-    draw.ellipse([(x + 4, y + 4), (x + 5, y + 5)], fill=(255, 255, 255))
-    draw.ellipse([(x + 9, y + 4), (x + 10, y + 5)], fill=(255, 255, 255))
-    draw.arc([(x + 4, y + 4), (x + 10, y + 10)], start=20, end=160, fill=(255, 255, 255), width=2)
+def _draw_mic_icon(draw, x, y, s=28, col=(255, 255, 255)):
+    """Microphone icon."""
+    lw = max(2, int(s * 0.12))
+    # Mic body (rounded rect)
+    bw = int(s * 0.35)
+    bh = int(s * 0.5)
+    bx = x + (s - bw) // 2
+    draw.rounded_rectangle([(bx, y), (bx + bw, y + bh)], radius=int(bw * 0.4), outline=col, width=lw)
+    # Arc under mic
+    aw = int(s * 0.7)
+    ax = x + (s - aw) // 2
+    ay = y + int(bh * 0.4)
+    draw.arc([(ax, ay), (ax + aw, ay + int(s * 0.55))], start=0, end=180, fill=col, width=lw)
+    # Stem
+    cx = x + s // 2
+    stem_top = ay + int(s * 0.55) // 2
+    stem_bot = y + int(s * 0.9)
+    draw.line([(cx, stem_top), (cx, stem_bot)], fill=col, width=lw)
 
-def _draw_arrow_icon(draw, x, y):
-    draw.line([(x + 1, y + 6), (x + 6, y + 1), (x + 11, y + 6)], fill=(255, 255, 255), width=2)
-    draw.line([(x + 6, y + 1), (x + 6, y + 11)], fill=(255, 255, 255), width=2)
-    draw.line([(x + 2, y + 13), (x + 10, y + 13)], fill=(255, 255, 255), width=2)
+def _draw_smile_icon(draw, x, y, s=28, col=(255, 255, 255)):
+    """Smiley face icon."""
+    lw = max(2, int(s * 0.12))
+    draw.ellipse([(x, y), (x + s, y + s)], outline=col, width=lw)
+    # Eyes
+    er = max(2, int(s * 0.06))
+    ley = y + int(s * 0.35)
+    draw.ellipse([(x + int(s * 0.3) - er, ley - er), (x + int(s * 0.3) + er, ley + er)], fill=col)
+    draw.ellipse([(x + int(s * 0.7) - er, ley - er), (x + int(s * 0.7) + er, ley + er)], fill=col)
+    # Smile arc
+    sw = int(s * 0.4)
+    sx = x + (s - sw) // 2
+    sy = y + int(s * 0.35)
+    draw.arc([(sx, sy), (sx + sw, sy + int(s * 0.4))], start=10, end=170, fill=col, width=lw)
+
+def _draw_arrow_up_icon(draw, x, y, s=28, col=(255, 255, 255)):
+    """Upload/arrow-up icon."""
+    lw = max(2, int(s * 0.12))
+    cx = x + s // 2
+    # Arrow head
+    head_w = int(s * 0.45)
+    head_top = y + int(s * 0.1)
+    head_bot = y + int(s * 0.45)
+    draw.line([(cx - head_w, head_bot), (cx, head_top), (cx + head_w, head_bot)], fill=col, width=lw, joint="curve")
+    # Stem
+    draw.line([(cx, head_top), (cx, y + int(s * 0.75))], fill=col, width=lw)
+    # Base line
+    draw.line([(x + int(s * 0.15), y + int(s * 0.9)), (x + int(s * 0.85), y + int(s * 0.9))], fill=col, width=lw)
+
 
 def generate_rank_card(
     username: str,
@@ -40,151 +87,149 @@ def generate_rank_card(
     message_count: int = 0,
     voice_minutes: int = 0,
     reaction_count: int = 0,
-    bar_color: tuple = (255, 165, 0),
-    bg_color: tuple = (20, 22, 30),
+    bar_color: tuple = (88, 101, 242),
+    bg_color: tuple = (30, 33, 43),
 ) -> bytes:
 
-    WIDTH, HEIGHT = 1100, 310
-    PADDING = 45
-    AVATAR_SIZE = 180
-    BAR_HEIGHT = 24
-    BAR_RADIUS = 12
+    # ── Render at 2x for super-sampled anti-aliasing ──
+    SCALE = 2
+    FINAL_W, FINAL_H = 1000, 280
+    WIDTH = FINAL_W * SCALE
+    HEIGHT = FINAL_H * SCALE
 
-    # Create base card
+    PADDING = 40 * SCALE
+    AVATAR_SIZE = 160 * SCALE
+    BAR_HEIGHT = 20 * SCALE
+    BAR_RADIUS = 10 * SCALE
+    ICON_SIZE = 14 * SCALE
+
     card = Image.new("RGBA", (WIDTH, HEIGHT), (*bg_color, 255))
     draw = ImageDraw.Draw(card)
 
-    # Load avatar
+    # ── Avatar ──
     try:
         avatar_img = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
         avatar_img = avatar_img.resize((AVATAR_SIZE, AVATAR_SIZE), Image.LANCZOS)
-
-        # Create circular mask
         mask = Image.new("L", (AVATAR_SIZE, AVATAR_SIZE), 0)
-        mask_draw = ImageDraw.Draw(mask)
-        mask_draw.ellipse((0, 0, AVATAR_SIZE, AVATAR_SIZE), fill=255)
-
+        ImageDraw.Draw(mask).ellipse((0, 0, AVATAR_SIZE, AVATAR_SIZE), fill=255)
         avatar_x = PADDING
         avatar_y = (HEIGHT - AVATAR_SIZE) // 2
         card.paste(avatar_img, (avatar_x, avatar_y), mask)
     except Exception:
         avatar_x = PADDING
         avatar_y = (HEIGHT - AVATAR_SIZE) // 2
-        draw.ellipse(
-            (avatar_x, avatar_y, avatar_x + AVATAR_SIZE, avatar_y + AVATAR_SIZE),
-            fill=(60, 60, 80)
-        )
+        draw.ellipse((avatar_x, avatar_y, avatar_x + AVATAR_SIZE, avatar_y + AVATAR_SIZE), fill=(60, 60, 80))
 
-    # Load fonts
-    try:
-        font_dir = os.path.join(os.path.dirname(__file__), "fonts")
-        font_bold = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 40)
-        font_medium = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 26)
-        font_xp = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 30)
-        font_stats = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 18)
-    except Exception:
+    # ── Fonts ──
+    def load_font(size):
+        sz = size * SCALE
         try:
-            # Fallback to system Arial (Windows/Mac)
-            font_bold = ImageFont.truetype("arialbd.ttf", 38)
-            font_medium = ImageFont.truetype("arialbd.ttf", 26)
-            font_xp = ImageFont.truetype("arialbd.ttf", 30)
-            font_stats = ImageFont.truetype("arialbd.ttf", 18)
+            font_dir = os.path.join(os.path.dirname(__file__), "fonts")
+            return ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), sz)
         except Exception:
+            pass
+        for name in ["arialbd.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"]:
             try:
-                # Linux fallback
-                font_bold = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
-                font_medium = ImageFont.truetype("DejaVuSans-Bold.ttf", 26)
-                font_xp = ImageFont.truetype("DejaVuSans-Bold.ttf", 30)
-                font_stats = ImageFont.truetype("DejaVuSans-Bold.ttf", 18)
+                return ImageFont.truetype(name, sz)
             except Exception:
-                font_bold = ImageFont.load_default()
-                font_medium = ImageFont.load_default()
-                font_xp = ImageFont.load_default()
-                font_stats = ImageFont.load_default()
+                continue
+        return ImageFont.load_default()
 
-    text_x = avatar_x + AVATAR_SIZE + 35
-    text_area_width = WIDTH - text_x - PADDING
+    font_rl = load_font(20)      # RANG / LEVEL
+    font_name = load_font(28)    # Username
+    font_xp = load_font(22)      # XP numbers
+    font_stats = load_font(14)   # Stats line
 
-    # Draw RANG and LEVEL (Top Right)
-    rang_text = f"RANG {rank}"
-    level_text = f"LEVEL {level}"
-    rank_level_y = 50
+    text_x = avatar_x + AVATAR_SIZE + 30 * SCALE
+    text_area_w = WIDTH - text_x - PADDING
 
-    draw.text((text_x + text_area_width - 230, rank_level_y), rang_text, fill=(255, 255, 255), font=font_medium)
-    draw.text((text_x + text_area_width - 110, rank_level_y), level_text, fill=(255, 255, 255), font=font_medium)
+    # ── RANG & LEVEL (top-right) ──
+    rl_y = 40 * SCALE
+    rang_str = f"RANG {rank}"
+    level_str = f"LEVEL {level}"
 
-    # Draw username
-    name_y = 105
+    # Right-align: LEVEL first, then RANG with gap
+    level_w = draw.textlength(level_str, font=font_rl)
+    rang_w = draw.textlength(rang_str, font=font_rl)
+    gap = 20 * SCALE
+
+    level_x = text_x + text_area_w - level_w
+    rang_x = level_x - gap - rang_w
+
+    draw.text((rang_x, rl_y), rang_str, fill=(255, 255, 255), font=font_rl)
+    draw.text((level_x, rl_y), level_str, fill=(255, 255, 255), font=font_rl)
+
+    # ── Username (left) & XP (right) ──
+    name_y = 90 * SCALE
     display_name = username[:20] + "..." if len(username) > 20 else username
-    draw.text((text_x, name_y), display_name, fill=(255, 255, 255), font=font_bold)
+    draw.text((text_x, name_y), display_name, fill=(255, 255, 255), font=font_name)
 
-    # Draw XP text (e.g. 2525 / 3.9k)
-    needed_formatted = _format_number(needed_xp).lower() if needed_xp >= 1000 else str(needed_xp)
-    xp_text = f"{current_xp} / {needed_formatted}"
-    draw.text((text_x + text_area_width, name_y + 5), xp_text, fill=(255, 255, 255), font=font_xp, anchor="ra")
+    needed_fmt = _format_number(needed_xp).lower() if needed_xp >= 1000 else str(needed_xp)
+    xp_str = f"{current_xp} / {needed_fmt}"
+    draw.text((text_x + text_area_w, name_y + 4 * SCALE), xp_str, fill=(255, 255, 255), font=font_xp, anchor="ra")
 
-    # Draw progress bar
-    bar_y = 175
-    bar_width = text_area_width
+    # ── Progress bar ──
+    bar_y = 145 * SCALE
+    bar_w = text_area_w
 
-    # Background bar
     draw.rounded_rectangle(
-        [(text_x, bar_y), (text_x + bar_width, bar_y + BAR_HEIGHT)],
-        radius=BAR_RADIUS,
-        fill=(40, 44, 58)
+        [(text_x, bar_y), (text_x + bar_w, bar_y + BAR_HEIGHT)],
+        radius=BAR_RADIUS, fill=(50, 54, 68)
     )
 
-    # Progress bar
     progress = current_xp / needed_xp if needed_xp > 0 else 1.0
-    progress = min(1.0, max(0.00, progress))
-    fill_width = int(bar_width * progress)
-    
-    # Ensure minimum width so it renders nicely without crashing
-    fill_width = max(BAR_RADIUS * 2, fill_width)
+    progress = min(1.0, max(0.0, progress))
+    fill_w = max(BAR_RADIUS * 2, int(bar_w * progress))
 
     draw.rounded_rectangle(
-        [(text_x, bar_y), (text_x + fill_width, bar_y + BAR_HEIGHT)],
-        radius=BAR_RADIUS,
-        fill=(*bar_color, 255)
+        [(text_x, bar_y), (text_x + fill_w, bar_y + BAR_HEIGHT)],
+        radius=BAR_RADIUS, fill=(*bar_color, 255)
     )
 
-    # Draw stats line
-    stats_y = 225
+    # ── Stats line ──
+    stats_y = 195 * SCALE
     cur_x = text_x
-    
-    # 1. Chat icon + message_count
-    _draw_chat_icon(draw, cur_x, stats_y + 2)
-    cur_x += 24
-    msg_str = str(message_count)
-    draw.text((cur_x, stats_y), msg_str, fill=(255, 255, 255), font=font_stats)
-    cur_x += draw.textlength(msg_str, font=font_stats) + 30
+    icon_gap = 8 * SCALE     # gap between icon and number
+    stat_gap = 22 * SCALE    # gap between stats
 
-    # 2. Mic icon + voice_minutes
-    _draw_mic_icon(draw, cur_x, stats_y + 2)
-    cur_x += 22
-    voice_str = f"{int(voice_minutes)}" if voice_minutes == int(voice_minutes) else f"{voice_minutes:.1f}"
-    draw.text((cur_x, stats_y), voice_str, fill=(255, 255, 255), font=font_stats)
-    cur_x += draw.textlength(voice_str, font=font_stats) + 30
+    # 1) Chat
+    _draw_chat_icon(draw, cur_x, stats_y, s=ICON_SIZE, col=(255, 255, 255))
+    cur_x += ICON_SIZE + icon_gap
+    t = str(message_count)
+    draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
+    cur_x += int(draw.textlength(t, font=font_stats)) + stat_gap
 
-    # 3. Smile icon + reaction_count
-    _draw_smile_icon(draw, cur_x, stats_y + 2)
-    cur_x += 24
-    react_str = str(reaction_count)
-    draw.text((cur_x, stats_y), react_str, fill=(255, 255, 255), font=font_stats)
-    cur_x += draw.textlength(react_str, font=font_stats) + 30
+    # 2) Mic
+    _draw_mic_icon(draw, cur_x, stats_y, s=ICON_SIZE, col=(255, 255, 255))
+    cur_x += ICON_SIZE + icon_gap
+    t = str(voice_minutes) if isinstance(voice_minutes, int) else f"{voice_minutes:.1f}"
+    draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
+    cur_x += int(draw.textlength(t, font=font_stats)) + stat_gap
 
-    # 4. Arrow icon + progress %
-    _draw_arrow_icon(draw, cur_x, stats_y + 2)
-    cur_x += 20
-    prog_str = f"{int(progress * 100)}%"
-    draw.text((cur_x, stats_y), prog_str, fill=(255, 255, 255), font=font_stats)
+    # 3) Smiley
+    _draw_smile_icon(draw, cur_x, stats_y, s=ICON_SIZE, col=(255, 255, 255))
+    cur_x += ICON_SIZE + icon_gap
+    t = str(reaction_count)
+    draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
+    cur_x += int(draw.textlength(t, font=font_stats)) + stat_gap
 
-    # Right stats: GESAMT XP
-    total_xp_formatted = _format_number(total_xp).lower() if total_xp >= 1000 else str(total_xp)
-    right_stats = f"GESAMT XP  {total_xp_formatted}"
-    draw.text((text_x + text_area_width, stats_y), right_stats, fill=(255, 255, 255), font=font_stats, anchor="ra")
+    # 4) Arrow up
+    _draw_arrow_up_icon(draw, cur_x, stats_y, s=ICON_SIZE, col=(255, 255, 255))
+    cur_x += ICON_SIZE + icon_gap
+    t = f"{int(progress * 100)}%"
+    draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
 
-    # Convert to bytes
+    # Right: GESAMT XP
+    total_fmt = _format_number(total_xp).lower() if total_xp >= 1000 else str(total_xp)
+    draw.text(
+        (text_x + text_area_w, stats_y + 2 * SCALE),
+        f"GESAMT XP  {total_fmt}",
+        fill=(255, 255, 255), font=font_stats, anchor="ra"
+    )
+
+    # ── Downsample 2x → final size for crisp anti-aliasing ──
+    card = card.resize((FINAL_W, FINAL_H), Image.LANCZOS)
+
     output = io.BytesIO()
     card.save(output, format="PNG")
     return output.getvalue()
