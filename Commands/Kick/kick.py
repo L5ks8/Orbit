@@ -32,7 +32,7 @@ class KickCommand(commands.Cog):
 
         try:
             from Commands._utils import send_moderation_dm
-            await send_moderation_dm(target, ctx.guild.name, "kicked", reason)
+            await send_moderation_dm(target, ctx.guild.name, "kicked", reason, guild_id=ctx.guild.id)
             
             await ctx.guild.kick(target, reason=f"Kicked by {ctx.author} | Reason: {reason}")
             case_id = create_case(ctx.guild.id, target.id, ctx.author.id, "kick", reason)

@@ -58,10 +58,22 @@ class UserOrIDConverter(commands.Converter):
 
         raise commands.BadArgument(f"Could not find user '{argument}'. Please provide a valid @mention or user ID.")
 
-async def send_moderation_dm(user: discord.Member | discord.User, guild_name: str, action: str, reason: str, duration: str = None):
+async def send_moderation_dm(user: discord.Member | discord.User, guild_name: str, action: str, reason: str, duration: str = None, guild_id: int = None):
     try:
+        desc = f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}"
+        
+        if guild_id:
+            from Commands.Appeals._storage import load_appeals_config
+            appeals_cfg = load_appeals_config(guild_id)
+            if appeals_cfg.get("enabled"):
+                allowed = appeals_cfg.get("allowed_punishments", [])
+                p_map = {"banned": "ban", "voice banned": "ban", "timed out": "timeout", "muted": "timeout", "voice muted": "timeout", "kicked": "kick", "warned": "warn"}
+                if p_map.get(action) in allowed:
+                    custom_url = appeals_cfg.get("custom_url", "orbit")
+                    desc += f"\n\n**Appeals:** You can appeal this punishment at: https://orbit-498b.onrender.com/appeal/{custom_url}"
+
         embed = discord.Embed(
-            description=f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}",
+            description=desc,
             color=discord.Color.red()
         )
         await user.send(embed=embed)

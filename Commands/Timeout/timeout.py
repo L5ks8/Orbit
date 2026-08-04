@@ -29,7 +29,7 @@ class TimeoutCommand(commands.Cog):
 
         try:
             from Commands._utils import send_moderation_dm
-            await send_moderation_dm(target, ctx.guild.name, "timed out", reason, f"{minutes} minutes")
+            await send_moderation_dm(target, ctx.guild.name, "timed out", reason, f"{minutes} minutes", guild_id=ctx.guild.id)
 
             duration = datetime.timedelta(minutes=minutes)
             await target.timeout(duration, reason=f"Timeout by {ctx.author} | Reason: {reason}")

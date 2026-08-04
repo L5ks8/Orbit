@@ -78,7 +78,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
 
     try:
         from Embeds import get_command_embed
-        dm_kwargs = get_command_embed(ctx.guild.id, "warn", msg_type="dm", guild_name=ctx.guild.name, warn_entry=warn_entry, reason=reason, punishment_text=punishment_text)
+        dm_kwargs = get_command_embed(ctx.guild.id, "warn", msg_type="dm", guild_name=ctx.guild.name, warn_entry=warn_entry, reason=reason, punishment_text=punishment_text, guild_id=ctx.guild.id)
         
         if "embed" in dm_kwargs:
             await user.send(embed=dm_kwargs["embed"])

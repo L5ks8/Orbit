@@ -11,6 +11,17 @@ def get_embed(msg_type: str, **kwargs):
         embed.add_field(name="Server", value=guild_name, inline=False)
         embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=False)
         embed.add_field(name="Reason", value=f"{reason}{punishment_text}", inline=False)
+        
+        guild_id = kwargs.get("guild_id")
+        if guild_id:
+            from Commands.Appeals._storage import load_appeals_config
+            appeals_cfg = load_appeals_config(guild_id)
+            if appeals_cfg.get("enabled"):
+                allowed = appeals_cfg.get("allowed_punishments", [])
+                if "warn" in allowed:
+                    custom_url = appeals_cfg.get("custom_url", "orbit")
+                    embed.add_field(name="Appeals", value=f"You can appeal this warning at: https://orbit-498b.onrender.com/appeal/{custom_url}", inline=False)
+
         return {"embed": embed}
         
     elif msg_type == "public":

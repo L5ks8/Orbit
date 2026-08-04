@@ -22,7 +22,7 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
         vc = user.voice.channel
         try:
             from Commands._utils import send_moderation_dm
-            await send_moderation_dm(user, ctx.guild.name, "voice banned", reason)
+            await send_moderation_dm(user, ctx.guild.name, "voice banned", reason, guild_id=ctx.guild.id)
             
             await user.edit(voice_channel=None, reason=f"Voice banned by {ctx.author} | Reason: {reason}")
         except Exception:

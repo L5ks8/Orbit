@@ -40,7 +40,7 @@ class BanCommand(commands.Cog):
 
         try:
             from Commands._utils import send_moderation_dm
-            await send_moderation_dm(target, ctx.guild.name, "banned", reason)
+            await send_moderation_dm(target, ctx.guild.name, "banned", reason, guild_id=ctx.guild.id)
             
             await ctx.guild.ban(target, reason=f"Banned by {ctx.author} | Reason: {reason}")
             from Commands.Ban._storage import add_ban_history

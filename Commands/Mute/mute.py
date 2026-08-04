@@ -52,7 +52,7 @@ class MuteCommand(commands.Cog):
 
         try:
             from Commands._utils import send_moderation_dm
-            await send_moderation_dm(target, ctx.guild.name, "muted", reason)
+            await send_moderation_dm(target, ctx.guild.name, "muted", reason, guild_id=ctx.guild.id)
 
             await target.add_roles(role, reason=f"Muted by {ctx.author} | Reason: {reason}")
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Mute", reason)

@@ -8,10 +8,22 @@ def get_embed(msg_type: str, **kwargs):
         reason = kwargs.get("reason")
         punishment_text = kwargs.get("punishment_text", "")
         
+        content = f"**Warn ID:** `{warn_entry['warn_id']}`\n**Reason:** {reason}{punishment_text}"
+        
+        guild_id = kwargs.get("guild_id")
+        if guild_id:
+            from Commands.Appeals._storage import load_appeals_config
+            appeals_cfg = load_appeals_config(guild_id)
+            if appeals_cfg.get("enabled"):
+                allowed = appeals_cfg.get("allowed_punishments", [])
+                if "warn" in allowed:
+                    custom_url = appeals_cfg.get("custom_url", "orbit")
+                    content += f"\n\n**Appeals:** You can appeal this warning at: https://orbit-498b.onrender.com/appeal/{custom_url}"
+                    
         container = Container(
             TextDisplay(content=f"### ⚠️ Formal Warning Received\n**Server:** `{guild_name}`"),
             Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Warn ID:** `{warn_entry['warn_id']}`\n**Reason:** {reason}{punishment_text}")
+            TextDisplay(content=content)
         )
         return {"components": [container]}
         
