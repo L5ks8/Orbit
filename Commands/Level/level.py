@@ -120,7 +120,7 @@ class LevelCommandsCog(commands.Cog):
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
         embed = discord.Embed(
             title=cat["title"],
-            description=f"[Want to see more than Top 10?](https://orbit-bot.xyz/leaderboard/{guild.id})",
+            description=f"[Want to see more than Top 10?](https://orbit-498b.onrender.com/leaderboard/{guild.id})",
             color=0x2B2D31
         )
         embed.set_image(url="attachment://leaderboard.png")
