@@ -31,6 +31,22 @@ class LevelCommandsCog(commands.Cog):
         try:
             from Commands.Level.rank_card import generate_rank_card
             avatar_bytes = await target.display_avatar.read()
+            # Dynamic bar color based on level
+            colors = [
+                (59, 130, 246),   # 0-9: Blue
+                (16, 185, 129),   # 10-19: Green
+                (245, 158, 11),   # 20-29: Yellow
+                (239, 68, 68),    # 30-39: Red
+                (139, 92, 246),   # 40-49: Purple
+                (236, 72, 153),   # 50-59: Pink
+                (20, 184, 166),   # 60-69: Teal
+                (249, 115, 22),   # 70-79: Orange
+                (99, 102, 241),   # 80-89: Indigo
+                (217, 70, 239)    # 90+: Fuchsia
+            ]
+            idx = min(level // 10, len(colors) - 1)
+            bar_color = colors[idx]
+
             img_bytes = generate_rank_card(
                 username=target.display_name,
                 avatar_bytes=avatar_bytes,
@@ -39,9 +55,7 @@ class LevelCommandsCog(commands.Cog):
                 current_xp=current_xp,
                 needed_xp=needed_xp,
                 total_xp=total_xp,
-                message_count=msg_count,
-                voice_minutes=voice_mins,
-                reaction_count=react_count
+                bar_color=bar_color
             )
             file = discord.File(io.BytesIO(img_bytes), filename="rank_card.png")
             await interaction.response.send_message(file=file)
@@ -160,6 +174,47 @@ class LevelCommandsCog(commands.Cog):
         await interaction.response.send_message(f"Successfully reset {member.mention}'s XP to 0.")
 
     # ─── PREFIX COMMANDS ──────────────────────────────────────────────────────
+    @commands.command(name="rank")
+    async def rank_prefix(self, ctx: commands.Context, member: discord.Member = None):
+        config = load_level_config(ctx.guild.id)
+        if not config.get("enabled", False):
+            return await ctx.send("The Level System is not enabled on this server.")
+
+        target = member or ctx.author
+        data = get_user_xp(ctx.guild.id, target.id)
+        total_xp = data.get("total_xp", 0)
+        level, current_xp, needed_xp = xp_progress(total_xp)
+        rank = get_user_rank(ctx.guild.id, target.id)
+
+        try:
+            from Commands.Level.rank_card import generate_rank_card
+            avatar_bytes = await target.display_avatar.read()
+            
+            colors = [
+                (59, 130, 246),   (16, 185, 129),   (245, 158, 11),
+                (239, 68, 68),    (139, 92, 246),   (236, 72, 153),
+                (20, 184, 166),   (249, 115, 22),   (99, 102, 241),
+                (217, 70, 239)
+            ]
+            idx = min(level // 10, len(colors) - 1)
+            bar_color = colors[idx]
+
+            img_bytes = generate_rank_card(
+                username=target.display_name,
+                avatar_bytes=avatar_bytes,
+                rank=rank,
+                level=level,
+                current_xp=current_xp,
+                needed_xp=needed_xp,
+                total_xp=total_xp,
+                bar_color=bar_color
+            )
+            file = discord.File(io.BytesIO(img_bytes), filename="rank_card.png")
+            await ctx.send(file=file)
+        except Exception as e:
+            await ctx.send("Failed to generate rank card.")
+
+
     @commands.command(name="addxp")
     @commands.has_permissions(administrator=True)
     async def addxp_prefix(self, ctx: commands.Context, member: discord.Member, amount: int):

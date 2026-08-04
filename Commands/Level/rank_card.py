@@ -150,9 +150,6 @@ def generate_rank_card(
     # Draw stats line
     stats_y = bar_y + BAR_HEIGHT + 12
     stats = [
-        (f"📨 {_format_number(message_count)}"),
-        (f"🎙 {_format_number(voice_minutes)}"),
-        (f"😄 {_format_number(reaction_count)}"),
         (f"⬆ {int(progress * 100)}%"),
         (f"TOTAL XP {_format_number(total_xp)}")
     ]
