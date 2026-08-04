@@ -82,6 +82,13 @@ class WebDashboard:
         except Exception as e:
             return web.Response(text="Error loading terms of service", status=500)
 
+    async def handle_leaderboard(self, request: web.Request):
+        try:
+            content = self._render_template("Web/leaderboard.html")
+            return web.Response(text=content, content_type="text/html")
+        except Exception as e:
+            return web.Response(text="Error loading leaderboard", status=500)
+
     async def handle_login(self, request: web.Request):
         if not self.client_id:
             return web.Response(text="OAuth2 is not configured. Missing DISCORD_CLIENT_ID.", status=500)
@@ -144,13 +151,60 @@ class WebDashboard:
         return response
 
     async def api_user(self, request: web.Request):
-        user = await self.get_user_session(request)
-        if not user:
-            return web.json_response({"error": "Unauthorized"}, status=401)
+        session = await self.get_user_session(request)
+        if not session:
+            return web.json_response({"error": "Not authenticated"}, status=401)
+        return web.json_response(session)
+
+    async def api_public_leaderboard(self, request: web.Request):
+        guild_id = request.match_info.get("id")
+        if not guild_id:
+            return web.json_response({"error": "Missing guild ID"}, status=400)
+            
+        try:
+            guild_id = int(guild_id)
+        except ValueError:
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+            
+        sort_key = request.query.get("sort", "total_xp")
+        
+        guild = self.bot.get_guild(guild_id)
+        if not guild:
+            return web.json_response({"error": "Bot not in this server"}, status=404)
+            
+        from Commands.Level._storage import get_leaderboard_by, level_from_xp
+        from Commands.Level.level import LB_CATEGORIES
+        
+        top = get_leaderboard_by(guild_id, sort_key, 100)
+        
+        results = []
+        for i, entry in enumerate(top, 1):
+            uid = entry.get("user_id")
+            member = guild.get_member(uid)
+            name = member.display_name if member else f"User#{uid}"
+            
+            avatar_url = ""
+            if member and member.display_avatar:
+                avatar_url = str(member.display_avatar.url)
+                
+            val = entry.get(sort_key, 0)
+            if sort_key == "voice_minutes":
+                val = val / 60.0
+                
+            results.append({
+                "rank": i,
+                "name": name,
+                "avatar": avatar_url,
+                "level": level_from_xp(entry.get("total_xp", 0)),
+                "value": val,
+                "total_xp": entry.get("total_xp", 0)
+            })
+            
         return web.json_response({
-            "id": user["id"],
-            "username": user["username"],
-            "avatar": user["avatar"]
+            "guild_name": guild.name,
+            "guild_icon": str(guild.icon.url) if guild.icon else "",
+            "category": sort_key,
+            "entries": results
         })
 
     async def api_resolve_user(self, request: web.Request):
@@ -1621,6 +1675,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/", dashboard.handle_index)
     app.router.add_get("/privacy", dashboard.handle_privacy)
     app.router.add_get("/terms", dashboard.handle_terms)
+    app.router.add_get("/leaderboard/{id}", dashboard.handle_leaderboard)
     
     app.router.add_static("/static", "Web/static")
     
@@ -1630,6 +1685,7 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     
     app.router.add_get("/api/user", dashboard.api_user)
     app.router.add_get("/api/user/{id}", dashboard.api_resolve_user)
+    app.router.add_get("/api/public_leaderboard/{id}", dashboard.api_public_leaderboard)
     app.router.add_get("/api/stats", dashboard.api_stats)
     app.router.add_get("/api/guilds", dashboard.api_guilds)
     app.router.add_get("/api/config/{id}", dashboard.api_get_config)
