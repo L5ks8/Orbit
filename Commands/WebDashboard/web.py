@@ -353,8 +353,12 @@ class WebDashboard:
         from Commands.WebDashboard._storage import load_settings_config
         settings_cfg = load_settings_config(guild_id)
 
+        from Commands.Appeals._storage import load_appeals_config
+        appeals_cfg = load_appeals_config(guild_id)
+
         config_data = {
             "settings": settings_cfg,
+            "appeals": appeals_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
                 "channel_id": str(welcome_cfg.get("channel_id")) if welcome_cfg.get("channel_id") else "",
@@ -606,6 +610,10 @@ class WebDashboard:
             if user_perms.get("is_admin") and "settings" in data:
                 from Commands.WebDashboard._storage import save_settings_config
                 save_settings_config(guild_id, data["settings"])
+
+            if user_perms.get("can_channels") and "appeals" in data:
+                from Commands.Appeals._storage import save_appeals_config
+                save_appeals_config(guild_id, data["appeals"])
 
             if user_perms.get("can_channels") and "serverstats" in data:
                 s_data = data.get("serverstats", {})
@@ -1668,6 +1676,51 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
+    async def handle_appeal_page(self, request: web.Request):
+        return web.Response(text=self._render_template(os.path.join("Web", "appeal_page.html")), content_type="text/html")
+
+    async def api_appeal_info(self, request: web.Request):
+        custom_url = request.match_info.get("custom_url")
+        from Commands.Appeals._storage import get_appeals_config_by_url
+        cfg = get_appeals_config_by_url(custom_url)
+        if not cfg:
+            return web.json_response({"error": "Not found"}, status=404)
+        
+        guild = self.bot.get_guild(int(cfg["_id"]))
+        if not guild:
+            return web.json_response({"error": "Server not found"}, status=404)
+            
+        return web.json_response({
+            "guild_name": guild.name,
+            "guild_icon": guild.icon.url if guild.icon else None,
+            "allowed_punishments": cfg.get("allowed_punishments", [])
+        })
+
+    async def api_submit_appeal(self, request: web.Request):
+        session = await self.get_user_session(request)
+        if not session:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+            
+        custom_url = request.match_info.get("custom_url")
+        from Commands.Appeals._storage import get_appeals_config_by_url
+        cfg = get_appeals_config_by_url(custom_url)
+        if not cfg:
+            return web.json_response({"error": "Not found"}, status=404)
+            
+        try:
+            data = await request.json()
+            reason = data.get("reason", "")
+            
+            from Commands.Appeals.appeals import process_new_appeal
+            success, msg = await process_new_appeal(self.bot, int(cfg["_id"]), int(session["id"]), reason, cfg)
+            
+            if success:
+                return web.json_response({"success": True})
+            else:
+                return web.json_response({"error": msg}, status=400)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application(client_max_size=10 * 1024 * 1024)  
@@ -1705,6 +1758,9 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_post("/api/reactionroles/{id}", dashboard.api_save_reactionrole)
     app.router.add_delete("/api/reactionroles/{id}/{msg_id}", dashboard.api_delete_reactionrole)
     app.router.add_post("/api/action/{id}/send_reactionrole", dashboard.api_action_send_reactionrole)
-    
+    app.router.add_get("/appeal/{custom_url}", dashboard.handle_appeal_page)
+    app.router.add_get("/api/appeal_info/{custom_url}", dashboard.api_appeal_info)
+    app.router.add_post("/api/submit_appeal/{custom_url}", dashboard.api_submit_appeal)
+
     return app
 

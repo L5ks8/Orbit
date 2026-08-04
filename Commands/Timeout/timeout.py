@@ -5,6 +5,7 @@ from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
+from Commands.Cases._storage import create_case
 
 
 
@@ -32,6 +33,7 @@ class TimeoutCommand(commands.Cog):
 
             duration = datetime.timedelta(minutes=minutes)
             await target.timeout(duration, reason=f"Timeout by {ctx.author} | Reason: {reason}")
+            case_id = create_case(ctx.guild.id, target.id, ctx.author.id, "timeout", f"{minutes}m - {reason}")
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Timeout", f"{minutes}m - {reason}")
             await log_event(
                 ctx.guild,

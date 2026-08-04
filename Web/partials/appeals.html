@@ -1,0 +1,52 @@
+<div class="module-header">
+    <div class="module-info">
+        <h1 class="module-title">Einspruchssystem</h1>
+        <p class="module-description">Erlaube gebannten oder stummgeschalteten Nutzern, einen Einspruch über das Web-Dashboard einzureichen.</p>
+    </div>
+    <label class="switch module-toggle">
+        <input type="checkbox" id="appeals_enabled">
+        <span class="slider round"></span>
+    </label>
+</div>
+
+<div class="module-content">
+    <div class="config-section">
+        <h2 class="section-title">Allgemein</h2>
+        
+        <div class="form-group">
+            <label class="form-label">Einspruchskanal <span class="required">*</span></label>
+            <input type="text" id="appeals_channel_id" class="form-input" placeholder="Kanal-ID für neue Einsprüche" data-is-discord-id="true">
+            <span class="help-text">Der Kanal, in dem neue Einsprüche als Nachricht mit Annehmen/Ablehnen-Buttons gesendet werden.</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Moderatoren Rollen</label>
+            <div class="select-wrapper">
+                <select id="appeals_mod_roles" multiple></select>
+            </div>
+            <span class="help-text">Rollen, die berechtigt sind, über Einsprüche zu entscheiden. Wenn leer, können alle mit der Berechtigung 'Nachrichten verwalten' entscheiden.</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Erlaubte Strafen</label>
+            <div class="select-wrapper">
+                <select id="appeals_allowed_punishments" multiple>
+                    <option value="ban">Bann</option>
+                    <option value="timeout">Timeout</option>
+                    <option value="kick">Kick</option>
+                    <option value="warn">Warnung</option>
+                </select>
+            </div>
+            <span class="help-text">Welche Art von Strafen dürfen über dieses System angefochten werden?</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Benutzerdefinierte URL</label>
+            <div class="url-input-wrapper" style="display: flex; align-items: center; gap: 8px;">
+                <span class="url-prefix" style="color: var(--text-secondary); background: var(--bg-surface); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">orbit-498b.onrender.com/appeal/</span>
+                <input type="text" id="appeals_custom_url" class="form-input" placeholder="orbit" style="flex: 1;">
+            </div>
+            <span class="help-text">Die URL, unter der das Einspruchsformular für diesen Server erreichbar ist.</span>
+        </div>
+    </div>
+</div>

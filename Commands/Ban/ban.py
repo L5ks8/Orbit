@@ -4,6 +4,7 @@ from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
+from Commands.Cases._storage import create_case
 from Commands._utils import MemberOrIDConverter, format_usage
 
 
@@ -44,6 +45,7 @@ class BanCommand(commands.Cog):
             await ctx.guild.ban(target, reason=f"Banned by {ctx.author} | Reason: {reason}")
             from Commands.Ban._storage import add_ban_history
             add_ban_history(ctx.guild.id, target.id, reason, ctx.author.id)
+            case_id = create_case(ctx.guild.id, target.id, ctx.author.id, "ban", reason)
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Ban", reason)
             from Embeds import get_command_embed
             

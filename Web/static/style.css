@@ -24,6 +24,18 @@
     --radius-lg: 12px;
 }
 
+.invalid-id {
+    border-color: var(--danger) !important;
+    background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.invalid-id-msg {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+}
+
 * {
     margin: 0;
     padding: 0;

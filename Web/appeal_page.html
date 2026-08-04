@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Appeal - Orbit</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .appeal-container {
+            max-width: 600px;
+            margin: 80px auto;
+            padding: 32px;
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+        .appeal-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .appeal-header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .appeal-header p {
+            color: var(--text-secondary);
+        }
+        .appeal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .appeal-textarea {
+            width: 100%;
+            min-height: 150px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            padding: 12px;
+            resize: vertical;
+        }
+        .appeal-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-input);
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        #login-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="appeal-container" id="app">
+        <div class="appeal-header">
+            <h1>Server Appeal</h1>
+            <p id="server-name-display">Loading...</p>
+        </div>
+
+        <div id="unauthenticated" style="display: none;">
+            <p style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);">You must log in with Discord to submit an appeal.</p>
+            <button id="login-btn" class="btn btn-primary">
+                <i data-lucide="log-in"></i> Login with Discord
+            </button>
+        </div>
+
+        <div id="authenticated" style="display: none;">
+            <div class="user-info">
+                <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
+                <div>
+                    <div id="user-name" style="font-weight: 600;">Username</div>
+                    <div id="user-id" style="font-size: 12px; color: var(--text-secondary);">ID: 123456789</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Why should your punishment be revoked?</label>
+                <textarea id="appeal-reason" class="appeal-textarea" placeholder="Please explain your situation clearly and honestly..."></textarea>
+            </div>
+
+            <button id="submit-btn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 8px;">
+                Submit Appeal
+            </button>
+            <p id="status-msg" style="text-align: center; margin-top: 12px; font-size: 14px;"></p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // The server will inject these variables if possible, or we fetch them
+        const customUrl = window.location.pathname.split('/').pop();
+        
+        async function checkAuth() {
+            try {
+                // First get server info
+                const sRes = await fetch(`/api/appeal_info/${customUrl}`);
+                if (!sRes.ok) {
+                    document.getElementById('app').innerHTML = '<div style="text-align:center"><h1>Not Found</h1><p>This appeal page does not exist or is disabled.</p></div>';
+                    return;
+                }
+                const sData = await sRes.json();
+                document.getElementById('server-name-display').textContent = sData.guild_name;
+
+                // Check auth
+                const res = await fetch('/api/user');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('unauthenticated').style.display = 'none';
+                    document.getElementById('authenticated').style.display = 'block';
+                    
+                    document.getElementById('user-name').textContent = data.global_name || data.username;
+                    document.getElementById('user-id').textContent = `ID: ${data.id}`;
+                    document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`;
+                } else {
+                    document.getElementById('unauthenticated').style.display = 'block';
+                    document.getElementById('authenticated').style.display = 'none';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.getElementById('login-btn').addEventListener('click', () => {
+            window.location.href = `/auth/login?redirect=/appeal/${customUrl}`;
+        });
+
+        document.getElementById('submit-btn').addEventListener('click', async () => {
+            const reason = document.getElementById('appeal-reason').value.trim();
+            const statusMsg = document.getElementById('status-msg');
+            
+            if (!reason) {
+                statusMsg.textContent = 'Please enter a reason.';
+                statusMsg.style.color = 'var(--danger)';
+                return;
+            }
+
+            if (reason.length < 20) {
+                statusMsg.textContent = 'Please provide a more detailed reason (at least 20 characters).';
+                statusMsg.style.color = 'var(--danger)';
+                return;
+            }
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+            statusMsg.textContent = '';
+
+            try {
+                const res = await fetch(`/api/submit_appeal/${customUrl}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('authenticated').innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <i data-lucide="check-circle" style="color: var(--success); width: 48px; height: 48px; margin-bottom: 16px;"></i>
+                            <h2 style="margin-bottom: 8px;">Appeal Submitted!</h2>
+                            <p style="color: var(--text-secondary)">Your appeal has been sent to the server moderators. They will review it shortly.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                    statusMsg.textContent = data.error || 'An error occurred while submitting.';
+                    statusMsg.style.color = 'var(--danger)';
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Appeal';
+                }
+            } catch (e) {
+                statusMsg.textContent = 'Network error. Please try again.';
+                statusMsg.style.color = 'var(--danger)';
+                btn.disabled = false;
+                btn.textContent = 'Submit Appeal';
+            }
+        });
+
+        checkAuth();
+    </script>
+</body>
+</html>

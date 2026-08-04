@@ -15,7 +15,45 @@ function escapeHtml(text) {
          .replace(/'/g, "&#039;");
 }
 
+function validateDiscordId(inputElement) {
+    const val = inputElement.value.trim();
+    if (val === '') {
+        inputElement.classList.remove('invalid-id');
+        let existingMsg = inputElement.nextElementSibling;
+        if (existingMsg && existingMsg.classList.contains('invalid-id-msg')) {
+            existingMsg.remove();
+        }
+        return true;
+    }
+    
+    // Discord IDs are typically 17-19 digit numbers
+    const isValid = /^\d{17,19}$/.test(val);
+    
+    if (!isValid) {
+        inputElement.classList.add('invalid-id');
+        let existingMsg = inputElement.nextElementSibling;
+        if (!existingMsg || !existingMsg.classList.contains('invalid-id-msg')) {
+            const msg = document.createElement('span');
+            msg.className = 'invalid-id-msg';
+            msg.textContent = 'Invalid Discord ID format. Must be 17-19 digits.';
+            inputElement.parentNode.insertBefore(msg, inputElement.nextSibling);
+        }
+    } else {
+        inputElement.classList.remove('invalid-id');
+        let existingMsg = inputElement.nextElementSibling;
+        if (existingMsg && existingMsg.classList.contains('invalid-id-msg')) {
+            existingMsg.remove();
+        }
+    }
+    return isValid;
+}
 
+// Global listener for ID validation
+document.addEventListener('input', function(e) {
+    if (e.target.tagName === 'INPUT' && e.target.hasAttribute('data-is-discord-id')) {
+        validateDiscordId(e.target);
+    }
+});
 
 const LOGS_CATEGORIES = [
     { id: "moderation_action", title: "Moderation Action", icon: '<i data-lucide="shield"></i>' },
@@ -875,6 +913,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         ticketPanelSelect.innerHTML = '<option value="">Select Channel...</option>';
         const ticketLogSelect = document.getElementById('ticket_log_channel_id');
         ticketLogSelect.innerHTML = '<option value="">None</option>';
+        const appealsSelect = document.getElementById('appeals_channel_id');
+        if (appealsSelect) appealsSelect.innerHTML = '<option value="">Select Channel...</option>';
         data.channels.forEach(c => {
             const opt = `<option value="${c.id}">#${c.name}</option>`;
             welcomeSelect.innerHTML += opt;
@@ -883,6 +923,7 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             verifyPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
             ticketPanelSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
             ticketLogSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
+            if (appealsSelect) appealsSelect.innerHTML += `<option value="${c.id}">#${c.name}</option>`;
         });
 
         const embedSelect = document.getElementById('embed_channel_id');
@@ -1338,6 +1379,33 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         if (!currentPermissions.can_channels) lockSection('section-tempvoice', 'Manage Channels');
         document.getElementById('tempvoice-enabled').checked = config.tempvoice?.enabled ?? false;
         renderTempVoiceHubs(config.tempvoice || {});
+
+        // Appeals System
+        if (!currentPermissions.can_channels) lockSection('section-appeals', 'Manage Channels');
+        document.getElementById('appeals_enabled').checked = config.appeals?.enabled ?? false;
+        if (document.getElementById('appeals_channel_id')) document.getElementById('appeals_channel_id').value = config.appeals?.channel_id || '';
+        document.getElementById('appeals_custom_url').value = config.appeals?.custom_url || '';
+        
+        const appealsModRolesEl = document.getElementById('appeals_mod_roles');
+        if (appealsModRolesEl) {
+            appealsModRolesEl.innerHTML = "";
+            globalRoles.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.name;
+                if (config.appeals?.mod_roles?.includes(r.id)) opt.selected = true;
+                appealsModRolesEl.appendChild(opt);
+            });
+            new CustomMultiSelect(appealsModRolesEl, globalRoles, "Rollen auswählen...");
+        }
+
+        const appealsPunishEl = document.getElementById('appeals_allowed_punishments');
+        if (appealsPunishEl) {
+            Array.from(appealsPunishEl.options).forEach(opt => {
+                opt.selected = config.appeals?.allowed_punishments?.includes(opt.value) || false;
+            });
+            new CustomMultiSelect(appealsPunishEl, null, "Strafen auswählen...");
+        }
 
         // Level System
         document.getElementById('level_enabled').checked = config.level?.enabled || false;
@@ -2797,6 +2865,11 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentGuildId) return;
 
+    if (document.querySelectorAll('.invalid-id').length > 0) {
+        showToast('Please fix the validation errors before saving.', 'error');
+        return;
+    }
+
     const btn = document.getElementById('btn-save');
     btn.innerText = 'Saving...';
     btn.disabled = true;
@@ -3021,6 +3094,13 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             embed_fields: boostEmbedFields
         },
         automod: currentAutomodConfig,
+        appeals: {
+            enabled: document.getElementById('appeals_enabled').checked,
+            channel_id: document.getElementById('appeals_channel_id')?.value || '',
+            custom_url: document.getElementById('appeals_custom_url')?.value || '',
+            mod_roles: Array.from(document.getElementById('appeals_mod_roles')?.selectedOptions || []).map(o => o.value),
+            allowed_punishments: Array.from(document.getElementById('appeals_allowed_punishments')?.selectedOptions || []).map(o => o.value)
+        },
         verify: {
             enabled: document.getElementById('verify_enabled').checked,
             role_id: document.getElementById('verify_role_id').value,
