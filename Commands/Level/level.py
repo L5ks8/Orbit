@@ -55,11 +55,12 @@ class LeaderboardSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         chosen = self.values[0]
-        embed = self.cog._build_leaderboard_embed(self.guild, chosen)
+        await interaction.response.defer()
+        embed, file = await self.cog._build_leaderboard_data(self.guild, chosen)
         if embed is None:
-            return await interaction.response.send_message("No data available.", ephemeral=True)
+            return await interaction.followup.send("No data available.", ephemeral=True)
         view = LeaderboardView(self.cog, self.guild, chosen)
-        await interaction.response.edit_message(embed=embed, view=view)
+        await interaction.edit_original_response(embed=embed, attachments=[file], view=view)
 
 
 class LeaderboardView(discord.ui.View):
@@ -72,29 +73,51 @@ class LevelCommandsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    def _build_leaderboard_embed(self, guild, sort_key="total_xp"):
-        """Build a leaderboard embed for the given sort key. Returns None if empty."""
+    async def _build_leaderboard_data(self, guild, sort_key="total_xp"):
+        """Build a leaderboard embed and file for the given sort key. Returns (embed, file) or (None, None)."""
         top = get_leaderboard_by(guild.id, sort_key, 10)
         if not top:
-            return None
+            return None, None
 
         cat = LB_CATEGORIES.get(sort_key, LB_CATEGORIES["total_xp"])
-        desc_lines = []
-        desc_lines.append(f"[Want to see more than Top 10?](https://orbit-bot.xyz)\n")
+        
+        entries = []
+        for i, entry_data in enumerate(top, 1):
+            name, stat1, stat2 = cat["format"](entry_data, guild)
+            uid = entry_data.get("user_id")
+            member = guild.get_member(uid)
+            
+            avatar_bytes = None
+            if member and member.display_avatar:
+                try:
+                    avatar_bytes = await member.display_avatar.read()
+                except Exception:
+                    pass
+            
+            lvl = level_from_xp(entry_data.get("total_xp", 0))
+            
+            entries.append({
+                "name": name,
+                "level": lvl,
+                "value_label": stat2,
+                "avatar_bytes": avatar_bytes,
+                "rank": i
+            })
 
-        for i, entry in enumerate(top, 1):
-            name, stat1, stat2 = cat["format"](entry, guild)
-            member = guild.get_member(entry.get("user_id"))
-            avatar_emoji = ""
-            rank_str = f"**#{i}**"
-            desc_lines.append(f"{rank_str} · **{name}**{'':>20}**{stat1}**\n{'':>10}{stat2}")
-
-        embed = discord.Embed(
+        from Commands.Level.leaderboard_card import generate_leaderboard_card
+        
+        img_bytes = generate_leaderboard_card(
+            entries=entries,
             title=cat["title"],
-            description="\n".join(desc_lines),
-            color=0x2B2D31
+            sort_key=sort_key,
+            link_text="Want to see more than Top 10?"
         )
-        return embed
+        
+        file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
+        embed = discord.Embed(color=0x2B2D31)
+        embed.set_image(url="attachment://leaderboard.png")
+        
+        return embed, file
 
     @app_commands.command(name="rank", description="View your or another member's rank card.")
     @app_commands.describe(member="The member to check")
@@ -167,12 +190,13 @@ class LevelCommandsCog(commands.Cog):
         if not config.get("enabled", False):
             return await interaction.response.send_message("The Level System is not enabled on this server.", ephemeral=True)
 
-        embed = self._build_leaderboard_embed(interaction.guild, "total_xp")
+        await interaction.response.defer()
+        embed, file = await self._build_leaderboard_data(interaction.guild, "total_xp")
         if embed is None:
-            return await interaction.response.send_message("No one has earned XP yet!", ephemeral=True)
+            return await interaction.followup.send("No one has earned XP yet!", ephemeral=True)
 
         view = LeaderboardView(self, interaction.guild)
-        await interaction.response.send_message(embed=embed, view=view)
+        await interaction.followup.send(embed=embed, file=file, view=view)
 
     @app_commands.command(name="addxp", description="Add XP to a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to add")
@@ -299,12 +323,12 @@ class LevelCommandsCog(commands.Cog):
         if not config.get("enabled", False):
             return await ctx.send("The Level System is not enabled on this server.")
 
-        embed = self._build_leaderboard_embed(ctx.guild, "total_xp")
+        embed, file = await self._build_leaderboard_data(ctx.guild, "total_xp")
         if embed is None:
             return await ctx.send("No one has earned XP yet!")
 
         view = LeaderboardView(self, ctx.guild)
-        await ctx.send(embed=embed, view=view)
+        await ctx.send(embed=embed, file=file, view=view)
 
     @commands.command(name="addxp")
     @commands.has_permissions(administrator=True)
