@@ -25,7 +25,8 @@ def load_boost_config(guild_id: int) -> Dict[str, Any]:
         "embed_author": "",
         "embed_author_icon": "",
         "embed_footer_icon": "",
-        "embed_fields": []
+        "embed_fields": [],
+        "reward_role_id": ""
     }
     
     try:

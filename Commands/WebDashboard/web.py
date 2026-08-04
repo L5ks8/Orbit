@@ -338,6 +338,7 @@ class WebDashboard:
             "boost": {
                 "enabled": boost_cfg.get("enabled", False),
                 "channel_id": str(boost_cfg.get("channel_id")) if boost_cfg.get("channel_id") else "",
+                "reward_role_id": str(boost_cfg.get("reward_role_id", "")),
                 "message": boost_cfg.get("message", ""),
                 "image_url": boost_cfg.get("image_url", ""),
                 "embed_image": boost_cfg.get("embed_image", ""),
@@ -648,6 +649,7 @@ class WebDashboard:
                 boost_cfg["enabled"] = bool(b_data.get("enabled"))
                 cid = b_data.get("channel_id")
                 boost_cfg["channel_id"] = int(cid) if cid else None
+                boost_cfg["reward_role_id"] = str(b_data.get("reward_role_id", ""))
                 boost_cfg["message"] = b_data.get("message", "")
                 boost_cfg["msg_mode"] = b_data.get("msg_mode", "image")
                 boost_cfg["image_url"] = b_data.get("image_url", "")

@@ -74,6 +74,16 @@ class BoostListener(commands.Cog):
             return
 
         config = load_boost_config(after.guild.id)
+        
+        reward_role_id = config.get("reward_role_id")
+        if reward_role_id:
+            try:
+                role = after.guild.get_role(int(reward_role_id))
+                if role:
+                    await after.add_roles(role, reason="Boost Reward")
+            except Exception:
+                pass
+
         if not config.get("enabled") or not config.get("channel_id"):
             return
 

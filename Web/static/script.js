@@ -867,6 +867,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         goodbyeSelect.innerHTML = '<option value="">None</option>';
         const boostSelect = document.getElementById('boost_channel_id');
         boostSelect.innerHTML = '<option value="">None</option>';
+        const boostRoleSelect = document.getElementById('boost_reward_role_id');
+        if (boostRoleSelect) boostRoleSelect.innerHTML = '<option value="">No reward role</option>';
         const verifyPanelSelect = document.getElementById('verify_panel_channel');
         verifyPanelSelect.innerHTML = '<option value="">Select Channel...</option>';
         const ticketPanelSelect = document.getElementById('ticket_panel_channel');
@@ -904,6 +906,13 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
                 const opt = document.createElement('option');
                 opt.value = r.id;
                 opt.textContent = r.name;
+                
+                if (boostRoleSelect) {
+                    const boostOpt = opt.cloneNode(true);
+                    if (config.boost?.reward_role_id === r.id) boostOpt.selected = true;
+                    boostRoleSelect.appendChild(boostOpt);
+                }
+
                 if (config.settings?.manager_roles?.includes(r.id)) opt.selected = true;
                 settingsManagerRolesEl.appendChild(opt);
             });
@@ -2996,6 +3005,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         boost: {
             enabled: document.getElementById('boost_enabled').checked,
             channel_id: document.getElementById('boost_channel_id').value,
+            reward_role_id: document.getElementById('boost_reward_role_id')?.value || '',
             message: document.getElementById('boost_message').value,
             image_url: document.getElementById('boost_image_url')?.value || '',
             embed_image: document.getElementById('boost_embed_image')?.value || '',
