@@ -1,4 +1,4 @@
-﻿from Database.mongodb import get_config, set_config
+from Database.mongodb import get_config, set_config
 import os
 import json
 import pathlib
@@ -26,7 +26,8 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         "options": [],
         "options_slots": [],
         "ticket_counter": 0,
-        "active_tickets": {}
+        "active_tickets": {},
+        "blacklist": {}
     }
     
     try:
@@ -41,6 +42,8 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
 
     if "active_tickets" not in data:
         data["active_tickets"] = {}
+    if "blacklist" not in data:
+        data["blacklist"] = {}
     if "ticket_counter" not in data:
         data["ticket_counter"] = 0
     if "log_channel_id" not in data:
@@ -131,3 +134,38 @@ def reset_ticket_config(guild_id: int) -> Dict[str, Any]:
     save_ticket_config(guild_id, default_config)
     return default_config
 
+
+def is_blacklisted(guild_id: int, user_id: int) -> bool:
+    config = load_ticket_config(guild_id)
+    blacklist = config.get("blacklist", {})
+    uid_str = str(user_id)
+    if uid_str in blacklist:
+        expiry = blacklist[uid_str]
+        if expiry is None:
+            return True
+        if time.time() < expiry:
+            return True
+        else:
+            del blacklist[uid_str]
+            save_ticket_config(guild_id, config)
+    return False
+
+def add_to_blacklist(guild_id: int, user_id: int, duration_seconds: Optional[int] = None) -> None:
+    config = load_ticket_config(guild_id)
+    if "blacklist" not in config:
+        config["blacklist"] = {}
+    uid_str = str(user_id)
+    if duration_seconds is None:
+        config["blacklist"][uid_str] = None
+    else:
+        config["blacklist"][uid_str] = time.time() + duration_seconds
+    save_ticket_config(guild_id, config)
+
+def remove_from_blacklist(guild_id: int, user_id: int) -> bool:
+    config = load_ticket_config(guild_id)
+    uid_str = str(user_id)
+    if "blacklist" in config and uid_str in config["blacklist"]:
+        del config["blacklist"][uid_str]
+        save_ticket_config(guild_id, config)
+        return True
+    return False

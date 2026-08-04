@@ -139,6 +139,10 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
+        from Commands.Ticket._storage import is_blacklisted
+        if is_blacklisted(interaction.guild.id, interaction.user.id):
+            return await interaction.followup.send("You are blacklisted from opening support tickets on this server.", ephemeral=True)
+
         config = load_ticket_config(interaction.guild.id)
         if not config.get("enabled", False):
             return await interaction.followup.send("Support tickets are currently disabled on this server.", ephemeral=True)
@@ -342,6 +346,10 @@ class PersistentTicketPanelLayout(discord.ui.View):
         btn_create = Button(label="Create Ticket", style=discord.ButtonStyle.primary, custom_id="orbit:ticket_create_btn")
         
         async def _btn_create_cb(interaction: discord.Interaction):
+            from Commands.Ticket._storage import is_blacklisted
+            if interaction.guild and is_blacklisted(interaction.guild.id, interaction.user.id):
+                return await interaction.response.send_message("You are blacklisted from opening support tickets on this server.", ephemeral=True)
+            
             config = load_ticket_config(interaction.guild.id) if interaction.guild else {}
             slots = config.get("options_slots", [])
             if not isinstance(slots, list) or not slots:
