@@ -55,8 +55,6 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_automod_config(guild_id: int) -> Dict[str, Any]:
     with _automod_lock:
-        if guild_id in _automod_cache:
-            return _automod_cache[guild_id]
         path = _get_file_path(guild_id)
         try:
             data = get_config("AutoMod", guild_id)
