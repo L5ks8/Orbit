@@ -206,76 +206,75 @@ class LevelCommandsCog(commands.Cog):
         view = LeaderboardView(self, interaction.guild)
         await interaction.followup.send(embed=embed, file=file, view=view)
 
-    @app_commands.command(name="addxp", description="Add XP to a member.")
+    @commands.hybrid_group(name="xp", description="Manage member XP")
+    async def xp(self, ctx: commands.Context):
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(ctx.command)
+
+    @xp.command(name="add", description="Add XP to a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to add")
-    @app_commands.default_permissions(administrator=True)
-    async def addxp_slash(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+    @commands.has_permissions(administrator=True)
+    async def xp_add(self, ctx: commands.Context, member: discord.Member, amount: int):
         if amount <= 0:
-            return await interaction.response.send_message("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
             
         from Commands.Level._storage import add_xp
-        old_level, new_level, new_xp = add_xp(interaction.guild.id, member.id, amount)
-        await interaction.response.send_message(f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).")
+        old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
+        await ctx.send(f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).")
 
-    @app_commands.command(name="removexp", description="Remove XP from a member.")
+    @xp.command(name="remove", description="Remove XP from a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to remove")
-    @app_commands.default_permissions(administrator=True)
-    async def removexp_slash(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+    @commands.has_permissions(administrator=True)
+    async def xp_remove(self, ctx: commands.Context, member: discord.Member, amount: int):
         if amount <= 0:
-            return await interaction.response.send_message("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
             
         from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp
-        data = get_user_xp(interaction.guild.id, member.id)
+        data = get_user_xp(ctx.guild.id, member.id)
         current_xp = data.get("total_xp", 0)
         new_xp = max(0, current_xp - amount)
         data["total_xp"] = new_xp
-        set_user_xp(interaction.guild.id, member.id, data)
+        set_user_xp(ctx.guild.id, member.id, data)
         new_level = level_from_xp(new_xp)
-        await interaction.response.send_message(f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).")
+        await ctx.send(f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).")
 
-    @app_commands.command(name="addlevel", description="Add levels to a member.")
-    @app_commands.describe(member="The member to modify", amount="Amount of levels to add")
-    @app_commands.default_permissions(administrator=True)
-    async def addlevel_slash(self, interaction: discord.Interaction, member: discord.Member, amount: int):
-        if amount <= 0:
-            return await interaction.response.send_message("Amount must be greater than 0.", ephemeral=True)
+    @xp.command(name="set", description="Set a member's XP.")
+    @app_commands.describe(member="The member to modify", amount="Amount of XP to set")
+    @commands.has_permissions(administrator=True)
+    async def xp_set(self, ctx: commands.Context, member: discord.Member, amount: int):
+        if amount < 0:
+            return await ctx.send("Amount cannot be negative.", ephemeral=True)
             
-        from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp, total_xp_for_level
-        data = get_user_xp(interaction.guild.id, member.id)
-        current_xp = data.get("total_xp", 0)
-        current_level = level_from_xp(current_xp)
-        target_level = current_level + amount
-        
-        new_xp = total_xp_for_level(target_level)
-        data["total_xp"] = new_xp
-        set_user_xp(interaction.guild.id, member.id, data)
-        await interaction.response.send_message(f"Added **{amount} levels** to {member.mention}. They are now **Level {target_level}** (with {new_xp:,} XP).")
+        from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp
+        data = get_user_xp(ctx.guild.id, member.id)
+        data["total_xp"] = amount
+        set_user_xp(ctx.guild.id, member.id, data)
+        new_level = level_from_xp(amount)
+        await ctx.send(f"Set {member.mention}'s XP to **{amount:,} XP** (Level {new_level}).")
 
-    @app_commands.command(name="removelevel", description="Remove levels from a member.")
-    @app_commands.describe(member="The member to modify", amount="Amount of levels to remove")
-    @app_commands.default_permissions(administrator=True)
-    async def removelevel_slash(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+    @xp.command(name="transfer", description="Transfer XP between members.")
+    @app_commands.describe(member="The member to transfer XP to", amount="Amount of XP to transfer")
+    async def xp_transfer(self, ctx: commands.Context, member: discord.Member, amount: int):
         if amount <= 0:
-            return await interaction.response.send_message("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
+        if member == ctx.author:
+            return await ctx.send("You cannot transfer XP to yourself.", ephemeral=True)
             
-        from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp, total_xp_for_level
-        data = get_user_xp(interaction.guild.id, member.id)
+        from Commands.Level._storage import get_user_xp, set_user_xp, add_xp
+        data = get_user_xp(ctx.guild.id, ctx.author.id)
         current_xp = data.get("total_xp", 0)
-        current_level = level_from_xp(current_xp)
-        target_level = max(0, current_level - amount)
         
-        new_xp = total_xp_for_level(target_level) if target_level > 0 else 0
-        data["total_xp"] = new_xp
-        set_user_xp(interaction.guild.id, member.id, data)
-        await interaction.response.send_message(f"Removed **{amount} levels** from {member.mention}. They are now **Level {target_level}** (with {new_xp:,} XP).")
-
-    @app_commands.command(name="resetxp", description="Reset a member's XP completely.")
-    @app_commands.describe(member="The member to modify")
-    @app_commands.default_permissions(administrator=True)
-    async def resetxp_slash(self, interaction: discord.Interaction, member: discord.Member):
-        from Commands.Level._storage import delete_user_xp
-        delete_user_xp(interaction.guild.id, member.id)
-        await interaction.response.send_message(f"Successfully reset {member.mention}'s XP to 0.")
+        if current_xp < amount:
+            return await ctx.send(f"You don't have enough XP to transfer {amount:,}. You only have {current_xp:,} XP.", ephemeral=True)
+            
+        # Deduct from author
+        data["total_xp"] = current_xp - amount
+        set_user_xp(ctx.guild.id, ctx.author.id, data)
+        
+        # Add to target
+        old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
+        
+        await ctx.send(f"Successfully transferred **{amount:,} XP** to {member.mention}!")
 
     # ─── PREFIX COMMANDS ──────────────────────────────────────────────────────
     @commands.command(name="rank")
@@ -338,65 +337,7 @@ class LevelCommandsCog(commands.Cog):
         view = LeaderboardView(self, ctx.guild)
         await ctx.send(embed=embed, file=file, view=view)
 
-    @commands.command(name="addxp")
-    @commands.has_permissions(administrator=True)
-    async def addxp_prefix(self, ctx: commands.Context, member: discord.Member, amount: int):
-        if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.")
-        from Commands.Level._storage import add_xp
-        old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
-        await ctx.send(f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).")
 
-    @commands.command(name="removexp")
-    @commands.has_permissions(administrator=True)
-    async def removexp_prefix(self, ctx: commands.Context, member: discord.Member, amount: int):
-        if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.")
-        from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp
-        data = get_user_xp(ctx.guild.id, member.id)
-        current_xp = data.get("total_xp", 0)
-        new_xp = max(0, current_xp - amount)
-        data["total_xp"] = new_xp
-        set_user_xp(ctx.guild.id, member.id, data)
-        new_level = level_from_xp(new_xp)
-        await ctx.send(f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).")
-
-    @commands.command(name="addlevel")
-    @commands.has_permissions(administrator=True)
-    async def addlevel_prefix(self, ctx: commands.Context, member: discord.Member, amount: int):
-        if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.")
-        from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp, total_xp_for_level
-        data = get_user_xp(ctx.guild.id, member.id)
-        current_xp = data.get("total_xp", 0)
-        current_level = level_from_xp(current_xp)
-        target_level = current_level + amount
-        new_xp = total_xp_for_level(target_level)
-        data["total_xp"] = new_xp
-        set_user_xp(ctx.guild.id, member.id, data)
-        await ctx.send(f"Added **{amount} levels** to {member.mention}. They are now **Level {target_level}** (with {new_xp:,} XP).")
-
-    @commands.command(name="removelevel")
-    @commands.has_permissions(administrator=True)
-    async def removelevel_prefix(self, ctx: commands.Context, member: discord.Member, amount: int):
-        if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.")
-        from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp, total_xp_for_level
-        data = get_user_xp(ctx.guild.id, member.id)
-        current_xp = data.get("total_xp", 0)
-        current_level = level_from_xp(current_xp)
-        target_level = max(0, current_level - amount)
-        new_xp = total_xp_for_level(target_level) if target_level > 0 else 0
-        data["total_xp"] = new_xp
-        set_user_xp(ctx.guild.id, member.id, data)
-        await ctx.send(f"Removed **{amount} levels** from {member.mention}. They are now **Level {target_level}** (with {new_xp:,} XP).")
-
-    @commands.command(name="resetxp")
-    @commands.has_permissions(administrator=True)
-    async def resetxp_prefix(self, ctx: commands.Context, member: discord.Member):
-        from Commands.Level._storage import delete_user_xp
-        delete_user_xp(ctx.guild.id, member.id)
-        await ctx.send(f"Successfully reset {member.mention}'s XP to 0.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(LevelCommandsCog(bot))
