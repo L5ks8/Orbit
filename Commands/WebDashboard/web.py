@@ -6,6 +6,7 @@ from aiohttp import web
 import aiohttp
 import discord
 from typing import Dict, Any
+
 from Commands.Welcome._storage import load_welcome_config, save_welcome_config
 from Commands.Goodbye._storage import load_goodbye_config, save_goodbye_config
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
@@ -17,23 +18,29 @@ from Commands.ChannelAutomation._storage import load_automation_config, save_aut
 from Commands.Boost._storage import load_boost_config, save_boost_config
 from Commands.Level._storage import load_level_config, save_level_config
 from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
+
 SESSIONS: Dict[str, Any] = {}
+
 class WebDashboard:
     def __init__(self, bot: discord.ext.commands.Bot):
         self.bot = bot
         self.client_id = os.environ.get("DISCORD_CLIENT_ID", "")
         self.client_secret = os.environ.get("DISCORD_CLIENT_SECRET", "")
+        
     def get_redirect_uri(self, request: web.Request) -> str:
         scheme = request.headers.get("X-Forwarded-Proto", "http")
         return f"{scheme}://{request.host}/auth/callback"
+
     async def get_user_session(self, request: web.Request) -> Dict[str, Any]:
         session_id = request.cookies.get("orbit_session")
         if not session_id or session_id not in SESSIONS:
             return None
         return SESSIONS[session_id]
+
     def _render_template(self, filepath: str) -> str:
         import re
         import os
+        
         def resolve_includes(content: str, base_dir: str) -> str:
             pattern = r'<!--\s*INCLUDE:\s*(.*?)\s*-->'
             def replacer(match):
@@ -43,13 +50,16 @@ class WebDashboard:
                         return resolve_includes(f.read(), base_dir)
                 except Exception as e:
                     return f"<!-- ERROR INCLUDING {match.group(1)}: {e} -->"
+            
             return re.sub(pattern, replacer, content)
+
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
             return resolve_includes(content, os.path.dirname(filepath))
         except Exception as e:
             raise e
+
     async def handle_index(self, request: web.Request):
         try:
             content = self._render_template("Web/index.html")
@@ -57,38 +67,46 @@ class WebDashboard:
         except Exception as e:
             print(f"Index HTML Error: {e}")
             return web.Response(text="Orbit Dashboard: Error loading index.html", status=500)
+
     async def handle_privacy(self, request: web.Request):
         try:
             content = self._render_template("Web/privacy.html")
             return web.Response(text=content, content_type="text/html")
         except Exception as e:
             return web.Response(text="Error loading privacy policy", status=500)
+
     async def handle_terms(self, request: web.Request):
         try:
             content = self._render_template("Web/terms.html")
             return web.Response(text=content, content_type="text/html")
         except Exception as e:
             return web.Response(text="Error loading terms of service", status=500)
+
     async def handle_leaderboard(self, request: web.Request):
         try:
             content = self._render_template("Web/leaderboard.html")
             return web.Response(text=content, content_type="text/html")
         except Exception as e:
             return web.Response(text="Error loading leaderboard", status=500)
+
     async def handle_login(self, request: web.Request):
         if not self.client_id:
             return web.Response(text="OAuth2 is not configured. Missing DISCORD_CLIENT_ID.", status=500)
+            
         redirect_uri = self.get_redirect_uri(request)
         discord_login_url = (
             f"https://discord.com/api/oauth2/authorize?client_id={self.client_id}"
             f"&redirect_uri={redirect_uri}&response_type=code&scope=identify%20guilds"
         )
         raise web.HTTPFound(discord_login_url)
+
     async def handle_callback(self, request: web.Request):
         code = request.query.get("code")
         if not code:
             return web.Response(text="Missing code", status=400)
+            
         redirect_uri = self.get_redirect_uri(request)
+        
         data = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
@@ -96,18 +114,22 @@ class WebDashboard:
             "code": code,
             "redirect_uri": redirect_uri
         }
+        
         async with aiohttp.ClientSession() as session:
+            
             async with session.post("https://discord.com/api/oauth2/token", data=data) as resp:
                 if resp.status != 200:
                     err = await resp.text()
                     return web.Response(text=f"Failed to exchange code: {err}", status=400)
                 token_info = await resp.json()
                 access_token = token_info["access_token"]
+
             headers = {"Authorization": f"Bearer {access_token}"}
             async with session.get("https://discord.com/api/users/@me", headers=headers) as resp:
                 if resp.status != 200:
                     return web.Response(text="Failed to fetch user info", status=400)
                 user_info = await resp.json()
+
         session_id = secrets.token_urlsafe(32)
         SESSIONS[session_id] = {
             "id": user_info["id"],
@@ -115,9 +137,11 @@ class WebDashboard:
             "avatar": user_info.get("avatar"),
             "access_token": access_token
         }
+        
         response = web.HTTPFound("/")
         response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
         return response
+
     async def handle_logout(self, request: web.Request):
         session_id = request.cookies.get("orbit_session")
         if session_id in SESSIONS:
@@ -125,37 +149,48 @@ class WebDashboard:
         response = web.HTTPFound("/")
         response.del_cookie("orbit_session")
         return response
+
     async def api_user(self, request: web.Request):
         session = await self.get_user_session(request)
         if not session:
             return web.json_response({"error": "Not authenticated"}, status=401)
         return web.json_response(session)
+
     async def api_public_leaderboard(self, request: web.Request):
         guild_id = request.match_info.get("id")
         if not guild_id:
             return web.json_response({"error": "Missing guild ID"}, status=400)
+            
         try:
             guild_id = int(guild_id)
         except ValueError:
             return web.json_response({"error": "Invalid guild ID"}, status=400)
+            
         sort_key = request.query.get("sort", "total_xp")
+        
         guild = self.bot.get_guild(guild_id)
         if not guild:
             return web.json_response({"error": "Bot not in this server"}, status=404)
+            
         from Commands.Level._storage import get_leaderboard_by, level_from_xp
         from Commands.Level.level import LB_CATEGORIES
+        
         top = get_leaderboard_by(guild_id, sort_key, 100)
+        
         results = []
         for i, entry in enumerate(top, 1):
             uid = entry.get("user_id")
             member = guild.get_member(uid)
             name = member.display_name if member else f"User#{uid}"
+            
             avatar_url = ""
             if member and member.display_avatar:
                 avatar_url = str(member.display_avatar.url)
+                
             val = entry.get(sort_key, 0)
             if sort_key == "voice_minutes":
                 val = val / 60.0
+                
             results.append({
                 "rank": i,
                 "name": name,
@@ -164,21 +199,25 @@ class WebDashboard:
                 "value": val,
                 "total_xp": entry.get("total_xp", 0)
             })
+            
         return web.json_response({
             "guild_name": guild.name,
             "guild_icon": str(guild.icon.url) if guild.icon else "",
             "category": sort_key,
             "entries": results
         })
+
     async def api_resolve_user(self, request: web.Request):
         user_id_str = request.match_info.get("id", "")
         if not user_id_str.isdigit():
             return web.json_response({"error": "Invalid User ID"}, status=400)
+        
         user_id = int(user_id_str)
         try:
             user = self.bot.get_user(user_id)
             if not user:
                 user = await self.bot.fetch_user(user_id)
+            
             return web.json_response({
                 "id": str(user.id),
                 "name": user.name,
@@ -189,34 +228,41 @@ class WebDashboard:
             return web.json_response({"error": "User not found"}, status=404)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
     async def api_stats(self, request: web.Request):
         return web.json_response({
             "servers": len(self.bot.guilds),
             "users": len(self.bot.users),
             "ping": round(self.bot.latency * 1000)
         })
+
     async def api_guilds(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user:
             return web.json_response({"error": "Unauthorized"}, status=401)
+            
         headers = {"Authorization": f"Bearer {user['access_token']}"}
         async with aiohttp.ClientSession() as session:
             async with session.get("https://discord.com/api/users/@me/guilds", headers=headers) as resp:
                 if resp.status != 200:
                     return web.json_response({"error": "Failed to fetch guilds"}, status=400)
                 user_guilds = await resp.json()
+                
         from Commands.WebDashboard._storage import load_settings_config
         manageable_guilds = []
         for g in user_guilds:
+            
             perms = int(g["permissions"])
             is_admin = (perms & 0x8) == 0x8
             manage_guild = (perms & 0x20) == 0x20
             manage_roles = (perms & 0x10000000) == 0x10000000
             manage_channels = (perms & 0x10) == 0x10
             manage_messages = (perms & 0x2000) == 0x2000
+            
             bot_guild = self.bot.get_guild(int(g["id"]))
             if bot_guild:
                 has_perms = is_admin or manage_guild or manage_roles or manage_channels or manage_messages
+                
                 if not has_perms:
                     settings_cfg = load_settings_config(int(g["id"]))
                     manager_roles = settings_cfg.get("manager_roles", [])
@@ -224,52 +270,66 @@ class WebDashboard:
                         member = bot_guild.get_member(int(user["id"]))
                         if member and any(str(r.id) in manager_roles for r in member.roles):
                             has_perms = True
+
                 if has_perms:
                     manageable_guilds.append({
                         "id": g["id"],
                         "name": g["name"],
                         "icon": g.get("icon")
                     })
+                    
         return web.json_response(manageable_guilds)
+
     async def _check_guild_access(self, request: web.Request, guild_id: int):
         user = await self.get_user_session(request)
         if not user:
             return None, None
+            
         bot_guild = self.bot.get_guild(guild_id)
         if not bot_guild:
             return None, None
+            
         member = bot_guild.get_member(int(user["id"]))
         if not member:
             return None, None
+            
         perms = member.guild_permissions
         is_admin = perms.administrator or perms.manage_guild
+        
         if not is_admin:
             from Commands.WebDashboard._storage import load_settings_config
             settings_cfg = load_settings_config(guild_id)
             manager_roles = settings_cfg.get("manager_roles", [])
             if any(str(r.id) in manager_roles for r in member.roles):
                 is_admin = True
+        
         user_perms = {
             "is_admin": is_admin,
             "can_roles": is_admin or perms.manage_roles,
             "can_channels": is_admin or perms.manage_channels,
             "can_messages": is_admin or perms.manage_messages
         }
+        
         if not any(user_perms.values()):
             return None, None
+            
         return bot_guild, user_perms
+
     async def api_get_config(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
+
         channels = [{"id": str(c.id), "name": c.name} for c in guild.text_channels]
         voice_channels = [{"id": str(c.id), "name": c.name} for c in guild.voice_channels]
         categories = [{"id": str(c.id), "name": c.name} for c in guild.categories]
         roles = [{"id": str(r.id), "name": r.name, "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe"} for r in guild.roles if not r.is_default()]
+
         welcome_cfg = load_welcome_config(guild_id)
         automod_cfg = load_automod_config(guild_id)
         verify_cfg = load_verify_config(guild_id)
@@ -277,20 +337,25 @@ class WebDashboard:
         boost_cfg = load_boost_config(guild_id)
         autoresponder_cfg = load_responses(guild_id)
         joinroles_cfg = load_join_roles(guild_id)
+        
         from Commands.Ticket._storage import load_ticket_config
         ticket_cfg = load_ticket_config(guild_id)
         logs_cfg = load_log_config(guild_id)
         automation_cfg = load_automation_config(guild_id)
+        
         from Commands.JoinToCreate._storage import load_jtc_config
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
         from Commands.Economy._storage import load_economy_config
         economy_cfg = load_economy_config(guild_id)
         serverstats_cfg = load_serverstats_config(guild_id)
+
         from Commands.WebDashboard._storage import load_settings_config
         settings_cfg = load_settings_config(guild_id)
+
         from Commands.Appeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(guild_id)
+
         config_data = {
             "settings": settings_cfg,
             "appeals": appeals_cfg,
@@ -452,16 +517,19 @@ class WebDashboard:
             "economy": economy_cfg,
             "serverstats": serverstats_cfg
         }
+
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
             for k, v in logs_cfg["channels"].items():
                 if v: logs_cfg["channels"][k] = str(v)
         if "roles" in logs_cfg and isinstance(logs_cfg["roles"], dict):
             for k, v in logs_cfg["roles"].items():
                 if v: logs_cfg["roles"][k] = str(v)
+                
         if "hubs" in tempvoice_cfg and isinstance(tempvoice_cfg["hubs"], list):
             for hub in tempvoice_cfg["hubs"]:
                 if hub.get("hub_channel_id"): hub["hub_channel_id"] = str(hub["hub_channel_id"])
                 if hub.get("category_id"): hub["category_id"] = str(hub["category_id"])
+        
         return web.json_response({
             "permissions": user_perms,
             "channels": channels,
@@ -470,28 +538,35 @@ class WebDashboard:
             "roles": roles,
             "config": config_data
         })
+
     async def api_guild_stats(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
         try:
             days = int(request.query.get("days", "7"))
         except ValueError:
             days = 7
+            
         from Database.mongodb import get_db
         db = get_db()
+        
         from datetime import datetime, timedelta, timezone
         today = datetime.now(timezone.utc)
+        
         stats = []
         if db is not None:
             for i in range(days - 1, -1, -1):
                 d = today - timedelta(days=i)
                 date_str = d.strftime("%Y-%m-%d")
                 doc_id = f"{guild_id}_{date_str}"
+                
                 doc = db["GuildStats"].find_one({"_id": doc_id})
                 if doc:
                     stats.append({
@@ -507,8 +582,10 @@ class WebDashboard:
                         "leaves": 0,
                         "messages": 0
                     })
+        
         today_str = today.strftime("%Y-%m-%d")
         today_doc = db["GuildStats"].find_one({"_id": f"{guild_id}_{today_str}"}) if db is not None else None
+        
         return web.json_response({
             "total_members": guild.member_count,
             "today_joins": today_doc.get("joins", 0) if today_doc else 0,
@@ -516,22 +593,28 @@ class WebDashboard:
             "today_messages": today_doc.get("messages", 0) if today_doc else 0,
             "history": stats
         })
+
     async def api_post_config(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
         try:
             data = await request.json()
+
             if user_perms.get("is_admin") and "settings" in data:
                 from Commands.WebDashboard._storage import save_settings_config
                 save_settings_config(guild_id, data["settings"])
+
             if user_perms.get("can_channels") and "appeals" in data:
                 from Commands.Appeals._storage import save_appeals_config
                 save_appeals_config(guild_id, data["appeals"])
+
             if user_perms.get("can_channels") and "serverstats" in data:
                 s_data = data.get("serverstats", {})
                 ss_cfg = load_serverstats_config(guild_id)
@@ -550,19 +633,23 @@ class WebDashboard:
                 if cog:
                     import asyncio
                     asyncio.create_task(cog.sync_guild_stats(guild))
+
             def _clean_cloudinary(old_url: str, new_url: str):
                 if old_url and old_url != new_url and "res.cloudinary.com" in old_url:
                     from Database.cloudinary_storage import delete_image_by_url
                     import asyncio
                     asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
+
             if user_perms.get("can_channels") and "welcome" in data:
                 welcome_cfg = load_welcome_config(guild_id)
                 w_data = data.get("welcome", {})
+                
                 _clean_cloudinary(welcome_cfg.get("image_url", ""), w_data.get("image_url", ""))
                 _clean_cloudinary(welcome_cfg.get("embed_image", ""), w_data.get("embed_image", ""))
                 _clean_cloudinary(welcome_cfg.get("embed_thumbnail", ""), w_data.get("embed_thumbnail", ""))
                 _clean_cloudinary(welcome_cfg.get("embed_author_icon", ""), w_data.get("embed_author_icon", ""))
                 _clean_cloudinary(welcome_cfg.get("embed_footer_icon", ""), w_data.get("embed_footer_icon", ""))
+
                 welcome_cfg["enabled"] = bool(w_data.get("enabled"))
                 cid = w_data.get("channel_id")
                 welcome_cfg["channel_id"] = int(cid) if cid else None
@@ -579,15 +666,19 @@ class WebDashboard:
                 welcome_cfg["embed_author_icon"] = w_data.get("embed_author_icon", "")
                 welcome_cfg["embed_footer_icon"] = w_data.get("embed_footer_icon", "")
                 welcome_cfg["embed_fields"] = w_data.get("embed_fields", [])
+                
                 save_welcome_config(guild_id, welcome_cfg)
+
             if user_perms.get("can_channels") and "goodbye" in data:
                 goodbye_cfg = load_goodbye_config(guild_id)
                 g_data = data.get("goodbye", {})
+
                 _clean_cloudinary(goodbye_cfg.get("image_url", ""), g_data.get("image_url", ""))
                 _clean_cloudinary(goodbye_cfg.get("embed_image", ""), g_data.get("embed_image", ""))
                 _clean_cloudinary(goodbye_cfg.get("embed_thumbnail", ""), g_data.get("embed_thumbnail", ""))
                 _clean_cloudinary(goodbye_cfg.get("embed_author_icon", ""), g_data.get("embed_author_icon", ""))
                 _clean_cloudinary(goodbye_cfg.get("embed_footer_icon", ""), g_data.get("embed_footer_icon", ""))
+
                 goodbye_cfg["enabled"] = bool(g_data.get("enabled"))
                 cid = g_data.get("channel_id")
                 goodbye_cfg["channel_id"] = int(cid) if cid else None
@@ -604,15 +695,19 @@ class WebDashboard:
                 goodbye_cfg["embed_author_icon"] = g_data.get("embed_author_icon", "")
                 goodbye_cfg["embed_footer_icon"] = g_data.get("embed_footer_icon", "")
                 goodbye_cfg["embed_fields"] = g_data.get("embed_fields", [])
+                    
                 save_goodbye_config(guild_id, goodbye_cfg)
+
             if user_perms.get("can_channels") and "boost" in data:
                 boost_cfg = load_boost_config(guild_id)
                 b_data = data.get("boost", {})
+
                 _clean_cloudinary(boost_cfg.get("image_url", ""), b_data.get("image_url", ""))
                 _clean_cloudinary(boost_cfg.get("embed_image", ""), b_data.get("embed_image", ""))
                 _clean_cloudinary(boost_cfg.get("embed_thumbnail", ""), b_data.get("embed_thumbnail", ""))
                 _clean_cloudinary(boost_cfg.get("embed_author_icon", ""), b_data.get("embed_author_icon", ""))
                 _clean_cloudinary(boost_cfg.get("embed_footer_icon", ""), b_data.get("embed_footer_icon", ""))
+
                 boost_cfg["enabled"] = bool(b_data.get("enabled"))
                 cid = b_data.get("channel_id")
                 boost_cfg["channel_id"] = int(cid) if cid else None
@@ -630,19 +725,24 @@ class WebDashboard:
                 boost_cfg["embed_author_icon"] = b_data.get("embed_author_icon", "")
                 boost_cfg["embed_footer_icon"] = b_data.get("embed_footer_icon", "")
                 boost_cfg["embed_fields"] = b_data.get("embed_fields", [])
+                    
                 save_boost_config(guild_id, boost_cfg)
+
             if user_perms.get("can_messages") and "automod" in data:
                 automod_cfg = load_automod_config(guild_id)
                 am = data.get("automod", {})
                 automod_cfg["enabled"] = bool(am.get("enabled"))
+                
                 gec = am.get("exempt_channels", [])
                 ger = am.get("exempt_roles", [])
                 if "global_exempt_channels" in automod_cfg:
                     del automod_cfg["global_exempt_channels"]
                 if "global_exempt_roles" in automod_cfg:
                     del automod_cfg["global_exempt_roles"]
+                
                 automod_cfg["exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
                 automod_cfg["exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
+
                 def save_submodule(key: str, defaults: dict, extra_fields: list = None):
                     if key not in automod_cfg:
                         automod_cfg[key] = {}
@@ -650,10 +750,12 @@ class WebDashboard:
                     automod_cfg[key]["enabled"] = bool(src.get("enabled"))
                     automod_cfg[key]["action"] = src.get("action", defaults.get("action", "warn"))
                     automod_cfg[key]["timeout_duration_min"] = int(src.get("timeout_duration_min", defaults.get("timeout_duration_min", 5)))
+                    
                     ec = src.get("exempt_channels", [])
                     er = src.get("exempt_roles", [])
                     automod_cfg[key]["exempt_channels"] = [str(c) for c in ec] if isinstance(ec, list) else []
                     automod_cfg[key]["exempt_roles"] = [str(r) for r in er] if isinstance(er, list) else []
+
                     if extra_fields:
                         for ef in extra_fields:
                             field_name = ef["name"]
@@ -665,6 +767,7 @@ class WebDashboard:
                                     automod_cfg[key][field_name] = [x.strip() for x in raw.split(",") if x.strip()]
                                 else:
                                     automod_cfg[key][field_name] = raw
+
                 save_submodule("banned_words", {}, [{"name": "words", "type": list, "default": []}])
                 save_submodule("anti_spam", {}, [
                     {"name": "max_messages", "type": int, "default": 5},
@@ -676,13 +779,16 @@ class WebDashboard:
                 save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
                 save_submodule("anti_bot", {"action": "kick"}, [])
                 save_submodule("ai_automod", {"action": "delete"}, [{"name": "min_words", "type": int, "default": 3}])
+
                 if "anti_alt" not in automod_cfg:
                     automod_cfg["anti_alt"] = {}
                 aalt = am.get("anti_alt", {})
                 automod_cfg["anti_alt"]["enabled"] = bool(aalt.get("enabled"))
                 automod_cfg["anti_alt"]["min_age_days"] = int(aalt.get("min_age_days", 3))
                 automod_cfg["anti_alt"]["action"] = aalt.get("action", "kick")
+
                 save_automod_config(guild_id, automod_cfg)
+
             if user_perms.get("can_roles") and "verify" in data:
                 verify_cfg = load_verify_config(guild_id)
                 verify_cfg["enabled"] = bool(data.get("verify", {}).get("enabled"))
@@ -697,8 +803,10 @@ class WebDashboard:
                 except (ValueError, TypeError):
                     verify_cfg["timeout_minutes"] = 0
                 save_verify_config(guild_id, verify_cfg)
+
             if user_perms.get("can_messages") and "autoresponder" in data:
                 save_responses(guild_id, data["autoresponder"])
+
             if user_perms.get("can_roles") and "joinroles" in data:
                 jr_data = data["joinroles"]
                 save_join_roles(guild_id, {
@@ -706,10 +814,12 @@ class WebDashboard:
                     "user_roles": [int(r) for r in jr_data.get("user_roles", []) if r],
                     "bot_roles": [int(r) for r in jr_data.get("bot_roles", []) if r]
                 })
+
             if user_perms.get("can_channels") and "ticket" in data:
                 from Commands.Ticket._storage import load_ticket_config, save_ticket_config
                 ticket_cfg = load_ticket_config(guild_id)
                 ticket_cfg["enabled"] = bool(data["ticket"].get("enabled"))
+                
                 title = data["ticket"].get("panel_title", "").strip()
                 if title:
                     ticket_cfg["panel_title"] = title
@@ -719,10 +829,13 @@ class WebDashboard:
                 instr = data["ticket"].get("panel_instructions", "").strip()
                 if instr:
                     ticket_cfg["panel_instructions"] = instr
+                
                 tid = data["ticket"].get("panel_channel_id")
                 ticket_cfg["panel_channel_id"] = int(tid) if tid else None
+                
                 tlid = data["ticket"].get("log_channel_id")
                 ticket_cfg["log_channel_id"] = int(tlid) if tlid else None
+                
                 if "options_slots" in data["ticket"]:
                     parsed_slots = []
                     for slot in data["ticket"]["options_slots"]:
@@ -734,8 +847,11 @@ class WebDashboard:
                             "category_id": int(cid) if cid else None
                         })
                     ticket_cfg["options_slots"] = parsed_slots
+                    
                     ticket_cfg["options"] = [s.get("name", "Option") for s in parsed_slots]
+                
                 save_ticket_config(guild_id, ticket_cfg)
+
             if user_perms.get("can_channels") and "automation" in data:
                 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
                 current_auto = load_automation_config(guild_id)
@@ -752,32 +868,41 @@ class WebDashboard:
                         if "reset_count_requested" in c_data:
                             del c_data["reset_count_requested"]
                 save_automation_config(guild_id, new_auto)
+
             if user_perms.get("can_channels") and "logs" in data:
                 l_cfg = load_log_config(guild_id)
                 l_data = data["logs"]
+                
                 l_cfg["enabled"] = bool(l_data.get("enabled", False))
                 l_cfg["executor_in_logs"] = bool(l_data.get("executor_in_logs", False))
+                
                 gec = l_data.get("global_exempt_channels", [])
                 ger = l_data.get("global_exempt_roles", [])
                 l_cfg["global_exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
                 l_cfg["global_exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
+                
                 from Commands.Log._storage import DEFAULT_CATEGORIES
                 if "channels" in l_data and isinstance(l_data["channels"], dict):
                     for k in DEFAULT_CATEGORIES:
                         c = l_data["channels"].get(k)
                         l_cfg["channels"][k] = str(c) if c else None
+                
                 if "roles" in l_data and isinstance(l_data["roles"], dict):
                     for k in DEFAULT_CATEGORIES:
                         r = l_data["roles"].get(k)
                         l_cfg["roles"][k] = str(r) if r else None
+                
                 if "categories" in l_data and isinstance(l_data["categories"], dict):
                     for k in DEFAULT_CATEGORIES:
                         l_cfg["categories"][k] = bool(l_data["categories"].get(k, False))
+                
                 save_log_config(guild_id, l_cfg)
+
             if user_perms.get("can_channels") and "tempvoice" in data:
                 from Commands.JoinToCreate._storage import load_jtc_config, save_jtc_config
                 jtc_cfg = load_jtc_config(guild_id)
                 jtc_data = data["tempvoice"]
+                
                 jtc_cfg["enabled"] = bool(jtc_data.get("enabled", False))
                 parsed_hubs = []
                 for hub in jtc_data.get("hubs", []):
@@ -792,6 +917,7 @@ class WebDashboard:
                         })
                 jtc_cfg["hubs"] = [h for h in parsed_hubs if h["hub_channel_id"]]
                 save_jtc_config(guild_id, jtc_cfg)
+
             if "level" in data:
                 level_cfg = load_level_config(guild_id)
                 ld = data["level"]
@@ -848,6 +974,7 @@ class WebDashboard:
                 level_cfg["role_boosters"] = ld.get("role_boosters", [])
                 level_cfg["channel_boosters"] = ld.get("channel_boosters", [])
                 save_level_config(guild_id, level_cfg)
+
             if "economy" in data:
                 from Commands.Economy._storage import load_economy_config, save_economy_config
                 e_cfg = load_economy_config(guild_id)
@@ -861,24 +988,30 @@ class WebDashboard:
                 e_cfg["bet_limit_enabled"] = bool(ed.get("bet_limit_enabled", True))
                 e_cfg["bet_limit_amount"] = int(ed.get("bet_limit_amount", 10000))
                 e_cfg["reset_on_leave"] = bool(ed.get("reset_on_leave", False))
+
                 e_cfg["msg_money_enabled"] = bool(ed.get("msg_money_enabled", True))
                 e_cfg["msg_money_amount"] = int(ed.get("msg_money_amount", 8))
                 e_cfg["msg_money_cooldown"] = int(ed.get("msg_money_cooldown", 60))
+
                 e_cfg["voice_money_enabled"] = bool(ed.get("voice_money_enabled", False))
                 e_cfg["voice_money_ignore_muted"] = bool(ed.get("voice_money_ignore_muted", True))
                 e_cfg["voice_money_ignore_solo"] = bool(ed.get("voice_money_ignore_solo", False))
                 e_cfg["voice_money_amount"] = int(ed.get("voice_money_amount", 4))
+
                 e_cfg["cmd_money_enabled"] = bool(ed.get("cmd_money_enabled", True))
                 e_cfg["cmd_money_amount"] = int(ed.get("cmd_money_amount", 8))
                 e_cfg["cmd_money_cooldown"] = int(ed.get("cmd_money_cooldown", 60))
+
                 e_cfg["react_money_enabled"] = bool(ed.get("react_money_enabled", True))
                 e_cfg["react_money_amount"] = int(ed.get("react_money_amount", 20))
                 e_cfg["react_money_cooldown"] = int(ed.get("react_money_cooldown", 300))
+
                 e_cfg["daily_base_reward_enabled"] = bool(ed.get("daily_base_reward_enabled", True))
                 e_cfg["daily_base_reward"] = int(ed.get("daily_base_reward", 250))
                 e_cfg["daily_tier_reward_enabled"] = bool(ed.get("daily_tier_reward_enabled", True))
                 e_cfg["daily_streak_limit"] = int(ed.get("daily_streak_limit", 5))
                 e_cfg["daily_streak_bonus"] = int(ed.get("daily_streak_bonus", 10))
+
                 e_cfg["work_enabled"] = bool(ed.get("work_enabled", True))
                 e_cfg["work_min_amount"] = int(ed.get("work_min_amount", 300))
                 e_cfg["work_max_amount"] = int(ed.get("work_max_amount", 500))
@@ -886,10 +1019,12 @@ class WebDashboard:
                 e_cfg["work_use_default_responses"] = bool(ed.get("work_use_default_responses", True))
                 if "work_custom_responses" in ed:
                     e_cfg["work_custom_responses"] = ed["work_custom_responses"]
+
                 e_cfg["baltop_custom_url"] = str(ed.get("baltop_custom_url", "") or "")
                 baltop_ch = ed.get("baltop_auto_channel_id")
                 e_cfg["baltop_auto_channel_id"] = int(baltop_ch) if baltop_ch else None
                 e_cfg["baltop_embed_color"] = str(ed.get("baltop_embed_color", "#5865F2") or "#5865F2")
+
                 e_cfg["role_boosters_stack"] = bool(ed.get("role_boosters_stack", True))
                 if "role_boosters" in ed:
                     e_cfg["role_boosters"] = ed["role_boosters"]
@@ -903,7 +1038,9 @@ class WebDashboard:
                     e_cfg["rarities"] = ed["rarities"]
                 if "recipes" in ed:
                     e_cfg["recipes"] = ed["recipes"]
+
                 save_economy_config(guild_id, e_cfg)
+
                 pid = ticket_cfg.get("panel_channel_id")
                 mid = ticket_cfg.get("panel_message_id")
                 if pid and mid:
@@ -923,53 +1060,67 @@ class WebDashboard:
                             await msg.edit(**kwargs, allowed_mentions=discord.AllowedMentions.none())
                         except Exception:
                             pass
+            
             return web.json_response({"success": True})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
+
     async def api_action_send_verify(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild or not user_perms.get("can_roles"):
             return web.json_response({"error": "Unauthorized or missing Manage Roles permission"}, status=403)
+            
         try:
             data = await request.json()
             channel_id = data.get("channel_id")
             if not channel_id:
                 return web.json_response({"error": "No channel_id provided"}, status=400)
+                
             channel = guild.get_channel(int(channel_id))
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
+                
             from Embeds import get_command_embed
             kwargs = get_command_embed(guild_id, "verify", msg_type="panel")
             await channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+
             verify_cfg = load_verify_config(guild_id)
             verify_cfg["channel_id"] = channel.id
             save_verify_config(guild_id, verify_cfg)
+            
             return web.json_response({"success": True})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
+
     async def api_action_send_ticket(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild or not user_perms.get("can_channels"):
             return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+            
         try:
             data = await request.json()
             channel_id = data.get("channel_id")
             if not channel_id:
                 return web.json_response({"error": "No channel_id provided"}, status=400)
+                
             channel = guild.get_channel(int(channel_id))
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
+                
             from Commands.Ticket._views import PersistentTicketPanelLayout
             from Commands.Ticket._storage import load_ticket_config, save_ticket_config
             from Embeds import get_command_embed
+            
             ticket_cfg = load_ticket_config(guild_id)
             view = PersistentTicketPanelLayout(
                 title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
@@ -979,31 +1130,40 @@ class WebDashboard:
             )
             kwargs = get_command_embed(guild_id, "ticket", msg_type="panel", title=view.panel_title, description=view.panel_desc, instructions=view.panel_instructions, components=view.children)
             msg = await channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+
             ticket_cfg["panel_channel_id"] = channel.id
             ticket_cfg["panel_message_id"] = msg.id
             save_ticket_config(guild_id, ticket_cfg)
+            
             return web.json_response({"success": True})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
+
     async def api_action_send_embed(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild or not user_perms.get("can_channels"):
             return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+            
         try:
             data = await request.json()
             channel_id = data.get("channel_id")
             if not channel_id:
                 return web.json_response({"error": "No channel_id provided"}, status=400)
+                
             channel = guild.get_channel(int(channel_id))
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
+                
             mode = data.get("mode", "normal")
             components = data.get("components", [])
             content_text = data.get("content", "").strip()
+            
             title = data.get("title", "").strip()
             desc = data.get("description", "").strip()
             url = data.get("url", "").strip()
@@ -1015,8 +1175,10 @@ class WebDashboard:
             footer_text = data.get("footer_text", "").strip()
             footer_icon = data.get("footer_icon", "").strip()
             fields = data.get("fields", [])
+            
             member_count = guild.member_count or len(guild.members)
             server_name = guild.name
+            
             def replace_vars(text: str, target_user=None) -> str:
                 if not text: return text
                 u = target_user or guild.me
@@ -1037,49 +1199,61 @@ class WebDashboard:
                 text = text.replace("{server.members}", str(member_count))
                 text = text.replace("{server.icon}", guild.icon.url if guild.icon else "")
                 return text
+
             content_text = replace_vars(content_text)
             title = replace_vars(title)
             desc = replace_vars(desc)
             author_name = replace_vars(author_name)
             footer_text = replace_vars(footer_text)
+            
             for f in fields:
                 if "name" in f: f["name"] = replace_vars(f["name"])
                 if "value" in f: f["value"] = replace_vars(f["value"])
+            
             msg_kwargs = {}
             if content_text:
                 msg_kwargs["content"] = content_text
+
             if mode == "components":
                 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
                 view = LayoutView(timeout=None)
                 elements = []
+                
                 if author_name:
                     elements.append(TextDisplay(content=f"**{author_name}**"))
                 if title:
                     elements.append(TextDisplay(content=f"### {title}"))
                 if desc:
                     elements.append(TextDisplay(content=desc))
+                    
                 if fields:
                     if elements: elements.append(Separator(spacing=discord.SeparatorSpacing.small))
                     for f in fields:
                         fname = f.get("name", "").strip() or "​"
                         fvalue = f.get("value", "").strip() or "​"
                         elements.append(TextDisplay(content=f"**{fname}**\\n{fvalue}"))
+                        
                 if footer_text:
                     if elements: elements.append(Separator(spacing=discord.SeparatorSpacing.small))
                     elements.append(TextDisplay(content=f"-# {footer_text}"))
+                    
                 if elements:
                     view.add_item(Container(*elements))
+                    
                 if components:
                     for comp in components:
-                        if comp.get("style") == 5: 
+                        if comp.get("style") == 5: # URL Button
                             url_str = comp.get("url")
                             label = comp.get("label", "Link")
                             if url_str and url_str.startswith("http"):
                                 view.add_item(ActionRow(Button(style=discord.ButtonStyle.link, url=url_str, label=label)))
+                                
                 if len(view.children) > 0:
                     msg_kwargs["view"] = view
+                    
                 if not content_text and not elements:
                     return web.json_response({"error": "Message cannot be completely empty"}, status=400)
+                    
                 await channel.send(**msg_kwargs)
                 return web.json_response({"success": True})
             else:
@@ -1105,8 +1279,10 @@ class WebDashboard:
                     fvalue = f.get("value", "").strip() or "​"
                     finline = f.get("inline", False)
                     embed.add_field(name=fname, value=fvalue, inline=finline)
+                    
                 if embed.title or embed.description or embed.author or embed.image or embed.footer or embed.fields:
                     msg_kwargs["embed"] = embed
+                    
                 if components:
                     view = discord.ui.View(timeout=None)
                     for comp in components:
@@ -1117,35 +1293,47 @@ class WebDashboard:
                                 view.add_item(discord.ui.Button(style=discord.ButtonStyle.link, url=url_str, label=label))
                     if len(view.children) > 0:
                         msg_kwargs["view"] = view
+                        
                 if not content_text and "embed" not in msg_kwargs:
                     return web.json_response({"error": "Message cannot be completely empty"}, status=400)
+                    
                 await channel.send(**msg_kwargs)
                 return web.json_response({"success": True})
         except discord.Forbidden:
             return web.json_response({"error": "Bot missing permissions to send message in that channel"}, status=403)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
     async def api_action_test_levelup(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild or not user_perms.get("can_channels"):
             return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+            
         try:
             data = await request.json()
             channel_id = data.get("channel_id")
+            
             target_ch = None
             if channel_id and channel_id != "current":
                 target_ch = guild.get_channel(int(channel_id))
+            
+            # If no channel selected or 'current', try to find a valid text channel
             if not target_ch:
                 target_ch = next((ch for ch in guild.text_channels if ch.permissions_for(guild.me).send_messages), None)
+                
             if not target_ch:
                 return web.json_response({"error": "No valid channel found to send the test message"}, status=400)
+                
             import discord
             import re
+            
             member = guild.me
+            
             content = data.get("message", "{user_mention}")
             title = data.get("embed_title", "🎉 Level Up!")
             desc = data.get("embed_description", "")
@@ -1153,15 +1341,18 @@ class WebDashboard:
             footer = data.get("embed_footer", "")
             image = data.get("embed_image", "")
             show_avatar = data.get("show_avatar", True)
+            
             def replace_vars(text):
                 text = text.replace("{user_mention}", member.mention)
                 text = text.replace("{user_globalname}", member.global_name or member.display_name)
                 text = text.replace("{level}", "99")
                 text = text.replace("{roles}", "None")
                 return text
+                
             content = replace_vars(content)
             title = replace_vars(title)
             desc = replace_vars(desc)
+            
             embed = discord.Embed(title=title, description=desc, color=0x3B82F6)
             if author:
                 embed.set_author(name=replace_vars(author))
@@ -1171,10 +1362,13 @@ class WebDashboard:
                 embed.set_image(url=image)
             if show_avatar:
                 embed.set_thumbnail(url=member.display_avatar.url)
+                
             await target_ch.send(content=content if content else None, embed=embed)
             return web.json_response({"success": True})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
+    
     async def api_get_messages(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1182,44 +1376,55 @@ class WebDashboard:
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Forbidden"}, status=403)
+            
         from Database.mongodb import get_db
         db = get_db()
         cursor = db["CustomMessages"].find({"guild_id": str(guild_id)}, {"_id": 0})
         messages = list(cursor)
         return web.json_response(messages)
+        
     async def api_action_send_honeypot(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild or not user_perms.get("can_channels"):
             return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+            
         try:
             data = await request.json()
             channel_id = data.get("channel_id")
             if not channel_id:
                 return web.json_response({"error": "No channel_id provided"}, status=400)
+                
             channel = guild.get_channel(int(channel_id))
             if not channel:
                 return web.json_response({"error": "Channel not found in this guild"}, status=404)
+                
             message_template = data.get("message", "")
             if not message_template:
                 return web.json_response({"error": "No message provided"}, status=400)
+                
             from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
             config = load_automation_config(guild_id)
             auto_ban_cfg = config.get("auto_ban", {})
             ban_count = auto_ban_cfg.get("ban_count", 0)
+            
             text = message_template.replace("{count}", str(ban_count))
             msg = await channel.send(content=text)
+            
             auto_ban_cfg["message_id"] = str(msg.id)
             config["auto_ban"] = auto_ban_cfg
             save_automation_config(guild_id, config)
+            
             return web.json_response({"success": True})
         except discord.Forbidden:
             return web.json_response({"error": "Bot lacks permission to send messages in that channel"}, status=403)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
     async def api_save_message(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1227,6 +1432,7 @@ class WebDashboard:
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Forbidden"}, status=403)
+            
         try:
             data = await request.json()
             import uuid
@@ -1234,15 +1440,19 @@ class WebDashboard:
             if not msg_id:
                 msg_id = str(uuid.uuid4())
                 data["id"] = msg_id
+                
             data["guild_id"] = str(guild_id)
+            # Default name if missing
             if not data.get("name"):
                 data["name"] = "Untitled Message"
+            
             from Database.mongodb import get_db
             db = get_db()
             db["CustomMessages"].replace_one({"id": msg_id, "guild_id": str(guild_id)}, data, upsert=True)
             return web.json_response({"success": True, "id": msg_id})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
+            
     async def api_delete_message(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1250,11 +1460,13 @@ class WebDashboard:
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Forbidden"}, status=403)
+            
         msg_id = request.match_info['msg_id']
         from Database.mongodb import get_db
         db = get_db()
         db["CustomMessages"].delete_one({"id": msg_id, "guild_id": str(guild_id)})
         return web.json_response({"success": True})
+
     async def api_get_reactionroles(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1263,6 +1475,7 @@ class WebDashboard:
         if not guild: return web.json_response({"error": "Forbidden"}, status=403)
         from Commands.ReactionRole._storage import load_reaction_roles
         return web.json_response(load_reaction_roles(guild_id))
+
     async def api_save_reactionrole(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1283,6 +1496,7 @@ class WebDashboard:
             return web.json_response({"success": True, "id": msg_id})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
+
     async def api_delete_reactionrole(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1293,6 +1507,7 @@ class WebDashboard:
         from Commands.ReactionRole._storage import delete_reaction_role
         delete_reaction_role(guild_id, msg_id)
         return web.json_response({"success": True})
+        
     async def api_action_send_reactionrole(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1307,10 +1522,12 @@ class WebDashboard:
             if not channel_id: return web.json_response({"error": "No channel_id provided"}, status=400)
             channel = guild.get_channel(int(channel_id))
             if not channel: return web.json_response({"error": "Channel not found"}, status=404)
+            
             from Commands.ReactionRole._storage import load_reaction_roles
             rrs = load_reaction_roles(guild_id)
             rr = next((r for r in rrs if r.get("id") == msg_id), None)
             if not rr: return web.json_response({"error": "Reaction Role not found in database"}, status=404)
+            
             import discord
             content = rr.get("content", "")
             embed_data = rr.get("embed", {})
@@ -1325,6 +1542,7 @@ class WebDashboard:
             footer_text = embed_data.get("footer_text", "")
             footer_icon = embed_data.get("footer_icon_url", "")
             fields = embed_data.get("fields", [])
+            
             embed = discord.Embed()
             if title: embed.title = title
             if desc: embed.description = desc
@@ -1344,12 +1562,15 @@ class WebDashboard:
                 embed.set_footer(**kwargs)
             for f in fields:
                 embed.add_field(name=f.get("name","​") or "​", value=f.get("value","​") or "​", inline=f.get("inline",False))
+                
             msg_kwargs = {}
             if embed.title or embed.description or embed.author or embed.image or embed.footer or embed.fields:
                 msg_kwargs["embed"] = embed
             if content: msg_kwargs["content"] = content
+            
             button_mode = rr.get("button_type", "toggle")
             buttons_data = rr.get("components", [])
+            
             view = discord.ui.View(timeout=None)
             for btn in buttons_data:
                 label = btn.get("label", "Role")
@@ -1357,76 +1578,94 @@ class WebDashboard:
                 color_str = btn.get("color", "blue")
                 role_id = btn.get("role_id")
                 if not role_id: continue
+                
                 style = discord.ButtonStyle.primary
                 if color_str == "gray": style = discord.ButtonStyle.secondary
                 elif color_str == "green": style = discord.ButtonStyle.success
                 elif color_str == "red": style = discord.ButtonStyle.danger
+                
                 custom_id = f"rr_{role_id}_{button_mode}"
                 kwargs = {"style": style, "label": label, "custom_id": custom_id}
                 if emoji: kwargs["emoji"] = emoji
+                
                 view.add_item(discord.ui.Button(**kwargs))
+            
             if len(view.children) > 0:
                 msg_kwargs["view"] = view
+            
             if not msg_kwargs:
                 return web.json_response({"error": "Message cannot be empty"}, status=400)
+                
             await channel.send(**msg_kwargs)
             return web.json_response({"success": True})
         except discord.Forbidden:
             return web.json_response({"error": "Bot missing permissions to send message in that channel"}, status=403)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
     async def api_upload_image(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user:
             return web.json_response({"error": "Unauthorized"}, status=401)
+
         try:
             import uuid, pathlib, mimetypes
             reader = await request.multipart()
             field = await reader.next()
             if not field or field.name != "file":
                 return web.json_response({"error": "No file field"}, status=400)
+
             content_type = field.headers.get("Content-Type", "image/png")
             ext = mimetypes.guess_extension(content_type) or ".png"
             if ext == ".jpe":
                 ext = ".jpg"
+
             file_bytes = b""
             while True:
                 chunk = await field.read_chunk(8192)
                 if not chunk:
                     break
                 file_bytes += chunk
+
             from Database.cloudinary_storage import upload_image_bytes
             import asyncio
             url = await asyncio.to_thread(upload_image_bytes, file_bytes, "Orbit")
+            
             if url:
                 return web.json_response({"success": True, "url": url})
             else:
                 return web.json_response({"error": "Upload failed"}, status=500)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
+
     async def api_action_setup_serverstats(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+        
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
         try:
             cog = self.bot.get_cog("ServerStats")
             if not cog:
                 from Commands.ServerStats.serverstats import ServerStats
                 cog = ServerStats(self.bot)
+            
             updated_config = await cog.sync_guild_stats(guild)
             return web.json_response({"success": True, "config": updated_config})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
     async def api_support_invite(self, request: web.Request):
         SUPPORT_GUILD_ID = 1525603130358759575
         guild = self.bot.get_guild(SUPPORT_GUILD_ID)
         if not guild:
             return web.json_response({"error": "Support guild not found"}, status=404)
         try:
+            
             for channel in guild.text_channels:
                 try:
                     invite = await channel.create_invite(max_age=86400, max_uses=1, unique=True, reason="Website support invite")
@@ -1436,54 +1675,68 @@ class WebDashboard:
             return web.json_response({"error": "No suitable channel found"}, status=500)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
     async def handle_appeal_page(self, request: web.Request):
         return web.Response(text=self._render_template(os.path.join("Web", "appeal_page.html")), content_type="text/html")
+
     async def api_appeal_info(self, request: web.Request):
         custom_url = request.match_info.get("custom_url")
         from Commands.Appeals._storage import get_appeals_config_by_url
         cfg = get_appeals_config_by_url(custom_url)
         if not cfg:
             return web.json_response({"error": "Not found"}, status=404)
+        
         guild = self.bot.get_guild(int(cfg["_id"]))
         if not guild:
             return web.json_response({"error": "Server not found"}, status=404)
+            
         return web.json_response({
             "guild_name": guild.name,
             "guild_icon": guild.icon.url if guild.icon else None,
             "allowed_punishments": cfg.get("allowed_punishments", []),
             "questions": cfg.get("questions", ["Why should your punishment be revoked?"])
         })
+
     async def api_submit_appeal(self, request: web.Request):
         session = await self.get_user_session(request)
         if not session:
             return web.json_response({"error": "Unauthorized"}, status=401)
+            
         custom_url = request.match_info.get("custom_url")
         from Commands.Appeals._storage import get_appeals_config_by_url
         cfg = get_appeals_config_by_url(custom_url)
         if not cfg:
             return web.json_response({"error": "Not found"}, status=404)
+            
         try:
             data = await request.json()
             reason = data.get("reason", "")
+            
             from Commands.Appeals.appeals import process_new_appeal
             success, msg = await process_new_appeal(self.bot, int(cfg["_id"]), int(session["id"]), reason, cfg)
+            
             if success:
                 return web.json_response({"success": True})
             else:
                 return web.json_response({"error": msg}, status=400)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application(client_max_size=10 * 1024 * 1024)  
+    
     app.router.add_get("/", dashboard.handle_index)
     app.router.add_get("/privacy", dashboard.handle_privacy)
     app.router.add_get("/terms", dashboard.handle_terms)
     app.router.add_get("/leaderboard/{id}", dashboard.handle_leaderboard)
+    
     app.router.add_static("/static", "Web/static")
+    
     app.router.add_get("/auth/login", dashboard.handle_login)
     app.router.add_get("/auth/callback", dashboard.handle_callback)
     app.router.add_get("/auth/logout", dashboard.handle_logout)
+    
     app.router.add_get("/api/user", dashboard.api_user)
     app.router.add_get("/api/user/{id}", dashboard.api_resolve_user)
     app.router.add_get("/api/public_leaderboard/{id}", dashboard.api_public_leaderboard)
@@ -1509,4 +1762,6 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/appeal/{custom_url}", dashboard.handle_appeal_page)
     app.router.add_get("/api/appeal_info/{custom_url}", dashboard.api_appeal_info)
     app.router.add_post("/api/submit_appeal/{custom_url}", dashboard.api_submit_appeal)
+
     return app
+

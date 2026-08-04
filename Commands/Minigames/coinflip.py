@@ -9,6 +9,7 @@ from Commands.Economy._storage import (
     remove_user_balance
 )
 from Commands.Level._storage import grant_minigame_xp
+
 class CoinflipView(discord.ui.View):
     def __init__(self, guild_id: int, player: discord.abc.User, bet_amount: int, choice: str):
         super().__init__(timeout=60)
@@ -20,19 +21,26 @@ class CoinflipView(discord.ui.View):
         self.result = ""
         self.game_over = False
         self.money_processed = False
+
     async def flip(self, interaction: discord.Interaction):
         if not self.game_over:
+            # First, deduct the bet
             remove_user_balance(self.guild_id, self.player.id, self.bet_amount)
+
+            # Flip the coin
             outcomes = ["heads", "tails"]
             self.result = random.choice(outcomes)
             self.game_over = True
+
             cfg = load_economy_config(self.guild_id)
             sym = cfg.get("currency_symbol", "🪙")
+
             if self.result == self.choice:
                 payout = self.bet_amount * 2
                 add_user_balance(self.guild_id, self.player.id, payout)
                 self.outcome_text = f"The coin landed on **{self.result.capitalize()}**! You won **{sym} {payout:,}**."
                 self.money_processed = True
+                
                 if interaction.guild and interaction.user:
                     xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, 20)
                     if xp_earned > 0:
@@ -42,7 +50,9 @@ class CoinflipView(discord.ui.View):
                 self.money_processed = True
                 if interaction.guild and interaction.user:
                     await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, 5)
+
         self.clear_items()
+        
         btn_heads = discord.ui.Button(label=f"Play Again: Heads ({self.bet_amount:,})", style=discord.ButtonStyle.primary, custom_id="play_heads")
         async def _heads_cb(inter: discord.Interaction):
             if inter.user.id != self.player.id:
@@ -52,6 +62,7 @@ class CoinflipView(discord.ui.View):
             await new_view.flip(inter)
         btn_heads.callback = _heads_cb
         self.add_item(btn_heads)
+
         btn_tails = discord.ui.Button(label=f"Play Again: Tails ({self.bet_amount:,})", style=discord.ButtonStyle.primary, custom_id="play_tails")
         async def _tails_cb(inter: discord.Interaction):
             if inter.user.id != self.player.id:
@@ -61,6 +72,8 @@ class CoinflipView(discord.ui.View):
             await new_view.flip(inter)
         btn_tails.callback = _tails_cb
         self.add_item(btn_tails)
+
+        # Update message
         from Embeds import get_command_embed
         kwargs = get_command_embed(
             self.guild_id, "coinflip", msg_type="game",
@@ -71,9 +84,11 @@ class CoinflipView(discord.ui.View):
             view=self
         )
         await interaction.edit_original_response(**kwargs)
+
 class CoinflipCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
     async def cog_check(self, ctx):
         if not ctx.guild:
             return True
@@ -83,6 +98,8 @@ class CoinflipCommand(commands.Cog):
             await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
             return False
         return True
+
+
     @commands.hybrid_command(name="coinflip", description="Bet money and flip a coin (`/coinflip <bet> <heads/tails>`).")
     @app_commands.describe(
         bet="Amount of money to bet",
@@ -94,23 +111,34 @@ class CoinflipCommand(commands.Cog):
     ])
     async def coinflip_cmd(self, ctx: commands.Context, bet: int, choice: str):
         await ctx.defer()
+        
+        # In hybrid commands, slash commands might pass the raw string if type hint is str
         choice_val = getattr(choice, "value", choice).lower()
         if choice_val not in ["heads", "tails"]:
             return await ctx.send("Choice must be Heads or Tails.")
+
+        
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.")
+
         if bet < 1:
             return await ctx.send("Bet amount must be at least 1.")
+
         cfg = load_economy_config(ctx.guild.id)
         sym = cfg.get("currency_symbol", "🪙")
+
         if cfg.get("bet_limit_enabled", True):
             max_bet = cfg.get("bet_limit_amount", 10000)
             if bet > max_bet:
                 return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.")
+
         bal = get_user_balance(ctx.guild.id, ctx.author.id)
         if bal < bet:
             return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
+
+        # Create view and simulate first flip
         view = CoinflipView(ctx.guild.id, ctx.author, bet, choice_val)
+        
         from Embeds import get_command_embed
         initial_kwargs = get_command_embed(
             ctx.guild.id, "coinflip", msg_type="spin",
@@ -119,6 +147,7 @@ class CoinflipCommand(commands.Cog):
             bet=bet
         )
         msg = await ctx.send(**initial_kwargs)
+
         class DummyInteraction:
             def __init__(self, m, u, g, c):
                 self.message = m
@@ -128,9 +157,12 @@ class CoinflipCommand(commands.Cog):
                 self.guild_id = g.id
             async def edit_original_response(self, **kwargs):
                 await self.message.edit(**kwargs)
+
         dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
+        
         import asyncio
         await asyncio.sleep(1.5)
         await view.flip(dummy_inter)
+
 async def setup(bot):
     await bot.add_cog(CoinflipCommand(bot))

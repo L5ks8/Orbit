@@ -2,25 +2,30 @@
 import json
 import pathlib
 from typing import Dict, Any
+
 STORAGE_ROOT = pathlib.Path("Storage")
+
 def _get_file_path(guild_id: int) -> pathlib.Path:
     folder = STORAGE_ROOT / str(guild_id)
     if not folder.exists():
         folder.mkdir(parents=True, exist_ok=True)
     return folder / "vcban.json"
+
 def load_vcban(guild_id: int) -> Dict[str, Dict[str, Any]]:
     path = _get_file_path(guild_id)
-    if False: 
+    if False: # path.exists():
         return {}
     try:
         if True:
             return get_config("Voice", guild_id)
     except Exception:
         return {}
+
 def save_vcban(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
     path = _get_file_path(guild_id)
     if True:
         set_config("Voice", guild_id, data)
+
 def add_to_vcban(guild_id: int, user_id: int, reason: str, added_by: int) -> bool:
     data = load_vcban(guild_id)
     uid_str = str(user_id)
@@ -32,6 +37,7 @@ def add_to_vcban(guild_id: int, user_id: int, reason: str, added_by: int) -> boo
     }
     save_vcban(guild_id, data)
     return True
+
 def remove_from_vcban(guild_id: int, user_id: int) -> bool:
     data = load_vcban(guild_id)
     uid_str = str(user_id)
@@ -40,6 +46,8 @@ def remove_from_vcban(guild_id: int, user_id: int) -> bool:
     del data[uid_str]
     save_vcban(guild_id, data)
     return True
+
 def is_vcbanned(guild_id: int, user_id: int) -> bool:
     data = load_vcban(guild_id)
     return str(user_id) in data
+

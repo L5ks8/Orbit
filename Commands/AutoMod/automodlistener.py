@@ -7,13 +7,16 @@ from Commands.AutoMod._storage import load_automod_config
 from Commands.Warn._storage import add_warning, get_user_warnings
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
+
 class AutoModNoticeLayout(discord.ui.View):
     def __init__(self, user: discord.Member, reason: str, action_taken: str, warn_count: int, escalation_str: str = ""):
         super().__init__()
+
 class AutoModListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.spam_cache = {}
+
     def _get_escalation(self, warn_count: int) -> tuple:
         if warn_count < 5:
             return None, ""
@@ -23,10 +26,12 @@ class AutoModListener(commands.Cog):
             return datetime.timedelta(days=3), "Timed out for 3 DAYS (Reached 6 Warnings)"
         else:
             return datetime.timedelta(days=7), f"Timed out for 7 DAYS (Reached {warn_count} Warnings)"
+
     async def _apply_action(self, member: discord.Member, action: str, timeout_min: int, reason: str) -> str:
         """Apply a moderation action and return the escalation/description string."""
         escalation_str = ""
         warn_count = len(get_user_warnings(member.guild.id, member.id))
+
         if action == "warn":
             add_warning(member.guild.id, member.id, reason, self.bot.user.id)
             warn_count += 1
@@ -52,14 +57,17 @@ class AutoModListener(commands.Cog):
                         clear_user_warnings(member.guild.id, member.id)
                     except Exception:
                         pass
+                
                 if td:
                     try:
                         new_until = discord.utils.utcnow() + td
                         if member.is_timed_out() and member.timed_out_until:
                             new_until = member.timed_out_until + td
+                        
                         max_until = discord.utils.utcnow() + datetime.timedelta(days=28)
                         if new_until > max_until:
                             new_until = max_until
+                            
                         await member.timeout(new_until, reason=f"AutoMod: {warn_count} warnings")
                     except Exception:
                         pass
@@ -90,31 +98,40 @@ class AutoModListener(commands.Cog):
                 await member.unban(reason="AutoMod: Softban unban")
             except Exception:
                 pass
+
         return escalation_str, warn_count
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if not message.guild or message.author.bot:
             return
+
         if message.author.guild_permissions.administrator or message.author.guild_permissions.manage_guild:
             return
+
         if is_whitelisted(message.guild.id, message.author.id):
             return
+
         config = load_automod_config(message.guild.id)
         if not config.get("enabled", False):
             return
+
         global_channels = config.get("exempt_channels", [])
         global_roles = config.get("exempt_roles", [])
         if str(message.channel.id) in global_channels:
             return
         if any(str(r.id) in global_roles for r in message.author.roles):
             return
+
         content_lower = message.content.lower()
+        
         def is_exempt(cfg):
             if str(message.channel.id) in cfg.get("exempt_channels", []):
                 return True
             if any(str(r.id) in cfg.get("exempt_roles", []) for r in message.author.roles):
                 return True
             return False
+        
         async def do_action(cfg, reason, delete_msg=True):
             if delete_msg:
                 try:
@@ -134,6 +151,7 @@ class AutoModListener(commands.Cog):
                 await log_event(message.guild, "auto_moderation", "AutoMod Triggered", f"**User:** {message.author.mention}\n**Reason:** {reason}\n**Action Taken:** {action.upper()}\n**Escalation:** {escalation_str}", target_channel_obj=message.channel)
             except Exception:
                 pass
+
         banned_cfg = config.get("banned_words", {})
         if banned_cfg.get("enabled", False) and not is_exempt(banned_cfg):
             words = banned_cfg.get("words", [])
@@ -141,6 +159,7 @@ class AutoModListener(commands.Cog):
             for w in words:
                 w = w.strip()
                 if not w: continue
+                # Handle asterisk wildcards
                 if w.startswith("*") and w.endswith("*"):
                     pattern = re.escape(w[1:-1])
                 elif w.startswith("*"):
@@ -149,26 +168,32 @@ class AutoModListener(commands.Cog):
                     pattern = r"\b" + re.escape(w[:-1])
                 else:
                     pattern = r"\b" + re.escape(w) + r"\b"
+                
                 if re.search(pattern, content_lower):
                     await do_action(banned_cfg, "AutoMod: Banned word detected")
                     return
+
         invites_cfg = config.get("anti_invites", {})
         if invites_cfg.get("enabled", False) and not is_exempt(invites_cfg):
             invite_links = ["discord.gg/", "discord.com/invite/", "dsc.gg/", "invite.gg/"]
             if any(inv in content_lower for inv in invite_links):
                 await do_action(invites_cfg, "AutoMod: Discord invite detected")
                 return
+
         link_cfg = config.get("anti_link", {})
         if link_cfg.get("enabled", False) and not is_exempt(link_cfg):
             blocked = link_cfg.get("blocked_domains", [])
+
             if blocked:
                 if any(domain in content_lower for domain in blocked if domain):
                     await do_action(link_cfg, "AutoMod: Unauthorized link detected")
                     return
             else:
+                
                 if "http://" in content_lower or "https://" in content_lower:
                     await do_action(link_cfg, "AutoMod: Unauthorized link detected")
                     return
+
         caps_cfg = config.get("anti_caps", {})
         if caps_cfg.get("enabled", False) and not is_exempt(caps_cfg):
             content_alpha = [c for c in message.content if c.isalpha()]
@@ -177,16 +202,19 @@ class AutoModListener(commands.Cog):
                 if upper_count / len(content_alpha) > 0.7:
                     await do_action(caps_cfg, "AutoMod: Excessive caps detected")
                     return
+
         mention_cfg = config.get("mention_spam", {})
         if mention_cfg.get("enabled", False) and not is_exempt(mention_cfg):
             max_mentions = mention_cfg.get("max_mentions", 4)
             if len(message.mentions) >= max_mentions:
                 await do_action(mention_cfg, f"AutoMod: Mass mentions detected ({len(message.mentions)})")
                 return
+
         spam_cfg = config.get("anti_spam", {})
         if spam_cfg.get("enabled", False) and not is_exempt(spam_cfg):
             m_msgs = spam_cfg.get("max_messages", 5)
             t_win = spam_cfg.get("time_window_sec", 3)
+
             now = time.time()
             gid = message.guild.id
             uid = message.author.id
@@ -194,16 +222,20 @@ class AutoModListener(commands.Cog):
                 self.spam_cache[gid] = {}
             if uid not in self.spam_cache[gid]:
                 self.spam_cache[gid][uid] = []
+
             self.spam_cache[gid][uid] = [t for t in self.spam_cache[gid][uid] if now - t <= t_win]
             self.spam_cache[gid][uid].append(now)
+
             if len(self.spam_cache[gid][uid]) >= m_msgs:
                 self.spam_cache[gid][uid] = []
                 await do_action(spam_cfg, f"AutoMod: Message flood ({m_msgs}+ messages in {t_win}s)")
                 return
+
         ai_cfg = config.get("ai_automod", {})
         if ai_cfg.get("enabled", False) and not is_exempt(ai_cfg):
             import re
             text = message.content
+
             flagged = None
             if re.search(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}(?:\.\d{1,3})?\b', text):
                 flagged = "IP address"
@@ -215,9 +247,11 @@ class AutoModListener(commands.Cog):
                 digits = re.sub(r'\D', '', text)
                 if len(digits) >= 7:
                     flagged = "Phone number"
+
             if flagged:
                 await do_action(ai_cfg, f"AutoMod: AI Content Filter - {flagged}")
                 return
+
             min_words = ai_cfg.get("min_words", 3)
             if len(text.split()) >= min_words:
                 try:
@@ -235,11 +269,13 @@ class AutoModListener(commands.Cog):
                         client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
                     else:
                         client = AsyncClient()
+
                     prompt = (f"Read this Discord message and decide if it should be deleted.\n"
                               f"Delete if it contains: severe insults, slurs, bypassed slurs (like 'f*ck'), or extreme toxicity.\n"
                               f"Do NOT delete normal chat, mild banter, or jokes.\n"
                               f"Message: '{text}'\n"
                               f"Answer ONLY YES or NO.")
+
                     res = await client.chat.completions.create(
                         model="gpt-3.5-turbo",
                         messages=[{"role": "user", "content": prompt}],
@@ -250,36 +286,48 @@ class AutoModListener(commands.Cog):
                         return
                 except Exception:
                     pass
+
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if not member.guild:
             return
+
         config = load_automod_config(member.guild.id)
         if not config.get("enabled", False):
             return
+
+        # Anti-Bot Add
         if member.bot:
             bot_cfg = config.get("anti_bot", {})
             if bot_cfg.get("enabled", False):
                 from Database.mongodb import get_config
                 settings = get_config("Settings", member.guild.id) or {}
                 bot_adders = settings.get("bot_adders", [])
+                
+                # Check audit logs for bot add
                 try:
                     inviter = None
                     async for entry in member.guild.audit_logs(limit=5, action=discord.AuditLogAction.bot_add):
                         if entry.target.id == member.id:
                             inviter = entry.user
                             break
+                    
                     if inviter:
                         if str(inviter.id) not in bot_adders and inviter.id != member.guild.owner_id:
+                            # Kick the bot immediately
                             try:
                                 await member.kick(reason="AutoMod: Anti-Bot Add triggered")
                             except:
                                 pass
+                            
+                            # Punish the inviter
                             action = bot_cfg.get("action", "kick")
                             escalation_str, warn_count = await self._apply_action(inviter, action, 5, "AutoMod: Unauthorized bot invite")
                             from Embeds import get_command_embed
                             kwargs = get_command_embed(member.guild.id, "automod", msg_type="notice", user_mention=inviter.mention, user_id=inviter.id, reason="Unauthorized Bot Invite", action_taken=action, warn_count=warn_count, escalation_str=escalation_str)
+                            
                             try:
+                                # Try to find a system channel to send notice to, or general
                                 channel = member.guild.system_channel
                                 if not channel:
                                     for c in member.guild.text_channels:
@@ -290,23 +338,29 @@ class AutoModListener(commands.Cog):
                                     await channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
                             except Exception:
                                 pass
+                            
                             try:
                                 await log_event(member.guild, "auto_moderation", "AutoMod Triggered (Anti-Bot)", f"**User:** {inviter.mention}\n**Reason:** Unauthorized Bot Invite\n**Action Taken:** {action.upper()}\n**Escalation:** {escalation_str}")
                             except Exception:
                                 pass
                 except Exception as e:
                     print(f"Error checking anti-bot: {e}")
+
             return
+
         if is_whitelisted(member.guild.id, member.id):
             return
+
         alt_cfg = config["anti_alt"]
         if alt_cfg.get("enabled", False):
             min_days = alt_cfg.get("min_age_days", 3)
             now = datetime.datetime.now(datetime.timezone.utc)
             age_days = (now - member.created_at).days
+
             if age_days < min_days:
                 action = alt_cfg.get("action", "kick")
                 reason = f"AutoMod Anti-Alt: Account age ({age_days} days) < required minimum ({min_days} days)"
+
                 if action == "kick":
                     try:
                         await member.send(f"You were automatically kicked from **{member.guild.name}** because your Discord account is too new (`{age_days} days old`, minimum: `{min_days} days`).")
@@ -340,5 +394,7 @@ class AutoModListener(commands.Cog):
                     await log_event(member.guild, "auto_moderation", "Anti-Alt Triggered", f"**User:** {member.mention}\n**Reason:** {reason}\n**Action Taken:** {action.upper()}")
                 except Exception:
                     pass
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModListener(bot))
+

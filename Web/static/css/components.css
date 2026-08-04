@@ -1,5 +1,5 @@
-
-
+/* ===== FORM ELEMENTS ===== */
+/* Base Button */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -46,7 +46,7 @@
     background: var(--bg-elevated);
 }
 
-
+/* Lang Switcher Pill */
 .lang-pill {
     background: var(--bg-elevated);
     border: 1px solid var(--border-color);
@@ -95,7 +95,7 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:foc
     border-color: #444;
 }
 
-
+/* ===== TOGGLES ===== */
 .toggle-container {
     display: flex;
     align-items: center;
@@ -123,7 +123,7 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:foc
 input:checked + .slider { background-color: var(--success); }
 input:checked + .slider:before { transform: translateX(18px); background-color: #fff; }
 
-
+/* ===== CONFIG CARDS ===== */
 .config-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
@@ -132,7 +132,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     margin-bottom: 20px;
 }
 
-
+/* ===== AUTOMOD CARDS ===== */
 .automod-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -168,7 +168,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 .btn-edit-rule:hover { border-color: var(--border-hover); background: #1a1a1a; }
 
-
+/* ===== MISC ===== */
 .hidden { display: none !important; }
 .image-dropzone {
     border: 1px dashed var(--border-color);
@@ -181,7 +181,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 .image-dropzone:hover { border-color: var(--border-hover); }
 
-
+/* ===== TOAST ===== */
 .toast {
     position: fixed; bottom: 24px; right: 24px;
     background: #fff; color: #000; padding: 12px 20px;
@@ -192,7 +192,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 .toast.show { transform: translateY(0); opacity: 1; }
 
-
+/* ===== MODALS ===== */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -239,7 +239,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     flex-shrink: 0;
 }
 
-
+/* ===== STATS ROW ===== */
 .dash-stats-row { display: flex; gap: 12px; margin-bottom: 24px; }
 .dash-stat-card {
     background: var(--bg-surface);
@@ -253,7 +253,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .status-pill.active { color: var(--success); border-color: rgba(34, 197, 94, 0.2); }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-
+/* ===== LOADERS ===== */
 .loader-container { padding: 80px 0; text-align: center; }
 .loader {
     width: 32px; height: 32px; border: 2px solid #222;
@@ -262,13 +262,13 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-
+/* ===== DISCORD PREVIEW ===== */
 .discord-preview {
     background: #2b2d31; border: 1px solid #1e1f22; border-radius: 8px; padding: 16px;
     font-family: "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-
+/* ===== CUSTOM SELECT ===== */
 .custom-select { position: relative; width: 100%; }
 .custom-select-trigger {
     width: 100%; background: var(--bg-input); border: 1px solid var(--border-color);
@@ -329,7 +329,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .custom-select-option.selected { background: var(--bg-elevated); color: var(--text-primary); font-weight: 600; }
 .color-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
-
+/* ===== CUSTOM MULTI-SELECT ===== */
 .custom-multiselect { position: relative; width: 100%; }
 .custom-multiselect-trigger {
     width: 100%; min-height: 42px; background: var(--bg-input);
@@ -364,7 +364,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 .custom-multiselect-input:focus { background: transparent; box-shadow: none; }
 
-
+/* Z-index for open dropdowns */
 .automod-rule-card:has(.custom-select.open),
 .automod-rule-card:has(.custom-multiselect.open),
 .form-group:has(.custom-select.open),

@@ -128,7 +128,7 @@ async function init() {
         if (userRes.ok) {
             currentUser = await userRes.json();
             document.getElementById('nav-user').innerHTML = `
-                <div class="avatar"><img src="https:
+                <div class="avatar"><img src="https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png" alt="Avatar" style="width:100%;height:100%;border-radius:50%"></div>
                 <span style="font-weight:600">${currentUser.username}</span>
                 <a href="/auth/logout" class="btn-secondary" style="padding: 6px 12px; margin-left: 10px;">Logout</a>
             `;
@@ -1800,7 +1800,7 @@ function renderWelcomeEmbedFields() {
                 </div>
                 
                 <button type="button" class="btn" title="Toggle Inline" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: ${inlineBg}; border: ${inlineBorder}; color: ${inlineColor}; border-radius: 4px; cursor: pointer;" onclick="updateWelcomeEmbedField(${index}, 'inline', !${field.inline}); renderWelcomeEmbedFields();">
-                    <svg xmlns="http:
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
                 </button>
                 
                 <button type="button" class="btn-danger" title="Delete Field" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #EF4444; border: none; color: white; cursor: pointer;" onclick="removeWelcomeEmbedField(${index})">
@@ -2002,26 +2002,26 @@ function formatDiscordPreviewText(str) {
     // 6. Inline code (`code`)
     text = text.replace(/`([^`]+)`/g, '<code style="background: #2B2D31; padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace; font-size: 12px; color: #E0E1E5;">$1</code>');
 
-    
+    // 7. Spoilers (||spoiler||)
     text = text.replace(/\|\|([\s\S]*?)\|\|/g, '<span style="background: #202225; color: transparent; border-radius: 3px; padding: 0 4px; cursor: pointer; transition: color 0.1s, background 0.1s;" onclick="this.style.color=\'#DBDEE1\'; this.style.background=\'rgba(255,255,255,0.1)\'" title="Click to reveal">$1</span>');
 
-    
+    // 8. Bold + Italic (***text***)
     text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
 
-    
+    // 9. Bold (**text**)
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
-    
+    // 10. Underline (__text__)
     text = text.replace(/__([^_]+)__/g, '<u>$1</u>');
 
-    
+    // 11. Italic (*text* or _text_)
     text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
     text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
 
-    
+    // 12. Strikethrough (~~text~~)
     text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
 
-    
+    // 13. Quotes (>>> multiline or > single line)
     if (text.includes('&gt;&gt;&gt;') || text.includes('>>>')) {
         const multilineRegex = /(?:&gt;&gt;&gt;|>>>)\s?([\s\S]*)/;
         text = text.replace(multilineRegex, '<blockquote style="border-left: 4px solid #4E5058; padding-left: 8px; margin: 4px 0; color: #B5BAC1; display: block; white-space: pre-wrap;">$1</blockquote>');
@@ -2550,7 +2550,7 @@ document.getElementById('btn-add-tempvoice-hub')?.addEventListener('click', () =
     addTempVoiceHubRow();
 });
 
-
+// Dropzone setup
 function bindDropzone(zoneId, fileInputId, urlInputId, syncFunc) {
     const zone = document.getElementById(zoneId);
     const fileInput = document.getElementById(fileInputId);
@@ -2644,7 +2644,7 @@ document.getElementById('btn-send-ticket').addEventListener('click', async () =>
     }
 });
 
-
+// AutoMod Modal Functions
 function openAutoModModal(ruleId) {
     activeAutomodRule = ruleId;
     const ruleCfg = currentAutomodConfig[ruleId] || {};
@@ -2926,7 +2926,7 @@ document.getElementById('btn_add_appeal_question')?.addEventListener('click', ()
     renderAppealQuestions(questions);
 });
 
-
+// Save Settings
 document.getElementById('config-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentGuildId) return;
@@ -2940,7 +2940,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     btn.innerText = 'Saving...';
     btn.disabled = true;
 
-    
+    // Process pending image uploads
     const uploadTargets = Object.keys(window.pendingMessageUploads);
     for (let targetId of uploadTargets) {
         const file = window.pendingMessageUploads[targetId];
@@ -2959,11 +2959,11 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
     }
     window.pendingMessageUploads = {};
 
-    
+    // Update AutoMod global options
     currentAutomodConfig.exempt_channels = Array.from(document.getElementById('automod_global_channels').selectedOptions).map(o => o.value);
     currentAutomodConfig.exempt_roles = Array.from(document.getElementById('automod_global_roles').selectedOptions).map(o => o.value);
 
-    
+    // Collect AutoResponder Data
     const localAutoresponder = {};
     document.querySelectorAll('.autoreply-row').forEach(row => {
         const trigger = row.querySelector('.ar-trigger').value.trim();
@@ -2975,14 +2975,14 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
 
-    
+    // Collect AutoRoles Data
     const joinroles = {
         enabled: document.getElementById('autoroles_enabled').checked,
         user_roles: Array.from(document.getElementById('autoroles_user').selectedOptions).map(o => o.value),
         bot_roles: Array.from(document.getElementById('autoroles_bot').selectedOptions).map(o => o.value)
     };
 
-    
+    // Collect Ticket Options Data
     const ticketOptions = [];
     document.querySelectorAll('.ticket-option-row').forEach(row => {
         const name = row.querySelector('.to-name').value.trim();
@@ -2997,7 +2997,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
 
-    
+    // Collect File Channels
     const fileChannels = [];
     document.querySelectorAll('.fc-row').forEach(row => {
         const channel_id = row.querySelector('.fc-channel').value;
@@ -3008,7 +3008,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
 
-    
+    // Collect Auto Reactions
     const autoReactions = [];
     document.querySelectorAll('.ar-row').forEach(row => {
         const channel_id = row.querySelector('.ar-channel-sel').value;
@@ -3019,7 +3019,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         }
     });
 
-    
+    // Setup Test Level Up Button
     const testLevelUpBtn = document.getElementById('btn-test-levelup');
     if (testLevelUpBtn) {
         testLevelUpBtn.addEventListener('click', async () => {
@@ -3059,7 +3059,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         });
     }
 
-    
+    // Collect AutoMod Toggle States and Global Exepts
     currentAutomodConfig.enabled = document.getElementById('automod_enabled').checked;
 
     if (!currentAutomodConfig.banned_words) currentAutomodConfig.banned_words = {};
@@ -3083,7 +3083,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
 
 
 
-    
+    // Collect Temp Voice Data
     const tvHubs = [];
     document.querySelectorAll('.tempvoice-hub-row').forEach(row => {
         const hid = row.querySelector('.tv-hub-channel').value;
@@ -3402,7 +3402,7 @@ document.getElementById('btn-setup-serverstats')?.addEventListener('click', asyn
 });
 
 init();
-
+// Workaround for multiple selects on Windows to behave like toggles
 document.addEventListener('mousedown', function (e) {
     if (e.target.tagName === 'OPTION' && e.target.parentElement.hasAttribute('multiple')) {
         e.preventDefault();
@@ -3411,9 +3411,9 @@ document.addEventListener('mousedown', function (e) {
     }
 });
 
+// ─── Level System Dynamic Functions ──────────────────────────────────────────
 
-
-
+// Number +/- buttons
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('num-btn')) {
         const targetId = e.target.dataset.target;
@@ -3430,25 +3430,25 @@ document.addEventListener('click', function(e) {
     }
 });
 
-
+// XP Multiplier slider display
 document.getElementById('level_xp_multiplier')?.addEventListener('input', function() {
     document.getElementById('level_xp_multiplier_display').textContent = 'x' + parseFloat(this.value).toFixed(2);
 });
 
-
+// Toggle tabs (Blacklist/Whitelist and Stat tabs)
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('toggle-tab')) {
         const parent = e.target.closest('.toggle-tabs');
         parent.querySelectorAll('.toggle-tab').forEach(t => t.classList.remove('active'));
         e.target.classList.add('active');
 
-        
+        // Handle mode tabs (blacklist/whitelist)
         const targetMode = e.target.dataset.targetMode;
         if (targetMode) {
             document.getElementById(targetMode).value = e.target.dataset.mode;
         }
 
-        
+        // Handle stat tabs (messages/voice/reactions)
         const statTab = e.target.dataset.statTab;
         if (statTab) {
             document.querySelectorAll('.stat-tab-content').forEach(el => el.style.display = 'none');
@@ -3457,7 +3457,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-
+// ─── Level Roles ─────────────────────────────────────────────────────────────
 function renderLevelRoles(roles) {
     const container = document.getElementById('level-roles-list');
     if (!roles.length) {
@@ -3502,7 +3502,7 @@ document.getElementById('btn-add-level-role')?.addEventListener('click', () => {
     container.appendChild(row);
 });
 
-
+// ─── Stat Roles ──────────────────────────────────────────────────────────────
 function renderStatRoles(type, roles) {
     const container = document.getElementById(`stat-${type}-roles-list`);
     const countEl = document.getElementById(`stat-${type}-count`);
@@ -3557,7 +3557,7 @@ document.querySelectorAll('.btn-add-stat-role').forEach(btn => {
     });
 });
 
-
+// ─── Boosters ────────────────────────────────────────────────────────────────
 function renderBoosters(type, boosters) {
     const container = document.getElementById(`${type}-boosters-list`);
     const countEl = document.getElementById(`${type}-booster-count`);
@@ -3691,7 +3691,7 @@ function handleInputChange(e) {
     }
 }
 
-
+// Track inputs
 document.addEventListener('input', handleInputChange);
 document.addEventListener('change', handleInputChange);
 
@@ -3717,12 +3717,12 @@ document.addEventListener('click', (e) => {
 if (btnCancelChanges) {
     btnCancelChanges.addEventListener('click', () => {
         window.clearDirtyTracking();
-        
+        // Reload config to revert changes but keep current tab
         if (currentGuildId) loadConfig(currentGuildId, undefined, undefined, true);
     });
 }
 
-
+// --- NEW EMBED BUILDER LOGIC ---
 
 window.promptUrl = function(inputId) {
     const el = document.getElementById(inputId);
@@ -3743,7 +3743,7 @@ function renderEmbedFields() {
         const div = document.createElement('div');
         div.style.cssText = 'border: 1px solid #313338; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 8px;';
         
-        
+        // Inline icon logic
         const inlineBg = field.inline ? '#006CE7' : '#3B82F6';
         const inlineBorder = field.inline ? 'none' : 'none';
         const inlineColor = field.inline ? 'white' : 'white';
@@ -3786,7 +3786,7 @@ window.updateCount = function(el, max) {
     }
 }
 
-
+// Attach character count updaters
 const attachCount = (id, max) => {
     const el = document.getElementById(id);
     if (el) {
@@ -3803,7 +3803,7 @@ attachCount('embed_description', 4096);
 attachCount('embed_footer_text', 2048);
 
 
-
+// Components v2 Mode Switch
 const modeRadios = document.querySelectorAll('input[name="embed_mode"]');
 const compSection = document.getElementById('components-v2-section');
 modeRadios.forEach(radio => {
@@ -3841,7 +3841,7 @@ if (btnAddComp) {
         if (!label) return;
         const url = prompt("Button URL (HTTPS only):");
         if (!url) return;
-        embedComponents.push({ label, url, style: 5 }); 
+        embedComponents.push({ label, url, style: 5 }); // 5 is URL button
         renderComponents();
         updateEmbedPreview();
         setDirty(true);
@@ -3850,7 +3850,7 @@ if (btnAddComp) {
 
 
 // ----------------------------------------------------
-
+// MESSAGES CRUD & UI LOGIC
 // ----------------------------------------------------
 let customMessages = [];
 let currentMessageId = null;
@@ -3953,14 +3953,14 @@ window.openMessageBuilder = function(msg = null) {
     updateEmbedPreview();
     updateDropBackgrounds();
     
-    
+    // Show/hide Delete button based on whether editing existing message
     const delBtn = document.getElementById('btn-embed-delete');
     if (delBtn) delBtn.style.display = msg ? 'inline-block' : 'none';
     
-    
+    // Clear any pending uploads from previous session
     window.pendingMessageUploads = {};
     
-    
+    // Dispatch input events to trigger char counts
     ['embed_content', 'embed_author_name', 'embed_title', 'embed_description', 'embed_footer_text'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.dispatchEvent(new Event('input'));
@@ -3979,7 +3979,7 @@ window.closeMessageBuilder = function() {
 }
 
 // ----------------------------------------------------
-
+// DRAG AND DROP IMAGE UPLOADS
 // ----------------------------------------------------
 function updateDropBackgrounds() {
     const bgs = [
@@ -4057,7 +4057,7 @@ window.pendingMessageUploads = {};
 async function uploadFile(file, targetInputId) {
     if (!file) return;
     
-    
+    // Defer the upload until save
     window.pendingMessageUploads[targetInputId] = file;
     const blobUrl = URL.createObjectURL(file);
     const inp = document.getElementById(targetInputId);
@@ -4127,15 +4127,15 @@ setupDropZone('drop-boost-thumbnail', 'boost_embed_thumbnail');
 setupDropZone('drop-boost-image', 'boost_embed_image');
 setupDropZone('drop-boost-footer-icon', 'boost_embed_footer_icon');
 
-
+// Replace the old promptUrl logic
 window.promptUrl = function(inputId) {
-    
+    // Legacy mapping (just in case)
     currentUploadTarget = inputId;
     fileInput.click();
 }
 
 // ----------------------------------------------------
-
+// SAVE AND DELETE MESSAGE LOGIC
 // ----------------------------------------------------
 window.saveCurrentCustomMessage = async function() {
     if (!currentGuildId) return;
@@ -4153,7 +4153,7 @@ window.saveCurrentCustomMessage = async function() {
     
     showToast("Processing uploads...");
     
-    
+    // Process pending uploads
     const uploadTargets = Object.keys(window.pendingMessageUploads);
     for (let targetId of uploadTargets) {
         const file = window.pendingMessageUploads[targetId];
@@ -4171,7 +4171,7 @@ window.saveCurrentCustomMessage = async function() {
             console.error("Upload failed", e);
         }
     }
-    
+    // Clear pending
     window.pendingMessageUploads = {};
     
     const payload = {
@@ -4258,7 +4258,7 @@ if (btnSaveMsg) {
 }
 
 // ----------------------------------------------------
-
+// OLD LOGIC HOOKUPS
 // ----------------------------------------------------
 let embedFields = [];
 
@@ -4392,7 +4392,7 @@ function updateEmbedPreview() {
         } else { embedEl.style.display = 'none'; }
     }
     
-    
+    // Render Components (Buttons) below the embed/v2 UI
     const compCont = document.getElementById('preview-components-container');
     if (compCont) {
         compCont.innerHTML = '';
@@ -4452,7 +4452,7 @@ if (btnSendEmbed) {
             mode: mode
         };
         
-        
+        // Upload any pending images before sending
         const pendingKeys = Object.keys(window.pendingMessageUploads);
         if (pendingKeys.length > 0) {
             showToast("Uploading images...");
@@ -4465,7 +4465,7 @@ if (btnSendEmbed) {
                     const upData = await upRes.json();
                     if (upData.success && upData.url) {
                         document.getElementById(targetId).value = upData.url;
-                        
+                        // Update the payload field that corresponds to this input
                         const fieldMap = { 'embed_author_icon': 'author_icon', 'embed_thumbnail': 'thumbnail', 'embed_image': 'image', 'embed_footer_icon': 'footer_icon' };
                         if (fieldMap[targetId]) payload[fieldMap[targetId]] = upData.url;
                     }
@@ -4501,7 +4501,7 @@ if (btnSendEmbed) {
 }
 
 // ==========================================
-
+// CHARTS (Chart.js) & STATS
 // ==========================================
 let chartsInitialized = false;
 let chartJoins, chartFlow, chartMessages;
@@ -4708,7 +4708,7 @@ function resetCountingNumber() {
     if (typeof showToast === 'function') showToast("Counting reset to 0. Click Save Changes to apply.");
 }
 
-
+// Economy System List Logic
 window.addEconomyWorkResponse = function(text = "") {
     const container = document.getElementById('economy_work_responses_container');
     if(!container) return;
@@ -4829,7 +4829,7 @@ document.addEventListener('click', function(e) {
 
 
 // -----------------------------------------------------------------------------
-
+// REACTION ROLES MODULE
 // -----------------------------------------------------------------------------
 
 let currentReactionRoles = [];
@@ -4958,7 +4958,7 @@ function openReactionRoleBuilder(rr) {
             input.checked = (input.value === btnType);
         });
 
-        
+        // Load fields
         document.getElementById('rr-embed-fields-container').innerHTML = '';
         if (embed.fields && embed.fields.length > 0) {
             embed.fields.forEach(f => {
@@ -4966,7 +4966,7 @@ function openReactionRoleBuilder(rr) {
             });
         }
         
-        
+        // Load buttons
         document.getElementById('rr_buttons_list').innerHTML = '';
         if (rr.components && rr.components.length > 0) {
             rr.components.forEach(btn => {
@@ -5005,10 +5005,10 @@ function openReactionRoleBuilder(rr) {
         
         const typeInputs = document.querySelectorAll('input[name="rr_button_type"]');
         typeInputs.forEach(input => input.checked = (input.value === 'toggle'));
-        rrAddButtonConfig(); 
+        rrAddButtonConfig(); // Default empty button
     }
     
-    
+    // Auto resize textareas
     autoResizeTextarea(document.getElementById('rr_embed_content'));
     autoResizeTextarea(document.getElementById('rr_embed_description'));
     
@@ -5022,7 +5022,7 @@ function closeReactionRoleBuilder() {
 }
 
 function rrSetDirty(isDirty) {
-    
+    // Optional unsaved state logic
 }
 
 function rrUpdateCount(el, max) {
@@ -5134,11 +5134,11 @@ function rrSelectColor(el) {
     const color = el.getAttribute('data-color');
     parent.querySelector('.rr-btn-color-val').value = color;
     
-    
+    // Reset all borders
     parent.querySelectorAll('.rr-color-circle').forEach(circle => {
         circle.style.border = 'none';
     });
-    
+    // Set border on selected
     el.style.border = '3px solid rgba(255,255,255,0.3)';
     
     updateRRPreview();
@@ -5292,11 +5292,11 @@ function updateRRPreview() {
     const pContent = document.getElementById('rr-preview-content');
     const pEmbed = document.getElementById('rr-preview-embed');
     
-    
+    // Content
     pContent.style.display = payload.content ? 'block' : 'none';
     if (payload.content) pContent.innerText = payload.content;
 
-    
+    // Embed
     let hasEmbed = false;
     if (payload.embed.author_name || payload.embed.title || payload.embed.description || 
         payload.embed.fields.length > 0 || payload.embed.image_url || payload.embed.footer_text) {
@@ -5306,7 +5306,7 @@ function updateRRPreview() {
     pEmbed.style.display = hasEmbed ? 'block' : 'none';
     
     if (hasEmbed) {
-        
+        // Author
         const pAuthor = document.getElementById('rr-preview-author');
         if (payload.embed.author_name) {
             pAuthor.style.display = 'flex';
@@ -5322,7 +5322,7 @@ function updateRRPreview() {
             pAuthor.style.display = 'none';
         }
 
-        
+        // Title
         const pTitle = document.getElementById('rr-preview-title');
         if (payload.embed.title) {
             pTitle.style.display = 'block';
@@ -5331,7 +5331,7 @@ function updateRRPreview() {
             pTitle.style.display = 'none';
         }
 
-        
+        // Desc
         const pDesc = document.getElementById('rr-preview-description');
         if (payload.embed.description) {
             pDesc.style.display = 'block';
@@ -5340,7 +5340,7 @@ function updateRRPreview() {
             pDesc.style.display = 'none';
         }
 
-        
+        // Fields
         const pFields = document.getElementById('rr-preview-fields');
         pFields.innerHTML = '';
         if (payload.embed.fields.length > 0) {
@@ -5359,7 +5359,7 @@ function updateRRPreview() {
             pFields.style.display = 'none';
         }
 
-        
+        // Image
         const pImage = document.getElementById('rr-preview-image');
         if (payload.embed.image_url) {
             pImage.src = payload.embed.image_url;
@@ -5368,7 +5368,7 @@ function updateRRPreview() {
             pImage.style.display = 'none';
         }
 
-        
+        // Thumbnail
         const pThumbCont = document.getElementById('rr-preview-thumbnail-container');
         const pThumb = document.getElementById('rr-preview-thumbnail');
         if (payload.embed.thumbnail_url) {
@@ -5378,7 +5378,7 @@ function updateRRPreview() {
             pThumbCont.style.display = 'none';
         }
 
-        
+        // Footer
         const pFooter = document.getElementById('rr-preview-footer');
         if (payload.embed.footer_text) {
             pFooter.style.display = 'flex';
@@ -5395,7 +5395,7 @@ function updateRRPreview() {
         }
     }
     
-    
+    // Components
     const compContainer = document.getElementById('rr-preview-components-container');
     compContainer.innerHTML = '';
     
@@ -5436,7 +5436,7 @@ function updateRRPreview() {
     });
 }
 
-
+// --- Moderation Immunity UI ---
 let modImmuneUsersList = [];
 
 function addImmuneUserChip(id, name, avatar) {
@@ -5484,7 +5484,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
+// --- Global Select Upgrader ---
 function upgradeNativeSelect(sel) {
     if (sel.dataset.customized === 'true' || sel.style.display === 'none' || sel.closest('.custom-select') || sel.closest('.custom-multiselect') || sel.classList.contains('select2-roles')) return;
 

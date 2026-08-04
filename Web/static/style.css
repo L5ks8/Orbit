@@ -52,16 +52,16 @@ body {
     overflow-x: hidden;
 }
 
-
+/* Hide scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #333; }
 
-
+/* Remove ambient effects */
 .ambient-bg, .ambient-orb { display: none !important; }
 
-
+/* ===== NAVBAR ===== */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -106,7 +106,7 @@ body {
 }
 .avatar:hover { border-color: var(--text-primary); }
 
-
+/* ===== BUTTONS ===== */
 .btn-primary {
     background: #fff;
     color: #000;
@@ -175,7 +175,7 @@ body {
     flex-grow: 1;
 }
 
-
+/* ===== SERVER SELECTION ===== */
 .page-header { margin-bottom: 32px; text-align: center; }
 .page-header h2 { font-size: 32px; font-weight: 700; letter-spacing: -1px; margin-bottom: 6px; }
 .page-header p { color: var(--text-secondary); font-size: 14px; }
@@ -220,7 +220,7 @@ body {
 .server-info h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
 .server-info p { color: var(--text-secondary); font-size: 12px; }
 
-
+/* ===== DASHBOARD LAYOUT ===== */
 .dashboard-grid {
     display: flex;
     flex-direction: row;
@@ -306,7 +306,7 @@ body {
 }
 .dash-nav-item.active svg { opacity: 1; color: #000; }
 
-
+/* ===== MAIN CONTENT ===== */
 .dash-main {
     background: none;
     border: none;
@@ -338,7 +338,7 @@ body {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .dash-panel h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
 
-
+/* ===== FORM ELEMENTS ===== */
 .form-group { margin-bottom: 24px; }
 .form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
 .form-group .help-text { display: block; color: var(--text-muted); font-size: 12px; margin-bottom: 10px; }
@@ -367,7 +367,7 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:foc
     border-color: #444;
 }
 
-
+/* ===== TOGGLES ===== */
 .toggle-container {
     display: flex;
     align-items: center;
@@ -395,7 +395,7 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:foc
 input:checked + .slider { background-color: var(--success); }
 input:checked + .slider:before { transform: translateX(18px); background-color: #fff; }
 
-
+/* ===== CONFIG CARDS ===== */
 .config-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
@@ -404,7 +404,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     margin-bottom: 20px;
 }
 
-
+/* ===== AUTOMOD CARDS ===== */
 .automod-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -440,7 +440,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 .btn-edit-rule:hover { border-color: var(--border-hover); background: #1a1a1a; }
 
-
+/* ===== MISC ===== */
 .hidden { display: none !important; }
 .image-dropzone {
     border: 1px dashed var(--border-color);
@@ -453,7 +453,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 .image-dropzone:hover { border-color: var(--border-hover); }
 
-
+/* ===== TOAST ===== */
 .toast {
     position: fixed; bottom: 24px; right: 24px;
     background: #fff; color: #000; padding: 12px 20px;
@@ -464,7 +464,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 .toast.show { transform: translateY(0); opacity: 1; }
 
-
+/* ===== MODALS ===== */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -511,7 +511,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     flex-shrink: 0;
 }
 
-
+/* ===== STATS ROW ===== */
 .dash-stats-row { display: flex; gap: 12px; margin-bottom: 24px; }
 .dash-stat-card {
     background: var(--bg-surface);
@@ -525,7 +525,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .status-pill.active { color: var(--success); border-color: rgba(34, 197, 94, 0.2); }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-
+/* ===== LOADERS ===== */
 .loader-container { padding: 80px 0; text-align: center; }
 .loader {
     width: 32px; height: 32px; border: 2px solid #222;
@@ -534,13 +534,13 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-
+/* ===== DISCORD PREVIEW ===== */
 .discord-preview {
     background: #2b2d31; border: 1px solid #1e1f22; border-radius: 8px; padding: 16px;
     font-family: "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-
+/* ===== CUSTOM SELECT ===== */
 .custom-select { position: relative; width: 100%; }
 .custom-select-trigger {
     width: 100%; background: var(--bg-input); border: 1px solid var(--border-color);
@@ -601,7 +601,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .custom-select-option.selected { background: var(--bg-elevated); color: var(--text-primary); font-weight: 600; }
 .color-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
-
+/* ===== CUSTOM MULTI-SELECT ===== */
 .custom-multiselect { position: relative; width: 100%; }
 .custom-multiselect-trigger {
     width: 100%; min-height: 42px; background: var(--bg-input);
@@ -636,7 +636,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 }
 .custom-multiselect-input:focus { background: transparent; box-shadow: none; }
 
-
+/* Z-index for open dropdowns */
 .automod-rule-card:has(.custom-select.open),
 .automod-rule-card:has(.custom-multiselect.open),
 .form-group:has(.custom-select.open),
@@ -647,7 +647,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .custom-multiselect.open .custom-select-dropdown,
 .custom-select.open .custom-select-dropdown { display: flex; }
 
-
+/* ===== LANDING PAGE ===== */
 .landing-wrapper {
     position: absolute; top: 56px; left: 0; width: 100%; min-height: calc(100vh - 56px);
     overflow-x: hidden; background: var(--bg-base);
@@ -718,7 +718,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     .dash-main { padding: 20px 0 0 0; }
 }
 
-
+/* ─── Level System Styles ─────────────────────────────────────────────────── */
 .level-card-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -743,7 +743,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     border-bottom: 1px solid var(--border-color);
 }
 
-
+/* Number +/- input group */
 .number-input-group {
     display: flex;
     align-items: center;
@@ -786,7 +786,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .num-btn.minus { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
 .num-btn.plus { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 
-
+/* Reward Tables */
 .reward-table {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -878,7 +878,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     color: white;
 }
 
-
+/* Toggle Tabs */
 .toggle-tabs {
     display: inline-flex;
     gap: 0;
@@ -905,7 +905,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     color: var(--text-primary);
 }
 
-
+/* Embed Builder Preview */
 .embed-builder-preview {
     background: var(--bg-input);
     border-left: 3px solid #3B82F6;
@@ -913,7 +913,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
     padding: 15px;
 }
 
-
+/* Range slider */
 input[type="range"] {
     -webkit-appearance: none;
     appearance: none;

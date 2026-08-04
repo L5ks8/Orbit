@@ -8,9 +8,9 @@
                         </div>
                         <p class="section-desc">Reward members with XP for participating in your server.</p>
 
-                        
+                        <!-- XP Modules Grid -->
                         <div class="level-card-grid">
-                            
+                            <!-- Message XP Card -->
                             <div class="level-card">
                                 <div class="level-card-title">Message XP</div>
                                 <div class="form-group toggle-group">
@@ -44,7 +44,7 @@
                                 </div>
                             </div>
 
-                            
+                            <!-- Voice XP Card -->
                             <div class="level-card">
                                 <div class="level-card-title">Voice XP</div>
                                 <div class="form-group toggle-group">
@@ -81,7 +81,7 @@
                                 </div>
                             </div>
 
-                            
+                            <!-- Command XP Card -->
                             <div class="level-card">
                                 <div class="level-card-title">Command XP</div>
                                 <div class="form-group toggle-group">
@@ -115,7 +115,7 @@
                                 </div>
                             </div>
 
-                            
+                            <!-- Reaction XP Card -->
                             <div class="level-card">
                                 <div class="level-card-title">Reaction XP</div>
                                 <div class="form-group toggle-group">
@@ -150,7 +150,7 @@
                             </div>
                         </div>
 
-                        
+                        <!-- XP Options -->
                         <div class="level-card" style="margin-top: 20px;">
                             <div class="level-card-title">XP Options</div>
                             <div class="level-card-grid" style="border:none; padding:0;">
@@ -190,7 +190,7 @@
                             </div>
                         </div>
 
-                        
+                        <!-- Channels & Roles -->
                         <div class="level-card" style="margin-top: 20px;">
                             <div class="level-card-title">Channels</div>
                             <div class="level-card-grid" style="border:none; padding:0;">
@@ -232,7 +232,7 @@
                             </div>
                         </div>
 
-                        
+                        <!-- Leaderboard -->
                         <div class="level-card" style="margin-top: 20px;">
                             <div class="level-card-title">Leaderboard</div>
                             <div class="level-card-grid" style="border:none; padding:0;">
@@ -256,7 +256,7 @@
                             </div>
                         </div>
 
-                        
+                        <!-- Level Up Message -->
                         <div class="level-card" style="margin-top: 20px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div class="level-card-title" style="margin-bottom: 0;">Level Up Message</div>
@@ -283,7 +283,7 @@
                                 <input type="text" id="level_levelup_message_content" value="{user_mention}" maxlength="2000">
                             </div>
 
-                            
+                            <!-- Embed Builder -->
                             <div class="embed-builder-preview" style="margin-top: 10px;">
                                 <div class="form-group">
                                     <label>Author Name</label>
@@ -310,7 +310,7 @@ You reached **Level {level}**.</textarea>
                             <p style="color: #e67e22; font-size: 12px; margin-top: 8px;">You can use {variables} in the embedded message: {user_mention}, {user_globalname}, {level}, {roles}</p>
                         </div>
 
-                        
+                        <!-- Level Roles -->
                         <div class="level-card" style="margin-top: 20px;">
                             <div class="level-card-title">Level Roles</div>
                             <div class="level-card-grid" style="border:none; padding:0;">
@@ -343,7 +343,7 @@ You reached **Level {level}**.</textarea>
                             <button type="button" id="btn-add-level-role" class="btn-primary">+ Add Role</button>
                         </div>
 
-                        
+                        <!-- Stat Roles -->
                         <div class="level-card" style="margin-top: 20px;">
                             <div class="level-card-title">Stat Roles</div>
 
@@ -353,7 +353,7 @@ You reached **Level {level}**.</textarea>
                                 <button type="button" class="toggle-tab" data-stat-tab="reactions">Reactions</button>
                             </div>
 
-                            
+                            <!-- Messages Stat Tab -->
                             <div id="stat-tab-messages" class="stat-tab-content">
                                 <h4 style="margin-bottom: 10px;">Message Roles (<span id="stat-msg-count">0</span>/5)</h4>
                                 <div class="level-card-grid" style="border:none; padding:0;">
@@ -387,7 +387,7 @@ You reached **Level {level}**.</textarea>
                                 <button type="button" class="btn-primary btn-add-stat-role" data-stat-type="msg">+ Add Role</button>
                             </div>
 
-                            
+                            <!-- Voice Stat Tab -->
                             <div id="stat-tab-voice" class="stat-tab-content" style="display: none;">
                                 <h4 style="margin-bottom: 10px;">Voice Hours Roles (<span id="stat-voice-count">0</span>/5)</h4>
                                 <div class="level-card-grid" style="border:none; padding:0;">
@@ -421,7 +421,7 @@ You reached **Level {level}**.</textarea>
                                 <button type="button" class="btn-primary btn-add-stat-role" data-stat-type="voice">+ Add Role</button>
                             </div>
 
-                            
+                            <!-- Reactions Stat Tab -->
                             <div id="stat-tab-reactions" class="stat-tab-content" style="display: none;">
                                 <h4 style="margin-bottom: 10px;">Reaction Roles (<span id="stat-react-count">0</span>/5)</h4>
                                 <div class="level-card-grid" style="border:none; padding:0;">
@@ -456,7 +456,7 @@ You reached **Level {level}**.</textarea>
                             </div>
                         </div>
 
-                        
+                        <!-- Role Boosters -->
                         <div class="level-card" style="margin-top: 20px;">
                             <div class="level-card-title">Role Boosters (<span id="role-booster-count">0</span>/10)</div>
                             <div class="form-group toggle-group">
@@ -479,7 +479,7 @@ You reached **Level {level}**.</textarea>
                             <button type="button" id="btn-add-role-booster" class="btn-primary">+ Add Role</button>
                         </div>
 
-                        
+                        <!-- Channel Boosters -->
                         <div class="level-card" style="margin-top: 20px;">
                             <div class="level-card-title">Channel Boosters (<span id="channel-booster-count">0</span>/10)</div>
                             <div class="reward-table" style="margin-top: 15px;">
