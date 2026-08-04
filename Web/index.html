@@ -97,7 +97,7 @@
                     class="nav-link" target="_blank" rel="noopener">Add to Discord</a>
                 <a href="#" class="nav-link" onclick="openSupportInvite(); return false;">Support Server</a>
                 <div class="lang-dropdown-wrapper" style="position:relative;">
-                    <button id="lang-switcher" class="lang-pill" onclick="this.nextElementSibling.classList.toggle('active')" style="display:flex; align-items:center; gap:6px; cursor:pointer; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:6px 12px; border-radius:100px;">
+                    <button id="lang-switcher" class="lang-pill" onclick="toggleLangMenu(this)" style="display:flex; align-items:center; gap:6px; cursor:pointer; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:6px 12px; border-radius:100px;">
                         <img id="lang-switcher-flag" src="https://flagcdn.com/w40/de.png" style="width:16px; height:16px; border-radius:50%; object-fit:cover;"> <span id="lang-switcher-text">DE</span>
                     </button>
                     <div class="lang-dropdown-menu" style="display:none; position:absolute; top:100%; right:0; background:var(--bg-elevated); border:1px solid var(--border-color); border-radius:8px; padding:4px; margin-top:8px; flex-direction:column; gap:4px; z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.4); min-width:120px;">
@@ -424,10 +424,24 @@
                 setTimeout(function() { translatePage(lang); }, 500);
             }
         }
+        function toggleLangMenu(btn) {
+            var menu = btn.nextElementSibling;
+            var isActive = menu.classList.contains('active');
+            
+            if (!isActive) {
+                menu.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } else {
+                menu.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
         function selectLang(code, text, flagUrl) {
             document.getElementById('lang-switcher-text').innerText = text;
             document.getElementById('lang-switcher-flag').src = flagUrl;
             document.querySelector('.lang-dropdown-menu').classList.remove('active');
+            document.body.style.overflow = '';
             translatePage(code);
         }
         
@@ -435,7 +449,10 @@
         window.addEventListener('click', function(e) {
             if (!e.target.closest('.lang-dropdown-wrapper')) {
                 var menu = document.querySelector('.lang-dropdown-menu');
-                if (menu) menu.classList.remove('active');
+                if (menu && menu.classList.contains('active')) {
+                    menu.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
             }
         });
     </script>
