@@ -48,8 +48,10 @@ def get_embed(msg_type: str, **kwargs):
         components = kwargs.get("components", [])
         
         embed = discord.Embed(title=title, description=f"{description}\n\n{instructions}", color=discord.Color.teal())
-        view = View(timeout=None)
-        for comp in components: view.add_item(comp)
+        view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = View(timeout=None)
+            for comp in components: view.add_item(comp)
         return {"embed": embed, "view": view}
         
     elif msg_type == "control":
@@ -68,8 +70,10 @@ def get_embed(msg_type: str, **kwargs):
         embed.add_field(name="Subject", value=subject, inline=False)
         embed.add_field(name="Description", value=f"```\n{description}\n```", inline=False)
         
-        view = View(timeout=None)
-        for comp in components: view.add_item(comp)
+        view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = View(timeout=None)
+            for comp in components: view.add_item(comp)
         return {"embed": embed, "view": view}
         
     elif msg_type == "claim":

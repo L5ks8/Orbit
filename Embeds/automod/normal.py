@@ -15,8 +15,10 @@ def get_embed(msg_type: str, **kwargs):
         embed.add_field(name="2. Anti-Spam / Anti-Raid", value=f"{spam_str}\nDetects message flood across all channels. If action is `WARN`, accumulating 5+ warnings automatically locks the user in timeout (1 Day -> 3 Days -> 7 Days).", inline=False)
         embed.add_field(name="3. Anti-Alt (Account Age Defense)", value=f"{alt_str}\nChecks account age of joining members to block suspicious alts & bots before they raid.", inline=False)
 
-        view = View(timeout=None)
-        for comp in components: view.add_item(comp)
+        view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = View(timeout=None)
+            for comp in components: view.add_item(comp)
         return {"embed": embed, "view": view}
 
     elif msg_type == "notice":

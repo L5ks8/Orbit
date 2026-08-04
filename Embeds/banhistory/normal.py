@@ -25,9 +25,11 @@ def get_embed(msg_type: str, **kwargs):
         )
         embed.set_footer(text=f"Total Past Bans: {total_bans} • Page {page} of {total_pages}")
         
-        view = discord.ui.View(timeout=None)
-        for comp in components:
-            view.add_item(comp)
+        view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = discord.ui.View(timeout=None)
+            for comp in components:
+                view.add_item(comp)
             
         return {"embed": embed, "view": view}
     return {}
