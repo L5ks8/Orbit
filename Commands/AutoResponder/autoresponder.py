@@ -97,21 +97,7 @@ class AutoResponderCommand(commands.Cog):
             
         async def check_ai_context(trigger: str, text: str, response: str) -> bool:
             try:
-                from g4f.client import AsyncClient
                 import g4f
-                providers = [
-                    getattr(g4f.Provider, "Blackbox", None),
-                    getattr(g4f.Provider, "DDG", None),
-                    getattr(g4f.Provider, "DuckDuckGo", None),
-                    getattr(g4f.Provider, "FreeGpt", None),
-                    getattr(g4f.Provider, "ChatGptEs", None),
-                ]
-                valid_providers = [p for p in providers if p is not None]
-                if hasattr(g4f.Provider, "RetryProvider") and valid_providers:
-                    client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
-                else:
-                    client = AsyncClient()
-                
                 prompt = (f"You are a strict context checker.\n"
                           f"Trigger Word: '{trigger}'\n"
                           f"Bot's intended Response: '{response}'\n"
@@ -120,18 +106,32 @@ class AutoResponderCommand(commands.Cog):
                           f"CRITICAL: If the Trigger Word is used in a different language or has a different meaning (e.g. German 'war' meaning 'was', but Bot's Response implies English 'war' meaning conflict), you MUST output NO.\n"
                           f"Respond ONLY with YES or NO. Do not explain.")
                 
-                res = await client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                answer = res.choices[0].message.content.strip().lower()
-                
+                try:
+                    from g4f.client import AsyncClient
+                    client = AsyncClient()
+                    res = await client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+                    answer = res.choices[0].message.content.strip().lower()
+                except Exception:
+                    # Fallback to old g4f API if AsyncClient fails or is missing
+                    answer = await g4f.ChatCompletion.create_async(
+                        model=g4f.models.gpt_35_turbo,
+                        messages=[{"role": "user", "content": prompt}]
+                    )
+                    if isinstance(answer, str):
+                        answer = answer.strip().lower()
+                    else:
+                        answer = str(answer).strip().lower()
+
                 import re
                 clean_answer = re.sub(r'[^a-z]', '', answer)
                 return clean_answer.startswith("yes")
             except Exception as e:
-                print(f"[AutoResponder AI] Error: {e}")
-                return False # Fallback to False if AI fails, so we don't send false positives
+                print(f"[AutoResponder AI] Error during AI check: {e}")
+                # Fallback to True so the bot at least responds instead of ignoring everything
+                return True
 
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
