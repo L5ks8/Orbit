@@ -9,6 +9,26 @@ def _format_number(n: int) -> str:
         return f"{n / 1_000:.1f}K"
     return str(n)
 
+def _draw_chat_icon(draw, x, y):
+    draw.rounded_rectangle([(x, y), (x + 15, y + 10)], radius=3, outline=(255, 255, 255), width=2)
+    draw.polygon([(x + 2, y + 9), (x - 1, y + 14), (x + 6, y + 9)], fill=(255, 255, 255))
+
+def _draw_mic_icon(draw, x, y):
+    draw.rounded_rectangle([(x + 4, y), (x + 9, y + 8)], radius=2, outline=(255, 255, 255), width=2)
+    draw.arc([(x + 1, y + 3), (x + 12, y + 11)], start=0, end=180, fill=(255, 255, 255), width=2)
+    draw.line([(x + 6, y + 11), (x + 6, y + 14)], fill=(255, 255, 255), width=2)
+
+def _draw_smile_icon(draw, x, y):
+    draw.ellipse([(x, y), (x + 14, y + 14)], outline=(255, 255, 255), width=2)
+    draw.ellipse([(x + 4, y + 4), (x + 5, y + 5)], fill=(255, 255, 255))
+    draw.ellipse([(x + 9, y + 4), (x + 10, y + 5)], fill=(255, 255, 255))
+    draw.arc([(x + 4, y + 4), (x + 10, y + 10)], start=20, end=160, fill=(255, 255, 255), width=2)
+
+def _draw_arrow_icon(draw, x, y):
+    draw.line([(x + 1, y + 6), (x + 6, y + 1), (x + 11, y + 6)], fill=(255, 255, 255), width=2)
+    draw.line([(x + 6, y + 1), (x + 6, y + 11)], fill=(255, 255, 255), width=2)
+    draw.line([(x + 2, y + 13), (x + 10, y + 13)], fill=(255, 255, 255), width=2)
+
 def generate_rank_card(
     username: str,
     avatar_bytes: bytes,
@@ -61,21 +81,21 @@ def generate_rank_card(
         font_bold = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 28)
         font_medium = ImageFont.truetype(os.path.join(font_dir, "Inter-Medium.ttf"), 18)
         font_small = ImageFont.truetype(os.path.join(font_dir, "Inter-Medium.ttf"), 14)
-        font_stats = ImageFont.truetype(os.path.join(font_dir, "Inter-Medium.ttf"), 14)
+        font_stats = ImageFont.truetype(os.path.join(font_dir, "Inter-Medium.ttf"), 16)
     except Exception:
         try:
             # Fallback to system Arial (Windows/Mac)
             font_bold = ImageFont.truetype("arialbd.ttf", 26)
             font_medium = ImageFont.truetype("arialbd.ttf", 18)
             font_small = ImageFont.truetype("arial.ttf", 14)
-            font_stats = ImageFont.truetype("arialbd.ttf", 14)
+            font_stats = ImageFont.truetype("arialbd.ttf", 16)
         except Exception:
             try:
                 # Linux fallback
                 font_bold = ImageFont.truetype("DejaVuSans-Bold.ttf", 26)
                 font_medium = ImageFont.truetype("DejaVuSans-Bold.ttf", 18)
                 font_small = ImageFont.truetype("DejaVuSans.ttf", 14)
-                font_stats = ImageFont.truetype("DejaVuSans-Bold.ttf", 14)
+                font_stats = ImageFont.truetype("DejaVuSans-Bold.ttf", 16)
             except Exception:
                 font_bold = ImageFont.load_default()
                 font_medium = ImageFont.load_default()
@@ -131,10 +151,34 @@ def generate_rank_card(
 
     # Draw stats line
     stats_y = bar_y + BAR_HEIGHT + 14
+    cur_x = text_x
     
-    # Left stats icons
-    left_stats = f"💬 {message_count}   🎙 {voice_minutes}   ☺ {reaction_count}   ⬆ {int(progress * 100)}%"
-    draw.text((text_x, stats_y), left_stats, fill=(255, 255, 255), font=font_stats)
+    # 1. Chat icon + message_count
+    _draw_chat_icon(draw, cur_x, stats_y + 2)
+    cur_x += 22
+    msg_str = str(message_count)
+    draw.text((cur_x, stats_y), msg_str, fill=(255, 255, 255), font=font_stats)
+    cur_x += draw.textlength(msg_str, font=font_stats) + 25
+
+    # 2. Mic icon + voice_minutes
+    _draw_mic_icon(draw, cur_x, stats_y + 2)
+    cur_x += 20
+    voice_str = f"{voice_minutes:.1f}" if isinstance(voice_minutes, float) else str(voice_minutes)
+    draw.text((cur_x, stats_y), voice_str, fill=(255, 255, 255), font=font_stats)
+    cur_x += draw.textlength(voice_str, font=font_stats) + 25
+
+    # 3. Smile icon + reaction_count
+    _draw_smile_icon(draw, cur_x, stats_y + 2)
+    cur_x += 22
+    react_str = str(reaction_count)
+    draw.text((cur_x, stats_y), react_str, fill=(255, 255, 255), font=font_stats)
+    cur_x += draw.textlength(react_str, font=font_stats) + 25
+
+    # 4. Arrow icon + progress %
+    _draw_arrow_icon(draw, cur_x, stats_y + 2)
+    cur_x += 18
+    prog_str = f"{int(progress * 100)}%"
+    draw.text((cur_x, stats_y), prog_str, fill=(255, 255, 255), font=font_stats)
 
     # Right stats: GESAMT XP
     total_xp_formatted = _format_number(total_xp).lower() if total_xp >= 1000 else str(total_xp)
