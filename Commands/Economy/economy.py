@@ -126,7 +126,7 @@ class EconomyCommand(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="baltop", aliases=["leaderboard", "moneytop"], description="View the server's money leaderboard.")
+    @commands.hybrid_command(name="baltop", aliases=["moneytop"], description="View the server's money leaderboard.")
     async def baltop(self, ctx: commands.Context):
         if not ctx.guild:
             return await ctx.send("This command must be run inside a server.", ephemeral=True)

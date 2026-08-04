@@ -8,10 +8,10 @@ class LeaderboardCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_group(name="leaderboard", description="Displays leaderboards for the server.")
+    @commands.hybrid_group(name="inviteleaderboard", description="Displays invite leaderboards for the server.")
     async def leaderboard_group(self, ctx: commands.Context):
         if ctx.invoked_subcommand is None:
-            await ctx.send("Please use `/leaderboard invites`.", ephemeral=True)
+            await ctx.send("Please use `/inviteleaderboard invites`.", ephemeral=True)
 
     @leaderboard_group.command(name="invites", description="Displays the top inviters of the server.")
     async def leaderboard_invites(self, ctx: commands.Context, limit: int = 10):
