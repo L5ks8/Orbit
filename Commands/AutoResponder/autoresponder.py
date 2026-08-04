@@ -96,11 +96,8 @@ class AutoResponderCommand(commands.Cog):
             return not cid or str(cid) == str(message.channel.id)
             
         async def check_ai_context(trigger: str, text: str, response: str) -> bool:
-            """Check if the trigger word is used in the correct context.
-            Uses fast local language detection first, then AI as optional backup."""
 
             def detect_lang(words_to_check: list[str]) -> str:
-                """Detect language from a list of words using stop-word sets."""
                 word_set = set(w.lower().strip(".,!?;:\"'()") for w in words_to_check)
 
                 de_stops = {
@@ -159,10 +156,8 @@ class AutoResponderCommand(commands.Cog):
                 best = max(scores, key=scores.get)
                 if scores[best] == 0:
                     return "unknown"
-                # Need at least 1 stop word match to claim a language
                 return best
 
-            # Split message into words and remove the trigger itself
             msg_words = text.split()
             context_words = [w for w in msg_words if w.lower().strip(".,!?;:\"'()") != trigger.lower()]
             resp_words = response.split()
@@ -170,14 +165,10 @@ class AutoResponderCommand(commands.Cog):
             msg_lang = detect_lang(context_words)
             resp_lang = detect_lang(resp_words)
 
-            print(f"[AutoResponder AI] trigger='{trigger}' msg_lang={msg_lang} resp_lang={resp_lang} context='{' '.join(context_words)}'")
-
-            # If we detected both languages and they differ → wrong context
             if msg_lang != "unknown" and resp_lang != "unknown" and msg_lang != resp_lang:
-                print(f"[AutoResponder AI] REJECTED: language mismatch ({msg_lang} vs {resp_lang})")
                 return False
 
-            # If languages match or we can't tell, try AI as bonus check
+
             try:
                 import g4f
                 from g4f.client import AsyncClient
@@ -206,11 +197,9 @@ class AutoResponderCommand(commands.Cog):
                     messages=[{"role": "user", "content": prompt}],
                 )
                 answer = res.choices[0].message.content.strip().lower()
-                print(f"[AutoResponder AI] AI answer='{answer}'")
                 return "yes" in answer
-            except Exception as e:
-                print(f"[AutoResponder AI] AI fallback failed ({e}), allowing response")
-                return True  # AI failed but language check passed, so allow it
+            except Exception:
+                return True
 
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
@@ -228,11 +217,8 @@ class AutoResponderCommand(commands.Cog):
         for trigger, entry_data in data.items():
             if trigger in words and can_respond(entry_data):
                 if entry_data.get("use_ai"):
-                    print(f"[AutoResponder AI] Checking context for trigger='{trigger}' in message='{message.content}'")
                     if not await check_ai_context(trigger, message.content, entry_data["response"]):
-                        print(f"[AutoResponder AI] Context check REJECTED for trigger='{trigger}'")
                         continue
-                    print(f"[AutoResponder AI] Context check APPROVED for trigger='{trigger}'")
                 try:
                     response_text = self._resolve_channel_mentions(entry_data["response"], message.guild)
                     await message.reply(content=response_text, mention_author=False)
