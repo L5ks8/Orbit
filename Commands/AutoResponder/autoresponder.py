@@ -98,52 +98,38 @@ class AutoResponderCommand(commands.Cog):
         async def check_ai_context(trigger: str, text: str, response: str) -> bool:
             try:
                 import g4f
+                from g4f.client import AsyncClient
+                providers = [
+                    getattr(g4f.Provider, "Blackbox", None),
+                    getattr(g4f.Provider, "DDG", None),
+                    getattr(g4f.Provider, "DuckDuckGo", None),
+                    getattr(g4f.Provider, "FreeGpt", None),
+                    getattr(g4f.Provider, "ChatGptEs", None),
+                ]
+                valid_providers = [p for p in providers if p is not None]
+                if hasattr(g4f.Provider, "RetryProvider") and valid_providers:
+                    client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
+                else:
+                    client = AsyncClient()
+                
                 prompt = (f"You are a strict context checker.\n"
                           f"Trigger Word: '{trigger}'\n"
                           f"Bot's intended Response: '{response}'\n"
                           f"User's Message: '{text}'\n\n"
-                          f"Task: Check if the User's Message uses the Trigger Word in the same context as the Bot's Response.\n"
-                          f"CRITICAL: If the Trigger Word is used in a different language or has a different meaning (e.g. German 'war' meaning 'was', but Bot's Response implies English 'war' meaning conflict), you MUST output NO.\n"
-                          f"Respond ONLY with YES or NO. Do not explain.")
+                          f"Task: Does the user's message use the trigger word '{trigger}' in a context where the bot's response makes sense?\n"
+                          f"If the trigger word is used in a completely different language or meaning (e.g. German 'war' meaning 'was/were' vs English 'war' meaning battle/conflict), answer NO.\n"
+                          f"Answer ONLY with YES or NO.")
                 
-                def _run_g4f_thread(prompt_text: str) -> str:
-                    import asyncio
-                    import g4f
-                    
-                    async def _do_run():
-                        try:
-                            from g4f.client import AsyncClient
-                            client = AsyncClient()
-                            res = await client.chat.completions.create(
-                                model="gpt-3.5-turbo",
-                                messages=[{"role": "user", "content": prompt_text}],
-                            )
-                            return res.choices[0].message.content
-                        except Exception:
-                            # Fallback to old g4f API
-                            ans = await g4f.ChatCompletion.create_async(
-                                model=g4f.models.gpt_35_turbo,
-                                messages=[{"role": "user", "content": prompt_text}]
-                            )
-                            return ans
-                            
-                    return asyncio.run(_do_run())
-
-                import asyncio
-                answer = await asyncio.to_thread(_run_g4f_thread, prompt)
-                
-                if isinstance(answer, str):
-                    answer = answer.strip().lower()
-                else:
-                    answer = str(answer).strip().lower()
-
-                import re
-                clean_answer = re.sub(r'[^a-z]', '', answer)
-                return clean_answer.startswith("yes")
+                res = await client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                answer = res.choices[0].message.content.strip().lower()
+                print(f"[AutoResponder AI] trigger='{trigger}' answer='{answer}'")
+                return "yes" in answer
             except Exception as e:
-                print(f"[AutoResponder AI] Error during AI check: {e}")
-                # We return False if it errors out to avoid spamming the chat unexpectedly.
-                return False
+                print(f"[AutoResponder AI] Error: {e}")
+                return True  # If AI fails, allow the response through
 
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
