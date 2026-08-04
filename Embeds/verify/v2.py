@@ -1,5 +1,5 @@
 import discord
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, MediaGallery
 
 def get_embed(msg_type: str, **kwargs):
     if msg_type == "panel":
@@ -42,10 +42,16 @@ def get_embed(msg_type: str, **kwargs):
         return {"view": view}
         
     elif msg_type == "captcha":
+        filename = kwargs.get("filename")
         container = Container(
             TextDisplay(content="### CAPTCHA Security Check\nPlease enter the characters from the image below."),
             Separator(spacing=discord.SeparatorSpacing.small)
         )
+        if filename:
+            gallery = MediaGallery()
+            gallery.add_item(media=f"attachment://{filename}")
+            container.add_item(gallery)
+            
         components = kwargs.get("components", [])
         if components:
             container.add_item(ActionRow(*components))
