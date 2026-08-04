@@ -44,11 +44,11 @@ def generate_rank_card(
     bg_color: tuple = (20, 22, 30),
 ) -> bytes:
 
-    WIDTH, HEIGHT = 934, 210
-    PADDING = 25
-    AVATAR_SIZE = 150
-    BAR_HEIGHT = 18
-    BAR_RADIUS = 9
+    WIDTH, HEIGHT = 1100, 310
+    PADDING = 45
+    AVATAR_SIZE = 180
+    BAR_HEIGHT = 24
+    BAR_RADIUS = 12
 
     # Create base card
     card = Image.new("RGBA", (WIDTH, HEIGHT), (*bg_color, 255))
@@ -78,53 +78,53 @@ def generate_rank_card(
     # Load fonts
     try:
         font_dir = os.path.join(os.path.dirname(__file__), "fonts")
-        font_bold = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 32)
-        font_medium = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 22)
-        font_xp = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 26)
-        font_stats = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 16)
+        font_bold = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 40)
+        font_medium = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 26)
+        font_xp = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 30)
+        font_stats = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), 18)
     except Exception:
         try:
             # Fallback to system Arial (Windows/Mac)
-            font_bold = ImageFont.truetype("arialbd.ttf", 30)
-            font_medium = ImageFont.truetype("arialbd.ttf", 22)
-            font_xp = ImageFont.truetype("arialbd.ttf", 26)
-            font_stats = ImageFont.truetype("arialbd.ttf", 16)
+            font_bold = ImageFont.truetype("arialbd.ttf", 38)
+            font_medium = ImageFont.truetype("arialbd.ttf", 26)
+            font_xp = ImageFont.truetype("arialbd.ttf", 30)
+            font_stats = ImageFont.truetype("arialbd.ttf", 18)
         except Exception:
             try:
                 # Linux fallback
-                font_bold = ImageFont.truetype("DejaVuSans-Bold.ttf", 30)
-                font_medium = ImageFont.truetype("DejaVuSans-Bold.ttf", 22)
-                font_xp = ImageFont.truetype("DejaVuSans-Bold.ttf", 26)
-                font_stats = ImageFont.truetype("DejaVuSans-Bold.ttf", 16)
+                font_bold = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
+                font_medium = ImageFont.truetype("DejaVuSans-Bold.ttf", 26)
+                font_xp = ImageFont.truetype("DejaVuSans-Bold.ttf", 30)
+                font_stats = ImageFont.truetype("DejaVuSans-Bold.ttf", 18)
             except Exception:
                 font_bold = ImageFont.load_default()
                 font_medium = ImageFont.load_default()
                 font_xp = ImageFont.load_default()
                 font_stats = ImageFont.load_default()
 
-    text_x = avatar_x + AVATAR_SIZE + 25
+    text_x = avatar_x + AVATAR_SIZE + 35
     text_area_width = WIDTH - text_x - PADDING
 
     # Draw RANG and LEVEL (Top Right)
     rang_text = f"RANG {rank}"
     level_text = f"LEVEL {level}"
-    rank_level_y = 25
+    rank_level_y = 50
 
-    draw.text((text_x + text_area_width - 200, rank_level_y), rang_text, fill=(255, 255, 255), font=font_medium)
-    draw.text((text_x + text_area_width - 95, rank_level_y), level_text, fill=(255, 255, 255), font=font_medium)
+    draw.text((text_x + text_area_width - 230, rank_level_y), rang_text, fill=(255, 255, 255), font=font_medium)
+    draw.text((text_x + text_area_width - 110, rank_level_y), level_text, fill=(255, 255, 255), font=font_medium)
 
     # Draw username
-    name_y = 65
+    name_y = 105
     display_name = username[:20] + "..." if len(username) > 20 else username
     draw.text((text_x, name_y), display_name, fill=(255, 255, 255), font=font_bold)
 
     # Draw XP text (e.g. 2525 / 3.9k)
     needed_formatted = _format_number(needed_xp).lower() if needed_xp >= 1000 else str(needed_xp)
     xp_text = f"{current_xp} / {needed_formatted}"
-    draw.text((text_x + text_area_width, name_y + 2), xp_text, fill=(255, 255, 255), font=font_xp, anchor="ra")
+    draw.text((text_x + text_area_width, name_y + 5), xp_text, fill=(255, 255, 255), font=font_xp, anchor="ra")
 
     # Draw progress bar
-    bar_y = 118
+    bar_y = 175
     bar_width = text_area_width
 
     # Background bar
@@ -149,33 +149,33 @@ def generate_rank_card(
     )
 
     # Draw stats line
-    stats_y = 152
+    stats_y = 225
     cur_x = text_x
     
     # 1. Chat icon + message_count
     _draw_chat_icon(draw, cur_x, stats_y + 2)
-    cur_x += 22
+    cur_x += 24
     msg_str = str(message_count)
     draw.text((cur_x, stats_y), msg_str, fill=(255, 255, 255), font=font_stats)
-    cur_x += draw.textlength(msg_str, font=font_stats) + 25
+    cur_x += draw.textlength(msg_str, font=font_stats) + 30
 
     # 2. Mic icon + voice_minutes
     _draw_mic_icon(draw, cur_x, stats_y + 2)
-    cur_x += 20
+    cur_x += 22
     voice_str = f"{int(voice_minutes)}" if voice_minutes == int(voice_minutes) else f"{voice_minutes:.1f}"
     draw.text((cur_x, stats_y), voice_str, fill=(255, 255, 255), font=font_stats)
-    cur_x += draw.textlength(voice_str, font=font_stats) + 25
+    cur_x += draw.textlength(voice_str, font=font_stats) + 30
 
     # 3. Smile icon + reaction_count
     _draw_smile_icon(draw, cur_x, stats_y + 2)
-    cur_x += 22
+    cur_x += 24
     react_str = str(reaction_count)
     draw.text((cur_x, stats_y), react_str, fill=(255, 255, 255), font=font_stats)
-    cur_x += draw.textlength(react_str, font=font_stats) + 25
+    cur_x += draw.textlength(react_str, font=font_stats) + 30
 
     # 4. Arrow icon + progress %
     _draw_arrow_icon(draw, cur_x, stats_y + 2)
-    cur_x += 18
+    cur_x += 20
     prog_str = f"{int(progress * 100)}%"
     draw.text((cur_x, stats_y), prog_str, fill=(255, 255, 255), font=font_stats)
 
