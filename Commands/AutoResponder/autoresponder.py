@@ -96,6 +96,88 @@ class AutoResponderCommand(commands.Cog):
             return not cid or str(cid) == str(message.channel.id)
             
         async def check_ai_context(trigger: str, text: str, response: str) -> bool:
+            """Check if the trigger word is used in the correct context.
+            Uses fast local language detection first, then AI as optional backup."""
+
+            def detect_lang(words_to_check: list[str]) -> str:
+                """Detect language from a list of words using stop-word sets."""
+                word_set = set(w.lower().strip(".,!?;:\"'()") for w in words_to_check)
+
+                de_stops = {
+                    "ich", "du", "er", "sie", "es", "wir", "ihr", "wie", "dein", "mein",
+                    "sein", "ist", "und", "oder", "aber", "nicht", "das", "der", "die",
+                    "den", "dem", "ein", "eine", "zu", "von", "mit", "auf", "für", "aus",
+                    "über", "nach", "bei", "durch", "um", "an", "hat", "bin", "hab",
+                    "heute", "morgen", "gestern", "auch", "noch", "schon", "nur", "dann",
+                    "wenn", "weil", "dass", "kann", "will", "muss", "soll", "darf",
+                    "habe", "hatte", "wurde", "werden", "haben", "waren", "sind",
+                    "doch", "ja", "nein", "kein", "keine", "alles", "nichts", "hier",
+                    "dort", "tag", "nacht", "guten", "gute", "gut", "schlecht", "sehr",
+                    "viel", "immer", "bitte", "danke", "wo", "wer", "was", "warum",
+                    "dieser", "diese", "dieses", "jetzt", "mal", "so", "da", "mir",
+                    "dir", "ihm", "uns", "euch", "ihnen", "mich", "dich", "sich",
+                }
+                en_stops = {
+                    "the", "is", "are", "was", "were", "have", "has", "do", "does",
+                    "did", "will", "would", "could", "should", "can", "may", "how",
+                    "what", "when", "where", "why", "who", "this", "that", "these",
+                    "those", "i", "you", "he", "she", "it", "we", "they", "my", "your",
+                    "his", "her", "its", "our", "their", "a", "an", "in", "on", "at",
+                    "to", "for", "with", "from", "about", "into", "through", "during",
+                    "before", "after", "above", "below", "between", "just", "also",
+                    "than", "then", "so", "if", "or", "but", "not", "no", "yes",
+                    "all", "each", "every", "both", "few", "more", "most", "other",
+                    "some", "such", "only", "own", "same", "very", "too", "quite",
+                    "request", "open", "ticket", "select", "please", "want", "need",
+                    "help", "server", "here", "there", "which", "been", "being",
+                }
+                fr_stops = {
+                    "le", "la", "les", "un", "une", "des", "je", "tu", "il", "elle",
+                    "nous", "vous", "ils", "elles", "de", "du", "au", "aux", "et",
+                    "ou", "mais", "donc", "car", "ni", "que", "qui", "quoi", "où",
+                    "comment", "pourquoi", "quand", "est", "sont", "suis", "es",
+                    "avoir", "être", "faire", "aller", "voir", "pouvoir", "vouloir",
+                    "pas", "ne", "plus", "très", "bien", "mal", "oui", "non",
+                    "avec", "dans", "sur", "sous", "pour", "par", "sans", "chez",
+                }
+                es_stops = {
+                    "el", "la", "los", "las", "un", "una", "unos", "unas", "yo",
+                    "tú", "él", "ella", "nosotros", "vosotros", "ellos", "ellas",
+                    "de", "del", "al", "y", "o", "pero", "sino", "que", "como",
+                    "qué", "quién", "dónde", "cuándo", "por", "para", "con", "sin",
+                    "es", "son", "soy", "eres", "está", "están", "estoy", "estás",
+                    "hola", "sí", "no", "muy", "bien", "mal", "aquí", "allí",
+                    "más", "menos", "también", "este", "esta", "estos", "estas",
+                }
+
+                scores = {
+                    "de": len(word_set & de_stops),
+                    "en": len(word_set & en_stops),
+                    "fr": len(word_set & fr_stops),
+                    "es": len(word_set & es_stops),
+                }
+                best = max(scores, key=scores.get)
+                if scores[best] == 0:
+                    return "unknown"
+                # Need at least 1 stop word match to claim a language
+                return best
+
+            # Split message into words and remove the trigger itself
+            msg_words = text.split()
+            context_words = [w for w in msg_words if w.lower().strip(".,!?;:\"'()") != trigger.lower()]
+            resp_words = response.split()
+
+            msg_lang = detect_lang(context_words)
+            resp_lang = detect_lang(resp_words)
+
+            print(f"[AutoResponder AI] trigger='{trigger}' msg_lang={msg_lang} resp_lang={resp_lang} context='{' '.join(context_words)}'")
+
+            # If we detected both languages and they differ → wrong context
+            if msg_lang != "unknown" and resp_lang != "unknown" and msg_lang != resp_lang:
+                print(f"[AutoResponder AI] REJECTED: language mismatch ({msg_lang} vs {resp_lang})")
+                return False
+
+            # If languages match or we can't tell, try AI as bonus check
             try:
                 import g4f
                 from g4f.client import AsyncClient
@@ -111,25 +193,24 @@ class AutoResponderCommand(commands.Cog):
                     client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
                 else:
                     client = AsyncClient()
-                
+
                 prompt = (f"You are a strict context checker.\n"
                           f"Trigger Word: '{trigger}'\n"
                           f"Bot's intended Response: '{response}'\n"
                           f"User's Message: '{text}'\n\n"
-                          f"Task: Does the user's message use the trigger word '{trigger}' in a context where the bot's response makes sense?\n"
-                          f"If the trigger word is used in a completely different language or meaning (e.g. German 'war' meaning 'was/were' vs English 'war' meaning battle/conflict), answer NO.\n"
+                          f"Does the user mean the trigger word in the same context as the bot's response?\n"
                           f"Answer ONLY with YES or NO.")
-                
+
                 res = await client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": prompt}],
                 )
                 answer = res.choices[0].message.content.strip().lower()
-                print(f"[AutoResponder AI] trigger='{trigger}' answer='{answer}'")
+                print(f"[AutoResponder AI] AI answer='{answer}'")
                 return "yes" in answer
             except Exception as e:
-                print(f"[AutoResponder AI] Error: {e}")
-                return True  # If AI fails, allow the response through
+                print(f"[AutoResponder AI] AI fallback failed ({e}), allowing response")
+                return True  # AI failed but language check passed, so allow it
 
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
