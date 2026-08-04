@@ -207,7 +207,7 @@ async def _do_ticket_blacklist(ctx: commands.Context, member: discord.Member, du
     add_to_blacklist(ctx.guild.id, member.id, dur_secs)
     
     dur_text = f"for {duration}" if dur_secs else "permanently"
-    await ctx.send(embed=discord.Embed(description=f"✅ {member.mention} has been blacklisted from opening tickets {dur_text}.", color=discord.Color.green()))
+    await ctx.send(embed=discord.Embed(description=f"{member.mention} has been blacklisted from opening tickets {dur_text}.", color=discord.Color.green()))
 
 async def _do_ticket_unblacklist(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
@@ -221,9 +221,9 @@ async def _do_ticket_unblacklist(ctx: commands.Context, member: discord.Member):
     
     removed = remove_from_blacklist(ctx.guild.id, member.id)
     if removed:
-        await ctx.send(embed=discord.Embed(description=f"✅ {member.mention} has been removed from the ticket blacklist.", color=discord.Color.green()))
+        await ctx.send(embed=discord.Embed(description=f"{member.mention} has been removed from the ticket blacklist.", color=discord.Color.green()))
     else:
-        await ctx.send(embed=discord.Embed(description=f"⚠️ {member.mention} was not blacklisted.", color=discord.Color.yellow()), ephemeral=True)
+        await ctx.send(embed=discord.Embed(description=f"{member.mention} was not blacklisted.", color=discord.Color.yellow()), ephemeral=True)
 
 @commands.hybrid_group(name="ticket", description="Support ticket tools.")
 @commands.has_permissions(manage_channels=True)
