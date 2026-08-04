@@ -543,14 +543,14 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '', us
 
     const row = document.createElement('div');
     row.className = 'autoreply-row';
-    row.style.cssText = 'display: flex; flex-direction: column; gap: 8px; background: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);';
+    row.style.cssText = 'display: flex; flex-direction: column; gap: 8px; background: var(--bg-elevated); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);';
 
     // Top row: trigger + response + delete
     const topRow = document.createElement('div');
     topRow.style.cssText = 'display: flex; gap: 10px; align-items: center;';
     topRow.innerHTML = `
-        <input type="text" class="ar-trigger" value="${triggerText.replace(/"/g, '&quot;')}" placeholder="Trigger (e.g. !help)" style="flex: 1; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
-        <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response (use #channel-name for mentions)" style="flex: 2; min-width: 0; background: #000000; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
+        <input type="text" class="ar-trigger" value="${triggerText.replace(/"/g, '&quot;')}" placeholder="Trigger (e.g. !help)" style="flex: 1; min-width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
+        <input type="text" class="ar-response" value="${responseText.replace(/"/g, '&quot;')}" placeholder="Bot Response (use #channel-name for mentions)" style="flex: 2; min-width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 4px; outline: none;">
         <button type="button" class="btn-danger" style="width: 38px; height: 38px; padding: 0; flex-shrink: 0; display: flex; align-items: center; justify-content: center;" onclick="this.closest('.autoreply-row').remove()">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
         </button>
@@ -567,7 +567,7 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '', us
     const aiId = `ai_chk_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     botRow.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M4 9h16M4 15h16"/><path d="M10 3 8 21M16 3l-2 18"/></svg>
-        <select class="ar-channel" style="background: #000000; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; font-size: 13px; outline: none; flex:1; max-width: 260px;">
+        <select class="ar-channel" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; font-size: 13px; outline: none; flex:1; max-width: 260px;">
             ${channelOptionsHTML}
         </select>
         <div style="display:flex; align-items:center; gap:6px; margin-left: 10px;">
