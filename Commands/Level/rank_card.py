@@ -125,7 +125,16 @@ def generate_rank_card(
         sz = size * SCALE
         try:
             font_dir = os.path.join(os.path.dirname(__file__), "fonts")
-            return ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), sz)
+            f = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), sz)
+            # Inter is a variable font – force Bold weight (700)
+            try:
+                f.set_variation_by_axes([14, 700])  # opsz=14, wght=700
+            except Exception:
+                try:
+                    f.set_variation_by_name("Bold")
+                except Exception:
+                    pass
+            return f
         except Exception:
             pass
         for name in ["arialbd.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"]:
