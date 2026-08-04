@@ -106,32 +106,37 @@ class AutoResponderCommand(commands.Cog):
                           f"CRITICAL: If the Trigger Word is used in a different language or has a different meaning (e.g. German 'war' meaning 'was', but Bot's Response implies English 'war' meaning conflict), you MUST output NO.\n"
                           f"Respond ONLY with YES or NO. Do not explain.")
                 
-                try:
-                    from g4f.client import AsyncClient
-                    client = AsyncClient()
-                    res = await client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[{"role": "user", "content": prompt}],
-                    )
-                    answer = res.choices[0].message.content.strip().lower()
-                except Exception:
-                    # Fallback to old g4f API if AsyncClient fails or is missing
-                    answer = await g4f.ChatCompletion.create_async(
-                        model=g4f.models.gpt_35_turbo,
-                        messages=[{"role": "user", "content": prompt}]
-                    )
-                    if isinstance(answer, str):
-                        answer = answer.strip().lower()
-                    else:
-                        answer = str(answer).strip().lower()
+                def _run_g4f_sync(prompt_text: str) -> str:
+                    import g4f
+                    try:
+                        from g4f.client import Client
+                        client = Client()
+                        res = client.chat.completions.create(
+                            model="gpt-3.5-turbo",
+                            messages=[{"role": "user", "content": prompt_text}],
+                        )
+                        return res.choices[0].message.content
+                    except Exception:
+                        return g4f.ChatCompletion.create(
+                            model=g4f.models.gpt_35_turbo,
+                            messages=[{"role": "user", "content": prompt_text}]
+                        )
+
+                import asyncio
+                answer = await asyncio.to_thread(_run_g4f_sync, prompt)
+                
+                if isinstance(answer, str):
+                    answer = answer.strip().lower()
+                else:
+                    answer = str(answer).strip().lower()
 
                 import re
                 clean_answer = re.sub(r'[^a-z]', '', answer)
                 return clean_answer.startswith("yes")
             except Exception as e:
                 print(f"[AutoResponder AI] Error during AI check: {e}")
-                # Fallback to True so the bot at least responds instead of ignoring everything
-                return True
+                # We return False if it errors out to avoid spamming the chat unexpectedly.
+                return False
 
         entry = get_response_entry(message.guild.id, content)
         if entry and can_respond(entry):
