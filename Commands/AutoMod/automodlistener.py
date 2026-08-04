@@ -233,8 +233,27 @@ class AutoModListener(commands.Cog):
 
         ai_cfg = config.get("ai_automod", {})
         if ai_cfg.get("enabled", False) and not is_exempt(ai_cfg):
+            import re
+            text = message.content
+
+            flagged = None
+            if re.search(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}(?:\.\d{1,3})?\b', text):
+                flagged = "IP address"
+            elif re.search(r'[A-Za-z0-9_-]{24,}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,}', text):
+                flagged = "Discord token"
+            elif re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}\b', text):
+                flagged = "Email address"
+            elif re.search(r'(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}', text):
+                digits = re.sub(r'\D', '', text)
+                if len(digits) >= 7:
+                    flagged = "Phone number"
+
+            if flagged:
+                await do_action(ai_cfg, f"AutoMod: AI Content Filter - {flagged}")
+                return
+
             min_words = ai_cfg.get("min_words", 3)
-            if len(message.content.split()) >= min_words:
+            if len(text.split()) >= min_words:
                 try:
                     import g4f
                     from g4f.client import AsyncClient
@@ -252,10 +271,9 @@ class AutoModListener(commands.Cog):
                         client = AsyncClient()
 
                     prompt = (f"Read this Discord message and decide if it should be deleted.\n"
-                              f"Delete if it contains: IP addresses, phone numbers, email addresses, personal info/doxxing, "
-                              f"severe insults, slurs, bypassed slurs (like 'f*ck'), or extreme toxicity.\n"
+                              f"Delete if it contains: severe insults, slurs, bypassed slurs (like 'f*ck'), or extreme toxicity.\n"
                               f"Do NOT delete normal chat, mild banter, or jokes.\n"
-                              f"Message: '{message.content}'\n"
+                              f"Message: '{text}'\n"
                               f"Answer ONLY YES or NO.")
 
                     res = await client.chat.completions.create(
