@@ -21,6 +21,12 @@ def get_command_embed(guild_id: int, command_name: str, **kwargs):
     module_name = f"Embeds.{command_name}.{style}"
     
     try:
+        if "components" in kwargs:
+            comps = kwargs["components"]
+            if comps:
+                for comp in comps:
+                    comp._view = None
+
         # Try to load the user's preferred style
         module = importlib.import_module(module_name)
         return module.get_embed(**kwargs)

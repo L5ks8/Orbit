@@ -12,12 +12,9 @@ def get_embed(msg_type: str, **kwargs):
         embed.add_field(name="Machine Reels", value=reels_str, inline=False)
         embed.add_field(name="Outcome", value=outcome_text, inline=False)
 
-        view = getattr(components[0], "view", None) if components else None
-    if not view:
         view = discord.ui.View(timeout=None)
         for comp in components:
-            try: view.add_item(comp)
-            except ValueError: pass
+            view.add_item(comp)
             
         return {"embed": embed, "view": view}
         
