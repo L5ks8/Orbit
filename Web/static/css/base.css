@@ -118,9 +118,8 @@ body::after {
     align-items: center;
     padding: 0 24px;
     height: 56px;
-    background: rgba(10, 10, 10, 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;

@@ -96,7 +96,22 @@
                 <a href="https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=277318297694&integration_type=0&scope=bot+applications.commands"
                     class="nav-link" target="_blank" rel="noopener">Add to Discord</a>
                 <a href="#" class="nav-link" onclick="openSupportInvite(); return false;">Support Server</a>
-                <button id="lang-switcher" class="lang-pill">🇩🇪 DE</button>
+                <div class="lang-dropdown-wrapper" style="position:relative;">
+                    <button id="lang-switcher" class="lang-pill" onclick="this.nextElementSibling.classList.toggle('active')" style="display:flex; align-items:center; gap:6px; cursor:pointer; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:6px 12px; border-radius:100px;">
+                        <img id="lang-switcher-flag" src="https://flagcdn.com/w40/de.png" style="width:16px; height:16px; border-radius:50%; object-fit:cover;"> <span id="lang-switcher-text">DE</span>
+                    </button>
+                    <div class="lang-dropdown-menu" style="display:none; position:absolute; top:100%; right:0; background:var(--bg-elevated); border:1px solid var(--border-color); border-radius:8px; padding:4px; margin-top:8px; flex-direction:column; gap:4px; z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.4); min-width:120px;">
+                        <div class="lang-option" onclick="selectLang('de', 'DE', 'https://flagcdn.com/w40/de.png')" style="display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; border-radius:4px;">
+                            <img src="https://flagcdn.com/w40/de.png" style="width:16px; height:16px; border-radius:50%; object-fit:cover;"> Deutsch
+                        </div>
+                        <div class="lang-option" onclick="selectLang('en', 'EN', 'https://flagcdn.com/w40/gb.png')" style="display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; border-radius:4px;">
+                            <img src="https://flagcdn.com/w40/gb.png" style="width:16px; height:16px; border-radius:50%; object-fit:cover;"> English
+                        </div>
+                        <div class="lang-option" onclick="selectLang('fr', 'FR', 'https://flagcdn.com/w40/fr.png')" style="display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; border-radius:4px;">
+                            <img src="https://flagcdn.com/w40/fr.png" style="width:16px; height:16px; border-radius:50%; object-fit:cover;"> Français
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="nav-user" id="nav-user">
                 <!-- Will be populated by JS: either Login button or Avatar -->
@@ -352,6 +367,8 @@
                             <a href="https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=277318297694&integration_type=0&scope=bot+applications.commands"
                                 target="_blank">Add to Discord</a>
                             <a href="#" onclick="openSupportInvite(); return false;">Support</a>
+                            <a href="/tos" target="_blank">Terms of Service</a>
+                            <a href="/privacy" target="_blank">Privacy Policy</a>
                             <button id="btn-footer-login" class="lp-footer-login">Dashboard</button>
                         </div>
                         <div class="lp-footer-copy">&copy; 2025 Orbit Bot. All rights reserved.</div>
@@ -387,6 +404,46 @@
         });
     })();
     </script>
+
+    <!-- Google Translate functionality -->
+    <div id="google_translate_element" style="display:none;"></div>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'de,en,fr',
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+        function translatePage(lang) {
+            var selectField = document.querySelector("select.goog-te-combo");
+            if (selectField) {
+                selectField.value = lang;
+                selectField.dispatchEvent(new Event('change'));
+            } else {
+                setTimeout(function() { translatePage(lang); }, 500);
+            }
+        }
+        function selectLang(code, text, flagUrl) {
+            document.getElementById('lang-switcher-text').innerText = text;
+            document.getElementById('lang-switcher-flag').src = flagUrl;
+            document.querySelector('.lang-dropdown-menu').classList.remove('active');
+            translatePage(code);
+        }
+        
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            if (!e.target.closest('.lang-dropdown-wrapper')) {
+                var menu = document.querySelector('.lang-dropdown-menu');
+                if (menu) menu.classList.remove('active');
+            }
+        });
+    </script>
+    <style>
+        .lang-dropdown-menu.active { display: flex !important; }
+        .lang-option:hover { background: rgba(255,255,255,0.05); }
+    </style>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
         <!-- DASHBOARD VIEW (Server List) -->
         <div id="view-dashboard" class="view hidden">
