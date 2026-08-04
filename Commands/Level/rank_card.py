@@ -80,10 +80,24 @@ def generate_rank_card(
         font_small = ImageFont.truetype(os.path.join(font_dir, "Inter-Medium.ttf"), 14)
         font_stats = ImageFont.truetype(os.path.join(font_dir, "Inter-Medium.ttf"), 12)
     except Exception:
-        font_bold = ImageFont.load_default()
-        font_medium = ImageFont.load_default()
-        font_small = ImageFont.load_default()
-        font_stats = ImageFont.load_default()
+        try:
+            # Fallback to system Arial (Windows/Mac)
+            font_bold = ImageFont.truetype("arialbd.ttf", 28)
+            font_medium = ImageFont.truetype("arial.ttf", 18)
+            font_small = ImageFont.truetype("arial.ttf", 14)
+            font_stats = ImageFont.truetype("arial.ttf", 12)
+        except Exception:
+            try:
+                # Linux fallback
+                font_bold = ImageFont.truetype("DejaVuSans-Bold.ttf", 28)
+                font_medium = ImageFont.truetype("DejaVuSans.ttf", 18)
+                font_small = ImageFont.truetype("DejaVuSans.ttf", 14)
+                font_stats = ImageFont.truetype("DejaVuSans.ttf", 12)
+            except Exception:
+                font_bold = ImageFont.load_default()
+                font_medium = ImageFont.load_default()
+                font_small = ImageFont.load_default()
+                font_stats = ImageFont.load_default()
 
     text_x = avatar_x + AVATAR_SIZE + 30
     text_area_width = WIDTH - text_x - PADDING
@@ -121,15 +135,17 @@ def generate_rank_card(
 
     # Progress bar
     progress = current_xp / needed_xp if needed_xp > 0 else 1.0
-    progress = min(1.0, max(0.02, progress))  # min 2% so it shows something
+    progress = min(1.0, max(0.00, progress))
     fill_width = int(bar_width * progress)
+    
+    # Ensure minimum width so it renders nicely without crashing
+    fill_width = max(BAR_RADIUS * 2, fill_width)
 
-    if fill_width > BAR_RADIUS * 2:
-        draw.rounded_rectangle(
-            [(text_x, bar_y), (text_x + fill_width, bar_y + BAR_HEIGHT)],
-            radius=BAR_RADIUS,
-            fill=(*bar_color, 255)
-        )
+    draw.rounded_rectangle(
+        [(text_x, bar_y), (text_x + fill_width, bar_y + BAR_HEIGHT)],
+        radius=BAR_RADIUS,
+        fill=(*bar_color, 255)
+    )
 
     # Draw stats line
     stats_y = bar_y + BAR_HEIGHT + 12
