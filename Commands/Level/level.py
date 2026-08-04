@@ -107,14 +107,15 @@ class LevelCommandsCog(commands.Cog):
         from Commands.Level.leaderboard_card import generate_leaderboard_card
         
         img_bytes = generate_leaderboard_card(
-            entries=entries,
-            title=cat["title"],
-            sort_key=sort_key,
-            link_text="Want to see more than Top 10?"
+            entries=entries
         )
         
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
-        embed = discord.Embed(color=0x2B2D31)
+        embed = discord.Embed(
+            title=cat["title"],
+            description="[Want to see more than Top 10?](https://orbit-bot.xyz)",
+            color=0x2B2D31
+        )
         embed.set_image(url="attachment://leaderboard.png")
         
         return embed, file
