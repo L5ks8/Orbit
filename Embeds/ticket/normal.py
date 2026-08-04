@@ -49,13 +49,11 @@ def get_embed(msg_type: str, **kwargs):
         
         embed = discord.Embed(title=title, description=f"{description}\n\n{instructions}", color=discord.Color.teal())
         view = getattr(components[0], "view", None) if components else None
-        if not view:
-            view = getattr(components[0], "view", None) if components else None
-        if not view:
-            view = discord.ui.View(timeout=None)
-            for comp in components:
-                try: view.add_item(comp)
-                except ValueError: pass
+    if not view:
+        view = discord.ui.View(timeout=None)
+        for comp in components:
+            try: view.add_item(comp)
+            except ValueError: pass
         return {"embed": embed, "view": view}
         
     elif msg_type == "control":
@@ -75,13 +73,11 @@ def get_embed(msg_type: str, **kwargs):
         embed.add_field(name="Description", value=f"```\n{description}\n```", inline=False)
         
         view = getattr(components[0], "view", None) if components else None
-        if not view:
-            view = getattr(components[0], "view", None) if components else None
-        if not view:
-            view = discord.ui.View(timeout=None)
-            for comp in components:
-                try: view.add_item(comp)
-                except ValueError: pass
+    if not view:
+        view = discord.ui.View(timeout=None)
+        for comp in components:
+            try: view.add_item(comp)
+            except ValueError: pass
         return {"embed": embed, "view": view}
         
     elif msg_type == "claim":

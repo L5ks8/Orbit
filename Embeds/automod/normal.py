@@ -16,13 +16,11 @@ def get_embed(msg_type: str, **kwargs):
         embed.add_field(name="3. Anti-Alt (Account Age Defense)", value=f"{alt_str}\nChecks account age of joining members to block suspicious alts & bots before they raid.", inline=False)
 
         view = getattr(components[0], "view", None) if components else None
-        if not view:
-            view = getattr(components[0], "view", None) if components else None
-        if not view:
-            view = discord.ui.View(timeout=None)
-            for comp in components:
-                try: view.add_item(comp)
-                except ValueError: pass
+    if not view:
+        view = discord.ui.View(timeout=None)
+        for comp in components:
+            try: view.add_item(comp)
+            except ValueError: pass
         return {"embed": embed, "view": view}
 
     elif msg_type == "notice":

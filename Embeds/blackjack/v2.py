@@ -21,7 +21,7 @@ def get_embed(msg_type: str, **kwargs):
         
         if components:
             ar = ActionRow()
-            for comp in components:
+        for comp in components:
                 ar.add_item(comp)
             view.add_item(ar)
             
