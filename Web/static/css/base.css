@@ -1,17 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --bg-base: #0a0a0a;
-    --bg-surface: #111111;
-    --bg-elevated: #161616;
-    --bg-input: #0e0e0e;
+    --bg-base: #1E1F22;
+    --bg-surface: #2B2D31;
+    --bg-elevated: #313338;
+    --bg-input: #1E1F22;
     
-    --border-color: #222222;
-    --border-hover: #333333;
+    --border-color: #313338;
+    --border-hover: #3f4147;
     
-    --text-primary: #ffffff;
-    --text-secondary: #888888;
-    --text-muted: #555555;
+    --text-primary: #DBDEE1;
+    --text-secondary: #949BA4;
+    --text-muted: #5c5e66;
     
     --accent-primary: #ffffff;
     --accent-hover: #dddddd;
