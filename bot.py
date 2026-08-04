@@ -174,6 +174,14 @@ async def get_prefix(bot, message: discord.Message):
     PREFIX_CACHE[guild_id] = PREFIX
     return commands.when_mentioned_or(PREFIX)(bot, message)
 
+# Patch commands.Context.send to handle ephemeral kwarg safely for prefix commands
+_old_send = commands.Context.send
+async def _safe_send(self, *args, **kwargs):
+    if self.interaction is None:
+        kwargs.pop("ephemeral", None)
+    return await _old_send(self, *args, **kwargs)
+commands.Context.send = _safe_send
+
 class OrbitBot(commands.Bot):
     def __init__(self):
         try:
@@ -189,13 +197,22 @@ class OrbitBot(commands.Bot):
             act = None
             discord_status = None
             
+        owner_ids = None
+        env_owners = os.environ.get("OWNER_IDS")
+        if env_owners:
+            try:
+                owner_ids = {int(x.strip()) for x in env_owners.split(",") if x.strip().isdigit()}
+            except Exception:
+                pass
+            
         super().__init__(
             command_prefix=get_prefix,
             intents=intents,
             help_command=None,
             tree_cls=OrbitCommandTree,
             activity=act,
-            status=discord_status
+            status=discord_status,
+            owner_ids=owner_ids or None
         )
 
     async def setup_hook(self):

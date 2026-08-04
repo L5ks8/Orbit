@@ -1,7 +1,7 @@
-﻿import discord
+import discord
 from discord.ext import commands
 
-@commands.hybrid_group(name="verify", description="Member verification commands.")
+@commands.hybrid_group(name="verify", description="Member verification commands.", invoke_without_command=True)
 @commands.has_permissions(manage_guild=True)
 async def verify_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
