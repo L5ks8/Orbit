@@ -338,10 +338,8 @@ class PersistentTicketPanelLayout(discord.ui.View):
         async def _panel_dropdown_cb(interaction: discord.Interaction):
             val = interaction.data.get("values", ["General Support"])[0]
             _user_ticket_selections[interaction.user.id] = val
-            try: 
-                await interaction.response.send_message(f"Selected category: **{val}**. You can now click **Create Ticket**.", ephemeral=True)
-            except Exception: 
-                pass
+            try: await interaction.response.defer()
+            except Exception: pass
 
         panel_dropdown.callback = _panel_dropdown_cb
 

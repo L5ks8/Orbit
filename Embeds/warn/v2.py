@@ -18,9 +18,7 @@ def get_embed(msg_type: str, **kwargs):
                 allowed = appeals_cfg.get("allowed_punishments", [])
                 if "warn" in allowed:
                     custom_url = appeals_cfg.get("custom_url", "orbit")
-                    import urllib.parse
-                    encoded_url = urllib.parse.quote(custom_url)
-                    content += f"\n\n**Appeals:** [Click here to submit an appeal](https://orbit-498b.onrender.com/appeal/{encoded_url})"
+                    content += f"\n\n**Appeals:** You can appeal this warning at: https://orbit-498b.onrender.com/appeal/{custom_url}"
                     
         container = Container(
             TextDisplay(content=f"### ⚠️ Formal Warning Received\n**Server:** `{guild_name}`"),
