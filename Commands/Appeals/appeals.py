@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from Commands.Cases._storage import get_user_cases, update_case_reason
+from Commands.Appeals._storage import get_appeal_status, close_appeal, register_appeal_submission
 import time
 
 class AppealView(discord.ui.View):
@@ -10,68 +11,85 @@ class AppealView(discord.ui.View):
         self.guild_id = guild_id
         self.user_id = user_id
 
-        # Accept Button
         btn_accept = discord.ui.Button(
-            label="Annehmen", 
+            label="Accept", 
             style=discord.ButtonStyle.success, 
             custom_id=f"appeal_acc_{guild_id}_{user_id}"
         )
         btn_accept.callback = self.btn_accept
         self.add_item(btn_accept)
 
-        # Deny Button
         btn_deny = discord.ui.Button(
-            label="Ablehnen", 
+            label="Deny", 
             style=discord.ButtonStyle.danger, 
             custom_id=f"appeal_den_{guild_id}_{user_id}"
         )
         btn_deny.callback = self.btn_deny
         self.add_item(btn_deny)
 
-    async def btn_accept(self, interaction: discord.Interaction):
+    async def get_appeals_cfg(self):
+        from Commands.Appeals._storage import load_appeals_config
+        return load_appeals_config(self.guild_id)
+
+    async def handle_decision(self, interaction: discord.Interaction, is_accept: bool):
         await interaction.response.defer(ephemeral=True)
         guild = self.bot.get_guild(self.guild_id)
         if not guild:
             return await interaction.followup.send("Server not found.", ephemeral=True)
             
         if not interaction.user.guild_permissions.moderate_members:
-            return await interaction.followup.send("You lack permissions to accept appeals.", ephemeral=True)
+            return await interaction.followup.send("You lack permissions to decide on appeals.", ephemeral=True)
             
-        try:
-            member = guild.get_member(self.user_id)
-            if member:
-                if member.is_timed_out():
-                    await member.timeout(None, reason=f"Appeal accepted by {interaction.user}")
-            else:
-                user = await self.bot.fetch_user(self.user_id)
-                await guild.unban(user, reason=f"Appeal accepted by {interaction.user}")
-        except Exception as e:
-            await interaction.followup.send(f"Could not revoke punishment: {e}", ephemeral=True)
-            
+        cfg = await self.get_appeals_cfg()
+        
+        if is_accept:
+            try:
+                member = guild.get_member(self.user_id)
+                if member:
+                    if member.is_timed_out():
+                        await member.timeout(None, reason=f"Appeal accepted by {interaction.user}")
+                else:
+                    user = await self.bot.fetch_user(self.user_id)
+                    await guild.unban(user, reason=f"Appeal accepted by {interaction.user}")
+                    
+                    if cfg.get("invite_unbanned", True):
+                        invite_channel = guild.system_channel
+                        if not invite_channel and guild.text_channels:
+                            invite_channel = guild.text_channels[0]
+                        if invite_channel:
+                            invite = await invite_channel.create_invite(max_uses=1, max_age=86400, reason="Appeal accepted")
+                            try:
+                                await user.send(f"Your appeal in **{guild.name}** was accepted! You can rejoin using this invite: {invite.url}")
+                            except:
+                                pass
+            except Exception as e:
+                return await interaction.followup.send(f"Could not revoke punishment: {e}", ephemeral=True)
+        
+        close_appeal(self.guild_id, self.user_id)
+        
         for child in self.children:
             child.disabled = True
         
         embed = interaction.message.embeds[0]
-        embed.color = discord.Color.green()
-        embed.add_field(name="Status", value=f"✅ Accepted by {interaction.user.mention}")
+        mod_name = "a Moderator" if cfg.get("anonymous_mods", False) else interaction.user.mention
+        
+        if is_accept:
+            embed.color = discord.Color.green()
+            embed.add_field(name="Status", value=f"✅ Accepted by {mod_name}")
+            msg = "Appeal accepted and punishment revoked."
+        else:
+            embed.color = discord.Color.red()
+            embed.add_field(name="Status", value=f"❌ Denied by {mod_name}")
+            msg = "Appeal denied."
         
         await interaction.message.edit(embed=embed, view=self)
-        await interaction.followup.send("Appeal accepted and user punishment revoked.", ephemeral=True)
+        await interaction.followup.send(msg, ephemeral=True)
+
+    async def btn_accept(self, interaction: discord.Interaction):
+        await self.handle_decision(interaction, True)
 
     async def btn_deny(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True)
-        if not interaction.user.guild_permissions.moderate_members:
-            return await interaction.followup.send("You lack permissions to deny appeals.", ephemeral=True)
-
-        for child in self.children:
-            child.disabled = True
-            
-        embed = interaction.message.embeds[0]
-        embed.color = discord.Color.red()
-        embed.add_field(name="Status", value=f"❌ Denied by {interaction.user.mention}")
-        
-        await interaction.message.edit(embed=embed, view=self)
-        await interaction.followup.send("Appeal denied.", ephemeral=True)
+        await self.handle_decision(interaction, False)
 
 async def process_new_appeal(bot: commands.Bot, guild_id: int, user_id: int, reason: str, appeals_cfg: dict):
     guild = bot.get_guild(guild_id)
@@ -90,6 +108,21 @@ async def process_new_appeal(bot: commands.Bot, guild_id: int, user_id: int, rea
     if not user:
         return False, "User not found."
         
+    status = get_appeal_status(guild_id, user_id)
+    if status:
+        if status.get("is_open"):
+            return False, "You already have a pending appeal. Please wait for a decision."
+            
+        if not appeals_cfg.get("multiple_submissions", False):
+            return False, "You have already submitted an appeal previously."
+            
+        cooldown_days = appeals_cfg.get("cooldown_days", 3)
+        last_submitted = status.get("last_submitted", 0)
+        time_passed = time.time() - last_submitted
+        if time_passed < cooldown_days * 86400:
+            remaining = (cooldown_days * 86400) - time_passed
+            return False, f"You must wait {int(remaining/86400)} more days before appealing again."
+        
     cases = get_user_cases(guild_id, user_id)
     allowed = appeals_cfg.get("allowed_punishments", [])
     
@@ -101,7 +134,7 @@ async def process_new_appeal(bot: commands.Bot, guild_id: int, user_id: int, rea
     
     embed = discord.Embed(
         title=f"New Appeal | Case #{latest_case.get('case_id')}",
-        description=reason,
+        description=reason[:4096],
         color=discord.Color.gold(),
         timestamp=discord.utils.utcnow()
     )
@@ -112,11 +145,15 @@ async def process_new_appeal(bot: commands.Bot, guild_id: int, user_id: int, rea
     
     view = AppealView(bot, guild_id, user_id)
     
-    mod_roles = appeals_cfg.get("mod_roles", [])
-    mentions = " ".join([f"<@&{r}>" for r in mod_roles])
-    content = mentions if mentions else None
+    content = None
+    if appeals_cfg.get("mention_mods", True):
+        mod_roles = appeals_cfg.get("mod_roles", [])
+        mentions = " ".join([f"<@&{r}>" for r in mod_roles])
+        if mentions:
+            content = mentions
     
     await channel.send(content=content, embed=embed, view=view)
+    register_appeal_submission(guild_id, user_id)
     return True, "Appeal submitted successfully."
 
 class AppealsCog(commands.Cog):
@@ -134,7 +171,6 @@ class AppealsCog(commands.Cog):
                 guild_id = int(parts[2])
                 user_id = int(parts[3])
                 
-                # Reconstruct the view to handle the button
                 view = AppealView(self.bot, guild_id, user_id)
                 if interaction.custom_id.startswith("appeal_acc_"):
                     await view.btn_accept(interaction)

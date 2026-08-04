@@ -1693,7 +1693,8 @@ class WebDashboard:
         return web.json_response({
             "guild_name": guild.name,
             "guild_icon": guild.icon.url if guild.icon else None,
-            "allowed_punishments": cfg.get("allowed_punishments", [])
+            "allowed_punishments": cfg.get("allowed_punishments", []),
+            "questions": cfg.get("questions", ["Why should your punishment be revoked?"])
         })
 
     async def api_submit_appeal(self, request: web.Request):

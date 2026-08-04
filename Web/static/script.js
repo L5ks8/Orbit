@@ -1385,6 +1385,11 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('appeals_enabled').checked = config.appeals?.enabled ?? false;
         if (document.getElementById('appeals_channel_id')) document.getElementById('appeals_channel_id').value = config.appeals?.channel_id || '';
         document.getElementById('appeals_custom_url').value = config.appeals?.custom_url || '';
+        document.getElementById('appeals_mention_mods').checked = config.appeals?.mention_mods ?? true;
+        document.getElementById('appeals_anonymous_mods').checked = config.appeals?.anonymous_mods ?? false;
+        document.getElementById('appeals_multiple_submissions').checked = config.appeals?.multiple_submissions ?? false;
+        document.getElementById('appeals_invite_unbanned').checked = config.appeals?.invite_unbanned ?? true;
+        document.getElementById('appeals_cooldown_days').value = config.appeals?.cooldown_days ?? 3;
         
         const appealsModRolesEl = document.getElementById('appeals_mod_roles');
         if (appealsModRolesEl) {
@@ -1396,15 +1401,32 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
                 if (config.appeals?.mod_roles?.includes(r.id)) opt.selected = true;
                 appealsModRolesEl.appendChild(opt);
             });
-            new CustomMultiSelect(appealsModRolesEl, globalRoles, "Rollen auswählen...");
+            new CustomMultiSelect(appealsModRolesEl, globalRoles, "Select Roles...");
         }
 
         const appealsPunishEl = document.getElementById('appeals_allowed_punishments');
         if (appealsPunishEl) {
+            const punishItems = [
+                {id: 'ban', name: 'Ban'},
+                {id: 'timeout', name: 'Timeout'},
+                {id: 'kick', name: 'Kick'},
+                {id: 'warn', name: 'Warn'}
+            ];
             Array.from(appealsPunishEl.options).forEach(opt => {
                 opt.selected = config.appeals?.allowed_punishments?.includes(opt.value) || false;
             });
-            new CustomMultiSelect(appealsPunishEl, null, "Strafen auswählen...");
+            new CustomMultiSelect(appealsPunishEl, punishItems, "Select Punishments...");
+        }
+
+        renderAppealQuestions(config.appeals?.questions || ["Why should your punishment be revoked?"]);
+        
+        const btnShowAppeal = document.getElementById('btn-show-appeal-page');
+        if (btnShowAppeal) {
+            btnShowAppeal.onclick = (e) => {
+                const customUrl = document.getElementById('appeals_custom_url').value;
+                if (!customUrl) { e.preventDefault(); return showToast("Please set a Custom URL and save first.", "error"); }
+                btnShowAppeal.href = `/appeal/${customUrl}`;
+            };
         }
 
         // Level System
@@ -2858,7 +2880,51 @@ function closeAutoModModal() {
     activeAutomodRule = null;
     document.getElementById('automod-modal').classList.remove('show');
     document.body.style.overflow = '';
+    document.body.style.overflow = '';
 }
+
+function renderAppealQuestions(questions) {
+    const container = document.getElementById('appeals_questions_container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    questions.forEach((q, idx) => {
+        const div = document.createElement('div');
+        div.className = 'form-group appeals-question-item';
+        div.style.display = 'flex';
+        div.style.gap = '8px';
+        div.style.alignItems = 'flex-start';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-input appeals-question-input';
+        input.value = q;
+        input.style.flex = '1';
+        input.placeholder = 'Enter a question...';
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-danger';
+        removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+        removeBtn.onclick = () => {
+            div.remove();
+        };
+        
+        div.appendChild(input);
+        div.appendChild(removeBtn);
+        container.appendChild(div);
+    });
+    
+    lucide.createIcons({root: container});
+}
+
+document.getElementById('btn_add_appeal_question')?.addEventListener('click', () => {
+    const container = document.getElementById('appeals_questions_container');
+    if (!container) return;
+    const questions = Array.from(container.querySelectorAll('.appeals-question-input')).map(i => i.value);
+    questions.push('');
+    renderAppealQuestions(questions);
+});
 
 // Save Settings
 document.getElementById('config-form').addEventListener('submit', async (e) => {
@@ -3099,7 +3165,13 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             channel_id: document.getElementById('appeals_channel_id')?.value || '',
             custom_url: document.getElementById('appeals_custom_url')?.value || '',
             mod_roles: Array.from(document.getElementById('appeals_mod_roles')?.selectedOptions || []).map(o => o.value),
-            allowed_punishments: Array.from(document.getElementById('appeals_allowed_punishments')?.selectedOptions || []).map(o => o.value)
+            allowed_punishments: Array.from(document.getElementById('appeals_allowed_punishments')?.selectedOptions || []).map(o => o.value),
+            mention_mods: document.getElementById('appeals_mention_mods')?.checked ?? true,
+            anonymous_mods: document.getElementById('appeals_anonymous_mods')?.checked ?? false,
+            multiple_submissions: document.getElementById('appeals_multiple_submissions')?.checked ?? false,
+            invite_unbanned: document.getElementById('appeals_invite_unbanned')?.checked ?? true,
+            cooldown_days: parseInt(document.getElementById('appeals_cooldown_days')?.value || 3),
+            questions: Array.from(document.querySelectorAll('.appeals-question-input') || []).map(i => i.value).filter(q => q.trim() !== '')
         },
         verify: {
             enabled: document.getElementById('verify_enabled').checked,

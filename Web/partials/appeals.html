@@ -1,7 +1,7 @@
 <div class="module-header">
     <div class="module-info">
-        <h1 class="module-title">Einspruchssystem</h1>
-        <p class="module-description">Erlaube gebannten oder stummgeschalteten Nutzern, einen Einspruch über das Web-Dashboard einzureichen.</p>
+        <h1 class="module-title">Appeals System</h1>
+        <p class="module-description">Allow banned or muted users to submit an appeal via the web dashboard.</p>
     </div>
     <label class="switch module-toggle">
         <input type="checkbox" id="appeals_enabled">
@@ -11,42 +11,121 @@
 
 <div class="module-content">
     <div class="config-section">
-        <h2 class="section-title">Allgemein</h2>
+        <h2 class="section-title">General</h2>
         
         <div class="form-group">
-            <label class="form-label">Einspruchskanal <span class="required">*</span></label>
-            <input type="text" id="appeals_channel_id" class="form-input" placeholder="Kanal-ID für neue Einsprüche" data-is-discord-id="true">
-            <span class="help-text">Der Kanal, in dem neue Einsprüche als Nachricht mit Annehmen/Ablehnen-Buttons gesendet werden.</span>
+            <label class="form-label">Appeal Channel <span class="required">*</span></label>
+            <input type="text" id="appeals_channel_id" class="form-input" placeholder="Channel ID for new appeals" data-is-discord-id="true">
+            <span class="help-text">The channel where new appeals will be sent with Accept/Deny buttons.</span>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Moderatoren Rollen</label>
+            <label class="form-label">Moderator Roles</label>
             <div class="select-wrapper">
                 <select id="appeals_mod_roles" multiple></select>
             </div>
-            <span class="help-text">Rollen, die berechtigt sind, über Einsprüche zu entscheiden. Wenn leer, können alle mit der Berechtigung 'Nachrichten verwalten' entscheiden.</span>
+            <span class="help-text">Roles allowed to decide on appeals. If empty, anyone with 'Manage Messages' permission can decide.</span>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Erlaubte Strafen</label>
+            <label class="form-label">Allowed Punishments</label>
             <div class="select-wrapper">
                 <select id="appeals_allowed_punishments" multiple>
-                    <option value="ban">Bann</option>
+                    <option value="ban">Ban</option>
                     <option value="timeout">Timeout</option>
                     <option value="kick">Kick</option>
-                    <option value="warn">Warnung</option>
+                    <option value="warn">Warn</option>
                 </select>
             </div>
-            <span class="help-text">Welche Art von Strafen dürfen über dieses System angefochten werden?</span>
+            <span class="help-text">Which types of punishments can be appealed through this system?</span>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Benutzerdefinierte URL</label>
+            <label class="form-label">Custom URL</label>
             <div class="url-input-wrapper" style="display: flex; align-items: center; gap: 8px;">
                 <span class="url-prefix" style="color: var(--text-secondary); background: var(--bg-surface); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">orbit-498b.onrender.com/appeal/</span>
                 <input type="text" id="appeals_custom_url" class="form-input" placeholder="orbit" style="flex: 1;">
             </div>
-            <span class="help-text">Die URL, unter der das Einspruchsformular für diesen Server erreichbar ist.</span>
+            <span class="help-text">The URL where the appeal form for this server is accessible.</span>
         </div>
+    </div>
+
+    <div class="config-section" style="margin-top: 24px;">
+        <h2 class="section-title">Options</h2>
+        
+        <div class="grid-2-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div class="form-group toggle-group" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <label class="form-label">Mention Moderators</label>
+                    <span class="help-text" style="display: block; margin-top: 4px;">Should moderators be mentioned when a new appeal is submitted?</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="appeals_mention_mods">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="form-group toggle-group" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <label class="form-label">Anonymous Moderators</label>
+                    <span class="help-text" style="display: block; margin-top: 4px;">Should moderators remain anonymous when processing appeals?</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="appeals_anonymous_mods">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="form-group toggle-group" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <label class="form-label">Multiple Submissions</label>
+                    <span class="help-text" style="display: block; margin-top: 4px;">Should users be able to submit multiple appeals?</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="appeals_multiple_submissions">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="form-group toggle-group" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <label class="form-label">Invite Unbanned Members</label>
+                    <span class="help-text" style="display: block; margin-top: 4px;">Should members receive a server invite when their ban appeal is accepted?</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="appeals_invite_unbanned">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Submission Cooldown (Days)</label>
+                <span class="help-text" style="display: block; margin-bottom: 8px;">The time members must wait before submitting another appeal.</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" onclick="const i=document.getElementById('appeals_cooldown_days'); i.value = Math.max(0, parseInt(i.value||0)-1);">-</button>
+                    <input type="number" id="appeals_cooldown_days" class="form-input" value="3" min="0" style="width: 80px; text-align: center;">
+                    <button type="button" class="btn btn-secondary" onclick="const i=document.getElementById('appeals_cooldown_days'); i.value = parseInt(i.value||0)+1;">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="config-section" style="margin-top: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 class="section-title" style="margin-bottom: 0;">Form <span class="required">*</span></h2>
+            <div style="display: flex; gap: 8px;">
+                <a href="#" id="btn-show-appeal-page" target="_blank" class="btn btn-secondary" style="text-decoration: none;">
+                    <i data-lucide="external-link"></i> Show Appeal Page
+                </a>
+            </div>
+        </div>
+        
+        <div id="appeals_questions_container" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px;">
+            <!-- Dynamic questions go here -->
+        </div>
+
+        <button type="button" id="btn_add_appeal_question" class="btn btn-primary">
+            <i data-lucide="plus"></i> Add Question
+        </button>
     </div>
 </div>
