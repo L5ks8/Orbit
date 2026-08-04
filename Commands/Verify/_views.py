@@ -141,18 +141,21 @@ class PersistentVerifyLayout(discord.ui.View):
                 await interaction.response.send_message(f"An error occurred assigning the verified role: {e}", ephemeral=True)
             return
 
-        code, img_bytes = generate_captcha()
-        CAPTCHA_SESSIONS[interaction.user.id] = {"code": code, "timestamp": time.time()}
+        try:
+            code, img_bytes = generate_captcha()
+            CAPTCHA_SESSIONS[interaction.user.id] = {"code": code, "timestamp": time.time()}
 
-        filename = "captcha.bmp" if img_bytes[:2] == b"BM" else "captcha.png"
-        file = discord.File(fp=io.BytesIO(img_bytes), filename=filename)
-        
-        view = CaptchaInteractionLayout(role_id, remove_role_id)
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(interaction.guild_id, "verify", msg_type="captcha", filename=filename, role_id=role_id, remove_role_id=remove_role_id, components=view.children)
-        
-        if "embed" in kwargs:
-            await interaction.response.send_message(embed=kwargs["embed"], file=file, view=kwargs.get("view", view), ephemeral=True)
-        elif "view" in kwargs:
-            await interaction.response.send_message(file=file, view=kwargs["view"], ephemeral=True)
+            filename = "captcha.bmp" if img_bytes[:2] == b"BM" else "captcha.png"
+            file = discord.File(fp=io.BytesIO(img_bytes), filename=filename)
+            
+            view = CaptchaInteractionLayout(role_id, remove_role_id)
+            from Embeds import get_command_embed
+            kwargs = get_command_embed(interaction.guild_id, "verify", msg_type="captcha", filename=filename, role_id=role_id, remove_role_id=remove_role_id, components=view.children)
+            
+            if "embed" in kwargs:
+                await interaction.response.send_message(embed=kwargs["embed"], file=file, view=kwargs.get("view", view), ephemeral=True)
+            elif "view" in kwargs:
+                await interaction.response.send_message(file=file, view=kwargs["view"], ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"Failed to generate verification panel: {e}", ephemeral=True)
 

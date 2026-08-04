@@ -215,6 +215,12 @@ class OrbitBot(commands.Bot):
         commands_dir = pathlib.Path("Commands")
         if not commands_dir.exists():
             commands_dir.mkdir(parents=True, exist_ok=True)
+            
+        try:
+            from Commands.Verify._views import PersistentVerifyLayout
+            self.add_view(PersistentVerifyLayout())
+        except Exception as e:
+            print(f"Failed to add PersistentVerifyLayout: {e}")
 
         # Load root command group modules first (e.g. Commands/Role/role.py, Commands/Ticket/ticket.py)
         for file_path in commands_dir.rglob("*.py"):
