@@ -106,24 +106,31 @@ class AutoResponderCommand(commands.Cog):
                           f"CRITICAL: If the Trigger Word is used in a different language or has a different meaning (e.g. German 'war' meaning 'was', but Bot's Response implies English 'war' meaning conflict), you MUST output NO.\n"
                           f"Respond ONLY with YES or NO. Do not explain.")
                 
-                def _run_g4f_sync(prompt_text: str) -> str:
+                def _run_g4f_thread(prompt_text: str) -> str:
+                    import asyncio
                     import g4f
-                    try:
-                        from g4f.client import Client
-                        client = Client()
-                        res = client.chat.completions.create(
-                            model="gpt-3.5-turbo",
-                            messages=[{"role": "user", "content": prompt_text}],
-                        )
-                        return res.choices[0].message.content
-                    except Exception:
-                        return g4f.ChatCompletion.create(
-                            model=g4f.models.gpt_35_turbo,
-                            messages=[{"role": "user", "content": prompt_text}]
-                        )
+                    
+                    async def _do_run():
+                        try:
+                            from g4f.client import AsyncClient
+                            client = AsyncClient()
+                            res = await client.chat.completions.create(
+                                model="gpt-3.5-turbo",
+                                messages=[{"role": "user", "content": prompt_text}],
+                            )
+                            return res.choices[0].message.content
+                        except Exception:
+                            # Fallback to old g4f API
+                            ans = await g4f.ChatCompletion.create_async(
+                                model=g4f.models.gpt_35_turbo,
+                                messages=[{"role": "user", "content": prompt_text}]
+                            )
+                            return ans
+                            
+                    return asyncio.run(_do_run())
 
                 import asyncio
-                answer = await asyncio.to_thread(_run_g4f_sync, prompt)
+                answer = await asyncio.to_thread(_run_g4f_thread, prompt)
                 
                 if isinstance(answer, str):
                     answer = answer.strip().lower()
