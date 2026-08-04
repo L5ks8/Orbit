@@ -1518,6 +1518,7 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         } else {
             setDirty(false);
         }
+        initStandardSelects();
 
         document.getElementById('config-loader').classList.add('hidden');
         document.getElementById('config-layout').style.display = 'flex';
