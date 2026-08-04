@@ -22,8 +22,14 @@ def get_embed(msg_type: str, **kwargs):
         )
         embed.set_footer(text=f"Giveaway ID: {giveaway_id}")
 
-        view = View(timeout=None)
-        for comp in components: view.add_item(comp)
+        view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = discord.ui.View(timeout=None)
+            for comp in components:
+                try: view.add_item(comp)
+                except ValueError: pass
         return {"embed": embed, "view": view}
 
     elif msg_type == "ended":
@@ -46,8 +52,14 @@ def get_embed(msg_type: str, **kwargs):
         )
         embed.set_footer(text=f"Giveaway ID: {giveaway_id}")
 
-        view = View(timeout=None)
-        for comp in components: view.add_item(comp)
+        view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = discord.ui.View(timeout=None)
+            for comp in components:
+                try: view.add_item(comp)
+                except ValueError: pass
         return {"embed": embed, "view": view}
 
     return {}

@@ -15,9 +15,14 @@ def get_embed(msg_type: str, **kwargs):
         embed.add_field(name="Total Configured", value=f"`{len(role_ids)}`", inline=True)
         embed.add_field(name="Assigned on Join", value=roles_text, inline=False)
         
-        view = discord.ui.View(timeout=None)
-        for comp in components:
-            view.add_item(comp)
+        view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = discord.ui.View(timeout=None)
+            for comp in components:
+                try: view.add_item(comp)
+                except ValueError: pass
             
         return {"embed": embed, "view": view}
         
@@ -27,9 +32,14 @@ def get_embed(msg_type: str, **kwargs):
         
         embed = discord.Embed(title="Join Roles Cleared", description=f"Cleared `{cleared_count}` automatic join roles.", color=discord.Color.red())
         
-        view = discord.ui.View(timeout=None)
-        for comp in components:
-            view.add_item(comp)
+        view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = getattr(components[0], "view", None) if components else None
+        if not view:
+            view = discord.ui.View(timeout=None)
+            for comp in components:
+                try: view.add_item(comp)
+                except ValueError: pass
             
         return {"embed": embed, "view": view}
         

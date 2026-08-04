@@ -260,7 +260,7 @@ class OrbitBot(commands.Bot):
             print(f"Failed to sync commands: {e}")
 
         _old_view_error = discord.ui.View.on_error
-        async def _global_view_error(view_self, error, item, interaction: discord.Interaction):
+        async def _global_view_error(view_self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item):
             try:
                 from Commands.OwnerOnly._monitor import record_error
                 source_name = f"UI View Error [{view_self.__class__.__name__} -> {item.__class__.__name__}]"
@@ -268,11 +268,11 @@ class OrbitBot(commands.Bot):
                 await send_dev_error(interaction.client, source_name, error)
             except Exception:
                 pass
-            await _old_view_error(view_self, error, item, interaction)
+            await _old_view_error(view_self, interaction, error, item)
         discord.ui.View.on_error = _global_view_error
 
         _old_modal_error = discord.ui.Modal.on_error
-        async def _global_modal_error(modal_self, error, interaction: discord.Interaction):
+        async def _global_modal_error(modal_self, interaction: discord.Interaction, error: Exception):
             try:
                 from Commands.OwnerOnly._monitor import record_error
                 source_name = f"UI Modal Error [{modal_self.__class__.__name__}]"
@@ -280,7 +280,7 @@ class OrbitBot(commands.Bot):
                 await send_dev_error(interaction.client, source_name, error)
             except Exception:
                 pass
-            await _old_modal_error(modal_self, error, interaction)
+            await _old_modal_error(modal_self, interaction, error)
         discord.ui.Modal.on_error = _global_modal_error
 
     async def on_error(self, event_method: str, *args, **kwargs):
