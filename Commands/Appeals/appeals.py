@@ -162,11 +162,15 @@ class AppealsCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
-        if not interaction.custom_id:
+        if interaction.type != discord.InteractionType.component:
             return
             
-        if interaction.custom_id.startswith("appeal_acc_") or interaction.custom_id.startswith("appeal_den_"):
-            parts = interaction.custom_id.split("_")
+        custom_id = interaction.data.get("custom_id", "")
+        if not custom_id:
+            return
+            
+        if custom_id.startswith("appeal_acc_") or custom_id.startswith("appeal_den_"):
+            parts = custom_id.split("_")
             if len(parts) >= 4:
                 guild_id = int(parts[2])
                 user_id = int(parts[3])
