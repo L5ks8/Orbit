@@ -20,7 +20,7 @@ def get_embed(msg_type: str, **kwargs):
                 allowed = appeals_cfg.get("allowed_punishments", [])
                 if "warn" in allowed:
                     custom_url = appeals_cfg.get("custom_url", "orbit")
-                    embed.add_field(name="Appeals", value=f"You can appeal this warning at: https://orbit-498b.onrender.com/appeal/{custom_url}", inline=False)
+                    embed.add_field(name="Appeals", value=f"[Click here to submit an appeal](https://orbit-498b.onrender.com/appeal/{custom_url})", inline=False)
 
         return {"embed": embed}
         

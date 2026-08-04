@@ -70,7 +70,7 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
                 p_map = {"banned": "ban", "voice banned": "ban", "timed out": "timeout", "muted": "timeout", "voice muted": "timeout", "kicked": "kick", "warned": "warn"}
                 if p_map.get(action) in allowed:
                     custom_url = appeals_cfg.get("custom_url", "orbit")
-                    desc += f"\n\n**Appeals:** You can appeal this punishment at: https://orbit-498b.onrender.com/appeal/{custom_url}"
+                    desc += f"\n\n**Appeals:** [Click here to submit an appeal](https://orbit-498b.onrender.com/appeal/{custom_url})"
 
         embed = discord.Embed(
             description=desc,
