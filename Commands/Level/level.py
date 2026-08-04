@@ -9,10 +9,10 @@ import io
 
 # ── Leaderboard category config ──
 LB_CATEGORIES = {
-    "total_xp": {"label": "Level", "emoji": "⭐", "title": "Level Leaderboard", "format": lambda e, g: _lb_level_line(e, g)},
-    "message_count": {"label": "Messages", "emoji": "💬", "title": "Messages Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "message_count", "messages")},
-    "voice_minutes": {"label": "Voice Hours", "emoji": "🎙️", "title": "Voice Hours Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "voice_minutes", "min")},
-    "reaction_count": {"label": "Reactions", "emoji": "😄", "title": "Reactions Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "reaction_count", "reactions")},
+    "total_xp": {"label": "Level", "title": "Level Leaderboard", "format": lambda e, g: _lb_level_line(e, g)},
+    "message_count": {"label": "Messages", "title": "Messages Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "message_count")},
+    "voice_minutes": {"label": "Voice Hours", "title": "Voice Hours Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "voice_minutes")},
+    "reaction_count": {"label": "Reactions", "title": "Reactions Leaderboard", "format": lambda e, g: _lb_stat_line(e, g, "reaction_count")},
 }
 
 def _lb_level_line(entry, guild):
@@ -23,13 +23,20 @@ def _lb_level_line(entry, guild):
     name = member.display_name if member else f"User#{uid}"
     return name, f"Level {lvl}", f"XP {_format_lb_number(xp)}"
 
-def _lb_stat_line(entry, guild, key, unit):
+def _lb_stat_line(entry, guild, key):
     uid = entry.get("user_id")
     val = entry.get(key, 0)
-    lvl = level_from_xp(entry.get("total_xp", 0))
     member = guild.get_member(uid)
     name = member.display_name if member else f"User#{uid}"
-    return name, f"Level {lvl}", f"{_format_lb_number(val)} {unit}"
+    
+    if key == "voice_minutes":
+        # Convert minutes to hours
+        val = val / 60.0
+        val_str = f"{val:.1f}"
+    else:
+        val_str = _format_lb_number(val)
+        
+    return name, val_str, ""
 
 def _format_lb_number(n):
     if n >= 1_000_000:
@@ -48,7 +55,6 @@ class LeaderboardSelect(discord.ui.Select):
             options.append(discord.SelectOption(
                 label=cat["label"],
                 value=key,
-                emoji=cat["emoji"],
                 default=(key == current_key)
             ))
         super().__init__(placeholder="Level", min_values=1, max_values=1, options=options)
