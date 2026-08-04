@@ -46,6 +46,27 @@
     background: var(--bg-elevated);
 }
 
+/* Lang Switcher Pill */
+.lang-pill {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    margin-right: 12px;
+}
+.lang-pill:hover {
+    background: var(--border-color);
+    border-color: var(--border-hover);
+}
+
 .form-group { margin-bottom: 24px; }
 .form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
 .form-group .help-text { display: block; color: var(--text-muted); font-size: 12px; margin-bottom: 10px; }

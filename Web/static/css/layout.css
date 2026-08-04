@@ -52,6 +52,8 @@
     flex: 1;
     overflow: hidden;
     min-height: 0;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .dash-sidebar {
@@ -59,8 +61,8 @@
     display: flex;
     flex-direction: column;
     gap: 0;
-    width: 200px;
-    min-width: 200px;
+    width: 240px;
+    min-width: 240px;
     height: 100%;
     padding: 16px 0;
     border-right: 1px solid var(--border-color);
@@ -124,17 +126,18 @@
 }
 .dash-nav-item:hover svg { opacity: 0.8; }
 .dash-nav-item.active {
-    background: var(--text-primary);
-    color: #000;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
-.dash-nav-item.active svg { opacity: 1; color: #000; }
+.dash-nav-item.active svg { opacity: 1; color: var(--text-primary); }
 
 /* ===== MAIN CONTENT ===== */
 .dash-main {
     background: none;
     border: none;
     border-radius: 0;
-    padding: 24px 32px;
+    padding: 40px 48px;
     height: 100%;
     box-shadow: none;
     position: relative;
@@ -689,7 +692,7 @@
     transition: all 0.15s;
 }
 .toggle-tab.active {
-    background: #3B82F6;
+    background: #5865F2;
     color: white;
 }
 .toggle-tab:hover:not(.active) {
