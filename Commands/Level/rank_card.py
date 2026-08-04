@@ -135,10 +135,10 @@ def generate_rank_card(
                 continue
         return ImageFont.load_default()
 
-    font_rl = load_font(20)      # RANG / LEVEL
-    font_name = load_font(28)    # Username
-    font_xp = load_font(22)      # XP numbers
-    font_stats = load_font(14)   # Stats line
+    font_rl = load_font(24)      # RANG / LEVEL
+    font_name = load_font(34)    # Username
+    font_xp = load_font(28)      # XP numbers
+    font_stats = load_font(17)   # Stats line
 
     text_x = avatar_x + AVATAR_SIZE + 30 * SCALE
     text_area_w = WIDTH - text_x - PADDING
