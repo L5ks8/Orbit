@@ -150,6 +150,8 @@
     border: none;
     border-radius: 0;
     padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
     height: 100%;
     box-shadow: none;
     position: relative;
@@ -744,4 +746,8 @@ input[type="range"]::-moz-range-thumb {
     background: #3B82F6;
     cursor: pointer;
     border: none;
+}
+
+#config-form {
+    flex: 1;
 }
