@@ -67,12 +67,18 @@ html {
 body {
     background-color: var(--bg-base);
     color: var(--text-primary);
+    -ms-overflow-style: none;
+    scrollbar-width: none;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    position: relative;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+::-webkit-scrollbar {
+    display: none;
 }
 
 /* Subtle noise texture overlay */

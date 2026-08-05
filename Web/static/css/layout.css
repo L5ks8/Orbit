@@ -740,7 +740,27 @@
         height: auto;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        padding-bottom: 12px;
+        padding-bottom: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    .dash-sidebar-header {
+        display: none;
+    }
+    .dash-nav-section {
+        display: flex;
+        flex-direction: row;
+        padding: 8px;
+        gap: 8px;
+    }
+    .nav-category {
+        display: none;
+    }
+    .dash-nav-item {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        margin-bottom: 0;
+        padding: 8px 12px;
     }
     .dash-main { padding: 20px 0 0 0; }
     .lp-footer-inner {
