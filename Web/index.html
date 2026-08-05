@@ -405,25 +405,7 @@
     })();
     </script>
 
-    <!-- Google Translate functionality -->
-    <div id="google_translate_element" style="display:none;"></div>
     <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'de,en,fr',
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-        function translatePage(lang) {
-            var selectField = document.querySelector("select.goog-te-combo");
-            if (selectField) {
-                selectField.value = lang;
-                selectField.dispatchEvent(new Event('change'));
-            } else {
-                setTimeout(function() { translatePage(lang); }, 500);
-            }
-        }
         function toggleLangMenu(btn) {
             var menu = btn.nextElementSibling;
             var isActive = menu.classList.contains('active');
@@ -442,7 +424,9 @@
             document.getElementById('lang-switcher-flag').src = flagUrl;
             document.querySelector('.lang-dropdown-menu').classList.remove('active');
             document.body.style.overflow = '';
-            translatePage(code);
+            
+            localStorage.setItem('orbit_lang', code);
+            location.reload();
         }
         
         // Close dropdown when clicking outside
@@ -460,7 +444,7 @@
         .lang-dropdown-menu.active { display: flex !important; }
         .lang-option:hover { background: rgba(255,255,255,0.05); }
     </style>
-    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    </style>
 
         <!-- DASHBOARD VIEW (Server List) -->
         <div id="view-dashboard" class="view hidden">

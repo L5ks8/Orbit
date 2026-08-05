@@ -76,20 +76,14 @@ const translations = {
     }
 };
 
-let currentLang = localStorage.getItem('orbit_lang') || 'de';
+let currentLang = localStorage.getItem('orbit_lang') || 'en';
 
 function applyTranslations(lang) {
     currentLang = lang;
     localStorage.setItem('orbit_lang', lang);
 
     if (lang === 'en') {
-        // If Google Translate is active, let it handle or reset
-        var selectField = document.querySelector("select.goog-te-combo");
-        if (selectField) {
-            selectField.value = 'en';
-            selectField.dispatchEvent(new Event('change'));
-        }
-        return;
+        return; // HTML is already in English
     }
     
     const dict = translations[lang];
@@ -108,18 +102,11 @@ function applyTranslations(lang) {
             if (dict[text]) el.setAttribute('placeholder', dict[text]);
         });
     }
-
-    // Trigger Google Translate as fallback for unmapped text
-    var selectField = document.querySelector("select.goog-te-combo");
-    if (selectField) {
-        selectField.value = lang;
-        selectField.dispatchEvent(new Event('change'));
-    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initial lang sync
-    const savedLang = localStorage.getItem('orbit_lang') || 'de';
+    const savedLang = localStorage.getItem('orbit_lang') || 'en';
     const langInfo = {
         'de': { text: 'DE', flag: 'https://flagcdn.com/w40/de.png' },
         'en': { text: 'EN', flag: 'https://flagcdn.com/w40/gb.png' },
