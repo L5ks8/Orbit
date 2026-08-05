@@ -15,9 +15,16 @@ class InvitesCommand(commands.Cog):
 
         stats = get_inviter_stats(ctx.guild.id, target.id)
         
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "invites", msg_type="info", target=target, stats=stats, guild=ctx.guild)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            color=0x00FFFF
+        )
+        embed.set_author(name=target.display_name, icon_url=target.display_avatar.url if target else None)
+        
+        embed.description = (
+            f"{target.mention} currently has **{stats['total']}** invites. "
+            f"(**{stats['regular']}** regular, **{stats['left']}** left, **{stats['fake']}** fake, **{stats['bonus']}** bonus)"
+        )
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @invites.error
     async def invites_error(self, ctx: commands.Context, error):

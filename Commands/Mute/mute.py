@@ -61,15 +61,20 @@ class MuteCommand(commands.Cog):
         except Exception as e:
             return await ctx.send(f"Error assigning muted role: {e}", ephemeral=True)
 
-        from Embeds import get_command_embed
+
         await log_event(
             ctx.guild,
             "moderation_action",
             "User Muted (`-mute`)",
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Muted Role:** {role.mention}"
         )
-        kwargs = get_command_embed(ctx.guild.id, "mute", msg_type="success", target=target, reason=reason, author=ctx.author, role=role)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="User Muted", color=discord.Color.red())
+        embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
+        embed.add_field(name="Reason", value=reason, inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        if role:
+            embed.add_field(name="Role Assigned", value=role.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @mute.error
     async def mute_error(self, ctx: commands.Context, error):

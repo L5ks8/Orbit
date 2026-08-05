@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
 from Commands.Channel.channel import channel_group
 
 
@@ -28,9 +27,16 @@ async def _do_create(ctx: commands.Context, name: str, channel_type: str, catego
     except Exception:
         pass
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "channel_create", msg_type="success", channel=new_channel, author=ctx.author)
-    await ctx.send(**kwargs, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+    ch_type_display = "Voice" if isinstance(new_channel, discord.VoiceChannel) else "Text"
+    cat_display = new_channel.category.name if new_channel.category else "No Category"
+    
+    embed = discord.Embed(title="Channel Created", color=discord.Color.green())
+    embed.add_field(name="Channel", value=new_channel.mention, inline=False)
+    embed.add_field(name="Type", value=f"`{ch_type_display}`", inline=True)
+    embed.add_field(name="Category", value=f"`{cat_display}`", inline=True)
+    embed.add_field(name="Created by", value=ctx.author.mention, inline=False)
+    
+    await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
 
 @channel_group.command(name="create", description="Create a new channel.")
 @commands.has_permissions(manage_channels=True)

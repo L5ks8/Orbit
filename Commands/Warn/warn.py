@@ -77,24 +77,35 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
                 punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
 
     try:
-        from Embeds import get_command_embed
-        dm_kwargs = get_command_embed(ctx.guild.id, "warn", msg_type="dm", guild_name=ctx.guild.name, warn_entry=warn_entry, reason=reason, punishment_text=punishment_text, guild_id=ctx.guild.id)
+        dm_embed = discord.Embed(title=f"⚠️ Formal Warning Received", color=discord.Color.red())
+        dm_embed.add_field(name="Server", value=ctx.guild.name, inline=False)
+        dm_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=False)
+        dm_embed.add_field(name="Reason", value=f"{reason}{punishment_text}", inline=False)
         
-        if "embed" in dm_kwargs:
-            await user.send(embed=dm_kwargs["embed"])
-        elif "components" in dm_kwargs:
-            dm_view = LayoutView()
-            for comp in dm_kwargs["components"]:
-                dm_view.add_item(comp)
-            await user.send(view=dm_view)
+        from Commands.Appeals._storage import load_appeals_config
+        appeals_cfg = load_appeals_config(ctx.guild.id)
+        if appeals_cfg.get("enabled"):
+            allowed = appeals_cfg.get("allowed_punishments", [])
+            if "warn" in allowed:
+                custom_url = appeals_cfg.get("custom_url", "orbit")
+                import urllib.parse
+                encoded_url = urllib.parse.quote(custom_url)
+                dm_embed.add_field(name="Appeals", value=f"You can appeal this warning at: https://orbit-498b.onrender.com/appeal/{encoded_url}", inline=False)
+
+        await user.send(embed=dm_embed)
     except Exception:
         pass
     try:
         await ctx.message.delete()
     except Exception:
         pass
-    from Embeds import get_command_embed
-    public_kwargs = get_command_embed(ctx.guild.id, "warn", msg_type="public", member=user, warn_entry=warn_entry, total_warns=total_warns)
+    public_embed = discord.Embed(title=f"⚠️ Warning Issued", color=discord.Color.orange())
+    public_embed.add_field(name="User", value=user.mention, inline=False)
+    public_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=True)
+    public_embed.add_field(name="Total Warnings", value=f"`{total_warns}`", inline=True)
+    public_embed.add_field(name="Moderator", value=f"<@{warn_entry['moderator_id']}>", inline=False)
+    public_embed.add_field(name="Reason", value=warn_entry['reason'], inline=False)
+    public_embed.add_field(name="Date", value=f"<t:{warn_entry['timestamp']}:f> (<t:{warn_entry['timestamp']}:R>)", inline=False)
     
     await log_event(
         ctx.guild,
@@ -103,13 +114,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}{punishment_text}"
     )
     
-    if "embed" in public_kwargs:
-        await ctx.send(embed=public_kwargs["embed"], delete_after=5, allowed_mentions=discord.AllowedMentions.none())
-    elif "components" in public_kwargs:
-        public_view = LayoutView()
-        for comp in public_kwargs["components"]:
-            public_view.add_item(comp)
-        await ctx.send(view=public_view, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+    await ctx.send(embed=public_embed, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 @commands.hybrid_command(
     name="warn",

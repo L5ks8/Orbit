@@ -67,15 +67,17 @@ async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission
             failed += 1
 
     state_display = "Enabled" if state.lower() == "on" else ("Disabled" if state.lower() == "off" else "Reset (Neutral)")
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(
-        ctx.guild.id, "role", msg_type="settings", 
-        role_mention=role.mention, role_id=role.id, role_color=role.color,
-        permission_label=permission, state=state_display,
-        success=success, failed=failed, skipped=skipped,
-        author_mention=ctx.author.mention
+    embed = discord.Embed(
+        title="Role Configuration Changed",
+        description=f"Mass updated `{permission}` to `{state_display}` for {role.mention}",
+        color=role.color
     )
-    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+    embed.add_field(name="Success", value=f"`{success}` channels", inline=True)
+    embed.add_field(name="Failed", value=f"`{failed}` channels", inline=True)
+    embed.add_field(name="Skipped", value=f"`{skipped}` channels", inline=True)
+    embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+    
+    await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @role_group.command(name="settings", description="Configure permissions for a role across all channels.")
 @commands.has_permissions(administrator=True)

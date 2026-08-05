@@ -14,9 +14,13 @@ async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     if not success:
         return await ctx.send("This user is not currently voice banned on this server.", ephemeral=True)
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="unban", member_mention=user.mention, member_id=user.id, reason=reason, author_mention=ctx.author.mention)
-    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(title="Voice Unbanned", color=discord.Color.green())
+    embed.add_field(name="Target", value=f"{user.mention} (`{user.id}`)", inline=False)
+    if reason and reason != "No reason provided":
+        embed.add_field(name="Reason", value=reason, inline=False)
+    embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+    embed.add_field(name="Status", value="`Cleared`", inline=False)
+    await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @voice_group.command(name="unban", description="Remove a voice ban from a user.")
 @commands.has_permissions(move_members=True)

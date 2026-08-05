@@ -40,9 +40,13 @@ class PollCloseCommand(commands.Cog):
             if channel:
                 msg = await channel.fetch_message(poll_data["message_id"])
                 if msg:
-                    from Embeds import get_command_embed
-                    kwargs = get_command_embed(ctx.guild.id, "poll", msg_type="closed", poll_id=clean_pid, question=poll_data["question"], author_mention=ctx.author.mention)
-                    await msg.edit(**kwargs)
+                    embed = discord.Embed(
+                        title="Community Poll Closed",
+                        description=f"**Question:** {poll_data['question']}\n\n**Status:** Voting session has ended. Results locked.\n**Closed By:** {ctx.author.mention}",
+                        color=discord.Color.red()
+                    )
+                    embed.set_footer(text=f"Poll ID: {clean_pid}")
+                    await msg.edit(embed=embed, view=None)
         except Exception:
             pass
 

@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
 from Commands.Afk._storage import remove_afk
 
 
@@ -18,9 +17,8 @@ class AfkRemoveCommand(commands.Cog):
         if not success:
             return await ctx.send("You are not currently AFK on this server.", ephemeral=True)
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "afk", msg_type="remove", author=ctx.author)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="AFK Status Removed", description=f"Welcome back, {ctx.author.mention} (`{ctx.author.id}`)!\nYour AFK status on this server has been cleared.", color=discord.Color.green())
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AfkRemoveCommand(bot))

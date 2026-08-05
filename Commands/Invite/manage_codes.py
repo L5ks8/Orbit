@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Commands._utils import format_usage
-from Embeds import get_command_embed
+
 from typing import Literal
 
 
@@ -23,8 +23,12 @@ class ManageCodesCommand(commands.Cog):
                 
             await target_invite.delete(reason=f"Deleted by {ctx.author}")
             
-            kwargs = get_command_embed(ctx.guild.id, "manage_codes", msg_type="deleted", code=code)
-            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(
+                title="Invite Deleted",
+                description=f"Successfully deleted the invite code `{code}`.",
+                color=discord.Color.green()
+            )
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             
         except discord.Forbidden:
             await ctx.send("I do not have permission to manage invites.", ephemeral=True)
@@ -69,8 +73,12 @@ class ManageCodesCommand(commands.Cog):
                     except Exception:
                         pass
                         
-            kwargs = get_command_embed(ctx.guild.id, "manage_codes", msg_type="purged", count=purged, condition=condition)
-            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(
+                title="Invites Purged",
+                description=f"Successfully purged **{purged}** invite(s) matching condition `{condition}`.",
+                color=discord.Color.green()
+            )
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             
         except discord.Forbidden:
             await ctx.send("I do not have permission to manage invites.", ephemeral=True)

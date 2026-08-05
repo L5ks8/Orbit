@@ -2,15 +2,11 @@ import discord
 import time
 import datetime
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.AutoMod._storage import load_automod_config
 from Commands.Warn._storage import add_warning, get_user_warnings
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 
-class AutoModNoticeLayout(discord.ui.View):
-    def __init__(self, user: discord.Member, reason: str, action_taken: str, warn_count: int, escalation_str: str = ""):
-        super().__init__()
 
 class AutoModListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -141,10 +137,14 @@ class AutoModListener(commands.Cog):
             action = cfg.get("action", "warn")
             timeout_min = cfg.get("timeout_duration_min", 5)
             escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(message.guild.id, "automod", msg_type="notice", user_mention=message.author.mention, user_id=message.author.id, reason=reason, action_taken=action, warn_count=warn_count, escalation_str=escalation_str)
+            embed = discord.Embed(title="Orbit AutoMod Triggered", color=discord.Color.orange())
+            embed.add_field(name="Target", value=f"{message.author.mention} (`{message.author.id}`)", inline=False)
+            embed.add_field(name="Reason", value=reason, inline=True)
+            embed.add_field(name="Action Taken", value=f"`{action.upper()}` (Total Warnings: {warn_count})", inline=True)
+            if escalation_str:
+                embed.add_field(name="Escalation", value=f"`{escalation_str}`", inline=False)
             try:
-                await message.channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+                await message.channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             except Exception:
                 pass
             try:
@@ -323,8 +323,12 @@ class AutoModListener(commands.Cog):
                             # Punish the inviter
                             action = bot_cfg.get("action", "kick")
                             escalation_str, warn_count = await self._apply_action(inviter, action, 5, "AutoMod: Unauthorized bot invite")
-                            from Embeds import get_command_embed
-                            kwargs = get_command_embed(member.guild.id, "automod", msg_type="notice", user_mention=inviter.mention, user_id=inviter.id, reason="Unauthorized Bot Invite", action_taken=action, warn_count=warn_count, escalation_str=escalation_str)
+                            embed = discord.Embed(title="Orbit AutoMod Triggered", color=discord.Color.orange())
+                            embed.add_field(name="Target", value=f"{inviter.mention} (`{inviter.id}`)", inline=False)
+                            embed.add_field(name="Reason", value="Unauthorized Bot Invite", inline=True)
+                            embed.add_field(name="Action Taken", value=f"`{action.upper()}` (Total Warnings: {warn_count})", inline=True)
+                            if escalation_str:
+                                embed.add_field(name="Escalation", value=f"`{escalation_str}`", inline=False)
                             
                             try:
                                 # Try to find a system channel to send notice to, or general
@@ -335,7 +339,7 @@ class AutoModListener(commands.Cog):
                                             channel = c
                                             break
                                 if channel:
-                                    await channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+                                    await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
                             except Exception:
                                 pass
                             

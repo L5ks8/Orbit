@@ -13,9 +13,14 @@ async def _do_vc_limit(ctx: commands.Context, limit: int, channel: discord.Voice
 
     try:
         await target_channel.edit(user_limit=limit, reason=f"Voice limit updated by {ctx.author}")
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="limit", channel_mention=target_channel.mention, limit=limit, author_mention=ctx.author.mention)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="User Limit Set", color=discord.Color.orange())
+        embed.add_field(name="Destination Channel", value=target_channel.mention, inline=False)
+        if limit > 0:
+            embed.add_field(name="New Limit", value=f"`{limit}`", inline=False)
+        else:
+            embed.add_field(name="New Limit", value="`None`", inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to modify this voice channel.", ephemeral=True)
     except Exception as e:

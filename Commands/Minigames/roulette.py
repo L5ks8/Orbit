@@ -95,16 +95,17 @@ class RouletteView(discord.ui.View):
         self.add_item(btn_green)
 
         # Update message
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(
-            self.guild_id, "roulette", msg_type="game",
-            player=self.player,
-            outcome_text=self.outcome_text,
-            result=self.result_color,
-            choice=self.choice,
-            view=self
-        )
-        await interaction.edit_original_response(**kwargs)
+        color = discord.Color.red()
+        if self.result_color.capitalize() == "Black":
+            color = discord.Color.dark_theme()
+        elif self.result_color.capitalize() == "Green":
+            color = discord.Color.green()
+            
+        embed = discord.Embed(title="Orbit Casino: Roulette", description=self.outcome_text, color=color)
+        embed.add_field(name="Result", value=self.result_color.capitalize(), inline=True)
+        embed.add_field(name="Your Choice", value=self.choice.capitalize(), inline=True)
+        embed.add_field(name="Player", value=self.player.mention, inline=False)
+        await interaction.edit_original_response(embed=embed, view=self)
 
 class RouletteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -160,14 +161,9 @@ class RouletteCommand(commands.Cog):
         # Create view and simulate first spin
         view = RouletteView(ctx.guild.id, ctx.author, bet, choice_val)
         
-        from Embeds import get_command_embed
-        initial_kwargs = get_command_embed(
-            ctx.guild.id, "roulette", msg_type="spin",
-            player=ctx.author,
-            choice=choice_val,
-            bet=bet
-        )
-        msg = await ctx.send(**initial_kwargs)
+        embed = discord.Embed(title="Orbit Casino: Roulette", description=f"Spinning the wheel... 🎡\n**Bet:** {bet:,} | **Choice:** {choice_val.capitalize()}", color=discord.Color.red())
+        embed.add_field(name="Player", value=ctx.author.mention, inline=False)
+        msg = await ctx.send(embed=embed)
 
         class DummyInteraction:
             def __init__(self, m, u, g, c):

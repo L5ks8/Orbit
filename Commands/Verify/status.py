@@ -21,10 +21,17 @@ async def _do_verify_status(ctx: commands.Context):
     rem_display = f"<@&{remove_role_id}> (`{remove_role_id}`)" if remove_role_id else "`Not set`"
     kick_str = f"`{auto_kick} minutes`" if auto_kick > 0 else "`Disabled`"
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "verify", msg_type="status", guild_name=ctx.guild.name, active=(enabled and ch_id and role_id), enabled_str='Yes' if enabled else 'No', ch_display=ch_display, role_display=role_display, rem_display=rem_display, kick_str=kick_str, pending=len(config.get('pending_kicks', {})))
+    active = bool(enabled and ch_id and role_id)
+    embed = discord.Embed(title=f"Server Verification Status: {ctx.guild.name}", color=discord.Color.blue() if active else discord.Color.red())
+    embed.add_field(name="Status", value="Active" if active else "Inactive", inline=False)
+    embed.add_field(name="System Enabled", value='Yes' if enabled else 'No', inline=True)
+    embed.add_field(name="Channel", value=ch_display, inline=True)
+    embed.add_field(name="Granted Role", value=role_display, inline=True)
+    embed.add_field(name="Removed Role", value=rem_display, inline=True)
+    embed.add_field(name="Auto-Kick Timer", value=kick_str, inline=True)
+    embed.add_field(name="Pending Unverified", value=f"`{len(config.get('pending_kicks', {}))}`", inline=True)
     
-    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+    await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @verify_group.command(name="status", description="Check CAPTCHA verification configuration status.")
 @commands.has_permissions(manage_guild=True)

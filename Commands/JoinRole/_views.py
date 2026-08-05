@@ -39,23 +39,25 @@ class JoinRoleLayout(discord.ui.View):
                 if interaction.user.id != self.author_id:
                     return await interaction.response.send_message("You cannot clear these roles.", ephemeral=True)
                 cleared = clear_join_roles(self.guild.id)
-                from Embeds import get_command_embed
-                kwargs = get_command_embed(
-                    self.guild.id, "joinrole", msg_type="cleared",
-                    cleared_count=cleared, components=[btn_close]
-                )
-                await interaction.response.edit_message(**kwargs)
+                embed = discord.Embed(title="Join Roles Cleared", description=f"Cleared `{cleared}` automatic join roles.", color=discord.Color.red())
+                self.clear_items()
+                self.add_item(btn_close)
+                await interaction.response.edit_message(embed=embed, view=self)
 
             btn_clear.callback = clear_cb
             buttons.append(btn_clear)
 
         buttons.append(btn_close)
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            self.guild.id, "joinrole", msg_type="list",
-            guild_name=self.guild.name, action_summary=self.action_summary,
-            role_ids=role_ids, role_mentions=role_mentions,
-            components=buttons
-        )
+        roles_text = "\n".join(f"> • {rm}" for rm in role_mentions) if role_mentions else "`No automatic join roles currently configured.`"
+        embed = discord.Embed(title=f"Automatic Join Roles: {self.guild.name}", color=discord.Color.dark_theme())
+        embed.add_field(name="Action", value=self.action_summary, inline=True)
+        embed.add_field(name="Total Configured", value=f"`{len(role_ids)}`", inline=True)
+        embed.add_field(name="Assigned on Join", value=roles_text, inline=False)
+        
+        self.clear_items()
+        for btn in buttons:
+            self.add_item(btn)
+
+        return {"embed": embed, "view": self}
 

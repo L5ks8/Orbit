@@ -40,14 +40,31 @@ class ComponentsPollView(discord.ui.View):
             btn.callback = vote_cb
             buttons.append(btn)
 
-        from Embeds import get_command_embed
         total_votes = sum(len(v) for v in self.votes.values())
-        return get_command_embed(
-            self.guild_id, "poll", msg_type="open",
-            poll_id=self.poll_id, question=self.question, options=self.options,
-            author_mention=self.author.mention, duration_minutes=self.duration_minutes,
-            votes_dict=self.votes, total_votes=total_votes, components=buttons
+        
+        dur_str = f"{self.duration_minutes}m ({round(self.duration_minutes/60, 1)}h)" if self.duration_minutes >= 60 else f"{self.duration_minutes}m"
+        
+        lines = []
+        for idx, opt in enumerate(self.options, 1):
+            v_count = len(self.votes.get(opt, set()))
+            pct = int(round((v_count / total_votes) * 100)) if total_votes > 0 else 0
+            bar = make_bar(pct, length=12)
+            lines.append(f"**`#{idx}` {opt}**\n`{bar}` **`{pct}%`** (`{v_count} votes`)")
+            
+        content_str = "\n\n".join(lines)
+        
+        embed = discord.Embed(
+            title="Community Poll",
+            description=f"**Question:** {self.question}\n**Author:** {self.author.mention} | **Duration:** `{dur_str}` | **Total Votes:** `{total_votes}`\n\n{content_str}",
+            color=discord.Color.blue()
         )
+        embed.set_footer(text=f"Poll ID: {self.poll_id}")
+        
+        self.clear_items()
+        for btn in buttons:
+            self.add_item(btn)
+            
+        return {"embed": embed, "view": self}
 
 class PollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

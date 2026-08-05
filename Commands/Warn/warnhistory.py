@@ -72,13 +72,15 @@ class WarnHistoryLayout(discord.ui.View):
             )
         warns_text = "\n\n".join(lines) if lines else "No warning history found on this page."
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            guild_id, "warnhistory", msg_type="history",
-            member_mention=f"<@{self.target_id}>", page=self.page,
-            total_pages=self.total_pages, total_warnings=len(self.warnings),
-            warns_text=warns_text, components=self.children
+        embed = discord.Embed(
+            title=f"⚠️ Permanent Warning History (Page {self.page} of {self.total_pages})",
+            description=warns_text,
+            color=discord.Color.dark_orange()
         )
+        embed.add_field(name="Target", value=f"<@{self.target_id}>", inline=True)
+        embed.add_field(name="Total Past Warnings", value=f"`{len(self.warnings)}`", inline=True)
+
+        return {"embed": embed, "view": self}
 
 async def _do_warnhistory(ctx: commands.Context, target: discord.User | discord.Member):
     await ctx.defer()

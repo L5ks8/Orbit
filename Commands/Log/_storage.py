@@ -154,11 +154,15 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
         except Exception:
             pass
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(guild.id, "log", msg_type="event", title=title, description=description)
+    embed = discord.Embed(
+        title=title,
+        description=description,
+        color=0x2b2d31,
+        timestamp=discord.utils.utcnow()
+    )
 
     try:
-        await channel.send(content=role_ping, **kwargs, allowed_mentions=discord.AllowedMentions.none())
+        await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except Exception as e:
         pass
 

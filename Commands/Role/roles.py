@@ -79,13 +79,10 @@ class AllRolesLayout(discord.ui.View):
 
         roles_text = "\n".join(lines) if lines else "No roles found on this page."
         
-        from Embeds import get_command_embed
-        return get_command_embed(
-            guild_id, "role", msg_type="roles",
-            page=self.page, total_pages=self.total_pages,
-            total_roles=len(self.roles), roles_text=roles_text,
-            components=self.children
-        )
+        embed = discord.Embed(title=f"Server Roles (Page {self.page} of {self.total_pages})", description=roles_text, color=discord.Color.blue())
+        embed.add_field(name="Total Roles", value=f"`{len(self.roles)}`", inline=False)
+        
+        return {"embed": embed, "view": self}
 
 async def _do_allroles(ctx: commands.Context):
     await ctx.defer()

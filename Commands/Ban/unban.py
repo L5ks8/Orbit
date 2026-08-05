@@ -1,16 +1,15 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from discord.ui import ActionRow, Button
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
 
 class UnbanConfirmView(discord.ui.View):
-    def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member, content_kwargs: dict):
+    def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member):
         super().__init__(timeout=60.0)
         self.ban_entry = ban_entry
         self.reason = reason
         self.author = author
-        self.content_kwargs = content_kwargs
 
         btn_confirm = Button(label="Confirm unban", style=discord.ButtonStyle.success, custom_id="unban_confirm")
         btn_cancel = Button(label="Cancel", style=discord.ButtonStyle.secondary, custom_id="unban_cancel")
@@ -20,7 +19,6 @@ class UnbanConfirmView(discord.ui.View):
                 return await interaction.response.send_message("You are not authorized to perform this action.", ephemeral=True)
             
             try:
-                from Embeds import get_command_embed
                 await interaction.guild.unban(self.ban_entry.user, reason=f"Unbanned by {self.author} | Reason: {self.reason}")
                 add_modlog(interaction.guild.id, self.ban_entry.user.id, self.author.id, "Unban", self.reason)
                 await log_event(
@@ -29,15 +27,12 @@ class UnbanConfirmView(discord.ui.View):
                     "User Unbanned (`-unban`)",
                     f"**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Reason:** {self.reason}"
                 )
-                
-                kwargs = get_command_embed(interaction.guild_id, "unban", msg_type="success", ban_entry=self.ban_entry, reason=self.reason, author=self.author)
-                
-                if "embed" in kwargs:
-                    await interaction.response.edit_message(embed=kwargs["embed"], view=None)
-                elif "components" in kwargs:
-                    lv = LayoutView()
-                    for comp in kwargs["components"]: lv.add_item(comp)
-                    await interaction.response.edit_message(view=lv)
+
+                embed = discord.Embed(title="User unbanned", color=discord.Color.green())
+                embed.add_field(name="Target", value=f"{self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)", inline=False)
+                embed.add_field(name="Reason", value=self.reason, inline=False)
+                embed.add_field(name="Moderator", value=self.author.mention, inline=False)
+                await interaction.response.edit_message(embed=embed, view=None)
                 
                 self.stop()
             except discord.Forbidden:
@@ -48,14 +43,8 @@ class UnbanConfirmView(discord.ui.View):
         async def cancel_callback(interaction: discord.Interaction):
             if interaction.user.id != self.author.id:
                 return await interaction.response.send_message("You are not authorized to perform this action.", ephemeral=True)
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(interaction.guild_id, "unban", msg_type="cancel")
-            if "embed" in kwargs:
-                await interaction.response.edit_message(embed=kwargs["embed"], view=None)
-            elif "components" in kwargs:
-                lv = LayoutView()
-                for comp in kwargs["components"]: lv.add_item(comp)
-                await interaction.response.edit_message(view=lv)
+            embed = discord.Embed(title="Unban cancelled", description="The operation was cancelled.", color=discord.Color.red())
+            await interaction.response.edit_message(embed=embed, view=None)
             self.stop()
 
         btn_confirm.callback = confirm_callback
@@ -64,17 +53,7 @@ class UnbanConfirmView(discord.ui.View):
         self.add_item(btn_confirm)
         self.add_item(btn_cancel)
 
-    def get_view(self):
-        if "components" in self.content_kwargs:
-            lv = LayoutView(timeout=60.0)
-            for comp in self.content_kwargs["components"]:
-                lv.add_item(comp)
-            ar = ActionRow()
-            for child in self.children:
-                ar.add_item(child)
-            lv.add_item(ar)
-            return lv
-        return self
+
 
 class UnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -96,14 +75,12 @@ class UnbanCommand(commands.Cog):
         except discord.Forbidden:
             return await ctx.send("I do not have permission to view the ban list.", ephemeral=True)
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "unban", msg_type="prompt", ban_entry=ban_entry, reason=reason)
-        view = UnbanConfirmView(ban_entry, reason, ctx.author, kwargs)
-        
-        if "embed" in kwargs:
-            await ctx.send(embed=kwargs["embed"], view=view.get_view(), allowed_mentions=discord.AllowedMentions.none())
-        elif "components" in kwargs:
-            await ctx.send(view=view.get_view(), allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="Confirm unban", description=f"Are you sure you want to unban **{ban_entry.user.name}**?", color=discord.Color.orange())
+        embed.add_field(name="Target", value=f"{ban_entry.user.mention} (`{ban_entry.user.id}`)", inline=False)
+        embed.add_field(name="Original Ban Reason", value=ban_entry.reason or 'None', inline=False)
+        embed.add_field(name="New Reason", value=reason, inline=False)
+        view = UnbanConfirmView(ban_entry, reason, ctx.author)
+        await ctx.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
     @unban.error
     async def unban_error(self, ctx: commands.Context, error):

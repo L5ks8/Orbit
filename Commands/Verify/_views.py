@@ -85,13 +85,14 @@ class CaptchaInteractionLayout(discord.ui.View):
             file = discord.File(fp=io.BytesIO(img_bytes), filename=filename)
             
             new_view = CaptchaInteractionLayout(self.role_id, self.remove_role_id)
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(interaction.guild_id, "verify", msg_type="captcha", filename=filename, role_id=self.role_id, remove_role_id=self.remove_role_id, components=new_view.children)
+            embed = discord.Embed(
+                title="Security Verification: Solve the CAPTCHA",
+                description="Please look at the connected characters in the image below and click **Enter CAPTCHA Code** to type what you see.",
+                color=discord.Color.blurple()
+            )
+            embed.set_image(url=f"attachment://{filename}")
             
-            if "embed" in kwargs:
-                await interaction.response.edit_message(embed=kwargs["embed"], attachments=[file], view=kwargs.get("view", new_view))
-            elif "view" in kwargs:
-                await interaction.response.edit_message(attachments=[file], view=kwargs["view"])
+            await interaction.response.edit_message(embed=embed, attachments=[file], view=new_view)
 
         btn_enter.callback = enter_cb
         btn_refresh.callback = refresh_cb
@@ -149,13 +150,14 @@ class PersistentVerifyLayout(discord.ui.View):
             file = discord.File(fp=io.BytesIO(img_bytes), filename=filename)
             
             view = CaptchaInteractionLayout(role_id, remove_role_id)
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(interaction.guild_id, "verify", msg_type="captcha", filename=filename, role_id=role_id, remove_role_id=remove_role_id, components=view.children)
+            embed = discord.Embed(
+                title="Security Verification: Solve the CAPTCHA",
+                description="Please look at the connected characters in the image below and click **Enter CAPTCHA Code** to type what you see.",
+                color=discord.Color.blurple()
+            )
+            embed.set_image(url=f"attachment://{filename}")
             
-            if "embed" in kwargs:
-                await interaction.response.send_message(embed=kwargs["embed"], file=file, view=kwargs.get("view", view), ephemeral=True)
-            elif "view" in kwargs:
-                await interaction.response.send_message(file=file, view=kwargs["view"], ephemeral=True)
+            await interaction.response.send_message(embed=embed, file=file, view=view, ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"Failed to generate verification panel: {e}", ephemeral=True)
 

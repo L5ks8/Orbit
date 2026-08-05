@@ -26,9 +26,14 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
         "Warning Deleted (`-delwarn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Removed Warn ID:** `{warn_id}`\n**Remaining Warnings:** `{remaining}`"
     )
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "delwarn", msg_type="delete", member_mention=user.mention, member_id=user.id, warn_id=warn_id, remaining=remaining)
-    await ctx.send(**kwargs, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(
+        title="⚠️ Warning Deleted",
+        description=f"**Target Member:** {user.mention} (`{user.id}`)",
+        color=discord.Color.green()
+    )
+    embed.add_field(name="Removed ID", value=f"`{warn_id}`", inline=True)
+    embed.add_field(name="Remaining Warnings", value=f"`{remaining}`", inline=True)
+    await ctx.send(embed=embed, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 class DelWarnCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

@@ -29,15 +29,20 @@ class UnmuteCommand(commands.Cog):
         except Exception as e:
             return await ctx.send(f"Error removing muted role: {e}", ephemeral=True)
 
-        from Embeds import get_command_embed
+
         await log_event(
             ctx.guild,
             "moderation_action",
             "User Unmuted (`-unmute`)",
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Removed Role:** {role.mention}"
         )
-        kwargs = get_command_embed(ctx.guild.id, "unmute", msg_type="success", target=target, reason=reason, author=ctx.author, role=role)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="User Unmuted", color=discord.Color.green())
+        embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
+        embed.add_field(name="Reason", value=reason, inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        if role:
+            embed.add_field(name="Role Removed", value=role.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @unmute.error
     async def unmute_error(self, ctx: commands.Context, error):

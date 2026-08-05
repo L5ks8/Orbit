@@ -53,12 +53,38 @@ class InvitedListCommand(commands.Cog):
                 except Exception:
                     invited.append({"user": None, "user_id": mid, "code": code})
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(
-            ctx.guild.id, "invitedlist", msg_type="info",
-            target=display_target, invited=invited, guild=ctx.guild, is_code=code is not None
+        is_code = code is not None
+
+        embed = discord.Embed(
+            title="Invited List",
+            color=discord.Color.blurple()
         )
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+
+        if is_code:
+            header = f"Members invited with code `{display_target}`"
+        else:
+            header = f"Members invited by {display_target.mention}"
+            embed.set_thumbnail(url=display_target.display_avatar.url if hasattr(display_target, "display_avatar") else None)
+
+        if not invited:
+            embed.description = f"{header}\n\nNo invited members found."
+        else:
+            lines = []
+            for i, entry in enumerate(invited[:25], 1):
+                user_obj = entry.get("user")
+                code_str = entry.get("code", "?")
+                if user_obj:
+                    lines.append(f"`{i}.` {user_obj.mention} — Code: `{code_str}`")
+                else:
+                    uid = entry.get("user_id", "?")
+                    lines.append(f"`{i}.` User ID: `{uid}` — Code: `{code_str}`")
+            embed.description = f"{header}\n\n" + "\n".join(lines)
+            if len(invited) > 25:
+                embed.set_footer(text=f"Showing 25 of {len(invited)} invited members")
+            elif ctx.guild:
+                embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @invitedlist.error
     async def invitedlist_error(self, ctx: commands.Context, error):

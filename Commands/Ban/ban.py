@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
@@ -47,8 +46,7 @@ class BanCommand(commands.Cog):
             add_ban_history(ctx.guild.id, target.id, reason, ctx.author.id)
             case_id = create_case(ctx.guild.id, target.id, ctx.author.id, "ban", reason)
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Ban", reason)
-            from Embeds import get_command_embed
-            
+
             await log_event(
                 ctx.guild,
                 "moderation_action",
@@ -56,8 +54,11 @@ class BanCommand(commands.Cog):
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             
-            kwargs = get_command_embed(ctx.guild.id, "ban", msg_type="success", target=target, reason=reason, author=ctx.author)
-            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title="User Banned", color=discord.Color.red())
+            embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
+            embed.add_field(name="Reason", value=reason, inline=False)
+            embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to ban this user.", ephemeral=True)
         except Exception as e:

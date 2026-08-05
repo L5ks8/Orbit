@@ -82,15 +82,12 @@ class DiceView(discord.ui.View):
         self.add_item(btn_roll)
 
         # Update message
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(
-            self.guild_id, "dice", msg_type="game",
-            player=self.player,
-            outcome_text=self.outcome_text,
-            result_dice=self.result_dice,
-            view=self
-        )
-        await interaction.edit_original_response(**kwargs)
+        d1, d2 = self.result_dice
+        dice_str = f"{DICE_FACES[d1]} {DICE_FACES[d2]}"
+        embed = discord.Embed(title="Orbit Casino: Dice Roll", description=self.outcome_text, color=discord.Color.blue())
+        embed.add_field(name="Result", value=f"{dice_str} ({d1 + d2})", inline=True)
+        embed.add_field(name="Player", value=self.player.mention, inline=False)
+        await interaction.edit_original_response(embed=embed, view=self)
 
 
 class DiceCommand(commands.Cog):
@@ -134,13 +131,9 @@ class DiceCommand(commands.Cog):
         # Create view and simulate first roll
         view = DiceView(ctx.guild.id, ctx.author, bet)
         
-        from Embeds import get_command_embed
-        initial_kwargs = get_command_embed(
-            ctx.guild.id, "dice", msg_type="roll",
-            player=ctx.author,
-            bet=bet
-        )
-        msg = await ctx.send(**initial_kwargs)
+        embed = discord.Embed(title="Orbit Casino: Dice Roll", description=f"Rolling the dice... 🎲\n**Bet:** {bet:,}", color=discord.Color.blue())
+        embed.add_field(name="Player", value=ctx.author.mention, inline=False)
+        msg = await ctx.send(embed=embed)
 
         class DummyInteraction:
             def __init__(self, m, u, g, c):

@@ -25,14 +25,16 @@ async def perform_nick_edit(ctx: commands.Context, target: discord.Member, nickn
 
     old_nick = target.nick
     try:
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(
-            ctx.guild.id, "nick",
-            target_mention=target.mention, target_id=target.id,
-            target_name=target.name, old_nick=old_nick, new_nick=nickname,
-            author_mention=ctx.author.mention
+        await target.edit(nick=nickname, reason=f"Nickname changed by {ctx.author}")
+        old_display = old_nick if old_nick else f"{target.name} (Default)"
+        new_display = nickname if nickname else f"{target.name} (Reset to Default)"
+
+        embed = discord.Embed(
+            title="Nickname Updated",
+            description=f"**Target:** {target.mention} (`{target.id}`)\n\n**Old Nickname:** `{old_display}`\n**New Nickname:** `{new_display}`\n**Changed by:** {ctx.author.mention}",
+            color=discord.Color.green()
         )
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions (`Manage Nicknames`) to modify this user's nickname.", ephemeral=True)
     except Exception as e:

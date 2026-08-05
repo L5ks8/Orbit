@@ -248,12 +248,17 @@ class BlackjackLayoutView(discord.ui.View):
 
         components = [btn_hit, btn_stand, btn_double] if not self.session.game_over else [btn_new]
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            self.guild_id, "blackjack", msg_type="game",
-            player=self.session.player, d_info=d_info, p_info=p_info,
-            status_text=status_text, components=components
-        )
+        embed = discord.Embed(title="Orbit V2 Casino: Blackjack Table", color=discord.Color.dark_green())
+        embed.add_field(name="Player", value=self.session.player.mention, inline=False)
+        embed.add_field(name="Dealer Info", value=d_info, inline=False)
+        embed.add_field(name="Player Info", value=p_info, inline=False)
+        embed.add_field(name="Status", value=status_text, inline=False)
+
+        self.clear_items()
+        for comp in components:
+            self.add_item(comp)
+            
+        return {"embed": embed, "view": self}
 
 class BlackjackCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

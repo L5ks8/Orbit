@@ -27,9 +27,12 @@ class UnlockCommand(commands.Cog):
                 await target_channel.set_permissions(ctx.guild.default_role, overwrite=None, reason=f"Unlocked by {ctx.author} | Reason: {reason}")
             else:
                 await target_channel.set_permissions(ctx.guild.default_role, overwrite=overwrite, reason=f"Unlocked by {ctx.author} | Reason: {reason}")
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(ctx.guild.id, "unlock", msg_type="success", channel=target_channel, reason=reason, author=ctx.author)
-            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title="Channel Unlocked", color=discord.Color.green())
+            embed.add_field(name="Channel", value=f"{target_channel.mention} (`{target_channel.id}`)", inline=False)
+            embed.add_field(name="Reason", value=reason, inline=False)
+            embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+            embed.add_field(name="Status", value="`@everyone` send messages restored", inline=False)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to unlock this channel.", ephemeral=True)
         except Exception as e:

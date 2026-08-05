@@ -100,8 +100,11 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             executor_username = f"@{closed_by.name}" if hasattr(closed_by, "name") and closed_by.name else str(closed_by)
             executor_id_str = str(getattr(closed_by, "id", "Unknown"))
 
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(guild.id, "ticket", msg_type="close", executor_mention=executor_mention, channel_name=channel.name, channel_id=channel.id, reason=reason, creator_mention=creator_mention, creator_username=creator_username, creator_id_str=creator_id_str, executor_username=executor_username, executor_id_str=executor_id_str)
+            embed = discord.Embed(title="Ticket Closed", description=f"{executor_mention} closed a ticket.", color=discord.Color.dark_red())
+            embed.add_field(name="Ticket Info", value=f"Name: {channel.name}\nID: {channel.id}\nReason: {reason}", inline=False)
+            embed.add_field(name="Creator Info", value=f"Creator: {creator_mention}\nUsername: {creator_username}\nID: {creator_id_str}", inline=False)
+            embed.add_field(name="Executor Info", value=f"Executor: {executor_mention}\nUsername: {executor_username}\nID: {executor_id_str}", inline=False)
+            kwargs = {"embed": embed}
             try:
                 await log_channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
                 file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
@@ -214,10 +217,15 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
 
         create_active_ticket(interaction.guild.id, ticket_channel.id, interaction.user.id, subject, description, self.category_option)
 
-        control_view = TicketControlLayout()
+        embed = discord.Embed(title=f"Ticket Opened: #{ticket_channel.name}", color=discord.Color.blurple())
+        embed.add_field(name="Category", value=self.category_option, inline=False)
+        embed.add_field(name="Creator", value=interaction.user.mention, inline=True)
+        embed.add_field(name="Assigned Team", value=support_role.mention, inline=True)
+        embed.add_field(name="Subject", value=subject, inline=False)
+        embed.add_field(name="Description", value=f"```\n{description}\n```", inline=False)
         
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(interaction.guild_id, "ticket", msg_type="control", channel_name=ticket_channel.name, category_option=self.category_option, creator_mention=interaction.user.mention, support_mention=support_role.mention, subject=subject, description=description, components=control_view.children)
+        control_view = TicketControlLayout()
+        kwargs = {"embed": embed, "view": control_view}
 
         try:
             allowed_mentions = discord.AllowedMentions(users=True, roles=True)
@@ -276,15 +284,23 @@ class TicketControlLayout(discord.ui.View):
             claim_ticket(interaction.guild.id, interaction.channel.id, interaction.user.id)
 
             updated_view = TicketControlLayout(claimed_name=interaction.user.display_name)
-            from Embeds import get_command_embed
-            
-            kwargs = get_command_embed(interaction.guild_id, "ticket", msg_type="control", channel_name=interaction.channel.name, category_option=ticket_data.get('category', 'Unknown'), creator_mention=f"<@{ticket_data.get('creator_id')}>", support_mention=interaction.user.mention, subject=ticket_data.get('subject', 'Unknown'), description="[Original Description Preserved]", components=updated_view.children)
+            embed = discord.Embed(title=f"Ticket Opened: #{interaction.channel.name}", color=discord.Color.blurple())
+            embed.add_field(name="Category", value=ticket_data.get('category', 'Unknown'), inline=False)
+            embed.add_field(name="Creator", value=f"<@{ticket_data.get('creator_id')}>", inline=True)
+            embed.add_field(name="Assigned Team", value=interaction.user.mention, inline=True)
+            embed.add_field(name="Subject", value=ticket_data.get('subject', 'Unknown'), inline=False)
+            embed.add_field(name="Description", value=f"```\n[Original Description Preserved]\n```", inline=False)
+            kwargs = {"embed": embed, "view": updated_view}
             try:
                 await interaction.message.edit(**kwargs, allowed_mentions=discord.AllowedMentions.none())
             except Exception:
                 pass
 
-            claim_kwargs = get_command_embed(interaction.guild_id, "ticket", msg_type="claim", channel_name=interaction.channel.name, author_mention=interaction.user.mention, subject=ticket_data.get('subject', 'Unknown'))
+            claim_embed = discord.Embed(title=f"Ticket Claimed: #{interaction.channel.name}", color=discord.Color.yellow())
+            claim_embed.description = "A staff member is handling this ticket now."
+            claim_embed.add_field(name="Assigned Staff", value=interaction.user.mention, inline=False)
+            claim_embed.add_field(name="Subject", value=ticket_data.get('subject', 'Unknown'), inline=False)
+            claim_kwargs = {"embed": claim_embed}
             await interaction.response.send_message(**claim_kwargs, allowed_mentions=discord.AllowedMentions.none())
 
         async def close_cb(interaction: discord.Interaction):

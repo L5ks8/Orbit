@@ -19,9 +19,24 @@ class LeaderboardCommand(commands.Cog):
         
         lb = get_leaderboard(ctx.guild.id, limit=limit)
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "leaderboard_invites", msg_type="info", leaderboard=lb, limit=limit, guild=ctx.guild)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Invite Leaderboard",
+            color=discord.Color.blurple()
+        )
+
+        if not lb:
+            embed.description = "No invite data found for this server."
+        else:
+            lines = []
+            for i, data in enumerate(lb, 1):
+                uid = data["user_id"]
+                lines.append(f"`{i}.` <@{uid}> — **{data['total']}** invites (`{data['regular']}` regular, `{data['bonus']}` bonus, `{data['fake']}` fake, `{data['left']}` left)")
+            embed.description = "\n".join(lines)
+
+        if ctx.guild:
+            embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @leaderboard_invites.error
     async def leaderboard_invites_error(self, ctx: commands.Context, error):

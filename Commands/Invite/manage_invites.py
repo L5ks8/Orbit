@@ -6,7 +6,6 @@ from Commands.Invite._storage import (
     reset_invites
 )
 from Commands._utils import format_usage
-from Embeds import get_command_embed
 
 
 class ManageInvitesCommand(commands.Cog):
@@ -22,8 +21,12 @@ class ManageInvitesCommand(commands.Cog):
             
         add_fake_invites(ctx.guild.id, user.id, amount)
         
-        kwargs = get_command_embed(ctx.guild.id, "manage_invites", msg_type="success", action="Added", type="fake", user=user, amount=amount)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Invites Managed",
+            description=f"Added **{amount}** fake invites for {user.mention}.",
+            color=discord.Color.green()
+        )
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @addfakeinvites.error
     async def addfakeinvites_error(self, ctx: commands.Context, error):
@@ -41,8 +44,12 @@ class ManageInvitesCommand(commands.Cog):
             
         remove_fake_invites(ctx.guild.id, user.id, amount)
         
-        kwargs = get_command_embed(ctx.guild.id, "manage_invites", msg_type="success", action="Removed", type="fake", user=user, amount=amount)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Invites Managed",
+            description=f"Removed **{amount}** fake invites for {user.mention}.",
+            color=discord.Color.green()
+        )
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @removefakeinvites.error
     async def removefakeinvites_error(self, ctx: commands.Context, error):
@@ -60,8 +67,12 @@ class ManageInvitesCommand(commands.Cog):
             
         add_bonus_invites(ctx.guild.id, user.id, amount)
         
-        kwargs = get_command_embed(ctx.guild.id, "manage_invites", msg_type="success", action="Added", type="regular", user=user, amount=amount)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Invites Managed",
+            description=f"Added **{amount}** regular invites for {user.mention}.",
+            color=discord.Color.green()
+        )
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @addinvites.error
     async def addinvites_error(self, ctx: commands.Context, error):
@@ -79,8 +90,12 @@ class ManageInvitesCommand(commands.Cog):
             
         remove_bonus_invites(ctx.guild.id, user.id, amount)
         
-        kwargs = get_command_embed(ctx.guild.id, "manage_invites", msg_type="success", action="Removed", type="regular", user=user, amount=amount)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Invites Managed",
+            description=f"Removed **{amount}** regular invites for {user.mention}.",
+            color=discord.Color.green()
+        )
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @removeinvites.error
     async def removeinvites_error(self, ctx: commands.Context, error):
@@ -101,8 +116,12 @@ class ManageInvitesCommand(commands.Cog):
             reset_invites(ctx.guild.id)
             msg = "Reset all invites for the entire server."
             
-        kwargs = get_command_embed(ctx.guild.id, "manage_invites", msg_type="reset", msg=msg)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Invites Reset",
+            description=msg,
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @resetinvites.error
     async def resetinvites_error(self, ctx: commands.Context, error):

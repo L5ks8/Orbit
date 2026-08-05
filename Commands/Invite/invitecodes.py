@@ -19,9 +19,29 @@ class InviteCodesCommand(commands.Cog):
 
         user_invites = [inv for inv in guild_invites if inv.inviter and inv.inviter.id == target.id]
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "invitecodes", msg_type="info", target=target, invites=user_invites, guild=ctx.guild)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Invite Codes",
+            color=discord.Color.blurple()
+        )
+        embed.set_thumbnail(url=target.display_avatar.url if hasattr(target, "display_avatar") else None)
+
+        if not user_invites:
+            embed.description = f"{target.mention} has no active invite codes."
+        else:
+            lines = []
+            for inv in user_invites[:25]:
+                expires = "Never" if inv.max_age == 0 else f"<t:{int(inv.created_at.timestamp()) + inv.max_age}:R>"
+                max_uses = "∞" if inv.max_uses == 0 else str(inv.max_uses)
+                lines.append(
+                    f"`{inv.code}` — **{inv.uses}**/{max_uses} uses — Expires: {expires}"
+                )
+            embed.description = f"**Invite codes for {target.mention}:**\n\n" + "\n".join(lines)
+            if len(user_invites) > 25:
+                embed.set_footer(text=f"Showing 25 of {len(user_invites)} invite codes")
+            elif ctx.guild:
+                embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @invitecodes.error
     async def invitecodes_error(self, ctx: commands.Context, error):

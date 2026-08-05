@@ -963,7 +963,6 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         if (config.settings) {
             document.getElementById('settings_timezone').value = config.settings.timezone || 'UTC';
             document.getElementById('settings_prefix').value = config.settings.prefix || '';
-            document.getElementById('settings_embed_style').value = config.settings.embed_style || 'normal';
         }
 
         // Welcome
@@ -3101,7 +3100,6 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
         settings: {
             manager_roles: Array.from(document.getElementById('settings_manager_roles').selectedOptions).map(o => o.value),
             timezone: document.getElementById('settings_timezone').value,
-            embed_style: document.getElementById('settings_embed_style').value,
             prefix: document.getElementById('settings_prefix').value,
             immune_users: modImmuneUsersList,
             immune_roles: Array.from(document.getElementById('mod_immune_roles').selectedOptions).map(o => o.value),

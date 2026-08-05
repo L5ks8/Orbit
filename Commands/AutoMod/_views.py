@@ -1,5 +1,5 @@
 import discord
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
+from discord.ui import ActionRow, Button, Modal, TextInput
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
 
 class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):
@@ -110,8 +110,13 @@ class AutoModDashboardLayout(discord.ui.View):
         self.btn_spam.style = discord.ButtonStyle.primary if spam_cfg["enabled"] else discord.ButtonStyle.secondary
         self.btn_alt.style = discord.ButtonStyle.primary if alt_cfg["enabled"] else discord.ButtonStyle.secondary
 
-        from Embeds import get_command_embed
-        return get_command_embed(self.guild_id, "automod", msg_type="dashboard", status_badge=status_badge, link_str=link_str, spam_str=spam_str, alt_str=alt_str, components=self.children)
+        embed = discord.Embed(title="Orbit AutoMod & Server Protection Dashboard", color=discord.Color.red())
+        embed.add_field(name="Master Status", value=status_badge, inline=False)
+        embed.add_field(name="1. Anti-Link / Anti-Invite", value=f"{link_str}\nAutomatically deletes Discord invite links (`discord.gg/`) and unauthorized links.", inline=False)
+        embed.add_field(name="2. Anti-Spam / Anti-Raid", value=f"{spam_str}\nDetects message flood across all channels. If action is `WARN`, accumulating 5+ warnings automatically locks the user in timeout (1 Day -> 3 Days -> 7 Days).", inline=False)
+        embed.add_field(name="3. Anti-Alt (Account Age Defense)", value=f"{alt_str}\nChecks account age of joining members to block suspicious alts & bots before they raid.", inline=False)
+
+        return {"embed": embed, "view": self}
 
     def build_components(self):
 

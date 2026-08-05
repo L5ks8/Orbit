@@ -14,9 +14,13 @@ async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: s
 
     try:
         await target.edit(mute=False, reason=f"Voice unmuted by {ctx.author} | Reason: {reason}")
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="unmute", member_mention=target.mention, member_id=target.id, channel_mention=target.voice.channel.mention if target.voice.channel else "N/A", reason=reason, author_mention=ctx.author.mention)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="Voice Unmuted", color=discord.Color.green())
+        embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
+        embed.add_field(name="Destination Channel", value=target.voice.channel.mention if target.voice.channel else "N/A", inline=False)
+        if reason and reason != "No reason provided":
+            embed.add_field(name="Reason", value=reason, inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to voice unmute this user.", ephemeral=True)
     except Exception as e:

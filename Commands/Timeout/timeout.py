@@ -41,9 +41,14 @@ class TimeoutCommand(commands.Cog):
                 "User Timed Out (`-timeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Duration:** `{minutes} minutes`\n**Reason:** {reason}"
             )
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(ctx.guild.id, "timeout", msg_type="timeout", member_mention=target.mention, member_id=target.id, minutes=minutes, reason=reason, author_mention=ctx.author.mention)
-            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title="User Timed Out", color=discord.Color.orange())
+            embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
+            embed.add_field(name="Duration", value=f"`{minutes} minutes`", inline=False)
+            if reason and reason != "No reason provided":
+                embed.add_field(name="Reason", value=reason, inline=False)
+            embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+            embed.add_field(name="Status", value="`Active (Cannot send messages or join VC)`", inline=False)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to time out this user.", ephemeral=True)
         except Exception as e:

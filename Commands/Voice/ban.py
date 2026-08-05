@@ -28,9 +28,14 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
         except Exception:
             pass
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="ban", member_mention=user.mention, member_id=user.id, channel_mention=vc.mention if vc else "N/A", reason=reason, author_mention=ctx.author.mention)
-    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(title="User Voice Banned", color=discord.Color.red())
+    embed.add_field(name="Target", value=f"{user.mention} (`{user.id}`)", inline=False)
+    embed.add_field(name="Destination Channel", value=vc.mention if vc else "N/A", inline=False)
+    if reason and reason != "No reason provided":
+        embed.add_field(name="Reason", value=reason, inline=False)
+    embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+    embed.add_field(name="Status", value="`Active (Banned from Voice Channels)`", inline=False)
+    await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @voice_group.command(name="ban", description="Ban a member from voice channels")
 @commands.has_permissions(move_members=True)

@@ -4,7 +4,6 @@ from Commands.Invite._storage import get_invited_by_user
 import csv
 import io
 from Commands._utils import format_usage
-from Embeds import get_command_embed
 
 
 class ExportInvitedListCommand(commands.Cog):
@@ -32,8 +31,12 @@ class ExportInvitedListCommand(commands.Cog):
         csv_file.seek(0)
         file = discord.File(fp=io.BytesIO(csv_file.getvalue().encode('utf-8')), filename=f"invited_list_{target.id}.csv")
         
-        kwargs = get_command_embed(ctx.guild.id, "exportinvitedlist", msg_type="success", user=target)
-        await ctx.send(**kwargs, file=file, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Export Invited List",
+            description=f"Successfully exported the invited list for {target.mention}.",
+            color=discord.Color.green()
+        )
+        await ctx.send(embed=embed, file=file, allowed_mentions=discord.AllowedMentions.none())
 
     @exportinvitedlist.error
     async def exportinvitedlist_error(self, ctx: commands.Context, error):

@@ -60,11 +60,9 @@ class SlotsLayoutView(discord.ui.View):
 
     def get_kwargs(self):
         if self.closed:
-            from Embeds import get_command_embed
-            return get_command_embed(
-                self.guild_id, "slots", msg_type="closed",
-                player=self.session.player
-            )
+            embed = discord.Embed(title="Orbit V2 Casino: Slot Machine", description="slots", color=discord.Color.red())
+            embed.add_field(name="Player", value=self.session.player.mention, inline=False)
+            return {"embed": embed, "view": None}
             
         r1 = " | ".join(self.session.grid[0])
         r2 = " | ".join(self.session.grid[1])
@@ -126,14 +124,16 @@ class SlotsLayoutView(discord.ui.View):
         btn_spin.callback = _spin_cb
         btn_exit.callback = _exit_cb
         
-        components = [btn_spin, btn_exit]
+        self.clear_items()
+        self.add_item(btn_spin)
+        self.add_item(btn_exit)
         
-        from Embeds import get_command_embed
-        return get_command_embed(
-            self.guild_id, "slots", msg_type="game",
-            player=self.session.player, reels_str=reels_str,
-            outcome_text=self.session.outcome_text, components=components
-        )
+        embed = discord.Embed(title="Orbit V2 Casino: Slot Machine", color=discord.Color.gold())
+        embed.add_field(name="Player", value=self.session.player.mention, inline=False)
+        embed.add_field(name="Machine Reels", value=reels_str, inline=False)
+        embed.add_field(name="Outcome", value=self.session.outcome_text, inline=False)
+
+        return {"embed": embed, "view": self}
 
 class SlotsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

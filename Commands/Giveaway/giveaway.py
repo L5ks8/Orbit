@@ -5,7 +5,7 @@ import time
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from discord.ui import ActionRow, Button
 from Commands.Giveaway._storage import (
     generate_giveaway_id,
     create_giveaway_entry,
@@ -23,14 +23,20 @@ def build_ended_giveaway_kwargs(guild_id: int, entry: dict, winners_display: str
 
     btn_ended = Button(label="Giveaway Ended", style=discord.ButtonStyle.secondary, disabled=True, custom_id="orbit:giveaway_ended")
     
-    from Embeds import get_command_embed
-    return get_command_embed(
-        guild_id, "giveaway", msg_type="ended",
-        prize=entry['prize'], winners_display=winners_display,
-        end_timestamp=entry['end_timestamp'], author_id=entry['author_id'],
-        req_text=req_text, total_entries=len(entry['entries']),
-        giveaway_id=entry['giveaway_id'], components=[btn_ended]
+    embed = discord.Embed(title=f"🎉 GIVEAWAY ENDED: {entry['prize']} 🎉", color=discord.Color.dark_grey())
+    embed.description = (
+        f"**Prize:** {entry['prize']}\n"
+        f"**Winner(s):** {winners_display}\n"
+        f"**Ended On:** <t:{entry['end_timestamp']}:f>\n"
+        f"**Hosted By:** <@{entry['author_id']}>{req_text}\n\n"
+        f"**Total Entries:** `{len(entry['entries'])}`"
     )
+    embed.set_footer(text=f"Giveaway ID: {entry['giveaway_id']}")
+    
+    view = discord.ui.View(timeout=None)
+    view.add_item(btn_ended)
+    
+    return {"embed": embed, "view": view}
 
 class PersistentGiveawayLayout(discord.ui.View):
     def __init__(self, entry: dict = None):
@@ -58,14 +64,17 @@ class PersistentGiveawayLayout(discord.ui.View):
             reqs.append(f"Role: <@&{self.entry['required_role_id']}>")
         req_text = f"\n**Requirements:** {' | '.join(reqs)}" if reqs else ""
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            guild_id, "giveaway", msg_type="active",
-            prize=self.entry['prize'], winners=self.entry['winners'],
-            end_timestamp=self.entry['end_timestamp'], author_id=self.entry['author_id'],
-            req_text=req_text, total_entries=len(self.entry['entries']),
-            giveaway_id=self.entry['giveaway_id'], components=self.children
+        embed = discord.Embed(title=f"🎉 GIVEAWAY: {self.entry['prize']} 🎉", color=discord.Color.purple())
+        embed.description = (
+            f"**Prize:** {self.entry['prize']}\n"
+            f"**Winners:** `{self.entry['winners']}`\n"
+            f"**Ends:** <t:{self.entry['end_timestamp']}:R> (<t:{self.entry['end_timestamp']}:f>)\n"
+            f"**Hosted By:** <@{self.entry['author_id']}>{req_text}\n\n"
+            f"**Total Entries:** `{len(self.entry['entries'])}`"
         )
+        embed.set_footer(text=f"Giveaway ID: {self.entry['giveaway_id']}")
+        
+        return {"embed": embed, "view": self}
 
     async def enter_callback(self, interaction: discord.Interaction):
         if not interaction.guild:

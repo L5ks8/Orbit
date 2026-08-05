@@ -20,9 +20,16 @@ async def _do_verify_setup(
     remove_role_id = remove_role.id if remove_role else None
     config = setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
     
-    from Embeds import get_command_embed
+    embed = discord.Embed(
+        title="Server Security Verification",
+        description="To protect against automated bots and spam, this server requires CAPTCHA verification before accessing channels.\n\n> Click **Verify Now** below to receive an automated security image with connected characters.",
+        color=discord.Color.blue()
+    )
+    btn_verify = discord.ui.Button(label="Verify Now", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
+    view = discord.ui.View(timeout=None)
+    view.add_item(btn_verify)
     
-    panel_kwargs = get_command_embed(ctx.guild.id, "verify", msg_type="panel")
+    panel_kwargs = {"embed": embed, "view": view}
     try:
         await channel.send(**panel_kwargs, allowed_mentions=discord.AllowedMentions.none())
     except Exception as e:
@@ -31,7 +38,14 @@ async def _do_verify_setup(
     kick_str = f"`{auto_kick_minutes} minutes`" if auto_kick_minutes > 0 else "`Disabled (No auto-kick)`"
     rem_str = remove_role.mention if remove_role else "`None (Disabled)`"
     
-    success_kwargs = get_command_embed(ctx.guild.id, "verify", msg_type="setup_success", guild_name=ctx.guild.name, channel_mention=channel.mention, role_mention=role.mention, rem_str=rem_str, kick_str=kick_str)
+    success_embed = discord.Embed(title=f"Verification Configured: {ctx.guild.name}", color=discord.Color.green())
+    success_embed.add_field(name="Verification Channel", value=channel.mention, inline=False)
+    success_embed.add_field(name="Granted Role", value=role.mention, inline=False)
+    success_embed.add_field(name="Removed Role", value=rem_str, inline=False)
+    success_embed.add_field(name="Auto-Kick Timer", value=kick_str, inline=False)
+    success_embed.set_footer(text="The interactive verification panel is now live.")
+    
+    success_kwargs = {"embed": success_embed}
     
     await ctx.send(**success_kwargs, allowed_mentions=discord.AllowedMentions.none())
 

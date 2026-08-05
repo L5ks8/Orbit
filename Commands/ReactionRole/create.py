@@ -21,9 +21,24 @@ async def _do_create_panel(
         if r >= ctx.guild.me.top_role and r != ctx.guild.me:
             return await ctx.send(f"I cannot assign the role `{r.name}` because it is equal to or higher than my highest role.", ephemeral=True)
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "reaction_role", title=title, description=description, image_url=image_url, roles=valid_roles)
-    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(
+        title=title,
+        description=description,
+        color=discord.Color.blue()
+    )
+    if image_url:
+        embed.set_image(url=image_url)
+
+    view = discord.ui.View(timeout=None)
+    for role in valid_roles:
+        btn = discord.ui.Button(
+            label=f"{role.name}",
+            style=discord.ButtonStyle.secondary,
+            custom_id=f"rr_btn_{role.id}"
+        )
+        view.add_item(btn)
+
+    await ctx.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
 @reactionrole_group.command(name="create", description="Create a button role panel.")
 @commands.has_permissions(administrator=True)

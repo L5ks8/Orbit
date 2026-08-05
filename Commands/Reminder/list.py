@@ -7,9 +7,20 @@ async def _do_remind_list(ctx: commands.Context):
     await ctx.defer(ephemeral=True)
     user_rems = get_user_reminders(ctx.author.id)
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id if ctx.guild else None, "reminder", msg_type="list", reminders=user_rems)
-    await ctx.send(**kwargs, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+    if not user_rems:
+        content_str = "*You currently have no active scheduled reminders.*"
+    else:
+        lines = []
+        for idx, r in enumerate(user_rems[:15], start=1):
+            lines.append(f"**{idx}. ID:** `{r.get('id')}` | **Due:** <t:{r.get('expires_at', 0)}:R>\n> {r.get('text')}")
+        content_str = "\n\n".join(lines)
+        
+    embed = discord.Embed(
+        title="Orbit Active Reminders",
+        description=content_str,
+        color=discord.Color.blue()
+    )
+    await ctx.send(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 
 @remind_group.command(name="list", description="View your active scheduled reminders.")
 async def remind_list_cmd(ctx: commands.Context):

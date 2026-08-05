@@ -13,9 +13,12 @@ async def _do_addrole(ctx: commands.Context, target: discord.Member, role: disco
 
     try:
         await target.add_roles(role, reason=f"Role added by {ctx.author} | Reason: {reason}")
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "role", msg_type="add", member_mention=target.mention, member_id=target.id, role_mention=role.mention, role_id=role.id, role_color=role.color, reason=reason, author_mention=ctx.author.mention)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="Role Added", color=role.color)
+        embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
+        embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
+        embed.add_field(name="Reason", value=reason, inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to add that role.", ephemeral=True)
     except Exception as e:

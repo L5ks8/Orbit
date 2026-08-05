@@ -15,9 +15,12 @@ async def _do_vc_unlock(ctx: commands.Context, channel: discord.VoiceChannel | N
     try:
         overwrite.connect = None
         await target_channel.set_permissions(ctx.guild.default_role, overwrite=overwrite, reason=f"Voice channel unlocked by {ctx.author} | Reason: {reason}")
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "voice", msg_type="unlock", channel_mention=target_channel.mention, reason=reason, author_mention=ctx.author.mention)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="Channel Unlocked", color=discord.Color.green())
+        embed.add_field(name="Destination Channel", value=target_channel.mention, inline=False)
+        if reason and reason != "No reason provided":
+            embed.add_field(name="Reason", value=reason, inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to unlock this voice channel.", ephemeral=True)
     except Exception as e:

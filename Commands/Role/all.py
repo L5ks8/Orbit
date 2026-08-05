@@ -20,9 +20,11 @@ async def _do_roleall(ctx: commands.Context, role: discord.Role, reason: str):
             except Exception:
                 pass
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "role", msg_type="all", role_mention=role.mention, role_id=role.id, role_color=role.color, count=updated_count, author_mention=ctx.author.mention)
-    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(title="Role Added to All", color=role.color)
+    embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
+    embed.add_field(name="Affected", value=f"`{updated_count}` members", inline=False)
+    embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+    await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @role_group.command(name="all", aliases=["roleall"], description="Assign a role to every member.")
 @commands.has_permissions(administrator=True)

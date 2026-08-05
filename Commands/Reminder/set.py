@@ -16,9 +16,17 @@ async def _do_remind_set(ctx: commands.Context, duration_str: str, text: str):
 
     guild_id = ctx.guild.id if ctx.guild else None
     entry = add_reminder(ctx.author.id, ctx.channel.id, guild_id, text, seconds)
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id if ctx.guild else None, "reminder", msg_type="success", entry=entry)
-    await ctx.send(**kwargs, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(
+        title="Orbit Reminder Scheduled",
+        description=(
+            f"**Reminder ID:** `{entry.get('id')}`\n"
+            f"**Target Time:** <t:{entry.get('expires_at', 0)}:F> (<t:{entry.get('expires_at', 0)}:R>)\n"
+            f"**Reminder Text:** {entry.get('text')}\n\n"
+            f"*I will notify you right here or via DMs when the timer completes.*"
+        ),
+        color=discord.Color.green()
+    )
+    await ctx.send(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 
 @remind_group.command(name="set", description="Schedule a new reminder.")
 async def remind_set_cmd(ctx: commands.Context, duration: str, *, text: str):

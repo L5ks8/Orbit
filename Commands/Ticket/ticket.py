@@ -49,9 +49,10 @@ async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
             reason=f"Added to ticket by {ctx.author}"
         )
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "ticket", msg_type="add", channel_name=ctx.channel.name, member_mention=member.mention, member_id=member.id, author_mention=ctx.author.mention)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title=f"Member Added: #{ctx.channel.name}", color=discord.Color.green())
+        embed.add_field(name="User Added", value=f"{member.mention} (`{member.id}`)", inline=False)
+        embed.add_field(name="Added By", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
         await ctx.send(f"I do not have permission to modify channel overwrites for {member.mention}.", ephemeral=True)
@@ -84,9 +85,10 @@ async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
     try:
         await ctx.channel.set_permissions(member, overwrite=None, reason=f"Removed from ticket by {ctx.author}")
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "ticket", msg_type="remove", channel_name=ctx.channel.name, member_mention=member.mention, member_id=member.id, author_mention=ctx.author.mention)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title=f"Member Removed: #{ctx.channel.name}", color=discord.Color.red())
+        embed.add_field(name="User Removed", value=f"{member.mention} (`{member.id}`)", inline=False)
+        embed.add_field(name="Removed By", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
         await ctx.send(f"I do not have permission to modify channel overwrites for {member.mention}.", ephemeral=True)
@@ -174,9 +176,13 @@ async def _do_ticket_transcript(ctx: commands.Context):
     transcript_text = html_template + "\n".join(msgs_html) + "\n    </div>\n</body>\n</html>"
     file = discord.File(fp=io.BytesIO(transcript_text.encode("utf-8")), filename=f"transcript-{ctx.channel.name}.html")
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "ticket", msg_type="transcript", channel_name=ctx.channel.name, channel_id=ctx.channel.id, subject=subject, messages_count=len(messages), creator_id=creator_id, executor_mention=ctx.author.mention, executor_id=ctx.author.id)
-    await ctx.send(**kwargs, file=file, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(title="Ticket Transcript Generated", color=discord.Color.blue())
+    embed.add_field(name="Ticket", value=f"`#{ctx.channel.name}` (`{ctx.channel.id}`)", inline=False)
+    embed.add_field(name="Subject", value=f"`{subject}`", inline=True)
+    embed.add_field(name="Messages", value=f"`{len(messages)}`", inline=True)
+    embed.add_field(name="Creator ID", value=f"`{creator_id}`", inline=False)
+    embed.add_field(name="Exported By", value=f"{ctx.author.mention} (`{ctx.author.id}`)", inline=False)
+    await ctx.send(embed=embed, file=file, allowed_mentions=discord.AllowedMentions.none())
 
 def _parse_duration(duration_str: str):
     if not duration_str:

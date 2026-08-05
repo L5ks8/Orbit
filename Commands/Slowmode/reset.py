@@ -16,9 +16,10 @@ async def _do_slowmode_remove(ctx: commands.Context, channel: discord.TextChanne
 
     try:
         await target_channel.edit(slowmode_delay=0, reason=f"Slowmode removed by {ctx.author}")
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "slowmode", msg_type="reset", channel_mention=target_channel.mention, author_mention=ctx.author.mention)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="Slowmode Disabled", color=discord.Color.green())
+        embed.add_field(name="Channel", value=target_channel.mention, inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:
         await ctx.send("I do not have sufficient permissions to edit slowmode in this channel.", ephemeral=True)
     except Exception as e:

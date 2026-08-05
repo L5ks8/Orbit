@@ -106,10 +106,10 @@ class WhitelistListLayout(discord.ui.View):
             if count > 15:
                 content_text += f"\n\n*And {count - 15} more users...*"
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            guild_id, "whitelist", msg_type="list",
-            count=count, content_text=content_text,
-            components=self.children
+        embed = discord.Embed(
+            title=f"Whitelist Overview ({count} Users)",
+            description=content_text,
+            color=discord.Color.blue()
         )
+        return {"embed": embed, "view": self}
 

@@ -28,12 +28,25 @@ class InviterCommand(commands.Cog):
                 except Exception:
                     pass
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(
-            ctx.guild.id, "inviter", msg_type="info",
-            target=target, inviter=inviter_user, code=code, guild=ctx.guild
+        embed = discord.Embed(
+            title="Inviter",
+            color=discord.Color.blurple()
         )
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed.set_thumbnail(url=target.display_avatar.url if target else None)
+
+        if inviter_user:
+            embed.description = (
+                f"**Member:** {target.mention}\n"
+                f"**Invited by:** {inviter_user.mention}\n"
+                f"**Invite Code:** `{code or 'Unknown'}`"
+            )
+        else:
+            embed.description = f"No invite data found for {target.mention}."
+
+        if ctx.guild:
+            embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @inviter.error
     async def inviter_error(self, ctx: commands.Context, error):

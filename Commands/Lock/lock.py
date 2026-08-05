@@ -24,9 +24,12 @@ class LockCommand(commands.Cog):
         try:
             overwrite.send_messages = False
             await target_channel.set_permissions(ctx.guild.default_role, overwrite=overwrite, reason=f"Locked by {ctx.author} | Reason: {reason}")
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(ctx.guild.id, "lock", msg_type="success", channel=target_channel, reason=reason, author=ctx.author)
-            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title="Channel Locked", color=discord.Color.orange())
+            embed.add_field(name="Channel", value=f"{target_channel.mention} (`{target_channel.id}`)", inline=False)
+            embed.add_field(name="Reason", value=reason, inline=False)
+            embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+            embed.add_field(name="Status", value="`@everyone` send messages disabled", inline=False)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to lock this channel.", ephemeral=True)
         except Exception as e:

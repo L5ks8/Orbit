@@ -28,9 +28,13 @@ class UntimeoutCommand(commands.Cog):
                 "User Timeout Removed (`-untimeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(ctx.guild.id, "timeout", msg_type="untimeout", member_mention=target.mention, member_id=target.id, reason=reason, author_mention=ctx.author.mention)
-            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title="User Timeout Removed", color=discord.Color.green())
+            embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
+            if reason and reason != "No reason provided":
+                embed.add_field(name="Reason", value=reason, inline=False)
+            embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+            embed.add_field(name="Status", value="`Cleared`", inline=False)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("I do not have sufficient permissions to remove the timeout.", ephemeral=True)
         except Exception as e:

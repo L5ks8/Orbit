@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Select
+from discord.ui import ActionRow, Button, Select
 
 
 
@@ -186,13 +186,20 @@ class HelpLayout(discord.ui.View):
 
         components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            self.guild_id, "help", msg_type="page",
-            page_data=page, current_page=self.current_page,
-            total_pages=len(PAGES), icon_url=icon_url,
-            components=components
+        embed = discord.Embed(
+            title=f"Orbit Command Guide: {page['title']}",
+            description=page["description"],
+            color=discord.Color.blue()
         )
+        if icon_url:
+            embed.set_thumbnail(url=icon_url)
+        embed.set_footer(text=f"Page {self.current_page + 1} of {len(PAGES)}")
+
+        self.clear_items()
+        for comp in components:
+            self.add_item(comp)
+
+        return {"embed": embed, "view": self}
 
 class HelpCommandCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

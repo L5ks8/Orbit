@@ -2,7 +2,7 @@ import time
 import discord
 from discord.ext import commands, tasks
 from Commands.Reminder._storage import remove_reminder, load_reminders
-from Embeds import get_command_embed
+
 
 class ReminderListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -26,7 +26,16 @@ class ReminderListener(commands.Cog):
         await self.bot.wait_until_ready()
 
     async def _deliver_alert(self, entry: dict):
-        kwargs = get_command_embed(entry.get("guild_id"), "reminder", msg_type="alert", entry=entry)
+        embed = discord.Embed(
+            title="Orbit Reminder Alert",
+            description=(
+                f"**Scheduled By:** <@{entry.get('user_id')}>\n"
+                f"**Created At:** <t:{entry.get('created_at', 0)}:F> (<t:{entry.get('created_at', 0)}:R>)\n\n"
+                f"**Reminder Note:**\n> {entry.get('text')}"
+            ),
+            color=discord.Color.gold()
+        )
+        kwargs = {"embed": embed}
         mention_str = f"<@{entry['user_id']}>"
         
         delivered = False

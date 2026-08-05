@@ -71,13 +71,15 @@ class WarningsListLayout(discord.ui.View):
             )
         warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            guild_id, "checkwarns", msg_type="list",
-            member_mention=self.member.mention, page=self.page,
-            total_pages=self.total_pages, total_warnings=len(self.warnings),
-            warns_text=warns_text, components=self.children
+        embed = discord.Embed(
+            title=f"⚠️ Warning History (Page {self.page} of {self.total_pages})",
+            description=warns_text,
+            color=discord.Color.orange()
         )
+        embed.add_field(name="Target", value=self.member.mention, inline=True)
+        embed.add_field(name="Total Warnings", value=f"`{len(self.warnings)}`", inline=True)
+
+        return {"embed": embed, "view": self}
 
 async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
     await ctx.defer()

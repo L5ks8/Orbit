@@ -5,16 +5,16 @@ from Commands.Role.role import role_group
 async def _do_roleinfo(ctx: commands.Context, role: discord.Role):
     await ctx.defer()
     created_ts = int(role.created_at.timestamp())
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(
-        ctx.guild.id, "role", msg_type="info", 
-        role_mention=role.mention, role_id=role.id, role_color=role.color,
-        role_created_at=f"<t:{created_ts}:F> (<t:{created_ts}:R>)",
-        role_members=len(role.members), role_position=role.position,
-        role_hoisted=role.hoist, role_mentionable=role.mentionable,
-        role_managed=role.managed
-    )
-    await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(title="Role Info", color=role.color)
+    embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
+    embed.add_field(name="Created At", value=f"<t:{created_ts}:F> (<t:{created_ts}:R>)", inline=False)
+    embed.add_field(name="Members", value=f"`{len(role.members)}`", inline=True)
+    embed.add_field(name="Position", value=f"`{role.position}`", inline=True)
+    embed.add_field(name="Hoisted", value=f"`{role.hoist}`", inline=True)
+    embed.add_field(name="Mentionable", value=f"`{role.mentionable}`", inline=True)
+    embed.add_field(name="Managed", value=f"`{role.managed}`", inline=True)
+    
+    await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @role_group.command(name="info", aliases=["roleinfo"], description="Display information about a role.")
 async def role_info_cmd(ctx: commands.Context, role: discord.Role):

@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
 
 
 
@@ -22,9 +21,10 @@ class BannerCommand(commands.Cog):
             return await ctx.send(f"`{target.display_name}` does not have a custom profile banner set.", ephemeral=True)
 
         banner_url = full_user.banner.with_size(4096).url
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id if ctx.guild else 0, "banner", msg_type="default", target=full_user, banner_url=banner_url)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title=f"Profile Banner: {full_user.display_name}", description=f"**User ID:** `{full_user.id}`", color=discord.Color.blurple())
+        embed.set_image(url=banner_url)
+        embed.add_field(name="Banner Link", value=f"[Download High-Res (`4096px`)]({banner_url})", inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BannerCommand(bot))

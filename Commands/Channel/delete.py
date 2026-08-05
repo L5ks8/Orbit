@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
 from Commands.Channel.channel import channel_group
 
 
@@ -27,9 +26,11 @@ async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | 
                 await ctx.message.delete()
             except Exception:
                 pass
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(ctx.guild.id, "channel_delete", msg_type="success", channel_name=name, channel_type=ch_type, author=ctx.author)
-            await ctx.send(**kwargs, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title="Channel Deleted", color=discord.Color.red())
+            embed.add_field(name="Channel", value=f"`#{name}`", inline=False)
+            embed.add_field(name="Type", value=f"`{ch_type}`", inline=True)
+            embed.add_field(name="Deleted by", value=ctx.author.mention, inline=False)
+            await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
     else:
         await ctx.send("That channel type cannot be deleted with this command.", ephemeral=True)
 

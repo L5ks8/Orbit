@@ -69,17 +69,14 @@ async def _do_vc_move(
         if moved_count == 0:
             return await ctx.send("❌ Failed to move members. Please check my permissions.", ephemeral=True)
 
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(
-            ctx.guild.id,
-            "voice",
-            msg_type="moveall",
-            count=moved_count,
-            channel_mention=dest_channel.mention,
-            reason=reason,
-            author_mention=ctx.author.mention
-        )
-        return await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="Moved All Voice Users", color=discord.Color.blue())
+        if moved_count > 0:
+            embed.add_field(name="Moved Members", value=f"`{moved_count}`", inline=False)
+        embed.add_field(name="Destination Channel", value=dest_channel.mention, inline=False)
+        if reason and reason != "No reason provided":
+            embed.add_field(name="Reason", value=reason, inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        return await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     else:
         # Resolve target member
@@ -109,18 +106,13 @@ async def _do_vc_move(
 
         try:
             await target_member.edit(voice_channel=dest_channel, reason=f"Moved by {ctx.author} | Reason: {reason}")
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(
-                ctx.guild.id,
-                "voice",
-                msg_type="move",
-                member_mention=target_member.mention,
-                member_id=target_member.id,
-                channel_mention=dest_channel.mention,
-                reason=reason,
-                author_mention=ctx.author.mention
-            )
-            await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title="Moved User", color=discord.Color.blue())
+            embed.add_field(name="Target", value=f"{target_member.mention} (`{target_member.id}`)", inline=False)
+            embed.add_field(name="Destination Channel", value=dest_channel.mention, inline=False)
+            if reason and reason != "No reason provided":
+                embed.add_field(name="Reason", value=reason, inline=False)
+            embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send("❌ I do not have permission to move that member into that channel.", ephemeral=True)
         except Exception as e:

@@ -14,9 +14,10 @@ class CheckBanCommand(commands.Cog):
             ban_entry = await ctx.guild.fetch_ban(discord.Object(id=target_id))
             reason = ban_entry.reason or "No reason provided"
             
-            from Embeds import get_command_embed
-            kwargs = get_command_embed(ctx.guild.id, "checkban", ban_entry=ban_entry, reason=reason)
-            await ctx.send(**kwargs)
+            embed = discord.Embed(title="User is Banned", color=discord.Color.red())
+            embed.add_field(name="User", value=f"{ban_entry.user} (`{ban_entry.user.id}`)", inline=False)
+            embed.add_field(name="Reason", value=reason, inline=False)
+            await ctx.send(embed=embed)
         except discord.NotFound:
             await ctx.send(f"The user with ID `{target_id}` is **not** currently banned on this server.")
         except discord.Forbidden:

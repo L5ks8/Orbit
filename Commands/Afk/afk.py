@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import Container, TextDisplay, Separator
 from Commands.Afk._storage import set_afk, get_afk
 
 
@@ -15,9 +14,10 @@ class AfkCommand(commands.Cog):
             return await ctx.send("This command can only be used inside a server.", ephemeral=True)
 
         set_afk(ctx.guild.id, ctx.author.id, reason)
-        from Embeds import get_command_embed
-        kwargs = get_command_embed(ctx.guild.id, "afk", msg_type="set", author=ctx.author, reason=reason)
-        await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title="AFK Status Enabled", color=discord.Color.green())
+        embed.add_field(name="User", value=f"{ctx.author.mention} (`{ctx.author.id}`)", inline=False)
+        embed.add_field(name="Reason", value=reason, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -36,10 +36,12 @@ class AfkCommand(commands.Cog):
             if afk_data:
                 reason = afk_data.get("reason", "AFK")
                 ts = afk_data.get("timestamp", 0)
-                from Embeds import get_command_embed
-                kwargs = get_command_embed(message.guild.id, "afk", msg_type="notice", target=user, reason=reason, timestamp=ts)
+                embed = discord.Embed(title="AFK Notice", description=f"{user.mention} is currently AFK.", color=discord.Color.orange())
+                embed.add_field(name="Reason", value=reason, inline=False)
+                if ts:
+                    embed.add_field(name="Since", value=f"<t:{ts}:R>", inline=False)
                 try:
-                    await message.reply(**kwargs, mention_author=False, allowed_mentions=discord.AllowedMentions.none())
+                    await message.reply(embed=embed, mention_author=False, allowed_mentions=discord.AllowedMentions.none())
                 except Exception as e:
                     print(f"Failed to reply AFK notice: {e}")
 

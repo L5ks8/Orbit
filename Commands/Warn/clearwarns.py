@@ -31,9 +31,14 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Total Cleared:** `{cleared_count}` warnings"
     )
 
-    from Embeds import get_command_embed
-    kwargs = get_command_embed(ctx.guild.id, "clearwarns", msg_type="clear", member_mention=user.mention, member_id=user.id, cleared_count=cleared_count)
-    await ctx.send(**kwargs, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+    embed = discord.Embed(
+        title="⚠️ All Warnings Cleared",
+        description=f"**Target Member:** {user.mention} (`{user.id}`)",
+        color=discord.Color.green()
+    )
+    embed.add_field(name="Total Removed", value=f"`{cleared_count}` warnings", inline=True)
+    embed.add_field(name="Current Remaining", value="`0`", inline=True)
+    await ctx.send(embed=embed, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
 class ClearWarnsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

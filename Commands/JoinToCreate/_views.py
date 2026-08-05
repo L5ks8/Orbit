@@ -98,11 +98,30 @@ class PersistentJTCControlLayout(discord.ui.View):
         # We must group them into ActionRows or just pass the flat list to the Embed dispatcher
         components = row1 + row2
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            self.guild_id, "jtc", msg_type="control",
-            data=self.data, components=components
-        )
+        owner_id = self.data.get("owner_id", "Unknown")
+        owner_mention = f"<@{owner_id}>" if owner_id != "Unknown" else "Unknown"
+
+        status_lock = "Locked" if self.data.get("locked") else "Unlocked"
+        status_vis = "Hidden" if self.data.get("hidden") else "Visible"
+
+        trusted_list = self.data.get("trusted_users", [])
+        if trusted_list:
+            trusted_display = ", ".join(f"<@{u}>" for u in trusted_list)
+        else:
+            trusted_display = "*No trusted users*"
+
+        embed = discord.Embed(title="Your Voice Channel", color=discord.Color.teal())
+        embed.add_field(name="Owner", value=owner_mention, inline=False)
+        embed.add_field(name="Channel Status", value=f"{status_lock} | {status_vis}", inline=False)
+        embed.add_field(name="Trusted Users", value=trusted_display, inline=False)
+        embed.set_footer(text="Use the buttons below to manage your channel.")
+        
+        self.clear_items()
+        for i, comp in enumerate(components):
+            comp.row = i // 4
+            self.add_item(comp)
+            
+        return {"embed": embed, "view": self}
 
     async def _get_context(self, interaction: discord.Interaction) -> tuple[discord.VoiceChannel | None, dict | None]:
         if not interaction.guild:

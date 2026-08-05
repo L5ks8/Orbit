@@ -56,13 +56,26 @@ class BanHistoryLayout(discord.ui.View):
 
         buttons.append(btn_close)
 
-        from Embeds import get_command_embed
-        return get_command_embed(
-            self.guild_id, "banhistory", msg_type="list",
-            target_id=self.target_id, target_name=self.target_name,
-            total_bans=len(self.bans), page=self.page, total_pages=self.total_pages,
-            slice_bans=slice_bans, components=buttons
+        lines = []
+        for b in slice_bans:
+            lines.append(
+                f"**ID:** `{b['ban_id']}` | **Mod:** <@{b['moderator_id']}>\n"
+                f"**Reason:** {b['reason']} (<t:{b['timestamp']}:R>)"
+            )
+        bans_text = "\n\n".join(lines) if lines else "No ban history found on this page."
+        
+        embed = discord.Embed(
+            title=f"🔨 Permanent Ban History: {self.target_name}",
+            description=bans_text,
+            color=discord.Color.dark_theme()
         )
+        embed.set_footer(text=f"Total Past Bans: {len(self.bans)} • Page {self.page} of {self.total_pages}")
+        
+        self.clear_items()
+        for comp in buttons:
+            self.add_item(comp)
+            
+        return {"embed": embed, "view": self}
 
 async def _do_banhistory(ctx: commands.Context, target: discord.User | discord.Member):
     await ctx.defer()

@@ -198,16 +198,14 @@ class MinesLayoutView(discord.ui.View):
                 self.session.outcome_text += f" *(✨ +{xp_earned} XP)*"
 
     def get_kwargs(self):
-        from Embeds import get_command_embed
-        return get_command_embed(
-            self.guild_id, "mines", msg_type="game",
-            player=self.session.player,
-            outcome_text=self.session.outcome_text,
-            mines_count=self.session.mines_count,
-            current_mult=self.session.current_mult,
-            bet_amount=self.session.bet_amount,
-            view=self
-        )
+        embed = discord.Embed(title="Mines", color=discord.Color.blue())
+        embed.set_author(name=self.session.player.display_name, icon_url=self.session.player.display_avatar.url if self.session.player.display_avatar else None)
+        embed.description = self.session.outcome_text
+        embed.add_field(name="Bet", value=f"`{self.session.bet_amount:,}`", inline=True)
+        embed.add_field(name="Mines", value=f"`{self.session.mines_count}`", inline=True)
+        embed.add_field(name="Multiplier", value=f"`{self.session.current_mult}x`", inline=True)
+        
+        return {"embed": embed, "view": self}
 
 class MinesCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
