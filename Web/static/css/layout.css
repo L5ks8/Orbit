@@ -89,6 +89,18 @@
 }
 .dash-sidebar-title .server-icon { width: 28px; height: 28px; border-radius: 8px; font-size: 11px; }
 
+/* Custom Scrollbar */
+.dash-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.dash-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.dash-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px;
+}
+
 .dash-nav-section {
     background: none;
     border: none;
