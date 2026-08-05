@@ -608,12 +608,9 @@ function addAutoReplyRow(triggerText = '', responseText = '', channelId = '', us
         <select class="ar-channel" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; font-size: 13px; outline: none; flex:1; max-width: 260px;">
             ${channelOptionsHTML}
         </select>
-        <div style="display:flex; align-items:center; gap:6px; margin-left: 10px;">
-            <label class="switch" style="margin-bottom: 0;">
-                <input type="checkbox" class="ar-ai" ${useAi ? 'checked' : ''} id="${aiId}">
-                <span class="slider"></span>
-            </label>
-            <label for="${aiId}" style="color:var(--text-secondary); font-size: 13px; cursor: pointer;" title="Checks if the word is used in its intended context before replying">AI Context Check</label>
+        <div style="display:flex; align-items:center; gap:8px; margin-left: 10px;">
+            <input type="checkbox" class="ar-ai" ${useAi ? 'checked' : ''} id="${aiId}" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--success);">
+            <label for="${aiId}" style="color:var(--text-secondary); font-size: 14px; cursor: pointer; margin-top: 2px;" title="Checks if the word is used in its intended context before replying">AI Context Check</label>
         </div>
     `;
 
