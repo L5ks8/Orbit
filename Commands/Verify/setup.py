@@ -20,8 +20,8 @@ async def _do_verify_setup(
     remove_role_id = remove_role.id if remove_role else None
     config = setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
     
-    emb_title = config.get("embed_title", "") or "Server Security Verification"
-    emb_desc = config.get("embed_description", "") or "To protect against automated bots and spam, this server requires CAPTCHA verification before accessing channels.\n\n> Click **Verify Now** below to receive an automated security image with connected characters."
+    emb_title = config.get("embed_title") if config.get("embed_title") is not None else ""
+    emb_desc = config.get("embed_description") if config.get("embed_description") is not None else "This server requires you to verify yourself to get access to other channels, you can simply verify by clicking on the verify button."
     
     try:
         emb_color = discord.Color(int(config.get("embed_color", "").lstrip('#'), 16)) if config.get("embed_color") else discord.Color.blue()

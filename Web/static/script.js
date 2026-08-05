@@ -1137,8 +1137,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('verify_type').value = config.verify?.verification_type || 'captcha';
         document.getElementById('verify_timeout_action').value = config.verify?.timeout_action || 'none';
         document.getElementById('verify_timeout_minutes').value = config.verify?.timeout_minutes || '';
-        document.getElementById('verify_embed_title').value = config.verify?.embed_title || 'This server requires you to verify yourself to get access to other channels, you can simply verify by clicking on the verify button.';
-        document.getElementById('verify_embed_description').value = config.verify?.embed_description || '';
+        document.getElementById('verify_embed_title').value = config.verify?.embed_title !== undefined ? config.verify.embed_title : 'Verification Required';
+        document.getElementById('verify_embed_description').value = config.verify?.embed_description !== undefined ? config.verify.embed_description : 'This server requires you to verify yourself to get access to other channels, you can simply verify by clicking on the verify button.';
         document.getElementById('verify_embed_color').value = config.verify?.embed_color || '#5865F2';
         document.getElementById('verify_embed_color_hex').value = config.verify?.embed_color || '#5865F2';
         
@@ -1152,9 +1152,13 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
                 verifyDropzone.style.backgroundImage = `url(${verifyImgUrl})`;
                 verifyDropzone.innerHTML = '';
             } else {
-                verifyDropzone.style.backgroundImage = 'none';
-                verifyDropzone.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+                verifyDropzone.style.backgroundImage = 'url(https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png)';
+                verifyDropzone.innerHTML = '';
             }
+        }
+        
+        if (typeof updateVerifyPreview === 'function') {
+            updateVerifyPreview();
         }
 
 
@@ -2057,6 +2061,34 @@ function formatDiscordPreviewText(str) {
     }
 
     return text;
+}
+
+function updateVerifyPreview() {
+    const title = document.getElementById('verify_embed_title')?.value || '';
+    const desc = document.getElementById('verify_embed_description')?.value || '';
+    const color = document.getElementById('verify_embed_color')?.value || '#5865F2';
+    const img = document.getElementById('verify_embed_image')?.value || 'https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png';
+    
+    const embedBox = document.getElementById('verify_preview_embed_box');
+    if (embedBox) embedBox.style.borderLeftColor = color;
+    
+    const titleEl = document.getElementById('verify_preview_title');
+    if (titleEl) {
+        titleEl.textContent = title;
+        titleEl.style.display = title ? 'block' : 'none';
+    }
+    
+    const descEl = document.getElementById('verify_preview_desc');
+    if (descEl) {
+        descEl.innerHTML = formatDiscordPreviewText(desc);
+        descEl.style.display = desc ? 'block' : 'none';
+    }
+    
+    const imgEl = document.getElementById('verify_preview_img');
+    if (imgEl) {
+        imgEl.src = img;
+        imgEl.style.display = img ? 'block' : 'none';
+    }
 }
 
 function updateLivePreview() {

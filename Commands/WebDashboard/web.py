@@ -1103,8 +1103,8 @@ class WebDashboard:
                 
             verify_cfg = load_verify_config(guild_id)
             
-            emb_title = verify_cfg.get("embed_title", "") or "Server Security Verification"
-            emb_desc = verify_cfg.get("embed_description", "") or "To protect against automated bots and spam, this server requires CAPTCHA verification before accessing channels.\n\n> Click **Verify Now** below to receive an automated security image with connected characters."
+            emb_title = verify_cfg.get("embed_title") if verify_cfg.get("embed_title") is not None else ""
+            emb_desc = verify_cfg.get("embed_description") if verify_cfg.get("embed_description") is not None else "This server requires you to verify yourself to get access to other channels, you can simply verify by clicking on the verify button."
             
             try:
                 emb_color = discord.Color(int(verify_cfg.get("embed_color", "").lstrip('#'), 16)) if verify_cfg.get("embed_color") else discord.Color.blue()
