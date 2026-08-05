@@ -14,7 +14,9 @@ def load_settings_config(guild_id: int) -> dict:
         "prefix": doc.get("prefix", ""),
         "immune_users": doc.get("immune_users", []),
         "immune_roles": doc.get("immune_roles", []),
-        "bot_adders": doc.get("bot_adders", [])
+        "bot_adders": doc.get("bot_adders", []),
+        "autoresponder_enabled": doc.get("autoresponder_enabled", False),
+        "messages_enabled": doc.get("messages_enabled", False)
     }
 
 def save_settings_config(guild_id: int, data: dict):
@@ -28,7 +30,9 @@ def save_settings_config(guild_id: int, data: dict):
         "embed_style": data.get("embed_style", "normal"),
         "immune_users": data.get("immune_users", []),
         "immune_roles": data.get("immune_roles", []),
-        "bot_adders": data.get("bot_adders", [])
+        "bot_adders": data.get("bot_adders", []),
+        "autoresponder_enabled": data.get("autoresponder_enabled", False),
+        "messages_enabled": data.get("messages_enabled", False)
     }
     
     if "prefix" in data:
