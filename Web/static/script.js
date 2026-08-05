@@ -1635,7 +1635,8 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('config-loader').classList.add('hidden');
         document.getElementById('config-layout').style.display = 'flex';
     } catch (e) {
-        document.getElementById('config-layout').innerHTML = '<div style="display: flex; height: 100vh; width: 100%; align-items: center; justify-content: center;"><p style="color:var(--accent-color); font-weight: 600;">Fehler beim Laden der Konfiguration.</p></div>';
+        console.error("Config Load Error:", e);
+        document.getElementById('config-layout').innerHTML = '<div style="display: flex; flex-direction:column; height: 100vh; width: 100%; align-items: center; justify-content: center;"><p style="color:var(--danger); font-weight: 600;">Fehler beim Laden der Konfiguration.</p><p style="color:var(--text-secondary); font-size:12px; margin-top:10px;">' + e.toString() + '</p></div>';
         document.getElementById('config-layout').style.display = 'block';
     }
 }
