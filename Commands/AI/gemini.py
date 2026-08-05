@@ -225,12 +225,77 @@ class GeminiChatbot(commands.Cog):
                                     
                                     if raw_mod_name:
                                         mod_name = module_map.get(raw_mod_name, raw_mod_name)
-                                        cfg = get_config(mod_name, message.guild.id) or {}
-                                        if mod_name == "Settings":
-                                            cfg["ai_enabled"] = is_enabled
-                                        else:
+                                        
+                                        # Use the correct load/save methods to ensure caches are updated
+                                        if raw_mod_name == "Leveling":
+                                            from Commands.Level._storage import load_level_config, save_level_config
+                                            cfg = load_level_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
-                                        set_config(mod_name, message.guild.id, cfg)
+                                            save_level_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "Economy":
+                                            from Commands.Economy._storage import load_economy_config, save_economy_config
+                                            cfg = load_economy_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_economy_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "ServerStats":
+                                            from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
+                                            cfg = load_serverstats_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_serverstats_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "AutoMod":
+                                            from Commands.AutoMod._storage import load_automod_config, save_automod_config
+                                            cfg = load_automod_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_automod_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "Logs":
+                                            from Commands.Log._storage import load_log_config, save_log_config
+                                            cfg = load_log_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_log_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "Welcome":
+                                            from Commands.Welcome._storage import load_welcome_config, save_welcome_config
+                                            cfg = load_welcome_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_welcome_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "Goodbye":
+                                            from Commands.Goodbye._storage import load_goodbye_config, save_goodbye_config
+                                            cfg = load_goodbye_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_goodbye_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "Appeals":
+                                            from Commands.Appeals._storage import load_appeals_config, save_appeals_config
+                                            cfg = load_appeals_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_appeals_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "Verify":
+                                            from Commands.Verify._storage import load_verify_config, save_verify_config
+                                            cfg = load_verify_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_verify_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "Automation":
+                                            from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
+                                            cfg = load_automation_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_automation_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "TempVoice":
+                                            from Commands.JoinToCreate._storage import load_jtc_config, save_jtc_config
+                                            cfg = load_jtc_config(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_jtc_config(message.guild.id, cfg)
+                                        elif raw_mod_name == "JoinRoles":
+                                            from Commands.JoinRole._storage import load_join_roles, save_join_roles
+                                            cfg = load_join_roles(message.guild.id)
+                                            cfg["enabled"] = is_enabled
+                                            save_join_roles(message.guild.id, cfg)
+                                        else:
+                                            # Fallback
+                                            cfg = get_config(mod_name, message.guild.id) or {}
+                                            if mod_name == "Settings":
+                                                cfg["ai_enabled"] = is_enabled
+                                            else:
+                                                cfg["enabled"] = is_enabled
+                                            set_config(mod_name, message.guild.id, cfg)
+                                            
                                         print(f"AI Module Toggle: set {mod_name} enabled to {is_enabled}")
                             except Exception as e:
                                 print(f"[Config AI] Failed to execute config: {e}")
