@@ -1648,6 +1648,23 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
     }
 }
 
+setInterval(() => {
+    const vRole = document.getElementById('verify_role_id');
+    const uRole = document.getElementById('verify_remove_role_id');
+    const btnSend = document.getElementById('btn-send-verify');
+    if (vRole && uRole && btnSend) {
+        if (vRole.value && uRole.value) {
+            btnSend.disabled = false;
+            btnSend.style.opacity = '1';
+            btnSend.title = '';
+        } else {
+            btnSend.disabled = true;
+            btnSend.style.opacity = '0.5';
+            btnSend.title = 'Please set both Verified and Unverified roles first.';
+        }
+    }
+}, 500);
+
 // Action: Send Verify Panel
 document.getElementById('btn-send-verify').addEventListener('click', async () => {
     const channelId = document.getElementById('verify_panel_channel').value;
