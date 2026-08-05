@@ -1137,7 +1137,7 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         document.getElementById('verify_type').value = config.verify?.verification_type || 'captcha';
         document.getElementById('verify_timeout_action').value = config.verify?.timeout_action || 'none';
         document.getElementById('verify_timeout_minutes').value = config.verify?.timeout_minutes || '';
-        document.getElementById('verify_embed_title').value = config.verify?.embed_title !== undefined ? config.verify.embed_title : 'Verification Required';
+        document.getElementById('verify_embed_title').value = config.verify?.embed_title !== undefined ? config.verify.embed_title : '';
         document.getElementById('verify_embed_description').value = config.verify?.embed_description !== undefined ? config.verify.embed_description : 'This server requires you to verify yourself to get access to other channels, you can simply verify by clicking on the verify button.';
         document.getElementById('verify_embed_color').value = config.verify?.embed_color || '#5865F2';
         document.getElementById('verify_embed_color_hex').value = config.verify?.embed_color || '#5865F2';

@@ -1122,7 +1122,7 @@ class WebDashboard:
                 embed.set_image(url=emb_image)
                 
             from discord.ui import Button, View
-            btn_verify = Button(label="Verify Now", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
+            btn_verify = Button(label="Verify", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
             view = View(timeout=None)
             view.add_item(btn_verify)
             await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
