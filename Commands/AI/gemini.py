@@ -46,8 +46,15 @@ class GeminiChatbot(commands.Cog):
             if isinstance(message.reference.resolved, discord.Message):
                 if message.reference.resolved.author.id == self.bot.user.id:
                     is_reply_to_bot = True
+                    if len(message.reference.resolved.embeds) > 0:
+                        return # Ignore replies to bot embeds
 
         if not (is_mentioned or is_reply_to_bot):
+            return
+
+        from Database.mongodb import get_config, set_config
+        settings = get_config("Settings", message.guild.id) if message.guild else {}
+        if not settings.get("ai_enabled", True):
             return
 
         async with message.channel.typing():
@@ -57,6 +64,20 @@ class GeminiChatbot(commands.Cog):
                 messages.reverse()
 
                 server_info = f"Server Name: {message.guild.name}\nMember Count: {message.guild.member_count}" if message.guild else "Direct Message"
+                
+                if message.guild:
+                    level_data = get_config("Leveling", message.guild.id) or {}
+                    users = level_data.get("users", {})
+                    user_id_str = str(message.author.id)
+                    if user_id_str in users:
+                        user_stats = users[user_id_str]
+                        xp = user_stats.get("xp", 0)
+                        level = user_stats.get("level", 0)
+                        messages_count = user_stats.get("messages", 0)
+                        voice_minutes = user_stats.get("voice_minutes", 0)
+                        sorted_users = sorted(users.items(), key=lambda x: x[1].get("xp", 0), reverse=True)
+                        rank = next((i + 1 for i, (uid, data) in enumerate(sorted_users) if uid == user_id_str), "Unranked")
+                        server_info += f"\n\nUser Speaking ({message.author.display_name}) Stats:\nRank on Leaderboard: #{rank}\nLevel: {level}\nXP: {xp}\nMessages Sent: {messages_count}\nVoice Hours: {round(voice_minutes/60, 2)}"
                 
                 prefix_cmds_details = [cmd.name for cmd in self.bot.commands if not cmd.hidden]
                 prefix_cmds_str = ", ".join(prefix_cmds_details)
@@ -90,7 +111,16 @@ class GeminiChatbot(commands.Cog):
                     "Output ONLY the text answer. Never show where you got the information from."
                 )
 
-                is_admin = getattr(message.author.guild_permissions, "administrator", False) if message.guild else False
+                is_admin = False
+                if message.guild:
+                    perms = message.author.guild_permissions
+                    if perms.administrator or perms.manage_guild:
+                        is_admin = True
+                    else:
+                        manager_roles = settings.get("manager_roles", [])
+                        if any(str(r.id) in manager_roles for r in message.author.roles):
+                            is_admin = True
+                            
                 if is_admin:
                     system_prompt += (
                         "\n\n[ADMINISTRATOR TOOLS AVAILABLE]\n"
@@ -101,6 +131,8 @@ class GeminiChatbot(commands.Cog):
                         "- To change Embed Style to v2/modern: [CONFIG_UPDATE: embed_style = \"v2\"]\n"
                         "- To add a level role (e.g., Level 5 gets Role ID 123): [CONFIG_UPDATE: add_level_role = {\"level\": 5, \"role_id\": 123}]\n"
                         "- To remove a level role: [CONFIG_UPDATE: remove_level_role = {\"level\": 5, \"role_id\": 123}]\n"
+                        "- To enable or disable a website module (e.g. Level System, Economy, etc): [CONFIG_UPDATE: module_toggle = {\"module\": \"Leveling\", \"enabled\": true}]\n"
+                        "Valid modules: Settings, Logs, AutoMod, Appeals, Welcome, Goodbye, Verify, Tickets, TempVoice, Leveling, Economy, ServerStats, AutoResponder, Messages, Automation, JoinRoles.\n"
                         "Only use these tools if explicitly requested by the administrator."
                     )
                 else:
@@ -170,6 +202,17 @@ class GeminiChatbot(commands.Cog):
                                     roles = [r for r in roles if str(r.get("level")) != str(val["level"]) or str(r.get("role_id")) != str(val["role_id"])]
                                     cfg["level_roles"] = roles
                                     set_config("Leveling", message.guild.id, cfg)
+                                elif action == "module_toggle":
+                                    val = json.loads(val_str)
+                                    mod_name = val.get("module")
+                                    is_enabled = val.get("enabled", True)
+                                    if mod_name:
+                                        cfg = get_config(mod_name, message.guild.id) or {}
+                                        if mod_name == "Settings":
+                                            cfg["ai_enabled"] = is_enabled
+                                        else:
+                                            cfg["enabled"] = is_enabled
+                                        set_config(mod_name, message.guild.id, cfg)
                             except Exception as e:
                                 print(f"[Config AI] Failed to execute config: {e}")
                             
