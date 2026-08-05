@@ -93,15 +93,29 @@ class WebDashboard:
         if not self.client_id:
             return web.Response(text="OAuth2 is not configured. Missing DISCORD_CLIENT_ID.", status=500)
             
+        import urllib.parse
+        next_url = request.query.get("next", "/")
+        state = urllib.parse.quote(next_url)
+            
         redirect_uri = self.get_redirect_uri(request)
         discord_login_url = (
             f"https://discord.com/api/oauth2/authorize?client_id={self.client_id}"
             f"&redirect_uri={redirect_uri}&response_type=code&scope=identify%20guilds"
+            f"&state={state}"
         )
         raise web.HTTPFound(discord_login_url)
 
     async def handle_callback(self, request: web.Request):
         code = request.query.get("code")
+        state = request.query.get("state", "/")
+        import urllib.parse
+        try:
+            next_url = urllib.parse.unquote(state)
+            if not next_url.startswith("/"):
+                next_url = "/"
+        except:
+            next_url = "/"
+            
         if not code:
             return web.Response(text="Missing code", status=400)
             
@@ -138,7 +152,7 @@ class WebDashboard:
             "access_token": access_token
         }
         
-        response = web.HTTPFound("/")
+        response = web.HTTPFound(next_url)
         response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
         return response
 

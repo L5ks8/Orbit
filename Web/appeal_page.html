@@ -3,97 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Appeal - Orbit</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Submit Appeal — Orbit</title>
+    <link rel="icon" type="image/png" href="/static/logo.png">
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <link rel="stylesheet" href="/static/css/base.css?v=4">
+    <link rel="stylesheet" href="/static/css/layout.css?v=4">
+    <link rel="stylesheet" href="/static/css/components.css?v=4">
+    <link rel="stylesheet" href="/static/css/animations.css?v=4">
     <style>
-        .appeal-container {
-            max-width: 600px;
+        .appeal-wrapper {
+            max-width: 700px;
             margin: 80px auto;
-            padding: 32px;
-            background: var(--bg-surface);
+            padding: 40px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.4);
         }
-        .appeal-header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .appeal-header h1 {
-            font-size: 24px;
+        .appeal-wrapper h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -1px;
             margin-bottom: 8px;
+            text-align: center;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .appeal-header p {
+        .appeal-wrapper p.subtitle {
             color: var(--text-secondary);
+            text-align: center;
+            font-size: 15px;
+            margin-bottom: 32px;
         }
         .appeal-form {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 24px;
         }
         .appeal-textarea {
             width: 100%;
-            min-height: 100px;
-            background: var(--bg-input);
+            min-height: 120px;
+            background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             color: var(--text-primary);
-            padding: 12px;
+            padding: 16px;
             resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all var(--duration-fast);
         }
         .appeal-textarea:focus {
             outline: none;
             border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
         }
         .user-info {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: var(--bg-input);
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            margin-bottom: 16px;
+            margin-bottom: 32px;
         }
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
+            border: 1px solid var(--border-color);
         }
-        #login-btn {
-            width: 100%;
-            justify-content: center;
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="appeal-container" id="app">
-        <div class="appeal-header">
+    <div class="ambient-bg"></div>
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+
+    <nav class="navbar" id="main-navbar">
+        <a href="/" class="logo">
+            <img src="/static/logo.png" alt="Orbit Logo" style="height: 36px; opacity: 0.9;">
+            Orbit
+        </a>
+    </nav>
+
+    <div class="landing-wrapper" style="min-height: calc(100vh - 56px);">
+        <div class="appeal-wrapper fade-in-up" id="app">
             <h1>Server Appeal</h1>
-            <p id="server-name-display">Loading...</p>
-        </div>
+            <p id="server-name-display" class="subtitle">Loading...</p>
 
-        <div id="unauthenticated" style="display: none;">
-            <p style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);">You must log in with Discord to submit an appeal.</p>
-            <button id="login-btn" class="btn btn-primary">
-                <i data-lucide="log-in"></i> Login with Discord
-            </button>
-        </div>
-
-        <div id="authenticated" style="display: none;">
-            <div class="user-info">
-                <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
-                <div>
-                    <div id="user-name" style="font-weight: 600;">Username</div>
-                    <div id="user-id" style="font-size: 12px; color: var(--text-secondary);">ID: 123456789</div>
+            <div id="unauthenticated" style="display: none; text-align: center; padding: 20px 0;">
+                <div style="background: rgba(108,99,255,0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--accent-primary);">
+                    <i data-lucide="lock" style="width: 32px; height: 32px;"></i>
                 </div>
+                <p style="margin-bottom: 24px; color: var(--text-secondary); font-size: 15px;">You must log in with Discord to verify your identity and submit an appeal.</p>
+                <button id="login-btn" class="btn-primary" style="margin: 0 auto;">
+                    <i data-lucide="log-in" style="width: 18px; height: 18px;"></i> Login with Discord
+                </button>
             </div>
 
-            <div id="dynamic-form" class="appeal-form"></div>
+            <div id="authenticated" style="display: none;">
+                <div class="user-info">
+                    <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
+                    <div>
+                        <div id="user-name" style="font-weight: 600; font-size: 16px;">Username</div>
+                        <div id="user-id" style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">ID: 123456789</div>
+                    </div>
+                </div>
 
-            <button id="submit-btn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 16px;">
-                Submit Appeal
-            </button>
-            <p id="status-msg" style="text-align: center; margin-top: 12px; font-size: 14px;"></p>
+                <div id="dynamic-form" class="appeal-form"></div>
+
+                <button id="submit-btn" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 32px; padding: 14px;">
+                    Submit Appeal
+                </button>
+                <p id="status-msg" style="text-align: center; margin-top: 16px; font-size: 14px; font-weight: 500;"></p>
+            </div>
         </div>
     </div>
 
@@ -107,11 +149,20 @@
             try {
                 const sRes = await fetch(`/api/appeal_info/${customUrl}`);
                 if (!sRes.ok) {
-                    document.getElementById('app').innerHTML = '<div style="text-align:center"><h1>Not Found</h1><p>This appeal page does not exist or is disabled.</p></div>';
+                    document.getElementById('app').innerHTML = `
+                        <div style="text-align:center; padding: 40px 0;">
+                            <div style="background: rgba(242, 63, 67, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--danger);">
+                                <i data-lucide="alert-circle" style="width: 32px; height: 32px;"></i>
+                            </div>
+                            <h1 style="font-size: 28px;">Appeal Not Found</h1>
+                            <p style="color: var(--text-secondary); margin-top: 12px;">This appeal page does not exist or has been disabled.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
                     return;
                 }
                 const sData = await sRes.json();
-                document.getElementById('server-name-display').textContent = sData.guild_name;
+                document.getElementById('server-name-display').textContent = 'Appealing punishment in: ' + sData.guild_name;
                 currentQuestions = sData.questions || ["Why should your punishment be revoked?"];
 
                 const res = await fetch('/api/user');
@@ -121,7 +172,7 @@
                     document.getElementById('authenticated').style.display = 'block';
                     
                     document.getElementById('user-name').textContent = data.global_name || data.username;
-                    document.getElementById('user-id').textContent = `ID: ${data.id}`;
+                    document.getElementById('user-id').textContent = `Discord ID: ${data.id}`;
                     document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`;
 
                     const formContainer = document.getElementById('dynamic-form');
@@ -151,62 +202,71 @@
             }
         }
 
-        document.getElementById('login-btn').addEventListener('click', () => {
-            window.location.href = `/auth/login?redirect=/appeal/${customUrl}`;
-        });
-
-        document.getElementById('submit-btn').addEventListener('click', async () => {
-            const statusMsg = document.getElementById('status-msg');
-            let answersText = "";
-            let isValid = true;
-            
-            currentQuestions.forEach((q, idx) => {
-                const ans = document.getElementById(`q_${idx}`).value.trim();
-                if (!ans) isValid = false;
-                answersText += `**${q}**\n${ans}\n\n`;
+        const loginBtn = document.getElementById('login-btn');
+        if(loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                // Changed redirect query param to next so it matches the python backend OAuth logic
+                window.location.href = `/auth/login?next=/appeal/${customUrl}`;
             });
-            
-            if (!isValid) {
-                statusMsg.textContent = 'Please answer all questions.';
-                statusMsg.style.color = 'var(--danger)';
-                return;
-            }
+        }
 
-            const btn = document.getElementById('submit-btn');
-            btn.disabled = true;
-            btn.textContent = 'Submitting...';
-            statusMsg.textContent = '';
-
-            try {
-                const res = await fetch(`/api/submit_appeal/${customUrl}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reason: answersText.trim() })
+        const submitBtn = document.getElementById('submit-btn');
+        if(submitBtn) {
+            submitBtn.addEventListener('click', async () => {
+                const statusMsg = document.getElementById('status-msg');
+                let answersText = "";
+                let isValid = true;
+                
+                currentQuestions.forEach((q, idx) => {
+                    const ans = document.getElementById(`q_${idx}`).value.trim();
+                    if (!ans) isValid = false;
+                    answersText += `**${q}**\n${ans}\n\n`;
                 });
                 
-                const data = await res.json();
-                if (res.ok) {
-                    document.getElementById('authenticated').innerHTML = `
-                        <div style="text-align: center; padding: 20px;">
-                            <i data-lucide="check-circle" style="color: var(--success); width: 48px; height: 48px; margin-bottom: 16px;"></i>
-                            <h2 style="margin-bottom: 8px;">Appeal Submitted!</h2>
-                            <p style="color: var(--text-secondary)">Your appeal has been sent to the server moderators. They will review it shortly.</p>
-                        </div>
-                    `;
-                    lucide.createIcons();
-                } else {
-                    statusMsg.textContent = data.error || 'An error occurred while submitting.';
+                if (!isValid) {
+                    statusMsg.textContent = 'Please answer all questions.';
+                    statusMsg.style.color = 'var(--danger)';
+                    return;
+                }
+
+                const btn = document.getElementById('submit-btn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loader" style="width:16px;height:16px;border-width:2px;display:inline-block;margin-right:8px;"></span> Submitting...';
+                statusMsg.textContent = '';
+
+                try {
+                    const res = await fetch(`/api/submit_appeal/${customUrl}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reason: answersText.trim() })
+                    });
+                    
+                    const data = await res.json();
+                    if (res.ok) {
+                        document.getElementById('authenticated').innerHTML = `
+                            <div style="text-align: center; padding: 40px 20px;">
+                                <div style="background: rgba(35, 165, 89, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; color: var(--success);">
+                                    <i data-lucide="check" style="width: 40px; height: 40px;"></i>
+                                </div>
+                                <h2 style="margin-bottom: 12px; font-size: 28px;">Appeal Submitted!</h2>
+                                <p style="color: var(--text-secondary); font-size: 15px; max-width: 400px; margin: 0 auto;">Your appeal has been successfully sent to the server moderators. They will review it shortly and contact you.</p>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                    } else {
+                        statusMsg.textContent = data.error || 'An error occurred while submitting.';
+                        statusMsg.style.color = 'var(--danger)';
+                        btn.disabled = false;
+                        btn.textContent = 'Submit Appeal';
+                    }
+                } catch (e) {
+                    statusMsg.textContent = 'Network error. Please try again.';
                     statusMsg.style.color = 'var(--danger)';
                     btn.disabled = false;
                     btn.textContent = 'Submit Appeal';
                 }
-            } catch (e) {
-                statusMsg.textContent = 'Network error. Please try again.';
-                statusMsg.style.color = 'var(--danger)';
-                btn.disabled = false;
-                btn.textContent = 'Submit Appeal';
-            }
-        });
+            });
+        }
 
         checkAuth();
     </script>
