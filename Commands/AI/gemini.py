@@ -184,14 +184,13 @@ class GeminiChatbot(commands.Cog):
                     await message.reply("I'm sorry, I couldn't generate a response.")
                     
             except Exception as e:
-                await message.reply(f"An error occurred while communicating with Orbit: `{e}`")
                 print(f"AI Error: {e}")
 
     async def _send_chunked(self, message: discord.Message, text: str):
         chunks = [text[i:i+1950] for i in range(0, len(text), 1950)]
         reply_to = message
         for chunk in chunks:
-            reply_to = await reply_to.reply(chunk)
+            reply_to = await reply_to.reply(chunk, suppress_embeds=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GeminiChatbot(bot))
