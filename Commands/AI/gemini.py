@@ -66,7 +66,7 @@ class GeminiChatbot(commands.Cog):
                 server_info = f"Server Name: {message.guild.name}\nMember Count: {message.guild.member_count}" if message.guild else "Direct Message"
                 
                 if message.guild:
-                    level_data = get_config("Leveling", message.guild.id) or {}
+                    level_data = get_config("LevelConfig", message.guild.id) or {}
                     users = level_data.get("users", {})
                     user_id_str = str(message.author.id)
                     if user_id_str in users:
@@ -127,8 +127,6 @@ class GeminiChatbot(commands.Cog):
                         "Because the user is an Administrator, you CAN execute server configuration commands for them! "
                         "If they ask you to change a setting, you MUST output EXACTLY one of the following commands in your response, and then reply to them normally.\n"
                         "Tools:\n"
-                        "- To change Embed Style to v1/normal: [CONFIG_UPDATE: embed_style = \"normal\"]\n"
-                        "- To change Embed Style to v2/modern: [CONFIG_UPDATE: embed_style = \"v2\"]\n"
                         "- To add a level role (e.g., Level 5 gets Role ID 123): [CONFIG_UPDATE: add_level_role = {\"level\": 5, \"role_id\": 123}]\n"
                         "- To remove a level role: [CONFIG_UPDATE: remove_level_role = {\"level\": 5, \"role_id\": 123}]\n"
                         "- To enable or disable a website module (e.g. Level System, Economy, etc): [CONFIG_UPDATE: module_toggle = {\"module\": \"Leveling\", \"enabled\": true}]\n"
@@ -190,29 +188,50 @@ class GeminiChatbot(commands.Cog):
                                     set_config("Settings", message.guild.id, cfg)
                                 elif action == "add_level_role":
                                     val = json.loads(val_str)
-                                    cfg = get_config("Leveling", message.guild.id) or {}
+                                    cfg = get_config("LevelConfig", message.guild.id) or {}
                                     roles = cfg.get("level_roles", [])
                                     roles.append({"level": val["level"], "role_id": str(val["role_id"])})
                                     cfg["level_roles"] = roles
-                                    set_config("Leveling", message.guild.id, cfg)
+                                    set_config("LevelConfig", message.guild.id, cfg)
                                 elif action == "remove_level_role":
                                     val = json.loads(val_str)
-                                    cfg = get_config("Leveling", message.guild.id) or {}
+                                    cfg = get_config("LevelConfig", message.guild.id) or {}
                                     roles = cfg.get("level_roles", [])
                                     roles = [r for r in roles if str(r.get("level")) != str(val["level"]) or str(r.get("role_id")) != str(val["role_id"])]
                                     cfg["level_roles"] = roles
-                                    set_config("Leveling", message.guild.id, cfg)
+                                    set_config("LevelConfig", message.guild.id, cfg)
                                 elif action == "module_toggle":
                                     val = json.loads(val_str)
-                                    mod_name = val.get("module")
+                                    raw_mod_name = val.get("module")
                                     is_enabled = val.get("enabled", True)
-                                    if mod_name:
+                                    
+                                    module_map = {
+                                        "Settings": "Settings",
+                                        "Logs": "Log",
+                                        "AutoMod": "AutoMod",
+                                        "Appeals": "Appeals",
+                                        "Welcome": "Welcome",
+                                        "Goodbye": "Goodbye",
+                                        "Verify": "Verify",
+                                        "Tickets": "Ticket",
+                                        "TempVoice": "JoinToCreate",
+                                        "Leveling": "LevelConfig",
+                                        "Economy": "EconomyConfig",
+                                        "ServerStats": "ServerStats",
+                                        "AutoResponder": "AutoResponder",
+                                        "Automation": "ChannelAutomation",
+                                        "JoinRoles": "JoinRole"
+                                    }
+                                    
+                                    if raw_mod_name:
+                                        mod_name = module_map.get(raw_mod_name, raw_mod_name)
                                         cfg = get_config(mod_name, message.guild.id) or {}
                                         if mod_name == "Settings":
                                             cfg["ai_enabled"] = is_enabled
                                         else:
                                             cfg["enabled"] = is_enabled
                                         set_config(mod_name, message.guild.id, cfg)
+                                        print(f"AI Module Toggle: set {mod_name} enabled to {is_enabled}")
                             except Exception as e:
                                 print(f"[Config AI] Failed to execute config: {e}")
                             
