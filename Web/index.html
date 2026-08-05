@@ -446,7 +446,7 @@
     </style>
 
         <!-- DASHBOARD VIEW (Server List) -->
-        <div id="view-dashboard" class="view hidden">
+        <div id="view-dashboard" class="view hidden" style="display: flex; flex-direction: column; min-height: calc(100vh - 56px);">
             <div class="page-header">
                 <h2>Select a Server</h2>
                 <p>Choose a server to manage its configuration.</p>
@@ -459,12 +459,11 @@
             <div class="server-grid" id="server-grid">
                 <!-- Populated by JS -->
             </div>
+            <footer style="text-align: center; padding: 24px; color: var(--text-secondary); font-size: 12px; margin-top: auto; border-top: 1px solid var(--border-color);">
+                <a href="/privacy" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px;">Privacy Policy</a> | 
+                <a href="/terms" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px;">Terms of Service</a>
+            </footer>
         </div>
-
-        <footer style="text-align: center; padding: 24px; color: var(--text-secondary); font-size: 12px; margin-top: 40px; border-top: 1px solid var(--border-color);">
-            <a href="/privacy" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px;">Privacy Policy</a> | 
-            <a href="/terms" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px;">Terms of Service</a>
-        </footer>
     </div>
 
     <!-- CONFIG VIEW (Settings) - Outside container for full width -->
@@ -655,12 +654,6 @@
             <!-- Main Content -->
             <div class="dash-main">
                 <form id="config-form">
-                    <div class="dash-main-header">
-                        <div>
-                            <h2 class="dash-main-title">Server Settings</h2>
-                            <div class="dash-main-subtitle">Manage modules and configurations.</div>
-                        </div>
-                    </div>
 
                     <!-- Unsaved Changes Bar -->
                     <style>
