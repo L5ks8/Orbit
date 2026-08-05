@@ -1398,6 +1398,11 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         renderFileChannels(config.automation?.file_only || []);
         renderAutoReactions(config.automation?.auto_reaction || []);
 
+        if (document.getElementById('automation_enabled')) document.getElementById('automation_enabled').checked = config.automation?.enabled || false;
+        if (document.getElementById('autoresponder_enabled')) document.getElementById('autoresponder_enabled').checked = config.autoresponder_enabled || false;
+        if (document.getElementById('serverstats_enabled')) document.getElementById('serverstats_enabled').checked = config.serverstats?.enabled || false;
+        if (document.getElementById('messages_enabled')) document.getElementById('messages_enabled').checked = config.messages_enabled || false;
+
         // Temp Voice
         if (!currentPermissions.can_channels) lockSection('section-tempvoice', 'Manage Channels');
         document.getElementById('tempvoice-enabled').checked = config.tempvoice?.enabled ?? false;
@@ -3245,9 +3250,12 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             log_channel_id: document.getElementById('ticket_log_channel_id').value,
             options_slots: ticketOptions
         },
+        autoresponder_enabled: document.getElementById('autoresponder_enabled')?.checked || false,
+        messages_enabled: document.getElementById('messages_enabled')?.checked || false,
         autoresponder: localAutoresponder,
         joinroles: joinroles,
         automation: {
+            enabled: document.getElementById('automation_enabled')?.checked || false,
             media_only: {
                 channels: Array.from(document.getElementById('auto_media_channels').selectedOptions).map(o => o.value),
                 ignore_bots: document.getElementById('auto_media_ignore_bots').checked
@@ -3327,6 +3335,7 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
             channel_boosters: collectBoosters('channel'),
         },
         serverstats: {
+            enabled: document.getElementById('serverstats_enabled')?.checked || false,
             category_id: document.getElementById('serverstats_category_id')?.value || '',
             users_enabled: document.getElementById('serverstats_users_enabled')?.checked || false,
             users_name: document.getElementById('serverstats_users_name')?.value || 'Users: {count}',
