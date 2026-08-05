@@ -486,7 +486,13 @@ class WebDashboard:
                 "enabled": verify_cfg.get("enabled", False),
                 "role_id": str(verify_cfg.get("role_id")) if verify_cfg.get("role_id") else "",
                 "remove_role_id": str(verify_cfg.get("remove_role_id")) if verify_cfg.get("remove_role_id") else "",
-                "verification_type": verify_cfg.get("verification_type", "captcha")
+                "verification_type": verify_cfg.get("verification_type", "captcha"),
+                "timeout_action": verify_cfg.get("timeout_action", "none"),
+                "timeout_minutes": verify_cfg.get("timeout_minutes", None),
+                "embed_title": verify_cfg.get("embed_title", ""),
+                "embed_description": verify_cfg.get("embed_description", ""),
+                "embed_color": verify_cfg.get("embed_color", ""),
+                "embed_image": verify_cfg.get("embed_image", "")
             },
             "autoresponder": autoresponder_cfg,
             "joinroles": {
@@ -802,6 +808,13 @@ class WebDashboard:
                     verify_cfg["timeout_minutes"] = int(data.get("verify", {}).get("timeout_minutes", 0))
                 except (ValueError, TypeError):
                     verify_cfg["timeout_minutes"] = 0
+                
+                verify_cfg["embed_title"] = data.get("verify", {}).get("embed_title", "")
+                verify_cfg["embed_description"] = data.get("verify", {}).get("embed_description", "")
+                verify_cfg["embed_color"] = data.get("verify", {}).get("embed_color", "")
+                verify_cfg["embed_image"] = data.get("verify", {}).get("embed_image", "")
+                verify_cfg["embed_fields"] = data.get("verify", {}).get("embed_fields", [])
+                
                 save_verify_config(guild_id, verify_cfg)
 
             if user_perms.get("can_messages") and "autoresponder" in data:
@@ -1088,11 +1101,26 @@ class WebDashboard:
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
                 
+            verify_cfg = load_verify_config(guild_id)
+            
+            emb_title = verify_cfg.get("embed_title", "") or "Server Security Verification"
+            emb_desc = verify_cfg.get("embed_description", "") or "To protect against automated bots and spam, this server requires CAPTCHA verification before accessing channels.\n\n> Click **Verify Now** below to receive an automated security image with connected characters."
+            
+            try:
+                emb_color = discord.Color(int(verify_cfg.get("embed_color", "").lstrip('#'), 16)) if verify_cfg.get("embed_color") else discord.Color.blue()
+            except:
+                emb_color = discord.Color.blue()
+                
             embed = discord.Embed(
-                title="Server Security Verification",
-                description="To protect against automated bots and spam, this server requires CAPTCHA verification before accessing channels.\n\n> Click **Verify Now** below to receive an automated security image with connected characters.",
-                color=discord.Color.blue()
+                title=emb_title,
+                description=emb_desc,
+                color=emb_color
             )
+            
+            emb_image = verify_cfg.get("embed_image", "") or "https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png"
+            if emb_image:
+                embed.set_image(url=emb_image)
+                
             from discord.ui import Button, View
             btn_verify = Button(label="Verify Now", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
             view = View(timeout=None)

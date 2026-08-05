@@ -20,11 +20,23 @@ async def _do_verify_setup(
     remove_role_id = remove_role.id if remove_role else None
     config = setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
     
+    emb_title = config.get("embed_title", "") or "Server Security Verification"
+    emb_desc = config.get("embed_description", "") or "To protect against automated bots and spam, this server requires CAPTCHA verification before accessing channels.\n\n> Click **Verify Now** below to receive an automated security image with connected characters."
+    
+    try:
+        emb_color = discord.Color(int(config.get("embed_color", "").lstrip('#'), 16)) if config.get("embed_color") else discord.Color.blue()
+    except:
+        emb_color = discord.Color.blue()
+
     embed = discord.Embed(
-        title="Server Security Verification",
-        description="To protect against automated bots and spam, this server requires CAPTCHA verification before accessing channels.\n\n> Click **Verify Now** below to receive an automated security image with connected characters.",
-        color=discord.Color.blue()
+        title=emb_title,
+        description=emb_desc,
+        color=emb_color
     )
+    
+    emb_image = config.get("embed_image", "") or "https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png"
+    if emb_image:
+        embed.set_image(url=emb_image)
     btn_verify = discord.ui.Button(label="Verify Now", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
     view = discord.ui.View(timeout=None)
     view.add_item(btn_verify)
