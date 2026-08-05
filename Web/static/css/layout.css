@@ -9,22 +9,26 @@
     gap: 16px;
 }
 .server-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
-    padding: 20px;
+    padding: 24px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    transition: all 0.15s;
+    gap: 20px;
+    transition: all var(--duration-normal) var(--ease-out-expo);
     text-decoration: none;
     color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 .server-card:hover {
-    border-color: var(--border-hover);
-    background: var(--bg-elevated);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
+    border-color: rgba(108, 99, 255, 0.25);
+    background: rgba(255, 255, 255, 0.03);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(108, 99, 255, 0.1);
 }
 .server-icon {
     width: 48px;

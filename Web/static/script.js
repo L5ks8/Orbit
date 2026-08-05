@@ -4,6 +4,7 @@ let currentAutomodConfig = {};
 let activeAutomodRule = null;
 let autoresponder = {};
 let joinroles = [];
+let modImmuneUsersList = [];
 
 function escapeHtml(text) {
     if (text === null || text === undefined) return '';
@@ -5504,7 +5505,6 @@ function updateRRPreview() {
 }
 
 // --- Moderation Immunity UI ---
-let modImmuneUsersList = [];
 
 function addImmuneUserChip(id, name, avatar) {
     if(modImmuneUsersList.includes(id)) return;
