@@ -358,6 +358,8 @@ class WebDashboard:
 
         config_data = {
             "settings": settings_cfg,
+            "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
+            "messages_enabled": settings_cfg.get("messages_enabled", False),
             "appeals": appeals_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
@@ -614,8 +616,15 @@ class WebDashboard:
             data = await request.json()
 
             if user_perms.get("is_admin") and "settings" in data:
-                from Commands.WebDashboard._storage import save_settings_config
-                save_settings_config(guild_id, data["settings"])
+                from Commands.WebDashboard._storage import save_settings_config, load_settings_config
+                s_cfg = load_settings_config(guild_id)
+                new_s = data["settings"]
+                # Update existing dict to preserve things not in payload
+                for k, v in new_s.items():
+                    s_cfg[k] = v
+                s_cfg["autoresponder_enabled"] = bool(data.get("autoresponder_enabled", False))
+                s_cfg["messages_enabled"] = bool(data.get("messages_enabled", False))
+                save_settings_config(guild_id, s_cfg)
 
             if user_perms.get("can_channels") and "appeals" in data:
                 from Commands.Appeals._storage import save_appeals_config
