@@ -1,6 +1,6 @@
 <style>
 .stat-card {
-    flex: 1; min-width: 200px; background: #2B2D31; border: 1px solid #313338; border-radius: 12px; padding: 16px;
+    flex: 1; min-width: 200px; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
@@ -30,7 +30,7 @@
     box-shadow: 0 0 10px rgba(74, 172, 189, 0.1);
 }
 .chart-card {
-    flex: 1; min-width: 300px; background: #2B2D31; border: 1px solid #313338; border-radius: 12px; padding: 16px;
+    flex: 1; min-width: 300px; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px;
     transition: border-color 0.3s;
 }
 .chart-card:hover {
@@ -89,7 +89,7 @@
                         <!-- Charts Section -->
                         <div style="margin-bottom: 16px;">
                             <label style="display: block; color: #F2F3F5; font-weight: 600; margin-bottom: 8px;">Charts for</label>
-                            <select id="chart_days_select" style="width: 100%; max-width: 300px; background: #2B2D31; border: 1px solid #313338; color: #DBDEE1; padding: 8px 12px; border-radius: 4px;">
+                            <select id="chart_days_select" style="width: 100%; max-width: 300px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 4px;">
                                 <option value="7">Last 7 Days</option>
                                 <option value="14">Last 14 Days</option>
                                 <option value="30">Last Month</option>

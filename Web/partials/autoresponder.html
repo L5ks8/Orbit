@@ -1,16 +1,16 @@
 <div id="section-autoresponder" class="dash-panel">
                         <div class="toggle-container" style="margin-bottom: 20px;">
                             <div style="display: flex; flex-direction: column;">
-                                <div style="display: flex; align-items: center; gap: 15px;">
-                                    <h3>Auto-Replies</h3>
-                                    <button type="button" id="btn-add-autoreply" class="btn-secondary" style="padding: 4px 10px; font-size: 12px;">+ Add Trigger</button>
-                                </div>
+                                <h3>Auto-Replies</h3>
                                 <p style="color: var(--text-secondary); margin-top: 5px; font-size: 13px;">Make the bot reply automatically to specific trigger words or phrases.</p>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="autoresponder_enabled">
                                 <span class="slider"></span>
                             </label>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <button type="button" id="btn-add-autoreply" class="btn-primary">+ Add Trigger</button>
                         </div>
 
                         <div id="autoreply-list" style="display: flex; flex-direction: column; gap: 15px;">
