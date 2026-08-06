@@ -4,8 +4,12 @@ from discord.ext import commands
 import re
 import aiohttp
 import io
+import datetime
 
 steal_group = app_commands.Group(name="steal", description="Steal emojis and add them to your server", default_permissions=discord.Permissions(manage_expressions=True))
+
+def _get_footer(interaction: discord.Interaction) -> str:
+    return f"{interaction.guild.name} | comeback • {datetime.datetime.now().strftime('%m/%d/%Y')}"
 
 class StealCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -16,6 +20,15 @@ class StealCog(commands.Cog):
     async def steal_emoji(self, interaction: discord.Interaction, emoji: str, name: str):
         if not interaction.guild.me.guild_permissions.manage_expressions:
             return await interaction.response.send_message("I need the 'Manage Expressions' permission to add emojis.", ephemeral=True)
+            
+        if any(e.name == name for e in interaction.guild.emojis):
+            embed = discord.Embed(
+                title="Name already exists!",
+                description="The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!",
+                color=0x1ABC9C
+            )
+            embed.set_footer(text=_get_footer(interaction))
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
             
         await interaction.response.defer()
         
@@ -42,7 +55,14 @@ class StealCog(commands.Cog):
                 return await interaction.followup.send("The emoji file is too large (exceeds 256KB limits).", ephemeral=True)
                 
             new_emoji = await interaction.guild.create_custom_emoji(name=name, image=image_bytes, reason=f"Stolen by {interaction.user}")
-            await interaction.followup.send(f"Successfully added emoji: {new_emoji} (`:{name}:`)")
+            
+            embed = discord.Embed(
+                title="Successfully added!",
+                description=f"Emoji was sucessfully added you should be able to use {new_emoji} now :)",
+                color=0x1ABC9C
+            )
+            embed.set_footer(text=_get_footer(interaction))
+            await interaction.followup.send(embed=embed)
         except discord.Forbidden:
             await interaction.followup.send("I don't have permission to add emojis.", ephemeral=True)
         except discord.HTTPException as e:
@@ -56,6 +76,15 @@ class StealCog(commands.Cog):
     async def steal_emojiurl(self, interaction: discord.Interaction, url: str, name: str):
         if not interaction.guild.me.guild_permissions.manage_expressions:
             return await interaction.response.send_message("I need the 'Manage Expressions' permission to add emojis.", ephemeral=True)
+            
+        if any(e.name == name for e in interaction.guild.emojis):
+            embed = discord.Embed(
+                title="Name already exists!",
+                description="The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!",
+                color=0x1ABC9C
+            )
+            embed.set_footer(text=_get_footer(interaction))
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
             
         await interaction.response.defer()
         
@@ -77,7 +106,14 @@ class StealCog(commands.Cog):
                 return await interaction.followup.send("The image file is too large (exceeds 256KB limits).", ephemeral=True)
                 
             new_emoji = await interaction.guild.create_custom_emoji(name=name, image=image_bytes, reason=f"Stolen by {interaction.user}")
-            await interaction.followup.send(f"Successfully added emoji: {new_emoji} (`:{name}:`)")
+            
+            embed = discord.Embed(
+                title="Successfully added!",
+                description=f"Emoji was sucessfully added you should be able to use {new_emoji} now :)",
+                color=0x1ABC9C
+            )
+            embed.set_footer(text=_get_footer(interaction))
+            await interaction.followup.send(embed=embed)
         except discord.Forbidden:
             await interaction.followup.send("I don't have permission to add emojis.", ephemeral=True)
         except discord.HTTPException as e:
