@@ -13,6 +13,7 @@ from Commands.Ticket._storage import (
     add_to_blacklist,
     remove_from_blacklist
 )
+from Commands.Ticket.transcript_render import parse_transcript, generate_transcript_image
 from Commands.Ticket._views import (
     PersistentTicketPanelLayout,
     TicketControlLayout,
@@ -266,6 +267,86 @@ async def ticket_blacklist_cmd(ctx: commands.Context, member: discord.Member, du
 async def ticket_unblacklist_cmd(ctx: commands.Context, member: discord.Member):
     await _do_ticket_unblacklist(ctx, member)
 
+render_group = app_commands.Group(name="render", description="Render images from data")
+
+class RenderTranscriptView(discord.ui.View):
+    def __init__(self, interaction: discord.Interaction, messages, current_page: int = 0):
+        super().__init__(timeout=300)
+        self.interaction = interaction
+        self.messages = messages
+        self.current_page = current_page
+        self.per_page = 50
+        self.total_pages = max(1, (len(messages) + self.per_page - 1) // self.per_page)
+        
+        self.btn_prev = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=self.current_page == 0)
+        self.btn_prev.callback = self.on_prev
+        self.add_item(self.btn_prev)
+        
+        self.btn_page = discord.ui.Button(label=f"Page {self.current_page + 1}/{self.total_pages}", style=discord.ButtonStyle.secondary, disabled=True)
+        self.add_item(self.btn_page)
+        
+        self.btn_next = discord.ui.Button(label="Next", style=discord.ButtonStyle.primary, disabled=self.current_page == self.total_pages - 1)
+        self.btn_next.callback = self.on_next
+        self.add_item(self.btn_next)
+
+    async def _update_page(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        img = await generate_transcript_image(self.messages, self.current_page, self.per_page)
+        if not img:
+            return await interaction.followup.send("Failed to render page.", ephemeral=True)
+            
+        import io
+        b = io.BytesIO()
+        img.save(b, format='PNG')
+        b.seek(0)
+        file = discord.File(fp=b, filename=f"transcript_p{self.current_page+1}.png")
+        
+        self.btn_prev.disabled = (self.current_page == 0)
+        self.btn_next.disabled = (self.current_page == self.total_pages - 1)
+        self.btn_page.label = f"Page {self.current_page + 1}/{self.total_pages}"
+        
+        await interaction.message.edit(attachments=[file], view=self)
+
+    async def on_prev(self, interaction: discord.Interaction):
+        self.current_page -= 1
+        await self._update_page(interaction)
+
+    async def on_next(self, interaction: discord.Interaction):
+        self.current_page += 1
+        await self._update_page(interaction)
+
+
+@render_group.command(name="transcript", description="Render a ticket transcript HTML file into a chat history image")
+@app_commands.describe(file="The transcript HTML file to render")
+async def render_transcript_cmd(interaction: discord.Interaction, file: discord.Attachment):
+    if not file.filename.endswith(".html"):
+        return await interaction.response.send_message("Please upload a valid .html transcript file.", ephemeral=True)
+        
+    await interaction.response.defer()
+    try:
+        content_bytes = await file.read()
+        content_str = content_bytes.decode('utf-8', errors='ignore')
+        
+        messages = parse_transcript(content_str)
+        if not messages:
+            return await interaction.followup.send("No valid messages found in the transcript file.", ephemeral=True)
+            
+        img = await generate_transcript_image(messages, page=0, per_page=50)
+        if not img:
+            return await interaction.followup.send("Failed to render image.", ephemeral=True)
+            
+        import io
+        b = io.BytesIO()
+        img.save(b, format='PNG')
+        b.seek(0)
+        discord_file = discord.File(fp=b, filename="transcript_p1.png")
+        
+        view = RenderTranscriptView(interaction, messages, current_page=0)
+        await interaction.followup.send(file=discord_file, view=view)
+        
+    except Exception as e:
+        await interaction.followup.send(f"An error occurred while rendering: {e}", ephemeral=True)
+
 class TicketCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -321,5 +402,6 @@ class TicketCog(commands.Cog):
 async def setup(bot: commands.Bot):
     if "ticket" not in bot.all_commands:
         bot.add_command(ticket_group)
+    bot.tree.add_command(render_group)
     await bot.add_cog(TicketCog(bot))
 
