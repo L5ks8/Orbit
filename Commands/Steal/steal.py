@@ -6,16 +6,15 @@ import aiohttp
 import io
 import datetime
 
-steal_group = app_commands.Group(name="steal", description="Steal emojis and add them to your server", default_permissions=discord.Permissions(manage_expressions=True))
-
 def _get_footer(interaction: discord.Interaction) -> str:
     return f"{interaction.guild.name} • {datetime.datetime.now().strftime('%m/%d/%Y')}"
 
-class StealCog(commands.Cog):
+@app_commands.default_permissions(manage_expressions=True)
+class StealCog(commands.GroupCog, group_name="steal", group_description="Steal emojis and add them to your server"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         
-    @steal_group.command(name="emoji", description="Steals an emoji and adds it to your server")
+    @app_commands.command(name="emoji", description="Steals an emoji and adds it to your server")
     @app_commands.describe(emoji="The custom emoji to steal (paste it here)", name="The name for the new emoji")
     async def steal_emoji(self, interaction: discord.Interaction, emoji: str, name: str):
         if not interaction.guild.me.guild_permissions.manage_expressions:
@@ -71,7 +70,7 @@ class StealCog(commands.Cog):
             await interaction.followup.send(f"An unexpected error occurred: {e}", ephemeral=True)
 
 
-    @steal_group.command(name="emojiurl", description="Steals an emoji using its URL and adds it to your server")
+    @app_commands.command(name="emojiurl", description="Steals an emoji using its URL and adds it to your server")
     @app_commands.describe(url="The URL to the emoji image", name="The name for the new emoji")
     async def steal_emojiurl(self, interaction: discord.Interaction, url: str, name: str):
         if not interaction.guild.me.guild_permissions.manage_expressions:
@@ -123,5 +122,4 @@ class StealCog(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    bot.tree.add_command(steal_group)
     await bot.add_cog(StealCog(bot))
