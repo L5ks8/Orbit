@@ -74,19 +74,12 @@ class ModLogCommand(commands.Cog):
     @commands.hybrid_command(name="modlog", aliases=["modlogs"], description="View the moderation actions performed by an admin/moderator.")
     @app_commands.describe(user="The moderator or admin to check")
     @commands.has_permissions(moderate_members=True)
-    async def modlog_cmd(self, ctx: commands.Context, user: str = None):
-        if not user:
-            return await ctx.send(format_usage("-modlog", "<@mention/ID>"), ephemeral=True)
-            
+    async def modlog_cmd(self, ctx: commands.Context, user: discord.Member | discord.User):
         await ctx.defer()
         
-        try:
-            user_target = await MemberOrIDConverter().convert(ctx, user)
-        except Exception:
-            return await ctx.send("Could not find user.", ephemeral=True)
-
+        user_target = user
         guild_id = ctx.guild.id
-        moderator_id = user_target.id if hasattr(user_target, 'id') else int(user_target)
+        moderator_id = user_target.id
 
         # 1. Fetch unified ModLogs by moderator
         from Commands.Log._modlog_storage import get_modlogs_by_moderator
@@ -159,6 +152,8 @@ class ModLogCommand(commands.Cog):
     async def modlog_cmd_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need `Moderate Members` permission to view modlogs.", ephemeral=True)
+        elif isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.BadArgument):
+            await ctx.send(format_usage("-modlog", "<@user/ID>"), ephemeral=True)
         else:
             await ctx.send(f"An error occurred: {error}", ephemeral=True)
 
