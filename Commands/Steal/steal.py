@@ -24,7 +24,7 @@ class StealCog(commands.GroupCog, group_name="steal", group_description="Steal e
             embed = discord.Embed(
                 title="Name already exists!",
                 description="The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!",
-                color=0x1ABC9C
+                color=0x4AACBD
             )
             embed.set_footer(text=_get_footer(interaction))
             return await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -58,7 +58,7 @@ class StealCog(commands.GroupCog, group_name="steal", group_description="Steal e
             embed = discord.Embed(
                 title="Successfully added!",
                 description=f"Emoji was sucessfully added you should be able to use {new_emoji} now :)",
-                color=0x1ABC9C
+                color=0x4AACBD
             )
             embed.set_footer(text=_get_footer(interaction))
             await interaction.followup.send(embed=embed)
@@ -80,7 +80,7 @@ class StealCog(commands.GroupCog, group_name="steal", group_description="Steal e
             embed = discord.Embed(
                 title="Name already exists!",
                 description="The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!",
-                color=0x1ABC9C
+                color=0x4AACBD
             )
             embed.set_footer(text=_get_footer(interaction))
             return await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -109,7 +109,7 @@ class StealCog(commands.GroupCog, group_name="steal", group_description="Steal e
             embed = discord.Embed(
                 title="Successfully added!",
                 description=f"Emoji was sucessfully added you should be able to use {new_emoji} now :)",
-                color=0x1ABC9C
+                color=0x4AACBD
             )
             embed.set_footer(text=_get_footer(interaction))
             await interaction.followup.send(embed=embed)
