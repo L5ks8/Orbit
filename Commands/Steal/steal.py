@@ -9,7 +9,7 @@ import datetime
 steal_group = app_commands.Group(name="steal", description="Steal emojis and add them to your server", default_permissions=discord.Permissions(manage_expressions=True))
 
 def _get_footer(interaction: discord.Interaction) -> str:
-    return f"{interaction.guild.name} | comeback • {datetime.datetime.now().strftime('%m/%d/%Y')}"
+    return f"{interaction.guild.name} • {datetime.datetime.now().strftime('%m/%d/%Y')}"
 
 class StealCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
