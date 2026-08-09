@@ -189,7 +189,11 @@ class WebDashboard:
         from Commands.Level._storage import get_leaderboard_by, level_from_xp
         from Commands.Level.level import LB_CATEGORIES
         
-        top = get_leaderboard_by(guild_id, sort_key, 100)
+        if sort_key == "invites":
+            from Commands.Invite._storage import get_leaderboard
+            top = get_leaderboard(guild_id, limit=100)
+        else:
+            top = get_leaderboard_by(guild_id, sort_key, 100)
         
         results = []
         for i, entry in enumerate(top, 1):
@@ -201,7 +205,11 @@ class WebDashboard:
             if member and member.display_avatar:
                 avatar_url = str(member.display_avatar.url)
                 
-            val = entry.get(sort_key, 0)
+            if sort_key == "invites":
+                val = entry.get("total", 0)
+            else:
+                val = entry.get(sort_key, 0)
+                
             if sort_key == "voice_minutes":
                 val = val / 60.0
                 
@@ -209,7 +217,7 @@ class WebDashboard:
                 "rank": i,
                 "name": name,
                 "avatar": avatar_url,
-                "level": level_from_xp(entry.get("total_xp", 0)),
+                "level": level_from_xp(entry.get("total_xp", 0)) if sort_key != "invites" else 0,
                 "value": val,
                 "total_xp": entry.get("total_xp", 0)
             })

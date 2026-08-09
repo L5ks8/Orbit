@@ -112,6 +112,16 @@ def _draw_smile_icon(draw, x, y, s=28, col=(255, 255, 255)):
     sy = y + int(s * 0.45)
     draw.arc([(sx, sy), (sx + sw, sy + int(s * 0.3))], start=20, end=160, fill=col, width=lw)
 
+def _draw_invite_icon(draw, x, y, s=28, col=(255, 255, 255)):
+    """Envelope icon for invites."""
+    lw = max(2, int(s * 0.12))
+    ew = int(s * 0.9)
+    eh = int(s * 0.6)
+    ex = x + (s - ew) // 2
+    ey = y + (s - eh) // 2
+    draw.rounded_rectangle([(ex, ey), (ex + ew, ey + eh)], radius=2, outline=col, width=lw)
+    draw.line([(ex, ey), (ex + ew//2, ey + eh//2), (ex + ew, ey)], fill=col, width=lw)
+
 def generate_leaderboard_card(
     entries: list,
     sort_key: str = "total_xp",
@@ -238,6 +248,8 @@ def generate_leaderboard_card(
                 _draw_mic_icon(draw, icon_x, icon_y, s=icon_s, col=TEXT_WHITE)
             elif sort_key == "reaction_count":
                 _draw_smile_icon(draw, icon_x, icon_y, s=icon_s, col=TEXT_WHITE)
+            elif sort_key == "invites":
+                _draw_invite_icon(draw, icon_x, icon_y, s=icon_s, col=TEXT_WHITE)
                 
             # Draw value next to icon
             stat_x = icon_x - 8 * SCALE - stat_w

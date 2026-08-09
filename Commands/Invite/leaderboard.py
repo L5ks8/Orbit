@@ -1,4 +1,5 @@
 import discord
+import io
 from discord.ext import commands
 from Commands.Invite._storage import get_leaderboard
 from Commands._utils import format_usage
@@ -19,24 +20,51 @@ class LeaderboardCommand(commands.Cog):
         
         lb = get_leaderboard(ctx.guild.id, limit=limit)
 
+        if not lb:
+            embed = discord.Embed(
+                title="Invite Leaderboard",
+                description="No invite data found for this server.",
+                color=0x2B2D31
+            )
+            return await ctx.send(embed=embed)
+
+        entries = []
+        for i, data in enumerate(lb, 1):
+            uid = data["user_id"]
+            member = ctx.guild.get_member(uid)
+            name = member.display_name if member else f"User#{uid}"
+            
+            avatar_bytes = None
+            if member and member.display_avatar:
+                try:
+                    avatar_bytes = await member.display_avatar.read()
+                except Exception:
+                    pass
+            
+            entries.append({
+                "name": name,
+                "level": 0,
+                "value_label": str(data["total"]),
+                "avatar_bytes": avatar_bytes,
+                "rank": i
+            })
+            
+        from Commands.Level.leaderboard_card import generate_leaderboard_card
+        
+        img_bytes = generate_leaderboard_card(
+            entries=entries,
+            sort_key="invites"
+        )
+        
+        file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
         embed = discord.Embed(
             title="Invite Leaderboard",
-            color=discord.Color.blurple()
+            description=f"[Want to see more than Top {limit}?](https://orbit-498b.onrender.com/leaderboard/{ctx.guild.id})",
+            color=0x2B2D31
         )
+        embed.set_image(url="attachment://leaderboard.png")
 
-        if not lb:
-            embed.description = "No invite data found for this server."
-        else:
-            lines = []
-            for i, data in enumerate(lb, 1):
-                uid = data["user_id"]
-                lines.append(f"`{i}.` <@{uid}> — **{data['total']}** invites (`{data['regular']}` regular, `{data['bonus']}` bonus, `{data['fake']}` fake, `{data['left']}` left)")
-            embed.description = "\n".join(lines)
-
-        if ctx.guild:
-            embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
-
-        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(embed=embed, file=file)
 
     @leaderboard_invites.error
     async def leaderboard_invites_error(self, ctx: commands.Context, error):

@@ -204,6 +204,9 @@
             <button class="cat-btn" data-sort="reaction_count">
                 <i data-lucide="smile"></i> Reactions
             </button>
+            <button class="cat-btn" data-sort="invites">
+                <i data-lucide="mail"></i> Invites
+            </button>
         </div>
 
         <div id="leaderboardList" class="leaderboard-list">
@@ -285,6 +288,7 @@
                         if (currentSort === 'message_count') iconName = 'message-square';
                         if (currentSort === 'voice_minutes') iconName = 'mic';
                         if (currentSort === 'reaction_count') iconName = 'smile';
+                        if (currentSort === 'invites') iconName = 'mail';
                         
                         let valStr = currentSort === 'voice_minutes' ? entry.value.toFixed(1) : formatNumber(entry.value);
                         
