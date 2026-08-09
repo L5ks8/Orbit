@@ -210,12 +210,12 @@ def generate_leaderboard_card(
         
         # Dot Separator
         rank_w = draw.textlength(rank_str, font=font_rank)
-        dot_str = " · "
-        draw.text((text_x + rank_w, text_y_center), dot_str, fill=TEXT_GRAY, font=font_rank)
+        dot_x = text_x + rank_w + 6 * SCALE
+        draw.text((dot_x, text_y_center), "·", fill=TEXT_GRAY, font=font_rank)
 
         # Name Text
-        dot_w = draw.textlength(dot_str, font=font_rank)
-        name_x = text_x + rank_w + dot_w
+        dot_w = draw.textlength("·", font=font_rank)
+        name_x = dot_x + dot_w + 6 * SCALE
         name_str = entry["name"]
         if len(name_str) > 22:
             name_str = name_str[:20] + ".."

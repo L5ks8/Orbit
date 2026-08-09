@@ -1,5 +1,6 @@
 import discord
 import io
+from discord import app_commands
 from discord.ext import commands
 from Commands.Invite._storage import get_leaderboard
 from Commands._utils import format_usage
@@ -15,6 +16,7 @@ class LeaderboardCommand(commands.Cog):
             await ctx.send("Please use `/inviteleaderboard invites`.", ephemeral=True)
 
     @leaderboard_group.command(name="invites", description="Displays the top inviters of the server.")
+    @app_commands.describe(limit="The number of users to show on the leaderboard")
     async def leaderboard_invites(self, ctx: commands.Context, limit: int = 10):
         await ctx.defer()
         
@@ -59,7 +61,7 @@ class LeaderboardCommand(commands.Cog):
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
         embed = discord.Embed(
             title="Invite Leaderboard",
-            description=f"[Want to see more than Top {limit}?](https://orbit-498b.onrender.com/leaderboard/{ctx.guild.id})",
+            description=f"[Want to see more than Top {limit}?](https://orbit-498b.onrender.com/leaderboard/{ctx.guild.id}?sort=invites)",
             color=0x2B2D31
         )
         embed.set_image(url="attachment://leaderboard.png")

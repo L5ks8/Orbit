@@ -152,9 +152,9 @@ def generate_rank_card(
     text_x = avatar_x + AVATAR_SIZE + 30 * SCALE
     text_area_w = WIDTH - text_x - PADDING
 
-    # ── RANG & LEVEL (top-right) ──
+    # ── RANK & LEVEL (top-right) ──
     rl_y = 40 * SCALE
-    rang_str = f"RANG {rank}"
+    rang_str = f"RANK {rank}"
     level_str = f"LEVEL {level}"
 
     # Right-align: LEVEL first, then RANG with gap
@@ -228,11 +228,11 @@ def generate_rank_card(
     t = f"{int(progress * 100)}%"
     draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
 
-    # Right: GESAMT XP
+    # Right: TOTAL XP
     total_fmt = _format_number(total_xp).lower() if total_xp >= 1000 else str(total_xp)
     draw.text(
         (text_x + text_area_w, stats_y + 2 * SCALE),
-        f"GESAMT XP  {total_fmt}",
+        f"TOTAL XP  {total_fmt}",
         fill=(255, 255, 255), font=font_stats, anchor="ra"
     )
 
