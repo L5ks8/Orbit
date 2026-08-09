@@ -427,11 +427,13 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .custom-multiselect-input:focus { background: transparent; box-shadow: none; }
 
 /* Z-index for open dropdowns */
+.dash-panel > div:has(.custom-select.open),
+.dash-panel > div:has(.custom-multiselect.open),
 .automod-rule-card:has(.custom-select.open),
 .automod-rule-card:has(.custom-multiselect.open),
 .form-group:has(.custom-select.open),
 .form-group:has(.custom-multiselect.open) {
-    z-index: 999;
+    z-index: 9999 !important;
     position: relative;
 }
 .custom-multiselect.open .custom-select-dropdown,
