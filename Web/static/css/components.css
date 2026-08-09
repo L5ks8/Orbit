@@ -5,28 +5,33 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 8px 16px;
-    border-radius: var(--radius-md);
+    padding: 10px 20px;
+    border-radius: 99px;
     font-size: 14px;
     font-weight: 600;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--duration-normal) var(--ease-out-expo);
     text-decoration: none;
+    will-change: transform;
 }
 .btn-primary {
     background: var(--btn-primary-bg);
     color: var(--btn-primary-fg);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
 }
 .btn-primary:hover {
     background: var(--btn-primary-hover);
+    transform: scale(1.03);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.15);
 }
 .btn-danger {
-    background: #EF4444;
+    background: var(--danger);
     color: white;
 }
 .btn-danger:hover {
     background: #DC2626;
+    transform: scale(1.03);
 }
 .btn-secondary {
     background: var(--bg-elevated);
@@ -36,15 +41,19 @@
 .btn-secondary:hover {
     background: var(--card-hover);
     border-color: var(--border-hover);
+    transform: scale(1.03);
 }
 .btn-icon {
-    padding: 8px;
+    padding: 10px;
     background: transparent;
     color: var(--text-secondary);
+    border-radius: 99px;
+    transition: all var(--duration-fast);
 }
 .btn-icon:hover {
     color: var(--text-primary);
     background: var(--bg-elevated);
+    transform: scale(1.05);
 }
 
 /* Lang Switcher Pill */
@@ -68,24 +77,26 @@
     border-color: var(--border-hover);
 }
 
-.form-group { margin-bottom: 24px; }
-.form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
-.form-group .help-text { display: block; color: var(--text-muted); font-size: 12px; margin-bottom: 10px; }
+.form-group { margin-bottom: 28px; }
+.form-group label, .dash-panel label { display: block; font-weight: 700; font-size: 11px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary) !important; }
+.form-group .help-text { display: block; color: var(--text-muted); font-size: 12px; margin-bottom: 12px; }
+.toggle-container label, .dash-panel label.switch { display: inline-block; margin-bottom: 0; }
 
 select, input[type="text"], input[type="number"], textarea {
     width: 100%;
     background: var(--bg-input);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    padding: 10px 12px;
-    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    border-radius: 12px;
     font-size: 14px;
     resize: vertical;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     overflow-y: hidden;
-    transition: border-color var(--duration-fast);
+    transition: all var(--duration-fast);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 textarea {
     resize: vertical !important;
@@ -96,13 +107,13 @@ textarea {
 select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
     border-color: var(--text-secondary);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 [data-theme="light"] select:focus,
 [data-theme="light"] input[type="text"]:focus,
 [data-theme="light"] input[type="number"]:focus,
 [data-theme="light"] textarea:focus {
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02), 0 0 0 3px rgba(0, 0, 0, 0.06);
 }
 
 /* ===== TOGGLES ===== */
