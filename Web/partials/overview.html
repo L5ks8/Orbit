@@ -1,45 +1,47 @@
 <style>
 .stat-card {
-    flex: 1; min-width: 200px; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex: 1; min-width: 200px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px;
+    transition: all var(--duration-normal) var(--ease-out-expo);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 .stat-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(74, 172, 189, 0.5);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 12px rgba(74, 172, 189, 0.1);
+    transform: translateY(-2px);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-sm);
 }
 .stat-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, #4AACBD, transparent);
+    background: linear-gradient(90deg, transparent, var(--text-secondary), transparent);
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity var(--duration-fast);
 }
 .stat-card:hover::before {
     opacity: 1;
 }
 .stat-icon-wrapper {
     width: 36px; height: 36px; border-radius: 8px; 
-    background: rgba(74, 172, 189, 0.15); 
-    border: 1px solid rgba(74, 172, 189, 0.3); 
+    background: var(--bg-elevated); 
+    border: 1px solid var(--border-color); 
     display: flex; align-items: center; justify-content: center; 
-    color: #4AACBD;
-    box-shadow: 0 0 10px rgba(74, 172, 189, 0.1);
+    color: var(--text-primary);
 }
 .chart-card {
-    flex: 1; min-width: 300px; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px;
-    transition: border-color 0.3s;
+    flex: 1; min-width: 300px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px;
+    transition: all var(--duration-normal) var(--ease-out-expo);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 .chart-card:hover {
-    border-color: rgba(74, 172, 189, 0.3);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-sm);
 }
 #chart_days_select:focus {
     outline: none;
-    border-color: #4AACBD !important;
-    box-shadow: 0 0 0 2px rgba(74, 172, 189, 0.2);
+    border-color: var(--text-secondary) !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 </style>
 <div id="section-overview" class="dash-panel active">
@@ -53,11 +55,11 @@
                                         <i data-lucide="message-circle" style="width: 18px; height: 18px;"></i>
                                     </div>
                                     <div>
-                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">New Messages</div>
-                                        <div style="color: #949BA4; font-size: 11px;">in the last 24h</div>
+                                        <h4 style="margin: 0; font-size: 15px; font-weight: 600; color: var(--text-primary);">Message Flow</h4>
+                                        <div style="color: var(--text-secondary); font-size: 11px;">in the last 24h</div>
                                     </div>
                                 </div>
-                                <div id="stat_new_messages" style="color: #F2F3F5; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">-</div>
+                                <div id="stat_new_messages" style="color: var(--text-primary); font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">-</div>
                             </div>
                             
                             <div class="stat-card">
@@ -66,11 +68,11 @@
                                         <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
                                     </div>
                                     <div>
-                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">Joins/Leaves</div>
-                                        <div style="color: #949BA4; font-size: 11px;">in the last 24h</div>
+                                        <div style="color: var(--text-primary); font-weight: 600; font-size: 14px;">Joins/Leaves</div>
+                                        <div style="color: var(--text-secondary); font-size: 11px;">in the last 24h</div>
                                     </div>
                                 </div>
-                                <div id="stat_joins_leaves" style="color: #F2F3F5; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">-</div>
+                                <div id="stat_joins_leaves" style="color: var(--text-primary); font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">-</div>
                             </div>
 
                             <div class="stat-card">
@@ -79,16 +81,16 @@
                                         <i data-lucide="users" style="width: 18px; height: 18px;"></i>
                                     </div>
                                     <div>
-                                        <div style="color: #F2F3F5; font-weight: 600; font-size: 14px;">Total Members</div>
+                                        <div style="color: var(--text-primary); font-weight: 600; font-size: 14px;">Total Members</div>
                                     </div>
                                 </div>
-                                <div id="stat_total_members" style="color: #F2F3F5; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">-</div>
+                                <div id="stat_total_members" style="color: var(--text-primary); font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">-</div>
                             </div>
                         </div>
 
                         <!-- Charts Section -->
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; color: #F2F3F5; font-weight: 600; margin-bottom: 8px;">Charts for</label>
+                            <label style="display: block; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px;">Charts for</label>
                             <select id="chart_days_select" style="width: 100%; max-width: 300px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 4px;">
                                 <option value="7">Last 7 Days</option>
                                 <option value="14">Last 14 Days</option>
