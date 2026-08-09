@@ -4709,7 +4709,7 @@ function initCharts() {
         chartFlow = new Chart(ctxFlow, {
             type: 'line',
             data: { labels: [], datasets: [
-                { label: 'Flow', data: [], borderColor: '#5865F2', backgroundColor: 'rgba(88, 101, 242, 0.1)', fill: true, tension: 0.4 }
+                { label: 'Flow', data: [], borderColor: '#a1a1aa', backgroundColor: 'rgba(161, 161, 170, 0.1)', fill: true, tension: 0.4 }
             ]},
             options: commonChartOptions
         });

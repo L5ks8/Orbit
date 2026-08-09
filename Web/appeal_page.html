@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0a0a0f">
+    <meta name="theme-color" content="#09090b">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
             letter-spacing: -1px;
             margin-bottom: 8px;
             text-align: center;
-            background: linear-gradient(135deg, #fff 0%, var(--accent-primary) 100%);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -65,8 +65,8 @@
         }
         .appeal-textarea:focus {
             outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+            border-color: var(--text-secondary);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
         }
         .user-info {
             display: flex;
@@ -111,7 +111,7 @@
             <p id="server-name-display" class="subtitle">Loading...</p>
 
             <div id="unauthenticated" style="display: none; text-align: center; padding: 20px 0;">
-                <div style="background: rgba(108,99,255,0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--accent-primary);">
+                <div style="background: rgba(255,255,255,0.06); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--text-primary);">
                     <i data-lucide="lock" style="width: 32px; height: 32px;"></i>
                 </div>
                 <p style="margin-bottom: 24px; color: var(--text-secondary); font-size: 15px;">You must log in with Discord to verify your identity and submit an appeal.</p>

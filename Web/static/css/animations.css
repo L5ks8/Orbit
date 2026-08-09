@@ -48,6 +48,18 @@
     100% { transform: translate(-50%, 50px); opacity: 0; }
 }
 
+/* Volt-style slide-up-fade */
+@keyframes slide-up-fade {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @keyframes float {
     0% { transform: translateY(0px); }
     50% { transform: translateY(-12px); }
@@ -142,12 +154,8 @@
 /* ===== TEXT EFFECTS ===== */
 
 @keyframes textReveal {
-    from {
-        clip-path: inset(0 100% 0 0);
-    }
-    to {
-        clip-path: inset(0 0 0 0);
-    }
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
 }
 
 @keyframes counterTick {
@@ -176,25 +184,13 @@
 /* ===== INTERACTIVE ===== */
 
 @keyframes accordionOpen {
-    from {
-        max-height: 0;
-        opacity: 0;
-    }
-    to {
-        max-height: 500px;
-        opacity: 1;
-    }
+    from { max-height: 0; opacity: 0; }
+    to { max-height: 500px; opacity: 1; }
 }
 
 @keyframes accordionClose {
-    from {
-        max-height: 500px;
-        opacity: 1;
-    }
-    to {
-        max-height: 0;
-        opacity: 0;
-    }
+    from { max-height: 500px; opacity: 1; }
+    to { max-height: 0; opacity: 0; }
 }
 
 @keyframes parallaxDrift {
@@ -203,14 +199,8 @@
 }
 
 @keyframes lineGrow {
-    from {
-        transform: scaleY(0);
-        opacity: 0;
-    }
-    to {
-        transform: scaleY(1);
-        opacity: 1;
-    }
+    from { transform: scaleY(0); opacity: 0; }
+    to { transform: scaleY(1); opacity: 1; }
 }
 
 @keyframes checkmark {
@@ -281,14 +271,12 @@
 .btn-animated::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
     background: linear-gradient(
         90deg,
         transparent,
-        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.08),
         transparent
     );
     transition: none;
@@ -296,7 +284,7 @@
 
 .btn-animated:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 24px rgba(108, 99, 255, 0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-animated:hover::before {
@@ -318,14 +306,12 @@
 .card-glow::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
     background: linear-gradient(
         90deg,
         transparent,
-        rgba(255, 255, 255, 0.03),
+        rgba(255, 255, 255, 0.02),
         transparent
     );
     transition: none;
@@ -338,8 +324,8 @@
 }
 
 .card-glow:hover {
-    border-color: rgba(108, 99, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 30px rgba(108, 99, 255, 0.05);
+    border-color: var(--border-hover);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 255, 255, 0.02);
     transform: translateY(-4px);
 }
 
