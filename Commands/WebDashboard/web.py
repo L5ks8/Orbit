@@ -197,9 +197,19 @@ class WebDashboard:
         
         results = []
         for i, entry in enumerate(top, 1):
-            uid = entry.get("user_id")
-            member = guild.get_member(uid)
-            name = member.display_name if member else f"User#{uid}"
+            try:
+                uid = int(entry.get("user_id"))
+            except (ValueError, TypeError):
+                uid = 0
+                
+            member = guild.get_member(uid) or self.bot.get_user(uid)
+            if not member and uid != 0:
+                try:
+                    member = await self.bot.fetch_user(uid)
+                except Exception:
+                    pass
+            
+            name = member.display_name if hasattr(member, 'display_name') else (member.name if member else f"User#{uid}")
             
             avatar_url = ""
             if member and member.display_avatar:
