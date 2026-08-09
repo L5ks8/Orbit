@@ -1733,21 +1733,7 @@ class WebDashboard:
             return web.json_response({"error": str(e)}, status=500)
 
     async def api_support_invite(self, request: web.Request):
-        SUPPORT_GUILD_ID = 1525603130358759575
-        guild = self.bot.get_guild(SUPPORT_GUILD_ID)
-        if not guild:
-            return web.json_response({"error": "Support guild not found"}, status=404)
-        try:
-            
-            for channel in guild.text_channels:
-                try:
-                    invite = await channel.create_invite(max_age=86400, max_uses=1, unique=True, reason="Website support invite")
-                    return web.json_response({"url": invite.url})
-                except Exception:
-                    continue
-            return web.json_response({"error": "No suitable channel found"}, status=500)
-        except Exception as e:
-            return web.json_response({"error": str(e)}, status=500)
+        return web.json_response({"url": "https://discord.gg/wekuhwCsUg"})
 
     async def handle_appeal_page(self, request: web.Request):
         return web.Response(text=self._render_template(os.path.join("Web", "appeal_page.html")), content_type="text/html")

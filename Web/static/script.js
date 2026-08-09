@@ -199,19 +199,8 @@ function initChipPicker(pickerId, tagsContainerId, hiddenInputId, initialValues,
 async function openSupportInvite() {
     const btn = document.getElementById('btn-support-invite');
     if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
-    try {
-        const res = await fetch('/api/support-invite');
-        const data = await res.json();
-        if (data.url) {
-            window.open(data.url, '_blank', 'noopener');
-        } else {
-            showToast('Could not generate invite link.');
-        }
-    } catch (e) {
-        showToast('Failed to connect to support server.');
-    } finally {
-        if (btn) { btn.disabled = false; btn.style.opacity = ''; }
-    }
+    window.open('https://discord.gg/wekuhwCsUg', '_blank', 'noopener');
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
 }
 
 async function loadDashboard() {
