@@ -32,9 +32,15 @@ class LeaderboardCommand(commands.Cog):
 
         entries = []
         for i, data in enumerate(lb, 1):
-            uid = data["user_id"]
-            member = ctx.guild.get_member(uid)
-            name = member.display_name if member else f"User#{uid}"
+            uid = int(data["user_id"])
+            member = ctx.guild.get_member(uid) or ctx.bot.get_user(uid)
+            if not member:
+                try:
+                    member = await ctx.bot.fetch_user(uid)
+                except Exception:
+                    pass
+            
+            name = member.display_name if hasattr(member, 'display_name') else (member.name if member else f"User#{uid}")
             
             avatar_bytes = None
             if member and member.display_avatar:
