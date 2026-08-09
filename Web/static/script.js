@@ -951,7 +951,13 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
         }
 
         if (config.settings) {
-            document.getElementById('settings_timezone').value = config.settings.timezone || 'UTC';
+            const tzEl = document.getElementById('settings_timezone');
+            if (tzEl) {
+                if (tzEl.nextElementSibling?.classList.contains('custom-select')) tzEl.nextElementSibling.remove();
+                tzEl.value = config.settings.timezone || 'UTC';
+                const tzOptions = Array.from(tzEl.querySelectorAll('option')).map(opt => ({ id: opt.value, name: opt.textContent }));
+                new CustomSelect(tzEl, tzOptions, tzEl.value, 'Select Timezone...');
+            }
             document.getElementById('settings_prefix').value = config.settings.prefix || '';
             if (document.getElementById('settings_ai_enabled')) document.getElementById('settings_ai_enabled').checked = config.settings.ai_enabled ?? true;
         }

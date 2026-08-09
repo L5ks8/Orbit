@@ -208,7 +208,7 @@
 .dash-main-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
 .dash-main-subtitle { color: var(--text-secondary); font-size: 14px; font-weight: 500; }
 
-.dash-panel { display: none; animation: slideUpFade var(--duration-normal) var(--ease-out-expo); }
+.dash-panel { display: none; animation: fadeIn var(--duration-fast) ease-out; }
 .dash-panel.active { display: block; }
 .dash-panel h3 { font-size: 18px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.3px; }
 
