@@ -11,9 +11,9 @@ class Broadcast(commands.Cog):
     async def broadcast_cmd(self, ctx: commands.Context, *, message: str):
         """Send a message to all server owners."""
         confirm_embed = discord.Embed(
-            title="📢 Confirm Broadcast",
+            title="Confirm Broadcast",
             description=f"Are you sure you want to send this message to **{len(self.bot.guilds)}** server owners?\n\n**Message:**\n{message}",
-            color=0xF59E0B
+            color=0x2B2D31
         )
         msg = await ctx.send(embed=confirm_embed)
         await msg.add_reaction("✅")
@@ -50,9 +50,9 @@ class Broadcast(commands.Cog):
                 await asyncio.sleep(0.5) 
                 
         result_embed = discord.Embed(
-            title="✅ Broadcast Complete",
+            title="Broadcast Complete",
             description=f"**Success:** {success}\n**Failed (DMs disabled):** {failed}",
-            color=0x22C55E
+            color=0x2B2D31
         )
         await ctx.send(embed=result_embed)
 

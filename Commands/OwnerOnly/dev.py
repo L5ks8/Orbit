@@ -1,58 +1,139 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
-class DevOverviewLayout(LayoutView):
-    def __init__(self, owner: discord.abc.User):
-        super().__init__(timeout=None)
-        header_str = f"### Developer Control Center\n**Authorized Developer:** {owner.mention} (`{owner.id}`)"
-        
-        commands_str = (
+PAGES = [
+    {
+        "title": "System Lifecycle",
+        "description": (
             "**`-dev` (Central Hub Overview)**\n"
             "> Displays this primary overview of all exclusive developer commands.\n\n"
-            "**`-restart` / `-update` (System Lifecycle)**\n"
+            "**`-restart` / `-update`**\n"
             "> Restarts the bot process or fetches the latest updates.\n\n"
-            "**`-status` [type] [text] (Activity & Presence Hub)**\n"
-            "> Interactive V2 control panel to set the bot's status and activity.\n\n"
-            "**`-console` (Interactive Live Terminal)**\n"
-            "> Launches a V2 execution console with an async Python evaluation modal.\n\n"
-            "**`-errors` (System Error Inspector)**\n"
-            "> Inspects the last system exceptions and tracebacks caught.\n\n"
-            "**`-logs` (Live System Event Stream)**\n"
-            "> Displays the real-time event log stream (commands, errors, etc).\n\n"
-            "**`-storagebrowser` | `-getstorage` (Data Management)**\n"
-            "> Interactively browse or download `Storage/` JSON files.\n\n"
-            "**`-servers` | `-leaveserver` | `-getinvite` (Guild Cluster Control)**\n"
-            "> View all servers, leave a specific server, or generate an invite.\n\n"
-            "**`-gblacklist <id>` | `-gblacklistremove <id>` (Global Defense)**\n"
-            "> Add or remove a Server ID from the global blacklist. Blacklisted servers are auto-left.\n\n"
-            "**`-cloudbackup` | `-cloudrestore` | `-setbackupchannel` (Cloud Recovery)**\n"
-            "> Configures and manually triggers the automated database backup/restore loop.\n\n"
-            "**`-dmclear` (DM History Purge)**\n"
-            "> Clears Orbit's recent direct message history in your DMs.\n\n"
-            "**`-devmode <true/false> [reason]` (Global Maintenance Mode)**\n"
+            "**`-status` [type] [text]**\n"
+            "> Control panel to set the bot's status and activity.\n\n"
+            "**`-devmode <true/false> [reason]`**\n"
             "> Toggles global developer lock, blocking non-owner execution.\n\n"
-            "**`-sync [here/local]` (Command Tree Synchronizer)**\n"
+            "**`-sync [here/local]`**\n"
             "> Pushes and synchronizes all application slash commands."
         )
-
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=commands_str)
+    },
+    {
+        "title": "Monitoring & Logs",
+        "description": (
+            "**`-console`**\n"
+            "> Launches an execution console with an async Python evaluation modal.\n\n"
+            "**`-errors`**\n"
+            "> Inspects the last system exceptions and tracebacks caught.\n\n"
+            "**`-logs`**\n"
+            "> Displays the real-time event log stream (commands, errors, etc).\n\n"
+            "**`-sysinfo`**\n"
+            "> CPU/RAM usage, uptime, DB ping, and active tasks."
         )
-        self.add_item(self.container)
+    },
+    {
+        "title": "Guild Cluster & Cloud",
+        "description": (
+            "**`-servers` | `-leaveserver` | `-getinvite`**\n"
+            "> View all servers, leave a specific server, or generate an invite.\n\n"
+            "**`-gblacklist <id>` | `-gblacklistremove <id>`**\n"
+            "> Add or remove a Server ID from the global blacklist.\n\n"
+            "**`-cloudbackup` | `-cloudrestore` | `-setbackupchannel`**\n"
+            "> Configures automated database backup/restore loop.\n\n"
+            "**`-broadcast <message>`**\n"
+            "> Send a direct message to all server owners."
+        )
+    },
+    {
+        "title": "Data Management & Misc",
+        "description": (
+            "**`-storagebrowser` | `-getstorage`**\n"
+            "> Interactively browse or download `Storage/` JSON files.\n\n"
+            "**`-dbquery <sql>`**\n"
+            "> Execute direct queries via MongoDB Python client.\n\n"
+            "**`-dmclear`**\n"
+            "> Clears Orbit's recent direct message history in your DMs."
+        )
+    }
+]
 
-        btn_close = Button(label="Close Control Center", style=discord.ButtonStyle.secondary)
+class DevCategorySelect(discord.ui.Select):
+    def __init__(self, parent_view: "DevLayout"):
+        self.parent_view = parent_view
+        options = [
+            discord.SelectOption(
+                label=page["title"],
+                value=str(idx),
+                default=(idx == parent_view.current_page)
+            )
+            for idx, page in enumerate(PAGES)
+        ]
+        super().__init__(placeholder="Jump directly to a category...", options=options)
 
-        async def _close_cb(interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user.id != self.parent_view.author_id:
+            return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+        
+        page_idx = int(self.values[0])
+        self.parent_view.current_page = page_idx
+        await interaction.response.edit_message(**self.parent_view.get_kwargs())
+
+class DevLayout(discord.ui.View):
+    def __init__(self, bot: commands.Bot, author_id: int, current_page: int = 0):
+        super().__init__(timeout=300)
+        self.bot = bot
+        self.author_id = author_id
+        self.current_page = current_page
+
+    def get_kwargs(self):
+        page = PAGES[self.current_page]
+
+        select_menu = DevCategorySelect(self)
+
+        btn_prev = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=(self.current_page == 0))
+        btn_page = discord.ui.Button(label=f"Page {self.current_page + 1}/{len(PAGES)}", style=discord.ButtonStyle.primary, disabled=True)
+        btn_next = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=(self.current_page == len(PAGES) - 1))
+        btn_close = discord.ui.Button(label="Close", style=discord.ButtonStyle.danger)
+
+        async def prev_cb(interaction: discord.Interaction):
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+            if self.current_page > 0:
+                self.current_page -= 1
+                await interaction.response.edit_message(**self.get_kwargs())
+
+        async def next_cb(interaction: discord.Interaction):
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+            if self.current_page < len(PAGES) - 1:
+                self.current_page += 1
+                await interaction.response.edit_message(**self.get_kwargs())
+
+        async def close_cb(interaction: discord.Interaction):
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
                 pass
 
-        btn_close.callback = _close_cb
-        self.add_item(ActionRow(btn_close))
+        btn_prev.callback = prev_cb
+        btn_next.callback = next_cb
+        btn_close.callback = close_cb
+
+        components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
+
+        embed = discord.Embed(
+            title=f"Developer Control Center - {page['title']}",
+            description=page["description"],
+            color=0x2B2D31
+        )
+        embed.set_footer(text=f"Page {self.current_page + 1} of {len(PAGES)}")
+
+        self.clear_items()
+        for comp in components:
+            self.add_item(comp)
+
+        return {"embed": embed, "view": self}
 
 class DevCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -68,8 +149,9 @@ class DevCommand(commands.Cog):
                 await ctx.message.delete()
             except Exception:
                 pass
-        view = DevOverviewLayout(ctx.author)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        
+        view = DevLayout(self.bot, ctx.author.id, 0)
+        await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
     @dev_cmd.error
     async def dev_error(self, ctx: commands.Context, error):

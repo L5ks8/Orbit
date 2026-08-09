@@ -1,4 +1,4 @@
-﻿import os
+import os
 import io
 import json
 import asyncio
@@ -8,7 +8,7 @@ import contextlib
 import typing
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
+from discord.ui import View, Button, Modal, TextInput
 from Commands.OwnerOnly._monitor import record_command
 
 class ConsoleEvalModal(Modal, title="Interactive Python Console"):
@@ -54,6 +54,7 @@ class ConsoleEvalModal(Modal, title="Interactive Python Console"):
 
         wrapped = f"async def __eval_func():\n{textwrap.indent(cleaned_body, '    ')}"
         stdout = io.StringIO()
+        ret = None
 
         try:
             exec(wrapped, env)
@@ -74,13 +75,13 @@ class ConsoleEvalModal(Modal, title="Interactive Python Console"):
         display_code = cleaned_body[:400]
         display_out = out_str[:1300]
 
-        result_view = LayoutView(timeout=300)
-        result_view.add_item(Container(
-            TextDisplay(content=f"### Console Execution (`{status}`)"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=f"**Executed Code:**\n```python\n{display_code}\n```\n**Output:**\n```python\n{display_out}\n```")
-        ))
+        result_embed = discord.Embed(
+            title=f"Console Execution (`{status}`)",
+            description=f"**Executed Code:**\n```python\n{display_code}\n```\n**Output:**\n```python\n{display_out}\n```",
+            color=0x2B2D31
+        )
 
+        result_view = View(timeout=300)
         btn_close_res = Button(label="Close Result", style=discord.ButtonStyle.secondary)
 
         async def _close_res_cb(inter: discord.Interaction):
@@ -90,32 +91,30 @@ class ConsoleEvalModal(Modal, title="Interactive Python Console"):
                 pass
 
         btn_close_res.callback = _close_res_cb
-        result_view.add_item(ActionRow(btn_close_res))
+        result_view.add_item(btn_close_res)
 
         try:
-            await interaction.followup.send(view=result_view, ephemeral=True)
+            await interaction.followup.send(embed=result_embed, view=result_view, ephemeral=True)
         except Exception:
             pass
 
-class ConsoleLayoutView(LayoutView):
+class ConsoleView(View):
     def __init__(self, bot: commands.Bot, owner: discord.abc.User):
         super().__init__(timeout=None)
         self.bot = bot
-
-        header_str = f"### Orbit Live Interactive Python Console\n**Authorized Developer:** {owner.mention}"
-        content_str = (
-            "Execute live async Python snippets, inspect internal bot state, sync slash commands, or modify database items directly in the live runtime.\n\n"
-            "Click the **Launch Interactive Terminal** button below to open the modal terminal input window!"
-        )
 
         btn_term = Button(label="Launch Interactive Terminal", style=discord.ButtonStyle.primary)
         btn_close = Button(label="Close Console", style=discord.ButtonStyle.secondary)
 
         async def _term_cb(interaction: discord.Interaction):
+            if interaction.user.id != owner.id:
+                return await interaction.response.send_message("Not allowed.", ephemeral=True)
             modal = ConsoleEvalModal(self.bot)
             await interaction.response.send_modal(modal)
 
         async def _close_cb(interaction: discord.Interaction):
+            if interaction.user.id != owner.id:
+                return await interaction.response.send_message("Not allowed.", ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -124,13 +123,8 @@ class ConsoleLayoutView(LayoutView):
         btn_term.callback = _term_cb
         btn_close.callback = _close_cb
 
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=content_str)
-        )
-        self.add_item(self.container)
-        self.add_item(ActionRow(btn_term, btn_close))
+        self.add_item(btn_term)
+        self.add_item(btn_close)
 
 class ConsoleCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -145,13 +139,24 @@ class ConsoleCommand(commands.Cog):
                 await ctx.message.delete()
             except Exception:
                 pass
-        view = ConsoleLayoutView(self.bot, ctx.author)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+                
+        embed = discord.Embed(
+            title="Orbit Live Interactive Python Console",
+            description=(
+                "Execute live async Python snippets, inspect internal bot state, sync slash commands, or modify database items directly in the live runtime.\n\n"
+                "Click the **Launch Interactive Terminal** button below to open the modal terminal input window!"
+            ),
+            color=0x2B2D31
+        )
+        embed.set_footer(text=f"Authorized Developer: {ctx.author}")
+        
+        view = ConsoleView(self.bot, ctx.author)
+        await ctx.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
     @console_cmd.error
     async def console_error(self, ctx: commands.Context, error):
-        pass
+        if not isinstance(error, commands.NotOwner):
+            await ctx.send(f"Console error: {error}", allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ConsoleCommand(bot))
-

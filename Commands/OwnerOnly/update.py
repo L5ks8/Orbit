@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 
 UPDATE_CHANNEL_ID = 1525664972720312390
 
@@ -65,7 +64,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
         embed = discord.Embed(
             title=title_str,
             description=desc_str,
-            color=0x00D2FF,
+            color=0x2B2D31,
             timestamp=discord.utils.utcnow()
         )
         footer_text = f"Orbit System Updates | {ver_str}" if ver_str else "Orbit System Updates"
@@ -102,12 +101,12 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
         except Exception as e:
             await interaction.followup.send(f"Failed to send update message: `{e}`", ephemeral=True)
 
-class UpdateLaunchLayout(LayoutView):
+class UpdateLaunchView(discord.ui.View):
     def __init__(self, author_id: int):
         super().__init__(timeout=300)
         self.author_id = author_id
 
-        btn_open = Button(
+        btn_open = discord.ui.Button(
             label="Open Update Creator Modal",
             style=discord.ButtonStyle.primary,
             custom_id="orbit:owner_update_open"
@@ -119,16 +118,7 @@ class UpdateLaunchLayout(LayoutView):
             await interaction.response.send_modal(UpdatePostModal())
             
         btn_open.callback = _open_modal
-        
-        self.add_item(
-            Container(
-                TextDisplay(content="### Orbit Update Studio"),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                TextDisplay(content=f"Click the button below to open your private update editor modal (Title & Content).\nWhen submitted, your announcement will be broadcasted directly to <#{UPDATE_CHANNEL_ID}>."),
-                Separator(spacing=discord.SeparatorSpacing.small),
-                ActionRow(btn_open)
-            )
-        )
+        self.add_item(btn_open)
 
 class UpdateCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -141,22 +131,20 @@ class UpdateCommand(commands.Cog):
             await ctx.message.delete()
         except Exception:
             pass
-        view = UpdateLaunchLayout(ctx.author.id)
-        try:
-            await ctx.author.send(view=view, allowed_mentions=discord.AllowedMentions.none())
-        except discord.Forbidden:
-            await ctx.send(view=view, delete_after=60.0, allowed_mentions=discord.AllowedMentions.none())
+        
+        embed = discord.Embed(
+            title="Orbit Update Studio",
+            description=f"Click the button below to open your private update editor modal (Title & Content).\nWhen submitted, your announcement will be broadcasted directly to <#{UPDATE_CHANNEL_ID}>.",
+            color=0x2B2D31
+        )
+        
+        view = UpdateLaunchView(ctx.author.id)
+        await ctx.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
     @update_prefix_cmd.error
     async def update_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.NotOwner):
+        if not isinstance(error, commands.NotOwner):
             pass
-        else:
-            try:
-                await ctx.send(f"Update command error: `{error}`", delete_after=10.0)
-            except Exception:
-                pass
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UpdateCommand(bot))
-

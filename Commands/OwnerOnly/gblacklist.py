@@ -36,24 +36,30 @@ class GlobalBlacklistCommand(commands.Cog):
         
         if target_guild_id is None:
             if not bl:
-                return await ctx.send("The global server blacklist is currently empty.")
+                embed = discord.Embed(title="Global Server Blacklist", description="The global server blacklist is currently empty.", color=0x2B2D31)
+                return await ctx.send(embed=embed)
             bl_str = ", ".join([f"`{gid}`" for gid in bl])
-            return await ctx.send(f"**Globally Blacklisted Servers ({len(bl)}):**\n{bl_str}")
+            embed = discord.Embed(title="Global Server Blacklist", description=f"**Globally Blacklisted Servers ({len(bl)}):**\n{bl_str}", color=0x2B2D31)
+            return await ctx.send(embed=embed)
             
         if target_guild_id in bl:
-            return await ctx.send(f"Server `{target_guild_id}` is already globally blacklisted.", ephemeral=True)
+            embed = discord.Embed(title="Global Server Blacklist", description=f"Server `{target_guild_id}` is already globally blacklisted.", color=0x2B2D31)
+            return await ctx.send(embed=embed, ephemeral=True)
         
         bl.append(target_guild_id)
         _save_gblacklist(bl)
-        await ctx.send(f"Server `{target_guild_id}` has been added to the global blacklist.\n**Reason:** {reason}")
-
+        
+        desc = f"Server `{target_guild_id}` has been added to the global blacklist.\n**Reason:** {reason}"
         guild = self.bot.get_guild(target_guild_id)
         if guild:
             try:
                 await guild.leave()
-                await ctx.send("I was currently in that server, so I have automatically left it.")
+                desc += "\n\nI was currently in that server, so I have automatically left it."
             except Exception:
                 pass
+                
+        embed = discord.Embed(title="Server Blacklisted", description=desc, color=0x2B2D31)
+        await ctx.send(embed=embed)
 
     @commands.command(name="gblacklistremove", hidden=True)
     @commands.is_owner()
@@ -61,23 +67,14 @@ class GlobalBlacklistCommand(commands.Cog):
         record_command("gblacklistremove", str(ctx.author))
         bl = _load_gblacklist()
         if target_guild_id not in bl:
-            return await ctx.send(f"Server `{target_guild_id}` is not globally blacklisted.", ephemeral=True)
-        
+            embed = discord.Embed(title="Global Server Blacklist", description=f"Server `{target_guild_id}` is not blacklisted.", color=0x2B2D31)
+            return await ctx.send(embed=embed, ephemeral=True)
+            
         bl.remove(target_guild_id)
         _save_gblacklist(bl)
-        await ctx.send(f"Server `{target_guild_id}` has been removed from the global blacklist.")
-
-    @commands.Cog.listener()
-    async def on_guild_join(self, guild: discord.Guild):
-        bl = _load_gblacklist()
-        if guild.id in bl:
-            try:
-                await guild.leave()
-                from Commands.OwnerOnly._monitor import record_log
-                record_log(f"[Security] Auto-left globally blacklisted server {guild.name} ({guild.id})")
-            except Exception:
-                pass
+        
+        embed = discord.Embed(title="Server Unblacklisted", description=f"Server `{target_guild_id}` has been removed from the global blacklist.", color=0x2B2D31)
+        await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GlobalBlacklistCommand(bot))
-

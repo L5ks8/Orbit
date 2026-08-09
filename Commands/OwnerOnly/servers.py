@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
+from discord.ui import View, Button
 
-class ServersPaginationLayout(LayoutView):
+class ServersPaginationView(View):
     def __init__(self, bot: commands.Bot, author_id: int, current_page: int = 0):
         super().__init__(timeout=300.0)
         self.bot = bot
@@ -18,18 +18,27 @@ class ServersPaginationLayout(LayoutView):
         if self.current_page < 0:
             self.current_page = 0
 
-        self._build_container()
+        self._build_ui()
 
-    def _build_container(self):
+    def _build_ui(self):
         self.clear_items()
+        
+        prev_btn = Button(style=discord.ButtonStyle.secondary, label="Previous", disabled=(self.current_page == 0))
+        prev_btn.callback = self.on_prev_click
 
+        next_btn = Button(style=discord.ButtonStyle.secondary, label="Next", disabled=(self.current_page >= self.total_pages - 1))
+        next_btn.callback = self.on_next_click
+
+        close_btn = Button(style=discord.ButtonStyle.danger, label="Close")
+        close_btn.callback = self.on_close_click
+
+        self.add_item(prev_btn)
+        self.add_item(next_btn)
+        self.add_item(close_btn)
+
+    def get_embed(self) -> discord.Embed:
         total_members = sum(g.member_count or 0 for g in self.guilds_list)
-        header_str = (
-            f"### Orbit Connected Server Empire\n"
-            f"**Total Connected Guilds:** `{len(self.guilds_list)}` | **Combined Members:** `{total_members:,}`\n"
-            f"**Current Page:** `{self.current_page + 1} / {self.total_pages}`"
-        )
-
+        
         start_idx = self.current_page * self.per_page
         end_idx = start_idx + self.per_page
         page_guilds = self.guilds_list[start_idx:end_idx]
@@ -46,38 +55,29 @@ class ServersPaginationLayout(LayoutView):
                     f"> **Owner:** {owner_str}"
                 )
             content_str = "\n\n".join(lines)
-
-        prev_btn = Button(style=discord.ButtonStyle.secondary, label="Previous", disabled=(self.current_page == 0))
-        prev_btn.callback = self.on_prev_click
-
-        next_btn = Button(style=discord.ButtonStyle.secondary, label="Next", disabled=(self.current_page >= self.total_pages - 1))
-        next_btn.callback = self.on_next_click
-
-        close_btn = Button(style=discord.ButtonStyle.danger, label="Close")
-        close_btn.callback = self.on_close_click
-
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=content_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            ActionRow(prev_btn, next_btn, close_btn)
+            
+        embed = discord.Embed(
+            title="Orbit Connected Server Empire",
+            description=content_str,
+            color=0x2B2D31
         )
-        self.add_item(self.container)
+        embed.add_field(name="Stats", value=f"**Total Guilds:** `{len(self.guilds_list)}`\n**Total Members:** `{total_members:,}`", inline=False)
+        embed.set_footer(text=f"Page {self.current_page + 1} / {self.total_pages}")
+        return embed
 
     async def on_prev_click(self, interaction: discord.Interaction):
         if interaction.user.id != self.author_id:
             return await interaction.response.send_message("Only the bot owner can interact with this pagination.", ephemeral=True)
         self.current_page -= 1
-        self._build_container()
-        await interaction.response.edit_message(view=self, allowed_mentions=discord.AllowedMentions.none())
+        self._build_ui()
+        await interaction.response.edit_message(embed=self.get_embed(), view=self)
 
     async def on_next_click(self, interaction: discord.Interaction):
         if interaction.user.id != self.author_id:
             return await interaction.response.send_message("Only the bot owner can interact with this pagination.", ephemeral=True)
         self.current_page += 1
-        self._build_container()
-        await interaction.response.edit_message(view=self, allowed_mentions=discord.AllowedMentions.none())
+        self._build_ui()
+        await interaction.response.edit_message(embed=self.get_embed(), view=self)
 
     async def on_close_click(self, interaction: discord.Interaction):
         if interaction.user.id != self.author_id:
@@ -85,7 +85,7 @@ class ServersPaginationLayout(LayoutView):
         try:
             await interaction.message.delete()
         except Exception:
-            await interaction.response.send_message("Closed server list.", ephemeral=True)
+            pass
 
 class ServersCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -95,8 +95,8 @@ class ServersCommand(commands.Cog):
     @commands.is_owner()
     async def servers_cmd(self, ctx: commands.Context, page: int = 1):
         target_page = max(0, page - 1)
-        view = ServersPaginationLayout(self.bot, ctx.author.id, target_page)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        view = ServersPaginationView(self.bot, ctx.author.id, target_page)
+        await ctx.send(embed=view.get_embed(), view=view, allowed_mentions=discord.AllowedMentions.none())
 
     @servers_cmd.error
     async def servers_error(self, ctx: commands.Context, error):
@@ -105,4 +105,3 @@ class ServersCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ServersCommand(bot))
-

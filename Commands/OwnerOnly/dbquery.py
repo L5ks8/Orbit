@@ -37,13 +37,23 @@ class DBQuery(commands.Cog):
                 formatted = str(result)
                 code_lang = "py"
                 
-            if len(formatted) > 1900:
-                formatted = formatted[:1900] + "\n... (truncated)"
+            if len(formatted) > 3000:
+                formatted = formatted[:3000] + "\n... (truncated)"
                 
-            await ctx.send(f"**Result:**\n```{code_lang}\n{formatted}\n```")
+            embed = discord.Embed(
+                title="Database Query Result",
+                description=f"```\n{query}\n```\n**Result:**\n```{code_lang}\n{formatted}\n```",
+                color=0x2B2D31
+            )
+            await ctx.send(embed=embed)
         except Exception as e:
             err = "".join(traceback.format_exception_only(type(e), e))
-            await ctx.send(f"**Error:**\n```py\n{err}\n```")
+            embed = discord.Embed(
+                title="Database Query Error",
+                description=f"```\n{query}\n```\n**Error:**\n```py\n{err}\n```",
+                color=0x2B2D31
+            )
+            await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(DBQuery(bot))

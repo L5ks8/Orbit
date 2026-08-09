@@ -1,38 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.OwnerOnly._monitor import get_live_logs, record_command
-
-class LiveLogsLayoutView(LayoutView):
-    def __init__(self, owner: discord.abc.User):
-        super().__init__(timeout=None)
-        raw_logs = get_live_logs(12)
-        if not raw_logs:
-            logs_str = "`[System]` Zero log events recorded yet."
-        else:
-            clean_lines = [line[:130] for line in raw_logs]
-            logs_str = "\n".join(clean_lines)
-            if len(logs_str) > 1600:
-                logs_str = logs_str[:1600] + "\n...(truncated for Discord limits)"
-
-        header_str = f"### Orbit Live System Event Stream\n**Authorized Developer:** {owner.mention}"
-        self.container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=logs_str)
-        )
-        self.add_item(self.container)
-
-        btn_close = Button(label="Close Logs View", style=discord.ButtonStyle.secondary)
-
-        async def _close_cb(interaction: discord.Interaction):
-            try:
-                await interaction.message.delete()
-            except Exception:
-                pass
-
-        btn_close.callback = _close_cb
-        self.add_item(ActionRow(btn_close))
 
 class LiveLogsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -47,8 +15,23 @@ class LiveLogsCommand(commands.Cog):
                 await ctx.message.delete()
             except Exception:
                 pass
-        view = LiveLogsLayoutView(ctx.author)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+                
+        raw_logs = get_live_logs(15)
+        if not raw_logs:
+            logs_str = "`[System]` Zero log events recorded yet."
+        else:
+            clean_lines = [line[:130] for line in raw_logs]
+            logs_str = "\n".join(clean_lines)
+            if len(logs_str) > 3000:
+                logs_str = logs_str[:3000] + "\n...(truncated)"
+                
+        embed = discord.Embed(
+            title="Orbit Live System Event Stream",
+            description=logs_str,
+            color=0x2B2D31
+        )
+        embed.set_footer(text=f"Authorized Developer: {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @logs_cmd.error
     async def logs_error(self, ctx: commands.Context, error):
@@ -57,4 +40,3 @@ class LiveLogsCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(LiveLogsCommand(bot))
-

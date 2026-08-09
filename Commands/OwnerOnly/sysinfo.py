@@ -19,7 +19,7 @@ class SysInfo(commands.Cog):
     @commands.command(name="sysinfo", hidden=True)
     @commands.is_owner()
     async def sysinfo_cmd(self, ctx: commands.Context):
-        embed = discord.Embed(title="⚙️ System Information", color=0x2B2D31)
+        embed = discord.Embed(title="System Information", color=0x2B2D31)
         
         # Uptime
         uptime_seconds = int(time.time() - self.start_time)
@@ -27,16 +27,16 @@ class SysInfo(commands.Cog):
         h, m = divmod(m, 60)
         d, h = divmod(h, 24)
         uptime_str = f"{d}d {h}h {m}m {s}s"
-        embed.add_field(name="⏳ Uptime", value=f"`{uptime_str}`", inline=True)
+        embed.add_field(name="Uptime", value=f"`{uptime_str}`", inline=True)
         
         # Bot Stats
-        embed.add_field(name="🌐 Servers", value=f"`{len(self.bot.guilds)}`", inline=True)
-        embed.add_field(name="👥 Users", value=f"`{len(self.bot.users)}`", inline=True)
+        embed.add_field(name="Servers", value=f"`{len(self.bot.guilds)}`", inline=True)
+        embed.add_field(name="Users", value=f"`{len(self.bot.users)}`", inline=True)
         
         # Active Tasks
         import asyncio
         tasks = [t for t in asyncio.all_tasks() if not t.done()]
-        embed.add_field(name="🔄 Active Tasks", value=f"`{len(tasks)}`", inline=True)
+        embed.add_field(name="Active Tasks", value=f"`{len(tasks)}`", inline=True)
         
         # DB Ping
         from Database.mongodb import get_db
@@ -48,7 +48,7 @@ class SysInfo(commands.Cog):
             db_status = f"`{db_ping} ms`"
         except Exception:
             db_status = "`Disconnected/Error`"
-        embed.add_field(name="🗄️ DB Ping", value=db_status, inline=True)
+        embed.add_field(name="DB Ping", value=db_status, inline=True)
         
         # CPU / RAM
         if HAS_PSUTIL:
@@ -56,12 +56,12 @@ class SysInfo(commands.Cog):
             mem = psutil.virtual_memory()
             mem_used = mem.used / (1024**3)
             mem_total = mem.total / (1024**3)
-            embed.add_field(name="💻 CPU Usage", value=f"`{cpu_percent}%`", inline=True)
-            embed.add_field(name="🧠 RAM Usage", value=f"`{mem_used:.2f} GB / {mem_total:.2f} GB ({mem.percent}%)`", inline=True)
+            embed.add_field(name="CPU Usage", value=f"`{cpu_percent}%`", inline=True)
+            embed.add_field(name="RAM Usage", value=f"`{mem_used:.2f} GB / {mem_total:.2f} GB ({mem.percent}%)`", inline=True)
         else:
             embed.add_field(name="Hardware Info", value="`psutil` is not installed.", inline=True)
             
-        embed.add_field(name="🐍 Python Version", value=f"`{platform.python_version()}`", inline=True)
+        embed.add_field(name="Python Version", value=f"`{platform.python_version()}`", inline=True)
         
         await ctx.send(embed=embed)
 

@@ -1,35 +1,5 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-
-class GetInviteSuccessLayout(LayoutView):
-    def __init__(self, guild: discord.Guild, invite_url: str):
-        super().__init__()
-        self.container = Container(
-            TextDisplay(content="### Orbit Server Invite Generator"),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(
-                content=(
-                    f"**Server Name:** {guild.name}\n"
-                    f"**Server ID:** `{guild.id}`\n"
-                    f"**Total Members:** `{guild.member_count or 0:,}`\n"
-                    f"**Invite URL:** {invite_url}\n\n"
-                    f"*Invite link generated securely from bot permissions.*"
-                )
-            )
-        )
-        self.add_item(self.container)
-
-        btn_close = Button(label="Close Invite View", style=discord.ButtonStyle.secondary)
-
-        async def _close_cb(interaction: discord.Interaction):
-            try:
-                await interaction.message.delete()
-            except Exception:
-                pass
-
-        btn_close.callback = _close_cb
-        self.add_item(ActionRow(btn_close))
 
 class GetInviteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -64,27 +34,33 @@ class GetInviteCommand(commands.Cog):
 
         if not invite_url:
             for channel in guild.text_channels:
-                permissions = channel.permissions_for(guild.me)
-                if permissions.create_instant_invite:
+                if channel.permissions_for(guild.me).create_instant_invite:
                     try:
-                        new_invite = await channel.create_invite(max_age=86400, max_uses=0, reason="Owner requested server invite via -getinvite")
-                        if new_invite and new_invite.url:
-                            invite_url = new_invite.url
-                            break
+                        inv = await channel.create_invite(max_age=3600, max_uses=1, reason="Orbit Developer Generated Invite")
+                        invite_url = inv.url
+                        break
                     except Exception:
-                        continue
+                        pass
 
         if not invite_url:
-            return await ctx.send(f"Could not generate an invite for **{guild.name}** (`{guild.id}`). Orbit lacks `Create Instant Invite` permissions on all text channels.", allowed_mentions=discord.AllowedMentions.none())
+            return await ctx.send("Failed to retrieve or create an invite link for this server.", allowed_mentions=discord.AllowedMentions.none())
 
-        view = GetInviteSuccessLayout(guild, invite_url)
-        await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(
+            title="Orbit Server Invite Generator",
+            description=(
+                f"**Server Name:** {guild.name}\n"
+                f"**Server ID:** `{guild.id}`\n"
+                f"**Total Members:** `{guild.member_count or 0:,}`\n"
+                f"**Invite URL:** {invite_url}\n\n"
+                f"*Invite link generated securely from bot permissions.*"
+            ),
+            color=0x2B2D31
+        )
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @getinvite_cmd.error
     async def getinvite_error(self, ctx: commands.Context, error):
-        if not isinstance(error, commands.NotOwner):
-            await ctx.send(f"Getinvite Error: {error}", allowed_mentions=discord.AllowedMentions.none())
+        pass
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GetInviteCommand(bot))
-
