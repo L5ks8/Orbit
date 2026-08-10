@@ -136,14 +136,27 @@ async function init() {
             const heroBtn = document.getElementById('btn-hero-login');
             if (heroBtn) { heroBtn.innerHTML = 'Go to Dashboard <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; heroBtn.onclick = loadDashboard; }
         } else {
+            const currentUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            const loginUrl = `/auth/login?next=${currentUrl}`;
             const heroBtn = document.getElementById('btn-hero-login');
-            if (heroBtn) heroBtn.onclick = () => window.location.href = '/auth/login';
+            if (heroBtn) heroBtn.onclick = () => window.location.href = loginUrl;
             const loginBtn = document.getElementById('btn-login');
-            if (loginBtn) loginBtn.onclick = () => window.location.href = '/auth/login';
+            if (loginBtn) loginBtn.onclick = () => window.location.href = loginUrl;
         }
         // Footer login button
         const footerLogin = document.getElementById('btn-footer-login');
-        if (footerLogin) footerLogin.onclick = currentUser ? loadDashboard : () => window.location.href = '/auth/login';
+        if (footerLogin) {
+            const currentUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            footerLogin.onclick = currentUser ? loadDashboard : () => window.location.href = `/auth/login?next=${currentUrl}`;
+        }
+        
+        // Auto load dashboard if URL params exist
+        if (currentUser) {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('server')) {
+                loadDashboard();
+            }
+        }
     } catch (e) {
         console.error(e);
         showView('landing');
@@ -246,6 +259,15 @@ async function loadDashboard() {
             `;
             grid.appendChild(card);
         });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const serverId = urlParams.get('server');
+        if (serverId) {
+            const guild = guilds.find(g => String(g.id) === String(serverId));
+            if (guild) {
+                loadConfig(guild.id, guild.name, guild.icon);
+            }
+        }
     } catch (e) {
         loader.classList.add('hidden');
         grid.innerHTML = `<p style="color:red;">Error loading servers.</p>`;
@@ -855,11 +877,29 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
     document.getElementById('config-loader').classList.remove('hidden');
 
     if (!keepTab) {
-        // Reset tabs to overview section
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetTab = urlParams.get('tab');
+        
         document.querySelectorAll('.dash-nav-item').forEach(i => i.classList.remove('active'));
         document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
-        document.querySelector('.dash-nav-item[data-target="section-overview"]')?.classList.add('active');
-        document.getElementById('section-overview')?.classList.add('active');
+
+        if (targetTab) {
+            const navItem = document.querySelector(`.dash-nav-item[data-target="section-${targetTab}"]`);
+            const panel = document.getElementById(`section-${targetTab}`);
+            if (navItem && panel) {
+                navItem.classList.add('active');
+                panel.classList.add('active');
+            } else {
+                document.querySelector('.dash-nav-item[data-target="section-overview"]')?.classList.add('active');
+                document.getElementById('section-overview')?.classList.add('active');
+            }
+            // Clear the URL so we don't get stuck on this tab when navigating inside the SPA
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+            // Reset tabs to overview section
+            document.querySelector('.dash-nav-item[data-target="section-overview"]')?.classList.add('active');
+            document.getElementById('section-overview')?.classList.add('active');
+        }
     }
 
     try {

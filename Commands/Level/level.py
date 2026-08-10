@@ -135,7 +135,7 @@ class LevelCommandsCog(commands.Cog):
             from Commands._utils import get_module_disabled_embed, ModuleDisabledView
             return await interaction.response.send_message(
                 embed=get_module_disabled_embed("Leveling"),
-                view=ModuleDisabledView(interaction.guild.id),
+                view=ModuleDisabledView(interaction.guild.id, "Leveling"),
                 ephemeral=True
             )
 
@@ -204,7 +204,7 @@ class LevelCommandsCog(commands.Cog):
             from Commands._utils import get_module_disabled_embed, ModuleDisabledView
             return await interaction.response.send_message(
                 embed=get_module_disabled_embed("Leveling"),
-                view=ModuleDisabledView(interaction.guild.id),
+                view=ModuleDisabledView(interaction.guild.id, "Leveling"),
                 ephemeral=True
             )
 
@@ -296,7 +296,7 @@ class LevelCommandsCog(commands.Cog):
             from Commands._utils import get_module_disabled_embed, ModuleDisabledView
             return await ctx.send(
                 embed=get_module_disabled_embed("Leveling"),
-                view=ModuleDisabledView(ctx.guild.id)
+                view=ModuleDisabledView(ctx.guild.id, "Leveling")
             )
 
         target = member or ctx.author

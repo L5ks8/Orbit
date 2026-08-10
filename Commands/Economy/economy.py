@@ -26,7 +26,7 @@ class EconomyCommand(commands.Cog):
             from Commands._utils import get_module_disabled_embed, ModuleDisabledView
             await ctx.send(
                 embed=get_module_disabled_embed("Economy"),
-                view=ModuleDisabledView(ctx.guild.id)
+                view=ModuleDisabledView(ctx.guild.id, "Economy")
             )
             return False
         return True
@@ -104,7 +104,7 @@ class EconomyCommand(commands.Cog):
             from Commands._utils import get_module_disabled_embed, ModuleDisabledView
             return await ctx.send(
                 embed=get_module_disabled_embed("Economy"),
-                view=ModuleDisabledView(ctx.guild.id)
+                view=ModuleDisabledView(ctx.guild.id, "Economy")
             )
 
         symbol = config.get("currency_symbol", "🪙")
