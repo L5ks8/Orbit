@@ -4,7 +4,7 @@ from discord.ext import commands
 class ModuleDisabledView(discord.ui.View):
     def __init__(self, guild_id: int):
         super().__init__()
-        self.add_item(discord.ui.Button(label="Activate Module", style=discord.ButtonStyle.link, url=f"https://orbit-498b.onrender.com/dashboard/{guild_id}"))
+        self.add_item(discord.ui.Button(label="Activate Module", style=discord.ButtonStyle.link, url="https://orbit-498b.onrender.com/"))
 
 def get_module_disabled_embed(module_name: str) -> discord.Embed:
     return discord.Embed(
