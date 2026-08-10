@@ -132,7 +132,12 @@ class LevelCommandsCog(commands.Cog):
     async def rank(self, interaction: discord.Interaction, member: discord.Member = None):
         config = load_level_config(interaction.guild.id)
         if not config.get("enabled", False):
-            return await interaction.response.send_message("The Level System is not enabled on this server.", ephemeral=True)
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            return await interaction.response.send_message(
+                embed=get_module_disabled_embed("Leveling"),
+                view=ModuleDisabledView(interaction.guild.id),
+                ephemeral=True
+            )
 
         target = member or interaction.user
         data = get_user_xp(interaction.guild.id, target.id)
@@ -196,7 +201,12 @@ class LevelCommandsCog(commands.Cog):
     async def leaderboard(self, interaction: discord.Interaction):
         config = load_level_config(interaction.guild.id)
         if not config.get("enabled", False):
-            return await interaction.response.send_message("The Level System is not enabled on this server.", ephemeral=True)
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            return await interaction.response.send_message(
+                embed=get_module_disabled_embed("Leveling"),
+                view=ModuleDisabledView(interaction.guild.id),
+                ephemeral=True
+            )
 
         await interaction.response.defer()
         embed, file = await self._build_leaderboard_data(interaction.guild, "total_xp")
@@ -281,7 +291,11 @@ class LevelCommandsCog(commands.Cog):
     async def rank_prefix(self, ctx: commands.Context, member: discord.Member = None):
         config = load_level_config(ctx.guild.id)
         if not config.get("enabled", False):
-            return await ctx.send("The Level System is not enabled on this server.")
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            return await ctx.send(
+                embed=get_module_disabled_embed("Leveling"),
+                view=ModuleDisabledView(ctx.guild.id)
+            )
 
         target = member or ctx.author
         data = get_user_xp(ctx.guild.id, target.id)

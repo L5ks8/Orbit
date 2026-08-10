@@ -23,7 +23,12 @@ class EconomyCommand(commands.Cog):
         from Commands.Economy._storage import load_economy_config
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            await ctx.send(
+                embed=get_module_disabled_embed("Economy"),
+                view=ModuleDisabledView(ctx.guild.id),
+                ephemeral=True
+            )
             return False
         return True
 
@@ -97,7 +102,12 @@ class EconomyCommand(commands.Cog):
 
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            return await ctx.send("The economy system is currently disabled on this server.", ephemeral=True)
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            return await ctx.send(
+                embed=get_module_disabled_embed("Economy"),
+                view=ModuleDisabledView(ctx.guild.id),
+                ephemeral=True
+            )
 
         symbol = config.get("currency_symbol", "🪙")
         success, amount, streak, cooldown_rem = claim_daily(ctx.guild.id, ctx.author.id)

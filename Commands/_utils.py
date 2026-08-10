@@ -1,6 +1,17 @@
 import discord
 from discord.ext import commands
 
+class ModuleDisabledView(discord.ui.View):
+    def __init__(self, guild_id: int):
+        super().__init__()
+        self.add_item(discord.ui.Button(label="Activate Module", url=f"https://orbit-498b.onrender.com/dashboard/{guild_id}"))
+
+def get_module_disabled_embed(module_name: str) -> discord.Embed:
+    return discord.Embed(
+        description=f"The {module_name} module must be activated to use this command.",
+        color=discord.Color.red()
+    )
+
 def format_usage(command: str, *args: str) -> str:
     usage = f"Usage: {command}"
     if args:
