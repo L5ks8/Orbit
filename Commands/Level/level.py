@@ -289,6 +289,8 @@ class LevelCommandsCog(commands.Cog):
     # ─── PREFIX COMMANDS ──────────────────────────────────────────────────────
     @commands.command(name="rank")
     async def rank_prefix(self, ctx: commands.Context, member: discord.Member = None):
+        if not ctx.guild:
+            return
         config = load_level_config(ctx.guild.id)
         if not config.get("enabled", False):
             from Commands._utils import get_module_disabled_embed, ModuleDisabledView
