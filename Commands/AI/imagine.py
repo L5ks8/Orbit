@@ -28,8 +28,8 @@ class ImagineCommand(commands.Cog):
             await ctx.typing()
             
         encoded_prompt = urllib.parse.quote(prompt)
-        # Using Pollinations AI without API key
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true"
+        # Using Pollinations AI without API key (using 'flux' model for higher quality)
+        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true&model=flux"
         
         # Fetch the image to ensure Discord displays it properly
         try:
