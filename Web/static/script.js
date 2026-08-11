@@ -1661,6 +1661,10 @@ async function loadConfig(guildId, guildName, guildIcon, keepTab = false) {
             if (document.getElementById('serverstats_bots_name')) document.getElementById('serverstats_bots_name').value = config.serverstats.bots_name || 'Bots: {count}';
             if (document.getElementById('serverstats_roles_enabled')) document.getElementById('serverstats_roles_enabled').checked = !!config.serverstats.roles_enabled;
             if (document.getElementById('serverstats_roles_name')) document.getElementById('serverstats_roles_name').value = config.serverstats.roles_name || 'Roles: {count}';
+            if (document.getElementById('anti_nuke_enabled')) document.getElementById('anti_nuke_enabled').checked = (config.security?.anti_nuke_enabled !== false);
+            if (document.getElementById('anti_nuke_threshold')) document.getElementById('anti_nuke_threshold').value = config.security?.anti_nuke_threshold || 3;
+            if (document.getElementById('anti_nuke_time_window')) document.getElementById('anti_nuke_time_window').value = config.security?.anti_nuke_time_window || 10;
+            if (document.getElementById('anti_scam_enabled')) document.getElementById('anti_scam_enabled').checked = (config.security?.anti_scam_enabled !== false);
         }
 
         // Initial Preview Update
@@ -3444,6 +3448,12 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
                 multiplier: parseFloat(row.querySelector('.eco-booster-mult')?.value) || 1.1,
                 channel_id: row.querySelector('.eco-booster-channel')?.value || ''
             })).filter(b => b.channel_id !== '')
+        },
+        security: {
+            anti_nuke_enabled: document.getElementById('anti_nuke_enabled')?.checked ?? true,
+            anti_nuke_threshold: parseInt(document.getElementById('anti_nuke_threshold')?.value) || 3,
+            anti_nuke_time_window: parseInt(document.getElementById('anti_nuke_time_window')?.value) || 10,
+            anti_scam_enabled: document.getElementById('anti_scam_enabled')?.checked ?? true
         },
         logs: {
             enabled: document.getElementById('logs_enabled').checked,

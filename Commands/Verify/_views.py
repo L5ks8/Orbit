@@ -142,28 +142,49 @@ class PersistentVerifyLayout(discord.ui.View):
                 await interaction.response.send_message(f"An error occurred assigning the verified role: {e}", ephemeral=True)
             return
 
-        try:
-            import secrets
-            token = secrets.token_urlsafe(16)
-            from Commands.Verify._storage import WEB_VERIFY_SESSIONS
-            WEB_VERIFY_SESSIONS[token] = {
-                "user_id": interaction.user.id,
-                "guild_id": interaction.guild.id,
-                "role_id": role_id,
-                "remove_role_id": remove_role_id,
-                "timestamp": time.time()
-            }
-            
-            view = discord.ui.View()
-            view.add_item(discord.ui.Button(label="Open Verification Page", style=discord.ButtonStyle.link, url=f"https://orbit-498b.onrender.com/verify/{token}"))
-            
-            embed = discord.Embed(
-                title="Web Security Verification",
-                description="Please click the button below to solve the CAPTCHA in your browser.\n*This link is unique to you and will expire in 10 minutes.*",
-                color=discord.Color.blurple()
-            )
-            
-            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
-        except Exception as e:
-            await interaction.response.send_message(f"Failed to generate verification panel: {e}", ephemeral=True)
+        elif verification_type == "web_captcha":
+            try:
+                import secrets
+                token = secrets.token_urlsafe(16)
+                from Commands.Verify._storage import WEB_VERIFY_SESSIONS
+                WEB_VERIFY_SESSIONS[token] = {
+                    "user_id": interaction.user.id,
+                    "guild_id": interaction.guild.id,
+                    "role_id": role_id,
+                    "remove_role_id": remove_role_id,
+                    "timestamp": time.time()
+                }
+                
+                view = discord.ui.View()
+                view.add_item(discord.ui.Button(label="Open Verification Page", style=discord.ButtonStyle.link, url=f"https://orbit-498b.onrender.com/verify/{token}"))
+                
+                embed = discord.Embed(
+                    title="Web Security Verification",
+                    description="Please click the button below to solve the CAPTCHA in your browser.\n*This link is unique to you and will expire in 10 minutes.*",
+                    color=discord.Color.blurple()
+                )
+                
+                await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+            except Exception as e:
+                await interaction.response.send_message(f"Failed to generate verification panel: {e}", ephemeral=True)
+                
+        else: # captcha
+            try:
+                code, img_bytes = generate_captcha()
+                CAPTCHA_SESSIONS[interaction.user.id] = {"code": code, "timestamp": time.time()}
+    
+                filename = "captcha.bmp" if img_bytes[:2] == b"BM" else "captcha.png"
+                file = discord.File(fp=io.BytesIO(img_bytes), filename=filename)
+                
+                view = CaptchaInteractionLayout(role_id, remove_role_id)
+                embed = discord.Embed(
+                    title="Security Verification: Solve the CAPTCHA",
+                    description="Please look at the connected characters in the image below and click **Enter CAPTCHA Code** to type what you see.",
+                    color=discord.Color.blurple()
+                )
+                embed.set_image(url=f"attachment://{filename}")
+                
+                await interaction.response.send_message(embed=embed, file=file, view=view, ephemeral=True)
+            except Exception as e:
+                await interaction.response.send_message(f"Failed to generate verification panel: {e}", ephemeral=True)
 

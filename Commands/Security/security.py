@@ -3,6 +3,7 @@ from discord.ext import commands
 import time
 from collections import defaultdict
 from Commands.OwnerOnly._monitor import record_command
+from Commands.Security._storage import load_security_config
 import datetime
 
 SCAM_LINKS = [
@@ -16,25 +17,34 @@ class SecurityModule(commands.Cog):
         self.bot = bot
         # Format: {guild_id: {admin_id: [timestamp1, timestamp2, ...]}}
         self.action_logs = defaultdict(lambda: defaultdict(list))
-        self.THRESHOLD = 3
-        self.TIME_WINDOW = 10 # seconds
 
     def _check_nuke(self, guild: discord.Guild, admin_id: int):
+        config = load_security_config(guild.id)
+        if not config.get("anti_nuke_enabled", True):
+            return False
+            
         current_time = time.time()
+        config = load_security_config(guild.id)
+        threshold = config.get("anti_nuke_threshold", 3)
+        time_window = config.get("anti_nuke_time_window", 10)
+        
         logs = self.action_logs[guild.id][admin_id]
         
         # Remove old logs
-        logs = [t for t in logs if current_time - t <= self.TIME_WINDOW]
+        logs = [t for t in logs if current_time - t <= time_window]
         logs.append(current_time)
         self.action_logs[guild.id][admin_id] = logs
         
-        if len(logs) >= self.THRESHOLD:
+        if len(logs) >= threshold:
             # Clear logs so it doesn't spam trigger
             self.action_logs[guild.id][admin_id] = []
             return True
         return False
 
     async def _punish_nuker(self, guild: discord.Guild, member: discord.Member):
+        config = load_security_config(guild.id)
+        threshold = config.get("anti_nuke_threshold", 3)
+        time_window = config.get("anti_nuke_time_window", 10)
         try:
             # Remove all roles if possible, to isolate the rogue admin
             # This fails if the member is higher in hierarchy than the bot
@@ -45,7 +55,7 @@ class SecurityModule(commands.Cog):
         try:
             owner = guild.owner
             if owner:
-                await owner.send(f"🚨 **ANTI-NUKE ALERT** 🚨\nUser {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}** by performing {self.THRESHOLD} destructive actions within {self.TIME_WINDOW} seconds.\nTheir roles have been removed (if the bot had permission). Please check your server immediately.")
+                await owner.send(f"🚨 **ANTI-NUKE ALERT** 🚨\nUser {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}** by performing {threshold} destructive actions within {time_window} seconds.\nTheir roles have been removed (if the bot had permission). Please check your server immediately.")
         except Exception:
             pass
 
@@ -99,6 +109,10 @@ class SecurityModule(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
+            return
+
+        config = load_security_config(message.guild.id)
+        if not config.get("anti_scam_enabled", True):
             return
 
         content = message.content.lower()

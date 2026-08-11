@@ -378,6 +378,10 @@ class WebDashboard:
         from Commands.JoinToCreate._storage import load_jtc_config
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
+        
+        from Commands.Security._storage import load_security_config
+        security_cfg = load_security_config(guild_id)
+        
         from Commands.Economy._storage import load_economy_config
         economy_cfg = load_economy_config(guild_id)
         serverstats_cfg = load_serverstats_config(guild_id)
@@ -555,7 +559,8 @@ class WebDashboard:
             "tempvoice": tempvoice_cfg,
             "level": level_cfg,
             "economy": economy_cfg,
-            "serverstats": serverstats_cfg
+            "serverstats": serverstats_cfg,
+            "security": security_cfg
         }
 
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
@@ -835,6 +840,21 @@ class WebDashboard:
                 automod_cfg["anti_alt"]["action"] = aalt.get("action", "kick")
 
                 save_automod_config(guild_id, automod_cfg)
+
+            if user_perms.get("can_channels") and "security" in data:
+                from Commands.Security._storage import load_security_config, save_security_config
+                sec_cfg = load_security_config(guild_id)
+                sec_cfg["anti_nuke_enabled"] = bool(data["security"].get("anti_nuke_enabled", True))
+                sec_cfg["anti_scam_enabled"] = bool(data["security"].get("anti_scam_enabled", True))
+                try:
+                    sec_cfg["anti_nuke_threshold"] = int(data["security"].get("anti_nuke_threshold", 3))
+                except (ValueError, TypeError):
+                    sec_cfg["anti_nuke_threshold"] = 3
+                try:
+                    sec_cfg["anti_nuke_time_window"] = int(data["security"].get("anti_nuke_time_window", 10))
+                except (ValueError, TypeError):
+                    sec_cfg["anti_nuke_time_window"] = 10
+                save_security_config(guild_id, sec_cfg)
 
             if user_perms.get("can_roles") and "verify" in data:
                 verify_cfg = load_verify_config(guild_id)
