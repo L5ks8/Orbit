@@ -1,8 +1,10 @@
-﻿from Database.mongodb import get_config, set_config
+from Database.mongodb import get_config, set_config
 import os
 import json
 import pathlib
 from typing import Dict, Any, Optional
+
+WEB_VERIFY_SESSIONS = {}
 
 STORAGE_ROOT = pathlib.Path("Storage")
 

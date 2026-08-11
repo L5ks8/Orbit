@@ -10,7 +10,7 @@ from typing import Dict, Any
 from Commands.Welcome._storage import load_welcome_config, save_welcome_config
 from Commands.Goodbye._storage import load_goodbye_config, save_goodbye_config
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
-from Commands.Verify._storage import load_verify_config, save_verify_config
+from Commands.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
 from Commands.AutoResponder._storage import load_responses, save_responses
 from Commands.JoinRole._storage import load_join_roles, save_join_roles
 from Commands.Log._storage import load_log_config, save_log_config
@@ -1791,6 +1791,70 @@ class WebDashboard:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
+    async def handle_verify_page(self, request: web.Request):
+        try:
+            content = self._render_template("Web/verify.html")
+            return web.Response(text=content, content_type="text/html")
+        except Exception:
+            return web.Response(text="Error loading verify page", status=500)
+
+    async def handle_api_captcha(self, request: web.Request):
+        token = request.match_info.get("token")
+        if not token or token not in WEB_VERIFY_SESSIONS:
+            return web.Response(text="Invalid or expired token", status=400)
+            
+        try:
+            from Commands.Verify._captcha import generate_captcha
+            code, img_bytes = generate_captcha()
+            WEB_VERIFY_SESSIONS[token]["code"] = code
+            return web.Response(body=img_bytes, content_type="image/png")
+        except Exception as e:
+            return web.Response(text=str(e), status=500)
+
+    async def handle_api_verify(self, request: web.Request):
+        token = request.match_info.get("token")
+        if not token or token not in WEB_VERIFY_SESSIONS:
+            return web.json_response({"error": "Invalid or expired token"}, status=400)
+            
+        try:
+            data = await request.json()
+            user_code = str(data.get("code", "")).strip().upper()
+            session = WEB_VERIFY_SESSIONS[token]
+            
+            if user_code != session.get("code"):
+                return web.json_response({"error": "Incorrect code"}, status=400)
+                
+            guild_id = session["guild_id"]
+            user_id = session["user_id"]
+            role_id = session["role_id"]
+            remove_role_id = session.get("remove_role_id")
+            
+            guild = self.bot.get_guild(guild_id)
+            if not guild:
+                return web.json_response({"error": "Guild not found"}, status=400)
+                
+            member = guild.get_member(user_id)
+            if not member:
+                return web.json_response({"error": "You must be in the server to verify"}, status=400)
+                
+            role = guild.get_role(role_id)
+            if role:
+                await member.add_roles(role, reason="Web CAPTCHA verification")
+                if remove_role_id:
+                    rem_role = guild.get_role(remove_role_id)
+                    if rem_role and rem_role in member.roles:
+                        try:
+                            await member.remove_roles(rem_role, reason="Web CAPTCHA verification")
+                        except Exception:
+                            pass
+                remove_pending_kick(guild_id, user_id)
+                del WEB_VERIFY_SESSIONS[token]
+                return web.json_response({"success": True})
+            else:
+                return web.json_response({"error": "Verification role not found in server"}, status=400)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
 def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application(client_max_size=10 * 1024 * 1024)  
@@ -1805,6 +1869,10 @@ def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
     app.router.add_get("/auth/login", dashboard.handle_login)
     app.router.add_get("/auth/callback", dashboard.handle_callback)
     app.router.add_get("/auth/logout", dashboard.handle_logout)
+    
+    app.router.add_get("/verify/{token}", dashboard.handle_verify_page)
+    app.router.add_get("/api/captcha/{token}", dashboard.handle_api_captcha)
+    app.router.add_post("/api/verify/{token}", dashboard.handle_api_verify)
     
     app.router.add_get("/api/user", dashboard.api_user)
     app.router.add_get("/api/user/{id}", dashboard.api_resolve_user)

@@ -8,20 +8,30 @@ from Commands.OwnerOnly._monitor import record_command
 class StorageBrowserSelect(Select):
     def __init__(self, parent_view: "StorageBrowserView"):
         self.parent_view = parent_view
-        storage_dir = pathlib.Path("Storage")
         options = []
+        
+        try:
+            from Database.mongodb import get_db
+            db = get_db()
+            if db is not None:
+                for coll in db.list_collection_names()[:15]:
+                    options.append(discord.SelectOption(label=f"MongoDB: {coll}", value=f"mongo:{coll}"))
+        except Exception:
+            pass
+
+        storage_dir = pathlib.Path("Storage")
         if storage_dir.exists():
             for p in storage_dir.glob("*.json"):
-                options.append(discord.SelectOption(label=f"Global: {p.name}", value=str(p)))
+                options.append(discord.SelectOption(label=f"Global: {p.name}", value=f"file:{p}"))
             for folder in storage_dir.iterdir():
                 if folder.is_dir() and folder.name.isdigit():
                     for p in folder.glob("*.json"):
-                        options.append(discord.SelectOption(label=f"Guild {folder.name}: {p.name}"[:100], value=str(p)))
+                        options.append(discord.SelectOption(label=f"Guild {folder.name}: {p.name}"[:100], value=f"file:{p}"))
 
         if not options:
             options.append(discord.SelectOption(label="No storage files found", value="none"))
 
-        super().__init__(placeholder="Select JSON Database File from Storage...", options=options[:25], min_values=1, max_values=1)
+        super().__init__(placeholder="Select JSON/Mongo Database from Storage...", options=options[:25], min_values=1, max_values=1)
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -51,14 +61,29 @@ class StorageBrowserView(View):
 
     def get_embed(self) -> discord.Embed:
         file_str = "No file selected."
-        if self.selected_path and pathlib.Path(self.selected_path).exists():
-            try:
-                with open(self.selected_path, "r", encoding="utf-8") as f:
-                    data_content = json.load(f)
-                raw_dump = json.dumps(data_content, indent=2)[:3000]
-                file_str = f"**Viewing Path:** `{self.selected_path}`\n```json\n{raw_dump}\n```"
-            except Exception as e:
-                file_str = f"**Viewing Path:** `{self.selected_path}`\n*(Error reading JSON: {e})*"
+        if self.selected_path:
+            if self.selected_path.startswith("mongo:"):
+                coll_name = self.selected_path.split(":", 1)[1]
+                try:
+                    from Database.mongodb import get_db
+                    db = get_db()
+                    docs = list(db[coll_name].find().limit(5))
+                    for d in docs:
+                        d["_id"] = str(d.get("_id"))
+                    raw_dump = json.dumps(docs, indent=2)[:3000]
+                    file_str = f"**Viewing MongoDB:** `{coll_name}` (First 5)\n```json\n{raw_dump}\n```"
+                except Exception as e:
+                    file_str = f"**Viewing MongoDB:** `{coll_name}`\n*(Error: {e})*"
+            elif self.selected_path.startswith("file:"):
+                actual_path = self.selected_path.split(":", 1)[1]
+                if pathlib.Path(actual_path).exists():
+                    try:
+                        with open(actual_path, "r", encoding="utf-8") as f:
+                            data_content = json.load(f)
+                        raw_dump = json.dumps(data_content, indent=2)[:3000]
+                        file_str = f"**Viewing Path:** `{actual_path}`\n```json\n{raw_dump}\n```"
+                    except Exception as e:
+                        file_str = f"**Viewing Path:** `{actual_path}`\n*(Error reading JSON: {e})*"
 
         embed = discord.Embed(
             title="Orbit SQL & Storage JSON Browser",
