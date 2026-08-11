@@ -5,15 +5,6 @@ import urllib.parse
 from Commands.OwnerOnly._monitor import record_command
 import aiohttp
 import io
-import re
-
-# Basic NSFW filter list (English and German)
-NSFW_WORDS = [
-    "nsfw", "porn", "sex", "nude", "naked", "dick", "pussy", "vagina", "penis", 
-    "boobs", "tits", "ass", "cum", "hentai", "r34", "rule34", "rule 34", "gore",
-    "blood", "murder", "kill", "rape", "child porn", "cp", "loli", "shota",
-    "nackt", "porno", "schwanz", "fotze", "titten", "arsch", "sperma", "blut"
-]
 
 class ImagineCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -28,14 +19,7 @@ class ImagineCommand(commands.Cog):
     async def imagine_cmd(self, ctx: commands.Context, *, prompt: str):
         record_command("imagine", str(ctx.author))
         
-        # NSFW Filter check
-        prompt_lower = prompt.lower()
-        if any(re.search(rf'\b{word}\b', prompt_lower) for word in NSFW_WORDS):
-            msg = "❌ Dein Prompt enthält unangebrachte Wörter und wurde blockiert."
-            if ctx.interaction:
-                return await ctx.interaction.response.send_message(msg, ephemeral=True)
-            else:
-                return await ctx.send(msg)
+
 
         # Defer because image generation might take a few seconds
         if ctx.interaction:
@@ -57,11 +41,11 @@ class ImagineCommand(commands.Cog):
                     else:
                         raise Exception("API returned non-200 status")
         except Exception as e:
-            err_msg = "❌ Fehler bei der Generierung des Bildes. Bitte versuche es später nochmal."
+            err_embed = discord.Embed(description="An error occurred while generating the image. Please try again later.", color=discord.Color.red())
             if ctx.interaction:
-                return await ctx.interaction.followup.send(err_msg)
+                return await ctx.interaction.followup.send(embed=err_embed)
             else:
-                return await ctx.send(err_msg)
+                return await ctx.send(embed=err_embed)
         
         embed = discord.Embed(
             title="AI Image Generation",
