@@ -1,4 +1,4 @@
-import random
+﻿import random
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -40,7 +40,7 @@ class RouletteView(discord.ui.View):
             self.game_over = True
 
             cfg = load_economy_config(self.guild_id)
-            sym = cfg.get("currency_symbol", "🪙")
+            sym = cfg.get("currency_symbol", "")
 
             if self.result_color == self.choice:
                 if self.choice == "green":
@@ -55,7 +55,7 @@ class RouletteView(discord.ui.View):
                 if interaction.guild and interaction.user:
                     xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, 25)
                     if xp_earned > 0:
-                        self.outcome_text += f" *(✨ +{xp_earned} XP)*"
+                        self.outcome_text += f" *( +{xp_earned} XP)*"
             else:
                 self.outcome_text = f"The wheel landed on **{self.result_color.capitalize()}**... You lost **{sym} {self.bet_amount:,}**."
                 self.money_processed = True
@@ -67,7 +67,7 @@ class RouletteView(discord.ui.View):
         btn_red = discord.ui.Button(label=f"Bet Red ({self.bet_amount:,})", style=discord.ButtonStyle.danger, custom_id="play_red")
         async def _red_cb(inter: discord.Interaction):
             if inter.user.id != self.player.id:
-                return await inter.response.send_message("This is not your game!", ephemeral=True)
+                return await inter.response.send_message(embed=make_embed("This is not your game!", discord.Color.red()), ephemeral=True)
             await inter.response.defer()
             new_view = RouletteView(self.guild_id, self.player, self.bet_amount, "red")
             await new_view.spin(inter)
@@ -77,7 +77,7 @@ class RouletteView(discord.ui.View):
         btn_black = discord.ui.Button(label=f"Bet Black ({self.bet_amount:,})", style=discord.ButtonStyle.secondary, custom_id="play_black")
         async def _black_cb(inter: discord.Interaction):
             if inter.user.id != self.player.id:
-                return await inter.response.send_message("This is not your game!", ephemeral=True)
+                return await inter.response.send_message(embed=make_embed("This is not your game!", discord.Color.red()), ephemeral=True)
             await inter.response.defer()
             new_view = RouletteView(self.guild_id, self.player, self.bet_amount, "black")
             await new_view.spin(inter)
@@ -87,7 +87,7 @@ class RouletteView(discord.ui.View):
         btn_green = discord.ui.Button(label=f"Bet Green ({self.bet_amount:,})", style=discord.ButtonStyle.success, custom_id="play_green")
         async def _green_cb(inter: discord.Interaction):
             if inter.user.id != self.player.id:
-                return await inter.response.send_message("This is not your game!", ephemeral=True)
+                return await inter.response.send_message(embed=make_embed("This is not your game!", discord.Color.red()), ephemeral=True)
             await inter.response.defer()
             new_view = RouletteView(self.guild_id, self.player, self.bet_amount, "green")
             await new_view.spin(inter)
@@ -117,7 +117,7 @@ class RouletteCommand(commands.Cog):
         from Commands.Economy._storage import load_economy_config
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
+            await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
             return False
         return True
 
@@ -137,26 +137,26 @@ class RouletteCommand(commands.Cog):
         
         choice_val = getattr(choice, "value", choice).lower()
         if choice_val not in ["red", "black", "green"]:
-            return await ctx.send("Choice must be Red, Black, or Green.")
+            return await ctx.send(embed=make_embed("Choice must be Red, Black, or Green.", discord.Color.red()))
 
         
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.")
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
 
         if bet < 1:
-            return await ctx.send("Bet amount must be at least 1.")
+            return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
 
         cfg = load_economy_config(ctx.guild.id)
-        sym = cfg.get("currency_symbol", "🪙")
+        sym = cfg.get("currency_symbol", "")
 
         if cfg.get("bet_limit_enabled", True):
             max_bet = cfg.get("bet_limit_amount", 10000)
             if bet > max_bet:
-                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.")
+                return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
 
         bal = get_user_balance(ctx.guild.id, ctx.author.id)
         if bal < bet:
-            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
+            return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
 
         # Create view and simulate first spin
         view = RouletteView(ctx.guild.id, ctx.author, bet, choice_val)
@@ -178,6 +178,7 @@ class RouletteCommand(commands.Cog):
         dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
         
         import asyncio
+from Commands._utils import make_embed
         await asyncio.sleep(2.0)
         await view.spin(dummy_inter)
 

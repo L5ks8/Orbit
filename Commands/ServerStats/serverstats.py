@@ -1,4 +1,4 @@
-import re
+﻿import re
 import discord
 from discord.ext import commands, tasks
 import asyncio
@@ -24,7 +24,7 @@ class ServerStats(commands.Cog):
             if isinstance(ch, discord.CategoryChannel):
                 category = ch
 
-        category_name = config.get("category_name", "📊 Server Stats").strip() or "📊 Server Stats"
+        category_name = config.get("category_name", " Server Stats").strip() or " Server Stats"
         any_enabled = any([
             config.get("users_enabled"),
             config.get("boosts_enabled"),

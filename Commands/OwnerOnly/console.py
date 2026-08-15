@@ -1,4 +1,4 @@
-import os
+﻿import os
 import io
 import json
 import asyncio
@@ -10,6 +10,7 @@ import discord
 from discord.ext import commands
 from discord.ui import View, Button, Modal, TextInput
 from Commands.OwnerOnly._monitor import record_command
+from Commands._utils import make_embed
 
 class ConsoleEvalModal(Modal, title="Interactive Python Console"):
     code_input = TextInput(
@@ -108,13 +109,13 @@ class ConsoleView(View):
 
         async def _term_cb(interaction: discord.Interaction):
             if interaction.user.id != owner.id:
-                return await interaction.response.send_message("Not allowed.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("Not allowed.", discord.Color.red()), ephemeral=True)
             modal = ConsoleEvalModal(self.bot)
             await interaction.response.send_modal(modal)
 
         async def _close_cb(interaction: discord.Interaction):
             if interaction.user.id != owner.id:
-                return await interaction.response.send_message("Not allowed.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("Not allowed.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -156,7 +157,7 @@ class ConsoleCommand(commands.Cog):
     @console_cmd.error
     async def console_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
-            await ctx.send(f"Console error: {error}", allowed_mentions=discord.AllowedMentions.none())
+            await ctx.send(embed=make_embed(f"Console error: {error}", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ConsoleCommand(bot))

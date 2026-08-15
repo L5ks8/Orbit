@@ -23,21 +23,21 @@ class CaptchaInputModal(Modal, title="CAPTCHA Security Check"):
 
     async def on_submit(self, interaction: discord.Interaction):
         if isinstance(interaction.user, discord.Member) and any(r.id == self.role_id for r in getattr(interaction.user, 'roles', [])):
-            return await interaction.response.send_message("You are already verified on this server!", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("You are already verified on this server!", discord.Color.red()), ephemeral=True)
 
         session = CAPTCHA_SESSIONS.get(interaction.user.id)
         if not session or time.time() - session.get("timestamp", 0) > 600:
-            return await interaction.response.send_message("Your CAPTCHA session expired (`> 10 minutes`). Please click 'Request New CAPTCHA'.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Your CAPTCHA session expired (`> 10 minutes`). Please click 'Request New CAPTCHA'.", discord.Color.red()), ephemeral=True)
 
         user_typed = self.code_input.value.strip().upper()
         expected = session["code"]
 
         if user_typed != expected:
-            return await interaction.response.send_message(f"**Incorrect CAPTCHA Code!** You entered `{user_typed}`. Please click **Request New CAPTCHA** to try again.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed(f"**Incorrect CAPTCHA Code!** You entered `{user_typed}`. Please click **Request New CAPTCHA** to try again."), ephemeral=True)
 
         role = interaction.guild.get_role(self.role_id)
         if not role:
-            return await interaction.response.send_message("Configuration error: The verification role could not be found.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Configuration error: The verification role could not be found.", discord.Color.red()), ephemeral=True)
 
         remove_role = interaction.guild.get_role(self.remove_role_id) if self.remove_role_id else None
 
@@ -54,11 +54,11 @@ class CaptchaInputModal(Modal, title="CAPTCHA Security Check"):
                 del CAPTCHA_SESSIONS[interaction.user.id]
 
             msg = "You are Successfully Verified now"
-            await interaction.response.send_message(msg, ephemeral=True)
+            await interaction.response.send_message(embed=make_embed(msg, discord.Color.green()), ephemeral=True)
         except discord.Forbidden:
-            await interaction.response.send_message(f"I do not have permission to modify roles ({role.mention}). Please contact a server administrator.", ephemeral=True)
+            await interaction.response.send_message(embed=make_embed(f"I do not have permission to modify roles ({role.mention}). Please contact a server administrator.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await interaction.response.send_message(f"An error occurred assigning the verified role: {e}", ephemeral=True)
+            await interaction.response.send_message(embed=make_embed(f"An error occurred assigning the verified role: {e}", discord.Color.red()), ephemeral=True)
 
 class CaptchaInteractionLayout(discord.ui.View):
     def __init__(self, role_id: int, remove_role_id: int = None):
@@ -71,13 +71,13 @@ class CaptchaInteractionLayout(discord.ui.View):
 
         async def enter_cb(interaction: discord.Interaction):
             if isinstance(interaction.user, discord.Member) and any(r.id == self.role_id for r in getattr(interaction.user, 'roles', [])):
-                return await interaction.response.send_message("You are already verified on this server!", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You are already verified on this server!", discord.Color.red()), ephemeral=True)
             modal = CaptchaInputModal(self.role_id, self.remove_role_id)
             await interaction.response.send_modal(modal)
 
         async def refresh_cb(interaction: discord.Interaction):
             if isinstance(interaction.user, discord.Member) and any(r.id == self.role_id for r in getattr(interaction.user, 'roles', [])):
-                return await interaction.response.send_message("You are already verified on this server!", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You are already verified on this server!", discord.Color.red()), ephemeral=True)
             code, img_bytes = generate_captcha()
             CAPTCHA_SESSIONS[interaction.user.id] = {"code": code, "timestamp": time.time()}
             
@@ -110,16 +110,16 @@ class PersistentVerifyLayout(discord.ui.View):
     async def verify_cb(self, interaction: discord.Interaction):
         config = load_verify_config(interaction.guild.id)
         if not config.get("enabled", True):
-            return await interaction.response.send_message("Server verification is currently disabled (`Status: Inactive`).", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Server verification is currently disabled (`Status: Inactive`).", discord.Color.red()), ephemeral=True)
 
         role_id = config.get("role_id")
         remove_role_id = config.get("remove_role_id")
 
         if not role_id or not interaction.guild.get_role(role_id):
-            return await interaction.response.send_message("Server verification is currently misconfigured (`Verified role not found`).", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Server verification is currently misconfigured (`Verified role not found`).", discord.Color.red()), ephemeral=True)
 
         if isinstance(interaction.user, discord.Member) and any(r.id == role_id for r in getattr(interaction.user, 'roles', [])):
-            return await interaction.response.send_message("You are already verified on this server!", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("You are already verified on this server!", discord.Color.red()), ephemeral=True)
 
         verification_type = config.get("verification_type", "captcha")
 
@@ -135,11 +135,11 @@ class PersistentVerifyLayout(discord.ui.View):
                         pass
                 remove_pending_kick(interaction.guild.id, interaction.user.id)
                 msg = "You are Successfully Verified now"
-                await interaction.response.send_message(msg, ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(msg, discord.Color.green()), ephemeral=True)
             except discord.Forbidden:
-                await interaction.response.send_message(f"I do not have permission to modify roles ({role.mention}). Please contact a server administrator.", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"I do not have permission to modify roles ({role.mention}). Please contact a server administrator.", discord.Color.red()), ephemeral=True)
             except Exception as e:
-                await interaction.response.send_message(f"An error occurred assigning the verified role: {e}", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"An error occurred assigning the verified role: {e}", discord.Color.red()), ephemeral=True)
             return
 
         elif verification_type == "web_captcha":
@@ -147,6 +147,7 @@ class PersistentVerifyLayout(discord.ui.View):
                 import secrets
                 token = secrets.token_urlsafe(16)
                 from Commands.Verify._storage import WEB_VERIFY_SESSIONS
+from Commands._utils import make_embed
                 WEB_VERIFY_SESSIONS[token] = {
                     "user_id": interaction.user.id,
                     "guild_id": interaction.guild.id,
@@ -166,7 +167,7 @@ class PersistentVerifyLayout(discord.ui.View):
                 
                 await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
             except Exception as e:
-                await interaction.response.send_message(f"Failed to generate verification panel: {e}", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"Failed to generate verification panel: {e}", discord.Color.red()), ephemeral=True)
                 
         else: # captcha
             try:
@@ -186,5 +187,4 @@ class PersistentVerifyLayout(discord.ui.View):
                 
                 await interaction.response.send_message(embed=embed, file=file, view=view, ephemeral=True)
             except Exception as e:
-                await interaction.response.send_message(f"Failed to generate verification panel: {e}", ephemeral=True)
-
+                await interaction.response.send_message(embed=make_embed(f"Failed to generate verification panel: {e}", discord.Color.red()), ephemeral=True)

@@ -1,6 +1,7 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
+from Commands._utils import make_embed
 
 class MassMoveCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -17,11 +18,11 @@ class MassMoveCog(commands.Cog):
         await ctx.defer()
         
         if from_channel.id == to_channel.id:
-            return await ctx.send("You cannot move members to the same channel.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You cannot move members to the same channel.", discord.Color.red()), ephemeral=True)
             
         members = from_channel.members
         if not members:
-            return await ctx.send(f"There are no members in {from_channel.mention} to move.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"There are no members in {from_channel.mention} to move."), ephemeral=True)
             
         success_count = 0
         failed_count = 0
@@ -48,11 +49,11 @@ class MassMoveCog(commands.Cog):
     @massmove_cmd.error
     async def massmove_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need `Move Members` permission to use this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need `Move Members` permission to use this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send("I need `Move Members` permission to execute this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("I need `Move Members` permission to execute this command."), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MassMoveCog(bot))

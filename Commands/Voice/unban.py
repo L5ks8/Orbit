@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Voice._storage import remove_from_vcban
 from Commands.Voice.voice import voice_group
@@ -8,11 +8,11 @@ from Commands.Voice.voice import voice_group
 async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     success = remove_from_vcban(ctx.guild.id, user.id)
     if not success:
-        return await ctx.send("This user is not currently voice banned on this server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This user is not currently voice banned on this server.", discord.Color.red()), ephemeral=True)
 
     embed = discord.Embed(title="Voice Unbanned", color=discord.Color.green())
     embed.add_field(name="Target", value=f"{user.mention} (`{user.id}`)", inline=False)
@@ -30,11 +30,11 @@ async def vc_unban_cmd(ctx: commands.Context, user: discord.User, *, reason: str
 @vc_unban_cmd.error
 async def vcunban_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
-        await ctx.send("You need Move Members permission to voice unban users.", ephemeral=True)
+        await ctx.send(embed=make_embed("You need Move Members permission to voice unban users.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("Usage: `-voice unban <@user> [reason]`", ephemeral=True)
+        await ctx.send(embed=make_embed("Usage: `-voice unban <@user> [reason]`", discord.Color.red()), ephemeral=True)
     else:
-        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class VcUnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -51,8 +51,8 @@ class VcUnbanPrefixFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Voice.voice import voice_group
+from Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(VcUnbanCommand(bot))
     await bot.add_cog(VcUnbanPrefixFallback(bot))
-

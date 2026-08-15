@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 
 from Commands.Verify._storage import reset_verify_config
@@ -7,7 +7,7 @@ from Commands.Verify.verify import verify_group
 async def _do_verify_reset(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     reset_verify_config(ctx.guild.id)
 
@@ -35,9 +35,9 @@ class VerifyResetCog(commands.Cog):
     @reset_cmd.error
     async def reset_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Server permission to reset verification.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Server permission to reset verification.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class VerifyResetFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -50,8 +50,8 @@ class VerifyResetFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Verify.verify import verify_group
+from Commands._utils import make_embed
     if "verify" not in bot.all_commands:
         bot.add_command(verify_group)
     await bot.add_cog(VerifyResetCog(bot))
     await bot.add_cog(VerifyResetFallback(bot))
-

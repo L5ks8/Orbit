@@ -1,9 +1,10 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 import re
 from Commands.Cases._storage import create_case
 from Commands.Log._modlog_storage import add_modlog
+from Commands._utils import make_embed
 
 class MassBanCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -32,14 +33,14 @@ class MassBanCog(commands.Cog):
         # Extract all IDs from the input string (mentions or raw IDs)
         user_ids_raw = re.findall(r'\d+', users)
         if not user_ids_raw:
-            return await ctx.send("No valid user IDs or mentions found in the input.", ephemeral=True)
+            return await ctx.send(embed=make_embed("No valid user IDs or mentions found in the input."), ephemeral=True)
             
         # Deduplicate while preserving order
         seen = set()
         user_ids = [int(uid) for uid in user_ids_raw if not (uid in seen or seen.add(uid))]
         
         if len(user_ids) > 50:
-            return await ctx.send("You can only mass ban up to 50 users at a time to prevent rate limits.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You can only mass ban up to 50 users at a time to prevent rate limits."), ephemeral=True)
             
         success_count = 0
         failed_count = 0
@@ -77,11 +78,11 @@ class MassBanCog(commands.Cog):
     @massban_cmd.error
     async def massban_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need `Ban Members` permission to use this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need `Ban Members` permission to use this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send("I need `Ban Members` permission to execute this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("I need `Ban Members` permission to execute this command."), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MassBanCog(bot))

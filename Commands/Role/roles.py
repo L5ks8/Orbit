@@ -1,12 +1,13 @@
-import math
+﻿import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
+from Commands._utils import make_embed
 
 @commands.hybrid_group(name="all", description="View all server items.")
 async def all_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
-        await ctx.send("Please use `/all roles`.", ephemeral=True)
+        await ctx.send(embed=make_embed("Please use `/all roles`."), ephemeral=True)
 
 class AllRolesLayout(discord.ui.View):
     def __init__(self, guild: discord.Guild, roles: list[discord.Role], author_id: int):
@@ -27,7 +28,7 @@ class AllRolesLayout(discord.ui.View):
 
         async def close_callback(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -44,7 +45,7 @@ class AllRolesLayout(discord.ui.View):
 
             async def prev_callback(interaction: discord.Interaction):
                 if interaction.user.id != self.author_id:
-                    return await interaction.response.send_message("You cannot control these pagination buttons.", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("You cannot control these pagination buttons.", discord.Color.red()), ephemeral=True)
                 if self.page > 1:
                     self.page -= 1
                     self.refresh_page()
@@ -52,7 +53,7 @@ class AllRolesLayout(discord.ui.View):
 
             async def next_callback(interaction: discord.Interaction):
                 if interaction.user.id != self.author_id:
-                    return await interaction.response.send_message("You cannot control these pagination buttons.", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("You cannot control these pagination buttons.", discord.Color.red()), ephemeral=True)
                 if self.page < self.total_pages:
                     self.page += 1
                     self.refresh_page()
@@ -87,11 +88,11 @@ class AllRolesLayout(discord.ui.View):
 async def _do_allroles(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     roles = [r for r in reversed(ctx.guild.roles) if not r.is_default()]
     if not roles:
-        return await ctx.send("There are no custom roles on this server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("There are no custom roles on this server."), ephemeral=True)
 
     view = AllRolesLayout(ctx.guild, roles, ctx.author.id)
     kwargs = view.get_kwargs(ctx.guild.id)
@@ -113,4 +114,3 @@ async def setup(bot: commands.Bot):
     if "all" not in bot.all_commands:
         bot.add_command(all_group)
     await bot.add_cog(AllRolesFallback(bot))
-

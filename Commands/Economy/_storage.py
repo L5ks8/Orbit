@@ -1,4 +1,4 @@
-from Database.mongodb import get_config, set_config, get_db
+﻿from Database.mongodb import get_config, set_config, get_db
 import time
 import random
 import threading
@@ -11,7 +11,7 @@ _economy_lock = threading.Lock()
 DEFAULT_ECONOMY_CONFIG = {
     "enabled": True,
     # Money Options
-    "currency_symbol": "🪙",
+    "currency_symbol": "",
     "money_multiplier": 1.0,
     "bet_limit_enabled": True,
     "bet_limit_amount": 10000,

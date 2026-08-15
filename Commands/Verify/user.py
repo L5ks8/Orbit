@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 
@@ -9,21 +9,21 @@ from Commands.Verify.verify import verify_group
 async def _do_verify_user(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     config = load_verify_config(ctx.guild.id)
     role_id = config.get("role_id")
     remove_role_id = config.get("remove_role_id")
 
     if not role_id:
-        return await ctx.send("Server verification is currently misconfigured (`Verified role not set`). Please run `-verify setup` first.", ephemeral=True)
+        return await ctx.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please run `-verify setup` first.", discord.Color.red()), ephemeral=True)
 
     role = ctx.guild.get_role(role_id)
     if not role:
-        return await ctx.send("Server verification is currently misconfigured (`Verified role not found in server`).", ephemeral=True)
+        return await ctx.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not found in server`).", discord.Color.red()), ephemeral=True)
 
     if any(r.id == role_id for r in getattr(member, 'roles', [])):
-        return await ctx.send(f"{member.mention} is already verified on this server!", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"{member.mention} is already verified on this server!", discord.Color.red()), ephemeral=True)
 
     remove_role = ctx.guild.get_role(remove_role_id) if remove_role_id else None
 
@@ -58,9 +58,9 @@ async def _do_verify_user(ctx: commands.Context, member: discord.Member):
         await ctx.send(view=status_view, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
-        await ctx.send(f"I do not have permission to modify roles for {member.mention}. Please check my role hierarchy.", ephemeral=True)
+        await ctx.send(embed=make_embed(f"I do not have permission to modify roles for {member.mention}. Please check my role hierarchy.", discord.Color.red()), ephemeral=True)
     except Exception as e:
-        await ctx.send(f"An error occurred manually verifying {member.mention}: {e}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"An error occurred manually verifying {member.mention}: {e}", discord.Color.red()), ephemeral=True)
 
 @verify_group.command(name="user", description="Manually verify a member.")
 @commands.has_permissions(manage_guild=True)
@@ -75,13 +75,13 @@ class VerifyUserCog(commands.Cog):
     @user_cmd.error
     async def user_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Server permission to manually verify members.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Server permission to manually verify members.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-verify user <@member>`", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `-verify user <@member>`", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.MemberNotFound, commands.BadArgument)):
-            await ctx.send("Member not found in this server.", ephemeral=True)
+            await ctx.send(embed=make_embed("Member not found in this server.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class VerifyUserFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -94,8 +94,8 @@ class VerifyUserFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Verify.verify import verify_group
+from Commands._utils import make_embed
     if "verify" not in bot.all_commands:
         bot.add_command(verify_group)
     await bot.add_cog(VerifyUserCog(bot))
     await bot.add_cog(VerifyUserFallback(bot))
-

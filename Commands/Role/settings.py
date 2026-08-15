@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.Role.role import role_group
@@ -24,18 +24,18 @@ PERMISSION_CHOICES = [app_commands.Choice(name=k, value=k) for k in PERMISSION_M
 async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission: str, state: str):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     perm_key = PERMISSION_MAP.get(permission.lower())
     if not perm_key:
         valid = ", ".join(f"`{k}`" for k in PERMISSION_MAP)
-        return await ctx.send(f"Unknown permission `{permission}`. Valid options: {valid}", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"Unknown permission `{permission}`. Valid options: {valid}"), ephemeral=True)
 
     if state.lower() not in ("on", "off", "reset"):
-        return await ctx.send("State must be `on`, `off`, or `reset`.", ephemeral=True)
+        return await ctx.send(embed=make_embed("State must be `on`, `off`, or `reset`.", discord.Color.red()), ephemeral=True)
 
     if role >= ctx.guild.me.top_role:
-        return await ctx.send("I cannot modify overwrites for a role that is higher than or equal to my highest role.", ephemeral=True)
+        return await ctx.send(embed=make_embed("I cannot modify overwrites for a role that is higher than or equal to my highest role.", discord.Color.red()), ephemeral=True)
 
     perm_value = True if state.lower() == "on" else (False if state.lower() == "off" else None)
 
@@ -105,15 +105,15 @@ class RoleSettingsCog(commands.Cog):
     @role_settings_cmd.error
     async def role_settings_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Administrator permission to use role settings.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Administrator permission to use role settings.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send("I need Manage Roles permission to modify channel overwrites.", ephemeral=True)
+            await ctx.send(embed=make_embed("I need Manage Roles permission to modify channel overwrites."), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-role settings <@role> <permission> <on/off/reset>`", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `-role settings <@role> <permission> <on/off/reset>`", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.RoleNotFound, commands.BadArgument)):
-            await ctx.send("Role not found.", ephemeral=True)
+            await ctx.send(embed=make_embed("Role not found.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class RoleSettingsFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -127,6 +127,7 @@ class RoleSettingsFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Role.role import role_group
+from Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleSettingsCog(bot))

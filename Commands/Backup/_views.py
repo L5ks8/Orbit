@@ -1,7 +1,8 @@
-import discord
+﻿import discord
 from discord.ui import View, Select, Button
 from Commands.Backup._storage import delete_backup, get_backup
 from datetime import datetime
+from Commands._utils import make_embed
 
 class ConfirmLoadView(View):
     def __init__(self, backup_id: str, cog):
@@ -13,7 +14,7 @@ class ConfirmLoadView(View):
     @discord.ui.button(label="Confirm Load (DESTRUCTIVE)", style=discord.ButtonStyle.danger, custom_id="backup_confirm_load")
     async def confirm_btn(self, interaction: discord.Interaction, button: Button):
         if interaction.user.id != interaction.guild.owner_id:
-            return await interaction.response.send_message("Only the server owner can confirm this.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the server owner can confirm this."), ephemeral=True)
         self.confirmed = True
         self.stop()
         await interaction.response.defer()
@@ -22,7 +23,7 @@ class ConfirmLoadView(View):
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.secondary, custom_id="backup_cancel_load")
     async def cancel_btn(self, interaction: discord.Interaction, button: Button):
         if interaction.user.id != interaction.guild.owner_id:
-            return await interaction.response.send_message("Only the server owner can cancel this.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the server owner can cancel this."), ephemeral=True)
         self.stop()
         await interaction.response.edit_message(content="Backup load cancelled.", view=None, embed=None)
 
@@ -46,7 +47,7 @@ class OverwriteBackupView(View):
 
     async def select_callback(self, interaction: discord.Interaction):
         if interaction.user.id != interaction.guild.owner_id:
-            return await interaction.response.send_message("Only the server owner can do this.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the server owner can do this."), ephemeral=True)
         
         target_id = self.select.values[0]
         # Keep the target_id to overwrite the same slot, or just delete target_id and save new one
@@ -82,11 +83,11 @@ class BackupListView(View):
 
     async def load_callback(self, interaction: discord.Interaction):
         if interaction.user.id != interaction.guild.owner_id:
-            return await interaction.response.send_message("Only the server owner can do this.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the server owner can do this."), ephemeral=True)
         target_id = self.load_select.values[0]
         backup_data = get_backup(target_id)
         if not backup_data:
-            return await interaction.response.send_message("Backup not found.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Backup not found.", discord.Color.red()), ephemeral=True)
             
         confirm_view = ConfirmLoadView(target_id, self.cog)
         await interaction.response.send_message(
@@ -97,7 +98,7 @@ class BackupListView(View):
 
     async def delete_callback(self, interaction: discord.Interaction):
         if interaction.user.id != interaction.guild.owner_id:
-            return await interaction.response.send_message("Only the server owner can do this.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the server owner can do this."), ephemeral=True)
         target_id = self.delete_select.values[0]
         delete_backup(target_id)
         await interaction.response.edit_message(content=f"Backup deleted successfully.", view=None, embed=None)

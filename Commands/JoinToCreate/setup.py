@@ -8,7 +8,7 @@ from Commands.JoinToCreate._storage import load_jtc_config, save_jtc_config
 async def _do_jtc_setup(ctx: commands.Context, channel: discord.VoiceChannel, category: discord.CategoryChannel, default_user_limit: int = 0):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     if default_user_limit < 0 or default_user_limit > 99:
         default_user_limit = 0
@@ -55,13 +55,13 @@ class JTCSetupCog(commands.Cog):
     @jtc_setup_cmd.error
     async def jtc_setup_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Server and Manage Channels permissions to setup Temp Voice.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Server and Manage Channels permissions to setup Temp Voice.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-tempvoice setup <#voice_channel> <#category> [user_limit]`", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `-tempvoice setup <#voice_channel> <#category> [user_limit]`", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.ChannelNotFound, commands.BadArgument)):
-            await ctx.send("Could not find the specified channel or category.", ephemeral=True)
+            await ctx.send(embed=make_embed("Could not find the specified channel or category.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred during setup: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred during setup: {error}", discord.Color.red()), ephemeral=True)
 
 class JTCSetupPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -74,8 +74,8 @@ class JTCSetupPrefixFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.JoinToCreate.tempvoice import tempvoice_group
+from Commands._utils import make_embed
     if "tempvoice" not in bot.all_commands:
         bot.add_command(tempvoice_group)
     await bot.add_cog(JTCSetupCog(bot))
     await bot.add_cog(JTCSetupPrefixFallback(bot))
-

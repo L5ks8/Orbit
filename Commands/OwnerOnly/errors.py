@@ -1,7 +1,8 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import View, Button
 from Commands.OwnerOnly._monitor import get_error_log, clear_errors, record_command
+from Commands._utils import make_embed
 
 class ErrorsView(View):
     def __init__(self, owner: discord.abc.User):
@@ -45,14 +46,14 @@ class ErrorsView(View):
 
         async def _clear_cb(interaction: discord.Interaction):
             if interaction.user.id != self.owner.id:
-                return await interaction.response.send_message("Not allowed.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("Not allowed.", discord.Color.red()), ephemeral=True)
             clear_errors()
             self.build_ui()
             await interaction.response.edit_message(embed=self.get_embed(), view=self)
 
         async def _close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.owner.id:
-                return await interaction.response.send_message("Not allowed.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("Not allowed.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -85,7 +86,7 @@ class ErrorsCommand(commands.Cog):
     @errors_cmd.error
     async def errors_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
-            await ctx.send(f"Errors command failed: {error}", allowed_mentions=discord.AllowedMentions.none())
+            await ctx.send(embed=make_embed(f"Errors command failed: {error}", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ErrorsCommand(bot))

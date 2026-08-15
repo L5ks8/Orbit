@@ -1,7 +1,8 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import ActionRow, Button, Select
+from Commands._utils import make_embed
 
 
 
@@ -133,7 +134,7 @@ class HelpCategorySelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         if interaction.user.id != self.parent_view.author_id:
-            return await interaction.response.send_message("You cannot control this help panel.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("You cannot control this help panel.", discord.Color.red()), ephemeral=True)
         
         page_idx = int(self.values[0])
         self.parent_view.current_page = page_idx
@@ -160,21 +161,21 @@ class HelpLayout(discord.ui.View):
 
         async def prev_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this help panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this help panel.", discord.Color.red()), ephemeral=True)
             if self.current_page > 0:
                 self.current_page -= 1
                 await interaction.response.edit_message(**self.get_kwargs())
 
         async def next_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this help panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this help panel.", discord.Color.red()), ephemeral=True)
             if self.current_page < len(PAGES) - 1:
                 self.current_page += 1
                 await interaction.response.edit_message(**self.get_kwargs())
 
         async def close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this help panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this help panel.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -213,8 +214,7 @@ class HelpCommandCog(commands.Cog):
 
     @help_cmd.error
     async def help_error(self, ctx: commands.Context, error):
-        await ctx.send(f"An error occurred displaying help: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"An error occurred displaying help: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(HelpCommandCog(bot))
-

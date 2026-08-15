@@ -1,8 +1,8 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.Cases._storage import get_user_cases
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 class HistoryPagination(discord.ui.View):
     def __init__(self, target_name: str, cases: list, per_page: int = 5):
@@ -94,13 +94,13 @@ class HistoryCog(commands.Cog):
     @history_cmd.error
     async def history_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Moderate Members permission to view history.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Moderate Members permission to view history.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage("-history", "<@user>"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-history", "<@user>"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-history', '<@user>')}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"{format_usage('-history','<@user>')}"), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

@@ -1,4 +1,4 @@
-import os
+﻿import os
 import io
 import asyncio
 import tempfile
@@ -33,23 +33,23 @@ async def vc_say_cmd(ctx: commands.Context, *, text: str):
     voice_client = ctx.guild.voice_client if ctx.guild else None
 
     if not voice_client or not voice_client.is_connected():
-        return await ctx.send("I'm not in a voice channel. Use `/connect` first.", ephemeral=True)
+        return await ctx.send(embed=make_embed("I'm not in a voice channel. Use `/connect` first.", discord.Color.red()), ephemeral=True)
 
     if not HAS_EDGE_TTS:
-        return await ctx.send("TTS is not available.", ephemeral=True)
+        return await ctx.send(embed=make_embed("TTS is not available.", discord.Color.red()), ephemeral=True)
 
     if len(text) > 500:
-        return await ctx.send("Text is too long. Maximum 500 characters.", ephemeral=True)
+        return await ctx.send(embed=make_embed("Text is too long. Maximum 500 characters.", discord.Color.red()), ephemeral=True)
 
     await ctx.defer()
 
     try:
         audio_data = await _text_to_speech(text)
     except Exception as e:
-        return await ctx.send(f"TTS failed: `{e}`", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"TTS failed: `{e}`", discord.Color.red()), ephemeral=True)
 
     if not audio_data:
-        return await ctx.send("Could not generate audio.", ephemeral=True)
+        return await ctx.send(embed=make_embed("Could not generate audio.", discord.Color.red()), ephemeral=True)
 
     tmp_path = None
     try:
@@ -72,7 +72,7 @@ async def vc_say_cmd(ctx: commands.Context, *, text: str):
         voice_client.play(source, after=after_playing)
 
         embed = discord.Embed(
-            description=f"🔊 **{text}**",
+            description=f" **{text}**",
             color=discord.Color.green(),
         )
         embed.set_footer(text=f"{ctx.author.display_name} • {voice_client.channel.name}")
@@ -93,11 +93,12 @@ async def vc_say_cmd(ctx: commands.Context, *, text: str):
 @vc_say_cmd.error
 async def vc_say_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("Use: `-voice say <text>` or `-vc say <text>`", ephemeral=True)
+        await ctx.send(embed=make_embed("Use: `-voice say <text>` or `-vc say <text>`", discord.Color.red()), ephemeral=True)
     else:
-        await ctx.send(f"Error: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Error: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     from Commands.Voice.voice import voice_group
+from Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)

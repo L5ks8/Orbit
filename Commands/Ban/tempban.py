@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 import re
@@ -6,6 +6,7 @@ import time
 from Commands.Cases._storage import create_case
 from Commands.Log._modlog_storage import add_modlog
 from Database.mongodb import get_db
+from Commands._utils import make_embed
 
 def parse_duration(duration_str: str) -> int:
     """Parses a duration string like '1d', '12h', '30m' into seconds."""
@@ -53,7 +54,7 @@ class TempBanCog(commands.Cog):
         
         seconds = parse_duration(duration)
         if seconds <= 0:
-            return await ctx.send("Invalid duration format. Please use formats like `1d`, `12h`, `30m`.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Invalid duration format. Please use formats like `1d`, `12h`, `30m`.", discord.Color.red()), ephemeral=True)
             
         unban_time = int(time.time()) + seconds
         
@@ -64,9 +65,9 @@ class TempBanCog(commands.Cog):
                 delete_message_seconds=history
             )
         except discord.Forbidden:
-            return await ctx.send("I do not have permission to ban this user. They might have a higher role than me.", ephemeral=True)
+            return await ctx.send(embed=make_embed("I do not have permission to ban this user. They might have a higher role than me.", discord.Color.red()), ephemeral=True)
         except discord.HTTPException:
-            return await ctx.send("Failed to ban the user due to an API error.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Failed to ban the user due to an API error.", discord.Color.red()), ephemeral=True)
             
         # Store in DB
         db = get_db()
@@ -120,11 +121,11 @@ class TempBanCog(commands.Cog):
     @tempban_cmd.error
     async def tempban_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need `Ban Members` permission to use this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need `Ban Members` permission to use this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send("I need `Ban Members` permission to execute this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("I need `Ban Members` permission to execute this command."), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(TempBanCog(bot))

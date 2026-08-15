@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 
 @commands.hybrid_group(name="role", description="Server role management commands.")
@@ -14,7 +14,7 @@ async def role_group(ctx: commands.Context):
                     try:
                         target = await commands.MemberConverter().convert(ctx, user_str)
                     except commands.MemberNotFound:
-                        return await ctx.send(f"Member '{user_str}' not found.", ephemeral=True)
+                        return await ctx.send(embed=make_embed(f"Member'{user_str}' not found.", discord.Color.red()), ephemeral=True)
                     
                     found_role = None
                     try:
@@ -37,16 +37,17 @@ async def role_group(ctx: commands.Context):
                                     break
                                 
                     if not found_role:
-                        return await ctx.send(f"Role `{role_query}` not found on this server.", ephemeral=True)
+                        return await ctx.send(embed=make_embed(f"Role `{role_query}` not found on this server.", discord.Color.red()), ephemeral=True)
                         
                     if found_role in target.roles:
                         from Commands.Role.remove import _do_removerole
                         return await _do_removerole(ctx, target, found_role, "Toggled via quick -role command")
                     else:
                         from Commands.Role.add import _do_addrole
+from Commands._utils import make_embed
                         return await _do_addrole(ctx, target, found_role, "Toggled via quick -role command")
 
-        await ctx.send("Please use `/role info`, `/role all`, `/role rall`, `/role create`, `/role remove`, or `/role settings`.", ephemeral=True)
+        await ctx.send(embed=make_embed("Please use `/role info`, `/role all`, `/role rall`, `/role create`, `/role remove`, or `/role settings`."), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     if "role" not in bot.all_commands:

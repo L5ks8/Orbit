@@ -1,6 +1,7 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
+from Commands._utils import make_embed
 
 
 
@@ -15,11 +16,11 @@ class UnlockCommand(commands.Cog):
         await ctx.defer()
         target_channel = channel or ctx.channel
         if not isinstance(target_channel, discord.TextChannel):
-            return await ctx.send("Please specify a valid text channel.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Please specify a valid text channel.", discord.Color.red()), ephemeral=True)
 
         overwrite = target_channel.overwrites_for(ctx.guild.default_role)
         if overwrite.send_messages is None or overwrite.send_messages is True:
-            return await ctx.send("This channel is not currently locked.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This channel is not currently locked.", discord.Color.red()), ephemeral=True)
 
         try:
             overwrite.send_messages = None
@@ -34,19 +35,18 @@ class UnlockCommand(commands.Cog):
             embed.add_field(name="Status", value="`@everyone` send messages restored", inline=False)
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
-            await ctx.send("I do not have sufficient permissions to unlock this channel.", ephemeral=True)
+            await ctx.send(embed=make_embed("I do not have sufficient permissions to unlock this channel.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await ctx.send(f"Error unlocking channel: {e}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Error unlocking channel: {e}", discord.Color.red()), ephemeral=True)
 
     @unlock.error
     async def unlock_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Channels permission to unlock channels.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Channels permission to unlock channels.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -unlock [#channel] [reason]", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: -unlock [#channel] [reason]", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UnlockCommand(bot))
-

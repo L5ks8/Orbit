@@ -1,4 +1,4 @@
-import random
+﻿import random
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -38,7 +38,7 @@ class DiceView(discord.ui.View):
             self.game_over = True
 
             cfg = load_economy_config(self.guild_id)
-            sym = cfg.get("currency_symbol", "🪙")
+            sym = cfg.get("currency_symbol", "")
             
             dice_sum = d1 + d2
             is_doubles = (d1 == d2)
@@ -51,7 +51,7 @@ class DiceView(discord.ui.View):
                 if interaction.guild and interaction.user:
                     xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, 30)
                     if xp_earned > 0:
-                        self.outcome_text += f" *(✨ +{xp_earned} XP)*"
+                        self.outcome_text += f" *( +{xp_earned} XP)*"
                         
             elif dice_sum > 7:
                 payout = int(self.bet_amount * 1.5)
@@ -61,7 +61,7 @@ class DiceView(discord.ui.View):
                 if interaction.guild and interaction.user:
                     xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, 15)
                     if xp_earned > 0:
-                        self.outcome_text += f" *(✨ +{xp_earned} XP)*"
+                        self.outcome_text += f" *( +{xp_earned} XP)*"
                         
             else:
                 self.outcome_text = f"You rolled a **{dice_sum}**... You lost **{sym} {self.bet_amount:,}**."
@@ -74,7 +74,7 @@ class DiceView(discord.ui.View):
         btn_roll = discord.ui.Button(label=f"Roll Again ({self.bet_amount:,})", style=discord.ButtonStyle.primary, custom_id="play_again")
         async def _roll_cb(inter: discord.Interaction):
             if inter.user.id != self.player.id:
-                return await inter.response.send_message("This is not your game!", ephemeral=True)
+                return await inter.response.send_message(embed=make_embed("This is not your game!", discord.Color.red()), ephemeral=True)
             await inter.response.defer()
             new_view = DiceView(self.guild_id, self.player, self.bet_amount)
             await new_view.roll(inter)
@@ -100,7 +100,7 @@ class DiceCommand(commands.Cog):
         from Commands.Economy._storage import load_economy_config
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
+            await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
             return False
         return True
 
@@ -111,27 +111,27 @@ class DiceCommand(commands.Cog):
         await ctx.defer()
         
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.")
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
 
         if bet < 1:
-            return await ctx.send("Bet amount must be at least 1.")
+            return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
 
         cfg = load_economy_config(ctx.guild.id)
-        sym = cfg.get("currency_symbol", "🪙")
+        sym = cfg.get("currency_symbol", "")
 
         if cfg.get("bet_limit_enabled", True):
             max_bet = cfg.get("bet_limit_amount", 10000)
             if bet > max_bet:
-                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.")
+                return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
 
         bal = get_user_balance(ctx.guild.id, ctx.author.id)
         if bal < bet:
-            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
+            return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
 
         # Create view and simulate first roll
         view = DiceView(ctx.guild.id, ctx.author, bet)
         
-        embed = discord.Embed(title="Orbit Casino: Dice Roll", description=f"Rolling the dice... 🎲\n**Bet:** {bet:,}", color=discord.Color.blue())
+        embed = discord.Embed(title="Orbit Casino: Dice Roll", description=f"Rolling the dice... \n**Bet:** {bet:,}", color=discord.Color.blue())
         embed.add_field(name="Player", value=ctx.author.mention, inline=False)
         msg = await ctx.send(embed=embed)
 
@@ -148,6 +148,7 @@ class DiceCommand(commands.Cog):
         dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
         
         import asyncio
+from Commands._utils import make_embed
         await asyncio.sleep(1.5)
         await view.roll(dummy_inter)
 

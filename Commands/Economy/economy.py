@@ -1,4 +1,4 @@
-import time
+﻿import time
 import random
 import discord
 from discord import app_commands
@@ -12,6 +12,7 @@ from Commands.Economy._storage import (
     set_user_economy,
     get_economy_leaderboard
 )
+from Commands._utils import make_embed
 
 class EconomyCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -23,7 +24,7 @@ class EconomyCommand(commands.Cog):
         from Commands.Economy._storage import load_economy_config
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView, make_embed
             await ctx.send(
                 embed=get_module_disabled_embed("Economy"),
                 view=ModuleDisabledView(ctx.guild.id, "Economy")
@@ -37,10 +38,10 @@ class EconomyCommand(commands.Cog):
     async def balance(self, ctx: commands.Context, user: discord.Member | None = None):
         target = user or ctx.author
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         config = load_economy_config(ctx.guild.id)
-        symbol = config.get("currency_symbol", "🪙")
+        symbol = config.get("currency_symbol", "")
         bal = get_user_balance(ctx.guild.id, target.id)
 
         is_self = (target.id == ctx.author.id)
@@ -63,13 +64,13 @@ class EconomyCommand(commands.Cog):
     @commands.hybrid_command(name="work", description="Work a job to earn money!")
     async def work(self, ctx: commands.Context):
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True) or not config.get("work_enabled", True):
-            return await ctx.send("The work command is currently disabled on this server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("The work command is currently disabled on this server.", discord.Color.red()), ephemeral=True)
 
-        symbol = config.get("currency_symbol", "🪙")
+        symbol = config.get("currency_symbol", "")
         success, amount, template, cooldown_rem = claim_work(ctx.guild.id, ctx.author.id)
 
         if not success:
@@ -97,17 +98,17 @@ class EconomyCommand(commands.Cog):
     @commands.hybrid_command(name="daily", description="Claim your daily money reward!")
     async def daily(self, ctx: commands.Context):
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView, make_embed
             return await ctx.send(
                 embed=get_module_disabled_embed("Economy"),
                 view=ModuleDisabledView(ctx.guild.id, "Economy")
             )
 
-        symbol = config.get("currency_symbol", "🪙")
+        symbol = config.get("currency_symbol", "")
         success, amount, streak, cooldown_rem = claim_daily(ctx.guild.id, ctx.author.id)
 
         if not success:
@@ -124,7 +125,7 @@ class EconomyCommand(commands.Cog):
             title="Daily Reward Claimed!",
             description=(
                 f"You received **{symbol} {amount:,}**!\n\n"
-                f"🔥 **Streak:** `Day {streak}`\n"
+                f" **Streak:** `Day {streak}`\n"
                 f"⏰ **Next Claim:** <t:{next_claim}:R>"
             ),
             color=discord.Color.green()
@@ -137,14 +138,14 @@ class EconomyCommand(commands.Cog):
     @commands.hybrid_command(name="baltop", aliases=["moneytop"], description="View the server's money leaderboard.")
     async def baltop(self, ctx: commands.Context):
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         config = load_economy_config(ctx.guild.id)
-        symbol = config.get("currency_symbol", "🪙")
+        symbol = config.get("currency_symbol", "")
         leaderboard_data = get_economy_leaderboard(ctx.guild.id, limit=10)
 
         if not leaderboard_data:
-            return await ctx.send("No economy data found for this server yet.", ephemeral=True)
+            return await ctx.send(embed=make_embed("No economy data found for this server yet."), ephemeral=True)
 
         medals = ["🥇", "🥈", "🥉"]
         lines = []
@@ -160,7 +161,7 @@ class EconomyCommand(commands.Cog):
             lines.append(f"{prefix} **{display_name}** — {symbol} `{bal:,}`")
 
         embed = discord.Embed(
-            title=f"🏆 {ctx.guild.name} — Wealth Leaderboard",
+            title=f" {ctx.guild.name} — Wealth Leaderboard",
             description="\n".join(lines),
             color=discord.Color.gold()
         )
@@ -172,10 +173,10 @@ class EconomyCommand(commands.Cog):
     @commands.hybrid_command(name="inventory", aliases=["inv", "items"], description="View your inventory items and chests.")
     async def inventory(self, ctx: commands.Context):
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         config = load_economy_config(ctx.guild.id)
-        symbol = config.get("currency_symbol", "🪙")
+        symbol = config.get("currency_symbol", "")
         user_data = get_user_economy(ctx.guild.id, ctx.author.id)
         inv = user_data.get("inventory", [])
 
@@ -219,7 +220,7 @@ class EconomyCommand(commands.Cog):
     @app_commands.describe(chest_name="Name or ID of the chest to open")
     async def open_chest(self, ctx: commands.Context, chest_name: str):
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         config = load_economy_config(ctx.guild.id)
         user_data = get_user_economy(ctx.guild.id, ctx.author.id)
@@ -233,18 +234,18 @@ class EconomyCommand(commands.Cog):
                 break
 
         if not target_chest:
-            return await ctx.send(f"Chest `{chest_name}` not found on this server.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"Chest `{chest_name}` not found on this server.", discord.Color.red()), ephemeral=True)
 
         cid = target_chest.get("id")
         if cid not in inv:
-            return await ctx.send(f"You do not have a **{target_chest.get('name')}** in your inventory!", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"You do not have a **{target_chest.get('name')}** in your inventory!", discord.Color.red()), ephemeral=True)
 
         rarity_weights = target_chest.get("rarity_weights", {})
         rarities = config.get("rarities", [])
         items = config.get("items", [])
 
         if not rarities or not items:
-            return await ctx.send("No items or rarities configured for this chest yet.", ephemeral=True)
+            return await ctx.send(embed=make_embed("No items or rarities configured for this chest yet."), ephemeral=True)
 
         # Roll rarity
         weighted_list = []
@@ -266,10 +267,10 @@ class EconomyCommand(commands.Cog):
         set_user_economy(ctx.guild.id, ctx.author.id, user_data)
 
         embed = discord.Embed(
-            title="✨ Chest Opened!",
+            title=" Chest Opened!",
             description=(
                 f"You opened a **{target_chest.get('name')}** and found:\n\n"
-                f"🎁 **{granted_item.get('name')}** (`{chosen_rarity.get('name')}`)\n"
+                f" **{granted_item.get('name')}** (`{chosen_rarity.get('name')}`)\n"
                 f"*{granted_item.get('description', '')}*"
             ),
             color=discord.Color.from_str(chosen_rarity.get("color", "#7289DA"))

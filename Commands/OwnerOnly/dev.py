@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 
 PAGES = [
@@ -71,7 +71,7 @@ class DevCategorySelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         if interaction.user.id != self.parent_view.author_id:
-            return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
         
         page_idx = int(self.values[0])
         self.parent_view.current_page = page_idx
@@ -96,21 +96,21 @@ class DevLayout(discord.ui.View):
 
         async def prev_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             if self.current_page > 0:
                 self.current_page -= 1
                 await interaction.response.edit_message(**self.get_kwargs())
 
         async def next_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             if self.current_page < len(PAGES) - 1:
                 self.current_page += 1
                 await interaction.response.edit_message(**self.get_kwargs())
 
         async def close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -143,6 +143,7 @@ class DevCommand(commands.Cog):
     @commands.is_owner()
     async def dev_cmd(self, ctx: commands.Context):
         from Commands.OwnerOnly._monitor import record_command
+from Commands._utils import make_embed
         record_command("dev", str(ctx.author))
         if ctx.guild is not None:
             try:

@@ -1,8 +1,8 @@
-import asyncio
+﻿import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
-from Commands._utils import MemberOrIDConverter, format_usage
+from Commands._utils import MemberOrIDConverter, format_usage, make_embed
 from Commands.Log._storage import log_event
 
 class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
@@ -29,7 +29,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
 
         if self.context_msg:
             try:
-                await self.context_msg.edit(content="⏳ Sending DM...", view=None, embed=None)
+                await self.context_msg.edit(content=" Sending DM...", view=None, embed=None)
             except Exception:
                 pass
         
@@ -39,7 +39,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
             matched_role = self.target_obj
             target_members = [m for m in matched_role.members if not m.bot]
             if not target_members:
-                return await interaction.followup.send(f"No non-bot members found with role {matched_role.mention}.", ephemeral=True)
+                return await interaction.followup.send(embed=make_embed(f"No non-bot members found with role {matched_role.mention}."), ephemeral=True)
 
             success_count = 0
             failed_count = 0
@@ -58,8 +58,8 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
             )
             summary_embed.add_field(name="Target Role", value=matched_role.mention, inline=True)
             summary_embed.add_field(name="Total Members", value=str(len(target_members)), inline=True)
-            summary_embed.add_field(name="Successfully Sent", value=f"✅ `{success_count}`", inline=True)
-            summary_embed.add_field(name="Failed (DMs Closed)", value=f"❌ `{failed_count}`", inline=True)
+            summary_embed.add_field(name="Successfully Sent", value=f" `{success_count}`", inline=True)
+            summary_embed.add_field(name="Failed (DMs Closed)", value=f" `{failed_count}`", inline=True)
 
             await interaction.followup.send(embed=summary_embed, ephemeral=True)
 
@@ -75,10 +75,10 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
             try:
                 await user_target.send(content=message)
             except Exception:
-                return await interaction.followup.send(f"❌ Failed to send DM to **{user_target}** (`{user_target.id}`). Their DMs may be closed.", ephemeral=True)
+                return await interaction.followup.send(embed=make_embed(f"Failed to send DM to **{user_target}** (`{user_target.id}`). Their DMs may be closed.", discord.Color.red()), ephemeral=True)
 
             embed = discord.Embed(
-                title="✅ Direct Message Sent",
+                title=" Direct Message Sent",
                 description=f"Direct message successfully delivered to **{user_target.mention}** (`{user_target.id}`).",
                 color=discord.Color.green()
             )
@@ -104,7 +104,7 @@ class ComposeDMView(discord.ui.View):
     @discord.ui.button(label="Compose DM", style=discord.ButtonStyle.primary, emoji="✍️")
     async def compose_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.author.id:
-            return await interaction.response.send_message("Only the command executor can use this.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the command executor can use this."), ephemeral=True)
         modal = ComposeDMModal(
             target_type=self.target_type,
             target_obj=self.target_obj,
@@ -132,10 +132,10 @@ class DMCommand(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def dm_cmd(self, ctx: commands.Context, target: str = None, *, message: str = None):
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         if not target:
-            return await ctx.send(format_usage("-dm", "<@member/ID/@role>", "[optional message]"), ephemeral=True)
+            return await ctx.send(embed=make_embed(format_usage("-dm", "<@member/ID/@role>", "[optional message]"), discord.Color.red()), ephemeral=True)
 
         target_str = target.strip()
         full_input = f"{target_str} {message}" if message else target_str
@@ -179,7 +179,7 @@ class DMCommand(commands.Cog):
                 target_type = 'user'
                 target_obj = user_target
             except Exception:
-                return await ctx.send(f"Could not find role, member, or user ID for `{target_str}`.", ephemeral=True)
+                return await ctx.send(embed=make_embed(f"Could not find role, member, or user ID for `{target_str}`.", discord.Color.red()), ephemeral=True)
 
         target_display = target_obj.mention if hasattr(target_obj, 'mention') else str(target_obj)
         embed = discord.Embed(
@@ -205,11 +205,11 @@ class DMCommand(commands.Cog):
     @dm_cmd.error
     async def dm_cmd_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need `Manage Messages` permission to use the `-dm` command.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need `Manage Messages` permission to use the `-dm` command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage("-dm", "<@member/ID/@role>", "[optional message]"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-dm", "<@member/ID/@role>", "[optional message]"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"Error: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Error: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DMCommand(bot))

@@ -1,10 +1,10 @@
-import re
+﻿import re
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal
 from Commands.Blacklist._storage import load_blacklist, add_to_blacklist, remove_from_blacklist
 from Commands.Whitelist._storage import is_whitelisted
-from Commands._utils import build_embed
+from Commands._utils import build_embed, make_embed
 
 class AddBlacklistModal(Modal, title="Add ID to Blacklist"):
     def __init__(self, parent_view: "BlacklistListLayout"):
@@ -18,21 +18,21 @@ class AddBlacklistModal(Modal, title="Add ID to Blacklist"):
     async def on_submit(self, interaction: discord.Interaction):
         clean_id_str = re.sub(r"\D", "", self.target_id.value)
         if not clean_id_str:
-            return await interaction.response.send_message("Please provide a valid numeric ID.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Please provide a valid numeric ID.", discord.Color.red()), ephemeral=True)
         user_id = int(clean_id_str)
 
         if is_whitelisted(interaction.guild_id, user_id):
-            return await interaction.response.send_message("This user is on the global moderation whitelist (`Immune to Blacklist`).", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("This user is on the global moderation whitelist (`Immune to Blacklist`).", discord.Color.red()), ephemeral=True)
 
         reason_str = self.reason.value or "No reason provided"
         success = add_to_blacklist(interaction.guild_id, user_id, reason_str, interaction.user.id)
         if not success:
-            return await interaction.response.send_message(f"ID `{user_id}` is already on the command blacklist.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed(f"ID `{user_id}` is already on the command blacklist.", discord.Color.red()), ephemeral=True)
 
         data = load_blacklist(interaction.guild_id)
         self.parent_view.update_view(data)
         await interaction.response.edit_message(**self.parent_view.get_kwargs())
-        await interaction.followup.send(f"Added ID `{user_id}` to the command blacklist.", ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Added ID `{user_id}` to the command blacklist.", discord.Color.green()), ephemeral=True)
 
 class RemoveBlacklistModal(Modal, title="Remove ID from Blacklist"):
     def __init__(self, parent_view: "BlacklistListLayout"):
@@ -44,17 +44,17 @@ class RemoveBlacklistModal(Modal, title="Remove ID from Blacklist"):
     async def on_submit(self, interaction: discord.Interaction):
         clean_id_str = re.sub(r"\D", "", self.target_id.value)
         if not clean_id_str:
-            return await interaction.response.send_message("Please provide a valid numeric ID.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Please provide a valid numeric ID.", discord.Color.red()), ephemeral=True)
         user_id = int(clean_id_str)
 
         success = remove_from_blacklist(interaction.guild_id, user_id)
         if not success:
-            return await interaction.response.send_message(f"ID `{user_id}` is not currently on the command blacklist.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed(f"ID `{user_id}` is not currently on the command blacklist.", discord.Color.red()), ephemeral=True)
 
         data = load_blacklist(interaction.guild_id)
         self.parent_view.update_view(data)
         await interaction.response.edit_message(**self.parent_view.get_kwargs())
-        await interaction.followup.send(f"Removed ID `{user_id}` from the command blacklist.", ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Removed ID `{user_id}` from the command blacklist.", discord.Color.green()), ephemeral=True)
 
 class BlacklistListLayout(discord.ui.View):
     def __init__(self, guild: discord.Guild, bot: commands.Bot, author_id: int):
@@ -72,17 +72,17 @@ class BlacklistListLayout(discord.ui.View):
 
         async def add_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             await interaction.response.send_modal(AddBlacklistModal(self))
 
         async def remove_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             await interaction.response.send_modal(RemoveBlacklistModal(self))
 
         async def close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -116,4 +116,3 @@ class BlacklistListLayout(discord.ui.View):
         )
             
         return {"embed": embed, "view": self}
-

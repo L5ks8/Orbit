@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 import re
@@ -218,7 +218,7 @@ class ChannelAutomationListener(commands.Cog):
                     fail_reason = f"{message.author.mention} sent wrong number (expected **{expected_number}**, got **{parsed_number}**)!"
 
                 fail_embed = discord.Embed(
-                    title="❌ Counting Failed!",
+                    title=" Counting Failed!",
                     description=f"{fail_reason}\n\n**Count has been reset to 0.**",
                     color=discord.Color.red()
                 )
@@ -240,12 +240,12 @@ class ChannelAutomationListener(commands.Cog):
                 # Countdown: 3, 2, 1, 0
                 countdown_msg = None
                 try:
-                    countdown_msg = await message.channel.send("🔒 Channel locked! Restarting count in **3...**")
+                    countdown_msg = await message.channel.send(" Channel locked! Restarting count in **3...**")
                     for i in [2, 1, 0]:
                         await asyncio.sleep(1)
                         if countdown_msg:
                             try:
-                                await countdown_msg.edit(content=f"🔒 Channel locked! Restarting count in **{i}...**")
+                                await countdown_msg.edit(content=f" Channel locked! Restarting count in **{i}...**")
                             except Exception:
                                 pass
                 except Exception:
@@ -265,9 +265,9 @@ class ChannelAutomationListener(commands.Cog):
 
                 try:
                     if countdown_msg:
-                        await countdown_msg.edit(content="🔓 **Channel unlocked!** Next number is **1**.")
+                        await countdown_msg.edit(content=" **Channel unlocked!** Next number is **1**.")
                     else:
-                        await message.channel.send("🔓 **Channel unlocked!** Next number is **1**.")
+                        await message.channel.send(" **Channel unlocked!** Next number is **1**.")
                 except Exception:
                     pass
 

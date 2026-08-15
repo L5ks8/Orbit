@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.Level._storage import (
@@ -6,6 +6,7 @@ from Commands.Level._storage import (
     get_leaderboard, get_leaderboard_by, get_user_rank, level_from_xp
 )
 import io
+from Commands._utils import make_embed
 
 # ── Leaderboard category config ──
 LB_CATEGORIES = {
@@ -64,7 +65,7 @@ class LeaderboardSelect(discord.ui.Select):
         await interaction.response.defer()
         embed, file = await self.cog._build_leaderboard_data(self.guild, chosen)
         if embed is None:
-            return await interaction.followup.send("No data available.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("No data available.", discord.Color.red()), ephemeral=True)
         view = LeaderboardView(self.cog, self.guild, chosen)
         await interaction.edit_original_response(embed=embed, attachments=[file], view=view)
 
@@ -132,7 +133,7 @@ class LevelCommandsCog(commands.Cog):
     async def rank(self, interaction: discord.Interaction, member: discord.Member = None):
         config = load_level_config(interaction.guild.id)
         if not config.get("enabled", False):
-            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView, make_embed
             return await interaction.response.send_message(
                 embed=get_module_disabled_embed("Leveling"),
                 view=ModuleDisabledView(interaction.guild.id, "Leveling"),
@@ -193,7 +194,7 @@ class LevelCommandsCog(commands.Cog):
             embed.add_field(name="Rank", value=f"#{rank}", inline=True)
             embed.add_field(name="Level", value=str(level), inline=True)
             embed.add_field(name="XP", value=f"{current_xp:,} / {needed_xp:,}", inline=True)
-            embed.add_field(name="Progress", value=f"{bar}\n📨 {msg_count:,} • 🎙 {voice_mins:,}m • 😄 {react_count:,} • Total: {total_xp:,} XP", inline=False)
+            embed.add_field(name="Progress", value=f"{bar}\n📨 {msg_count:,} •  {voice_mins:,}m • 😄 {react_count:,} • Total: {total_xp:,} XP", inline=False)
             embed.set_thumbnail(url=target.display_avatar.url)
             await interaction.response.send_message(embed=embed)
 
@@ -201,7 +202,7 @@ class LevelCommandsCog(commands.Cog):
     async def leaderboard(self, interaction: discord.Interaction):
         config = load_level_config(interaction.guild.id)
         if not config.get("enabled", False):
-            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView, make_embed
             return await interaction.response.send_message(
                 embed=get_module_disabled_embed("Leveling"),
                 view=ModuleDisabledView(interaction.guild.id, "Leveling"),
@@ -211,7 +212,7 @@ class LevelCommandsCog(commands.Cog):
         await interaction.response.defer()
         embed, file = await self._build_leaderboard_data(interaction.guild, "total_xp")
         if embed is None:
-            return await interaction.followup.send("No one has earned XP yet!", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("No one has earned XP yet!", discord.Color.red()), ephemeral=True)
 
         view = LeaderboardView(self, interaction.guild)
         await interaction.followup.send(embed=embed, file=file, view=view)
@@ -226,18 +227,18 @@ class LevelCommandsCog(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def xp_add(self, ctx: commands.Context, member: discord.Member, amount: int):
         if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
         from Commands.Level._storage import add_xp
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
-        await ctx.send(f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).")
+        await ctx.send(embed=make_embed(f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).", discord.Color.green()))
 
     @xp.command(name="remove", description="Remove XP from a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to remove")
     @commands.has_permissions(administrator=True)
     async def xp_remove(self, ctx: commands.Context, member: discord.Member, amount: int):
         if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
         from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp
         data = get_user_xp(ctx.guild.id, member.id)
@@ -246,36 +247,36 @@ class LevelCommandsCog(commands.Cog):
         data["total_xp"] = new_xp
         set_user_xp(ctx.guild.id, member.id, data)
         new_level = level_from_xp(new_xp)
-        await ctx.send(f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).")
+        await ctx.send(embed=make_embed(f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).", discord.Color.green()))
 
     @xp.command(name="set", description="Set a member's XP.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to set")
     @commands.has_permissions(administrator=True)
     async def xp_set(self, ctx: commands.Context, member: discord.Member, amount: int):
         if amount < 0:
-            return await ctx.send("Amount cannot be negative.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Amount cannot be negative.", discord.Color.red()), ephemeral=True)
             
         from Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp
         data = get_user_xp(ctx.guild.id, member.id)
         data["total_xp"] = amount
         set_user_xp(ctx.guild.id, member.id, data)
         new_level = level_from_xp(amount)
-        await ctx.send(f"Set {member.mention}'s XP to **{amount:,} XP** (Level {new_level}).")
+        await ctx.send(embed=make_embed(f"Set {member.mention}'s XP to **{amount:,} XP** (Level {new_level})."))
 
     @xp.command(name="transfer", description="Transfer XP between members.")
     @app_commands.describe(member="The member to transfer XP to", amount="Amount of XP to transfer")
     async def xp_transfer(self, ctx: commands.Context, member: discord.Member, amount: int):
         if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
         if member == ctx.author:
-            return await ctx.send("You cannot transfer XP to yourself.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You cannot transfer XP to yourself.", discord.Color.red()), ephemeral=True)
             
         from Commands.Level._storage import get_user_xp, set_user_xp, add_xp
         data = get_user_xp(ctx.guild.id, ctx.author.id)
         current_xp = data.get("total_xp", 0)
         
         if current_xp < amount:
-            return await ctx.send(f"You don't have enough XP to transfer {amount:,}. You only have {current_xp:,} XP.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"You don't have enough XP to transfer {amount:,}. You only have {current_xp:,} XP."), ephemeral=True)
             
         # Deduct from author
         data["total_xp"] = current_xp - amount
@@ -284,7 +285,7 @@ class LevelCommandsCog(commands.Cog):
         # Add to target
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
         
-        await ctx.send(f"Successfully transferred **{amount:,} XP** to {member.mention}!")
+        await ctx.send(embed=make_embed(f"Successfully transferred **{amount:,} XP** to {member.mention}!", discord.Color.green()))
 
     # ─── PREFIX COMMANDS ──────────────────────────────────────────────────────
     @commands.command(name="rank")
@@ -293,7 +294,7 @@ class LevelCommandsCog(commands.Cog):
             return
         config = load_level_config(ctx.guild.id)
         if not config.get("enabled", False):
-            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView, make_embed
             return await ctx.send(
                 embed=get_module_disabled_embed("Leveling"),
                 view=ModuleDisabledView(ctx.guild.id, "Leveling")
@@ -338,17 +339,17 @@ class LevelCommandsCog(commands.Cog):
             file = discord.File(io.BytesIO(img_bytes), filename="rank_card.png")
             await ctx.send(file=file)
         except Exception as e:
-            await ctx.send("Failed to generate rank card.")
+            await ctx.send(embed=make_embed("Failed to generate rank card.", discord.Color.red()))
 
     @commands.command(name="leaderboard", aliases=["lb", "top"])
     async def leaderboard_prefix(self, ctx: commands.Context):
         config = load_level_config(ctx.guild.id)
         if not config.get("enabled", False):
-            return await ctx.send("The Level System is not enabled on this server.")
+            return await ctx.send(embed=make_embed("The Level System is not enabled on this server.", discord.Color.red()))
 
         embed, file = await self._build_leaderboard_data(ctx.guild, "total_xp")
         if embed is None:
-            return await ctx.send("No one has earned XP yet!")
+            return await ctx.send(embed=make_embed("No one has earned XP yet!", discord.Color.red()))
 
         view = LeaderboardView(self, ctx.guild)
         await ctx.send(embed=embed, file=file, view=view)

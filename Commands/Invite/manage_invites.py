@@ -1,11 +1,11 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Invite._storage import (
     add_fake_invites, remove_fake_invites,
     add_bonus_invites, remove_bonus_invites,
     reset_invites
 )
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 
 class ManageInvitesCommand(commands.Cog):
@@ -17,7 +17,7 @@ class ManageInvitesCommand(commands.Cog):
     async def addfakeinvites(self, ctx: commands.Context, user: discord.Member, amount: int):
         await ctx.defer()
         if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
         add_fake_invites(ctx.guild.id, user.id, amount)
         
@@ -31,16 +31,16 @@ class ManageInvitesCommand(commands.Cog):
     @addfakeinvites.error
     async def addfakeinvites_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
     @commands.hybrid_command(name="removefakeinvites", description="Remove fake invites from a specific user.")
     @commands.has_permissions(manage_guild=True)
     async def removefakeinvites(self, ctx: commands.Context, user: discord.Member, amount: int):
         await ctx.defer()
         if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
         remove_fake_invites(ctx.guild.id, user.id, amount)
         
@@ -54,16 +54,16 @@ class ManageInvitesCommand(commands.Cog):
     @removefakeinvites.error
     async def removefakeinvites_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
     @commands.hybrid_command(name="addinvites", description="Add regular invites to a specific user.")
     @commands.has_permissions(manage_guild=True)
     async def addinvites(self, ctx: commands.Context, user: discord.Member, amount: int):
         await ctx.defer()
         if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
         add_bonus_invites(ctx.guild.id, user.id, amount)
         
@@ -77,16 +77,16 @@ class ManageInvitesCommand(commands.Cog):
     @addinvites.error
     async def addinvites_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
     @commands.hybrid_command(name="removeinvites", description="Remove regular invites from a specific user.")
     @commands.has_permissions(manage_guild=True)
     async def removeinvites(self, ctx: commands.Context, user: discord.Member, amount: int):
         await ctx.defer()
         if amount <= 0:
-            return await ctx.send("Amount must be greater than 0.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
         remove_bonus_invites(ctx.guild.id, user.id, amount)
         
@@ -100,9 +100,9 @@ class ManageInvitesCommand(commands.Cog):
     @removeinvites.error
     async def removeinvites_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
     @commands.hybrid_command(name="resetinvites", description="Reset the invites for a specific user or for the whole server.")
     @commands.has_permissions(manage_guild=True)
@@ -126,9 +126,9 @@ class ManageInvitesCommand(commands.Cog):
     @resetinvites.error
     async def resetinvites_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ManageInvitesCommand(bot))

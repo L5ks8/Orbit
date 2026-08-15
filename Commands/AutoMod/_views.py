@@ -1,6 +1,7 @@
-import discord
+﻿import discord
 from discord.ui import ActionRow, Button, Modal, TextInput
 from Commands.AutoMod._storage import load_automod_config, save_automod_config
+from Commands._utils import make_embed
 
 class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):
     max_msgs_input = TextInput(
@@ -39,7 +40,7 @@ class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):
             if m_msgs < 2 or t_win < 1 or m_mentions < 1:
                 raise ValueError()
         except ValueError:
-            return await interaction.response.send_message("Please enter valid positive numbers (Max messages >= 2, Time window >= 1).", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Please enter valid positive numbers (Max messages >= 2, Time window >= 1).", discord.Color.red()), ephemeral=True)
 
         config = load_automod_config(self.guild_id)
         config["anti_spam"]["max_messages"] = m_msgs
@@ -49,7 +50,7 @@ class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):
 
         self.dashboard_view.refresh_content(self.guild_id)
         await interaction.response.edit_message(view=self.dashboard_view)
-        await interaction.followup.send(f"Updated Anti-Spam settings: {m_msgs} msgs in {t_win}s, Max Mentions: {m_mentions}.", ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Updated Anti-Spam settings: {m_msgs} msgs in {t_win}s, Max Mentions: {m_mentions}.", discord.Color.green()), ephemeral=True)
 
 class AntiAltAgeModal(Modal, title="Configure Anti-Alt Minimum Age"):
     min_age_input = TextInput(
@@ -72,7 +73,7 @@ class AntiAltAgeModal(Modal, title="Configure Anti-Alt Minimum Age"):
             if age < 0:
                 raise ValueError()
         except ValueError:
-            return await interaction.response.send_message("Please enter a valid number of days (>= 0).", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Please enter a valid number of days (>= 0).", discord.Color.red()), ephemeral=True)
 
         config = load_automod_config(self.guild_id)
         config["anti_alt"]["min_age_days"] = age
@@ -80,7 +81,7 @@ class AntiAltAgeModal(Modal, title="Configure Anti-Alt Minimum Age"):
 
         self.dashboard_view.refresh_content(self.guild_id)
         await interaction.response.edit_message(view=self.dashboard_view)
-        await interaction.followup.send(f"Updated Anti-Alt minimum account age requirement to {age} days.", ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Updated Anti-Alt minimum account age requirement to {age} days.", discord.Color.green()), ephemeral=True)
 
 class AutoModDashboardLayout(discord.ui.View):
     def __init__(self, guild_id: int):
@@ -183,7 +184,7 @@ class AutoModDashboardLayout(discord.ui.View):
             try:
                 await interaction.message.delete()
             except Exception:
-                await interaction.response.send_message("Dashboard closed.", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed("Dashboard closed.", discord.Color.red()), ephemeral=True)
 
         self.btn_master.callback = master_cb
         self.btn_link.callback = link_cb
@@ -200,4 +201,3 @@ class AutoModDashboardLayout(discord.ui.View):
         self.add_item(self.btn_alt)
         self.add_item(self.btn_alt_cfg)
         self.add_item(self.btn_close)
-

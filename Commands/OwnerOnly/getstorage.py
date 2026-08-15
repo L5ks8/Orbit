@@ -1,4 +1,4 @@
-import os
+﻿import os
 import io
 import zipfile
 import pathlib
@@ -37,9 +37,10 @@ class GetStorageCommand(commands.Cog):
     @commands.is_owner()
     async def getstorage_cmd(self, ctx: commands.Context):
         from Commands.OwnerOnly._monitor import record_command
+from Commands._utils import make_embed
         record_command("getstorage", str(ctx.author))
 
-        msg = await ctx.send("Zipping storage directory... This might take a moment.", allowed_mentions=discord.AllowedMentions.none())
+        msg = await ctx.send(embed=make_embed("Zipping storage directory... This might take a moment."), allowed_mentions=discord.AllowedMentions.none())
         
         buffer, size_kb = await self._create_backup_zip_memory()
         

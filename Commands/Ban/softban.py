@@ -1,10 +1,10 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord import app_commands
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
-from Commands._utils import MemberOrIDConverter, format_usage
+from Commands._utils import MemberOrIDConverter, format_usage, make_embed
 import typing
 
 class SoftbanCommand(commands.Cog):
@@ -21,16 +21,16 @@ class SoftbanCommand(commands.Cog):
     async def softban(self, ctx: commands.Context, target: typing.Union[discord.Member, discord.User], *, reason: str = "No reason provided"):
         await ctx.defer()
         if target.id == ctx.author.id:
-            return await ctx.send("You cannot softban yourself.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You cannot softban yourself.", discord.Color.red()), ephemeral=True)
         if is_whitelisted(ctx.guild.id, target.id):
-            return await ctx.send("This user is on the global moderation whitelist (`Immune to Softban`).", ephemeral=True)
+            return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Softban`).", discord.Color.red()), ephemeral=True)
         if isinstance(target, discord.Member) and target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
-            return await ctx.send("You cannot softban a user with an equal or higher role.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You cannot softban a user with an equal or higher role.", discord.Color.red()), ephemeral=True)
 
         try:
             ban_entry = await ctx.guild.fetch_ban(target)
             if ban_entry:
-                return await ctx.send("This user is already banned. Softban is not possible.", ephemeral=True)
+                return await ctx.send(embed=make_embed("This user is already banned. Softban is not possible.", discord.Color.red()), ephemeral=True)
         except discord.NotFound:
             pass
 
@@ -52,29 +52,29 @@ class SoftbanCommand(commands.Cog):
             
             embed = discord.Embed(
                 title="🔨 User Softbanned",
-                description=f"✅ **{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*",
+                description=f" **{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*",
                 color=discord.Color.orange()
             )
             embed.add_field(name="Reason", value=reason, inline=False)
             await ctx.send(embed=embed)
 
         except discord.Forbidden:
-            await ctx.send("I do not have sufficient permissions to softban this user.", ephemeral=True)
+            await ctx.send(embed=make_embed("I do not have sufficient permissions to softban this user.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await ctx.send(f"Error softbanning user: {e}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Error softbanning user: {e}", discord.Color.red()), ephemeral=True)
 
     @softban.error
     async def softban_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to ban members.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to ban members.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send("I am missing the Ban Members permission.", ephemeral=True)
+            await ctx.send(embed=make_embed("I am missing the Ban Members permission.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage("-softban", "<@member>", "[reason]"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-softban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(format_usage("-softban", "<@member>", "[reason]"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-softban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SoftbanCommand(bot))

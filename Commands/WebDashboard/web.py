@@ -1,4 +1,4 @@
-import os
+﻿import os
 import secrets
 import json
 import asyncio
@@ -671,7 +671,7 @@ class WebDashboard:
                 s_data = data.get("serverstats", {})
                 ss_cfg = load_serverstats_config(guild_id)
                 ss_cfg["category_id"] = str(s_data.get("category_id", "") or "")
-                ss_cfg["category_name"] = str(s_data.get("category_name", "📊 Server Stats") or "📊 Server Stats")
+                ss_cfg["category_name"] = str(s_data.get("category_name", " Server Stats") or " Server Stats")
                 ss_cfg["users_enabled"] = bool(s_data.get("users_enabled"))
                 ss_cfg["users_name"] = str(s_data.get("users_name", "Users: {count}") or "Users: {count}")
                 ss_cfg["boosts_enabled"] = bool(s_data.get("boosts_enabled"))
@@ -1028,7 +1028,7 @@ class WebDashboard:
                 level_cfg["levelup_show_avatar"] = bool(ld.get("levelup_show_avatar", True))
                 level_cfg["levelup_message_content"] = ld.get("levelup_message_content", "{user_mention}")
                 level_cfg["levelup_embed_author"] = ld.get("levelup_embed_author", "")
-                level_cfg["levelup_embed_title"] = ld.get("levelup_embed_title", "🎉 Level Up!")
+                level_cfg["levelup_embed_title"] = ld.get("levelup_embed_title", " Level Up!")
                 level_cfg["levelup_embed_description"] = ld.get("levelup_embed_description", "")
                 level_cfg["levelup_embed_image"] = ld.get("levelup_embed_image", "")
                 level_cfg["levelup_embed_footer"] = ld.get("levelup_embed_footer", "")
@@ -1054,7 +1054,7 @@ class WebDashboard:
                 e_cfg = load_economy_config(guild_id)
                 ed = data["economy"]
                 e_cfg["enabled"] = bool(ed.get("enabled", True))
-                e_cfg["currency_symbol"] = str(ed.get("currency_symbol", "🪙") or "🪙")
+                e_cfg["currency_symbol"] = str(ed.get("currency_symbol", "") or "")
                 try:
                     e_cfg["money_multiplier"] = float(ed.get("money_multiplier", 1.0))
                 except (ValueError, TypeError):
@@ -1438,7 +1438,7 @@ class WebDashboard:
             member = guild.me
             
             content = data.get("message", "{user_mention}")
-            title = data.get("embed_title", "🎉 Level Up!")
+            title = data.get("embed_title", " Level Up!")
             desc = data.get("embed_description", "")
             author = data.get("embed_author", "")
             footer = data.get("embed_footer", "")

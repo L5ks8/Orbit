@@ -1,10 +1,11 @@
-import datetime
+﻿import datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.Poll.poll import ComponentsPollView
 from Commands.Poll._storage import generate_poll_id, create_poll_entry
+from Commands._utils import make_embed
 
 class FastPollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -21,7 +22,7 @@ class FastPollCommand(commands.Cog):
     async def fastpoll(self, ctx: commands.Context, question: str, duration: int = 60):
         await ctx.defer()
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         if duration < 1 or duration > 46080:
             duration = 60
@@ -45,10 +46,9 @@ class FastPollCommand(commands.Cog):
     @fastpoll.error
     async def fastpoll_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -fastpoll \"<question>\" [duration_in_minutes]", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: -fastpoll \"<question>\"[duration_in_minutes]", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(FastPollCommand(bot))
-

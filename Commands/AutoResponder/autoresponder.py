@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from Commands.AutoResponder._storage import add_response, remove_response, load_responses, get_response_entry
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 class AutoResponderCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -29,46 +29,46 @@ class AutoResponderCommand(commands.Cog):
     )
     async def addreply(self, ctx: commands.Context, channel: discord.TextChannel = None, trigger: str = None, *, response: str = None, use_ai: bool = False):
         if not trigger or not response:
-            return await ctx.send(format_usage("-addreply", "[#channel]", "<trigger_word>", "<response_message>"), ephemeral=True)
+            return await ctx.send(embed=make_embed(format_usage("-addreply", "[#channel]", "<trigger_word>", "<response_message>"), discord.Color.red()), ephemeral=True)
         
         await ctx.defer()
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
         
         channel_id = channel.id if channel else None
         add_response(ctx.guild.id, trigger, response, channel_id, use_ai)
         
         chan_text = f"<#{channel.id}>" if channel else "All Channels"
         ai_text = "Enabled" if use_ai else "Disabled"
-        await ctx.send(f"âœ… Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Channel:** {chan_text}\n**AI Context Check:** {ai_text}\n**Response:** {response}")
+        await ctx.send(embed=make_embed(f"Successfully added auto-response!\n**Trigger:** `{trigger}`\n**Channel:** {chan_text}\n**AI Context Check:** {ai_text}\n**Response:** {response}", discord.Color.green()))
 
     @commands.hybrid_command(name="delreply", aliases=["removereply"], description="Removes an auto-response.")
     @commands.has_permissions(manage_guild=True)
     @app_commands.describe(trigger="The trigger word or phrase to remove")
     async def delreply(self, ctx: commands.Context, *, trigger: str = None):
         if not trigger:
-            return await ctx.send(format_usage("-delreply", "<trigger_word>"), ephemeral=True)
+            return await ctx.send(embed=make_embed(format_usage("-delreply", "<trigger_word>"), discord.Color.red()), ephemeral=True)
             
         await ctx.defer()
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
             
         success = remove_response(ctx.guild.id, trigger)
         if success:
-            await ctx.send(f"âœ… Successfully removed auto-response for trigger: `{trigger}`")
+            await ctx.send(embed=make_embed(f"Successfully removed auto-response for trigger: `{trigger}`", discord.Color.green()))
         else:
-            await ctx.send(f"âŒ Could not find an auto-response with trigger: `{trigger}`", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Could not find an auto-response with trigger: `{trigger}`", discord.Color.red()), ephemeral=True)
 
     @commands.hybrid_command(name="replies", aliases=["listreplies"], description="Lists all active auto-responses.")
     @commands.has_permissions(manage_guild=True)
     async def listreplies(self, ctx: commands.Context):
         await ctx.defer()
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
             
         data = load_responses(ctx.guild.id)
         if not data:
-            return await ctx.send("This server has no auto-responses set up yet.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This server has no auto-responses set up yet."), ephemeral=True)
             
         lines = []
         for trigger, entry in data.items():
@@ -80,7 +80,7 @@ class AutoResponderCommand(commands.Cog):
         if len(content) > 2000:
             content = content[:1990] + "..."
             
-        await ctx.send(content)
+        await ctx.send(embed=make_embed(content))
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -228,4 +228,3 @@ class AutoResponderCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoResponderCommand(bot))
-

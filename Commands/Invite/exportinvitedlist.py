@@ -1,9 +1,9 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Invite._storage import get_invited_by_user
 import csv
 import io
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 
 class ExportInvitedListCommand(commands.Cog):
@@ -19,7 +19,7 @@ class ExportInvitedListCommand(commands.Cog):
         raw_list = get_invited_by_user(ctx.guild.id, target.id)
         
         if not raw_list:
-            return await ctx.send(f"{target.mention} has not invited anyone.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"{target.mention} has not invited anyone."), ephemeral=True)
             
         csv_file = io.StringIO()
         writer = csv.writer(csv_file)
@@ -41,9 +41,9 @@ class ExportInvitedListCommand(commands.Cog):
     @exportinvitedlist.error
     async def exportinvitedlist_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

@@ -1,13 +1,14 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord import app_commands
 from Commands.Cases._storage import get_case, delete_case, update_case_reason
+from Commands._utils import make_embed
 
 @commands.hybrid_group(name="case", description="Manage moderation cases.")
 @commands.has_permissions(manage_messages=True)
 async def case_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
-        await ctx.send("Please specify a subcommand: info, delete, or reason.", ephemeral=True)
+        await ctx.send(embed=make_embed("Please specify a subcommand: info, delete, or reason.", discord.Color.red()), ephemeral=True)
 
 class CaseCommandsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -18,7 +19,7 @@ class CaseCommandsCog(commands.Cog):
     async def case_info(self, ctx: commands.Context, fall: int):
         case_data = get_case(ctx.guild.id, fall)
         if not case_data:
-            return await ctx.send(f"Case #{fall} not found in this server.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"Case #{fall} not found in this server.", discord.Color.red()), ephemeral=True)
             
         action = case_data.get("action", "Unknown").capitalize()
         reason = case_data.get("reason", "No reason provided")
@@ -42,18 +43,18 @@ class CaseCommandsCog(commands.Cog):
     async def case_delete(self, ctx: commands.Context, fall: int):
         success = delete_case(ctx.guild.id, fall)
         if success:
-            await ctx.send(f"Case #{fall} has been successfully deleted.", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Case #{fall} has been successfully deleted.", discord.Color.green()), ephemeral=True)
         else:
-            await ctx.send(f"Case #{fall} could not be found or deleted.", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Case #{fall} could not be found or deleted.", discord.Color.red()), ephemeral=True)
 
     @case_group.command(name="reason", description="Ändert den Grund eines Falls.")
     @app_commands.describe(fall="Die ID des Falls (Zahl)", grund="Der neue Grund")
     async def case_reason(self, ctx: commands.Context, fall: int, *, grund: str):
         success = update_case_reason(ctx.guild.id, fall, grund)
         if success:
-            await ctx.send(f"Reason for Case #{fall} has been updated to: **{grund}**", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Reason for Case #{fall} has been updated to: **{grund}**", discord.Color.green()), ephemeral=True)
         else:
-            await ctx.send(f"Case #{fall} could not be found.", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Case #{fall} could not be found.", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     bot.add_command(case_group)

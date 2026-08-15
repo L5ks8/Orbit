@@ -1,4 +1,4 @@
-import io
+﻿import io
 import time
 import asyncio
 import discord
@@ -144,11 +144,11 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
         await interaction.response.defer(ephemeral=True)
         from Commands.Ticket._storage import is_blacklisted
         if is_blacklisted(interaction.guild.id, interaction.user.id):
-            return await interaction.followup.send("You are blacklisted from opening support tickets on this server.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("You are blacklisted from opening support tickets on this server.", discord.Color.red()), ephemeral=True)
 
         config = load_ticket_config(interaction.guild.id)
         if not config.get("enabled", False):
-            return await interaction.followup.send("Support tickets are currently disabled on this server.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("Support tickets are currently disabled on this server.", discord.Color.red()), ephemeral=True)
 
         category_id = config.get("category_id")
         support_role_id = config.get("support_role_id")
@@ -166,12 +166,12 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
         if not category and category_id:
             category = interaction.guild.get_channel(category_id)
         if not category or not isinstance(category, discord.CategoryChannel):
-            return await interaction.followup.send("Ticket system misconfigured (`Configured ticket category not found for this option`).", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("Ticket system misconfigured (`Configured ticket category not found for this option`).", discord.Color.red()), ephemeral=True)
 
         if not support_role and support_role_id:
             support_role = interaction.guild.get_role(support_role_id)
         if not support_role:
-            return await interaction.followup.send("Ticket system misconfigured (`Configured support role not found for this option`).", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("Ticket system misconfigured (`Configured support role not found for this option`).", discord.Color.red()), ephemeral=True)
 
         subject = self.subject_input.value.strip()
         description = self.description_input.value.strip()
@@ -179,7 +179,7 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
         active_tickets = config.get("active_tickets", {})
         user_open_count = sum(1 for t in active_tickets.values() if t.get("creator_id") == interaction.user.id)
         if user_open_count >= 3:
-            return await interaction.followup.send("You already have 3 open tickets! Please close an existing ticket before opening a new one.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("You already have 3 open tickets! Please close an existing ticket before opening a new one.", discord.Color.red()), ephemeral=True)
 
         counter = config.get("ticket_counter", 0) + 1
         clean_name = "".join(c for c in interaction.user.name.lower().replace(" ", "-") if c.isalnum() or c in "-_")[:15]
@@ -211,9 +211,9 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
                 reason=f"Support ticket opened by {interaction.user}"
             )
         except discord.Forbidden:
-            return await interaction.followup.send("I do not have permission to create channels inside the configured ticket category.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("I do not have permission to create channels inside the configured ticket category.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            return await interaction.followup.send(f"Failed to create ticket channel: {e}", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed(f"Failed to create ticket channel: {e}", discord.Color.red()), ephemeral=True)
 
         create_active_ticket(interaction.guild.id, ticket_channel.id, interaction.user.id, subject, description, self.category_option)
 
@@ -240,12 +240,12 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
         except Exception as e:
             print(f"SEND ERROR inside ticket_channel.send: {repr(e)}")
             try:
-                await interaction.followup.send(f"Your ticket channel {ticket_channel.mention} was created, but sending the ticket embed failed with error:\n`{e}`", ephemeral=True)
+                await interaction.followup.send(embed=make_embed(f"Your ticket channel {ticket_channel.mention} was created, but sending the ticket embed failed with error:\n`{e}`", discord.Color.red()), ephemeral=True)
             except Exception:
                 pass
             return
 
-        await interaction.followup.send(f"Your support ticket has been created: {ticket_channel.mention}", ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Your support ticket has been created: {ticket_channel.mention}", discord.Color.green()), ephemeral=True)
 
 class TicketControlLayout(discord.ui.View):
     def __init__(self, claimed_name: str = None):
@@ -268,7 +268,7 @@ class TicketControlLayout(discord.ui.View):
             ticket_data = config.get("active_tickets", {}).get(str(interaction.channel.id))
 
             if not ticket_data:
-                return await interaction.response.send_message("This channel is not recognized as an active ticket.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This channel is not recognized as an active ticket.", discord.Color.red()), ephemeral=True)
 
             is_staff = interaction.user.guild_permissions.manage_guild
             if isinstance(interaction.user, discord.Member) and support_role_id:
@@ -276,10 +276,10 @@ class TicketControlLayout(discord.ui.View):
                     is_staff = True
 
             if not is_staff:
-                return await interaction.response.send_message("Only support staff can claim tickets.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("Only support staff can claim tickets.", discord.Color.red()), ephemeral=True)
 
             if ticket_data.get("claimed_by"):
-                return await interaction.response.send_message(f"This ticket has already been claimed by <@{ticket_data['claimed_by']}>.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed(f"This ticket has already been claimed by <@{ticket_data['claimed_by']}>.", discord.Color.red()), ephemeral=True)
 
             claim_ticket(interaction.guild.id, interaction.channel.id, interaction.user.id)
 
@@ -309,7 +309,7 @@ class TicketControlLayout(discord.ui.View):
             ticket_data = config.get("active_tickets", {}).get(str(interaction.channel.id))
 
             if not ticket_data:
-                return await interaction.response.send_message("This channel is not an active ticket.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This channel is not an active ticket.", discord.Color.red()), ephemeral=True)
 
             creator_id = ticket_data.get("creator_id")
             is_authorized = interaction.user.id == creator_id or interaction.user.guild_permissions.manage_guild
@@ -318,9 +318,9 @@ class TicketControlLayout(discord.ui.View):
                     is_authorized = True
 
             if not is_authorized:
-                return await interaction.response.send_message("You do not have permission to close this ticket (`Creator or Support Staff only`).", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You do not have permission to close this ticket (`Creator or Support Staff only`).", discord.Color.red()), ephemeral=True)
 
-            await interaction.response.send_message("Initiating ticket closure...", ephemeral=True)
+            await interaction.response.send_message(embed=make_embed("Initiating ticket closure..."), ephemeral=True)
             asyncio.create_task(close_ticket_flow(interaction.guild, interaction.channel, interaction.user, reason="Closed via ticket button"))
 
         self.btn_claim.callback = claim_cb
@@ -363,8 +363,9 @@ class PersistentTicketPanelLayout(discord.ui.View):
         
         async def _btn_create_cb(interaction: discord.Interaction):
             from Commands.Ticket._storage import is_blacklisted
+from Commands._utils import make_embed
             if interaction.guild and is_blacklisted(interaction.guild.id, interaction.user.id):
-                return await interaction.response.send_message("You are blacklisted from opening support tickets on this server.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You are blacklisted from opening support tickets on this server.", discord.Color.red()), ephemeral=True)
             
             config = load_ticket_config(interaction.guild.id) if interaction.guild else {}
             slots = config.get("options_slots", [])
@@ -376,7 +377,7 @@ class PersistentTicketPanelLayout(discord.ui.View):
                 if len(slots) == 1:
                     selected_opt = slots[0].get("name", "Support") if isinstance(slots[0], dict) else str(slots[0])
                 elif len(slots) > 1:
-                    return await interaction.response.send_message("Please choose a category option from the dropdown menu above first!", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("Please choose a category option from the dropdown menu above first!"), ephemeral=True)
             if not selected_opt:
                 selected_opt = "General Support"
             modal = TicketOpenModal(category_option=selected_opt)
@@ -386,4 +387,3 @@ class PersistentTicketPanelLayout(discord.ui.View):
 
         self.add_item(panel_dropdown)
         self.add_item(btn_create)
-

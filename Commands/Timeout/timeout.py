@@ -1,4 +1,4 @@
-import datetime
+﻿import datetime
 import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
@@ -6,6 +6,7 @@ from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
 from Commands.Cases._storage import create_case
+from Commands._utils import make_embed
 
 
 
@@ -19,16 +20,16 @@ class TimeoutCommand(commands.Cog):
     async def timeout(self, ctx: commands.Context, target: discord.Member, minutes: int, *, reason: str = "No reason provided"):
         await ctx.defer()
         if target.id == ctx.author.id:
-            return await ctx.send("You cannot time out yourself.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You cannot time out yourself.", discord.Color.red()), ephemeral=True)
         if is_whitelisted(ctx.guild.id, target.id):
-            return await ctx.send("This user is on the global moderation whitelist (`Immune to Timeout`).", ephemeral=True)
+            return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Timeout`).", discord.Color.red()), ephemeral=True)
         if target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
-            return await ctx.send("You cannot time out a user with equal or higher role.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You cannot time out a user with equal or higher role.", discord.Color.red()), ephemeral=True)
         if minutes <= 0 or minutes > 40320:
-            return await ctx.send("Duration must be between 1 minute and 28 days (40320 minutes).", ephemeral=True)
+            return await ctx.send(embed=make_embed("Duration must be between 1 minute and 28 days (40320 minutes).", discord.Color.red()), ephemeral=True)
 
         try:
-            from Commands._utils import send_moderation_dm
+            from Commands._utils import send_moderation_dm, make_embed
             await send_moderation_dm(target, ctx.guild.name, "timed out", reason, f"{minutes} minutes", guild_id=ctx.guild.id)
 
             duration = datetime.timedelta(minutes=minutes)
@@ -50,19 +51,18 @@ class TimeoutCommand(commands.Cog):
             embed.add_field(name="Status", value="`Active (Cannot send messages or join VC)`", inline=False)
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
-            await ctx.send("I do not have sufficient permissions to time out this user.", ephemeral=True)
+            await ctx.send(embed=make_embed("I do not have sufficient permissions to time out this user.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await ctx.send(f"Error timing out user: {e}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Error timing out user: {e}", discord.Color.red()), ephemeral=True)
 
     @timeout.error
     async def timeout_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Moderate Members permission to use timeout.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Moderate Members permission to use timeout.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -timeout <@user/ID> <minutes> [reason]", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: -timeout <@user/ID> <minutes> [reason]", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(TimeoutCommand(bot))
-

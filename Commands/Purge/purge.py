@@ -1,14 +1,15 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 import re
+from Commands._utils import make_embed
 
 async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_name: str = "", user: discord.Member = None, after: str = None):
     if not isinstance(ctx.channel, (discord.TextChannel, discord.VoiceChannel, discord.Thread)):
-        return await ctx.send("This command can only be used in server channels.", ephemeral=True, delete_after=5)
+        return await ctx.send(embed=make_embed("This command can only be used in server channels.", discord.Color.red()), ephemeral=True, delete_after=5)
 
     if count < 1 or count > 100:
-        return await ctx.send("Please specify an amount between 1 and 100.", ephemeral=True, delete_after=5)
+        return await ctx.send(embed=make_embed("Please specify an amount between 1 and 100.", discord.Color.red()), ephemeral=True, delete_after=5)
         
     def final_check(m: discord.Message) -> bool:
         if user and m.author.id != user.id:
@@ -21,7 +22,7 @@ async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_n
     
     if after:
         if not after.isdigit():
-            return await ctx.send("The 'after' parameter must be a valid Message ID.", ephemeral=True, delete_after=5)
+            return await ctx.send(embed=make_embed("The'after' parameter must be a valid Message ID.", discord.Color.red()), ephemeral=True, delete_after=5)
         purge_kwargs["after"] = discord.Object(id=int(after))
 
     try:
@@ -39,11 +40,11 @@ async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_n
         )
         await ctx.send(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none(), delete_after=5)
     except discord.Forbidden:
-        await ctx.send("I do not have sufficient permissions to delete messages in this channel.", ephemeral=True, delete_after=5)
+        await ctx.send(embed=make_embed("I do not have sufficient permissions to delete messages in this channel.", discord.Color.red()), ephemeral=True, delete_after=5)
     except discord.HTTPException as e:
-        await ctx.send(f"Could not delete messages (they may be older than 14 days): {e}", ephemeral=True, delete_after=5)
+        await ctx.send(embed=make_embed(f"Could not delete messages (they may be older than 14 days): {e}", discord.Color.red()), ephemeral=True, delete_after=5)
     except Exception as e:
-        await ctx.send(f"Error purging messages: {e}", ephemeral=True, delete_after=5)
+        await ctx.send(embed=make_embed(f"Error purging messages: {e}", discord.Color.red()), ephemeral=True, delete_after=5)
 
 
 class PurgeCog(commands.Cog):
@@ -121,9 +122,9 @@ class PurgeCog(commands.Cog):
     @purge_mentions.error
     async def purge_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Messages permission to purge messages.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Messages permission to purge messages.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     bot.remove_command("purge")

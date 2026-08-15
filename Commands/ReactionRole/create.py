@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.ReactionRole.reactionrole import reactionrole_group
 
@@ -12,14 +12,14 @@ async def _do_create_panel(
 ):
     valid_roles = [r for r in roles if r is not None]
     if not valid_roles:
-        return await ctx.send("You must specify at least one valid role (`role1`).", ephemeral=True)
+        return await ctx.send(embed=make_embed("You must specify at least one valid role (`role1`)."), ephemeral=True)
 
     if len(valid_roles) > 10:
-        return await ctx.send("You can attach at most 10 roles per panel.", ephemeral=True)
+        return await ctx.send(embed=make_embed("You can attach at most 10 roles per panel."), ephemeral=True)
 
     for r in valid_roles:
         if r >= ctx.guild.me.top_role and r != ctx.guild.me:
-            return await ctx.send(f"I cannot assign the role `{r.name}` because it is equal to or higher than my highest role.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"I cannot assign the role `{r.name}` because it is equal to or higher than my highest role.", discord.Color.red()), ephemeral=True)
 
     embed = discord.Embed(
         title=title,
@@ -70,7 +70,7 @@ class ReactionRoleCreateCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.ReactionRole.reactionrole import reactionrole_group
+from Commands._utils import make_embed
     if "reactionrole" not in bot.all_commands:
         bot.add_command(reactionrole_group)
     await bot.add_cog(ReactionRoleCreateCog(bot))
-

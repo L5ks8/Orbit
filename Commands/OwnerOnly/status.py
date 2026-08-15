@@ -1,4 +1,4 @@
-import json
+﻿import json
 import pathlib
 import discord
 from discord.ext import commands
@@ -24,6 +24,7 @@ def _save_status(act_type: str, text: str, status_str: str = "online"):
 def _load_status() -> dict | None:
     try:
         from Database.mongodb import get_db
+from Commands._utils import make_embed
         db = get_db()
         if db is not None:
             doc = db["OwnerOnly_BotStatus"].find_one({"_id": "GLOBAL"})
@@ -121,7 +122,7 @@ class StatusInteractiveView(View):
 
         async def _act_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("Not allowed.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("Not allowed.", discord.Color.red()), ephemeral=True)
             val = self.act_select.values[0]
             if val == "clear":
                 data = _load_status() or {}
@@ -152,7 +153,7 @@ class StatusInteractiveView(View):
 
         async def _stat_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("Not allowed.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("Not allowed.", discord.Color.red()), ephemeral=True)
             val = self.status_select.values[0]
             data = _load_status() or {}
             c_type = data.get("type", "clear")
@@ -171,7 +172,7 @@ class StatusInteractiveView(View):
         btn_close = Button(label="Close Panel", style=discord.ButtonStyle.secondary, row=2)
         async def _close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("Not allowed.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("Not allowed.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -250,7 +251,7 @@ class StatusCommand(commands.Cog):
     @status_cmd.error
     async def status_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
-            await ctx.send(f"Status Error: {error}")
+            await ctx.send(embed=make_embed(f"Status Error: {error}", discord.Color.red()))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(StatusCommand(bot))

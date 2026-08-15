@@ -1,4 +1,4 @@
-import random
+﻿import random
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -79,17 +79,17 @@ class SlotsLayoutView(discord.ui.View):
 
         async def _spin_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("This is not your slot machine! Use `/slots` to spin your own.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This is not your slot machine! Use `/slots` to spin your own.", discord.Color.red()), ephemeral=True)
             
             await interaction.response.defer()
             gid = interaction.guild_id or self.guild_id
             cfg = load_economy_config(gid)
-            sym = cfg.get("currency_symbol", "🪙")
+            sym = cfg.get("currency_symbol", "")
             bet = self.session.bet_amount
 
             bal = get_user_balance(gid, interaction.user.id)
             if bal < bet:
-                return await interaction.followup.send(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**")
+                return await interaction.followup.send(embed=make_embed(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**"))
 
             remove_user_balance(gid, interaction.user.id, bet)
             self.session = SlotsSession(self.session.player, bet_amount=self.session.bet_amount, guild_id=self.guild_id)
@@ -101,23 +101,23 @@ class SlotsLayoutView(discord.ui.View):
 
             if payout > bet:
                 profit = payout - bet
-                self.session.outcome_text += f"\n💰 **Won:** {sym} {payout:,} *(Net: +{sym} {profit:,})*"
+                self.session.outcome_text += f"\n **Won:** {sym} {payout:,} *(Net: +{sym} {profit:,})*"
             elif payout == bet:
-                self.session.outcome_text += f"\n💰 **Returned:** {sym} {payout:,}"
+                self.session.outcome_text += f"\n **Returned:** {sym} {payout:,}"
             else:
-                self.session.outcome_text += f"\n💸 **Lost:** {sym} {bet:,}"
+                self.session.outcome_text += f"\n **Lost:** {sym} {bet:,}"
 
             if self.session.base_xp > 0 and interaction.guild and interaction.user:
                 from Commands.Level._storage import grant_minigame_xp
                 xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, self.session.base_xp)
                 if xp_earned > 0:
-                    self.session.outcome_text += f" *(✨ +{xp_earned} XP)*"
+                    self.session.outcome_text += f" *( +{xp_earned} XP)*"
 
             await interaction.edit_original_response(**self.get_kwargs())
 
         async def _exit_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("This slot machine belongs to someone else! Use `/slots` to spin your own machine.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This slot machine belongs to someone else! Use `/slots` to spin your own machine.", discord.Color.red()), ephemeral=True)
             self.closed = True
             await interaction.response.edit_message(**self.get_kwargs())
 
@@ -145,7 +145,7 @@ class SlotsCommand(commands.Cog):
         from Commands.Economy._storage import load_economy_config
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
+            await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
             return False
         return True
 
@@ -156,22 +156,22 @@ class SlotsCommand(commands.Cog):
         await ctx.defer()
         
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.")
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
 
         if bet < 1:
-            return await ctx.send("Bet amount must be at least 1.")
+            return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
 
         cfg = load_economy_config(ctx.guild.id)
-        sym = cfg.get("currency_symbol", "🪙")
+        sym = cfg.get("currency_symbol", "")
 
         if cfg.get("bet_limit_enabled", True):
             max_bet = cfg.get("bet_limit_amount", 10000)
             if bet > max_bet:
-                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.")
+                return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
 
         bal = get_user_balance(ctx.guild.id, ctx.author.id)
         if bal < bet:
-            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
+            return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
 
         remove_user_balance(ctx.guild.id, ctx.author.id, bet)
 
@@ -184,22 +184,22 @@ class SlotsCommand(commands.Cog):
 
         if payout > bet:
             profit = payout - bet
-            session.outcome_text += f"\n💰 **Won:** {sym} {payout:,} *(Net: +{sym} {profit:,})*"
+            session.outcome_text += f"\n **Won:** {sym} {payout:,} *(Net: +{sym} {profit:,})*"
         elif payout == bet:
-            session.outcome_text += f"\n💰 **Returned:** {sym} {payout:,}"
+            session.outcome_text += f"\n **Returned:** {sym} {payout:,}"
         else:
-            session.outcome_text += f"\n💸 **Lost:** {sym} {bet:,}"
+            session.outcome_text += f"\n **Lost:** {sym} {bet:,}"
 
         if session.base_xp > 0 and ctx.guild and ctx.author:
             from Commands.Level._storage import grant_minigame_xp
+from Commands._utils import make_embed
             xp_earned = await grant_minigame_xp(ctx.guild, ctx.author, ctx.channel, session.base_xp)
             if xp_earned > 0:
-                session.outcome_text += f" *(✨ +{xp_earned} XP)*"
+                session.outcome_text += f" *( +{xp_earned} XP)*"
 
         view = SlotsLayoutView(session, guild_id=ctx.guild.id)
         await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SlotsCommand(bot))
-
 

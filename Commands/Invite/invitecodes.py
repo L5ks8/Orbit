@@ -1,6 +1,6 @@
-import discord
+﻿import discord
 from discord.ext import commands
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 
 class InviteCodesCommand(commands.Cog):
@@ -15,7 +15,7 @@ class InviteCodesCommand(commands.Cog):
         try:
             guild_invites = await ctx.guild.invites()
         except discord.Forbidden:
-            return await ctx.send("I do not have permission to view invites.", ephemeral=True)
+            return await ctx.send(embed=make_embed("I do not have permission to view invites.", discord.Color.red()), ephemeral=True)
 
         user_invites = [inv for inv in guild_invites if inv.inviter and inv.inviter.id == target.id]
 
@@ -46,9 +46,9 @@ class InviteCodesCommand(commands.Cog):
     @invitecodes.error
     async def invitecodes_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send(format_usage("-invitecodes", "[member]"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-invitecodes", "[member]"), discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

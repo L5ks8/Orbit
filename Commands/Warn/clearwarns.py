@@ -1,19 +1,19 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Commands.Warn._storage import clear_user_warnings
 from Commands.Log._storage import log_event
-from Commands._utils import MemberOrIDConverter, format_usage
+from Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 
 
 async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
     cleared_count = clear_user_warnings(ctx.guild.id, user.id)
     if cleared_count == 0:
-        return await ctx.send(f"**{user.display_name}** has no formal warnings on this server.", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"**{user.display_name}** has no formal warnings on this server."), ephemeral=True)
     
     if user.is_timed_out():
         try:
@@ -32,7 +32,7 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     )
 
     embed = discord.Embed(
-        title="⚠️ All Warnings Cleared",
+        title="️ All Warnings Cleared",
         description=f"**Target Member:** {user.mention} (`{user.id}`)",
         color=discord.Color.green()
     )
@@ -52,12 +52,11 @@ class ClearWarnsCog(commands.Cog):
     @clearwarns_cmd.error
     async def clearwarns_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Moderate Members permission to manage warnings.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Moderate Members permission to manage warnings.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage("-clearwarns", "<@member>"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-clearwarns", "<@member>"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-clearwarns', '<@member>')}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"{format_usage('-clearwarns','<@member>')}"), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ClearWarnsCog(bot))
-

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import pathlib
 import random
 import time
@@ -7,6 +7,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from discord.ui import ActionRow, Button
 from Commands.Giveaway._storage import (
+from Commands._utils import make_embed
     generate_giveaway_id,
     create_giveaway_entry,
     get_giveaway,
@@ -23,7 +24,7 @@ def build_ended_giveaway_kwargs(guild_id: int, entry: dict, winners_display: str
 
     btn_ended = Button(label="Giveaway Ended", style=discord.ButtonStyle.secondary, disabled=True, custom_id="orbit:giveaway_ended")
     
-    embed = discord.Embed(title=f"🎉 GIVEAWAY ENDED: {entry['prize']} 🎉", color=discord.Color.dark_grey())
+    embed = discord.Embed(title=f" GIVEAWAY ENDED: {entry['prize']} ", color=discord.Color.dark_grey())
     embed.description = (
         f"**Prize:** {entry['prize']}\n"
         f"**Winner(s):** {winners_display}\n"
@@ -64,7 +65,7 @@ class PersistentGiveawayLayout(discord.ui.View):
             reqs.append(f"Role: <@&{self.entry['required_role_id']}>")
         req_text = f"\n**Requirements:** {' | '.join(reqs)}" if reqs else ""
 
-        embed = discord.Embed(title=f"🎉 GIVEAWAY: {self.entry['prize']} 🎉", color=discord.Color.purple())
+        embed = discord.Embed(title=f" GIVEAWAY: {self.entry['prize']} ", color=discord.Color.purple())
         embed.description = (
             f"**Prize:** {self.entry['prize']}\n"
             f"**Winners:** `{self.entry['winners']}`\n"
@@ -78,20 +79,20 @@ class PersistentGiveawayLayout(discord.ui.View):
 
     async def enter_callback(self, interaction: discord.Interaction):
         if not interaction.guild:
-            return await interaction.response.send_message("Giveaways only work inside servers.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Giveaways only work inside servers."), ephemeral=True)
 
         entry = get_giveaway_by_message_id(interaction.guild.id, interaction.message.id)
         if not entry:
-            return await interaction.response.send_message("Could not locate giveaway data for this message.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Could not locate giveaway data for this message.", discord.Color.red()), ephemeral=True)
 
         if entry.get("ended"):
-            return await interaction.response.send_message("This giveaway has already ended.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("This giveaway has already ended.", discord.Color.red()), ephemeral=True)
 
         uid = interaction.user.id
         if uid in entry["entries"]:
             entry["entries"].remove(uid)
             update_giveaway_entry(interaction.guild.id, entry)
-            await interaction.response.send_message("You have left the giveaway.", ephemeral=True)
+            await interaction.response.send_message(embed=make_embed("You have left the giveaway."), ephemeral=True)
         else:
             req_role_id = entry.get("required_role_id")
             if req_role_id:
@@ -103,7 +104,7 @@ class PersistentGiveawayLayout(discord.ui.View):
 
             entry["entries"].append(uid)
             update_giveaway_entry(interaction.guild.id, entry)
-            await interaction.response.send_message("You have successfully entered the giveaway! Good luck!", ephemeral=True)
+            await interaction.response.send_message(embed=make_embed("You have successfully entered the giveaway! Good luck!", discord.Color.green()), ephemeral=True)
 
         try:
             self.entry = entry
@@ -170,7 +171,7 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
 
     try:
         if picked_winners:
-            await channel.send(content=f"🎉 **GIVEAWAY ENDED!** 🎉\nCongratulations {winners_display}! You won **{entry['prize']}**! 🎊 (Giveaway ID: `#{entry['giveaway_id']}`)")
+            await channel.send(content=f" **GIVEAWAY ENDED!** \nCongratulations {winners_display}! You won **{entry['prize']}**! 🎊 (Giveaway ID: `#{entry['giveaway_id']}`)")
         else:
             await channel.send(content=f"Giveaway **{entry['prize']}** (`#{entry['giveaway_id']}`) ended with no valid entries. 😔")
     except Exception:
@@ -222,7 +223,7 @@ class GiveawayCommand(commands.Cog):
     ):
         await ctx.defer()
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         if winners < 1 or winners > 20:
             winners = 1
@@ -254,13 +255,12 @@ class GiveawayCommand(commands.Cog):
     @giveaway.error
     async def giveaway_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Server permission to host giveaways.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Server permission to host giveaways.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -giveaway \"<prize>\" <winners_count> <duration_minutes> [required_role]", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: -giveaway \"<prize>\"<winners_count> <duration_minutes> [required_role]", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     bot.add_view(PersistentGiveawayLayout())
     await bot.add_cog(GiveawayCommand(bot))
-

@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord import app_commands
 from Commands.Nick._utils import perform_nick_edit
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 class NickCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -23,16 +23,15 @@ class NickCommand(commands.Cog):
     @nick_cmd.error
     async def nick_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need the `Manage Nicknames` permission to use this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need the `Manage Nicknames` permission to use this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send("I need the `Manage Nicknames` permission to change nicknames.", ephemeral=True)
+            await ctx.send(embed=make_embed("I need the `Manage Nicknames` permission to change nicknames."), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(str(error), ephemeral=True)
+            await ctx.send(embed=make_embed(str(error), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage(ctx.invoked_with, "<@member>", "[nickname]"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage(ctx.invoked_with, "<@member>", "[nickname]"), discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(NickCommand(bot))
-

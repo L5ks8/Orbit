@@ -1,6 +1,7 @@
-import discord
+﻿import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Commands.JoinRole._storage import load_join_roles, clear_join_roles
+from Commands._utils import make_embed
 
 class JoinRoleLayout(discord.ui.View):
     def __init__(self, guild: discord.Guild, action_summary: str, author_id: int):
@@ -23,7 +24,7 @@ class JoinRoleLayout(discord.ui.View):
         
         async def close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot close this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot close this panel.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -37,7 +38,7 @@ class JoinRoleLayout(discord.ui.View):
             
             async def clear_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.author_id:
-                    return await interaction.response.send_message("You cannot clear these roles.", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("You cannot clear these roles.", discord.Color.red()), ephemeral=True)
                 cleared = clear_join_roles(self.guild.id)
                 embed = discord.Embed(title="Join Roles Cleared", description=f"Cleared `{cleared}` automatic join roles.", color=discord.Color.red())
                 self.clear_items()
@@ -60,4 +61,3 @@ class JoinRoleLayout(discord.ui.View):
             self.add_item(btn)
 
         return {"embed": embed, "view": self}
-

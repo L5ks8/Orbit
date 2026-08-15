@@ -1,9 +1,10 @@
-import datetime
+﻿import datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import Button
 from Commands.Poll._storage import generate_poll_id, create_poll_entry, get_poll_entry
+from Commands._utils import make_embed
 
 def make_bar(pct: int, length: int = 15) -> str:
     filled = int(round((pct / 100.0) * length))
@@ -29,7 +30,7 @@ class ComponentsPollView(discord.ui.View):
             async def vote_cb(interaction: discord.Interaction, o=opt):
                 poll_info = get_poll_entry(interaction.guild.id, self.poll_id) if interaction.guild else None
                 if poll_info and poll_info.get("closed"):
-                    return await interaction.response.send_message("This poll has been closed and no longer accepts votes.", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("This poll has been closed and no longer accepts votes.", discord.Color.red()), ephemeral=True)
 
                 uid = interaction.user.id
                 for s in self.votes.values():
@@ -82,11 +83,11 @@ class PollCommand(commands.Cog):
     async def poll(self, ctx: commands.Context, question: str, options: str, duration: int = 60):
         await ctx.defer()
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         opts = [o.strip() for o in options.split(",") if o.strip()]
         if len(opts) < 2 or len(opts) > 10:
-            return await ctx.send("Please specify between 2 and 10 options separated by commas (`Option 1, Option 2, Option 3`).", ephemeral=True)
+            return await ctx.send(embed=make_embed("Please specify between 2 and 10 options separated by commas (`Option 1, Option 2, Option 3`).", discord.Color.red()), ephemeral=True)
 
         if duration < 1 or duration > 46080:
             duration = 60
@@ -109,10 +110,9 @@ class PollCommand(commands.Cog):
     @poll.error
     async def poll_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -poll \"<question>\" \"<option1, option2, option3>\" [duration_in_minutes]", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: -poll \"<question>\"\"<option1, option2, option3>\"[duration_in_minutes]", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(PollCommand(bot))
-

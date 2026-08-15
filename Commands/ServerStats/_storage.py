@@ -1,4 +1,4 @@
-import pathlib
+﻿import pathlib
 import threading
 from typing import Dict, Any
 from Database.mongodb import get_config, set_config
@@ -9,7 +9,7 @@ _serverstats_lock = threading.Lock()
 
 DEFAULT_SERVERSTATS_CONFIG: Dict[str, Any] = {
     "category_id": "",
-    "category_name": "📊 Server Stats",
+    "category_name": " Server Stats",
     "users_enabled": False,
     "users_name": "Users: {count}",
     "users_channel_id": "",

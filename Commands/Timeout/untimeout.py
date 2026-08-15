@@ -1,8 +1,9 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
+from Commands._utils import make_embed
 
 
 
@@ -16,7 +17,7 @@ class UntimeoutCommand(commands.Cog):
     async def untimeout(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
         await ctx.defer()
         if not target.is_timed_out():
-            return await ctx.send("This user is not currently timed out.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This user is not currently timed out.", discord.Color.red()), ephemeral=True)
 
         try:
             await target.timeout(None, reason=f"Untimeout by {ctx.author} | Reason: {reason}")
@@ -36,19 +37,18 @@ class UntimeoutCommand(commands.Cog):
             embed.add_field(name="Status", value="`Cleared`", inline=False)
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
-            await ctx.send("I do not have sufficient permissions to remove the timeout.", ephemeral=True)
+            await ctx.send(embed=make_embed("I do not have sufficient permissions to remove the timeout.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await ctx.send(f"Error removing timeout: {e}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Error removing timeout: {e}", discord.Color.red()), ephemeral=True)
 
     @untimeout.error
     async def untimeout_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Moderate Members permission to remove timeouts.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Moderate Members permission to remove timeouts.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -untimeout <@user/ID> [reason]", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: -untimeout <@user/ID> [reason]", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UntimeoutCommand(bot))
-

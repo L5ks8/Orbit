@@ -1,10 +1,11 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Commands.Mute._storage import get_muted_role_id
 from Commands.Mute.mute import get_or_create_muted_role
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
+from Commands._utils import make_embed
 
 
 
@@ -19,15 +20,15 @@ class UnmuteCommand(commands.Cog):
         await ctx.defer()
         role = await get_or_create_muted_role(ctx.guild)
         if not role or role not in target.roles:
-            return await ctx.send("This user is not currently muted.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This user is not currently muted.", discord.Color.red()), ephemeral=True)
 
         try:
             await target.remove_roles(role, reason=f"Unmuted by {ctx.author} | Reason: {reason}")
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
         except discord.Forbidden:
-            return await ctx.send("I do not have permissions to remove the Muted role.", ephemeral=True)
+            return await ctx.send(embed=make_embed("I do not have permissions to remove the Muted role.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            return await ctx.send(f"Error removing muted role: {e}", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"Error removing muted role: {e}", discord.Color.red()), ephemeral=True)
 
 
         await log_event(
@@ -47,12 +48,11 @@ class UnmuteCommand(commands.Cog):
     @unmute.error
     async def unmute_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Roles permission to unmute users.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Roles permission to unmute users.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -unmute <@user/ID> [reason]", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: -unmute <@user/ID> [reason]", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UnmuteCommand(bot))
-

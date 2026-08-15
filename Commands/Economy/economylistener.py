@@ -1,4 +1,4 @@
-import time
+﻿import time
 import discord
 from discord.ext import commands, tasks
 from Commands.Economy._storage import (
@@ -213,7 +213,7 @@ class EconomyListenerCog(commands.Cog):
                 if not leaderboard_data:
                     continue
 
-                symbol = config.get("currency_symbol", "🪙")
+                symbol = config.get("currency_symbol", "")
                 medals = ["🥇", "🥈", "🥉"]
                 lines = []
 
@@ -232,7 +232,7 @@ class EconomyListenerCog(commands.Cog):
                     embed_color = discord.Color.gold()
 
                 embed = discord.Embed(
-                    title=f"🏆 {guild.name} — Money Leaderboard",
+                    title=f" {guild.name} — Money Leaderboard",
                     description="\n".join(lines),
                     color=embed_color
                 )

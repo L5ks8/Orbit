@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 
 from Commands.Verify._storage import toggle_verify_config
@@ -7,7 +7,7 @@ from Commands.Verify.verify import verify_group
 async def _do_verify_toggle(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     config = toggle_verify_config(ctx.guild.id)
     enabled = config["enabled"]
@@ -39,9 +39,9 @@ class VerifyToggleCog(commands.Cog):
     @toggle_cmd.error
     async def toggle_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Server permission to toggle verification.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Server permission to toggle verification.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class VerifyToggleFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -54,8 +54,8 @@ class VerifyToggleFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Verify.verify import verify_group
+from Commands._utils import make_embed
     if "verify" not in bot.all_commands:
         bot.add_command(verify_group)
     await bot.add_cog(VerifyToggleCog(bot))
     await bot.add_cog(VerifyToggleFallback(bot))
-

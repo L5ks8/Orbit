@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 
 from Commands.Verify._storage import load_verify_config
@@ -7,7 +7,7 @@ from Commands.Verify.verify import verify_group
 async def _do_verify_status(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     config = load_verify_config(ctx.guild.id)
     enabled = config.get("enabled", True)
@@ -45,9 +45,9 @@ class VerifyStatusCog(commands.Cog):
     @status_cmd.error
     async def status_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Server permission to check verification status.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Server permission to check verification status.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class VerifyStatusFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -60,8 +60,8 @@ class VerifyStatusFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Verify.verify import verify_group
+from Commands._utils import make_embed
     if "verify" not in bot.all_commands:
         bot.add_command(verify_group)
     await bot.add_cog(VerifyStatusCog(bot))
     await bot.add_cog(VerifyStatusFallback(bot))
-

@@ -1,5 +1,6 @@
-import discord
+﻿import discord
 from discord.ext import commands
+from Commands._utils import make_embed
 
 class SyncCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -21,7 +22,7 @@ class SyncCommand(commands.Cog):
         async with ctx.typing():
             if option and option.lower() in ["here", "local"]:
                 if not ctx.guild:
-                    return await ctx.send("You must be inside a server to sync locally.")
+                    return await ctx.send(embed=make_embed("You must be inside a server to sync locally.", discord.Color.red()))
                 self.bot.tree.copy_global_to(guild=ctx.guild)
                 synced = await self.bot.tree.sync(guild=ctx.guild)
                 await ctx.send(embed=self._get_embed(f"Local Server ({ctx.guild.name})", len(synced)))
@@ -56,7 +57,7 @@ class SyncCommand(commands.Cog):
         if isinstance(error, commands.NotOwner):
             pass
         else:
-            await ctx.send(f"Sync error: {error}")
+            await ctx.send(embed=make_embed(f"Sync error: {error}", discord.Color.red()))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SyncCommand(bot))

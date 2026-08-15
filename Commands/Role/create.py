@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Role.role import role_group
 
@@ -10,7 +10,7 @@ async def _do_createrole(ctx: commands.Context, name: str, color: str = None, ho
         try:
             parsed_color = discord.Color(int(color.replace("#", ""), 16))
         except ValueError:
-            return await ctx.send("Invalid color format. Please use hex (e.g. #ff0000).", ephemeral=True)
+            return await ctx.send(embed=make_embed("Invalid color format. Please use hex (e.g. #ff0000).", discord.Color.red()), ephemeral=True)
 
     try:
         new_role = await ctx.guild.create_role(
@@ -28,9 +28,9 @@ async def _do_createrole(ctx: commands.Context, name: str, color: str = None, ho
         )
         await ctx.send(embed=embed)
     except discord.Forbidden:
-        await ctx.send("I do not have sufficient permissions to create roles.", ephemeral=True)
+        await ctx.send(embed=make_embed("I do not have sufficient permissions to create roles.", discord.Color.red()), ephemeral=True)
     except Exception as e:
-        await ctx.send(f"Error creating role: {e}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Error creating role: {e}", discord.Color.red()), ephemeral=True)
 
 @role_group.command(name="create", description="Create a new role in the server.")
 @commands.has_permissions(manage_roles=True)
@@ -45,14 +45,15 @@ class RoleCreateCog(commands.Cog):
     @role_create_cmd.error
     async def role_create_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Roles permission to create roles.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Roles permission to create roles.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-role create <name> [color_hex] [hoist] [mentionable]`", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `-role create <name> [color_hex] [hoist] [mentionable]`", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     from Commands.Role.role import role_group
+from Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleCreateCog(bot))

@@ -1,9 +1,9 @@
-import math
+﻿import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
 from Commands.Warn._storage import get_user_warnings
-from Commands._utils import MemberOrIDConverter, format_usage
+from Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 class WarningsListLayout(discord.ui.View):
     def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
@@ -22,7 +22,7 @@ class WarningsListLayout(discord.ui.View):
 
         async def close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
@@ -36,14 +36,14 @@ class WarningsListLayout(discord.ui.View):
 
             async def prev_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.author_id:
-                    return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
                 self.page -= 1
                 self._build_view()
                 await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
 
             async def next_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.author_id:
-                    return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
                 self.page += 1
                 self._build_view()
                 await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
@@ -72,7 +72,7 @@ class WarningsListLayout(discord.ui.View):
         warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
 
         embed = discord.Embed(
-            title=f"⚠️ Warning History (Page {self.page} of {self.total_pages})",
+            title=f"️ Warning History (Page {self.page} of {self.total_pages})",
             description=warns_text,
             color=discord.Color.orange()
         )
@@ -84,11 +84,11 @@ class WarningsListLayout(discord.ui.View):
 async def _do_warnings(ctx: commands.Context, user: discord.Member | None):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
     target = user or ctx.author
     warns = get_user_warnings(ctx.guild.id, target.id)
     if not warns:
-        return await ctx.send(f"`{target.display_name}` has 0 formal warnings on this server.", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"`{target.display_name}` has 0 formal warnings on this server."), ephemeral=True)
     view = WarningsListLayout(target, warns, ctx.author.id)
     kwargs = view.get_kwargs(ctx.guild.id)
     await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
@@ -104,8 +104,7 @@ class CheckWarnsCog(commands.Cog):
     @checkwarn_cmd.error
     async def checkwarns_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-checkwarns', '<@member>')}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"{format_usage('-checkwarns','<@member>')}"), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CheckWarnsCog(bot))
-

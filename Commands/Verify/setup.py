@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 
@@ -15,7 +15,7 @@ async def _do_verify_setup(
 ):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     remove_role_id = remove_role.id if remove_role else None
     config = setup_verify_config(ctx.guild.id, channel.id, role.id, remove_role_id, auto_kick_minutes)
@@ -45,7 +45,7 @@ async def _do_verify_setup(
     try:
         await channel.send(**panel_kwargs, allowed_mentions=discord.AllowedMentions.none())
     except Exception as e:
-        return await ctx.send(f"Could not post verification card inside {channel.mention}: {e}", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"Could not post verification card inside {channel.mention}: {e}", discord.Color.red()), ephemeral=True)
 
     kick_str = f"`{auto_kick_minutes} minutes`" if auto_kick_minutes > 0 else "`Disabled (No auto-kick)`"
     rem_str = remove_role.mention if remove_role else "`None (Disabled)`"
@@ -79,11 +79,11 @@ class VerifySetupCog(commands.Cog):
     @setup_cmd.error
     async def setup_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Server permission to configure verification.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Server permission to configure verification.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-verify setup <#channel> <@role> [remove_role] [auto_kick_minutes]`", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `-verify setup <#channel> <@role> [remove_role] [auto_kick_minutes]`", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class VerifySetupFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -96,9 +96,9 @@ class VerifySetupFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Verify.verify import verify_group
+from Commands._utils import make_embed
     if "verify" not in bot.all_commands:
         bot.add_command(verify_group)
     bot.add_view(PersistentVerifyLayout())
     await bot.add_cog(VerifySetupCog(bot))
     await bot.add_cog(VerifySetupFallback(bot))
-

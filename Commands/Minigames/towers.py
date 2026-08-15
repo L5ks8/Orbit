@@ -1,4 +1,4 @@
-import random
+﻿import random
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -102,13 +102,13 @@ class TowersLayoutView(discord.ui.View):
                     style = discord.ButtonStyle.primary if is_active_row else discord.ButtonStyle.secondary
                     btn = discord.ui.Button(style=style, label="?", custom_id=f"tower_{r}_{c}", disabled=not is_active_row, row=ui_row)
                 elif state == "safe":
-                    btn = discord.ui.Button(style=discord.ButtonStyle.success, emoji="✅", custom_id=f"tower_{r}_{c}", disabled=True, row=ui_row)
+                    btn = discord.ui.Button(style=discord.ButtonStyle.success, emoji="", custom_id=f"tower_{r}_{c}", disabled=True, row=ui_row)
                 elif state == "bomb":
-                    btn = discord.ui.Button(style=discord.ButtonStyle.danger, emoji="💀", custom_id=f"tower_{r}_{c}", disabled=True, row=ui_row)
+                    btn = discord.ui.Button(style=discord.ButtonStyle.danger, emoji="", custom_id=f"tower_{r}_{c}", disabled=True, row=ui_row)
                 elif state == "safe_revealed":
-                    btn = discord.ui.Button(style=discord.ButtonStyle.secondary, emoji="✅", custom_id=f"tower_{r}_{c}", disabled=True, row=ui_row)
+                    btn = discord.ui.Button(style=discord.ButtonStyle.secondary, emoji="", custom_id=f"tower_{r}_{c}", disabled=True, row=ui_row)
                 elif state == "bomb_revealed":
-                    btn = discord.ui.Button(style=discord.ButtonStyle.secondary, emoji="💀", custom_id=f"tower_{r}_{c}", disabled=True, row=ui_row)
+                    btn = discord.ui.Button(style=discord.ButtonStyle.secondary, emoji="", custom_id=f"tower_{r}_{c}", disabled=True, row=ui_row)
                     
                 if state == "hidden" and is_active_row:
                     btn.callback = self.make_callback(r, c)
@@ -122,7 +122,7 @@ class TowersLayoutView(discord.ui.View):
             
             async def _cashout_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.session.player.id:
-                    return await interaction.response.send_message("This is not your game!", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("This is not your game!", discord.Color.red()), ephemeral=True)
                 await interaction.response.defer()
                 self.session.cashout()
                 await self.process_payout_and_xp(interaction)
@@ -136,16 +136,16 @@ class TowersLayoutView(discord.ui.View):
             
             async def _new_cb(interaction: discord.Interaction):
                 if interaction.user.id != self.session.player.id:
-                    return await interaction.response.send_message("This is not your game!", ephemeral=True)
+                    return await interaction.response.send_message(embed=make_embed("This is not your game!", discord.Color.red()), ephemeral=True)
                 
                 await interaction.response.defer()
                 gid = interaction.guild_id or self.guild_id
                 cfg = load_economy_config(gid)
-                sym = cfg.get("currency_symbol", "🪙")
+                sym = cfg.get("currency_symbol", "")
 
                 bal = get_user_balance(gid, interaction.user.id)
                 if bal < self.session.bet_amount:
-                    return await interaction.followup.send(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**")
+                    return await interaction.followup.send(embed=make_embed(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**"))
 
                 remove_user_balance(gid, interaction.user.id, self.session.bet_amount)
                 self.session = TowersSession(self.session.player, self.session.bet_amount, self.guild_id)
@@ -158,7 +158,7 @@ class TowersLayoutView(discord.ui.View):
     def make_callback(self, row: int, col: int):
         async def _cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("This is not your game!", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This is not your game!", discord.Color.red()), ephemeral=True)
             
             await interaction.response.defer()
             self.session.click(row, col)
@@ -176,7 +176,7 @@ class TowersLayoutView(discord.ui.View):
         self.session.money_processed = True
         gid = interaction.guild_id or self.guild_id
         cfg = load_economy_config(gid)
-        sym = cfg.get("currency_symbol", "🪙")
+        sym = cfg.get("currency_symbol", "")
 
         payout = int(self.session.bet_amount * self.session.current_mult)
         if payout > 0:
@@ -186,15 +186,15 @@ class TowersLayoutView(discord.ui.View):
             profit = payout - self.session.bet_amount
             # Only append if not already in the text (like cashout)
             if "Cashed Out!" not in self.session.outcome_text:
-                self.session.outcome_text += f"\n💰 **Won:** {sym} {payout:,} *(Net: +{sym} {profit:,})*"
+                self.session.outcome_text += f"\n **Won:** {sym} {payout:,} *(Net: +{sym} {profit:,})*"
         elif payout == self.session.bet_amount:
-            self.session.outcome_text += f"\n💰 **Returned:** {sym} {payout:,}"
+            self.session.outcome_text += f"\n **Returned:** {sym} {payout:,}"
 
         if self.session.base_xp > 0 and interaction.guild and interaction.user:
             from Commands.Level._storage import grant_minigame_xp
             xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, self.session.base_xp)
             if xp_earned > 0:
-                self.session.outcome_text += f" *(✨ +{xp_earned} XP)*"
+                self.session.outcome_text += f" *( +{xp_earned} XP)*"
 
     def get_kwargs(self):
         embed = discord.Embed(title="Towers", color=discord.Color.blue())
@@ -214,9 +214,10 @@ class TowersCommand(commands.Cog):
         if not ctx.guild:
             return True
         from Commands.Economy._storage import load_economy_config
+from Commands._utils import make_embed
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
+            await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
             return False
         return True
 
@@ -227,22 +228,22 @@ class TowersCommand(commands.Cog):
         await ctx.defer()
         
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.")
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
 
         if bet < 1:
-            return await ctx.send("Bet amount must be at least 1.")
+            return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
 
         cfg = load_economy_config(ctx.guild.id)
-        sym = cfg.get("currency_symbol", "🪙")
+        sym = cfg.get("currency_symbol", "")
 
         if cfg.get("bet_limit_enabled", True):
             max_bet = cfg.get("bet_limit_amount", 10000)
             if bet > max_bet:
-                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.")
+                return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
 
         bal = get_user_balance(ctx.guild.id, ctx.author.id)
         if bal < bet:
-            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
+            return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
 
         remove_user_balance(ctx.guild.id, ctx.author.id, bet)
 

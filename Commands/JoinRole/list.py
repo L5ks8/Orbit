@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
 from Commands.JoinRole._views import JoinRoleLayout
@@ -6,7 +6,7 @@ from Commands.JoinRole._views import JoinRoleLayout
 async def _do_jr_list(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     view = JoinRoleLayout(ctx.guild, "Viewing list", ctx.author.id)
     await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
@@ -27,7 +27,7 @@ class JoinRoleListCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.JoinRole.joinrole import joinrole_group
+from Commands._utils import make_embed
     if "joinrole" not in bot.all_commands:
         bot.add_command(joinrole_group)
     await bot.add_cog(JoinRoleListCog(bot))
-

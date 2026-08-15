@@ -1,10 +1,11 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Whitelist._views import WhitelistListLayout
+from Commands._utils import make_embed
 
 async def _do_wl_list(ctx: commands.Context):
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
     view = WhitelistListLayout(ctx.guild, ctx.bot, ctx.author.id)
     kwargs = view.get_kwargs(ctx.guild.id)
     await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
@@ -27,4 +28,3 @@ async def setup(bot: commands.Bot):
     if "checkwhitelist" not in bot.all_commands:
         bot.add_command(checkwhitelist_cmd)
     await bot.add_cog(WhitelistListCog(bot))
-

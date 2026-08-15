@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.JoinRole.joinrole import joinrole_group
@@ -8,13 +8,13 @@ from Commands.JoinRole._views import JoinRoleLayout
 async def _do_jr_add(ctx: commands.Context, role: discord.Role):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     if role.is_default() or role.managed:
-        return await ctx.send("You cannot configure `@everyone` or bot integration roles (`managed roles`) as join roles.", ephemeral=True)
+        return await ctx.send(embed=make_embed("You cannot configure `@everyone` or bot integration roles (`managed roles`) as join roles.", discord.Color.red()), ephemeral=True)
 
     if ctx.guild.me.top_role <= role:
-        return await ctx.send(f"I cannot assign {role.mention} because it is higher than or equal to my highest role (`{ctx.guild.me.top_role.name}`).", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"I cannot assign {role.mention} because it is higher than or equal to my highest role (`{ctx.guild.me.top_role.name}`).", discord.Color.red()), ephemeral=True)
 
     added = add_join_role(ctx.guild.id, role.id)
     summary = f"Added {role.mention}" if added else f"{role.mention} is already in the join roles list."
@@ -38,7 +38,7 @@ class JoinRoleAddCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.JoinRole.joinrole import joinrole_group
+from Commands._utils import make_embed
     if "joinrole" not in bot.all_commands:
         bot.add_command(joinrole_group)
     await bot.add_cog(JoinRoleAddCog(bot))
-

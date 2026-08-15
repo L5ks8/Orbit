@@ -1,7 +1,7 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Invite._storage import get_invited_by_user, get_invited_by_code
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 
 class InvitedListCommand(commands.Cog):
@@ -89,9 +89,9 @@ class InvitedListCommand(commands.Cog):
     @invitedlist.error
     async def invitedlist_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send(format_usage("-invitedlist", "[member or invite code]"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-invitedlist", "[member or invite code]"), discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

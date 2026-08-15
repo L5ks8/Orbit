@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 import time
 from collections import defaultdict
@@ -55,7 +55,7 @@ class SecurityModule(commands.Cog):
         try:
             owner = guild.owner
             if owner:
-                await owner.send(f"🚨 **ANTI-NUKE ALERT** 🚨\nUser {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}** by performing {threshold} destructive actions within {time_window} seconds.\nTheir roles have been removed (if the bot had permission). Please check your server immediately.")
+                await owner.send(f" **ANTI-NUKE ALERT** \nUser {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}** by performing {threshold} destructive actions within {time_window} seconds.\nTheir roles have been removed (if the bot had permission). Please check your server immediately.")
         except Exception:
             pass
 
@@ -119,7 +119,7 @@ class SecurityModule(commands.Cog):
         if any(scam in content for scam in SCAM_LINKS):
             try:
                 await message.delete()
-                warning = await message.channel.send(f"⚠️ {message.author.mention}, that link is blacklisted for phishing/scams.")
+                warning = await message.channel.send(f"️ {message.author.mention}, that link is blacklisted for phishing/scams.")
                 try:
                     await message.author.timeout(discord.utils.utcnow() + datetime.timedelta(minutes=5), reason="Posting known scam links")
                 except discord.Forbidden:

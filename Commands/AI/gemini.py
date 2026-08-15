@@ -1,4 +1,4 @@
-import os
+﻿import os
 import discord
 from discord.ext import commands
 from g4f.client import AsyncClient
@@ -306,7 +306,7 @@ class GeminiChatbot(commands.Cog):
                     if text_response:
                         await self._send_chunked(message, text_response)
                     else:
-                        await message.add_reaction("✅")
+                        await message.add_reaction("")
                 else:
                     await message.reply("I'm sorry, I couldn't generate a response.")
                     

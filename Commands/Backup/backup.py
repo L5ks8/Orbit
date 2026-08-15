@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord import app_commands
 import uuid
@@ -7,6 +7,7 @@ from datetime import datetime
 
 from Commands.Backup._storage import save_backup, get_backups, get_backup
 from Commands.Backup._views import OverwriteBackupView, BackupListView, ConfirmLoadView
+from Commands._utils import make_embed
 
 class BackupCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -33,7 +34,7 @@ class BackupCommand(commands.Cog):
     @app_commands.describe(name="Optional name for the backup")
     async def backup_create_cmd(self, interaction: discord.Interaction, name: str = None):
         if interaction.user.id != interaction.guild.owner_id:
-            return await interaction.response.send_message("Only the server owner can create a backup.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the server owner can create a backup."), ephemeral=True)
 
         await interaction.response.defer(ephemeral=True)
         guild = interaction.guild
@@ -119,23 +120,23 @@ class BackupCommand(commands.Cog):
     @backup_group.command(name="load", description="Load a previously created backup (DESTRUCTIVE).")
     async def backup_load_cmd(self, interaction: discord.Interaction):
         if interaction.user.id != interaction.guild.owner_id:
-            return await interaction.response.send_message("Only the server owner can load a backup.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the server owner can load a backup."), ephemeral=True)
         
         existing_backups = get_backups(interaction.guild.id)
         if not existing_backups:
-            return await interaction.response.send_message("No backups found for this server.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("No backups found for this server."), ephemeral=True)
             
         view = BackupListView(existing_backups, self)
-        await interaction.response.send_message("Select a backup to load from the dropdown below:", view=view, ephemeral=True)
+        await interaction.response.send_message(embed=make_embed("Select a backup to load from the dropdown below:"), view=view, ephemeral=True)
 
     @app_commands.command(name="backups", description="List all server backups.")
     async def backups_cmd(self, interaction: discord.Interaction):
         if interaction.user.id != interaction.guild.owner_id:
-            return await interaction.response.send_message("Only the server owner can view backups.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the server owner can view backups."), ephemeral=True)
             
         existing_backups = get_backups(interaction.guild.id)
         if not existing_backups:
-            return await interaction.response.send_message("No backups found for this server.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("No backups found for this server."), ephemeral=True)
             
         embed = discord.Embed(title="Server Backups", color=discord.Color.blue())
         for b in existing_backups:
@@ -151,9 +152,9 @@ class BackupCommand(commands.Cog):
         guild = interaction.guild
         backup_data = get_backup(backup_id)
         if not backup_data:
-            return await interaction.followup.send("Backup data not found.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("Backup data not found.", discord.Color.red()), ephemeral=True)
 
-        await interaction.followup.send("⏳ Starting backup restoration... This may take a while.", ephemeral=True)
+        await interaction.followup.send(embed=make_embed("Starting backup restoration... This may take a while."), ephemeral=True)
 
         # 1. Delete all channels
         for ch in guild.channels:
@@ -248,7 +249,7 @@ class BackupCommand(commands.Cog):
         try:
             owner = guild.owner
             if owner:
-                await owner.send(f"✅ The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!")
+                await owner.send(f" The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!")
         except Exception:
             pass
 

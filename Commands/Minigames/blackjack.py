@@ -1,4 +1,4 @@
-import random
+﻿import random
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -9,7 +9,7 @@ from Commands.Economy._storage import (
     remove_user_balance
 )
 
-SUITS = ["♠️", "♥️", "♦️", "♣️"]
+SUITS = ["️", "️", "️", "️"]
 RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 
 class Card:
@@ -140,7 +140,7 @@ class BlackjackLayoutView(discord.ui.View):
 
         gid = interaction.guild_id or self.guild_id
         cfg = load_economy_config(gid)
-        sym = cfg.get("currency_symbol", "🪙")
+        sym = cfg.get("currency_symbol", "")
 
         if not self.session.money_processed:
             self.session.money_processed = True
@@ -150,11 +150,11 @@ class BlackjackLayoutView(discord.ui.View):
 
             net = payout - self.session.total_bet
             if net > 0:
-                self.session.outcome_text += f"\n💰 **Won:** {sym} {payout:,} *(Net: +{sym} {net:,})*"
+                self.session.outcome_text += f"\n **Won:** {sym} {payout:,} *(Net: +{sym} {net:,})*"
             elif net == 0 and payout > 0:
-                self.session.outcome_text += f"\n💰 **Returned:** {sym} {payout:,}"
+                self.session.outcome_text += f"\n **Returned:** {sym} {payout:,}"
             else:
-                self.session.outcome_text += f"\n💸 **Lost:** {sym} {self.session.total_bet:,}"
+                self.session.outcome_text += f"\n **Lost:** {sym} {self.session.total_bet:,}"
 
         if self.session.base_xp > 0 and not self.session.xp_awarded:
             self.session.xp_awarded = True
@@ -162,7 +162,7 @@ class BlackjackLayoutView(discord.ui.View):
                 from Commands.Level._storage import grant_minigame_xp
                 earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, self.session.base_xp)
                 if earned > 0:
-                    self.session.outcome_text += f" *(✨ +{earned} XP)*"
+                    self.session.outcome_text += f" *( +{earned} XP)*"
 
     def get_kwargs(self):
         p_score = calculate_score(self.session.player_hand)
@@ -188,7 +188,7 @@ class BlackjackLayoutView(discord.ui.View):
 
         async def _hit_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This is not your blackjack hand! Use `/blackjack` to start your own game.", discord.Color.red()), ephemeral=True)
             
             await interaction.response.defer()
             self.session.hit_player()
@@ -197,7 +197,7 @@ class BlackjackLayoutView(discord.ui.View):
 
         async def _stand_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This is not your blackjack hand! Use `/blackjack` to start your own game.", discord.Color.red()), ephemeral=True)
             
             await interaction.response.defer()
             self.session.stand_player()
@@ -206,16 +206,16 @@ class BlackjackLayoutView(discord.ui.View):
 
         async def _double_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This is not your blackjack hand! Use `/blackjack` to start your own game.", discord.Color.red()), ephemeral=True)
 
             await interaction.response.defer()
             gid = interaction.guild_id or self.guild_id
             cfg = load_economy_config(gid)
-            sym = cfg.get("currency_symbol", "🪙")
+            sym = cfg.get("currency_symbol", "")
 
             bal = get_user_balance(gid, interaction.user.id)
             if bal < self.session.bet_amount:
-                return await interaction.followup.send(f"You don't have enough money to double down! Balance: **{sym} {bal:,}**", ephemeral=True)
+                return await interaction.followup.send(embed=make_embed(f"You don't have enough money to double down! Balance: **{sym} {bal:,}**"), ephemeral=True)
 
             remove_user_balance(gid, interaction.user.id, self.session.bet_amount)
             self.session.total_bet += self.session.bet_amount
@@ -225,16 +225,16 @@ class BlackjackLayoutView(discord.ui.View):
 
         async def _new_cb(interaction: discord.Interaction):
             if interaction.user.id != self.session.player.id:
-                return await interaction.response.send_message("This is not your blackjack hand! Use `/blackjack` to start your own game.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("This is not your blackjack hand! Use `/blackjack` to start your own game.", discord.Color.red()), ephemeral=True)
 
             await interaction.response.defer()
             gid = interaction.guild_id or self.guild_id
             cfg = load_economy_config(gid)
-            sym = cfg.get("currency_symbol", "🪙")
+            sym = cfg.get("currency_symbol", "")
 
             bal = get_user_balance(gid, interaction.user.id)
             if bal < self.session.bet_amount:
-                return await interaction.followup.send(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**", ephemeral=True)
+                return await interaction.followup.send(embed=make_embed(f"You don't have enough money for this bet! Balance: **{sym} {bal:,}**"), ephemeral=True)
 
             remove_user_balance(gid, interaction.user.id, self.session.bet_amount)
             self.session = BlackjackSession(self.session.player, bet_amount=self.session.bet_amount, guild_id=self.guild_id)
@@ -268,9 +268,10 @@ class BlackjackCommand(commands.Cog):
         if not ctx.guild:
             return True
         from Commands.Economy._storage import load_economy_config
+from Commands._utils import make_embed
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
-            await ctx.send("The Money system isn't Configured on this server", ephemeral=True)
+            await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
             return False
         return True
 
@@ -281,22 +282,22 @@ class BlackjackCommand(commands.Cog):
         await ctx.defer()
         
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.")
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
 
         if bet < 1:
-            return await ctx.send("Bet amount must be at least 1.")
+            return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
 
         cfg = load_economy_config(ctx.guild.id)
-        sym = cfg.get("currency_symbol", "🪙")
+        sym = cfg.get("currency_symbol", "")
 
         if cfg.get("bet_limit_enabled", True):
             max_bet = cfg.get("bet_limit_amount", 10000)
             if bet > max_bet:
-                return await ctx.send(f"The maximum bet limit on this server is **{sym} {max_bet:,}**.")
+                return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
 
         bal = get_user_balance(ctx.guild.id, ctx.author.id)
         if bal < bet:
-            return await ctx.send(f"You don't have enough money! Your balance is **{sym} {bal:,}**.")
+            return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
 
         remove_user_balance(ctx.guild.id, ctx.author.id, bet)
 
@@ -310,5 +311,4 @@ class BlackjackCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BlackjackCommand(bot))
-
 

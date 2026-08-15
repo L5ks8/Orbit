@@ -1,7 +1,8 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.Poll._storage import get_poll_entry, close_poll_entry
+from Commands._utils import make_embed
 
 
 class PollCloseCommand(commands.Cog):
@@ -19,14 +20,14 @@ class PollCloseCommand(commands.Cog):
     async def pollclose(self, ctx: commands.Context, poll_id: str):
         await ctx.defer()
         if not ctx.guild:
-            return await ctx.send("This command must be run inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         poll_data = get_poll_entry(ctx.guild.id, poll_id)
         if not poll_data:
-            return await ctx.send(f"Could not find an active poll with ID `{poll_id}` on this server.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"Could not find an active poll with ID `{poll_id}` on this server.", discord.Color.red()), ephemeral=True)
 
         if poll_data.get("closed"):
-            return await ctx.send(f"Poll `{poll_id}` is already closed.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"Poll `{poll_id}` is already closed.", discord.Color.red()), ephemeral=True)
 
         clean_pid = poll_id.strip().upper()
         if not clean_pid.startswith("P-"):
@@ -51,15 +52,14 @@ class PollCloseCommand(commands.Cog):
             pass
 
         close_poll_entry(ctx.guild.id, clean_pid)
-        await ctx.send(f"Successfully closed Poll `{clean_pid}` (`{poll_data['question']}`). No further votes can be submitted.")
+        await ctx.send(embed=make_embed(f"Successfully closed Poll `{clean_pid}` (`{poll_data['question']}`). No further votes can be submitted.", discord.Color.red()))
 
     @pollclose.error
     async def pollclose_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: -pollclose <P-123456>", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: -pollclose <P-123456>", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(PollCloseCommand(bot))
-

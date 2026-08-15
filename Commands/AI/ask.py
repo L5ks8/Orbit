@@ -7,6 +7,7 @@ from discord.ext import commands
 from discord import app_commands
 from g4f.client import AsyncClient
 import g4f
+from Commands._utils import make_embed
 
 try:
     import edge_tts
@@ -90,11 +91,11 @@ class AskVoice(commands.Cog):
         try:
             answer = await self._generate_response(question, guild)
         except Exception as e:
-            return await send_ephemeral(f"⚠️ Could not generate an AI response: `{e}`")
+            return await send_ephemeral(f"️ Could not generate an AI response: `{e}`")
 
         if not voice_client or not voice_client.is_connected():
             embed = discord.Embed(
-                description=f"💬 **{answer}**\n\n-# *Connect me to a voice channel with `/connect` to hear the answer spoken!*",
+                description=f" **{answer}**\n\n-# *Connect me to a voice channel with `/connect` to hear the answer spoken!*",
                 color=discord.Color.blurple(),
             )
             embed.set_footer(text=f"Asked by {user.display_name}")
@@ -102,7 +103,7 @@ class AskVoice(commands.Cog):
 
         if not HAS_EDGE_TTS:
             embed = discord.Embed(
-                description=f"💬 **{answer}**\n\n-# *edge-tts is not installed – voice playback unavailable.*",
+                description=f" **{answer}**\n\n-# *edge-tts is not installed – voice playback unavailable.*",
                 color=discord.Color.orange(),
             )
             return await send(embed=embed)
@@ -111,14 +112,14 @@ class AskVoice(commands.Cog):
             audio_data = await self._text_to_speech(answer)
         except Exception as e:
             embed = discord.Embed(
-                description=f"💬 **{answer}**\n\n-# *TTS failed: `{e}`*",
+                description=f" **{answer}**\n\n-# *TTS failed: `{e}`*",
                 color=discord.Color.orange(),
             )
             return await send(embed=embed)
 
         if not audio_data:
             embed = discord.Embed(
-                description=f"💬 **{answer}**\n\n-# *Could not generate audio.*",
+                description=f" **{answer}**\n\n-# *Could not generate audio.*",
                 color=discord.Color.orange(),
             )
             return await send(embed=embed)
@@ -144,7 +145,7 @@ class AskVoice(commands.Cog):
             voice_client.play(source, after=after_playing)
 
             embed = discord.Embed(
-                description=f"🔊 **{answer}**",
+                description=f" **{answer}**",
                 color=discord.Color.green(),
             )
             embed.set_footer(text=f"Asked by {user.display_name} • Speaking in {voice_client.channel.name}")
@@ -173,7 +174,7 @@ class AskVoice(commands.Cog):
             user=interaction.user,
             voice_client=voice_client,
             send=interaction.followup.send,
-            send_ephemeral=lambda msg: interaction.followup.send(msg, ephemeral=True),
+            send_ephemeral=lambda msg: interaction.followup.send(embed=make_embed(msg, discord.Color.red()), ephemeral=True),
         )
 
     @commands.command(name="ask", aliases=["frag"])

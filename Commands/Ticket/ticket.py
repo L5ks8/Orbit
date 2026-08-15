@@ -1,4 +1,4 @@
-import io
+﻿import io
 import asyncio
 import discord
 from discord import app_commands
@@ -23,14 +23,14 @@ from Commands.Ticket._views import (
 async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
-        return await ctx.send("This command must be run inside a server ticket channel.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server ticket channel.", discord.Color.red()), ephemeral=True)
 
     config = load_ticket_config(ctx.guild.id)
     support_role_id = config.get("support_role_id")
     ticket_data = config.get("active_tickets", {}).get(str(ctx.channel.id))
 
     if not ticket_data and not ctx.channel.name.startswith("ticket-"):
-        return await ctx.send("This channel is not recognized as an active support ticket.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This channel is not recognized as an active support ticket.", discord.Color.red()), ephemeral=True)
 
     is_staff = ctx.author.guild_permissions.manage_guild
     if isinstance(ctx.author, discord.Member) and support_role_id:
@@ -38,7 +38,7 @@ async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
             is_staff = True
 
     if not is_staff:
-        return await ctx.send("Only support staff or administrators can add members to tickets.", ephemeral=True)
+        return await ctx.send(embed=make_embed("Only support staff or administrators can add members to tickets.", discord.Color.red()), ephemeral=True)
 
     try:
         await ctx.channel.set_permissions(
@@ -56,21 +56,21 @@ async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
-        await ctx.send(f"I do not have permission to modify channel overwrites for {member.mention}.", ephemeral=True)
+        await ctx.send(embed=make_embed(f"I do not have permission to modify channel overwrites for {member.mention}.", discord.Color.red()), ephemeral=True)
     except Exception as e:
-        await ctx.send(f"An error occurred adding {member.mention} to the ticket: {e}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"An error occurred adding {member.mention} to the ticket: {e}", discord.Color.red()), ephemeral=True)
 
 async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
-        return await ctx.send("This command must be run inside a server ticket channel.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server ticket channel.", discord.Color.red()), ephemeral=True)
 
     config = load_ticket_config(ctx.guild.id)
     support_role_id = config.get("support_role_id")
     ticket_data = config.get("active_tickets", {}).get(str(ctx.channel.id))
 
     if not ticket_data and not ctx.channel.name.startswith("ticket-"):
-        return await ctx.send("This channel is not recognized as an active support ticket.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This channel is not recognized as an active support ticket.", discord.Color.red()), ephemeral=True)
 
     is_staff = ctx.author.guild_permissions.manage_guild
     if isinstance(ctx.author, discord.Member) and support_role_id:
@@ -78,10 +78,10 @@ async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
             is_staff = True
 
     if not is_staff:
-        return await ctx.send("Only support staff or administrators can remove members from tickets.", ephemeral=True)
+        return await ctx.send(embed=make_embed("Only support staff or administrators can remove members from tickets.", discord.Color.red()), ephemeral=True)
 
     if member.id == ctx.bot.user.id or member.guild_permissions.manage_guild:
-        return await ctx.send("You cannot remove administrators or the bot from a ticket.", ephemeral=True)
+        return await ctx.send(embed=make_embed("You cannot remove administrators or the bot from a ticket.", discord.Color.red()), ephemeral=True)
 
     try:
         await ctx.channel.set_permissions(member, overwrite=None, reason=f"Removed from ticket by {ctx.author}")
@@ -92,21 +92,21 @@ async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
-        await ctx.send(f"I do not have permission to modify channel overwrites for {member.mention}.", ephemeral=True)
+        await ctx.send(embed=make_embed(f"I do not have permission to modify channel overwrites for {member.mention}.", discord.Color.red()), ephemeral=True)
     except Exception as e:
-        await ctx.send(f"An error occurred removing {member.mention} from the ticket: {e}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"An error occurred removing {member.mention} from the ticket: {e}", discord.Color.red()), ephemeral=True)
 
 async def _do_ticket_close(ctx: commands.Context, reason: str):
     await ctx.defer()
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
-        return await ctx.send("This command must be run inside a server ticket channel.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server ticket channel.", discord.Color.red()), ephemeral=True)
 
     config = load_ticket_config(ctx.guild.id)
     support_role_id = config.get("support_role_id")
     ticket_data = config.get("active_tickets", {}).get(str(ctx.channel.id))
 
     if not ticket_data and not ctx.channel.name.startswith("ticket-"):
-        return await ctx.send("This channel is not recognized as an active support ticket.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This channel is not recognized as an active support ticket.", discord.Color.red()), ephemeral=True)
 
     creator_id = ticket_data.get("creator_id") if ticket_data else None
     is_authorized = ctx.author.id == creator_id or ctx.author.guild_permissions.manage_guild
@@ -115,22 +115,22 @@ async def _do_ticket_close(ctx: commands.Context, reason: str):
             is_authorized = True
 
     if not is_authorized:
-        return await ctx.send("You do not have permission to close this ticket (`Creator or Support Staff only`).", ephemeral=True)
+        return await ctx.send(embed=make_embed("You do not have permission to close this ticket (`Creator or Support Staff only`).", discord.Color.red()), ephemeral=True)
 
-    await ctx.send(f"Initiating ticket closure by {ctx.author.mention} (`Reason: {reason}`)...")
+    await ctx.send(embed=make_embed(f"Initiating ticket closure by {ctx.author.mention} (`Reason: {reason}`)..."))
     asyncio.create_task(close_ticket_flow(ctx.guild, ctx.channel, ctx.author, reason))
 
 async def _do_ticket_transcript(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild or not isinstance(ctx.channel, discord.TextChannel):
-        return await ctx.send("This command must be run inside a server ticket channel.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server ticket channel.", discord.Color.red()), ephemeral=True)
 
     config = load_ticket_config(ctx.guild.id)
     support_role_id = config.get("support_role_id")
     ticket_data = config.get("active_tickets", {}).get(str(ctx.channel.id))
 
     if not ticket_data and not ctx.channel.name.startswith("ticket-"):
-        return await ctx.send("This channel is not recognized as an active support ticket.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This channel is not recognized as an active support ticket.", discord.Color.red()), ephemeral=True)
 
     creator_id = ticket_data.get("creator_id", "Unknown") if ticket_data else "Unknown"
     subject = ticket_data.get("subject", "Unknown") if ticket_data else "Unknown"
@@ -141,14 +141,14 @@ async def _do_ticket_transcript(ctx: commands.Context):
             is_authorized = True
 
     if not is_authorized:
-        return await ctx.send("You do not have permission to export transcripts for this ticket (`Creator or Support Staff only`).", ephemeral=True)
+        return await ctx.send(embed=make_embed("You do not have permission to export transcripts for this ticket (`Creator or Support Staff only`).", discord.Color.red()), ephemeral=True)
 
     messages = []
     try:
         async for m in ctx.channel.history(limit=500, oldest_first=True):
             messages.append(m)
     except Exception as e:
-        return await ctx.send(f"Failed to fetch channel history: {e}", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"Failed to fetch channel history: {e}", discord.Color.red()), ephemeral=True)
 
     lines = [
         "=== TICKET TRANSCRIPT ===",
@@ -236,7 +236,7 @@ async def _do_ticket_unblacklist(ctx: commands.Context, member: discord.Member):
 @commands.has_permissions(manage_channels=True)
 async def ticket_group(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
-        await ctx.send("Use: `add`, `remove`, `close`, or `transcript`.", ephemeral=True)
+        await ctx.send(embed=make_embed("Use: `add`, `remove`, `close`, or `transcript`.", discord.Color.red()), ephemeral=True)
 
 @ticket_group.command(name="add", description="Add a member to a ticket")
 @app_commands.describe(member="The member to grant access to this ticket")
@@ -293,7 +293,7 @@ class RenderTranscriptView(discord.ui.View):
         await interaction.response.defer()
         img = await generate_transcript_image(self.messages, self.current_page, self.per_page)
         if not img:
-            return await interaction.followup.send("Failed to render page.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("Failed to render page.", discord.Color.red()), ephemeral=True)
             
         import io
         b = io.BytesIO()
@@ -320,7 +320,7 @@ class RenderTranscriptView(discord.ui.View):
 @app_commands.describe(file="The transcript HTML file to render")
 async def render_transcript_cmd(interaction: discord.Interaction, file: discord.Attachment):
     if not file.filename.endswith(".html"):
-        return await interaction.response.send_message("Please upload a valid .html transcript file.", ephemeral=True)
+        return await interaction.response.send_message(embed=make_embed("Please upload a valid .html transcript file."), ephemeral=True)
         
     await interaction.response.defer()
     try:
@@ -329,13 +329,14 @@ async def render_transcript_cmd(interaction: discord.Interaction, file: discord.
         
         messages = parse_transcript(content_str)
         if not messages:
-            return await interaction.followup.send("No valid messages found in the transcript file.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("No valid messages found in the transcript file."), ephemeral=True)
             
         img = await generate_transcript_image(messages, page=0, per_page=50)
         if not img:
-            return await interaction.followup.send("Failed to render image.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("Failed to render image.", discord.Color.red()), ephemeral=True)
             
         import io
+from Commands._utils import make_embed
         b = io.BytesIO()
         img.save(b, format='PNG')
         b.seek(0)
@@ -345,7 +346,7 @@ async def render_transcript_cmd(interaction: discord.Interaction, file: discord.
         await interaction.followup.send(file=discord_file, view=view)
         
     except Exception as e:
-        await interaction.followup.send(f"An error occurred while rendering: {e}", ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"An error occurred while rendering: {e}", discord.Color.red()), ephemeral=True)
 
 class TicketCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -377,31 +378,30 @@ class TicketCog(commands.Cog):
 
     @ticket_add_cmd.error
     async def add_error(self, ctx: commands.Context, error):
-        await ctx.send(f"Ticket add failed: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Ticket add failed: {error}", discord.Color.red()), ephemeral=True)
 
     @ticket_remove_cmd.error
     async def remove_error(self, ctx: commands.Context, error):
-        await ctx.send(f"Ticket remove failed: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Ticket remove failed: {error}", discord.Color.red()), ephemeral=True)
 
     @ticket_close_cmd.error
     async def close_error(self, ctx: commands.Context, error):
-        await ctx.send(f"Ticket close failed: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Ticket close failed: {error}", discord.Color.red()), ephemeral=True)
 
     @ticket_transcript_cmd.error
     async def transcript_error(self, ctx: commands.Context, error):
-        await ctx.send(f"Ticket transcript failed: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Ticket transcript failed: {error}", discord.Color.red()), ephemeral=True)
 
     @ticket_blacklist_cmd.error
     async def blacklist_error(self, ctx: commands.Context, error):
-        await ctx.send(f"Ticket blacklist failed: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Ticket blacklist failed: {error}", discord.Color.red()), ephemeral=True)
 
     @ticket_unblacklist_cmd.error
     async def unblacklist_error(self, ctx: commands.Context, error):
-        await ctx.send(f"Ticket unblacklist failed: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Ticket unblacklist failed: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     if "ticket" not in bot.all_commands:
         bot.add_command(ticket_group)
     bot.tree.add_command(render_group)
     await bot.add_cog(TicketCog(bot))
-

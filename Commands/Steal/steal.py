@@ -1,9 +1,10 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 import re
 import aiohttp
 import datetime
+from Commands._utils import make_embed
 
 def _get_footer(guild_name: str) -> str:
     return f"{guild_name} • {datetime.datetime.now().strftime('%m/%d/%Y')}"
@@ -140,7 +141,7 @@ class StealCog(commands.GroupCog, group_name="steal", group_description="Steal e
     @commands.has_permissions(manage_expressions=True)
     async def steal_prefix(self, ctx: commands.Context):
         if ctx.invoked_subcommand is None:
-            await ctx.send("Use `-steal emoji <emoji> <name>` or `-steal emojiurl <url> <name>`")
+            await ctx.send(embed=make_embed("Use `-steal emoji <emoji> <name>` or `-steal emojiurl <url> <name>`"))
 
     @steal_prefix.command(name="emoji")
     @commands.has_permissions(manage_expressions=True)
@@ -168,9 +169,9 @@ class StealCog(commands.GroupCog, group_name="steal", group_description="Steal e
     @steal_emojiurl_cmd.error
     async def steal_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage expressions.", delete_after=10)
+            await ctx.send(embed=make_embed("You do not have permission to manage expressions.", discord.Color.red()), delete_after=10)
         else:
-            await ctx.send(f"An error occurred: {error}", delete_after=10)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), delete_after=10)
 
 
 async def setup(bot: commands.Bot):

@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Role.role import role_group
 
@@ -27,9 +27,9 @@ class RoleInfoCog(commands.Cog):
     @role_info_cmd.error
     async def role_info_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-role info <@role/name/ID>`", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `-role info <@role/name/ID>`", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class RoleInfoFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -41,6 +41,7 @@ class RoleInfoFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Role.role import role_group
+from Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleInfoCog(bot))

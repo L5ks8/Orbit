@@ -3,6 +3,7 @@ from discord.ext import commands
 from Commands.Cases._storage import get_user_cases, update_case_reason
 from Commands.Appeals._storage import get_appeal_status, close_appeal, register_appeal_submission
 import time
+from Commands._utils import make_embed
 
 class AppealView(discord.ui.View):
     def __init__(self, bot: commands.Bot, guild_id: int, user_id: int):
@@ -29,16 +30,17 @@ class AppealView(discord.ui.View):
 
     async def get_appeals_cfg(self):
         from Commands.Appeals._storage import load_appeals_config
+from Commands._utils import make_embed
         return load_appeals_config(self.guild_id)
 
     async def handle_decision(self, interaction: discord.Interaction, is_accept: bool):
         await interaction.response.defer(ephemeral=True)
         guild = self.bot.get_guild(self.guild_id)
         if not guild:
-            return await interaction.followup.send("Server not found.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("Server not found.", discord.Color.red()), ephemeral=True)
             
         if not interaction.user.guild_permissions.moderate_members:
-            return await interaction.followup.send("You lack permissions to decide on appeals.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("You lack permissions to decide on appeals."), ephemeral=True)
             
         cfg = await self.get_appeals_cfg()
         
@@ -63,7 +65,7 @@ class AppealView(discord.ui.View):
                             except:
                                 pass
             except Exception as e:
-                return await interaction.followup.send(f"Could not revoke punishment: {e}", ephemeral=True)
+                return await interaction.followup.send(embed=make_embed(f"Could not revoke punishment: {e}", discord.Color.red()), ephemeral=True)
         
         close_appeal(self.guild_id, self.user_id)
         
@@ -75,15 +77,15 @@ class AppealView(discord.ui.View):
         
         if is_accept:
             embed.color = discord.Color.green()
-            embed.add_field(name="Status", value=f"✅ Accepted by {mod_name}")
+            embed.add_field(name="Status", value=f" Accepted by {mod_name}")
             msg = "Appeal accepted and punishment revoked."
         else:
             embed.color = discord.Color.red()
-            embed.add_field(name="Status", value=f"❌ Denied by {mod_name}")
+            embed.add_field(name="Status", value=f" Denied by {mod_name}")
             msg = "Appeal denied."
         
         await interaction.message.edit(embed=embed, view=self)
-        await interaction.followup.send(msg, ephemeral=True)
+        await interaction.followup.send(embed=make_embed(msg, discord.Color.green() if accepted else discord.Color.red()), ephemeral=True)
 
     async def btn_accept(self, interaction: discord.Interaction):
         await self.handle_decision(interaction, True)

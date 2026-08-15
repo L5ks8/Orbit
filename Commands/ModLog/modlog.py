@@ -1,11 +1,11 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord import app_commands
 from discord.ui import View, Button
 from Commands.Log._modlog_storage import get_modlogs
 from Commands.Warn._storage import load_warnings
 from Commands.Ban._storage import load_ban_history
-from Commands._utils import MemberOrIDConverter, format_usage
+from Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 class ModLogPaginationView(View):
     def __init__(self, interaction_or_ctx, user_target, logs: list):
@@ -151,11 +151,11 @@ class ModLogCommand(commands.Cog):
     @modlog_cmd.error
     async def modlog_cmd_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need `Moderate Members` permission to view modlogs.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need `Moderate Members` permission to view modlogs.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.BadArgument):
-            await ctx.send(format_usage("-modlog", "<@user/ID>"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-modlog", "<@user/ID>"), discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

@@ -1,5 +1,6 @@
-import discord
+﻿import discord
 from discord.ext import commands
+from Commands._utils import make_embed
 
 class GetInviteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -9,7 +10,7 @@ class GetInviteCommand(commands.Cog):
     @commands.is_owner()
     async def getinvite_cmd(self, ctx: commands.Context, server_id: int = None):
         if server_id is None:
-            return await ctx.send("Usage: `-getinvite <server_id>`", allowed_mentions=discord.AllowedMentions.none())
+            return await ctx.send(embed=make_embed("Usage: `-getinvite <server_id>`", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
         guild = self.bot.get_guild(server_id)
         if not guild:
@@ -19,7 +20,7 @@ class GetInviteCommand(commands.Cog):
                 guild = None
 
         if not guild:
-            return await ctx.send(f"Orbit is not currently connected to any guild matching ID `{server_id}`.", allowed_mentions=discord.AllowedMentions.none())
+            return await ctx.send(embed=make_embed(f"Orbit is not currently connected to any guild matching ID `{server_id}`.", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
         invite_url = None
         try:
@@ -43,7 +44,7 @@ class GetInviteCommand(commands.Cog):
                         pass
 
         if not invite_url:
-            return await ctx.send("Failed to retrieve or create an invite link for this server.", allowed_mentions=discord.AllowedMentions.none())
+            return await ctx.send(embed=make_embed("Failed to retrieve or create an invite link for this server.", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
         embed = discord.Embed(
             title="Orbit Server Invite Generator",

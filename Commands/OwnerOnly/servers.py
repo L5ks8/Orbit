@@ -1,6 +1,7 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import View, Button
+from Commands._utils import make_embed
 
 class ServersPaginationView(View):
     def __init__(self, bot: commands.Bot, author_id: int, current_page: int = 0):
@@ -67,21 +68,21 @@ class ServersPaginationView(View):
 
     async def on_prev_click(self, interaction: discord.Interaction):
         if interaction.user.id != self.author_id:
-            return await interaction.response.send_message("Only the bot owner can interact with this pagination.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the bot owner can interact with this pagination.", discord.Color.red()), ephemeral=True)
         self.current_page -= 1
         self._build_ui()
         await interaction.response.edit_message(embed=self.get_embed(), view=self)
 
     async def on_next_click(self, interaction: discord.Interaction):
         if interaction.user.id != self.author_id:
-            return await interaction.response.send_message("Only the bot owner can interact with this pagination.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the bot owner can interact with this pagination.", discord.Color.red()), ephemeral=True)
         self.current_page += 1
         self._build_ui()
         await interaction.response.edit_message(embed=self.get_embed(), view=self)
 
     async def on_close_click(self, interaction: discord.Interaction):
         if interaction.user.id != self.author_id:
-            return await interaction.response.send_message("Only the bot owner can interact with this panel.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Only the bot owner can interact with this panel.", discord.Color.red()), ephemeral=True)
         try:
             await interaction.message.delete()
         except Exception:
@@ -101,7 +102,7 @@ class ServersCommand(commands.Cog):
     @servers_cmd.error
     async def servers_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
-            await ctx.send(f"Servers Error: {error}", allowed_mentions=discord.AllowedMentions.none())
+            await ctx.send(embed=make_embed(f"Servers Error: {error}", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ServersCommand(bot))

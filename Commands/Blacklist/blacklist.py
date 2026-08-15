@@ -4,25 +4,26 @@ from discord.ext import commands
 from Commands.Blacklist._storage import add_to_blacklist
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Log._storage import log_event
+from Commands._utils import make_embed
 
 async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command can only be used inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command can only be used inside a server.", discord.Color.red()), ephemeral=True)
     if not target_id_str:
-        return await ctx.send("Please provide a user ID to blacklist (e.g. `/blacklist 123456789` or `-blacklist 123456789`).", ephemeral=True)
+        return await ctx.send(embed=make_embed("Please provide a user ID to blacklist (e.g. `/blacklist 123456789` or `-blacklist 123456789`).", discord.Color.red()), ephemeral=True)
 
     clean_id_str = re.sub(r"\D", "", str(target_id_str))
     if not clean_id_str:
-        return await ctx.send("Please provide a valid numeric ID to blacklist.", ephemeral=True)
+        return await ctx.send(embed=make_embed("Please provide a valid numeric ID to blacklist.", discord.Color.red()), ephemeral=True)
     user_id = int(clean_id_str)
 
     if is_whitelisted(ctx.guild.id, user_id):
-        return await ctx.send("This user is on the global moderation whitelist (`Immune to Blacklist`).", ephemeral=True)
+        return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Blacklist`).", discord.Color.red()), ephemeral=True)
 
     success = add_to_blacklist(ctx.guild.id, user_id, reason, ctx.author.id)
     if not success:
-        return await ctx.send(f"ID `{user_id}` is already on the command blacklist.", ephemeral=True)
+        return await ctx.send(embed=make_embed(f"ID `{user_id}` is already on the command blacklist.", discord.Color.red()), ephemeral=True)
 
     member = ctx.guild.get_member(user_id)
     ban_msg = ""
@@ -39,7 +40,7 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
         "User Blacklisted (`-blacklist add`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}{ban_msg}"
     )
-    await ctx.send(f"Added ID `{user_id}` to the command blacklist.{ban_msg}", ephemeral=True)
+    await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the command blacklist.{ban_msg}", discord.Color.green()), ephemeral=True)
 
 @commands.hybrid_command(
     name="blacklist",
@@ -62,4 +63,3 @@ async def setup(bot: commands.Bot):
     if "blacklist" not in bot.all_commands:
         bot.add_command(blacklist_cmd)
     await bot.add_cog(BlacklistCog(bot))
-

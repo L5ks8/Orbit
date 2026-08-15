@@ -1,4 +1,4 @@
-import time
+﻿import time
 import re
 import discord
 from discord.ext import commands, tasks
@@ -126,7 +126,7 @@ class LevelListenerCog(commands.Cog):
 
         # Send level up message
         content = config.get("levelup_message_content", "{user_mention}")
-        title = config.get("levelup_embed_title", "🎉 Level Up!")
+        title = config.get("levelup_embed_title", " Level Up!")
         desc = config.get("levelup_embed_description", "")
         author = config.get("levelup_embed_author", "")
         footer = config.get("levelup_embed_footer", "")
@@ -457,7 +457,7 @@ class LevelListenerCog(commands.Cog):
                 desc_lines.append(f"{medal} **{name}** — Level {lvl} • {xp:,} XP")
 
             embed = discord.Embed(
-                title="🏆 XP Leaderboard",
+                title=" XP Leaderboard",
                 description="\n".join(desc_lines),
                 color=color
             )

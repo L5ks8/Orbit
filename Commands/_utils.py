@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 
+def make_embed(description: str, color: discord.Color = discord.Color.blurple()) -> discord.Embed:
+    return discord.Embed(description=description, color=color)
+
 class ModuleDisabledView(discord.ui.View):
     def __init__(self, guild_id: int, module_name: str):
         super().__init__()

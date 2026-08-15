@@ -1,5 +1,6 @@
-import discord
+﻿import discord
 from discord.ext import commands
+from Commands._utils import make_embed
 
 class CheckBanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -19,20 +20,20 @@ class CheckBanCommand(commands.Cog):
             embed.add_field(name="Reason", value=reason, inline=False)
             await ctx.send(embed=embed)
         except discord.NotFound:
-            await ctx.send(f"The user with ID `{target_id}` is **not** currently banned on this server.")
+            await ctx.send(embed=make_embed(f"The user with ID `{target_id}` is **not** currently banned on this server."))
         except discord.Forbidden:
-            await ctx.send("I do not have permission to view the ban list.", ephemeral=True)
+            await ctx.send(embed=make_embed("I do not have permission to view the ban list.", discord.Color.red()), ephemeral=True)
         except discord.HTTPException:
-            await ctx.send("Failed to fetch ban information due to an API error.", ephemeral=True)
+            await ctx.send(embed=make_embed("Failed to fetch ban information due to an API error.", discord.Color.red()), ephemeral=True)
 
     @checkban.error
     async def checkban_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to use this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to use this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `/checkban <target>`", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/checkban <target>`", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CheckBanCommand(bot))

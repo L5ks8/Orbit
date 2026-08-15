@@ -1,11 +1,11 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Mute._storage import get_muted_role_id, set_muted_role_id
 from Commands.Log._storage import log_event
 from Commands.Log._modlog_storage import add_modlog
-from Commands._utils import MemberOrIDConverter, format_usage
+from Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
     stored_id = get_muted_role_id(guild.id)
@@ -40,26 +40,26 @@ class MuteCommand(commands.Cog):
     async def mute(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
         await ctx.defer()
         if target.id == ctx.author.id:
-            return await ctx.send("You cannot mute yourself.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You cannot mute yourself.", discord.Color.red()), ephemeral=True)
         if is_whitelisted(ctx.guild.id, target.id):
-            return await ctx.send("This user is on the global moderation whitelist (`Immune to Mute`).", ephemeral=True)
+            return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Mute`).", discord.Color.red()), ephemeral=True)
         if target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
-            return await ctx.send("You cannot mute a user with an equal or higher role.", ephemeral=True)
+            return await ctx.send(embed=make_embed("You cannot mute a user with an equal or higher role.", discord.Color.red()), ephemeral=True)
 
         role = await get_or_create_muted_role(ctx.guild)
         if role in target.roles:
-            return await ctx.send("This user is already muted.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This user is already muted.", discord.Color.red()), ephemeral=True)
 
         try:
-            from Commands._utils import send_moderation_dm
+            from Commands._utils import send_moderation_dm, make_embed
             await send_moderation_dm(target, ctx.guild.name, "muted", reason, guild_id=ctx.guild.id)
 
             await target.add_roles(role, reason=f"Muted by {ctx.author} | Reason: {reason}")
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Mute", reason)
         except discord.Forbidden:
-            return await ctx.send("I do not have permissions to manage roles or my role is lower than the Muted role.", ephemeral=True)
+            return await ctx.send(embed=make_embed("I do not have permissions to manage roles or my role is lower than the Muted role.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            return await ctx.send(f"Error assigning muted role: {e}", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"Error assigning muted role: {e}", discord.Color.red()), ephemeral=True)
 
 
         await log_event(
@@ -79,14 +79,13 @@ class MuteCommand(commands.Cog):
     @mute.error
     async def mute_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Manage Roles permission to mute users.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Manage Roles permission to mute users.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(format_usage("-mute", "<@member>", "[reason]"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("-mute", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"{format_usage('-mute', '<@member>', '[reason]')}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"{format_usage('-mute','<@member>','[reason]')}"), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MuteCommand(bot))
-

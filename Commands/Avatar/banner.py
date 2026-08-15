@@ -1,5 +1,6 @@
-import discord
+﻿import discord
 from discord.ext import commands
+from Commands._utils import make_embed
 
 
 
@@ -18,7 +19,7 @@ class BannerCommand(commands.Cog):
             full_user = target
 
         if not getattr(full_user, "banner", None):
-            return await ctx.send(f"`{target.display_name}` does not have a custom profile banner set.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"`{target.display_name}` does not have a custom profile banner set."), ephemeral=True)
 
         banner_url = full_user.banner.with_size(4096).url
         embed = discord.Embed(title=f"Profile Banner: {full_user.display_name}", description=f"**User ID:** `{full_user.id}`", color=discord.Color.blurple())
@@ -28,4 +29,3 @@ class BannerCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BannerCommand(bot))
-

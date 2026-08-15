@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 sys.dont_write_bytecode = True
 
 import os
@@ -7,6 +7,7 @@ import pathlib
 import discord
 from discord.ext import commands
 import discord.ext.commands.core as core
+from Commands._utils import make_embed
 
 def custom_has_permissions(**perms: bool):
     def decorator(func):
@@ -80,7 +81,7 @@ async def send_dev_error(bot, source: str, error):
             msg = str(error)[:300]
             
         embed = discord.Embed(
-            title="⚠️ System Error Captured", 
+            title="️ System Error Captured", 
             description=f"**Source:** {source}\n**Message:** {msg}", 
             color=discord.Color.red()
         )
@@ -106,9 +107,9 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             if is_blacklisted(interaction.guild.id, interaction.user.id):
                 try:
                     if interaction.response.is_done():
-                        await interaction.followup.send("You are blacklisted from using bot commands on this server.", ephemeral=True)
+                        await interaction.followup.send(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), ephemeral=True)
                     else:
-                        await interaction.response.send_message("You are blacklisted from using bot commands on this server.", ephemeral=True)
+                        await interaction.response.send_message(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), ephemeral=True)
                 except Exception:
                     pass
                 return False
@@ -140,7 +141,7 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             pass
         try:
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"An error occurred: `{error}`", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"An error occurred: `{error}`", discord.Color.red()), ephemeral=True)
         except Exception:
             pass
 
@@ -333,7 +334,7 @@ class OrbitBot(commands.Bot):
             return
         if hasattr(error, "original") and isinstance(error.original, discord.app_commands.errors.CommandSignatureMismatch):
             try:
-                await ctx.send("Command definitions have just been updated! Please try running the command again.", ephemeral=True)
+                await ctx.send(embed=make_embed("Command definitions have just been updated! Please try running the command again.", discord.Color.green()), ephemeral=True)
             except Exception:
                 pass
             return
@@ -355,7 +356,7 @@ async def global_blacklist_prefix_check(ctx: commands.Context):
     from Commands.Blacklist._storage import is_blacklisted
     if is_blacklisted(ctx.guild.id, ctx.author.id):
         try:
-            await ctx.send("You are blacklisted from using bot commands on this server.", delete_after=5.0)
+            await ctx.send(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), delete_after=5.0)
         except Exception:
             pass
         return False
@@ -386,6 +387,7 @@ if __name__ == "__main__":
     else:
         import time
         import asyncio
+from Commands._utils import make_embed
         while True:
             try:
                 asyncio.run(main())

@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 import asyncio
 
@@ -16,11 +16,11 @@ class Broadcast(commands.Cog):
             color=0x2B2D31
         )
         msg = await ctx.send(embed=confirm_embed)
-        await msg.add_reaction("✅")
-        await msg.add_reaction("❌")
+        await msg.add_reaction("")
+        await msg.add_reaction("")
         
         def check(r, u):
-            return u.id == ctx.author.id and str(r.emoji) in ["✅", "❌"] and r.message.id == msg.id
+            return u.id == ctx.author.id and str(r.emoji) in ["", ""] and r.message.id == msg.id
             
         try:
             reaction, _ = await self.bot.wait_for("reaction_add", timeout=30.0, check=check)
@@ -28,7 +28,7 @@ class Broadcast(commands.Cog):
             await msg.edit(content="Broadcast timed out.", embed=None)
             return
             
-        if str(reaction.emoji) == "❌":
+        if str(reaction.emoji) == "":
             await msg.edit(content="Broadcast cancelled.", embed=None)
             return
             

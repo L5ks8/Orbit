@@ -1,7 +1,8 @@
-import asyncio
+﻿import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, UserSelect
 from Commands.JoinToCreate._storage import get_active_channel, update_active_channel, remove_active_channel
+from Commands._utils import make_embed
 
 
 
@@ -25,11 +26,11 @@ class RenameVoiceModal(Modal, title="Rename Voice Channel"):
         new_name = self.name_input.value.strip()
         try:
             await self.channel.edit(name=new_name, reason=f"Renamed by owner {interaction.user}")
-            await interaction.followup.send(f"Successfully renamed channel to **{new_name}**.", ephemeral=True)
+            await interaction.followup.send(embed=make_embed(f"Successfully renamed channel to **{new_name}**.", discord.Color.green()), ephemeral=True)
         except discord.Forbidden:
-            await interaction.followup.send("I do not have permission to rename this channel.", ephemeral=True)
+            await interaction.followup.send(embed=make_embed("I do not have permission to rename this channel.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await interaction.followup.send(f"Failed to rename channel: {e}", ephemeral=True)
+            await interaction.followup.send(embed=make_embed(f"Failed to rename channel: {e}", discord.Color.red()), ephemeral=True)
 
 class LimitVoiceModal(Modal, title="Set Voice User Limit"):
     limit_input = TextInput(
@@ -53,18 +54,18 @@ class LimitVoiceModal(Modal, title="Set Voice User Limit"):
             if val < 0 or val > 99:
                 val = 0
         except ValueError:
-            return await interaction.followup.send("Please enter a valid number between 0 and 99.", ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("Please enter a valid number between 0 and 99.", discord.Color.red()), ephemeral=True)
 
         try:
             await self.channel.edit(user_limit=val, reason=f"User limit set by owner {interaction.user}")
             self.data["limit"] = val
             if interaction.guild:
                 update_active_channel(interaction.guild.id, self.channel.id, self.data)
-            await interaction.followup.send(f"User limit set to **{'Unlimited' if val == 0 else val}**.", ephemeral=True)
+            await interaction.followup.send(embed=make_embed(f"User limit set to **{'Unlimited' if val == 0 else val}**.", discord.Color.green()), ephemeral=True)
         except discord.Forbidden:
-            await interaction.followup.send("I do not have permission to change the limit of this channel.", ephemeral=True)
+            await interaction.followup.send(embed=make_embed("I do not have permission to change the limit of this channel.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await interaction.followup.send(f"Failed to change user limit: {e}", ephemeral=True)
+            await interaction.followup.send(embed=make_embed(f"Failed to change user limit: {e}", discord.Color.red()), ephemeral=True)
 
 class PersistentJTCControlLayout(discord.ui.View):
     def __init__(self, guild_id: int = 0, data: dict = None):
@@ -140,10 +141,10 @@ class PersistentJTCControlLayout(discord.ui.View):
 
     async def _check_owner(self, interaction: discord.Interaction, data: dict) -> bool:
         if not data:
-            await interaction.response.send_message("This voice channel is not registered as an active temporary channel.", ephemeral=True)
+            await interaction.response.send_message(embed=make_embed("This voice channel is not registered as an active temporary channel.", discord.Color.red()), ephemeral=True)
             return False
         if interaction.user.id != data.get("owner_id") and not interaction.user.guild_permissions.manage_channels:
-            await interaction.response.send_message("Only the channel owner or server staff can use this control panel.", ephemeral=True)
+            await interaction.response.send_message(embed=make_embed("Only the channel owner or server staff can use this control panel."), ephemeral=True)
             return False
         return True
 
@@ -161,10 +162,10 @@ class PersistentJTCControlLayout(discord.ui.View):
             update_active_channel(interaction.guild.id, channel.id, data)
             updated_view = PersistentJTCControlLayout(interaction.guild.id, data)
             await interaction.response.edit_message(**updated_view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
-            await interaction.followup.send(f"Voice channel is now **{'Locked' if new_locked else 'Unlocked'}**.", ephemeral=True)
+            await interaction.followup.send(embed=make_embed(f"Voice channel is now **{'Locked' if new_locked else'Unlocked'}**.", discord.Color.red()), ephemeral=True)
         except Exception as e:
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"Failed to toggle lock: {e}", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"Failed to toggle lock: {e}", discord.Color.red()), ephemeral=True)
 
     async def on_hide(self, interaction: discord.Interaction):
         channel, data = await self._get_context(interaction)
@@ -180,10 +181,10 @@ class PersistentJTCControlLayout(discord.ui.View):
             update_active_channel(interaction.guild.id, channel.id, data)
             updated_view = PersistentJTCControlLayout(interaction.guild.id, data)
             await interaction.response.edit_message(**updated_view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
-            await interaction.followup.send(f"Voice channel is now **{'Hidden' if new_hidden else 'Visible'}**.", ephemeral=True)
+            await interaction.followup.send(embed=make_embed(f"Voice channel is now **{'Hidden' if new_hidden else'Visible'}**."), ephemeral=True)
         except Exception as e:
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"Failed to toggle visibility: {e}", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"Failed to toggle visibility: {e}", discord.Color.red()), ephemeral=True)
 
     async def on_rename(self, interaction: discord.Interaction):
         channel, data = await self._get_context(interaction)
@@ -210,7 +211,7 @@ class PersistentJTCControlLayout(discord.ui.View):
                 options.append(discord.SelectOption(label=m.display_name, value=str(m.id), description=f"@{m.name}"))
 
         if not options:
-            return await interaction.response.send_message("No eligible members in the channel to kick.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("No eligible members in the channel to kick."), ephemeral=True)
 
         select = Select(placeholder="Select a member to kick from the voice channel...", options=options)
 
@@ -219,20 +220,20 @@ class PersistentJTCControlLayout(discord.ui.View):
             val = inter.data.get("values", ["none"])[0]
             target = inter.guild.get_member(int(val))
             if not target:
-                return await inter.followup.send("Member not found.", ephemeral=True)
+                return await inter.followup.send(embed=make_embed("Member not found.", discord.Color.red()), ephemeral=True)
             try:
                 if target.voice and target.voice.channel and target.voice.channel.id == channel.id:
                     await target.move_to(None, reason=f"Kicked from temp voice channel by owner {inter.user}")
-                    await inter.followup.send(f"Kicked **{target.display_name}** from the voice channel.", ephemeral=True)
+                    await inter.followup.send(embed=make_embed(f"Kicked **{target.display_name}** from the voice channel."), ephemeral=True)
                 else:
-                    await inter.followup.send(f"**{target.display_name}** is no longer in this voice channel.", ephemeral=True)
+                    await inter.followup.send(embed=make_embed(f"**{target.display_name}** is no longer in this voice channel."), ephemeral=True)
             except discord.Forbidden:
-                await inter.followup.send("I do not have permission to disconnect this member.", ephemeral=True)
+                await inter.followup.send(embed=make_embed("I do not have permission to disconnect this member.", discord.Color.red()), ephemeral=True)
 
         select.callback = kick_cb
         kick_view = discord.ui.View(timeout=60)
         kick_view.add_item(select)
-        await interaction.response.send_message("Select a member to kick:", view=kick_view, ephemeral=True)
+        await interaction.response.send_message(embed=make_embed("Select a member to kick:"), view=kick_view, ephemeral=True)
 
     async def on_trust(self, interaction: discord.Interaction):
         channel, data = await self._get_context(interaction)
@@ -280,29 +281,29 @@ class PersistentJTCControlLayout(discord.ui.View):
                     pass
 
             if added:
-                await inter.followup.send(f"Trusted users added: {', '.join(added)}", ephemeral=True)
+                await inter.followup.send(embed=make_embed(f"Trusted users added: {','.join(added)}", discord.Color.green()), ephemeral=True)
             else:
-                await inter.followup.send("No new users were trusted.", ephemeral=True)
+                await inter.followup.send(embed=make_embed("No new users were trusted."), ephemeral=True)
 
         user_select.callback = trust_cb
         trust_view = discord.ui.View(timeout=60)
         trust_view.add_item(user_select)
-        await interaction.response.send_message("Select user(s) to trust:", view=trust_view, ephemeral=True)
+        await interaction.response.send_message(embed=make_embed("Select user(s) to trust:"), view=trust_view, ephemeral=True)
 
     async def on_claim(self, interaction: discord.Interaction):
         channel, data = await self._get_context(interaction)
         if not channel or not data:
-            return await interaction.response.send_message("This is not an active temporary voice channel.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("This is not an active temporary voice channel.", discord.Color.red()), ephemeral=True)
 
         if not interaction.user.voice or interaction.user.voice.channel.id != channel.id:
-            return await interaction.response.send_message("You must be connected to this voice channel to claim ownership.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("You must be connected to this voice channel to claim ownership.", discord.Color.red()), ephemeral=True)
 
         if interaction.user.id == data.get("owner_id"):
-            return await interaction.response.send_message("You are already the owner of this voice channel.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("You are already the owner of this voice channel.", discord.Color.red()), ephemeral=True)
 
         current_owner = interaction.guild.get_member(data.get("owner_id"))
         if current_owner and current_owner in channel.members:
-            return await interaction.response.send_message(f"The current channel owner ({current_owner.display_name}) is still connected!", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed(f"The current channel owner ({current_owner.display_name}) is still connected!"), ephemeral=True)
 
         data["owner_id"] = interaction.user.id
         update_active_channel(interaction.guild.id, channel.id, data)
@@ -311,20 +312,19 @@ class PersistentJTCControlLayout(discord.ui.View):
             await channel.set_permissions(interaction.user, read_messages=True, connect=True, view_channel=True, manage_channels=True, reason=f"Claimed by {interaction.user}")
             updated_view = PersistentJTCControlLayout(interaction.guild.id, data)
             await interaction.response.edit_message(**updated_view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
-            await interaction.followup.send("You are now the **Owner** of this temporary voice channel.", ephemeral=True)
+            await interaction.followup.send(embed=make_embed("You are now the **Owner** of this temporary voice channel.", discord.Color.green()), ephemeral=True)
         except Exception as e:
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"Failed to claim channel: {e}", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"Failed to claim channel: {e}", discord.Color.red()), ephemeral=True)
 
     async def on_delete(self, interaction: discord.Interaction):
         channel, data = await self._get_context(interaction)
         if not await self._check_owner(interaction, data):
             return
 
-        await interaction.response.send_message("Deleting temporary voice channel...", ephemeral=True)
+        await interaction.response.send_message(embed=make_embed("Deleting temporary voice channel..."), ephemeral=True)
         remove_active_channel(interaction.guild.id, channel.id)
         try:
             await channel.delete(reason=f"Deleted by owner {interaction.user}")
         except Exception:
             pass
-

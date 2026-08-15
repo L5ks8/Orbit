@@ -1,6 +1,7 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.OwnerOnly._storage import load_devmode_config, save_devmode_config
+from Commands._utils import make_embed
 
 class DevmodeCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -36,7 +37,7 @@ class DevmodeCommand(commands.Cog):
         elif clean_state in ["false", "off", "0", "disable", "no"]:
             enabled = False
         else:
-            return await ctx.send("Usage: `-devmode <true/false> [reason]` (`-devmode true Database upgrades in progress`)", allowed_mentions=discord.AllowedMentions.none())
+            return await ctx.send(embed=make_embed("Usage: `-devmode <true/false> [reason]` (`-devmode true Database upgrades in progress`)", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
         config["enabled"] = enabled
         if reason and reason.strip():
@@ -49,7 +50,7 @@ class DevmodeCommand(commands.Cog):
     @devmode_cmd.error
     async def devmode_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
-            await ctx.send(f"Devmode Error: {error}", allowed_mentions=discord.AllowedMentions.none())
+            await ctx.send(embed=make_embed(f"Devmode Error: {error}", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DevmodeCommand(bot))

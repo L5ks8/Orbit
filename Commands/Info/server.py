@@ -1,12 +1,13 @@
-import discord
+﻿import discord
 from discord.ext import commands
+from Commands._utils import make_embed
 
 
 
 async def _do_server_info(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be run inside a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
     created_timestamp = int(ctx.guild.created_at.timestamp())
     humans = len([m for m in ctx.guild.members if not m.bot])

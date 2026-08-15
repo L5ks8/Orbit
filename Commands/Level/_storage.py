@@ -1,4 +1,4 @@
-from Database.mongodb import get_config, set_config, get_db
+﻿from Database.mongodb import get_config, set_config, get_db
 import math
 import threading
 from typing import Dict, Any, List, Optional
@@ -44,7 +44,7 @@ DEFAULT_LEVEL_CONFIG = {
     # Level Up Message
     "levelup_message_content": "{user_mention}",
     "levelup_embed_author": "",
-    "levelup_embed_title": "🎉 Level Up!",
+    "levelup_embed_title": " Level Up!",
     "levelup_embed_description": "Congratulations **{user_globalname}**!\nYou reached **Level {level}**.",
     "levelup_embed_footer": "",
     "levelup_embed_image": "",

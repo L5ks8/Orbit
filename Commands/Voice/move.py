@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from typing import Union, Optional
 
@@ -36,11 +36,11 @@ async def _do_vc_move(
 ):
     await ctx.defer()
     if not ctx.guild:
-        return await ctx.send("This command must be used in a server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This command must be used in a server.", discord.Color.red()), ephemeral=True)
 
     dest_channel = await _resolve_channel(ctx, channel_raw)
     if not dest_channel:
-        return await ctx.send("❌ Could not find a valid voice channel with that ID or name.", ephemeral=True)
+        return await ctx.send(embed=make_embed("Could not find a valid voice channel with that ID or name.", discord.Color.red()), ephemeral=True)
 
     # Check if target is 'all'
     target_str = str(target_raw).strip().lower() if not isinstance(target_raw, discord.Member) else ""
@@ -56,7 +56,7 @@ async def _do_vc_move(
                     source_members.extend(vc.members)
 
         if not source_members:
-            return await ctx.send("❌ No voice members found to move.", ephemeral=True)
+            return await ctx.send(embed=make_embed("No voice members found to move."), ephemeral=True)
 
         moved_count = 0
         for m in source_members:
@@ -67,7 +67,7 @@ async def _do_vc_move(
                 pass
 
         if moved_count == 0:
-            return await ctx.send("❌ Failed to move members. Please check my permissions.", ephemeral=True)
+            return await ctx.send(embed=make_embed("Failed to move members. Please check my permissions.", discord.Color.red()), ephemeral=True)
 
         embed = discord.Embed(title="Moved All Voice Users", color=discord.Color.blue())
         if moved_count > 0:
@@ -96,13 +96,13 @@ async def _do_vc_move(
                 target_member = ctx.guild.get_member_named(str(target_raw))
 
         if not target_member:
-            return await ctx.send(f"❌ Could not find member `{target_raw}`.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"Could not find member `{target_raw}`.", discord.Color.red()), ephemeral=True)
 
         if not target_member.voice or not target_member.voice.channel:
-            return await ctx.send(f"❌ {target_member.mention} is not in any voice channel.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"{target_member.mention} is not in any voice channel.", discord.Color.red()), ephemeral=True)
 
         if target_member.voice.channel.id == dest_channel.id:
-            return await ctx.send(f"{target_member.mention} is already in {dest_channel.mention}.", ephemeral=True)
+            return await ctx.send(embed=make_embed(f"{target_member.mention} is already in {dest_channel.mention}.", discord.Color.red()), ephemeral=True)
 
         try:
             await target_member.edit(voice_channel=dest_channel, reason=f"Moved by {ctx.author} | Reason: {reason}")
@@ -114,9 +114,9 @@ async def _do_vc_move(
             embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
-            await ctx.send("❌ I do not have permission to move that member into that channel.", ephemeral=True)
+            await ctx.send(embed=make_embed("I do not have permission to move that member into that channel.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await ctx.send(f"❌ Error moving user: {e}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"Error moving user: {e}", discord.Color.red()), ephemeral=True)
 
 from Commands.Voice.voice import voice_group
 
@@ -136,11 +136,11 @@ async def vc_moveall_cmd(ctx: commands.Context, channel: str, *, reason: str = "
 @vc_moveall_cmd.error
 async def move_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
-        await ctx.send("You need `Move Members` permission to move voice users.", ephemeral=True)
+        await ctx.send(embed=make_embed("You need `Move Members` permission to move voice users.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("Usage: `-voice move <@member|all> <#channel|channel_id> [reason]`", ephemeral=True)
+        await ctx.send(embed=make_embed("Usage: `-voice move <@member|all> <#channel|channel_id> [reason]`", discord.Color.red()), ephemeral=True)
     else:
-        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class MoveCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -162,6 +162,7 @@ class MovePrefixFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Voice.voice import voice_group
+from Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(MoveCommand(bot))

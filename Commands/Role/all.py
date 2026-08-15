@@ -1,15 +1,15 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Role.role import role_group
 
 async def _do_roleall(ctx: commands.Context, role: discord.Role, reason: str):
     await ctx.defer()
     if role >= ctx.guild.me.top_role:
-        return await ctx.send("I cannot assign that role because it is higher than or equal to my highest role.", ephemeral=True)
+        return await ctx.send(embed=make_embed("I cannot assign that role because it is higher than or equal to my highest role.", discord.Color.red()), ephemeral=True)
     if role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
-        return await ctx.send("You cannot assign a role higher than or equal to your own top role.", ephemeral=True)
+        return await ctx.send(embed=make_embed("You cannot assign a role higher than or equal to your own top role.", discord.Color.red()), ephemeral=True)
     if role.is_default():
-        return await ctx.send("You cannot assign the @everyone role explicitly.", ephemeral=True)
+        return await ctx.send(embed=make_embed("You cannot assign the @everyone role explicitly.", discord.Color.red()), ephemeral=True)
 
     updated_count = 0
     for member in ctx.guild.members:
@@ -39,11 +39,11 @@ class RoleAllCog(commands.Cog):
     @role_all_cmd.error
     async def role_all_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need Administrator permissions to run this command.", ephemeral=True)
+            await ctx.send(embed=make_embed("You need Administrator permissions to run this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Usage: `-role all <@role/name> [reason]`", ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `-role all <@role/name> [reason]`", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 class RoleAllFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -57,6 +57,7 @@ class RoleAllFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Role.role import role_group
+from Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleAllCog(bot))

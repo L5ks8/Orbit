@@ -1,4 +1,4 @@
-import re
+﻿import re
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
@@ -16,18 +16,18 @@ class AddWhitelistModal(Modal, title="Add ID to Whitelist"):
     async def on_submit(self, interaction: discord.Interaction):
         clean_id_str = re.sub(r"\D", "", self.target_id.value)
         if not clean_id_str:
-            return await interaction.response.send_message("Please provide a valid numeric ID.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Please provide a valid numeric ID.", discord.Color.red()), ephemeral=True)
         user_id = int(clean_id_str)
 
         reason_str = self.reason.value or "Whitelisted via panel"
         success = add_to_whitelist(interaction.guild_id, user_id, reason_str, interaction.user.id)
         if not success:
-            return await interaction.response.send_message(f"ID `{user_id}` is already on the server moderation whitelist.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed(f"ID `{user_id}` is already on the server moderation whitelist.", discord.Color.red()), ephemeral=True)
 
         data = load_whitelist(interaction.guild_id)
         self.parent_view.data = data
         await interaction.response.edit_message(**self.parent_view.get_kwargs(interaction.guild_id))
-        await interaction.followup.send(f"Added ID `{user_id}` to the server moderation whitelist.", ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Added ID `{user_id}` to the server moderation whitelist.", discord.Color.green()), ephemeral=True)
 
 class RemoveWhitelistModal(Modal, title="Remove ID from Whitelist"):
     def __init__(self, parent_view: "WhitelistListLayout"):
@@ -39,17 +39,17 @@ class RemoveWhitelistModal(Modal, title="Remove ID from Whitelist"):
     async def on_submit(self, interaction: discord.Interaction):
         clean_id_str = re.sub(r"\D", "", self.target_id.value)
         if not clean_id_str:
-            return await interaction.response.send_message("Please provide a valid numeric ID.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("Please provide a valid numeric ID.", discord.Color.red()), ephemeral=True)
         user_id = int(clean_id_str)
 
         success = remove_from_whitelist(interaction.guild_id, user_id)
         if not success:
-            return await interaction.response.send_message(f"ID `{user_id}` is not currently on the server moderation whitelist.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed(f"ID `{user_id}` is not currently on the server moderation whitelist.", discord.Color.red()), ephemeral=True)
 
         data = load_whitelist(interaction.guild_id)
         self.parent_view.data = data
         await interaction.response.edit_message(**self.parent_view.get_kwargs(interaction.guild_id))
-        await interaction.followup.send(f"Removed ID `{user_id}` from the server moderation whitelist.", ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Removed ID `{user_id}` from the server moderation whitelist.", discord.Color.green()), ephemeral=True)
 
 class WhitelistListLayout(discord.ui.View):
     def __init__(self, guild: discord.Guild, bot: commands.Bot, author_id: int):
@@ -64,22 +64,23 @@ class WhitelistListLayout(discord.ui.View):
 
         async def add_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             await interaction.response.send_modal(AddWhitelistModal(self))
 
         async def remove_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             await interaction.response.send_modal(RemoveWhitelistModal(self))
 
         async def close_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:
-                return await interaction.response.send_message("You cannot control this panel.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You cannot control this panel.", discord.Color.red()), ephemeral=True)
             try:
                 await interaction.message.delete()
             except Exception:
                 self.clear_items()
                 from discord.ui import Container, TextDisplay
+from Commands._utils import make_embed
                 self.add_item(Container(TextDisplay(content="### Whitelist overview closed.")))
                 await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
                 self.stop()
@@ -112,4 +113,3 @@ class WhitelistListLayout(discord.ui.View):
             color=discord.Color.blue()
         )
         return {"embed": embed, "view": self}
-

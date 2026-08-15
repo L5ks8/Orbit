@@ -1,9 +1,9 @@
-import discord
+﻿import discord
 import io
 from discord import app_commands
 from discord.ext import commands
 from Commands.Invite._storage import get_leaderboard
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 
 class LeaderboardCommand(commands.Cog):
@@ -13,7 +13,7 @@ class LeaderboardCommand(commands.Cog):
     @commands.hybrid_group(name="inviteleaderboard", description="Displays invite leaderboards for the server.")
     async def leaderboard_group(self, ctx: commands.Context):
         if ctx.invoked_subcommand is None:
-            await ctx.send("Please use `/inviteleaderboard invites`.", ephemeral=True)
+            await ctx.send(embed=make_embed("Please use `/inviteleaderboard invites`."), ephemeral=True)
 
     @leaderboard_group.command(name="invites", description="Displays the top inviters of the server.")
     @app_commands.describe(limit="The number of users to show on the leaderboard")
@@ -76,7 +76,7 @@ class LeaderboardCommand(commands.Cog):
 
     @leaderboard_invites.error
     async def leaderboard_invites_error(self, ctx: commands.Context, error):
-        await ctx.send(f"An error occurred: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

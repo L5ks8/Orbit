@@ -1,5 +1,6 @@
-import discord
+﻿import discord
 from discord.ext import commands
+from Commands._utils import make_embed
 
 UPDATE_CHANNEL_ID = 1525664972720312390
 
@@ -32,7 +33,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
 
     async def on_submit(self, interaction: discord.Interaction):
         if not await interaction.client.is_owner(interaction.user):
-            return await interaction.response.send_message("You are not authorized to post updates.", ephemeral=True)
+            return await interaction.response.send_message(embed=make_embed("You are not authorized to post updates.", discord.Color.red()), ephemeral=True)
 
         await interaction.response.defer(ephemeral=True)
 
@@ -99,7 +100,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
                 ephemeral=True
             )
         except Exception as e:
-            await interaction.followup.send(f"Failed to send update message: `{e}`", ephemeral=True)
+            await interaction.followup.send(embed=make_embed(f"Failed to send update message: `{e}`", discord.Color.red()), ephemeral=True)
 
 class UpdateLaunchView(discord.ui.View):
     def __init__(self, author_id: int):
@@ -114,7 +115,7 @@ class UpdateLaunchView(discord.ui.View):
         
         async def _open_modal(interaction: discord.Interaction):
             if not await interaction.client.is_owner(interaction.user):
-                return await interaction.response.send_message("You are not authorized to post updates.", ephemeral=True)
+                return await interaction.response.send_message(embed=make_embed("You are not authorized to post updates.", discord.Color.red()), ephemeral=True)
             await interaction.response.send_modal(UpdatePostModal())
             
         btn_open.callback = _open_modal

@@ -1,6 +1,7 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.OwnerOnly._monitor import get_live_logs, record_command
+from Commands._utils import make_embed
 
 class LiveLogsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -36,7 +37,7 @@ class LiveLogsCommand(commands.Cog):
     @logs_cmd.error
     async def logs_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
-            await ctx.send(f"Livelogs error: {error}", allowed_mentions=discord.AllowedMentions.none())
+            await ctx.send(embed=make_embed(f"Livelogs error: {error}", discord.Color.red()), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(LiveLogsCommand(bot))

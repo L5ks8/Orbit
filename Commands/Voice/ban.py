@@ -1,27 +1,28 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Voice._storage import add_to_vcban, is_vcbanned
 from Commands.Whitelist._storage import is_whitelisted
 from Commands.Voice.voice import voice_group
+from Commands._utils import make_embed
 
 async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     await ctx.defer()
     if user.id == ctx.author.id:
-        return await ctx.send("You cannot voice ban yourself.", ephemeral=True)
+        return await ctx.send(embed=make_embed("You cannot voice ban yourself.", discord.Color.red()), ephemeral=True)
     if is_whitelisted(ctx.guild.id, user.id):
-        return await ctx.send("This user is on the global moderation whitelist (`Immune to Voice Ban`).", ephemeral=True)
+        return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Voice Ban`).", discord.Color.red()), ephemeral=True)
     if user.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
-        return await ctx.send("You cannot voice ban a user with equal or higher role.", ephemeral=True)
+        return await ctx.send(embed=make_embed("You cannot voice ban a user with equal or higher role.", discord.Color.red()), ephemeral=True)
 
     success = add_to_vcban(ctx.guild.id, user.id, reason, ctx.author.id)
     if not success:
-        return await ctx.send("This user is already voice banned on this server.", ephemeral=True)
+        return await ctx.send(embed=make_embed("This user is already voice banned on this server.", discord.Color.red()), ephemeral=True)
 
     vc = None
     if user.voice and user.voice.channel:
         vc = user.voice.channel
         try:
-            from Commands._utils import send_moderation_dm
+            from Commands._utils import send_moderation_dm, make_embed
             await send_moderation_dm(user, ctx.guild.name, "voice banned", reason, guild_id=ctx.guild.id)
             
             await user.edit(voice_channel=None, reason=f"Voice banned by {ctx.author} | Reason: {reason}")
@@ -60,11 +61,11 @@ class VcBanCommand(commands.Cog):
 @vc_ban_cmd.error
 async def vc_ban_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
-        await ctx.send("You need Move Members permission to voice ban users.", ephemeral=True)
+        await ctx.send(embed=make_embed("You need Move Members permission to voice ban users.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("Use: `-voice ban <member> [reason]`", ephemeral=True)
+        await ctx.send(embed=make_embed("Use: `-voice ban <member> [reason]`", discord.Color.red()), ephemeral=True)
     else:
-        await ctx.send(f"Voice ban failed: {error}", ephemeral=True)
+        await ctx.send(embed=make_embed(f"Voice ban failed: {error}", discord.Color.red()), ephemeral=True)
 
 class VcBanPrefixFallback(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -81,4 +82,3 @@ async def setup(bot: commands.Bot):
         bot.add_command(voice_group)
     await bot.add_cog(VcBanCommand(bot))
     await bot.add_cog(VcBanPrefixFallback(bot))
-

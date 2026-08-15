@@ -1,6 +1,6 @@
-import discord
+﻿import discord
 from discord.ext import commands
-from Commands._utils import format_usage
+from Commands._utils import format_usage, make_embed
 
 from typing import Literal
 
@@ -19,7 +19,7 @@ class ManageCodesCommand(commands.Cog):
             target_invite = discord.utils.get(invites, code=code)
             
             if not target_invite:
-                return await ctx.send("Invite code not found on this server.", ephemeral=True)
+                return await ctx.send(embed=make_embed("Invite code not found on this server.", discord.Color.red()), ephemeral=True)
                 
             await target_invite.delete(reason=f"Deleted by {ctx.author}")
             
@@ -31,16 +31,16 @@ class ManageCodesCommand(commands.Cog):
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             
         except discord.Forbidden:
-            await ctx.send("I do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("I do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await ctx.send(f"An error occurred: {e}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {e}", discord.Color.red()), ephemeral=True)
 
     @deleteinvite.error
     async def deleteinvite_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
     @commands.hybrid_command(name="purge-invite-codes", description="Purge invite codes from your server based on conditions.")
@@ -81,16 +81,16 @@ class ManageCodesCommand(commands.Cog):
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             
         except discord.Forbidden:
-            await ctx.send("I do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("I do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         except Exception as e:
-            await ctx.send(f"An error occurred: {e}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {e}", discord.Color.red()), ephemeral=True)
 
     @purge_invite_codes.error
     async def purge_invite_codes_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to manage invites.", ephemeral=True)
+            await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
-            await ctx.send(f"An error occurred: {error}", ephemeral=True)
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

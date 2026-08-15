@@ -1,6 +1,7 @@
-import discord
+﻿import discord
 from discord.ext import commands
 from Commands.Afk._storage import set_afk, get_afk
+from Commands._utils import make_embed
 
 
 
@@ -11,7 +12,7 @@ class AfkCommand(commands.Cog):
     @commands.hybrid_command(name="afk", description="Sets your AFK status with an optional reason.")
     async def afk(self, ctx: commands.Context, *, reason: str = "AFK"):
         if not ctx.guild:
-            return await ctx.send("This command can only be used inside a server.", ephemeral=True)
+            return await ctx.send(embed=make_embed("This command can only be used inside a server.", discord.Color.red()), ephemeral=True)
 
         set_afk(ctx.guild.id, ctx.author.id, reason)
         embed = discord.Embed(title="AFK Status Enabled", color=discord.Color.green())
@@ -47,4 +48,3 @@ class AfkCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AfkCommand(bot))
-
