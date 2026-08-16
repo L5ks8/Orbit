@@ -81,8 +81,12 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
     return { automod: payload };
   };
 
-  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const [initialState, setInitialState] = React.useState(() => JSON.stringify(getPayload()));
   const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  React.useEffect(() => {
+    setInitialState(JSON.stringify(getPayload()));
+  }, [config]);
 
   const handleSave = () => {
     onSave(getPayload());

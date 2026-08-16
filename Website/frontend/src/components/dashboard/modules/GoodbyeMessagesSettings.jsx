@@ -22,7 +22,7 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
 
   const getPayload = () => ({
       goodbye: {
-        enabled, channel_id: channel, message: content, msg_mode: mode,
+        enabled: gCfg.enabled || false, channel_id: channel, message: content, msg_mode: mode,
         image_url: bgImageUrl, embed_author: embedAuthor, embed_title: embedTitle,
         embed_description: embedDesc, embed_footer: embedFooter, embed_color: embedColor,
         embed_image: embedImage, embed_thumbnail: embedThumbnail,
