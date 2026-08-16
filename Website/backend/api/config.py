@@ -17,11 +17,7 @@ from Commands.ChannelAutomation._storage import load_automation_config, save_aut
 from Commands.Boost._storage import load_boost_config, save_boost_config
 from Commands.Level._storage import load_level_config, save_level_config
 from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
-from aiohttp import web
-import discord
-import os
-import secrets
-import aiohttp
+
 
 class ConfigMixin:
     async def api_get_config(self, request: web.Request):
