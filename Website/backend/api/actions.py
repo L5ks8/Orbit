@@ -761,7 +761,17 @@ class ActionsMixin:
             verify_cfg = load_verify_config(guild_id)
             verified_ips = verify_cfg.get("verified_ips", [])
             
-            if client_ip and client_ip in verified_ips:
+            is_verified = False
+            if client_ip:
+                for entry in verified_ips:
+                    if isinstance(entry, dict) and entry.get("ip") == client_ip:
+                        is_verified = True
+                        break
+                    elif isinstance(entry, str) and entry == client_ip:
+                        is_verified = True
+                        break
+            
+            if is_verified:
                 return web.json_response({"error": "An account has already been verified from this IP address in this server."}, status=400)
             
             guild = self.bot.get_guild(guild_id)
@@ -785,8 +795,8 @@ class ActionsMixin:
                 remove_pending_kick(guild_id, user_id)
                 del WEB_VERIFY_SESSIONS[token]
                 
-                if client_ip and client_ip not in verified_ips:
-                    verified_ips.append(client_ip)
+                if client_ip and not is_verified:
+                    verified_ips.append({"ip": client_ip, "user_id": user_id})
                     verify_cfg["verified_ips"] = verified_ips
                     save_verify_config(guild_id, verify_cfg)
                     
