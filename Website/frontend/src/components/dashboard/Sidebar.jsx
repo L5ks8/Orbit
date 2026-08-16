@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 
 export default function Sidebar({ guildId }) {
   const links = [
@@ -11,10 +11,10 @@ export default function Sidebar({ guildId }) {
 
   return (
     <div className="dash-sidebar">
-      <div className="dash-sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <Link to="/" className="dash-sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
         <img src="/logo.png" alt="Orbit Logo" style={{ height: '32px' }} />
         <span style={{ fontWeight: '600', fontSize: '20px', color: '#fff' }}>Orbit</span>
-      </div>
+      </Link>
       <nav className="dash-sidebar-nav">
         {links.map((link) => (
           <NavLink 
