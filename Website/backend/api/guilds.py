@@ -41,6 +41,9 @@ class GuildsMixin:
         if sort_key == "invites":
             from Commands.Invite._storage import get_leaderboard
             top = get_leaderboard(guild_id, limit=100)
+        elif sort_key == "balance":
+            from Commands.Economy._storage import get_economy_leaderboard
+            top = get_economy_leaderboard(guild_id, limit=100)
         else:
             top = get_leaderboard_by(guild_id, sort_key, 100)
         
@@ -66,6 +69,8 @@ class GuildsMixin:
                 
             if sort_key == "invites":
                 val = entry.get("total", 0)
+            elif sort_key == "balance":
+                val = entry.get("balance", 0)
             else:
                 val = entry.get(sort_key, 0)
                 

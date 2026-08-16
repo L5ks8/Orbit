@@ -1,4 +1,4 @@
-﻿import time
+import time
 import random
 import discord
 from discord import app_commands
@@ -160,9 +160,10 @@ class EconomyCommand(commands.Cog):
 
             lines.append(f"{prefix} **{display_name}** — {symbol} `{bal:,}`")
 
+        desc_with_link = f"[Want to see more than Top 10?](https://orbit-498b.onrender.com/leaderboard/{ctx.guild.id}?sort=balance)\n\n" + "\n".join(lines)
         embed = discord.Embed(
             title=f" {ctx.guild.name} — Wealth Leaderboard",
-            description="\n".join(lines),
+            description=desc_with_link,
             color=discord.Color.gold()
         )
         embed.set_thumbnail(url=ctx.guild.icon.url if ctx.guild.icon else "")

@@ -12,6 +12,7 @@ import Status from './pages/Status';
 import Dashboard from './pages/Dashboard';
 import Appeal from './pages/Appeal';
 import Verify from './pages/Verify';
+import Leaderboard from './pages/Leaderboard';
 import Navbar from './components/ui/Navbar';
 import DocsNavbar from './components/ui/DocsNavbar';
 import { useLocation } from 'react-router-dom';
@@ -70,6 +71,7 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
           <Route path="/terms" element={<Terms />} />
           <Route path="/appeal/:customUrl" element={<Appeal />} />
           <Route path="/verify/:token" element={<Verify />} />
+          <Route path="/leaderboard/:guildId" element={<Leaderboard />} />
           <Route path="/dashboard/*" element={<Dashboard />} />
         </Routes>
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
