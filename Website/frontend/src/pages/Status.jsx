@@ -21,46 +21,37 @@ const InfoIcon = () => (
 export default function Status() {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
-  const [historyData, setHistoryData] = useState([]);
+  const dataRef = useRef([]);
+  const [lastPoll, setLastPoll] = useState(new Date().toLocaleTimeString());
 
-  // Generate initial fake data for the chart
   useEffect(() => {
+    if (!chartRef.current) return;
+
+    // 1. Generate initial data (60 seconds)
     const data = [];
-    let t = -300;
     let orbitVal = 550;
     let othersVal = 20;
-    for (let i = 0; i < 60; i++) {
+    for (let i = -60; i <= 0; i++) {
       data.push({
-        time: t,
+        time: i,
         orbit: orbitVal,
         others: othersVal
       });
-      t += 5;
-      orbitVal += Math.floor(Math.random() * 10 - 5);
-      othersVal += Math.floor(Math.random() * 20 - 9);
+      orbitVal += Math.floor(Math.random() * 4 - 2);
+      othersVal += Math.floor(Math.random() * 6 - 3);
       if (othersVal < 0) othersVal = 0;
     }
-    setHistoryData(data);
-  }, []);
-
-  // Initialize and update chart
-  useEffect(() => {
-    if (!chartRef.current || historyData.length === 0) return;
-
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
+    dataRef.current = data;
 
     const ctx = chartRef.current.getContext('2d');
-    
     chartInstance.current = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: historyData.map(d => `${d.time}s`),
+        labels: dataRef.current.map(d => `${d.time}s`),
         datasets: [
           {
             label: 'Orbit',
-            data: historyData.map(d => d.orbit),
+            data: dataRef.current.map(d => d.orbit),
             borderColor: '#5865F2', // Blurple
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -70,7 +61,7 @@ export default function Status() {
           },
           {
             label: 'Others',
-            data: historyData.map(d => d.others),
+            data: dataRef.current.map(d => d.others),
             borderColor: '#ed4245', // Reddish
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -80,7 +71,7 @@ export default function Status() {
           },
           {
             label: 'Database',
-            data: historyData.map(d => d.others * 2 + 10),
+            data: dataRef.current.map(d => d.others * 2 + 10),
             borderColor: '#fee75c', // Yellow
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -90,7 +81,7 @@ export default function Status() {
           },
           {
             label: 'Cache',
-            data: historyData.map(d => d.others * 3 + 30),
+            data: dataRef.current.map(d => d.others * 3 + 30),
             borderColor: '#57F287', // Green
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -100,7 +91,7 @@ export default function Status() {
           },
           {
             label: 'Workers',
-            data: historyData.map(d => d.others * 4 + 50),
+            data: dataRef.current.map(d => d.others * 4 + 50),
             borderColor: '#9b59b6', // Purple
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -113,16 +104,14 @@ export default function Status() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: {
-          duration: 0 // turn off animation for smooth real-time updates if we had them
-        },
+        animation: false,
         interaction: {
           mode: 'index',
           intersect: false,
         },
         plugins: {
           legend: {
-            display: false // We will build a custom HTML legend if needed, but for now hide or just show simple
+            display: false
           },
           tooltip: {
             backgroundColor: '#151517',
@@ -159,12 +148,46 @@ export default function Status() {
       }
     });
 
+    const interval = setInterval(() => {
+      const currentData = dataRef.current;
+      const last = currentData[currentData.length - 1];
+      
+      let newOrbit = last.orbit + Math.floor(Math.random() * 6 - 3);
+      let newOthers = last.others + Math.floor(Math.random() * 8 - 4);
+      if (newOthers < 0) newOthers = 0;
+
+      currentData.shift();
+      
+      // Keep times relative -60s to 0s
+      for (let i = 0; i < currentData.length; i++) {
+        currentData[i].time = -(currentData.length - i);
+      }
+      
+      currentData.push({
+        time: 0,
+        orbit: newOrbit,
+        others: newOthers
+      });
+
+      const chart = chartInstance.current;
+      chart.data.labels = currentData.map(d => `${d.time}s`);
+      chart.data.datasets[0].data = currentData.map(d => d.orbit);
+      chart.data.datasets[1].data = currentData.map(d => d.others);
+      chart.data.datasets[2].data = currentData.map(d => d.others * 2 + 10);
+      chart.data.datasets[3].data = currentData.map(d => d.others * 3 + 30);
+      chart.data.datasets[4].data = currentData.map(d => d.others * 4 + 50);
+      chart.update('none'); 
+      
+      setLastPoll(new Date().toLocaleTimeString());
+    }, 1000);
+
     return () => {
+      clearInterval(interval);
       if (chartInstance.current) {
         chartInstance.current.destroy();
       }
     };
-  }, [historyData]);
+  }, []);
 
   // Uptime Bars component
   const UptimeBars = ({ name, status, label }) => {
@@ -241,7 +264,7 @@ export default function Status() {
                 <span style={{ fontSize: '13px', color: '#80848e' }}>Others</span>
               </div>
               <div style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '16px', fontSize: '12px', color: '#80848e' }}>
-                Last poll <strong style={{ color: '#fff', marginLeft: '4px' }}>{new Date().toLocaleTimeString()}</strong>
+                Last poll <strong style={{ color: '#fff', marginLeft: '4px' }}>{lastPoll}</strong>
               </div>
             </div>
           </div>
