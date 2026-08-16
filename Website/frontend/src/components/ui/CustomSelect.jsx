@@ -23,14 +23,14 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
 
   const handleSelect = (val) => {
     if (isMulti) {
-      const currentValues = Array.isArray(value) ? value : [];
-      if (currentValues.includes(val)) {
-        onChange(currentValues.filter(v => v !== val));
+      const currentValues = Array.isArray(value) ? value.map(String) : [];
+      if (currentValues.includes(String(val))) {
+        onChange(currentValues.filter(v => v !== String(val)));
       } else {
-        onChange([...currentValues, val]);
+        onChange([...currentValues, String(val)]);
       }
     } else {
-      onChange(val);
+      onChange(String(val));
       setIsOpen(false);
       setSearch('');
     }
@@ -39,19 +39,19 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
   const handleRemove = (e, valToRemove) => {
     e.stopPropagation();
     if (isMulti && Array.isArray(value)) {
-      onChange(value.filter(v => v !== valToRemove));
+      onChange(value.map(String).filter(v => v !== String(valToRemove)));
     }
   };
 
   const renderTriggerContent = () => {
     if (isMulti) {
-      const currentValues = Array.isArray(value) ? value : [];
+      const currentValues = Array.isArray(value) ? value.map(String) : [];
       if (currentValues.length === 0) return <span className="content placeholder">{placeholder}</span>;
       
       return (
         <div className="dash-multiselect-tags">
           {currentValues.map(val => {
-            const opt = options.find(o => o.value === val);
+            const opt = options.find(o => String(o.value) === val);
             if (!opt) return null;
             return (
               <span key={val} className="dash-multiselect-tag">
@@ -64,7 +64,7 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
         </div>
       );
     } else {
-      const selectedOption = options.find(opt => opt.value === value);
+      const selectedOption = options.find(opt => String(opt.value) === String(value));
       if (!selectedOption) return <span className="content placeholder">{placeholder}</span>;
       return (
         <span className="content">
@@ -109,8 +109,8 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
           {filteredOptions.length > 0 ? (
             filteredOptions.map(opt => {
               const isSelected = isMulti 
-                ? (Array.isArray(value) && value.includes(opt.value))
-                : value === opt.value;
+                ? (Array.isArray(value) && value.map(String).includes(String(opt.value)))
+                : String(value) === String(opt.value);
 
               return (
                 <div 

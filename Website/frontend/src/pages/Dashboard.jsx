@@ -51,7 +51,7 @@ function DashboardInner() {
     <div className="dash-container">
       <Sidebar guildId={guildId} />
       <div className="dash-main">
-        <div className="dash-topbar">
+        <div className="dash-topbar" style={{ zIndex: 50, position: 'relative' }}>
           <div className="dash-server-selector" onClick={() => setShowServerDropdown(!showServerDropdown)} style={{ position: 'relative', cursor: 'pointer' }}>
             {guildIcon ? (
               <img src={`https://cdn.discordapp.com/icons/${guildId}/${guildIcon}.png`} alt="" className="dash-server-icon" style={{borderRadius: '50%', background: 'none'}} />
