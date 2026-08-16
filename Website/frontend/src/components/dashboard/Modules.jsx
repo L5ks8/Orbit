@@ -55,12 +55,59 @@ export default function Modules({ guildId }) {
   }, [guildId]);
 
   const toggleModule = (id) => {
-    // In a full implementation, this should send a POST request to update the config.
-    // For now, we update local state.
-    setEnabledModules(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+    if (!config) return;
+
+    const newState = !enabledModules[id];
+    setEnabledModules(prev => ({ ...prev, [id]: newState }));
+
+    // Map frontend ID to backend key
+    let backendKey = id;
+    if (id === 'tickets') backendKey = 'ticket';
+
+    let payload = {};
+
+    if (id === 'autoresponder' || id === 'messages') {
+      // These are saved under settings in the backend
+      payload = {
+        settings: config.settings || {},
+        autoresponder_enabled: id === 'autoresponder' ? newState : (enabledModules.autoresponder || false),
+        messages_enabled: id === 'messages' ? newState : (enabledModules.messages || false)
+      };
+    } else {
+      // Normal module, must send full current config so we don't wipe it
+      const currentModConfig = config[backendKey] || {};
+      payload[backendKey] = {
+        ...currentModConfig,
+        enabled: newState
+      };
+    }
+
+    fetch(`/api/config/${guildId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        console.error("Failed to save:", data.error);
+        // Revert UI state on failure
+        setEnabledModules(prev => ({ ...prev, [id]: !newState }));
+      } else {
+        // Update local config cache with the new state
+        setConfig(prev => ({
+          ...prev,
+          ...payload,
+          [backendKey]: payload[backendKey] ? payload[backendKey] : prev[backendKey]
+        }));
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      setEnabledModules(prev => ({ ...prev, [id]: !newState }));
+    });
   };
 
   return (

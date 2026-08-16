@@ -4,6 +4,8 @@ import Sidebar from '../components/dashboard/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Modules from '../components/dashboard/Modules';
 import ModuleSettings from '../components/dashboard/ModuleSettings';
+import Leaderboard from '../components/dashboard/Leaderboard';
+import Settings from '../components/dashboard/Settings';
 import ServerSelector from './ServerSelector';
 import { useAuth } from '../context/AuthContext';
 
@@ -57,6 +59,8 @@ function DashboardInner() {
             <Route path="overview" element={<Overview guildId={guildId} />} />
             <Route path="modules" element={<Modules guildId={guildId} />} />
             <Route path="modules/:moduleId" element={<ModuleSettings guildId={guildId} />} />
+            <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
+            <Route path="settings" element={<Settings guildId={guildId} />} />
           </Routes>
         </div>
       </div>
