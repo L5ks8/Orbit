@@ -1,4 +1,7 @@
-
+import os
+import discord
+from aiohttp import web
+from typing import Dict, Any
 
 SESSIONS: Dict[str, Any] = {}
 
