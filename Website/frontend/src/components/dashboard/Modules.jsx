@@ -75,16 +75,17 @@ export default function Modules({ guildId }) {
     let backendKey = id;
     if (id === 'tickets') backendKey = 'ticket';
 
+    const cfg = config.config || {};
     let payload = {};
 
     if (id === 'autoresponder' || id === 'messages') {
       payload = {
-        settings: config.settings || {},
+        settings: cfg.settings || {},
         autoresponder_enabled: id === 'autoresponder' ? newState : (enabledModules.autoresponder || false),
         messages_enabled: id === 'messages' ? newState : (enabledModules.messages || false)
       };
     } else {
-      const currentModConfig = config[backendKey] || {};
+      const currentModConfig = cfg[backendKey] || {};
       payload[backendKey] = {
         ...currentModConfig,
         enabled: newState
@@ -107,8 +108,10 @@ export default function Modules({ guildId }) {
         } else {
           setConfig(prev => ({
             ...prev,
-            ...payload,
-            [backendKey]: payload[backendKey] ? payload[backendKey] : prev[backendKey]
+            config: {
+              ...prev.config,
+              ...(payload[backendKey] ? { [backendKey]: payload[backendKey] } : payload)
+            }
           }));
         }
       })

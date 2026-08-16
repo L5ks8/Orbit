@@ -68,7 +68,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
           </div>
         </div>
 
-        <div className="dash-card settings-card" style={{ padding: '20px' }}>
+        <div className="dash-card settings-card" style={{ padding: '20px', position: 'relative', zIndex: 10, overflow: 'visible' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label style={{ color: '#fff' }}>Reward Role</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Give this role to users when they boost the server.</span>

@@ -5,6 +5,7 @@ import CustomSelect from '../../ui/CustomSelect';
 
 export default function ServerStatsSettings({ config, categories, onSave, saving, onReset }) {
   const ssCfg = config?.serverstats || {};
+  console.log('[ServerStats] config received:', JSON.stringify(config?.serverstats, null, 2));
 
   const [usersEnabled, setUsersEnabled] = useState(ssCfg.users_enabled || false);
   const [usersName, setUsersName] = useState(ssCfg.users_name || 'Users: {count}');
