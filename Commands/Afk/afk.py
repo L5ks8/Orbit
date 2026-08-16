@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands.Afk._storage import set_afk, get_afk
 from Commands._utils import make_embed
@@ -24,6 +24,19 @@ class AfkCommand(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
+
+        from Commands.Afk._storage import remove_afk
+        if get_afk(message.guild.id, message.author.id):
+            remove_afk(message.guild.id, message.author.id)
+            embed = discord.Embed(
+                title="AFK Removed", 
+                description=f"Welcome back, {message.author.mention}! I've removed your AFK status.", 
+                color=discord.Color.green()
+            )
+            try:
+                await message.reply(embed=embed, mention_author=False, delete_after=10, allowed_mentions=discord.AllowedMentions.none())
+            except Exception:
+                pass
 
         targets = set(message.mentions)
         if message.reference and isinstance(message.reference.resolved, discord.Message):
