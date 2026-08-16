@@ -1,4 +1,5 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
@@ -34,7 +35,7 @@ const LOGS_CATEGORIES = [
     { id: "invite_created", title: "Invite Created" }
 ];
 
-export default function AuditLogsSettings({ config, channels, roles, onSave, saving }) {
+export default function AuditLogsSettings({ config, channels, roles, onSave, saving, onReset }) {
   const logsCfg = config?.logs || {};
 
     const [executorInLogs, setExecutorInLogs] = useState(logsCfg.executor_in_logs || false);
@@ -61,7 +62,7 @@ export default function AuditLogsSettings({ config, channels, roles, onSave, sav
     setCatState(prev => ({ ...prev, [catId]: { ...prev[catId], [key]: value } }));
   };
 
-  const handleSave = () => {
+  const getPayload = () => {
     const catChannels = {};
     const catRoles = {};
     const catEnabled = {};
@@ -71,7 +72,7 @@ export default function AuditLogsSettings({ config, channels, roles, onSave, sav
       catEnabled[cat.id] = catState[cat.id].enabled;
     });
 
-    onSave({
+    return {
       logs: {
         enabled: logsCfg.enabled || false,
         executor_in_logs: executorInLogs,
@@ -81,7 +82,14 @@ export default function AuditLogsSettings({ config, channels, roles, onSave, sav
         roles: catRoles,
         categories: catEnabled
       }
-    });
+    };
+  };
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -148,8 +156,9 @@ export default function AuditLogsSettings({ config, channels, roles, onSave, sav
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Log Settings'}</button>
+        
       </div>
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

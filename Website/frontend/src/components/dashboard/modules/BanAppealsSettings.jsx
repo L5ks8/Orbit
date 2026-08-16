@@ -1,8 +1,9 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function BanAppealsSettings({ config, channels, roles, onSave, saving }) {
+export default function BanAppealsSettings({ config, channels, roles, onSave, saving, onReset }) {
   const aCfg = config?.appeals || {};
   const [questions, setQuestions] = useState(aCfg.questions || []);
   const [appealChannel, setAppealChannel] = useState(aCfg.channel_id || '');
@@ -24,8 +25,7 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
     { value: 'warn', label: 'Warn' },
   ];
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       appeals: {
         channel_id: appealChannel,
         mod_roles: modRoles,
@@ -39,6 +39,12 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
         questions: questions
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -172,8 +178,10 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button onClick={handleSave} className="dash-btn primary" style={{ width: '100%', padding: '12px' }} disabled={saving}>{saving ? 'Saving...' : 'Save Appeals Settings'}</button>
+        
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

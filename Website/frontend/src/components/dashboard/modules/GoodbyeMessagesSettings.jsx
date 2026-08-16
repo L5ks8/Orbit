@@ -1,8 +1,9 @@
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
-export default function GoodbyeMessagesSettings({ config, channels, onSave, saving }) {
+export default function GoodbyeMessagesSettings({ config, channels, onSave, saving, onReset }) {
   const gCfg = config?.goodbye || {};
 
     const [mode, setMode] = useState(gCfg.msg_mode || 'embed');
@@ -19,8 +20,7 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
 
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       goodbye: {
         enabled, channel_id: channel, message: content, msg_mode: mode,
         image_url: bgImageUrl, embed_author: embedAuthor, embed_title: embedTitle,
@@ -30,6 +30,12 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
         embed_fields: gCfg.embed_fields || []
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -128,9 +134,11 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
         </div>
 
         <div className="settings-footer" style={{ marginTop: '32px' }}>
-          <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Settings'}</button>
+          
         </div>
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

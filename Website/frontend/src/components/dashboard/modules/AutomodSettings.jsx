@@ -1,8 +1,9 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function AutomodSettings({ config, channels, roles, onSave, saving }) {
+export default function AutomodSettings({ config, channels, roles, onSave, saving, onReset }) {
   const amCfg = config?.automod || {};
 
   const rulesDef = [
@@ -57,7 +58,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
     setEditingRule(null);
   };
 
-  const handleSaveAll = () => {
+  const getPayload = () => {
     const payload = { enabled: amCfg?.enabled || false };
     payload.exempt_channels = selectedChannels;
     payload.exempt_roles = selectedRoles;
@@ -75,7 +76,14 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
       payload[r.id].timeout_duration_min = r.timeout_duration_min;
     });
 
-    onSave({ automod: payload });
+    return { automod: payload };
+  };
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -149,7 +157,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
         </div>
         
         <div className="settings-footer">
-          <button className="dash-btn primary" onClick={handleSaveAll} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+          
         </div>
       </div>
 

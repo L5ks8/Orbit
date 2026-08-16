@@ -1,9 +1,10 @@
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
-export default function WelcomeSettings({ config, channels, onSave, saving }) {
+export default function WelcomeSettings({ config, channels, onSave, saving, onReset }) {
   const wCfg = config?.welcome || {};
   
 
@@ -22,8 +23,7 @@ export default function WelcomeSettings({ config, channels, onSave, saving }) {
 
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       welcome: {
         enabled: wCfg.enabled || false,
         channel_id: channel,
@@ -42,6 +42,12 @@ export default function WelcomeSettings({ config, channels, onSave, saving }) {
         embed_fields: wCfg.embed_fields || []
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -162,9 +168,11 @@ export default function WelcomeSettings({ config, channels, onSave, saving }) {
         </div>
 
         <div className="settings-footer" style={{ marginTop: '32px' }}>
-          <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</button>
+          
         </div>
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

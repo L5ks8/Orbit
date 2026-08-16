@@ -1,7 +1,8 @@
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function AutoresponderSettings({ config, channels, onSave, saving }) {
+export default function AutoresponderSettings({ config, channels, onSave, saving, onReset }) {
   const arCfg = config?.autoresponder || [];
   
   const [triggers, setTriggers] = useState(
@@ -32,29 +33,30 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
     }
     setTriggers(newTriggers);
     setEditingTrigger(null);
-    
-    // Save to backend
-    const payload = newTriggers.map(t => ({
-      id: t.id,
-      trigger: t.trigger,
-      reply: t.reply,
-      exact_match: t.exactMatch
-    }));
-    onSave({ autoresponder: payload });
   };
 
   const handleDeleteTrigger = (id) => {
     const newTriggers = triggers.filter(t => t.id !== id);
     setTriggers(newTriggers);
     setEditingTrigger(null);
-    
-    const payload = newTriggers.map(t => ({
-      id: t.id,
-      trigger: t.trigger,
-      reply: t.reply,
-      exact_match: t.exactMatch
-    }));
-    onSave({ autoresponder: payload });
+  };
+
+  const getPayload = () => {
+    return {
+      autoresponder: triggers.map(t => ({
+        id: t.id,
+        trigger: t.trigger,
+        reply: t.reply,
+        exact_match: t.exactMatch
+      }))
+    };
+  };
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -136,6 +138,7 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
           </div>
         </div>
       )}
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

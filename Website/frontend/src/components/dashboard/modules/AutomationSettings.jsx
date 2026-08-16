@@ -1,8 +1,9 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function AutomationSettings({ config, channels, roles, onSave, saving }) {
+export default function AutomationSettings({ config, channels, roles, onSave, saving, onReset }) {
   const autCfg = config?.automation || {};
   
   // States for dynamic lists
@@ -22,8 +23,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       automation: {
         media_only_channels: mediaChannels,
         command_only_channels: cmdChannels,
@@ -39,6 +39,12 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
         solo_counting: soloCount
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -222,8 +228,10 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
       </div>
 
       <div style={{ marginTop: '24px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Automation Settings'}</button>
+        
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

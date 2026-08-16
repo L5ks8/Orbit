@@ -26,6 +26,11 @@ export default function ModuleSettings({ guildId }) {
   const [serverData, setServerData] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const [formKey, setFormKey] = React.useState(0);
+
+  const handleReset = () => {
+    setFormKey(prev => prev + 1);
+  };
 
   React.useEffect(() => {
     if (!guildId) return;
@@ -67,6 +72,7 @@ export default function ModuleSettings({ guildId }) {
           return { ...prev, config: newConfig };
         });
         alert("Settings saved successfully!");
+        handleReset(); // reset formKey to update initial state
       }
     } catch (e) {
       console.error(e);
@@ -92,6 +98,7 @@ export default function ModuleSettings({ guildId }) {
           </Link>
         </div>
         <Component 
+          key={formKey}
           guildId={guildId}
           config={serverData.config}
           channels={serverData.channels || []}
@@ -100,6 +107,7 @@ export default function ModuleSettings({ guildId }) {
           categories={serverData.categories || []}
           onSave={handleSave}
           saving={saving}
+          onReset={handleReset}
         />
       </div>
     );

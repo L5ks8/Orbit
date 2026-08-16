@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
 import Toggle from '../ui/Toggle';
+import SaveBar from '../ui/SaveBar';
 
 export default function Settings({ guildId }) {
   const [settings, setSettings] = useState({
@@ -24,11 +25,19 @@ export default function Settings({ guildId }) {
           autoresponder_enabled: s.autoresponder_enabled || false,
           messages_enabled: s.messages_enabled || false
         });
+        setInitialState(JSON.stringify({
+          manager_roles: s.manager_roles || [],
+          autoresponder_enabled: s.autoresponder_enabled || false,
+          messages_enabled: s.messages_enabled || false
+        }));
         setRoles(data.roles || []);
       })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
   }, [guildId]);
+
+  const [initialState, setInitialState] = useState('');
+  const isDirty = initialState && JSON.stringify(settings) !== initialState;
 
   const saveSettings = () => {
     setSaving(true);
@@ -38,9 +47,18 @@ export default function Settings({ guildId }) {
       body: JSON.stringify({ settings })
     })
       .then(res => res.json())
-      .then(() => alert("Settings saved!"))
+      .then(() => {
+        alert("Settings saved!");
+        setInitialState(JSON.stringify(settings));
+      })
       .catch(() => alert("Failed to save settings."))
       .finally(() => setSaving(false));
+  };
+
+  const handleReset = () => {
+    if (initialState) {
+      setSettings(JSON.parse(initialState));
+    }
   };
 
   if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>Loading settings...</div>;
@@ -95,15 +113,7 @@ export default function Settings({ guildId }) {
         </div>
       </div>
 
-      <div>
-        <button 
-          onClick={saveSettings} 
-          disabled={saving}
-          className="dash-btn primary"
-        >
-          {saving ? "Saving..." : "Save Settings"}
-        </button>
-      </div>
+      <SaveBar show={isDirty} onReset={handleReset} onSave={saveSettings} saving={saving} />
     </div>
   );
 }

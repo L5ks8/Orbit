@@ -1,8 +1,9 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function MessageLogsSettings({ config, channels, roles, onSave, saving }) {
+export default function MessageLogsSettings({ config, channels, roles, onSave, saving, onReset }) {
   const mlCfg = config?.messagelogs || {};
     const [executorInLogs, setExecutorInLogs] = useState(mlCfg.executor_in_logs || false);
   const [exemptChannels, setExemptChannels] = useState((mlCfg.exempt_channels || []).map(String));
@@ -11,8 +12,7 @@ export default function MessageLogsSettings({ config, channels, roles, onSave, s
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       messagelogs: {
         enabled: mlCfg.enabled || false,
         executor_in_logs: executorInLogs,
@@ -20,6 +20,12 @@ export default function MessageLogsSettings({ config, channels, roles, onSave, s
         exempt_roles: exemptRoles
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   // Mock log categories
@@ -98,8 +104,10 @@ export default function MessageLogsSettings({ config, channels, roles, onSave, s
       </div>
 
       <div style={{ marginTop: '24px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Log Settings'}</button>
+        
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

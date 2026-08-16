@@ -1,7 +1,8 @@
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function JoinRolesSettings({ config, roles, onSave, saving }) {
+export default function JoinRolesSettings({ config, roles, onSave, saving, onReset }) {
   const jrCfg = config?.joinroles || {};
 
     const [userRoles, setUserRoles] = useState((jrCfg.user_roles || []).map(String));
@@ -9,14 +10,19 @@ export default function JoinRolesSettings({ config, roles, onSave, saving }) {
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       joinroles: {
         enabled: jrCfg.enabled || false,
         user_roles: userRoles,
         bot_roles: botRoles
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -46,9 +52,11 @@ export default function JoinRolesSettings({ config, roles, onSave, saving }) {
         </div>
 
         <div className="settings-footer" style={{ marginTop: '24px' }}>
-          <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Settings'}</button>
+          
         </div>
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

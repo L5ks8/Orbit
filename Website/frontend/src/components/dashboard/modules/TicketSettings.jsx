@@ -1,7 +1,8 @@
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function TicketSettings({ config, channels, roles, categories, onSave, saving }) {
+export default function TicketSettings({ config, channels, roles, categories, onSave, saving, onReset }) {
   const tCfg = config?.ticket || {};
 
     const [panelTitle, setPanelTitle] = useState(tCfg.panel_title || 'Support Tickets');
@@ -47,8 +48,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
     setEditingOption(null);
   };
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       ticket: {
         enabled: tCfg.enabled || false,
         panel_title: panelTitle,
@@ -63,6 +63,12 @@ export default function TicketSettings({ config, channels, roles, categories, on
         }))
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -136,7 +142,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
       </div>
 
       <div style={{ marginTop: '24px' }}>
-        <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Ticket Settings'}</button>
+        
       </div>
 
       {editingOption && (
@@ -181,6 +187,8 @@ export default function TicketSettings({ config, channels, roles, categories, on
           </div>
         </div>
       )}
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

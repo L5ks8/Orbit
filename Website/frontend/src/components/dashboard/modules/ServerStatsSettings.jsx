@@ -1,8 +1,9 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function ServerStatsSettings({ config, categories, onSave, saving }) {
+export default function ServerStatsSettings({ config, categories, onSave, saving, onReset }) {
   const ssCfg = config?.serverstats || {};
 
   const [usersEnabled, setUsersEnabled] = useState(ssCfg.users_enabled || false);
@@ -18,8 +19,7 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
 
   const categoryOptions = (categories || []).map(c => ({ value: c.id, label: c.name }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       serverstats: {
         category_id: categoryId,
         category_name: categoryName,
@@ -33,6 +33,12 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
         roles_name: rolesName
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -102,9 +108,11 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
         </div>
 
         <div style={{ marginTop: '32px' }}>
-          <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save & Create Channels'}</button>
+          
         </div>
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

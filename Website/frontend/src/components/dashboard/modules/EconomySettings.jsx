@@ -1,8 +1,9 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function EconomySettings({ config, channels, roles, onSave, saving }) {
+export default function EconomySettings({ config, channels, roles, onSave, saving, onReset }) {
   const eCfg = config?.economy || {};
   const [workResponses, setWorkResponses] = useState(eCfg.work_responses || []);
   const [roleBoosters, setRoleBoosters] = useState(eCfg.role_boosters || []);
@@ -43,8 +44,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       economy: {
         currency_symbol: currencySymbol,
         multiplier: parseFloat(multiplier),
@@ -81,6 +81,12 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
         stack_boosters: stackBoosters
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -422,8 +428,10 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button onClick={handleSave} className="dash-btn primary" style={{ width: '100%', padding: '12px' }} disabled={saving}>{saving ? 'Saving...' : 'Save All Economy Settings'}</button>
+        
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

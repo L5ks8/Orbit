@@ -1,8 +1,9 @@
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
-export default function BoostMessagesSettings({ config, channels, roles, onSave, saving }) {
+export default function BoostMessagesSettings({ config, channels, roles, onSave, saving, onReset }) {
   const bCfg = config?.boost || {};
     const [mode, setMode] = useState(bCfg.msg_mode || 'embed');
   const [channel, setChannel] = useState(bCfg.channel_id || '');
@@ -23,8 +24,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       boost: {
         enabled: bCfg.enabled || false,
         channel_id: channel,
@@ -38,6 +38,12 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
         embed_color: embedColor
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -197,8 +203,10 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
       </div>
 
       <div style={{ marginTop: '24px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Boost Settings'}</button>
+        
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

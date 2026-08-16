@@ -1,7 +1,8 @@
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function TempVoiceSettings({ config, voiceChannels, categories, onSave, saving }) {
+export default function TempVoiceSettings({ config, voiceChannels, categories, onSave, saving, onReset }) {
   const tvCfg = config?.tempvoice || {};
 
     const [hubs, setHubs] = useState(
@@ -19,13 +20,18 @@ export default function TempVoiceSettings({ config, voiceChannels, categories, o
     setHubs(prev => prev.map((h, i) => i === index ? { ...h, [key]: value } : h));
   };
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       tempvoice: {
         enabled: tvCfg.enabled || false,
         hubs: hubs.filter(h => h.hub_channel_id)
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -85,9 +91,11 @@ export default function TempVoiceSettings({ config, voiceChannels, categories, o
         )}
 
         <div style={{ marginTop: '24px' }}>
-          <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Settings'}</button>
+          
         </div>
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

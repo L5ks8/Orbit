@@ -1,8 +1,9 @@
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
-export default function VerificationSettings({ config, roles, onSave, saving }) {
+export default function VerificationSettings({ config, roles, onSave, saving, onReset }) {
   const vCfg = config?.verify || {};
 
     const [verType, setVerType] = useState(vCfg.verification_type || 'captcha');
@@ -17,8 +18,7 @@ export default function VerificationSettings({ config, roles, onSave, saving }) 
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       verify: {
         enabled: vCfg.enabled || false,
         verification_type: verType,
@@ -32,6 +32,12 @@ export default function VerificationSettings({ config, roles, onSave, saving }) 
         embed_image: embedImage
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -128,8 +134,10 @@ export default function VerificationSettings({ config, roles, onSave, saving }) 
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Verification Settings'}</button>
+        
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

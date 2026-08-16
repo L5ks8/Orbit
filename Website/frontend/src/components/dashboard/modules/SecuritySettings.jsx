@@ -1,7 +1,8 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 
-export default function SecuritySettings({ config, onSave, saving }) {
+export default function SecuritySettings({ config, onSave, saving, onReset }) {
   const secCfg = config?.security || {};
 
   const [antiNukeEnabled, setAntiNukeEnabled] = useState(secCfg.anti_nuke_enabled !== false);
@@ -9,8 +10,7 @@ export default function SecuritySettings({ config, onSave, saving }) {
   const [threshold, setThreshold] = useState(secCfg.anti_nuke_threshold || 3);
   const [timeWindow, setTimeWindow] = useState(secCfg.anti_nuke_time_window || 10);
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       security: {
         anti_nuke_enabled: antiNukeEnabled,
         anti_scam_enabled: antiScamEnabled,
@@ -18,6 +18,12 @@ export default function SecuritySettings({ config, onSave, saving }) {
         anti_nuke_time_window: timeWindow
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -66,8 +72,10 @@ export default function SecuritySettings({ config, onSave, saving }) {
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Security Settings'}</button>
+        
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }

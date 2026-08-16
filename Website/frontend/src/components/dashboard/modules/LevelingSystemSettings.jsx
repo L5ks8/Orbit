@@ -1,8 +1,9 @@
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function LevelingSystemSettings({ config, channels, roles, onSave, saving }) {
+export default function LevelingSystemSettings({ config, channels, roles, onSave, saving, onReset }) {
   const lvlCfg = config?.level || {};
   // Local state for tabs and inputs to make the UI interactive
   const [statTab, setStatTab] = useState('messages'); // 'messages', 'voice', 'reactions'
@@ -55,8 +56,7 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
-  const handleSave = () => {
-    onSave({
+  const getPayload = () => ({
       level: {
         level_up_mode: levelUpMode,
         level_role_mode: levelRoleMode,
@@ -95,6 +95,12 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
         levelup_conditional: levelupConditional
       }
     });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
   };
 
   return (
@@ -429,8 +435,10 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save All Leveling Settings'}</button>
+        
       </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }
