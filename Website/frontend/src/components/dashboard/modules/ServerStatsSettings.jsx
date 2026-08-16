@@ -21,6 +21,7 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
 
   const getPayload = () => ({
       serverstats: {
+        enabled: ssCfg.enabled || false,
         category_id: categoryId,
         category_name: categoryName,
         users_enabled: usersEnabled,

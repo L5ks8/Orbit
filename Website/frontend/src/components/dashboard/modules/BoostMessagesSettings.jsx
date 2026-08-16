@@ -5,8 +5,9 @@ import DiscordPreview from '../../ui/DiscordPreview';
 
 export default function BoostMessagesSettings({ config, channels, roles, onSave, saving, onReset }) {
   const bCfg = config?.boost || {};
-    const [mode, setMode] = useState(bCfg.msg_mode || 'embed');
+  const [mode, setMode] = useState(bCfg.msg_mode || 'embed');
   const [channel, setChannel] = useState(bCfg.channel_id || '');
+  const [rewardRole, setRewardRole] = useState(bCfg.reward_role_id || '');
   
   // Message State
   const [content, setContent] = useState(bCfg.message || 'Thank you for boosting the server, {user}!');
@@ -28,6 +29,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
       boost: {
         enabled: bCfg.enabled || false,
         channel_id: channel,
+        reward_role_id: rewardRole,
         message: content,
         msg_mode: mode,
         image_url: bgImageUrl,
@@ -70,7 +72,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label style={{ color: '#fff' }}>Reward Role</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Give this role to users when they boost the server.</span>
-            <CustomSelect options={roleOptions} placeholder="No reward role" />
+            <CustomSelect options={roleOptions} value={rewardRole} onChange={setRewardRole} placeholder="No reward role" />
           </div>
         </div>
       </div>

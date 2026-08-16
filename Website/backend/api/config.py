@@ -742,6 +742,8 @@ class ConfigMixin:
                 save_serverstats_config(guild_id, ss_cfg)
 
             if user_perms.get("can_channels") and "ticket" in data:
+                from Commands.Ticket._storage import load_ticket_config
+                ticket_cfg = load_ticket_config(guild_id)
                 pid = ticket_cfg.get("panel_channel_id")
                 mid = ticket_cfg.get("panel_message_id")
                 if pid and mid:
@@ -767,5 +769,7 @@ class ConfigMixin:
             
             return web.json_response({"success": True})
         except Exception as e:
+            import traceback
+            with open("C:/Users/berkm/Downloads/Orbit/Orbit/error.log", "a") as f:
+                f.write(traceback.format_exc() + "\n")
             return web.json_response({"error": str(e)}, status=400)
-

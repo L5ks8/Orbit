@@ -103,11 +103,11 @@ function formatInline(text, channels = [], roles = []) {
     )},
     // Custom animated emoji <a:name:id> or <a:id>
     { regex: /<a:(?:([^:]*):)?(\d+)>/, render: (match) => (
-      <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.gif`} alt={match[1] || 'emoji'} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} />
+      <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.gif`} alt={match[1] || 'emoji'} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} onError={(e) => { e.target.replaceWith(':' + (e.target.alt || 'emoji') + ':'); }} />
     )},
     // Custom emoji <:name:id> or <:id>
     { regex: /<:(?:([^:]*):)?(\d+)>/, render: (match) => (
-      <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.webp`} alt={match[1] || 'emoji'} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} />
+      <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.webp`} alt={match[1] || 'emoji'} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} onError={(e) => { e.target.replaceWith(':' + (e.target.alt || 'emoji') + ':'); }} />
     )},
     // Channel mention <#id>
     { regex: /<#(\d+)>/, render: (match) => {
@@ -198,11 +198,13 @@ function formatInline(text, channels = [], roles = []) {
   return parts;
 }
 
-// Replace {user}, {server}, {count}, {id} placeholders with styled spans
+// Replace {user}, {server}, {count}, {id}, {username}, {mention} placeholders with styled spans
 function replaceVariables(text) {
   if (!text) return text;
   return text
     .replace(/\{user\}/g, '@User')
+    .replace(/\{mention\}/g, '@User')
+    .replace(/\{username\}/g, 'User')
     .replace(/\{server\}/g, 'My Server')
     .replace(/\{count\}/g, '1,234')
     .replace(/\{id\}/g, '123456789012345678');
