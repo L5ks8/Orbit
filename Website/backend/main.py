@@ -75,4 +75,46 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
             return None, None
             
         return bot_guild, user_perms
-
+
+
+def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
+    dashboard = WebDashboard(bot)
+    app = web.Application(client_max_size=10 * 1024 * 1024)  
+    
+    app.router.add_get("/auth/login", dashboard.handle_login)
+    app.router.add_get("/auth/callback", dashboard.handle_callback)
+    app.router.add_get("/auth/logout", dashboard.handle_logout)
+    
+    app.router.add_get("/api/captcha/{token}", dashboard.handle_api_captcha)
+    app.router.add_post("/api/verify/{token}", dashboard.handle_api_verify)
+    
+    app.router.add_get("/api/user", dashboard.api_user)
+    app.router.add_get("/api/user/{id}", dashboard.api_resolve_user)
+    app.router.add_get("/api/public_leaderboard/{id}", dashboard.api_public_leaderboard)
+    app.router.add_get("/api/stats", dashboard.api_stats)
+    app.router.add_get("/api/guilds", dashboard.api_guilds)
+    app.router.add_get("/api/config/{id}", dashboard.api_get_config)
+    app.router.add_get("/api/guild_stats/{id}", dashboard.api_guild_stats)
+    app.router.add_post("/api/config/{id}", dashboard.api_post_config)
+    app.router.add_post("/api/action/{id}/setup_serverstats", dashboard.api_action_setup_serverstats)
+    app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
+    app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
+    app.router.add_post("/api/action/{id}/send_embed", dashboard.api_action_send_embed)
+    app.router.add_post("/api/action/{id}/send_honeypot", dashboard.api_action_send_honeypot)
+    app.router.add_get("/api/messages/{id}", dashboard.api_get_messages)
+    app.router.add_post("/api/messages/{id}", dashboard.api_save_message)
+    app.router.add_delete("/api/messages/{id}/{msg_id}", dashboard.api_delete_message)
+    app.router.add_post("/api/server/{id}/test-levelup", dashboard.api_action_test_levelup)
+    app.router.add_post("/api/upload/image", dashboard.api_upload_image)
+    app.router.add_get("/api/reactionroles/{id}", dashboard.api_get_reactionroles)
+    app.router.add_post("/api/reactionroles/{id}", dashboard.api_save_reactionrole)
+    app.router.add_delete("/api/reactionroles/{id}/{msg_id}", dashboard.api_delete_reactionrole)
+    app.router.add_post("/api/action/{id}/send_reactionrole", dashboard.api_action_send_reactionrole)
+    app.router.add_get("/api/appeal_info/{custom_url}", dashboard.api_appeal_info)
+    app.router.add_post("/api/submit_appeal/{custom_url}", dashboard.api_submit_appeal)
+
+    # SPA Catch-all Route must be added LAST
+    app.router.add_get("/{tail:.*}", dashboard.handle_spa)
+
+    return app
+
