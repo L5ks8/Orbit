@@ -746,7 +746,7 @@ class ActionsMixin:
             user_code = str(data.get("code", "")).strip().upper()
             session = WEB_VERIFY_SESSIONS[token]
             
-            if user_code != session.get("code"):
+            if "code" in session and user_code != session.get("code"):
                 return web.json_response({"error": "Incorrect code"}, status=400)
                 
             guild_id = session["guild_id"]
