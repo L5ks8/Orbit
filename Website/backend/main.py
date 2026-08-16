@@ -9,7 +9,7 @@ from Website.backend.api.guilds import GuildsMixin
 from Website.backend.api.actions import ActionsMixin
 
 class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
-    def __init__(self, bot: discord.ext.commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.client_id = os.environ.get("DISCORD_CLIENT_ID", "")
         self.client_secret = os.environ.get("DISCORD_CLIENT_SECRET", "")
@@ -77,7 +77,7 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         return bot_guild, user_perms
 
 
-def setup_web_app(bot: discord.ext.commands.Bot) -> web.Application:
+def setup_web_app(bot) -> web.Application:
     dashboard = WebDashboard(bot)
     app = web.Application(client_max_size=10 * 1024 * 1024)  
     
