@@ -137,17 +137,19 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
           <div className="form-group" style={{ margin: 0 }}>
             <label style={{ color: '#fff' }}>Punishment Action</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Action to take when a user posts here.</span>
-            <select className="dash-input" value={honeypotAction} onChange={e => setHoneypotAction(e.target.value)}>
-              {actionOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            <CustomSelect options={actionOptions} value={honeypotAction} onChange={setHoneypotAction} />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label style={{ color: '#fff' }}>Warning Style</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Should the warning be a Text Message or an Embed?</span>
-            <select className="dash-input" value={honeypotMsgMode} onChange={e => setHoneypotMsgMode(e.target.value)}>
-              <option value="message">Text Message</option>
-              <option value="embed">Embed</option>
-            </select>
+            <CustomSelect 
+              options={[
+                { value: 'message', label: 'Text Message' },
+                { value: 'embed', label: 'Embed' }
+              ]} 
+              value={honeypotMsgMode} 
+              onChange={setHoneypotMsgMode} 
+            />
           </div>
         </div>
 
