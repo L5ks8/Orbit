@@ -4,6 +4,7 @@ import discord
 from discord.ui import Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
 from Commands.Verify._storage import load_verify_config, remove_pending_kick
 from Commands.Verify._captcha import generate_captcha
+from Commands._utils import make_embed
 
 CAPTCHA_SESSIONS = {}
 
@@ -147,7 +148,6 @@ class PersistentVerifyLayout(discord.ui.View):
                 import secrets
                 token = secrets.token_urlsafe(16)
                 from Commands.Verify._storage import WEB_VERIFY_SESSIONS
-                from Commands._utils import make_embed
                 WEB_VERIFY_SESSIONS[token] = {
                     "user_id": interaction.user.id,
                     "guild_id": interaction.guild.id,
