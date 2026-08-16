@@ -2,8 +2,12 @@ import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
+import { useParams } from 'react-router-dom';
+import { useToast } from '../../ui/Toast';
 
-export default function VerificationSettings({ config, roles, onSave, saving, onReset }) {
+export default function VerificationSettings({ config, channels, roles, onSave, saving, onReset }) {
+  const { guildId } = useParams();
+  const toast = useToast();
   const vCfg = config?.verify || {};
 
     const [verType, setVerType] = useState(vCfg.verification_type || 'captcha');
@@ -15,13 +19,16 @@ export default function VerificationSettings({ config, roles, onSave, saving, on
   const [embedDesc, setEmbedDesc] = useState(vCfg.embed_description || '');
   const [embedColor, setEmbedColor] = useState(vCfg.embed_color || '#5865F2');
   const [embedImage, setEmbedImage] = useState(vCfg.embed_image || 'https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png');
+  const [panelChannel, setPanelChannel] = useState(vCfg.channel_id || '');
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+  const channelOptions = (channels || []).map(c => ({ value: c.id, label: `# ${c.name}` }));
 
   const getPayload = () => ({
       verify: {
         enabled: vCfg.enabled || false,
         verification_type: verType,
+        channel_id: panelChannel,
         role_id: roleId,
         remove_role_id: removeRoleId,
         timeout_action: timeoutAction,
@@ -130,6 +137,39 @@ export default function VerificationSettings({ config, roles, onSave, saving, on
               roles={roles}
             />
           </div>
+        </div>
+
+        <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
+          <div className="form-group" style={{ flex: 1, margin: 0 }}>
+            <label style={{ color: '#fff' }}>Panel Channel</label>
+            <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Where should the bot send this verification panel?</span>
+            <CustomSelect options={channelOptions} value={panelChannel} onChange={setPanelChannel} placeholder="Select Channel..." />
+          </div>
+          <button 
+            className="dash-btn primary"
+            style={{ padding: '0 24px', height: '42px' }}
+            disabled={!panelChannel}
+            onClick={() => {
+              if (isDirty) {
+                toast('Please save your changes first before sending the panel.', 'error');
+                return;
+              }
+              toast('Sending Verification Panel...', 'info');
+              fetch(`/api/action/${guildId}/send_verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channel_id: panelChannel })
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.error) toast(data.error, 'error');
+                else toast('Verification Panel sent successfully!', 'success');
+              })
+              .catch(err => toast('Failed to send panel.', 'error'));
+            }}
+          >
+            Send Panel
+          </button>
         </div>
       </div>
 
