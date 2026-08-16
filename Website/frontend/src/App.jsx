@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Navbar from './components/ui/Navbar';
 import DocsNavbar from './components/ui/DocsNavbar';
 import { useLocation } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 
 function AppContent({ isSearchOpen, setIsSearchOpen }) {
   const location = useLocation();
@@ -71,9 +72,11 @@ function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
-    <BrowserRouter>
-      <AppContent isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} />
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <AppContent isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

@@ -31,7 +31,7 @@ export default function Footer() {
           <div className="lp-footer-links">
             <Link to="/docs">Documentation</Link>
             <a href="#">Add to Discord</a>
-            <button className="lp-footer-login" style={{ background: 'none', border: 'none', padding: 0 }}>Dashboard</button>
+            <a href="/auth/login" className="lp-footer-login" style={{ textDecoration: 'none', background: 'none', border: 'none', padding: 0 }}>Dashboard</a>
           </div>
         </div>
         <div className="lp-footer-col">

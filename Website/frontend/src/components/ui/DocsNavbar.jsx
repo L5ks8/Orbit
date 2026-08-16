@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export default function DocsNavbar({ onSearchClick }) {
+  const { user } = useAuth();
   return (
     <nav className="navbar" id="main-navbar">
       <Link to="/" className="logo">
@@ -27,7 +29,14 @@ export default function DocsNavbar({ onSearchClick }) {
           <a href="#" className="nav-link">Support Server</a>
         </div>
         <div className="nav-user">
-          <button className="btn-primary">Login</button>
+          {user ? (
+            <Link to="/dashboard" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} alt="" style={{width: '20px', height: '20px', borderRadius: '50%'}} onError={(e)=>{e.target.src='https://cdn.discordapp.com/embed/avatars/0.png'}} />
+              Dashboard
+            </Link>
+          ) : (
+            <a href="/auth/login" className="btn-primary" style={{textDecoration: 'none'}}>Login</a>
+          )}
         </div>
       </div>
     </nav>

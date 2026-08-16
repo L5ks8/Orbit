@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Toggle from '../ui/Toggle';
 
-export default function Modules() {
+export default function Modules({ guildId }) {
   const modulesList = [
     { id: 'automod', name: 'Auto-Moderation', desc: 'Automatically filter spam, bad words, and malicious links.', iconColor: 'rgba(239, 68, 68, 0.2)', icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/> },
     { id: 'welcome', name: 'Welcome Messages', desc: 'Greet new users with custom text and image cards.', iconColor: 'rgba(59, 130, 246, 0.2)', icon: <path d="M14 22v-4a2 2 0 1 0-4 0v4M12 14v4M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M14.83 9.17l2.83-2.83M6.34 17.66l-2.83 2.83"/> },
@@ -24,8 +24,39 @@ export default function Modules() {
   ];
 
   const [enabledModules, setEnabledModules] = useState({});
+  const [config, setConfig] = useState(null);
+
+  useEffect(() => {
+    if (!guildId) return;
+    fetch(`/api/config/${guildId}`)
+      .then(res => res.json())
+      .then(data => {
+        setConfig(data);
+        setEnabledModules({
+          automod: data.automod?.enabled || false,
+          welcome: data.welcome?.enabled || false,
+          level: data.level?.enabled || false,
+          tickets: data.ticket?.enabled || false,
+          appeals: data.appeals?.enabled || false,
+          automation: data.automation?.enabled || false,
+          autoresponder: data.autoresponder_enabled || false,
+          boost: data.boost?.enabled || false,
+          economy: data.economy?.enabled || false,
+          goodbye: data.goodbye?.enabled || false,
+          joinroles: data.joinroles?.enabled || false,
+          logs: data.logs?.enabled || false,
+          messages: data.messages_enabled || false,
+          security: data.security?.enabled || false,
+          serverstats: data.serverstats?.enabled || false,
+          tempvoice: data.tempvoice?.enabled || false,
+          verify: data.verify?.enabled || false,
+        });
+      });
+  }, [guildId]);
 
   const toggleModule = (id) => {
+    // In a full implementation, this should send a POST request to update the config.
+    // For now, we update local state.
     setEnabledModules(prev => ({
       ...prev,
       [id]: !prev[id]
@@ -53,7 +84,7 @@ export default function Modules() {
             </div>
             <p className="module-card-desc">{mod.desc}</p>
             <div className="module-card-actions">
-              <Link to={`/dashboard/modules/${mod.id}`} className="module-config-btn">
+              <Link to={`/dashboard/${guildId}/modules/${mod.id}`} className="module-config-btn">
                 Configure
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12"></line>

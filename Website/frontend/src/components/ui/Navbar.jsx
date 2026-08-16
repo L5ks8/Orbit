@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar({ onSearchClick }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const dropdownRef = useRef(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -143,13 +146,19 @@ export default function Navbar({ onSearchClick }) {
         </div>
       </div>
 
-      {/* Right: Actions */}
       <div className="mega-navbar-actions">
         <a href="#" className="mega-nav-item" style={{ paddingRight: '8px' }}>Add to Discord</a>
         <a href="#" className="mega-nav-item" style={{ paddingRight: '16px' }}>Support Server</a>
-        <Link to="#" className="mega-btn-light">
-          Login <LoginIcon />
-        </Link>
+        {user ? (
+          <Link to="/dashboard" className="mega-btn-light" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} alt="" style={{width: '20px', height: '20px', borderRadius: '50%'}} onError={(e)=>{e.target.src='https://cdn.discordapp.com/embed/avatars/0.png'}} />
+            Dashboard
+          </Link>
+        ) : (
+          <a href="/auth/login" className="mega-btn-light">
+            Login <LoginIcon />
+          </a>
+        )}
       </div>
     </nav>
   );
