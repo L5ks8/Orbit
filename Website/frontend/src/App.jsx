@@ -17,7 +17,7 @@ import { AuthProvider } from './context/AuthContext';
 
 function AppContent({ isSearchOpen, setIsSearchOpen }) {
   const location = useLocation();
-  const useMegaMenu = ['/', '/terms', '/privacy'].includes(location.pathname);
+  const useMegaMenu = ['/', '/terms', '/privacy', '/status', '/benchmarks'].includes(location.pathname);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
