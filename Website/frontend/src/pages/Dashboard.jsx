@@ -20,13 +20,24 @@ function DashboardInner() {
     fetch('/api/guilds')
       .then(res => res.json())
       .then(data => {
-        if (data && data.guilds) {
-          const g = data.guilds.find(g => g.id === guildId);
-          if (g) {
-            setGuildName(g.name);
-            setGuildIcon(g.icon);
-          }
+        let guildsArray = [];
+        if (Array.isArray(data)) {
+          guildsArray = data;
+        } else if (data && data.guilds) {
+          guildsArray = data.guilds;
         }
+        
+        const g = guildsArray.find(g => g.id === guildId);
+        if (g) {
+          setGuildName(g.name);
+          setGuildIcon(g.icon);
+        } else {
+          setGuildName('Unknown Server');
+        }
+      })
+      .catch(err => {
+        console.error("Error loading guild info:", err);
+        setGuildName('Error');
       });
   }, [guildId]);
 

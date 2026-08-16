@@ -1,0 +1,41 @@
+<div id="section-security" class="dash-panel">
+    <div class="toggle-container" style="margin-bottom: 20px;">
+        <div>
+            <h3>Anti-Nuke System</h3>
+            <p style="color: var(--text-secondary); margin-top: 5px; font-size: 13px;">Automatically protect your server against rogue administrators deleting channels or roles.</p>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="anti_nuke_enabled">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+    <div class="form-group">
+        <label>Anti-Nuke Threshold</label>
+        <span class="help-text">How many destructive actions (channel/role delete, ban) within the time window will trigger the Anti-Nuke system?</span>
+        <input type="number" id="anti_nuke_threshold" placeholder="e.g. 3" min="1" max="50" style="width: 100px;">
+    </div>
+    
+    <div class="form-group">
+        <label>Time Window (Seconds)</label>
+        <span class="help-text">The timeframe in which actions are counted. (e.g. 3 actions in 10 seconds)</span>
+        <input type="number" id="anti_nuke_time_window" placeholder="e.g. 10" min="1" max="120" style="width: 100px;">
+    </div>
+    
+    <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 30px 0;">
+
+    <div class="toggle-container" style="margin-bottom: 20px;">
+        <div>
+            <h3>Anti-Scam & Phishing</h3>
+            <p style="color: var(--text-secondary); margin-top: 5px; font-size: 13px;">Automatically detect and delete known phishing and scam links (e.g. fake Discord Nitro links).</p>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="anti_scam_enabled">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="form-group">
+        <button class="save-btn" onclick="saveSecurityConfig()">Save Security Settings</button>
+    </div>
+</div>
