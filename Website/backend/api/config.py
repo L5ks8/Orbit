@@ -244,9 +244,15 @@ class ConfigMixin:
                 "media_only_channels": automation_cfg.get("media_only", {}).get("channels", []),
                 "media_ignore_bots": automation_cfg.get("media_only", {}).get("ignore_bots", True),
                 "command_only_channels": automation_cfg.get("command_only", {}).get("channels", []),
-                "honeypot_channel_id": automation_cfg.get("honeypot", {}).get("channel_id", ""),
-                "honeypot_exempt_roles": automation_cfg.get("honeypot", {}).get("exempt_roles", []),
-                "honeypot_message": automation_cfg.get("honeypot", {}).get("message", ""),
+                "honeypot_channel_id": automation_cfg.get("auto_ban", {}).get("channel_id", ""),
+                "honeypot_exempt_roles": automation_cfg.get("auto_ban", {}).get("exempt_roles", []),
+                "honeypot_message": automation_cfg.get("auto_ban", {}).get("message", ""),
+                "honeypot_msg_mode": automation_cfg.get("auto_ban", {}).get("msg_mode", "message"),
+                "honeypot_action": automation_cfg.get("auto_ban", {}).get("action", "softban"),
+                "honeypot_embed_title": automation_cfg.get("auto_ban", {}).get("embed_title", ""),
+                "honeypot_embed_description": automation_cfg.get("auto_ban", {}).get("embed_description", ""),
+                "honeypot_embed_color": automation_cfg.get("auto_ban", {}).get("embed_color", "#EF4444"),
+                "honeypot_embed_thumbnail": automation_cfg.get("auto_ban", {}).get("embed_thumbnail", ""),
                 "file_channels": automation_cfg.get("file_only", []),
                 "reaction_channels": automation_cfg.get("auto_reaction", []),
                 "counting_enabled": automation_cfg.get("counting", {}).get("enabled", False),
@@ -613,10 +619,18 @@ class ConfigMixin:
                     "command_only": {
                         "channels": new_flat.get("command_only_channels", [])
                     },
-                    "honeypot": {
+                    "auto_ban": {
                         "channel_id": str(new_flat.get("honeypot_channel_id", "")),
                         "exempt_roles": new_flat.get("honeypot_exempt_roles", []),
-                        "message": str(new_flat.get("honeypot_message", ""))
+                        "message": str(new_flat.get("honeypot_message", "")),
+                        "msg_mode": str(new_flat.get("honeypot_msg_mode", "message")),
+                        "action": str(new_flat.get("honeypot_action", "softban")),
+                        "embed_title": str(new_flat.get("honeypot_embed_title", "")),
+                        "embed_description": str(new_flat.get("honeypot_embed_description", "")),
+                        "embed_color": str(new_flat.get("honeypot_embed_color", "#EF4444")),
+                        "embed_thumbnail": str(new_flat.get("honeypot_embed_thumbnail", "")),
+                        "ban_count": current_auto.get("auto_ban", {}).get("ban_count", 0),
+                        "message_id": current_auto.get("auto_ban", {}).get("message_id", "")
                     },
                     "file_only": new_flat.get("file_channels", []),
                     "auto_reaction": new_flat.get("reaction_channels", []),

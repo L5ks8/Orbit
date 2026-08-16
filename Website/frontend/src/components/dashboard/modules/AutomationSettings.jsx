@@ -16,6 +16,13 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
   const [honeypotChannel, setHoneypotChannel] = useState(autCfg.honeypot_channel_id || '');
   const [honeypotExemptRoles, setHoneypotExemptRoles] = useState((autCfg.honeypot_exempt_roles || []).map(String));
   const [honeypotMsg, setHoneypotMsg] = useState(autCfg.honeypot_message || '');
+  const [honeypotMsgMode, setHoneypotMsgMode] = useState(autCfg.honeypot_msg_mode || 'message');
+  const [honeypotAction, setHoneypotAction] = useState(autCfg.honeypot_action || 'softban');
+  const [honeypotEmbedTitle, setHoneypotEmbedTitle] = useState(autCfg.honeypot_embed_title || 'DO NOT SEND MESSAGES IN THIS CHANNEL');
+  const [honeypotEmbedDesc, setHoneypotEmbedDesc] = useState(autCfg.honeypot_embed_description || 'This channel is used to catch spam bots. Any messages sent here will result in a **softban**.');
+  const [honeypotEmbedColor, setHoneypotEmbedColor] = useState(autCfg.honeypot_embed_color || '#EF4444');
+  const [honeypotEmbedThumb, setHoneypotEmbedThumb] = useState(autCfg.honeypot_embed_thumbnail || '');
+
   const [countingEnabled, setCountingEnabled] = useState(autCfg.counting_enabled || false);
   const [countingChannel, setCountingChannel] = useState(autCfg.counting_channel_id || '');
   const [countingWhitelistRoles, setCountingWhitelistRoles] = useState((autCfg.counting_whitelist_roles || []).map(String));
@@ -24,6 +31,12 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
 
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+  const actionOptions = [
+    { value: 'kick', label: 'Kick' },
+    { value: 'softban', label: 'Softban (Ban + Delete msgs + Unban)' },
+    { value: 'ban', label: 'Ban' },
+    { value: 'timeout', label: 'Timeout (7 Days)' }
+  ];
 
   const getPayload = () => ({
       automation: {
@@ -33,6 +46,12 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
         honeypot_channel_id: honeypotChannel,
         honeypot_exempt_roles: honeypotExemptRoles,
         honeypot_message: honeypotMsg,
+        honeypot_msg_mode: honeypotMsgMode,
+        honeypot_action: honeypotAction,
+        honeypot_embed_title: honeypotEmbedTitle,
+        honeypot_embed_description: honeypotEmbedDesc,
+        honeypot_embed_color: honeypotEmbedColor,
+        honeypot_embed_thumbnail: honeypotEmbedThumb,
         file_channels: fileChannels,
         reaction_channels: reactionChannels,
         counting_enabled: countingEnabled,
@@ -112,13 +131,57 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
           </div>
         </div>
 
-        <div className="form-group" style={{ margin: 0 }}>
-          <label style={{ color: '#fff' }}>Honeypot Warning Message</label>
-          <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>The warning message sent by the bot. You can use {'{count}'} to display the number of banned accounts.</span>
-          <textarea className="dash-input" style={{ width: '100%', height: '120px', resize: 'vertical', marginBottom: '12px' }} value={honeypotMsg} onChange={e => setHoneypotMsg(e.target.value)} placeholder="# ⚠️ POSTING IN THIS CHANNEL WILL GET YOU BANNED..."></textarea>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label style={{ color: '#fff' }}>Punishment Action</label>
+            <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Action to take when a user posts here.</span>
+            <select className="dash-input" value={honeypotAction} onChange={e => setHoneypotAction(e.target.value)}>
+              {actionOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label style={{ color: '#fff' }}>Warning Style</label>
+            <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Should the warning be a Text Message or an Embed?</span>
+            <select className="dash-input" value={honeypotMsgMode} onChange={e => setHoneypotMsgMode(e.target.value)}>
+              <option value="message">Text Message</option>
+              <option value="embed">Embed</option>
+            </select>
+          </div>
+        </div>
+
+        {honeypotMsgMode === 'message' ? (
+          <div className="form-group" style={{ margin: 0 }}>
+            <label style={{ color: '#fff' }}>Honeypot Warning Message</label>
+            <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>The warning message sent by the bot. You can use {'{count}'} to display the number of punished accounts.</span>
+            <textarea className="dash-input" style={{ width: '100%', height: '120px', resize: 'vertical', marginBottom: '12px' }} value={honeypotMsg} onChange={e => setHoneypotMsg(e.target.value)} placeholder="# ⚠️ POSTING IN THIS CHANNEL WILL GET YOU BANNED..."></textarea>
+          </div>
+        ) : (
+          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Embed Title</label>
+                <input type="text" className="dash-input" value={honeypotEmbedTitle} onChange={e => setHoneypotEmbedTitle(e.target.value)} />
+              </div>
+              <div>
+                <label style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Embed Color (Hex)</label>
+                <input type="text" className="dash-input" value={honeypotEmbedColor} onChange={e => setHoneypotEmbedColor(e.target.value)} />
+              </div>
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Embed Description</label>
+              <textarea className="dash-input" style={{ width: '100%', height: '80px', resize: 'vertical' }} value={honeypotEmbedDesc} onChange={e => setHoneypotEmbedDesc(e.target.value)}></textarea>
+            </div>
+            <div>
+              <label style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Thumbnail URL (Optional)</label>
+              <input type="text" className="dash-input" placeholder="https://..." value={honeypotEmbedThumb} onChange={e => setHoneypotEmbedThumb(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        <div className="form-group" style={{ margin: 0, marginTop: '16px' }}>
           <button 
             className="dash-btn primary"
-            disabled={!honeypotChannel || !honeypotMsg}
+            disabled={!honeypotChannel || (honeypotMsgMode === 'message' && !honeypotMsg)}
             onClick={() => {
               fetch(`/api/action/${guildId}/send_honeypot`, {
                 method: 'POST',
@@ -126,14 +189,23 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
                   'Content-Type': 'application/json',
                   'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ channel_id: honeypotChannel, message: honeypotMsg })
+                body: JSON.stringify({ 
+                  channel_id: honeypotChannel, 
+                  message: honeypotMsg,
+                  msg_mode: honeypotMsgMode,
+                  action: honeypotAction,
+                  embed_title: honeypotEmbedTitle,
+                  embed_description: honeypotEmbedDesc,
+                  embed_color: honeypotEmbedColor,
+                  embed_thumbnail: honeypotEmbedThumb
+                })
               }).then(res => {
                 if (res.ok) alert('Message sent!');
                 else alert('Failed to send message.');
               }).catch(err => alert('Error sending message.'));
             }}
           >
-            Send Message to Channel
+            Send Warning Message to Channel
           </button>
         </div>
       </div>

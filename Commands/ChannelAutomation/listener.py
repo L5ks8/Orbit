@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 import re
@@ -122,9 +122,23 @@ class ChannelAutomationListener(commands.Cog):
                     except (discord.Forbidden, discord.NotFound):
                         pass
                         
-                    # Ban the user
+                    # Execute Punishment
+                    action = auto_ban_cfg.get("action", "softban")
+                    reason_text = "Caught in Auto Ban Honeypot channel."
                     try:
-                        await message.author.ban(reason="Caught in Auto Ban Honeypot channel.")
+                        if action == "kick":
+                            await message.author.kick(reason=reason_text)
+                        elif action == "softban":
+                            await message.author.ban(reason=reason_text, delete_message_seconds=604800)
+                            try:
+                                await message.guild.unban(message.author, reason="Softban: Reverting ban")
+                            except discord.HTTPException:
+                                pass
+                        elif action == "ban":
+                            await message.author.ban(reason=reason_text, delete_message_seconds=604800)
+                        elif action == "timeout":
+                            import datetime
+                            await message.author.timeout(datetime.timedelta(days=7), reason=reason_text)
                     except discord.Forbidden:
                         pass # Bot lacks permission
                         
@@ -135,17 +149,43 @@ class ChannelAutomationListener(commands.Cog):
                     save_automation_config(message.guild.id, config)
                     
                     # Update or send the honeypot message
-                    template = auto_ban_cfg.get("message")
-                    if not template:
-                        template = (
-                            "# :warning: POSTING IN THIS CHANNEL WILL GET YOU BANNED. :hammer:\n"
-                            "## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n"
-                            ":no_entry_sign: THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
-                            ":information_source: Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n"
-                            "**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\n"
-                            "Ban Counter: `{count}`"
-                        )
-                    trap_text = template.replace("{count}", str(ban_count))
+                    msg_mode = auto_ban_cfg.get("msg_mode", "message")
+                    
+                    action_label = action.capitalize() + "s"
+                    
+                    content_kw = {}
+                    if msg_mode == "embed":
+                        embed_title = auto_ban_cfg.get("embed_title", "DO NOT SEND MESSAGES IN THIS CHANNEL")
+                        embed_desc = auto_ban_cfg.get("embed_description", "This channel is used to catch spam bots. Any messages sent here will result in a **softban**.")
+                        embed_color = auto_ban_cfg.get("embed_color", "#EF4444")
+                        embed_thumb = auto_ban_cfg.get("embed_thumbnail", "")
+                        
+                        try:
+                            color_val = int(str(embed_color).lstrip('#'), 16)
+                        except ValueError:
+                            color_val = 0xEF4444
+                            
+                        embed = discord.Embed(title=embed_title, description=embed_desc, color=color_val)
+                        if embed_thumb:
+                            embed.set_thumbnail(url=embed_thumb)
+                            
+                        view = discord.ui.View()
+                        view.add_item(discord.ui.Button(label=f"{action_label}: {ban_count:,}", emoji="🍯", disabled=True, style=discord.ButtonStyle.secondary))
+                        
+                        content_kw["embed"] = embed
+                        content_kw["view"] = view
+                    else:
+                        template = auto_ban_cfg.get("message")
+                        if not template:
+                            template = (
+                                "# :warning: POSTING IN THIS CHANNEL WILL GET YOU BANNED. :hammer:\n"
+                                "## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n"
+                                ":no_entry_sign: THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
+                                ":information_source: Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n"
+                                "**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\n"
+                                f"{action_label[:-1]} Counter: `{{count}}`"
+                            )
+                        content_kw["content"] = template.replace("{count}", str(ban_count))
                     
                     msg_id = auto_ban_cfg.get("message_id")
                     trap_msg = None
@@ -157,12 +197,15 @@ class ChannelAutomationListener(commands.Cog):
                             
                     if trap_msg:
                         try:
-                            await trap_msg.edit(content=trap_text)
+                            if msg_mode == "embed":
+                                await trap_msg.edit(content=None, embed=content_kw["embed"], view=content_kw["view"])
+                            else:
+                                await trap_msg.edit(content=content_kw["content"], embed=None, view=None)
                         except discord.HTTPException:
                             pass
                     else:
                         try:
-                            new_msg = await message.channel.send(content=trap_text)
+                            new_msg = await message.channel.send(**content_kw)
                             auto_ban_cfg["message_id"] = str(new_msg.id)
                             config["auto_ban"] = auto_ban_cfg
                             save_automation_config(message.guild.id, config)

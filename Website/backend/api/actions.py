@@ -384,17 +384,44 @@ class ActionsMixin:
             if not channel:
                 return web.json_response({"error": "Channel not found in this guild"}, status=404)
                 
-            message_template = data.get("message", "")
-            if not message_template:
-                return web.json_response({"error": "No message provided"}, status=400)
-                
+            msg_mode = data.get("msg_mode", "message")
+            
             from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
             config = load_automation_config(guild_id)
             auto_ban_cfg = config.get("auto_ban", {})
             ban_count = auto_ban_cfg.get("ban_count", 0)
             
-            text = message_template.replace("{count}", str(ban_count))
-            msg = await channel.send(content=text)
+            action = data.get("action", "softban")
+            action_label = action.capitalize() + "s"
+            
+            content_kw = {}
+            if msg_mode == "embed":
+                embed_title = data.get("embed_title", "DO NOT SEND MESSAGES IN THIS CHANNEL")
+                embed_desc = data.get("embed_description", "This channel is used to catch spam bots. Any messages sent here will result in a **softban**.")
+                embed_color = data.get("embed_color", "#EF4444")
+                embed_thumb = data.get("embed_thumbnail", "")
+                
+                try:
+                    color_val = int(str(embed_color).lstrip('#'), 16)
+                except ValueError:
+                    color_val = 0xEF4444
+                    
+                embed = discord.Embed(title=embed_title, description=embed_desc, color=color_val)
+                if embed_thumb:
+                    embed.set_thumbnail(url=embed_thumb)
+                    
+                view = discord.ui.View()
+                view.add_item(discord.ui.Button(label=f"{action_label}: {ban_count:,}", emoji="🍯", disabled=True, style=discord.ButtonStyle.secondary))
+                
+                content_kw["embed"] = embed
+                content_kw["view"] = view
+            else:
+                message_template = data.get("message", "")
+                if not message_template:
+                    return web.json_response({"error": "No message provided"}, status=400)
+                content_kw["content"] = message_template.replace("{count}", str(ban_count))
+                
+            msg = await channel.send(**content_kw)
             
             auto_ban_cfg["message_id"] = str(msg.id)
             config["auto_ban"] = auto_ban_cfg
