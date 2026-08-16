@@ -3548,8 +3548,124 @@ input:checked + .toggle-slider:before {
   overflow: hidden;
 }
 
+.dash-custom-select.drop-up .dash-custom-select-dropdown {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 4px;
+}
+
 .dash-custom-select.open .dash-custom-select-dropdown {
   display: flex;
+}
+
+/* Docs UI Components */
+.docs-syntax-block {
+  background-color: #111113;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 32px;
+  position: relative;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 14px;
+  color: #e2e8f0;
+}
+
+.docs-syntax-keyword {
+  color: #f6e165; /* Yellowish */
+}
+.docs-syntax-type {
+  color: #22d3ee; /* Cyan */
+}
+.docs-syntax-punct {
+  color: #fb7185; /* Pinkish */
+}
+
+.docs-properties-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 40px;
+  background-color: #0a0a0b;
+}
+
+.docs-properties-table th {
+  background-color: #111113;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.docs-properties-table td {
+  padding: 16px;
+  font-size: 14px;
+  color: #a1a1aa;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: top;
+}
+
+.docs-properties-table tr:last-child td {
+  border-bottom: none;
+}
+
+.docs-prop-type {
+  display: inline-block;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.docs-page-navigation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.docs-nav-button {
+  background-color: #111113;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 20px;
+  text-decoration: none;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.docs-nav-button:hover {
+  background-color: #1a1a1d;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.docs-nav-button .nav-label {
+  font-size: 12px;
+  color: #71717a;
+  margin-bottom: 4px;
+}
+
+.docs-nav-button .nav-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dash-custom-select-search {

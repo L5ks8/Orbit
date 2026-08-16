@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 export default function CustomSelect({ options, value, onChange, placeholder = 'Select...', isMulti = false, name }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [dropUp, setDropUp] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -16,6 +17,21 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // If less than 250px below, but enough space above, flip it up.
+      if (spaceBelow < 250 && rect.top > 250) {
+        setDropUp(true);
+      } else {
+        setDropUp(false);
+      }
+    } else {
+      setDropUp(false);
+    }
+  }, [isOpen]);
 
   const filteredOptions = options.filter(opt => 
     opt.label.toLowerCase().includes(search.toLowerCase())
@@ -76,7 +92,7 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
   };
 
   return (
-    <div className={`dash-custom-select ${isOpen ? 'open' : ''} ${isMulti ? 'is-multi' : ''}`} ref={containerRef}>
+    <div className={`dash-custom-select ${isOpen ? 'open' : ''} ${dropUp ? 'drop-up' : ''} ${isMulti ? 'is-multi' : ''}`} ref={containerRef}>
       {name && (
         <input 
           type="hidden" 

@@ -2,42 +2,80 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import DiscordEmbed from '../components/ui/DiscordEmbed';
 
+function SyntaxBlock({ title = "Syntax", syntax }) {
+  return (
+    <div style={{ marginBottom: '40px' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>{title}</h2>
+      <div className="docs-syntax-block">
+        <div style={{ position: 'absolute', top: '12px', right: '12px', opacity: 0.5, cursor: 'pointer' }}>
+          <CopyIcon />
+        </div>
+        <div>
+          {syntax.map((s, i) => (
+            <span key={i} className={`docs-syntax-${s.type || 'text'}`}>{s.text}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PropertiesTable({ title = "Configuration / Fields", properties }) {
+  return (
+    <div style={{ marginBottom: '40px' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>{title}</h2>
+      <table className="docs-properties-table">
+        <thead>
+          <tr>
+            <th style={{ width: '30%' }}>Property / Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {properties.map((p, i) => (
+            <tr key={i}>
+              <td>
+                <span className="docs-prop-type">{p.name}</span>
+                {p.type && <div style={{ fontSize: '12px', color: '#71717a', marginTop: '4px' }}>{p.type}</div>}
+              </td>
+              <td>{p.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export const docsData = {
   introduction: {
     title: 'Introduction',
     icon: <BookIcon />,
     toc: [
       { id: 'overview', label: 'Overview' },
-      { id: 'explore', label: 'Explore the Docs' }
+      { id: 'features', label: 'Key Features' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          The official documentation for <strong>Orbit</strong>.
-        </p>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Here you can find information about Orbit's features, moderation tools, and other general usage information.
+          Welcome to the official documentation for <strong>Orbit</strong>. Here you will find in-depth tutorials on how to configure and use every feature available in our Discord Bot.
         </p>
         <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '8px', padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', color: 'var(--text-primary)', marginBottom: '48px' }}>
           <InfoIcon />
-          <span style={{ fontSize: '14px' }}>This documentation is actively being updated and may change.</span>
+          <span style={{ fontSize: '14px' }}>These tutorials are actively updated. Follow the navigation at the bottom of each page to progress through the guide.</span>
         </div>
 
-        <h2 id="explore" style={{ fontSize: '20px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-          <SearchIcon /> Explore the Docs
-        </h2>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-          <div className="docs-explore-card" onClick={() => document.getElementById('btn-setup').click()}>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>Initial Setup</h3>
-            <p style={{ fontSize: '14px', color: 'var(--text-primary)', lineHeight: '1.5' }}>Configure Orbit for your server, set up permissions, and explore the dashboard.</p>
-          </div>
-          <div className="docs-explore-card" onClick={() => document.getElementById('btn-automod').click()}>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>Auto-Moderation</h3>
-            <p style={{ fontSize: '14px', color: 'var(--text-primary)', lineHeight: '1.5' }}>Protect your server with advanced spam detection, anti-raid, and automated punishments.</p>
-          </div>
-        </div>
+        <h2 id="features" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Key Features</h2>
+        <PropertiesTable 
+          title="What Orbit offers"
+          properties={[
+            { name: 'Auto-Moderation', description: 'Advanced spam detection, bad word filters, and automated punishments.' },
+            { name: 'Verification', description: 'Secure your server with CAPTCHA and auto-kick capabilities.' },
+            { name: 'Tickets', description: 'Interactive panels with multi-category dropdowns for support.' },
+            { name: 'Automations', description: 'Honeypots, Welcome cards, goodbye messages, and more.' }
+          ]} 
+        />
       </>
     )
   },
@@ -47,20 +85,32 @@ export const docsData = {
     badge: 'NEW',
     toc: [
       { id: 'overview', label: 'Overview' },
-      { id: 'dashboard-access', label: 'Dashboard Access' }
+      { id: 'dashboard', label: 'Using the Dashboard' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Configuring Orbit for the first time via the Web Dashboard.
+          Setting up Orbit is entirely visual. You won't need to remember complex slash commands or write configuration files.
         </p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <p style={{ marginBottom: '16px' }}>Orbit does not use complex slash commands for setup. Everything is managed visually through our dashboard.</p>
-          <h2 id="dashboard-access" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Dashboard Access</h2>
-          <p style={{ marginBottom: '16px' }}>Login with your Discord account on our website. You will see a list of servers where you have Manage Server permissions. Select your server to open the panel.</p>
-          <p>We recommend enabling the <strong>Auto-Moderation</strong> and <strong>Welcome Cards</strong> modules first.</p>
-        </div>
+        
+        <SyntaxBlock 
+          title="Accessing the Dashboard"
+          syntax={[
+            { text: 'https://', type: 'punct' },
+            { text: 'orbit-498b.onrender.com', type: 'keyword' },
+            { text: '/dashboard', type: 'type' }
+          ]}
+        />
+
+        <h2 id="dashboard" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Using the Dashboard</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Login', type: 'Action', description: 'Click the Login button to authenticate with your Discord account via OAuth2.' },
+            { name: 'Server Selection', type: 'Navigation', description: 'Select any server where you hold the "Manage Server" or "Administrator" permission.' },
+            { name: 'Saving Changes', type: 'Action', description: 'Always remember to click the green "Save Changes" button in the navigation bar when modifying settings.' }
+          ]}
+        />
       </>
     )
   },
@@ -69,19 +119,24 @@ export const docsData = {
     icon: <ShieldIcon />,
     toc: [
       { id: 'overview', label: 'Overview' },
-      { id: 'punishments', label: 'Punishments' }
+      { id: 'filters', label: 'Available Filters' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Keep your community safe automatically.
+          Keep your community safe with automated filters that detect and act on malicious or unwanted content instantly.
         </p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <p>The Auto-Moderation module allows you to block bad words, spam, invite links, and zalgo text.</p>
-          <h2 id="punishments" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Punishments</h2>
-          <p>You can configure automated punishments (Warn, Mute, Kick, Ban) when a user triggers an Auto-Mod filter multiple times.</p>
-        </div>
+
+        <h2 id="filters" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Available Filters</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Bad Words', type: 'Toggle', description: 'Blocks messages containing profanity or words you specify in your custom blacklist.' },
+            { name: 'Spam Prevention', type: 'Toggle', description: 'Detects users sending messages too quickly (rate-limiting).' },
+            { name: 'Invite Links', type: 'Toggle', description: 'Automatically deletes discord.gg/ invite links sent by unauthorized users.' },
+            { name: 'Mass Mentions', type: 'Toggle', description: 'Prevents ghost-pings and mass-pings by limiting the number of allowed mentions per message.' }
+          ]}
+        />
       </>
     )
   },
@@ -89,43 +144,82 @@ export const docsData = {
     title: 'Auto-Mod Punishments',
     toc: [
       { id: 'overview', label: 'Overview' },
-      { id: 'available-actions', label: 'Available Actions' }
+      { id: 'actions', label: 'Automated Actions' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Configure automated actions when filters are triggered.
+          When a user violates an Auto-Mod filter multiple times, Orbit can automatically execute predefined punishments to stop raids and trolls in their tracks.
         </p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <p>When a user violates an auto-mod filter, Orbit can automatically execute predefined punishments.</p>
-          <h2 id="available-actions" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Available Actions</h2>
-          <ul style={{ paddingLeft: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <li><strong>Delete Message:</strong> Instantly removes the offending message.</li>
-            <li><strong>Warn:</strong> Adds a formal warning to the user's history.</li>
-            <li><strong>Timeout:</strong> Temporarily mutes the user (up to 28 days).</li>
-            <li><strong>Kick/Ban:</strong> Removes the user from the server for severe infractions.</li>
-          </ul>
-        </div>
+
+        <h2 id="actions" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Automated Actions</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Warn', type: 'Punishment', description: 'Adds a formal warning to the user\'s history. Useful for initial infractions.' },
+            { name: 'Timeout', type: 'Punishment', description: 'Temporarily mutes the user. You can configure the duration (e.g., 10 minutes, 1 hour).' },
+            { name: 'Softban', type: 'Punishment', description: 'Bans and immediately unbans the user, which kicks them and deletes their recent messages.' },
+            { name: 'Ban', type: 'Punishment', description: 'Permanently removes the user from the server for severe or repeated infractions.' }
+          ]}
+        />
       </>
     )
   },
   'automod-logs': {
-    title: 'Audit & Logs',
+    title: 'Audit Logs',
     toc: [
-      { id: 'overview', label: 'Overview' },
-      { id: 'log-setup', label: 'Log Setup' }
+      { id: 'overview', label: 'Overview' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Track every moderation action.
+          Track every Auto-Mod action to maintain transparency and review false positives.
         </p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <h2 id="log-setup" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Log Setup</h2>
-          <p>Assign a dedicated logging channel in the dashboard to receive detailed reports whenever Auto-Mod takes action. Logs include the original deleted message content, the rule triggered, and the punishment executed.</p>
-        </div>
+
+        <SyntaxBlock 
+          title="Log Output Format"
+          syntax={[
+            { text: 'Action:', type: 'keyword' },
+            { text: ' Message Deleted\n', type: 'text' },
+            { text: 'User:', type: 'keyword' },
+            { text: ' @username (123456789)\n', type: 'type' },
+            { text: 'Reason:', type: 'keyword' },
+            { text: ' Triggered Bad Word Filter\n', type: 'text' }
+          ]}
+        />
+
+        <PropertiesTable 
+          properties={[
+            { name: 'Log Channel', type: 'Channel', description: 'The specific Discord channel where Orbit will send moderation embeds. Keep this private for staff only.' }
+          ]}
+        />
+      </>
+    )
+  },
+  verification: {
+    title: 'Verification System',
+    icon: <ShieldCheckIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'setup', label: 'Configuration' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Protect your server from bot raids by forcing new users to complete a CAPTCHA verification to gain access to your channels.
+        </p>
+
+        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Configuration Fields</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Verification Channel', type: 'Channel', description: 'Where the verification panel is sent. Users must be able to view this channel upon joining.' },
+            { name: 'Verified Role', type: 'Role', description: 'The role granted to users who successfully complete the CAPTCHA.' },
+            { name: 'Unverified Role', type: 'Role', description: '(Optional) A role given to users when they join, which is removed upon verification.' },
+            { name: 'Auto-Kick Timer', type: 'Number (Minutes)', description: 'Automatically kick users who fail to verify within this timeframe (e.g., 10 minutes).' }
+          ]}
+        />
       </>
     )
   },
@@ -134,213 +228,221 @@ export const docsData = {
     icon: <StarIcon />,
     toc: [
       { id: 'overview', label: 'Overview' },
-      { id: 'xp-rates', label: 'XP Rates' }
+      { id: 'rewards', label: 'XP & Rewards' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Reward active members with XP and roles.
+          Reward active members with XP and roles. Orbit tracks messages and voice activity to calculate user levels.
         </p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <h2 id="xp-rates" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>XP Rates</h2>
-          <p>Members gain XP by sending messages. You can configure the XP rate, level up messages, and role rewards that are automatically given when a user reaches a certain level.</p>
-        </div>
+
+        <h2 id="rewards" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>XP & Rewards</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'XP Multiplier', type: 'Decimal', description: 'Global multiplier for XP gain. E.g., 1.5x gives 50% more XP.' },
+            { name: 'Level Up Messages', type: 'Toggle', description: 'Send a congratulatory message when a user levels up. Can be routed to a specific channel.' },
+            { name: 'Role Rewards', type: 'Map<Level, Role>', description: 'Automatically assign specific Discord roles when users reach milestones (e.g., Level 10 gets "Active Member").' }
+          ]}
+        />
       </>
     )
   },
-  verification: {
-    title: 'Verification',
-    icon: <ShieldCheckIcon />,
+  tickets: {
+    title: 'Ticket System',
+    icon: <TicketIcon />,
     toc: [
       { id: 'overview', label: 'Overview' },
-      { id: 'setup', label: 'Setup' },
-      { id: 'preview', label: 'Sneak Peek' }
+      { id: 'categories', label: 'Ticket Categories' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Protect your server from bot raids.
+          Create beautiful, interactive support panels for your community using modern Discord UI components.
         </p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Features</h2>
-          <ul style={{ paddingLeft: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <li><strong>CAPTCHA Integration:</strong> Force new users to complete a CAPTCHA verification to gain access to your server.</li>
-            <li><strong>Role Management:</strong> Automatically grant a "Verified" role and remove a "Quarantine/Unverified" role upon success.</li>
-            <li><strong>Auto-Kick:</strong> Automatically kick users who fail to verify within a specified timeframe (e.g., 10 minutes).</li>
-          </ul>
-          
-          <h2 id="preview" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Sneak Peek</h2>
-          <DiscordEmbed 
-            color="#38bdf8"
-            title="Server Verification: Your Community"
-            description="This server requires you to verify yourself to get access to other channels, you can simply verify by clicking on the verify button below."
-            image="https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png"
-            buttons={[{ label: 'Verify', style: 'success' }]}
-          />
-        </div>
+
+        <SyntaxBlock 
+          title="Staff Commands inside a Ticket"
+          syntax={[
+            { text: '/ticket ', type: 'keyword' },
+            { text: 'close', type: 'type' },
+            { text: '\n', type: 'text' },
+            { text: '/ticket ', type: 'keyword' },
+            { text: 'add ', type: 'type' },
+            { text: '<@user>', type: 'punct' }
+          ]}
+        />
+
+        <h2 id="categories" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Ticket Categories</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Panel Channel', type: 'Channel', description: 'The channel where the main Ticket embed and dropdown will be placed.' },
+            { name: 'Category Name', type: 'String', description: 'Visible in the dropdown (e.g., "Support", "Billing", "Reports").' },
+            { name: 'Support Role', type: 'Role', description: 'The staff role that gets pinged and has access to view tickets in this category.' }
+          ]}
+        />
+      </>
+    )
+  },
+  'temp-voice': {
+    title: 'Temp Voice Channels',
+    icon: <MicIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Set up "Join-to-Create" voice hubs. When a user joins the hub channel, Orbit automatically creates a new, private voice channel for them.
+        </p>
+
+        <PropertiesTable 
+          properties={[
+            { name: 'Hub Channel', type: 'Voice Channel', description: 'The trigger channel users join to create their own temp channel.' },
+            { name: 'Category', type: 'Category', description: 'Where the temporary voice channels will be created.' },
+            { name: 'Owner Permissions', type: 'System', description: 'The creator gets full control to rename the channel, change user limits, and kick users via voice controls.' }
+          ]}
+        />
+      </>
+    )
+  },
+  giveaways: {
+    title: 'Giveaways & Polls',
+    icon: <GiftIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'commands', label: 'Commands' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Host engaging giveaways with entry requirements, multiple winners, and automated drawing.
+        </p>
+
+        <h2 id="commands" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Commands</h2>
+        <PropertiesTable 
+          properties={[
+            { name: '/gcreate', type: 'Command', description: 'Starts an interactive setup to launch a new giveaway in the current channel.' },
+            { name: '/greroll', type: 'Command', description: 'Selects a new random winner for a recently ended giveaway.' },
+            { name: '/gend', type: 'Command', description: 'Forces a running giveaway to end immediately and draws winners.' }
+          ]}
+        />
+      </>
+    )
+  },
+  logs: {
+    title: 'Advanced Logging',
+    icon: <ActivityIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Orbit tracks essential server activities and categorizes them into neat embeds, making moderation history easy to read.
+        </p>
+
+        <PropertiesTable 
+          properties={[
+            { name: 'Message Logs', type: 'Toggle/Channel', description: 'Logs deleted and edited messages, showing original content.' },
+            { name: 'Voice Logs', type: 'Toggle/Channel', description: 'Logs when members join, move, or leave voice channels.' },
+            { name: 'Role Logs', type: 'Toggle/Channel', description: 'Logs role creations, deletions, and member role updates.' },
+            { name: 'Server Logs', type: 'Toggle/Channel', description: 'Logs channel creations, server settings changes, and more.' }
+          ]}
+        />
       </>
     )
   },
   'automations-welcome': {
     title: 'Welcome Messages',
-    toc: [{ id: 'overview', label: 'Overview' }, { id: 'preview', label: 'Card Preview' }],
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'variables', label: 'Message Variables' }
+    ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>Greet new members automatically with customized image cards.</p>
-        <h2 id="preview" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>Card Preview</h2>
-        
-        <div style={{
-          width: '100%', maxWidth: '800px', aspectRatio: '800 / 300', 
-          backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%), url(https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          borderRadius: '12px', position: 'relative', overflow: 'hidden',
-          fontFamily: 'sans-serif', border: '1px solid rgba(255,255,255,0.1)'
-        }}>
-          <img src="/img/wumpus.png" alt="Wumpus" style={{ position: 'absolute', top: '5%', left: '7.5%', width: '20%', height: '53.33%', borderRadius: '50%', border: '4px solid #111111', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', top: '65%', left: '7.5%' }}>
-            <h3 style={{ margin: 0, fontSize: 'clamp(20px, 4vw, 48px)', color: '#fff', fontWeight: 900, fontStyle: 'italic', letterSpacing: '1px', lineHeight: 1 }}>WELCOME</h3>
-            <p style={{ margin: '5px 0 0', fontSize: 'clamp(14px, 2.5vw, 32px)', color: 'rgba(255, 255, 255, 0.78)', lineHeight: 1 }}>@wumpus</p>
-          </div>
-        </div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Greet new members automatically with customized text and beautiful image cards.
+        </p>
+
+        <h2 id="variables" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Message Variables</h2>
+        <PropertiesTable 
+          properties={[
+            { name: '{user}', type: 'Variable', description: 'Mentions the user (e.g., @Wumpus)' },
+            { name: '{server}', type: 'Variable', description: 'The name of your Discord server' },
+            { name: '{membercount}', type: 'Variable', description: 'The total number of members in your server' }
+          ]}
+        />
       </>
     )
   },
   'automations-goodbye': {
     title: 'Goodbye Messages',
-    toc: [{ id: 'overview', label: 'Overview' }, { id: 'preview', label: 'Card Preview' }],
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>Send a farewell message and image card when someone leaves.</p>
-        <h2 id="preview" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>Card Preview</h2>
-        
-        <div style={{
-          width: '100%', maxWidth: '800px', aspectRatio: '800 / 300', 
-          backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%), url(https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          borderRadius: '12px', position: 'relative', overflow: 'hidden',
-          fontFamily: 'sans-serif', border: '1px solid rgba(255,255,255,0.1)'
-        }}>
-          <img src="/img/wumpus.png" alt="Wumpus" style={{ position: 'absolute', top: '5%', left: '7.5%', width: '20%', height: '53.33%', borderRadius: '50%', border: '4px solid #111111', objectFit: 'cover', filter: 'grayscale(100%)' }} />
-          <div style={{ position: 'absolute', top: '65%', left: '7.5%' }}>
-            <h3 style={{ margin: 0, fontSize: 'clamp(20px, 4vw, 48px)', color: '#fff', fontWeight: 900, fontStyle: 'italic', letterSpacing: '1px', lineHeight: 1 }}>GOODBYE</h3>
-            <p style={{ margin: '5px 0 0', fontSize: 'clamp(14px, 2.5vw, 32px)', color: 'rgba(255, 255, 255, 0.78)', lineHeight: 1 }}>@wumpus</p>
-          </div>
-        </div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Send a farewell message and image card when someone leaves the server.
+        </p>
+
+        <PropertiesTable 
+          properties={[
+            { name: 'Leave Channel', type: 'Channel', description: 'The channel where the goodbye message will be sent.' },
+            { name: 'Message Content', type: 'Text', description: 'The text sent alongside the goodbye image card. Supports the same variables as Welcome messages.' }
+          ]}
+        />
       </>
     )
   },
   'automations-roles': {
     title: 'Auto Roles',
-    toc: [{ id: 'overview', label: 'Overview' }],
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>Automatically assign roles when users join.</p>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Automatically assign roles when users join, ensuring they get immediate access to community channels without manual intervention.
+        </p>
+        <PropertiesTable 
+          properties={[
+            { name: 'Roles to Assign', type: 'List<Role>', description: 'A list of roles that will be instantly granted to every new member upon joining.' },
+            { name: 'Bot Roles', type: 'List<Role>', description: '(Optional) Roles granted only to bot accounts when they are added to the server.' }
+          ]}
+        />
       </>
     )
   },
   'automations-respond': {
-    title: 'Auto Respond',
-    toc: [{ id: 'overview', label: 'Overview' }],
+    title: 'Honeypot System',
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'setup', label: 'Configuration' }
+    ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>Create custom bot responses to specific keywords.</p>
-      </>
-    )
-  },
-  'tickets': {
-    title: 'Ticket System',
-    icon: <TicketIcon />,
-    toc: [{ id: 'overview', label: 'Overview' }, { id: 'categories', label: 'Categories' }, { id: 'preview', label: 'Sneak Peek' }],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>Create beautiful support panels for your community.</p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <p>Orbit's ticket system allows users to open private channels to speak with your staff.</p>
-          <h2 id="categories" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>Features</h2>
-          <ul style={{ paddingLeft: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <li><strong>Multiple Categories:</strong> Set up distinct ticket types (e.g., Support, Billing) via dropdown menus.</li>
-            <li><strong>Staff Tools:</strong> Claim tickets, generate HTML transcripts, and close tickets with one click.</li>
-            <li><strong>Blacklists:</strong> Restrict abusive members from opening tickets.</li>
-          </ul>
-
-          <h2 id="preview" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>Sneak Peek</h2>
-          <DiscordEmbed 
-            color="#5865F2"
-            title="Support Tickets"
-            description="Please select a category below to open a ticket and contact our staff team."
-            selectMenu={{ placeholder: 'Select a category...' }}
-          />
-        </div>
-      </>
-    )
-  },
-  'temp-voice': {
-    title: 'Temp Voice',
-    icon: <MicIcon />,
-    toc: [{ id: 'overview', label: 'Overview' }],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>Join-to-create voice channels.</p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <p>When a user joins the Hub channel, Orbit automatically creates a new, private voice channel for them. They have full control to change the name, limit users, or kick people.</p>
-        </div>
-      </>
-    )
-  },
-  'giveaways': {
-    title: 'Giveaways & Polls',
-    icon: <GiftIcon />,
-    toc: [{ id: 'overview', label: 'Overview' }, { id: 'preview', label: 'Sneak Peek' }],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>Engage your community with events.</p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <p>Easily host giveaways with entry requirements, multiple winners, and automated drawing. Create interactive polls to gather community feedback.</p>
-          
-          <h2 id="preview" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>Sneak Peek</h2>
-          <DiscordEmbed 
-            color="#a855f7"
-            title="🎉 GIVEAWAY: 1x Nitro Classic 🎉"
-            description="React with 🎉 or click the button below to enter!"
-            fields={[
-              { name: 'Winners', value: '1', inline: true },
-              { name: 'Ends In', value: '24 hours', inline: true }
-            ]}
-            footer={{ text: 'Hosted by @wumpus' }}
-            buttons={[{ label: 'Join Giveaway', style: 'primary', emoji: '🎉' }]}
-          />
-        </div>
-      </>
-    )
-  },
-  'logs': {
-    title: 'Advanced Logs',
-    icon: <ActivityIcon />,
-    toc: [{ id: 'overview', label: 'Overview' }, { id: 'preview', label: 'Sneak Peek' }],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>Track everything happening in your server.</p>
-        <div className="document-content" style={{ lineHeight: '1.7', color: 'var(--text-primary)' }}>
-          <p>Orbit logs message deletions, edits, voice channel joins/leaves, role updates, and moderation actions into clean, categorized embed messages.</p>
-
-          <h2 id="preview" style={{ fontSize: '24px', fontWeight: 600, marginTop: '32px', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>Sneak Peek</h2>
-          <DiscordEmbed 
-            color="#ef4444"
-            author={{ name: 'Message Deleted', icon: '/img/wumpus.png' }}
-            description="**Message sent by <@Wumpus> deleted in <#general>**\n\nThis was a bad message that got deleted by auto-mod."
-            footer={{ text: 'User ID: 123456789' }}
-          />
-        </div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          The Honeypot System is a powerful trap for compromised accounts and spam bots. By setting up a hidden channel, anyone who posts in it is immediately punished.
+        </p>
+        
+        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Configuration</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Honeypot Channel', type: 'Channel', description: 'A channel that regular users should NOT type in. If a bot scrapes and posts here, the trap triggers.' },
+            { name: 'Punishment Action', type: 'Dropdown', description: 'The action taken (e.g., Softban, Ban, Timeout) when a message is caught.' },
+            { name: 'Warning Style', type: 'Dropdown', description: 'Choose whether the bot displays a simple Text Message warning or a rich Embed.' }
+          ]}
+        />
       </>
     )
   }
@@ -378,11 +480,17 @@ export default function Docs() {
   };
 
   useEffect(() => {
-    // Scroll to top when active tab changes if we were scrolled down
+    // Scroll to top when active tab changes
     window.scrollTo(0, 0);
   }, [activeTab]);
 
   const activeContent = docsData[activeTab];
+
+  // Pagination Logic
+  const keys = Object.keys(docsData);
+  const currentIndex = keys.indexOf(activeTab);
+  const prevKey = currentIndex > 0 ? keys[currentIndex - 1] : null;
+  const nextKey = currentIndex < keys.length - 1 ? keys[currentIndex + 1] : null;
 
   return (
     <div className="docs-layout" style={{ display: 'flex', minHeight: 'calc(100vh - 56px)', backgroundColor: '#0a0a0b', color: '#ededed' }}>
@@ -396,7 +504,7 @@ export default function Docs() {
         position: 'sticky',
         top: '56px',
         height: 'calc(100vh - 56px)',
-        overflow: 'hidden', // User requested "nicht hoch und runter scrollen"
+        overflow: 'hidden', 
         backgroundColor: '#0a0a0b'
       }}>
         
@@ -410,7 +518,7 @@ export default function Docs() {
           </Link>
         </div>
 
-        <div className="docs-nav-group">
+        <div className="docs-nav-group" style={{ height: 'calc(100% - 60px)', overflowY: 'auto', paddingRight: '4px' }}>
           <div 
             id="btn-introduction"
             className={`docs-nav-item ${activeTab === 'introduction' ? 'active' : ''}`}
@@ -548,7 +656,7 @@ export default function Docs() {
               borderLeft: '1px solid rgba(255,255,255,0.08)',
               marginLeft: '18px',
               paddingTop: '4px',
-              marginBottom: '16px',
+              marginBottom: '32px',
               display: 'flex',
               flexDirection: 'column'
             }}>
@@ -574,7 +682,7 @@ export default function Docs() {
                 className={`docs-sub-item ${activeTab === 'automations-respond' ? 'active' : ''}`}
                 onClick={() => handleTabChange('automations-respond')}
               >
-                Auto Respond
+                Honeypot
               </div>
             </div>
           )}
@@ -583,10 +691,31 @@ export default function Docs() {
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flexGrow: 1, padding: '48px 64px', maxWidth: '1000px' }}>
-        <div style={{ animation: 'fadeIn 0.2s ease-out' }} key={activeTab}>
+      <main style={{ flexGrow: 1, padding: '48px 64px', maxWidth: '1000px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ animation: 'fadeIn 0.2s ease-out', flexGrow: 1 }} key={activeTab}>
           <h1 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '32px', letterSpacing: '-0.5px' }}>{activeContent.title}</h1>
           {activeContent.content}
+        </div>
+
+        {/* Page Navigation Component */}
+        <div className="docs-page-navigation">
+          {prevKey ? (
+            <div className="docs-nav-button" onClick={() => handleTabChange(prevKey)} style={{ alignItems: 'flex-start' }}>
+              <span className="nav-label">Previous Page</span>
+              <span className="nav-title">
+                <ChevronLeftIcon /> {docsData[prevKey].title}
+              </span>
+            </div>
+          ) : <div></div>}
+          
+          {nextKey ? (
+            <div className="docs-nav-button" onClick={() => handleTabChange(nextKey)} style={{ alignItems: 'flex-end' }}>
+              <span className="nav-label">Next Page</span>
+              <span className="nav-title">
+                {docsData[nextKey].title} <ChevronRightIcon />
+              </span>
+            </div>
+          ) : <div></div>}
         </div>
       </main>
 
@@ -646,14 +775,14 @@ function ShieldIcon() {
 function StarIcon() {
   return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
 }
-function SearchIcon({ style }) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
-}
 function InfoIcon() {
   return <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>;
 }
 function ChevronRightIcon() {
-  return <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', opacity: 0.5 }}><polyline points="9 18 15 12 9 6"></polyline></svg>;
+  return <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}><polyline points="9 18 15 12 9 6"></polyline></svg>;
+}
+function ChevronLeftIcon() {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}><polyline points="15 18 9 12 15 6"></polyline></svg>;
 }
 function ChevronDownIcon({ style }) {
   return <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={style}><polyline points="6 9 12 15 18 9"></polyline></svg>;
@@ -678,4 +807,7 @@ function GiftIcon() {
 }
 function ActivityIcon() {
   return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>;
+}
+function CopyIcon() {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>;
 }
