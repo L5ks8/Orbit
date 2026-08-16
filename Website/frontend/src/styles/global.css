@@ -3657,9 +3657,11 @@ input:checked + .toggle-slider:before {
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 9999;
+  padding: 40px 20px;
+  overflow-y: auto;
 }
 .dash-modal {
   background: #111113;
@@ -3669,6 +3671,7 @@ input:checked + .toggle-slider:before {
   max-width: 500px;
   padding: 24px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  margin: auto;
 }
 .dash-modal-header {
   display: flex;

@@ -173,7 +173,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
               </button>
             </div>
             
-            <div className="settings-form" style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '4px' }}>
+            <div className="settings-form" style={{ paddingRight: '4px' }}>
               
               {/* BANNED WORDS */}
               {editingForm.id === 'banned_words' && (
