@@ -7,6 +7,7 @@ import Terms from './pages/Terms';
 import Docs from './pages/Docs';
 import Guides from './pages/Guides';
 import Dashboard from './pages/Dashboard';
+import Appeal from './pages/Appeal';
 import Navbar from './components/ui/Navbar';
 import DocsNavbar from './components/ui/DocsNavbar';
 import { useLocation } from 'react-router-dom';
@@ -61,6 +62,7 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
           <Route path="/guides" element={<Guides />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/appeal/:customUrl" element={<Appeal />} />
           <Route path="/dashboard/*" element={<Dashboard />} />
         </Routes>
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
