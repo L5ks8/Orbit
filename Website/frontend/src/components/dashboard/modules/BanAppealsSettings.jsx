@@ -71,7 +71,7 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
           <div className="form-group">
             <label style={{ color: '#fff' }}>Allowed Punishments</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Which types of punishments can be appealed?</span>
-            <CustomSelect options={punishmentOptions} isMulti placeholder="Select punishments..." defaultValue={[punishmentOptions[0]]} />
+            <CustomSelect options={punishmentOptions} isMulti placeholder="Select punishments..." value={allowedPunishments} onChange={setAllowedPunishments} />
           </div>
 
           <div className="form-group">
@@ -135,8 +135,8 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', margin: 0 }}>Form <span style={{ color: 'var(--status-danger)' }}>*</span></h3>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="dash-btn secondary" onClick={() => window.open(`https://orbit-bot.com/appeal/${customUrl || 'my-server'}`, '_blank')}>Show Appeal Page</button>
-            <button className="dash-btn secondary" onClick={() => window.open(`https://orbit-bot.com/appeal/${customUrl || 'my-server'}`, '_blank')}>View Appeal</button>
+            <button className="dash-btn secondary" onClick={() => window.open(`${window.location.origin}/appeal/${customUrl || 'my-server'}`, '_blank')}>Show Appeal Page</button>
+            <button className="dash-btn secondary" onClick={() => window.open(`${window.location.origin}/appeal/${customUrl || 'my-server'}`, '_blank')}>View Appeal</button>
           </div>
         </div>
         
