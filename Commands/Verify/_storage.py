@@ -28,6 +28,8 @@ def load_verify_config(guild_id: int) -> Dict[str, Any]:
     if not isinstance(data, dict):
         data = default_cfg.copy()
 
+    if "verified_ips" not in data:
+        data["verified_ips"] = []
     if "enabled" not in data:
         data["enabled"] = bool(data.get("channel_id") and data.get("role_id"))
     if "pending_kicks" not in data:

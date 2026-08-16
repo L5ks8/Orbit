@@ -754,6 +754,16 @@ class ActionsMixin:
             role_id = session["role_id"]
             remove_role_id = session.get("remove_role_id")
             
+            client_ip = request.headers.get("X-Forwarded-For", request.remote)
+            if client_ip:
+                client_ip = client_ip.split(",")[0].strip()
+                
+            verify_cfg = load_verify_config(guild_id)
+            verified_ips = verify_cfg.get("verified_ips", [])
+            
+            if client_ip and client_ip in verified_ips:
+                return web.json_response({"error": "An account has already been verified from this IP address in this server."}, status=400)
+            
             guild = self.bot.get_guild(guild_id)
             if not guild:
                 return web.json_response({"error": "Guild not found"}, status=400)
@@ -774,6 +784,12 @@ class ActionsMixin:
                             pass
                 remove_pending_kick(guild_id, user_id)
                 del WEB_VERIFY_SESSIONS[token]
+                
+                if client_ip and client_ip not in verified_ips:
+                    verified_ips.append(client_ip)
+                    verify_cfg["verified_ips"] = verified_ips
+                    save_verify_config(guild_id, verify_cfg)
+                    
                 return web.json_response({"success": True})
             else:
                 return web.json_response({"error": "Verification role not found in server"}, status=400)
