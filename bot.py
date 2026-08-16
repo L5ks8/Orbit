@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 sys.dont_write_bytecode = True
 
 import os
@@ -387,7 +387,6 @@ if __name__ == "__main__":
     else:
         import time
         import asyncio
-from Commands._utils import make_embed
         while True:
             try:
                 asyncio.run(main())
