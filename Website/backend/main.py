@@ -1,9 +1,7 @@
 import os
 import discord
 from aiohttp import web
-from typing import Dict, Any
-
-SESSIONS: Dict[str, Any] = {}
+from typing import Dict, Any, Optional
 
 from Website.backend.api.auth import AuthMixin
 from Website.backend.api.config import ConfigMixin
@@ -15,12 +13,13 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         self.bot = bot
         self.client_id = os.environ.get("DISCORD_CLIENT_ID", "")
         self.client_secret = os.environ.get("DISCORD_CLIENT_SECRET", "")
+        self.sessions: Dict[str, Any] = {}
         
-    async def get_user_session(self, request: web.Request) -> Dict[str, Any]:
+    async def get_user_session(self, request: web.Request) -> Optional[Dict[str, Any]]:
         session_id = request.cookies.get("orbit_session")
-        if not session_id or session_id not in SESSIONS:
+        if not session_id or session_id not in self.sessions:
             return None
-        return SESSIONS[session_id]
+        return self.sessions[session_id]
 
     async def handle_spa(self, request: web.Request):
         import os
@@ -32,8 +31,6 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
             
         dist_dir = os.path.join("Website", "frontend", "dist")
         file_path = os.path.join(dist_dir, path)
-        
-        # Check if the requested file exists
         if path and os.path.exists(file_path) and os.path.isfile(file_path):
             return web.FileResponse(file_path)
             

@@ -77,34 +77,6 @@ class AuthMixin:
                 token_info = await resp.json()
                 access_token = token_info["access_token"]
 
-            headers = {"Authorization": f"Bearer {access_token}"}
-            async with session.get("https://discord.com/api/users/@me", headers=headers) as resp:
-                if resp.status != 200:
-                    return web.Response(text="Failed to fetch user info", status=400)
-                user_info = await resp.json()
-
-        session_id = secrets.token_urlsafe(32)
-        SESSIONS[session_id] = {
-            "id": user_info["id"],
-            "username": user_info["username"],
-            "avatar": user_info.get("avatar"),
-            "access_token": access_token
-        }
-        
-        response = web.HTTPFound(next_url)
-        response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
-        return response
-
-    async def handle_logout(self, request: web.Request):
-        session_id = request.cookies.get("orbit_session")
-        if session_id in SESSIONS:
-            del SESSIONS[session_id]
-        response = web.HTTPFound("/")
-        response.del_cookie("orbit_session")
-        return response
-
-    async def api_user(self, request: web.Request):
-        session = await self.get_user_session(request)
         if not session:
             return web.json_response({"error": "Not authenticated"}, status=401)
         return web.json_response(session)
