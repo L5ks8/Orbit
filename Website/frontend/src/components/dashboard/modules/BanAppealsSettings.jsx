@@ -13,6 +13,7 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
   const [multipleSubmissions, setMultipleSubmissions] = useState(aCfg.multiple_submissions || false);
   const [inviteUnbanned, setInviteUnbanned] = useState(aCfg.invite_unbanned || false);
   const [cooldownDays, setCooldownDays] = useState(aCfg.cooldown_days || 3);
+  const [customUrl, setCustomUrl] = useState(aCfg.custom_url || '');
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
@@ -34,6 +35,7 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
         multiple_submissions: multipleSubmissions,
         invite_unbanned: inviteUnbanned,
         cooldown_days: cooldownDays,
+        custom_url: customUrl,
         questions: questions
       }
     });
@@ -77,7 +79,7 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>The URL where the appeal form for this server is accessible.</span>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ color: 'var(--text-muted)', background: 'var(--bg-elevated)', padding: '9px 12px', border: '1px solid rgba(255,255,255,0.1)', borderRight: 'none', borderRadius: '4px 0 0 4px', fontSize: '13px' }}>orbit-bot.com/appeal/</span>
-              <input type="text" className="dash-input" placeholder="orbit" style={{ borderRadius: '0 4px 4px 0' }} />
+              <input type="text" className="dash-input" placeholder="orbit" style={{ borderRadius: '0 4px 4px 0' }} value={customUrl} onChange={(e) => setCustomUrl(e.target.value)} />
             </div>
           </div>
           
@@ -133,8 +135,8 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', margin: 0 }}>Form <span style={{ color: 'var(--status-danger)' }}>*</span></h3>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="dash-btn secondary">Show Appeal Page</button>
-            <button className="dash-btn secondary">View Appeal</button>
+            <button className="dash-btn secondary" onClick={() => window.open(`https://orbit-bot.com/appeal/${customUrl || 'my-server'}`, '_blank')}>Show Appeal Page</button>
+            <button className="dash-btn secondary" onClick={() => window.open(`https://orbit-bot.com/appeal/${customUrl || 'my-server'}`, '_blank')}>View Appeal</button>
           </div>
         </div>
         
@@ -146,7 +148,18 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
           ) : (
             questions.map((q, i) => (
               <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <input type="text" className="dash-input" placeholder="Enter question..." style={{ flex: 1 }} />
+                <input 
+                  type="text" 
+                  className="dash-input" 
+                  placeholder="Enter question..." 
+                  style={{ flex: 1 }} 
+                  value={typeof q === 'string' ? q : ''} 
+                  onChange={(e) => {
+                    const newQs = [...questions];
+                    newQs[i] = e.target.value;
+                    setQuestions(newQs);
+                  }}
+                />
                 <button onClick={() => setQuestions(questions.filter((_, idx) => idx !== i))} className="dash-btn danger" style={{ padding: '12px' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                 </button>
@@ -155,7 +168,7 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
           )}
         </div>
         
-        <button onClick={() => setQuestions([...questions, {}])} className="dash-btn primary">+ Add Question</button>
+        <button onClick={() => setQuestions([...questions, ''])} className="dash-btn primary">+ Add Question</button>
       </div>
 
       <div style={{ marginTop: '32px' }}>
