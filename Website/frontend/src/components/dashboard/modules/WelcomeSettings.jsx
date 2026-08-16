@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import Toggle from '../../ui/Toggle';
+
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
 export default function WelcomeSettings({ config, channels, onSave, saving }) {
   const wCfg = config?.welcome || {};
   
-  const [enabled, setEnabled] = useState(wCfg.enabled || false);
+
   const [mode, setMode] = useState(wCfg.msg_mode || 'image');
   const [channel, setChannel] = useState(wCfg.channel_id || '');
   const [welcomeText, setWelcomeText] = useState(wCfg.message || '');
@@ -25,7 +25,7 @@ export default function WelcomeSettings({ config, channels, onSave, saving }) {
   const handleSave = () => {
     onSave({
       welcome: {
-        enabled,
+        enabled: wCfg.enabled || false,
         channel_id: channel,
         message: welcomeText,
         msg_mode: mode,
@@ -52,7 +52,7 @@ export default function WelcomeSettings({ config, channels, onSave, saving }) {
             <h1 className="dash-title">Welcome System</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Greet new members when they join the server with a custom welcome card or embed message!</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
+
         </div>
       </div>
 

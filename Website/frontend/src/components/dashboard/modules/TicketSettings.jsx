@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function TicketSettings({ config, channels, roles, categories, onSave, saving }) {
   const tCfg = config?.ticket || {};
 
-  const [enabled, setEnabled] = useState(tCfg.enabled || false);
-  const [panelTitle, setPanelTitle] = useState(tCfg.panel_title || 'Support Tickets');
+    const [panelTitle, setPanelTitle] = useState(tCfg.panel_title || 'Support Tickets');
   const [panelDesc, setPanelDesc] = useState(tCfg.panel_description || '');
   const [panelInstructions, setPanelInstructions] = useState(tCfg.panel_instructions || '');
   const [panelChannel, setPanelChannel] = useState(tCfg.panel_channel_id || '');
@@ -52,7 +50,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
   const handleSave = () => {
     onSave({
       ticket: {
-        enabled,
+        enabled: tCfg.enabled || false,
         panel_title: panelTitle,
         panel_description: panelDesc,
         panel_instructions: panelInstructions,
@@ -75,8 +73,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
             <h1 className="dash-title">Ticket System</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Configure support tickets and send the ticket panel to a channel.</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
-        </div>
+                  </div>
       </div>
 
       <div className="dash-card settings-card" style={{ marginBottom: '24px' }}>

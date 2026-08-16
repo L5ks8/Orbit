@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function JoinRolesSettings({ config, roles, onSave, saving }) {
   const jrCfg = config?.joinroles || {};
 
-  const [enabled, setEnabled] = useState(jrCfg.enabled || false);
-  const [userRoles, setUserRoles] = useState((jrCfg.user_roles || []).map(String));
+    const [userRoles, setUserRoles] = useState((jrCfg.user_roles || []).map(String));
   const [botRoles, setBotRoles] = useState((jrCfg.bot_roles || []).map(String));
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
@@ -14,7 +12,7 @@ export default function JoinRolesSettings({ config, roles, onSave, saving }) {
   const handleSave = () => {
     onSave({
       joinroles: {
-        enabled,
+        enabled: jrCfg.enabled || false,
         user_roles: userRoles,
         bot_roles: botRoles
       }
@@ -29,8 +27,7 @@ export default function JoinRolesSettings({ config, roles, onSave, saving }) {
             <h1 className="dash-title">Auto-Roles</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Automatically assign roles when users or bots join.</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
-        </div>
+                  </div>
       </div>
 
       <div className="dash-card settings-card" style={{ padding: '20px' }}>

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function AutoresponderSettings({ config, channels, onSave, saving }) {

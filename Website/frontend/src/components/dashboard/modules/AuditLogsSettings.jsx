@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
+import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
 const LOGS_CATEGORIES = [
@@ -37,8 +37,7 @@ const LOGS_CATEGORIES = [
 export default function AuditLogsSettings({ config, channels, roles, onSave, saving }) {
   const logsCfg = config?.logs || {};
 
-  const [enabled, setEnabled] = useState(logsCfg.enabled || false);
-  const [executorInLogs, setExecutorInLogs] = useState(logsCfg.executor_in_logs || false);
+    const [executorInLogs, setExecutorInLogs] = useState(logsCfg.executor_in_logs || false);
   const [exemptChannels, setExemptChannels] = useState((logsCfg.global_exempt_channels || []).map(String));
   const [exemptRoles, setExemptRoles] = useState((logsCfg.global_exempt_roles || []).map(String));
 
@@ -74,7 +73,7 @@ export default function AuditLogsSettings({ config, channels, roles, onSave, sav
 
     onSave({
       logs: {
-        enabled,
+        enabled: logsCfg.enabled || false,
         executor_in_logs: executorInLogs,
         global_exempt_channels: exemptChannels,
         global_exempt_roles: exemptRoles,
@@ -93,8 +92,7 @@ export default function AuditLogsSettings({ config, channels, roles, onSave, sav
             <h1 className="dash-title">Server Logs</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Track and record server activity seamlessly.</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
-        </div>
+                  </div>
       </div>
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>

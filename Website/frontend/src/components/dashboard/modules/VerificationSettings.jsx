@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
 export default function VerificationSettings({ config, roles, onSave, saving }) {
   const vCfg = config?.verify || {};
 
-  const [enabled, setEnabled] = useState(vCfg.enabled || false);
-  const [verType, setVerType] = useState(vCfg.verification_type || 'captcha');
+    const [verType, setVerType] = useState(vCfg.verification_type || 'captcha');
   const [roleId, setRoleId] = useState(vCfg.role_id || '');
   const [removeRoleId, setRemoveRoleId] = useState(vCfg.remove_role_id || '');
   const [timeoutAction, setTimeoutAction] = useState(vCfg.timeout_action || 'none');
@@ -22,7 +20,7 @@ export default function VerificationSettings({ config, roles, onSave, saving }) 
   const handleSave = () => {
     onSave({
       verify: {
-        enabled,
+        enabled: vCfg.enabled || false,
         verification_type: verType,
         role_id: roleId,
         remove_role_id: removeRoleId,
@@ -44,8 +42,7 @@ export default function VerificationSettings({ config, roles, onSave, saving }) 
             <h1 className="dash-title">Verification</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Require users to solve a CAPTCHA or click to verify before accessing channels.</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
-        </div>
+                  </div>
       </div>
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>

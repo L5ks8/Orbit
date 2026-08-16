@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
 export default function BoostMessagesSettings({ config, channels, roles, onSave, saving }) {
   const bCfg = config?.boost || {};
-  const [enabled, setEnabled] = useState(bCfg.enabled || false);
-  const [mode, setMode] = useState(bCfg.msg_mode || 'embed');
+    const [mode, setMode] = useState(bCfg.msg_mode || 'embed');
   const [channel, setChannel] = useState(bCfg.channel_id || '');
   
   // Message State
@@ -28,7 +26,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
   const handleSave = () => {
     onSave({
       boost: {
-        enabled,
+        enabled: bCfg.enabled || false,
         channel_id: channel,
         message: content,
         msg_mode: mode,
@@ -50,8 +48,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
             <h1 className="dash-title">Boost Messages</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Celebrate when members boost your server with a custom card or embed message!</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
-        </div>
+                  </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>

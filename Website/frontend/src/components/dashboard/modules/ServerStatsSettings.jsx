@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
+import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function ServerStatsSettings({ config, categories, onSave, saving }) {

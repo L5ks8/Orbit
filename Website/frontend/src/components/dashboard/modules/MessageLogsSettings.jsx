@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
+import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function MessageLogsSettings({ config, channels, roles, onSave, saving }) {
   const mlCfg = config?.messagelogs || {};
-  const [enabled, setEnabled] = useState(mlCfg.enabled || false);
-  const [executorInLogs, setExecutorInLogs] = useState(mlCfg.executor_in_logs || false);
+    const [executorInLogs, setExecutorInLogs] = useState(mlCfg.executor_in_logs || false);
   const [exemptChannels, setExemptChannels] = useState((mlCfg.exempt_channels || []).map(String));
   const [exemptRoles, setExemptRoles] = useState((mlCfg.exempt_roles || []).map(String));
 
@@ -15,7 +14,7 @@ export default function MessageLogsSettings({ config, channels, roles, onSave, s
   const handleSave = () => {
     onSave({
       messagelogs: {
-        enabled,
+        enabled: mlCfg.enabled || false,
         executor_in_logs: executorInLogs,
         exempt_channels: exemptChannels,
         exempt_roles: exemptRoles
@@ -51,8 +50,7 @@ export default function MessageLogsSettings({ config, channels, roles, onSave, s
             <h1 className="dash-title">Server Logs</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Track and record server activity seamlessly.</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
-        </div>
+                  </div>
       </div>
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>

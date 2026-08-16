@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
+import React, { useState } from 'react';
 
 export default function SecuritySettings({ config, onSave, saving }) {
   const secCfg = config?.security || {};

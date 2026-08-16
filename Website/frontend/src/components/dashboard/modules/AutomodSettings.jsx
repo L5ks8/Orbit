@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
+import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function AutomodSettings({ config, channels, roles, onSave, saving }) {
@@ -58,7 +58,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
   };
 
   const handleSaveAll = () => {
-    const payload = { enabled: true };
+    const payload = { enabled: amCfg?.enabled || false };
     payload.exempt_channels = selectedChannels;
     payload.exempt_roles = selectedRoles;
 

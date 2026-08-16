@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function TempVoiceSettings({ config, voiceChannels, categories, onSave, saving }) {
   const tvCfg = config?.tempvoice || {};
 
-  const [enabled, setEnabled] = useState(tvCfg.enabled || false);
-  const [hubs, setHubs] = useState(
+    const [hubs, setHubs] = useState(
     (tvCfg.hubs || []).map((h, i) => ({
       hub_channel_id: String(h.hub_channel_id || ''),
       category_id: String(h.category_id || ''),
@@ -24,7 +22,7 @@ export default function TempVoiceSettings({ config, voiceChannels, categories, o
   const handleSave = () => {
     onSave({
       tempvoice: {
-        enabled,
+        enabled: tvCfg.enabled || false,
         hubs: hubs.filter(h => h.hub_channel_id)
       }
     });
@@ -38,8 +36,7 @@ export default function TempVoiceSettings({ config, voiceChannels, categories, o
             <h1 className="dash-title">Temporary Voice Channels</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Allow users to create their own temporary voice channels.</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
-        </div>
+                  </div>
       </div>
 
       <div className="dash-card settings-card" style={{ padding: '24px' }}>

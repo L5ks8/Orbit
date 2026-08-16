@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
 export default function GoodbyeMessagesSettings({ config, channels, onSave, saving }) {
   const gCfg = config?.goodbye || {};
 
-  const [enabled, setEnabled] = useState(gCfg.enabled || false);
-  const [mode, setMode] = useState(gCfg.msg_mode || 'embed');
+    const [mode, setMode] = useState(gCfg.msg_mode || 'embed');
   const [channel, setChannel] = useState(gCfg.channel_id || '');
   const [content, setContent] = useState(gCfg.message || "We're sad to see you go, {user}!");
   const [embedColor, setEmbedColor] = useState(gCfg.embed_color || '#ED4245');
@@ -42,8 +40,7 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
             <h1 className="dash-title">Goodbye System</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Say farewell to members when they leave the server with a custom goodbye card or embed message!</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
-        </div>
+                  </div>
       </div>
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
