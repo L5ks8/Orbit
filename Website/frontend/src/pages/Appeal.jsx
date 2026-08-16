@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomSelect from '../components/ui/CustomSelect';
+import { useToast } from '../components/ui/Toast';
 
 export default function Appeal() {
   const { customUrl } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,12 +52,12 @@ export default function Appeal() {
       .then(res => res.json())
       .then(data => {
         if (data.error) {
-          alert(data.error);
+          toast(data.error, 'error');
         } else {
           setSuccess(true);
         }
       })
-      .catch(err => alert("An error occurred while submitting your appeal."))
+      .catch(err => toast("An error occurred while submitting your appeal.", 'error'))
       .finally(() => setSubmitting(false));
   };
 

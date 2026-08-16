@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useToast } from '../ui/Toast';
 import Toggle from '../ui/Toggle';
 import CustomSelect from '../ui/CustomSelect';
 import AutomodSettings from './modules/AutomodSettings';
@@ -22,6 +23,7 @@ import LevelingSystemSettings from './modules/LevelingSystemSettings';
 
 export default function ModuleSettings({ guildId }) {
   const { moduleId } = useParams();
+  const toast = useToast();
 
   const [serverData, setServerData] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
@@ -64,7 +66,7 @@ export default function ModuleSettings({ guildId }) {
       });
       const data = await res.json();
       if (data.error) {
-        alert("Failed to save: " + data.error);
+        toast("Failed to save: " + data.error, 'error');
       } else {
         // Optimistically update local config state
         setServerData(prev => {
@@ -78,12 +80,12 @@ export default function ModuleSettings({ guildId }) {
           });
           return { ...prev, config: newConfig };
         });
-        alert("Settings saved successfully!");
+        toast("Settings saved successfully!", 'success');
         handleReset(); // reset formKey to update initial state
       }
     } catch (e) {
       console.error(e);
-      alert("Error saving settings.");
+      toast("Error saving settings.", 'error');
     } finally {
       setSaving(false);
     }

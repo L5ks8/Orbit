@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { ToastProvider } from './components/ui/Toast';
 import SearchModal from './components/landing/SearchModal';
 import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
@@ -79,9 +80,11 @@ function App() {
 
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppContent isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} />
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <AppContent isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} />
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

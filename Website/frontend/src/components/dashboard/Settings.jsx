@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
 import Toggle from '../ui/Toggle';
 import SaveBar from '../ui/SaveBar';
+import { useToast } from '../ui/Toast';
 
 export default function Settings({ guildId }) {
+  const toast = useToast();
   const [settings, setSettings] = useState({
     manager_roles: [],
     autoresponder_enabled: false,
@@ -55,10 +57,10 @@ export default function Settings({ guildId }) {
     })
       .then(res => res.json())
       .then(() => {
-        alert("Settings saved!");
+        toast("Settings saved!", 'success');
         setInitialState(JSON.stringify(settings));
       })
-      .catch(() => alert("Failed to save settings."))
+      .catch(() => toast("Failed to save settings.", 'error'))
       .finally(() => setSaving(false));
   };
 
