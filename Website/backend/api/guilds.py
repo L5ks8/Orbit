@@ -104,39 +104,50 @@ class GuildsMixin:
         async with aiohttp.ClientSession() as session:
             async with session.get("https://discord.com/api/users/@me/guilds", headers=headers) as resp:
                 if resp.status != 200:
+                    err_text = await resp.text()
+                    print(f"[api_guilds] Discord API error {resp.status}: {err_text}")
                     return web.json_response({"error": "Failed to fetch guilds"}, status=400)
                 user_guilds = await resp.json()
+        
+        print(f"[api_guilds] User {user.get('username')} has {len(user_guilds)} total guilds, bot is in {len(self.bot.guilds)} guilds")
                 
         from Commands.WebDashboard._storage import load_settings_config
         manageable_guilds = []
         for g in user_guilds:
-            
             perms = int(g["permissions"])
-            is_admin = (perms & 0x8) == 0x8
+            is_owner = g.get("owner", False)
+            is_admin = is_owner or (perms & 0x8) == 0x8
             manage_guild = (perms & 0x20) == 0x20
             manage_roles = (perms & 0x10000000) == 0x10000000
             manage_channels = (perms & 0x10) == 0x10
             manage_messages = (perms & 0x2000) == 0x2000
             
-            bot_guild = self.bot.get_guild(int(g["id"]))
-            if bot_guild:
-                has_perms = is_admin or manage_guild or manage_roles or manage_channels or manage_messages
+            has_perms = is_admin or manage_guild or manage_roles or manage_channels or manage_messages
+            
+            if not has_perms:
+                continue
                 
-                if not has_perms:
-                    settings_cfg = load_settings_config(int(g["id"]))
-                    manager_roles = settings_cfg.get("manager_roles", [])
-                    if manager_roles:
-                        member = bot_guild.get_member(int(user["id"]))
-                        if member and any(str(r.id) in manager_roles for r in member.roles):
-                            has_perms = True
+            bot_guild = self.bot.get_guild(int(g["id"]))
+            if not bot_guild:
+                continue
+                
+            # Additional manager role check for users without direct perms
+            if not (is_admin or manage_guild):
+                settings_cfg = load_settings_config(int(g["id"]))
+                manager_roles = settings_cfg.get("manager_roles", [])
+                if manager_roles:
+                    member = bot_guild.get_member(int(user["id"]))
+                    if not (member and any(str(r.id) in manager_roles for r in member.roles)):
+                        continue
 
-                if has_perms:
-                    manageable_guilds.append({
-                        "id": g["id"],
-                        "name": g["name"],
-                        "icon": g.get("icon")
-                    })
-                    
+            manageable_guilds.append({
+                "id": g["id"],
+                "name": g["name"],
+                "icon": g.get("icon"),
+                "owner": is_owner
+            })
+        
+        print(f"[api_guilds] Returning {len(manageable_guilds)} manageable guilds")
         return web.json_response(manageable_guilds)
 
     async def api_guild_stats(self, request: web.Request):
@@ -193,4 +204,3 @@ class GuildsMixin:
             "today_messages": today_doc.get("messages", 0) if today_doc else 0,
             "history": stats
         })
-
