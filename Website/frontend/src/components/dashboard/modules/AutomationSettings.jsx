@@ -2,8 +2,10 @@ import Toggle from '../../ui/Toggle';
 import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
+import { useParams } from 'react-router-dom';
 
 export default function AutomationSettings({ config, channels, roles, onSave, saving, onReset }) {
+  const { id: guildId } = useParams();
   const autCfg = config?.automation || {};
   
   // States for dynamic lists
@@ -114,7 +116,25 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
           <label style={{ color: '#fff' }}>Honeypot Warning Message</label>
           <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>The warning message sent by the bot. You can use {'{count}'} to display the number of banned accounts.</span>
           <textarea className="dash-input" style={{ width: '100%', height: '120px', resize: 'vertical', marginBottom: '12px' }} value={honeypotMsg} onChange={e => setHoneypotMsg(e.target.value)} placeholder="# ⚠️ POSTING IN THIS CHANNEL WILL GET YOU BANNED..."></textarea>
-          <button className="dash-btn primary">Send Message to Channel</button>
+          <button 
+            className="dash-btn primary"
+            disabled={!honeypotChannel || !honeypotMsg}
+            onClick={() => {
+              fetch(`/api/action/${guildId}/send_honeypot`, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ channel_id: honeypotChannel, message: honeypotMsg })
+              }).then(res => {
+                if (res.ok) alert('Message sent!');
+                else alert('Failed to send message.');
+              }).catch(err => alert('Error sending message.'));
+            }}
+          >
+            Send Message to Channel
+          </button>
         </div>
       </div>
 
