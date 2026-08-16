@@ -52,7 +52,7 @@ export default function Overview() {
               const maxMsgs = Math.max(...stats.history.map(d => d.messages || 0), 1);
               const height = `${Math.max(10, ((day.messages || 0) / maxMsgs) * 100)}%`;
               return (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div key={i} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
                   <div style={{ 
                     width: '100%', 
                     background: 'var(--accent-color, #5865F2)', 

@@ -34,7 +34,7 @@ export default function Sidebar({ guildId }) {
               {link.name === 'Modules' && <line x1="3" y1="9" x2="21" y2="9"></line>}
               {link.name === 'Modules' && <line x1="9" y1="21" x2="9" y2="9"></line>}
 
-              {link.name === 'Leaderboard' && <polygon points={link.icon}></polygon>}
+              {link.name === 'Leaderboard' && <path d={link.icon}></path>}
 
               {link.name === 'Settings' && <path d={link.icon}></path>}
               {link.name === 'Settings' && <circle cx="12" cy="12" r="3"></circle>}
