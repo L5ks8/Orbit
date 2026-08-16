@@ -10,6 +10,36 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
   const [currencySymbol, setCurrencySymbol] = useState(eCfg.currency_symbol || '🪙');
   const [multiplier, setMultiplier] = useState(eCfg.multiplier || 1.0);
 
+
+  const [betLimitEnabled, setBetLimitEnabled] = useState(eCfg.bet_limit_enabled !== false);
+  const [betLimitAmount, setBetLimitAmount] = useState(eCfg.bet_limit_amount || 10000);
+  const [resetOnLeave, setResetOnLeave] = useState(eCfg.reset_on_leave || false);
+  const [msgMoneyEnabled, setMsgMoneyEnabled] = useState(eCfg.msg_money_enabled !== false);
+  const [msgMoneyAmount, setMsgMoneyAmount] = useState(eCfg.msg_money_amount || 8);
+  const [msgMoneyCooldown, setMsgMoneyCooldown] = useState(eCfg.msg_money_cooldown || 60);
+  const [voiceMoneyEnabled, setVoiceMoneyEnabled] = useState(eCfg.voice_money_enabled || false);
+  const [voiceMoneyIgnoreMuted, setVoiceMoneyIgnoreMuted] = useState(eCfg.voice_money_ignore_muted !== false);
+  const [voiceMoneyIgnoreSolo, setVoiceMoneyIgnoreSolo] = useState(eCfg.voice_money_ignore_solo || false);
+  const [voiceMoneyAmount, setVoiceMoneyAmount] = useState(eCfg.voice_money_amount || 4);
+  const [cmdMoneyEnabled, setCmdMoneyEnabled] = useState(eCfg.cmd_money_enabled !== false);
+  const [cmdMoneyAmount, setCmdMoneyAmount] = useState(eCfg.cmd_money_amount || 8);
+  const [cmdMoneyCooldown, setCmdMoneyCooldown] = useState(eCfg.cmd_money_cooldown || 60);
+  const [reactMoneyEnabled, setReactMoneyEnabled] = useState(eCfg.react_money_enabled !== false);
+  const [reactMoneyAmount, setReactMoneyAmount] = useState(eCfg.react_money_amount || 20);
+  const [reactMoneyCooldown, setReactMoneyCooldown] = useState(eCfg.react_money_cooldown || 300);
+  const [workMinAmount, setWorkMinAmount] = useState(eCfg.work_min_amount || 300);
+  const [workMaxAmount, setWorkMaxAmount] = useState(eCfg.work_max_amount || 500);
+  const [workCooldownMin, setWorkCooldownMin] = useState(eCfg.work_cooldown_min || 240);
+  const [workUseDefaultResponses, setWorkUseDefaultResponses] = useState(eCfg.work_use_default_responses !== false);
+  const [dailyBaseRewardEnabled, setDailyBaseRewardEnabled] = useState(eCfg.daily_base_reward_enabled !== false);
+  const [dailyTierRewardEnabled, setDailyTierRewardEnabled] = useState(eCfg.daily_tier_reward_enabled !== false);
+  const [dailyStreakLimit, setDailyStreakLimit] = useState(eCfg.daily_streak_limit || 5);
+  const [dailyStreakBonus, setDailyStreakBonus] = useState(eCfg.daily_streak_bonus || 50);
+  const [baltopCustomUrl, setBaltopCustomUrl] = useState(eCfg.baltop_custom_url || '');
+  const [baltopAutoChannelId, setBaltopAutoChannelId] = useState(eCfg.baltop_auto_channel_id || '');
+  const [baltopEmbedColor, setBaltopEmbedColor] = useState(eCfg.baltop_embed_color || '#5865F2');
+  const [stackBoosters, setStackBoosters] = useState(eCfg.stack_boosters !== false);
+
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
@@ -17,10 +47,38 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
     onSave({
       economy: {
         currency_symbol: currencySymbol,
-        multiplier,
+        multiplier: parseFloat(multiplier),
         work_responses: workResponses,
         role_boosters: roleBoosters,
-        channel_boosters: channelBoosters
+        channel_boosters: channelBoosters,
+        bet_limit_enabled: betLimitEnabled,
+        bet_limit_amount: parseInt(betLimitAmount),
+        reset_on_leave: resetOnLeave,
+        msg_money_enabled: msgMoneyEnabled,
+        msg_money_amount: parseInt(msgMoneyAmount),
+        msg_money_cooldown: parseInt(msgMoneyCooldown),
+        voice_money_enabled: voiceMoneyEnabled,
+        voice_money_ignore_muted: voiceMoneyIgnoreMuted,
+        voice_money_ignore_solo: voiceMoneyIgnoreSolo,
+        voice_money_amount: parseInt(voiceMoneyAmount),
+        cmd_money_enabled: cmdMoneyEnabled,
+        cmd_money_amount: parseInt(cmdMoneyAmount),
+        cmd_money_cooldown: parseInt(cmdMoneyCooldown),
+        react_money_enabled: reactMoneyEnabled,
+        react_money_amount: parseInt(reactMoneyAmount),
+        react_money_cooldown: parseInt(reactMoneyCooldown),
+        work_min_amount: parseInt(workMinAmount),
+        work_max_amount: parseInt(workMaxAmount),
+        work_cooldown_min: parseInt(workCooldownMin),
+        work_use_default_responses: workUseDefaultResponses,
+        daily_base_reward_enabled: dailyBaseRewardEnabled,
+        daily_tier_reward_enabled: dailyTierRewardEnabled,
+        daily_streak_limit: parseInt(dailyStreakLimit),
+        daily_streak_bonus: parseInt(dailyStreakBonus),
+        baltop_custom_url: baltopCustomUrl,
+        baltop_auto_channel_id: baltopAutoChannelId,
+        baltop_embed_color: baltopEmbedColor,
+        stack_boosters: stackBoosters
       }
     });
   };
@@ -44,15 +102,15 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
           <div className="form-group">
             <label style={{ color: '#fff' }}>Currency Symbol</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Used in commands and responses.</span>
-            <input type="text" className="dash-input" defaultValue="🪙" />
+            <input type="text" className="dash-input" value={currencySymbol} onChange={e => setCurrencySymbol(e.target.value)} />
           </div>
 
           <div className="form-group">
             <label style={{ color: '#fff' }}>Money Multiplier</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Global multiplier for all earned money.</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <input type="range" min="0.1" max="5.0" step="0.05" defaultValue="1.0" style={{ flex: 1, accentColor: '#fff' }} />
-              <span style={{ fontWeight: '600', minWidth: '50px', textAlign: 'right', color: '#fff' }}>x1.00</span>
+              <input type="range" min="0.1" max="5.0" step="0.05" value={multiplier} onChange={e => setMultiplier(parseFloat(e.target.value))} style={{ flex: 1, accentColor: '#fff' }} />
+              <span style={{ fontWeight: '600', minWidth: '50px', textAlign: 'right', color: '#fff' }}>{`x${parseFloat(multiplier || 1).toFixed(2)}`}</span>
             </div>
           </div>
 
@@ -62,9 +120,9 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
                 <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Bet Limit</label>
                 <span className="form-hint" style={{ fontSize: '12px' }}>Enable maximum amount for gambling bets.</span>
               </div>
-              <Toggle defaultChecked={false} />
+              <Toggle checked={betLimitEnabled} onChange={() => setBetLimitEnabled(!betLimitEnabled)} />
             </div>
-            <input type="number" className="dash-input" defaultValue={10000} />
+            <input type="number" className="dash-input" value={betLimitAmount} onChange={e => setBetLimitAmount(e.target.value)} />
           </div>
 
           <div className="form-group">
@@ -73,7 +131,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
                 <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Reset Money On Leave</label>
                 <span className="form-hint" style={{ fontSize: '12px' }}>Members lose all money when leaving.</span>
               </div>
-              <Toggle defaultChecked={false} />
+              <Toggle checked={resetOnLeave} onChange={() => setResetOnLeave(!resetOnLeave)} />
             </div>
           </div>
 
@@ -91,19 +149,19 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Message Money Enabled</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Earn money by sending text messages.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={msgMoneyEnabled} onChange={() => setMsgMoneyEnabled(!msgMoneyEnabled)} />
           </div>
           
           <div className="form-group" style={{ marginBottom: '16px' }}>
             <label style={{ color: '#fff' }}>Amount</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Money granted per message.</span>
-            <input type="number" className="dash-input" defaultValue={8} />
+            <input type="number" className="dash-input" value={msgMoneyAmount} onChange={e => setMsgMoneyAmount(e.target.value)} />
           </div>
           
           <div className="form-group">
             <label style={{ color: '#fff' }}>Cooldown (s)</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Cooldown between message rewards.</span>
-            <input type="number" className="dash-input" defaultValue={60} />
+            <input type="number" className="dash-input" value={msgMoneyCooldown} onChange={e => setMsgMoneyCooldown(e.target.value)} />
           </div>
         </div>
 
@@ -116,7 +174,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Voice Money Enabled</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Earn money in voice channels.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={voiceMoneyEnabled} onChange={() => setVoiceMoneyEnabled(!voiceMoneyEnabled)} />
           </div>
           
           <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -124,7 +182,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Ignore Muted</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Ignore self-muted/deafened users.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={voiceMoneyIgnoreMuted} onChange={() => setVoiceMoneyIgnoreMuted(!voiceMoneyIgnoreMuted)} />
           </div>
           
           <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -132,13 +190,13 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Ignore Solo</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Ignore users alone in a channel.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={voiceMoneyIgnoreSolo} onChange={() => setVoiceMoneyIgnoreSolo(!voiceMoneyIgnoreSolo)} />
           </div>
           
           <div className="form-group">
             <label style={{ color: '#fff' }}>Amount per Minute</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Money granted per minute.</span>
-            <input type="number" className="dash-input" defaultValue={4} />
+            <input type="number" className="dash-input" value={voiceMoneyAmount} onChange={e => setVoiceMoneyAmount(e.target.value)} />
           </div>
         </div>
 
@@ -151,19 +209,19 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Command Money Enabled</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Earn money when executing commands.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={cmdMoneyEnabled} onChange={() => setCmdMoneyEnabled(!cmdMoneyEnabled)} />
           </div>
           
           <div className="form-group" style={{ marginBottom: '16px' }}>
             <label style={{ color: '#fff' }}>Amount</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Money granted per command.</span>
-            <input type="number" className="dash-input" defaultValue={8} />
+            <input type="number" className="dash-input" value={cmdMoneyAmount} onChange={e => setCmdMoneyAmount(e.target.value)} />
           </div>
           
           <div className="form-group">
             <label style={{ color: '#fff' }}>Cooldown (s)</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Cooldown between command rewards.</span>
-            <input type="number" className="dash-input" defaultValue={60} />
+            <input type="number" className="dash-input" value={cmdMoneyCooldown} onChange={e => setCmdMoneyCooldown(e.target.value)} />
           </div>
         </div>
 
@@ -176,19 +234,19 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Reaction Money Enabled</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Earn money by adding reactions.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={reactMoneyEnabled} onChange={() => setReactMoneyEnabled(!reactMoneyEnabled)} />
           </div>
           
           <div className="form-group" style={{ marginBottom: '16px' }}>
             <label style={{ color: '#fff' }}>Amount</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Money granted per reaction.</span>
-            <input type="number" className="dash-input" defaultValue={20} />
+            <input type="number" className="dash-input" value={reactMoneyAmount} onChange={e => setReactMoneyAmount(e.target.value)} />
           </div>
           
           <div className="form-group">
             <label style={{ color: '#fff' }}>Cooldown (s)</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Cooldown between reaction rewards.</span>
-            <input type="number" className="dash-input" defaultValue={300} />
+            <input type="number" className="dash-input" value={reactMoneyCooldown} onChange={e => setReactMoneyCooldown(e.target.value)} />
           </div>
         </div>
       </div>
@@ -201,16 +259,16 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
             <label style={{ color: '#fff' }}>Work Money Range</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '12px', fontSize: '12px' }}>Range of money earned with the work command.</span>
             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-              <span style={{ fontSize: '14px', fontWeight: '500', color: '#fff' }}>300</span>
-              <input type="range" min="1" max="2000" defaultValue="300" style={{ flex: 1, accentColor: '#fff' }} />
-              <input type="range" min="1" max="2000" defaultValue="500" style={{ flex: 1, accentColor: '#fff' }} />
-              <span style={{ fontSize: '14px', fontWeight: '500', color: '#fff' }}>500</span>
+              <span style={{ fontSize: '14px', fontWeight: '500', color: '#fff' }}>{workMinAmount}</span>
+              <input type="range" min="1" max="2000" value={workMinAmount} onChange={e => setWorkMinAmount(e.target.value)} style={{ flex: 1, accentColor: '#fff' }} />
+              <input type="range" min="1" max="2000" value={workMaxAmount} onChange={e => setWorkMaxAmount(e.target.value)} style={{ flex: 1, accentColor: '#fff' }} />
+              <span style={{ fontSize: '14px', fontWeight: '500', color: '#fff' }}>{workMaxAmount}</span>
             </div>
           </div>
           <div className="form-group">
             <label style={{ color: '#fff' }}>Work Cooldown</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '12px', fontSize: '12px' }}>Cooldown in minutes.</span>
-            <input type="number" className="dash-input" defaultValue={240} />
+            <input type="number" className="dash-input" value={workCooldownMin} onChange={e => setWorkCooldownMin(e.target.value)} />
           </div>
         </div>
         
@@ -219,7 +277,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
             <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Default Work Responses</label>
             <span className="form-hint" style={{ fontSize: '12px' }}>Should the default work responses be used?</span>
           </div>
-          <Toggle defaultChecked={true} />
+          <Toggle checked={workUseDefaultResponses} onChange={() => setWorkUseDefaultResponses(!workUseDefaultResponses)} />
         </div>
         
         <div style={{ marginBottom: '16px' }}>
@@ -253,7 +311,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Base Reward</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Fixed reward for day 1. If disabled, tier reward is used.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={dailyBaseRewardEnabled} onChange={() => setDailyBaseRewardEnabled(!dailyBaseRewardEnabled)} />
           </div>
           
           <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -261,19 +319,19 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Tier Reward</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Amount added per streak day ramping up to limit.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={dailyTierRewardEnabled} onChange={() => setDailyTierRewardEnabled(!dailyTierRewardEnabled)} />
           </div>
           
           <div className="form-group">
             <label style={{ color: '#fff' }}>Streak Limit</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Days before primary scaling stops.</span>
-            <input type="number" className="dash-input" defaultValue={5} />
+            <input type="number" className="dash-input" value={dailyStreakLimit} onChange={e => setDailyStreakLimit(e.target.value)} />
           </div>
           
           <div className="form-group">
             <label style={{ color: '#fff' }}>Streak Bonus</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Amount added per day past the limit.</span>
-            <input type="number" className="dash-input" defaultValue={10} />
+            <input type="number" className="dash-input" value={dailyStreakBonus} onChange={e => setDailyStreakBonus(e.target.value)} />
           </div>
         </div>
       </div>
@@ -285,19 +343,19 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
           <div className="form-group">
             <label style={{ color: '#fff' }}>Custom URL</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Custom vanity URL for public leaderboard view.</span>
-            <input type="text" className="dash-input" placeholder="e.g. noctaly" />
+            <input type="text" className="dash-input" value={baltopCustomUrl} onChange={e => setBaltopCustomUrl(e.target.value)} placeholder="e.g. noctaly" />
           </div>
           <div className="form-group">
             <label style={{ color: '#fff' }}>Automatic Channel</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Channel where the wealth leaderboard is updated hourly.</span>
-            <CustomSelect options={channelOptions} placeholder="Select Channel..." />
+            <CustomSelect options={channelOptions} value={baltopAutoChannelId} onChange={setBaltopAutoChannelId} placeholder="Select Channel..." />
           </div>
           <div className="form-group">
             <label style={{ color: '#fff' }}>Embed Color</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Color of the automatic leaderboard embed.</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-              <input type="color" defaultValue="#5865F2" style={{ width: '44px', height: '38px', borderRadius: '4px', cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <input type="text" className="dash-input" defaultValue="#5865F2" style={{ width: '100px' }} />
+              <input type="color" value={baltopEmbedColor} onChange={e => setBaltopEmbedColor(e.target.value)} style={{ width: '44px', height: '38px', borderRadius: '4px', cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <input type="text" className="dash-input" value={baltopEmbedColor} onChange={e => setBaltopEmbedColor(e.target.value)} style={{ width: '100px' }} />
             </div>
           </div>
         </div>
@@ -311,7 +369,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
             <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Stack Boosters</label>
             <span className="form-hint" style={{ fontSize: '12px' }}>Should multiple boosters stack (add up)?</span>
           </div>
-          <Toggle defaultChecked={true} />
+          <Toggle checked={stackBoosters} onChange={() => setStackBoosters(!stackBoosters)} />
         </div>
         
         <div style={{ marginBottom: '24px' }}>

@@ -55,7 +55,7 @@ export default function Overview() {
                 <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                   <div style={{ 
                     width: '100%', 
-                    background: 'var(--primary)', 
+                    background: 'var(--accent-color, #5865F2)', 
                     height: height, 
                     borderRadius: '4px',
                     opacity: 0.8
