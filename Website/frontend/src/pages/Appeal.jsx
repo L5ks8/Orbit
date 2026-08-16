@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import CustomSelect from '../components/ui/CustomSelect';
 
 export default function Appeal() {
   const { customUrl } = useParams();
@@ -112,26 +113,15 @@ export default function Appeal() {
           {info.allowed_punishments && info.allowed_punishments.length > 0 && (
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>What type of punishment are you appealing? <span style={{color: 'var(--status-danger)'}}>*</span></label>
-              <select 
+              <CustomSelect 
+                options={info.allowed_punishments.map(pt => ({
+                  value: pt.value || pt,
+                  label: pt.label || pt.value || pt
+                }))}
                 value={punishmentType} 
-                onChange={e => setPunishmentType(e.target.value)} 
-                required
-                style={{ 
-                  width: '100%', 
-                  padding: '12px', 
-                  background: 'rgba(0,0,0,0.2)', 
-                  border: '1px solid rgba(255,255,255,0.1)', 
-                  borderRadius: '6px', 
-                  color: '#fff',
-                  outline: 'none'
-                }}
-              >
-                {info.allowed_punishments.map((pt, i) => {
-                  const val = pt.value || pt;
-                  const label = pt.label || val;
-                  return <option key={i} value={val} style={{background: 'var(--bg-elevated)'}}>{label}</option>;
-                })}
-              </select>
+                onChange={setPunishmentType} 
+                placeholder="Select punishment type..."
+              />
             </div>
           )}
 
