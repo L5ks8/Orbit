@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
@@ -37,7 +37,6 @@ export default function WelcomeSettings({ config, channels, onSave, saving }) {
         embed_footer: embedFooter,
         embed_color: embedColor,
         embed_thumbnail: embedThumbnail,
-        // Preserve other fields we aren't editing yet
         embed_image: wCfg.embed_image || '',
         embed_author_icon: wCfg.embed_author_icon || '',
         embed_footer_icon: wCfg.embed_footer_icon || '',
@@ -54,79 +53,202 @@ export default function WelcomeSettings({ config, channels, onSave, saving }) {
             <h1 className="dash-title">Welcome System</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Greet new members when they join the server with a custom welcome card or embed message!</p>
           </div>
-          <Toggle checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
         </div>
       </div>
 
-      <div className="dash-card settings-card">
-        <div className="settings-form">
-          <div className="form-group">
-            <label>Welcome Channel</label>
-            <span className="form-hint" style={{ display: 'block', marginBottom: '12px' }}>Where should the bot post the welcome message?</span>
-            <CustomSelect 
-              options={channelOptions}
-              value={channel}
-              onChange={setChannel}
-              placeholder="Select a channel..."
-            />
-          </div>
+      <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label style={{ color: '#fff' }}>Welcome Channel</label>
+          <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Where should the bot post the welcome message?</span>
+          <CustomSelect options={channelOptions} value={channel} onChange={setChannel} placeholder="Select Channel..." />
+        </div>
+      </div>
 
-          <div className="form-group">
-            <label>Message Mode</label>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-              <button 
-                className={`dash-btn ${mode === 'image' ? 'primary' : 'secondary'}`} 
-                onClick={() => setMode('image')}
-              >
-                Image Card
-              </button>
-              <button 
-                className={`dash-btn ${mode === 'embed' ? 'primary' : 'secondary'}`} 
-                onClick={() => setMode('embed')}
-              >
-                Embed Message
-              </button>
+      <div className="dash-card settings-card" style={{ padding: '24px' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '20px' }}>Message Builder</h3>
+        
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+          <button 
+            className={`dash-btn ${mode === 'image' ? 'primary' : 'secondary'}`} 
+            onClick={() => setMode('image')}
+          >
+            Image Card
+          </button>
+          <button 
+            className={`dash-btn ${mode === 'embed' ? 'primary' : 'secondary'}`} 
+            onClick={() => setMode('embed')}
+          >
+            Embed Message
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
+          {/* Builder Form (Left Column) */}
+          <div style={{ flex: '1 1 400px' }}>
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#fff' }}>Content Text (Outside Embed)</label>
+              <textarea 
+                className="dash-input" 
+                style={{ width: '100%', height: '80px', resize: 'vertical' }} 
+                value={welcomeText}
+                onChange={(e) => setWelcomeText(e.target.value)}
+                placeholder="Welcome {user} to {server}!"
+              />
             </div>
-          </div>
 
-          <div className="form-group">
-            <label>Content / Message Text</label>
-            <span className="form-hint" style={{ display: 'block', marginBottom: '12px' }}>You can use {'{user}'}, {'{server}'}, and {'{count}'} as placeholders.</span>
-            <textarea 
-              className="dash-input" 
-              rows="3" 
-              value={welcomeText}
-              onChange={(e) => setWelcomeText(e.target.value)}
-              placeholder="Welcome {user} to {server}!"
-            ></textarea>
-          </div>
-
-          {mode === 'image' && (
-            <div className="form-group" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-              <label>Background Image URL</label>
-              <span className="form-hint" style={{ display: 'block', marginBottom: '12px' }}>Paste a URL to use as the welcome card background.</span>
-              <input type="text" className="dash-input" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://example.com/image.png" />
-            </div>
-          )}
-
-          {mode === 'embed' && (
-            <div className="form-group" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-              <label>Embed Builder</label>
-              <span className="form-hint" style={{ display: 'block', marginBottom: '16px' }}>Customize the embed colors and text.</span>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <input type="color" value={embedColor} onChange={e => setEmbedColor(e.target.value)} style={{ width: '40px', height: '40px', padding: '0', background: 'none', border: 'none', cursor: 'pointer' }} />
-                  <input type="text" className="dash-input" value={embedColor} onChange={e => setEmbedColor(e.target.value)} style={{ width: '120px' }} />
+            {mode === 'embed' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#fff' }}>Embed Color</label>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <input 
+                      type="color" 
+                      value={embedColor} 
+                      onChange={(e) => setEmbedColor(e.target.value)}
+                      style={{ width: '40px', height: '40px', padding: 0, border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'transparent' }}
+                    />
+                    <input 
+                      type="text" 
+                      className="dash-input" 
+                      value={embedColor}
+                      onChange={(e) => setEmbedColor(e.target.value)}
+                      style={{ width: '100px' }}
+                    />
+                  </div>
                 </div>
-                <input type="text" className="dash-input" value={embedAuthor} onChange={e => setEmbedAuthor(e.target.value)} placeholder="Author Name" />
-                <input type="text" className="dash-input" value={embedTitle} onChange={e => setEmbedTitle(e.target.value)} placeholder="Title" />
-                <textarea className="dash-input" rows="3" value={embedDescription} onChange={e => setEmbedDescription(e.target.value)} placeholder="Description"></textarea>
-                <input type="text" className="dash-input" value={embedFooter} onChange={e => setEmbedFooter(e.target.value)} placeholder="Footer Text" />
-                <input type="text" className="dash-input" value={embedThumbnail} onChange={e => setEmbedThumbnail(e.target.value)} placeholder="Thumbnail URL" />
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#fff' }}>Author Name</label>
+                  <input type="text" className="dash-input" placeholder="Author..." value={embedAuthor} onChange={(e) => setEmbedAuthor(e.target.value)} />
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#fff' }}>Title</label>
+                  <input type="text" className="dash-input" placeholder="Title..." value={embedTitle} onChange={(e) => setEmbedTitle(e.target.value)} />
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#fff' }}>Description</label>
+                  <textarea className="dash-input" style={{ width: '100%', height: '100px', resize: 'vertical' }} placeholder="Description..." value={embedDescription} onChange={(e) => setEmbedDescription(e.target.value)} />
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#fff' }}>Footer Text</label>
+                  <input type="text" className="dash-input" placeholder="Footer..." value={embedFooter} onChange={(e) => setEmbedFooter(e.target.value)} />
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#fff' }}>Thumbnail URL</label>
+                  <input type="text" className="dash-input" placeholder="https://..." value={embedThumbnail} onChange={(e) => setEmbedThumbnail(e.target.value)} />
+                </div>
+              </div>
+            )}
+
+            {mode === 'image' && (
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ color: '#fff' }}>Background Image URL</label>
+                  <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Provide a direct URL to an image (png/jpg/gif).</span>
+                  <input 
+                    type="text" 
+                    className="dash-input" 
+                    placeholder="https://example.com/image.png" 
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Live Preview (Right Column) */}
+          <div style={{ flex: '1 1 400px' }}>
+            <label style={{ color: '#fff', display: 'block', marginBottom: '12px', fontWeight: '600' }}>Live Discord Preview</label>
+            <div style={{ background: '#313338', borderRadius: '8px', padding: '16px', display: 'flex', gap: '16px', fontFamily: '"gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#5865F2', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>
+                O
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ color: '#F2F3F5', fontWeight: '500', fontSize: '16px' }}>Orbit</span>
+                  <span style={{ background: '#5865F2', color: '#fff', fontSize: '10px', padding: '2px 4px', borderRadius: '3px', fontWeight: 'bold', textTransform: 'uppercase' }}>Bot</span>
+                  <span style={{ color: '#949BA4', fontSize: '12px' }}>Today at 12:00 PM</span>
+                </div>
+
+                {welcomeText && (
+                  <div style={{ color: '#DBDEE1', fontSize: '14px', marginBottom: '8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {welcomeText}
+                  </div>
+                )}
+
+                {mode === 'embed' && (embedAuthor || embedTitle || embedDescription || embedFooter) && (
+                  <div style={{ background: '#2B2D31', borderRadius: '4px', borderLeft: `4px solid ${embedColor}`, padding: '12px 16px', maxWidth: '432px', display: 'flex' }}>
+                    <div style={{ flex: 1 }}>
+                      {embedAuthor && (
+                        <div style={{ color: '#F2F3F5', fontSize: '13.5px', fontWeight: '600', marginBottom: '8px' }}>
+                          {embedAuthor}
+                        </div>
+                      )}
+                      {embedTitle && (
+                        <div style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: '700', marginBottom: '4px' }}>
+                          {embedTitle}
+                        </div>
+                      )}
+                      {embedDescription && (
+                        <div style={{ color: '#DBDEE1', fontSize: '13.5px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', marginBottom: '8px' }}>
+                          {embedDescription}
+                        </div>
+                      )}
+                      {embedFooter && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                          <span style={{ color: '#949BA4', fontSize: '11px' }}>{embedFooter}</span>
+                        </div>
+                      )}
+                    </div>
+                    {embedThumbnail && (
+                      <div style={{ width: '80px', height: '80px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0, marginLeft: '16px' }}>
+                        <img src={embedThumbnail} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" onError={(e) => e.target.style.display = 'none'} />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {mode === 'image' && (
+                  <div style={{ maxWidth: '400px', borderRadius: '8px', overflow: 'hidden', position: 'relative', background: '#2B2D31', minHeight: '150px' }}>
+                    {imageUrl ? (
+                      <img src={imageUrl} style={{ width: '100%', display: 'block', objectFit: 'cover' }} alt="Welcome Card Background" onError={(e) => e.target.style.display = 'none'} />
+                    ) : (
+                      <div style={{ width: '100%', height: '200px', background: 'linear-gradient(45deg, #1f2023, #2b2d31)' }}></div>
+                    )}
+                    
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to right, rgba(88,101,242,0.3), rgba(0,0,0,0.6))', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '30px' }}>
+                      <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#313338', marginBottom: '12px', border: '3px solid #5865F2', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        <img src="https://cdn.discordapp.com/embed/avatars/0.png" style={{ width: '100%' }} alt="User Avatar" />
+                      </div>
+                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: '800', fontStyle: 'italic', letterSpacing: '1px' }}>WELCOME</div>
+                      <div style={{ color: '#fff', fontSize: '14px', opacity: 0.9 }}>@user</div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Helper Variables Box */}
+            <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '16px' }}>
+              <h4 style={{ fontSize: '13px', color: '#fff', fontWeight: '600', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5865F2" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                Variables You Can Use
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#5865F2', fontWeight: '600' }}>{'{user}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>@User</span></div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#5865F2', fontWeight: '600' }}>{'{server}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>Server Name</span></div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#5865F2', fontWeight: '600' }}>{'{count}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>Member Count</span></div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#5865F2', fontWeight: '600' }}>{'{id}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>User ID</span></div>
+              </div>
+            </div>
+
+          </div>
         </div>
 
         <div className="settings-footer" style={{ marginTop: '32px' }}>

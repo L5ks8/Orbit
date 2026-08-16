@@ -58,7 +58,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label style={{ color: '#fff' }}>Boost Channel</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Where should the bot post the boost message?</span>
-            <CustomSelect options={channelOptions} placeholder="Select Channel..." />
+            <CustomSelect options={channelOptions} value={channel} onChange={setChannel} placeholder="Select Channel..." />
           </div>
         </div>
 

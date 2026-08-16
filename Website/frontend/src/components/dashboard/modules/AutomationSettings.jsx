@@ -59,14 +59,14 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
           <div className="form-group" style={{ marginBottom: '16px' }}>
             <label style={{ color: '#fff', fontSize: '15px' }}>Media-Only Channels</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Channels where only images, GIFs, and videos can be posted.</span>
-            <CustomSelect options={channelOptions} isMulti={true} placeholder="Select Channels..." />
+            <CustomSelect options={channelOptions} value={mediaChannels} onChange={setMediaChannels} isMulti={true} placeholder="Select Channels..." />
           </div>
           <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}>
             <div>
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Ignore Bots</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Do not enforce media restriction on messages from bots.</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={mediaBotIgnore} onChange={() => setMediaBotIgnore(!mediaBotIgnore)} />
           </div>
         </div>
 
@@ -74,7 +74,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label style={{ color: '#fff', fontSize: '15px' }}>Command-Only Channels</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Channels where regular text messages are deleted to keep chat clean.</span>
-            <CustomSelect options={channelOptions} isMulti={true} placeholder="Select Channels..." />
+            <CustomSelect options={channelOptions} value={cmdChannels} onChange={setCmdChannels} isMulti={true} placeholder="Select Channels..." />
           </div>
         </div>
       </div>
@@ -88,14 +88,14 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
         
         <div className="form-group" style={{ marginBottom: '16px' }}>
           <label style={{ color: '#fff' }}>Honeypot Channel</label>
-          <CustomSelect options={channelOptions} placeholder="Select Channel..." />
+          <CustomSelect options={channelOptions} value={honeypotChannel} onChange={setHoneypotChannel} placeholder="Select Channel..." />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
           <div className="form-group" style={{ margin: 0 }}>
             <label style={{ color: '#fff' }}>Exempt Roles</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Members with these roles will not be banned.</span>
-            <CustomSelect options={roleOptions} isMulti={true} placeholder="Select Roles..." />
+            <CustomSelect options={roleOptions} value={honeypotExemptRoles} onChange={setHoneypotExemptRoles} isMulti={true} placeholder="Select Roles..." />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label style={{ color: '#fff' }}>Exempt User IDs</label>
@@ -107,7 +107,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
         <div className="form-group" style={{ margin: 0 }}>
           <label style={{ color: '#fff' }}>Honeypot Warning Message</label>
           <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>The warning message sent by the bot. You can use {'{count}'} to display the number of banned accounts.</span>
-          <textarea className="dash-input" style={{ width: '100%', height: '120px', resize: 'vertical', marginBottom: '12px' }} placeholder="# ⚠️ POSTING IN THIS CHANNEL WILL GET YOU BANNED..."></textarea>
+          <textarea className="dash-input" style={{ width: '100%', height: '120px', resize: 'vertical', marginBottom: '12px' }} value={honeypotMsg} onChange={e => setHoneypotMsg(e.target.value)} placeholder="# ⚠️ POSTING IN THIS CHANNEL WILL GET YOU BANNED..."></textarea>
           <button className="dash-btn primary">Send Message to Channel</button>
         </div>
       </div>
@@ -187,18 +187,18 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
             <label style={{ fontSize: '15px', fontWeight: '600', color: '#fff', display: 'block', marginBottom: '4px' }}>Counting Channel</label>
             <span className="form-hint" style={{ fontSize: '12px' }}>Enforce consecutive number counting. Messing up locks the channel and resets count to 0.</span>
           </div>
-          <Toggle defaultChecked={false} />
+          <Toggle checked={countingEnabled} onChange={() => setCountingEnabled(!countingEnabled)} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
           <div className="form-group" style={{ margin: 0 }}>
             <label style={{ color: '#fff' }}>Counting Channel</label>
-            <CustomSelect options={channelOptions} placeholder="Select Channel..." />
+            <CustomSelect options={channelOptions} value={countingChannel} onChange={setCountingChannel} placeholder="Select Channel..." />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label style={{ color: '#fff' }}>Whitelisted Roles</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Members with these roles can chat without breaking count.</span>
-            <CustomSelect options={roleOptions} isMulti={true} placeholder="Select Roles..." />
+            <CustomSelect options={roleOptions} value={countingWhitelistRoles} onChange={setCountingWhitelistRoles} isMulti={true} placeholder="Select Roles..." />
           </div>
         </div>
 
@@ -207,7 +207,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
             <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Allow Solo Counting</label>
             <span className="form-hint" style={{ fontSize: '12px' }}>Allow the same user to count consecutive numbers in a row.</span>
           </div>
-          <Toggle defaultChecked={true} />
+          <Toggle checked={soloCount} onChange={() => setSoloCount(!soloCount)} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
