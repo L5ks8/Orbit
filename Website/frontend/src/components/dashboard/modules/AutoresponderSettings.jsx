@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
+import CustomSelect from '../../ui/CustomSelect';
 
-export default function AutoresponderSettings() {
-  const [globalEnabled, setGlobalEnabled] = useState(true);
-  const [triggers, setTriggers] = useState([
-    { id: 1, trigger: 'hello', reply: 'Hello there! Welcome to the server.', exactMatch: false }
-  ]);
+export default function AutoresponderSettings({ config, channels, onSave, saving }) {
+  const arCfg = config?.autoresponder || [];
+  
+  const [triggers, setTriggers] = useState(
+    arCfg.map((t, i) => ({
+      id: t.id || i + 1,
+      trigger: t.trigger || '',
+      reply: t.reply || '',
+      exactMatch: t.exact_match || false
+    }))
+  );
   const [editingTrigger, setEditingTrigger] = useState(null);
 
   const handleSaveTrigger = (e) => {
@@ -18,17 +25,37 @@ export default function AutoresponderSettings() {
       exactMatch: formData.get('exactMatch') === 'on',
     };
 
+    let newTriggers;
     if (editingTrigger.id) {
-      setTriggers(triggers.map(t => t.id === newTrigger.id ? newTrigger : t));
+      newTriggers = triggers.map(t => t.id === newTrigger.id ? newTrigger : t);
     } else {
-      setTriggers([...triggers, newTrigger]);
+      newTriggers = [...triggers, newTrigger];
     }
+    setTriggers(newTriggers);
     setEditingTrigger(null);
+    
+    // Save to backend
+    const payload = newTriggers.map(t => ({
+      id: t.id,
+      trigger: t.trigger,
+      reply: t.reply,
+      exact_match: t.exactMatch
+    }));
+    onSave({ autoresponder: payload });
   };
 
   const handleDeleteTrigger = (id) => {
-    setTriggers(triggers.filter(t => t.id !== id));
+    const newTriggers = triggers.filter(t => t.id !== id);
+    setTriggers(newTriggers);
     setEditingTrigger(null);
+    
+    const payload = newTriggers.map(t => ({
+      id: t.id,
+      trigger: t.trigger,
+      reply: t.reply,
+      exact_match: t.exactMatch
+    }));
+    onSave({ autoresponder: payload });
   };
 
   return (
@@ -39,7 +66,6 @@ export default function AutoresponderSettings() {
             <h1 className="dash-title">Auto-Replies</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Make the bot reply automatically to specific trigger words or phrases.</p>
           </div>
-          
         </div>
       </div>
 

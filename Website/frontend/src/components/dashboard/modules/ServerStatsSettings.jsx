@@ -2,13 +2,38 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function ServerStatsSettings() {
-  const [enabled, setEnabled] = useState(false);
+export default function ServerStatsSettings({ config, categories, onSave, saving }) {
+  const ssCfg = config?.serverstats || {};
 
-  const categoryOptions = [
-    { value: '1', label: 'SERVER STATS' },
-    { value: '2', label: 'IMPORTANT' }
-  ];
+  const [usersEnabled, setUsersEnabled] = useState(ssCfg.users_enabled || false);
+  const [usersName, setUsersName] = useState(ssCfg.users_name || 'Users: {count}');
+  const [boostsEnabled, setBoostsEnabled] = useState(ssCfg.boosts_enabled || false);
+  const [boostsName, setBoostsName] = useState(ssCfg.boosts_name || 'Boosts: {count}');
+  const [botsEnabled, setBotsEnabled] = useState(ssCfg.bots_enabled || false);
+  const [botsName, setBotsName] = useState(ssCfg.bots_name || 'Bots: {count}');
+  const [rolesEnabled, setRolesEnabled] = useState(ssCfg.roles_enabled || false);
+  const [rolesName, setRolesName] = useState(ssCfg.roles_name || 'Roles: {count}');
+  const [categoryId, setCategoryId] = useState(ssCfg.category_id || '');
+  const [categoryName, setCategoryName] = useState(ssCfg.category_name || ' Server Stats');
+
+  const categoryOptions = (categories || []).map(c => ({ value: c.id, label: c.name }));
+
+  const handleSave = () => {
+    onSave({
+      serverstats: {
+        category_id: categoryId,
+        category_name: categoryName,
+        users_enabled: usersEnabled,
+        users_name: usersName,
+        boosts_enabled: boostsEnabled,
+        boosts_name: boostsName,
+        bots_enabled: botsEnabled,
+        bots_name: botsName,
+        roles_enabled: rolesEnabled,
+        roles_name: rolesName
+      }
+    });
+  };
 
   return (
     <div className="dash-settings-module">
@@ -18,7 +43,6 @@ export default function ServerStatsSettings() {
             <h1 className="dash-title">Server Stats</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Select Server Data to display in voice channels.</p>
           </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
         </div>
       </div>
 
@@ -26,7 +50,7 @@ export default function ServerStatsSettings() {
         <div className="form-group" style={{ marginBottom: '24px' }}>
           <label style={{ fontSize: '15px', fontWeight: '600', color: '#fff', display: 'block', marginBottom: '4px' }}>Category <span style={{ color: '#F23F43' }}>*</span></label>
           <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Category in which the channels will be created</span>
-          <CustomSelect options={categoryOptions} placeholder="Select category..." />
+          <CustomSelect options={categoryOptions} value={categoryId} onChange={setCategoryId} placeholder="Select category..." />
         </div>
 
         {/* Users Toggle */}
@@ -36,9 +60,9 @@ export default function ServerStatsSettings() {
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '600' }}>Users</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Show the total number of users on the server</span>
             </div>
-            <Toggle defaultChecked={true} />
+            <Toggle checked={usersEnabled} onChange={() => setUsersEnabled(!usersEnabled)} />
           </div>
-          <input type="text" className="dash-input" placeholder="Users: {count}" defaultValue="Users: {count}" style={{ maxWidth: '400px' }} />
+          <input type="text" className="dash-input" value={usersName} onChange={e => setUsersName(e.target.value)} placeholder="Users: {count}" style={{ maxWidth: '400px' }} />
         </div>
 
         {/* Boosts Toggle */}
@@ -48,9 +72,9 @@ export default function ServerStatsSettings() {
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '600' }}>Boosts</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Show the total number of boosts on the server</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={boostsEnabled} onChange={() => setBoostsEnabled(!boostsEnabled)} />
           </div>
-          <input type="text" className="dash-input" placeholder="Boosts: {count}" defaultValue="Boosts: {count}" style={{ maxWidth: '400px' }} />
+          <input type="text" className="dash-input" value={boostsName} onChange={e => setBoostsName(e.target.value)} placeholder="Boosts: {count}" style={{ maxWidth: '400px' }} />
         </div>
 
         {/* Bots Toggle */}
@@ -60,9 +84,9 @@ export default function ServerStatsSettings() {
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '600' }}>Bots</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Show the total number of bots on the server</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={botsEnabled} onChange={() => setBotsEnabled(!botsEnabled)} />
           </div>
-          <input type="text" className="dash-input" placeholder="Bots: {count}" defaultValue="Bots: {count}" style={{ maxWidth: '400px' }} />
+          <input type="text" className="dash-input" value={botsName} onChange={e => setBotsName(e.target.value)} placeholder="Bots: {count}" style={{ maxWidth: '400px' }} />
         </div>
 
         {/* Roles Toggle */}
@@ -72,19 +96,13 @@ export default function ServerStatsSettings() {
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '600' }}>Roles</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Show the total number of roles on the server</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={rolesEnabled} onChange={() => setRolesEnabled(!rolesEnabled)} />
           </div>
-          <input type="text" className="dash-input" placeholder="Roles: {count}" defaultValue="Roles: {count}" style={{ maxWidth: '400px' }} />
+          <input type="text" className="dash-input" value={rolesName} onChange={e => setRolesName(e.target.value)} placeholder="Roles: {count}" style={{ maxWidth: '400px' }} />
         </div>
 
         <div style={{ marginTop: '32px' }}>
-          <button className="dash-btn primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-            Create Channels
-          </button>
+          <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save & Create Channels'}</button>
         </div>
       </div>
     </div>

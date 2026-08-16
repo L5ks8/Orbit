@@ -2,23 +2,44 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function AutomationSettings() {
-  const [enabled, setEnabled] = useState(false);
+export default function AutomationSettings({ config, channels, roles, onSave, saving }) {
+  const autCfg = config?.automation || {};
   
   // States for dynamic lists
-  const [fileChannels, setFileChannels] = useState([]);
-  const [reactionChannels, setReactionChannels] = useState([]);
+  const [fileChannels, setFileChannels] = useState(autCfg.file_channels || []);
+  const [reactionChannels, setReactionChannels] = useState(autCfg.reaction_channels || []);
+  const [mediaChannels, setMediaChannels] = useState((autCfg.media_only_channels || []).map(String));
+  const [cmdChannels, setCmdChannels] = useState((autCfg.command_only_channels || []).map(String));
+  const [honeypotChannel, setHoneypotChannel] = useState(autCfg.honeypot_channel_id || '');
+  const [honeypotExemptRoles, setHoneypotExemptRoles] = useState((autCfg.honeypot_exempt_roles || []).map(String));
+  const [honeypotMsg, setHoneypotMsg] = useState(autCfg.honeypot_message || '');
+  const [countingEnabled, setCountingEnabled] = useState(autCfg.counting_enabled || false);
+  const [countingChannel, setCountingChannel] = useState(autCfg.counting_channel_id || '');
+  const [countingWhitelistRoles, setCountingWhitelistRoles] = useState((autCfg.counting_whitelist_roles || []).map(String));
+  const [soloCount, setSoloCount] = useState(autCfg.solo_counting !== false);
+  const [mediaBotIgnore, setMediaBotIgnore] = useState(autCfg.media_ignore_bots || false);
 
-  // Mock data for dropdowns
-  const channelOptions = [
-    { value: '1', label: '# general' },
-    { value: '2', label: '# memes' },
-    { value: '3', label: '# commands' }
-  ];
-  const roleOptions = [
-    { value: '1', label: '@ Admin' },
-    { value: '2', label: '@ Moderator' }
-  ];
+  const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
+  const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+
+  const handleSave = () => {
+    onSave({
+      automation: {
+        media_only_channels: mediaChannels,
+        command_only_channels: cmdChannels,
+        media_ignore_bots: mediaBotIgnore,
+        honeypot_channel_id: honeypotChannel,
+        honeypot_exempt_roles: honeypotExemptRoles,
+        honeypot_message: honeypotMsg,
+        file_channels: fileChannels,
+        reaction_channels: reactionChannels,
+        counting_enabled: countingEnabled,
+        counting_channel_id: countingChannel,
+        counting_whitelist_roles: countingWhitelistRoles,
+        solo_counting: soloCount
+      }
+    });
+  };
 
   return (
     <div className="dash-settings-module">
@@ -198,6 +219,10 @@ export default function AutomationSettings() {
           </div>
           <button className="dash-btn secondary" style={{ fontSize: '12px', padding: '8px 16px' }}>Reset Count to 0</button>
         </div>
+      </div>
+
+      <div style={{ marginTop: '24px' }}>
+        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Automation Settings'}</button>
       </div>
     </div>
   );

@@ -2,27 +2,50 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function GoodbyeMessagesSettings() {
-  const [enabled, setEnabled] = useState(false);
-  const [mode, setMode] = useState('embed'); // 'image' or 'embed'
+export default function GoodbyeMessagesSettings({ config, channels, onSave, saving }) {
+  const gCfg = config?.goodbye || {};
+
+  const [enabled, setEnabled] = useState(gCfg.enabled || false);
+  const [mode, setMode] = useState(gCfg.msg_mode || 'embed'); // 'image' or 'embed'
+  const [channel, setChannel] = useState(gCfg.channel_id || '');
   
   // Message State
-  const [content, setContent] = useState("We're sad to see you go, {user}!");
+  const [content, setContent] = useState(gCfg.message || "We're sad to see you go, {user}!");
   
   // Embed State
-  const [embedColor, setEmbedColor] = useState('#ED4245');
-  const [embedAuthor, setEmbedAuthor] = useState('');
-  const [embedTitle, setEmbedTitle] = useState('MEMBER LEFT');
-  const [embedDesc, setEmbedDesc] = useState('');
-  const [embedFooter, setEmbedFooter] = useState('');
+  const [embedColor, setEmbedColor] = useState(gCfg.embed_color || '#ED4245');
+  const [embedAuthor, setEmbedAuthor] = useState(gCfg.embed_author || '');
+  const [embedTitle, setEmbedTitle] = useState(gCfg.embed_title || 'MEMBER LEFT');
+  const [embedDesc, setEmbedDesc] = useState(gCfg.embed_description || '');
+  const [embedFooter, setEmbedFooter] = useState(gCfg.embed_footer || '');
 
   // Image Card State
-  const [bgImageUrl, setBgImageUrl] = useState('');
+  const [bgImageUrl, setBgImageUrl] = useState(gCfg.image_url || '');
 
-  const channelOptions = [
-    { value: '1', label: '# general' },
-    { value: '2', label: '# goodbye' }
-  ];
+  const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
+
+  const handleSave = () => {
+    onSave({
+      goodbye: {
+        enabled,
+        channel_id: channel,
+        message: content,
+        msg_mode: mode,
+        image_url: bgImageUrl,
+        embed_author: embedAuthor,
+        embed_title: embedTitle,
+        embed_description: embedDesc,
+        embed_footer: embedFooter,
+        embed_color: embedColor,
+        // Preserve other fields
+        embed_image: gCfg.embed_image || '',
+        embed_thumbnail: gCfg.embed_thumbnail || '',
+        embed_author_icon: gCfg.embed_author_icon || '',
+        embed_footer_icon: gCfg.embed_footer_icon || '',
+        embed_fields: gCfg.embed_fields || []
+      }
+    });
+  };
 
   return (
     <div className="dash-settings-module">
@@ -40,7 +63,7 @@ export default function GoodbyeMessagesSettings() {
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label style={{ color: '#fff' }}>Goodbye Channel</label>
           <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Where should the bot post the goodbye message?</span>
-          <CustomSelect options={channelOptions} placeholder="Select Channel..." />
+          <CustomSelect options={channelOptions} value={channel} onChange={setChannel} placeholder="Select Channel..." />
         </div>
       </div>
 
@@ -216,6 +239,10 @@ export default function GoodbyeMessagesSettings() {
             </div>
 
           </div>
+        </div>
+
+        <div className="settings-footer" style={{ marginTop: '32px' }}>
+          <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Settings'}</button>
         </div>
       </div>
     </div>

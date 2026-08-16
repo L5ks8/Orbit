@@ -2,17 +2,37 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function TempVoiceSettings() {
-  const [enabled, setEnabled] = useState(false);
-  const [hubs, setHubs] = useState([]);
+export default function TempVoiceSettings({ config, channels, categories, onSave, saving }) {
+  const tvCfg = config?.tempvoice || {};
 
-  const categoryOptions = [
-    { value: '1', label: 'VOICE CHANNELS' }
-  ];
-  
-  const channelOptions = [
-    { value: '1', label: '➕ Join to Create' }
-  ];
+  const [enabled, setEnabled] = useState(tvCfg.enabled || false);
+  const [hubs, setHubs] = useState(
+    (tvCfg.hubs || []).map((h, i) => ({
+      hub_channel_id: String(h.hub_channel_id || ''),
+      category_id: String(h.category_id || ''),
+      default_user_limit: h.default_user_limit || 0
+    }))
+  );
+
+  // Use voice_channels from config (passed via channels for text, but we also need voice)
+  // The API returns voice_channels separately — but our parent passes channels (text).
+  // We'll handle this by filtering or using whatever is available.
+  const categoryOptions = (categories || []).map(c => ({ value: c.id, label: c.name }));
+  // For voice channels, we use any channel list available
+  const voiceChannelOptions = channels.map(c => ({ value: c.id, label: `🔊 ${c.name}` }));
+
+  const updateHub = (index, key, value) => {
+    setHubs(prev => prev.map((h, i) => i === index ? { ...h, [key]: value } : h));
+  };
+
+  const handleSave = () => {
+    onSave({
+      tempvoice: {
+        enabled,
+        hubs: hubs.filter(h => h.hub_channel_id)
+      }
+    });
+  };
 
   return (
     <div className="dash-settings-module">
@@ -29,13 +49,13 @@ export default function TempVoiceSettings() {
       <div className="dash-card settings-card" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', margin: 0 }}>Voice Hubs</h3>
-          <button onClick={() => setHubs([...hubs, {}])} className="dash-btn primary">+ Add Hub</button>
+          <button onClick={() => setHubs([...hubs, { hub_channel_id: '', category_id: '', default_user_limit: 0 }])} className="dash-btn primary">+ Add Hub</button>
         </div>
 
         {hubs.length === 0 ? (
           <div style={{ padding: '40px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
             <p style={{ color: '#949BA4', fontSize: '14px', marginBottom: '16px' }}>No Temporary Voice Hubs configured.</p>
-            <button onClick={() => setHubs([...hubs, {}])} className="dash-btn primary">+ Add Hub</button>
+            <button onClick={() => setHubs([...hubs, { hub_channel_id: '', category_id: '', default_user_limit: 0 }])} className="dash-btn primary">+ Add Hub</button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -44,7 +64,6 @@ export default function TempVoiceSettings() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h4 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', margin: 0 }}>Hub #{i + 1}</h4>
                   <button onClick={() => setHubs(hubs.filter((_, idx) => idx !== i))} className="dash-btn danger" style={{ padding: '6px 12px' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                     Delete Hub
                   </button>
                 </div>
@@ -53,24 +72,28 @@ export default function TempVoiceSettings() {
                   <div className="form-group" style={{ margin: 0 }}>
                     <label style={{ color: '#fff' }}>Hub Category</label>
                     <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>The category where temporary channels will be created.</span>
-                    <CustomSelect options={categoryOptions} placeholder="Select Category..." />
+                    <CustomSelect options={categoryOptions} value={hub.category_id} onChange={v => updateHub(i, 'category_id', v)} placeholder="Select Category..." />
                   </div>
                   <div className="form-group" style={{ margin: 0 }}>
                     <label style={{ color: '#fff' }}>Generator Channel</label>
                     <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>The voice channel users join to create a temporary channel.</span>
-                    <CustomSelect options={channelOptions} placeholder="Select Channel..." />
+                    <CustomSelect options={voiceChannelOptions} value={hub.hub_channel_id} onChange={v => updateHub(i, 'hub_channel_id', v)} placeholder="Select Channel..." />
                   </div>
                 </div>
                 
                 <div className="form-group" style={{ marginTop: '16px', marginBottom: 0 }}>
-                  <label style={{ color: '#fff' }}>Temporary Channel Name Format</label>
-                  <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Use {'{user}'} for the creator's name.</span>
-                  <input type="text" className="dash-input" defaultValue="{user}'s Channel" />
+                  <label style={{ color: '#fff' }}>Default User Limit</label>
+                  <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Set to 0 for no limit.</span>
+                  <input type="number" className="dash-input" value={hub.default_user_limit} onChange={e => updateHub(i, 'default_user_limit', parseInt(e.target.value) || 0)} min="0" style={{ maxWidth: '200px' }} />
                 </div>
               </div>
             ))}
           </div>
         )}
+
+        <div style={{ marginTop: '24px' }}>
+          <button className="dash-btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Settings'}</button>
+        </div>
       </div>
     </div>
   );

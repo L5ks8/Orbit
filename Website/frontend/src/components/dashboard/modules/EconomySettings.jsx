@@ -2,15 +2,28 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function EconomySettings() {
-  const [workResponses, setWorkResponses] = useState([]);
-  const [roleBoosters, setRoleBoosters] = useState([]);
-  const [channelBoosters, setChannelBoosters] = useState([]);
+export default function EconomySettings({ config, channels, roles, onSave, saving }) {
+  const eCfg = config?.economy || {};
+  const [workResponses, setWorkResponses] = useState(eCfg.work_responses || []);
+  const [roleBoosters, setRoleBoosters] = useState(eCfg.role_boosters || []);
+  const [channelBoosters, setChannelBoosters] = useState(eCfg.channel_boosters || []);
+  const [currencySymbol, setCurrencySymbol] = useState(eCfg.currency_symbol || '🪙');
+  const [multiplier, setMultiplier] = useState(eCfg.multiplier || 1.0);
 
-  const channelOptions = [
-    { value: '1', label: '# general' },
-    { value: '2', label: '# bot-commands' },
-  ];
+  const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
+  const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+
+  const handleSave = () => {
+    onSave({
+      economy: {
+        currency_symbol: currencySymbol,
+        multiplier,
+        work_responses: workResponses,
+        role_boosters: roleBoosters,
+        channel_boosters: channelBoosters
+      }
+    });
+  };
 
   return (
     <div className="dash-settings-module">
@@ -351,7 +364,7 @@ export default function EconomySettings() {
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button onClick={() => alert('Settings saved!')} className="dash-btn primary" style={{ width: '100%', padding: '12px' }}>Save All Economy Settings</button>
+        <button onClick={handleSave} className="dash-btn primary" style={{ width: '100%', padding: '12px' }} disabled={saving}>{saving ? 'Saving...' : 'Save All Economy Settings'}</button>
       </div>
     </div>
   );

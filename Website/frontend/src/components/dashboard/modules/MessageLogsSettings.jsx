@@ -2,18 +2,26 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function MessageLogsSettings() {
-  const [enabled, setEnabled] = useState(false);
+export default function MessageLogsSettings({ config, channels, roles, onSave, saving }) {
+  const mlCfg = config?.messagelogs || {};
+  const [enabled, setEnabled] = useState(mlCfg.enabled || false);
+  const [executorInLogs, setExecutorInLogs] = useState(mlCfg.executor_in_logs || false);
+  const [exemptChannels, setExemptChannels] = useState((mlCfg.exempt_channels || []).map(String));
+  const [exemptRoles, setExemptRoles] = useState((mlCfg.exempt_roles || []).map(String));
 
-  const channelOptions = [
-    { value: '1', label: '# general' },
-    { value: '2', label: '# logs' }
-  ];
-  
-  const roleOptions = [
-    { value: '1', label: '@ Admin' },
-    { value: '2', label: '@ Moderator' }
-  ];
+  const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
+  const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+
+  const handleSave = () => {
+    onSave({
+      messagelogs: {
+        enabled,
+        executor_in_logs: executorInLogs,
+        exempt_channels: exemptChannels,
+        exempt_roles: exemptRoles
+      }
+    });
+  };
 
   // Mock log categories
   const logCategories = [
@@ -55,19 +63,19 @@ export default function MessageLogsSettings() {
             <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '600' }}>Executor In Logs</label>
             <span className="form-hint" style={{ fontSize: '12px' }}>Logs the person who performed a specific action in the logs (if supported by the API).</span>
           </div>
-          <Toggle defaultChecked={false} />
+          <Toggle checked={executorInLogs} onChange={() => setExecutorInLogs(!executorInLogs)} />
         </div>
 
         <div className="form-group" style={{ marginBottom: '20px' }}>
           <label style={{ fontSize: '14px', fontWeight: '600', color: '#fff', display: 'block', marginBottom: '4px' }}>Excluded Channels</label>
           <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Channels where events will not be logged (applies to channels where messages are sent/deleted, etc.).</span>
-          <CustomSelect options={channelOptions} isMulti={true} placeholder="Select Channels..." />
+          <CustomSelect options={channelOptions} value={exemptChannels} onChange={setExemptChannels} isMulti={true} placeholder="Select Channels..." />
         </div>
 
         <div className="form-group" style={{ margin: 0 }}>
           <label style={{ fontSize: '14px', fontWeight: '600', color: '#fff', display: 'block', marginBottom: '4px' }}>Excluded Roles</label>
           <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Roles whose actions will not be logged.</span>
-          <CustomSelect options={roleOptions} isMulti={true} placeholder="Select Roles..." />
+          <CustomSelect options={roleOptions} value={exemptRoles} onChange={setExemptRoles} isMulti={true} placeholder="Select Roles..." />
         </div>
       </div>
 
@@ -89,6 +97,10 @@ export default function MessageLogsSettings() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div style={{ marginTop: '24px' }}>
+        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Log Settings'}</button>
       </div>
     </div>
   );

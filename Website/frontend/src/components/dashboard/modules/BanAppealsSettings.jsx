@@ -2,22 +2,42 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function BanAppealsSettings() {
-  const [questions, setQuestions] = useState([]);
+export default function BanAppealsSettings({ config, channels, roles, onSave, saving }) {
+  const aCfg = config?.appeals || {};
+  const [questions, setQuestions] = useState(aCfg.questions || []);
+  const [appealChannel, setAppealChannel] = useState(aCfg.channel_id || '');
+  const [modRoles, setModRoles] = useState((aCfg.mod_roles || []).map(String));
+  const [allowedPunishments, setAllowedPunishments] = useState(aCfg.allowed_punishments || ['ban']);
+  const [mentionMods, setMentionMods] = useState(aCfg.mention_mods || false);
+  const [anonymousMods, setAnonymousMods] = useState(aCfg.anonymous_mods || false);
+  const [multipleSubmissions, setMultipleSubmissions] = useState(aCfg.multiple_submissions || false);
+  const [inviteUnbanned, setInviteUnbanned] = useState(aCfg.invite_unbanned || false);
+  const [cooldownDays, setCooldownDays] = useState(aCfg.cooldown_days || 3);
 
-  const roleOptions = [
-    { value: '1', label: '@ Admin' },
-    { value: '2', label: '@ Mod' },
-  ];
-  const channelOptions = [
-    { value: '1', label: '# appeals' }
-  ];
+  const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+  const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
   const punishmentOptions = [
     { value: 'ban', label: 'Ban' },
     { value: 'timeout', label: 'Timeout' },
     { value: 'kick', label: 'Kick' },
     { value: 'warn', label: 'Warn' },
   ];
+
+  const handleSave = () => {
+    onSave({
+      appeals: {
+        channel_id: appealChannel,
+        mod_roles: modRoles,
+        allowed_punishments: allowedPunishments,
+        mention_mods: mentionMods,
+        anonymous_mods: anonymousMods,
+        multiple_submissions: multipleSubmissions,
+        invite_unbanned: inviteUnbanned,
+        cooldown_days: cooldownDays,
+        questions: questions
+      }
+    });
+  };
 
   return (
     <div className="dash-settings-module">
@@ -37,13 +57,13 @@ export default function BanAppealsSettings() {
           <div className="form-group">
             <label style={{ color: '#fff' }}>Appeal Channel <span style={{ color: 'var(--status-danger)' }}>*</span></label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>The channel where new appeals will be sent with Accept/Deny buttons.</span>
-            <CustomSelect options={channelOptions} placeholder="Select channel..." />
+            <CustomSelect options={channelOptions} value={appealChannel} onChange={setAppealChannel} placeholder="Select channel..." />
           </div>
 
           <div className="form-group">
             <label style={{ color: '#fff' }}>Moderator Roles</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Roles allowed to decide on appeals.</span>
-            <CustomSelect options={roleOptions} isMulti placeholder="Select roles..." />
+            <CustomSelect options={roleOptions} value={modRoles} onChange={setModRoles} isMulti placeholder="Select roles..." />
           </div>
 
           <div className="form-group">
@@ -73,7 +93,7 @@ export default function BanAppealsSettings() {
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Mention Moderators</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Should moderators be mentioned when a new appeal is submitted?</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={mentionMods} onChange={() => setMentionMods(!mentionMods)} />
           </div>
 
           <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -81,7 +101,7 @@ export default function BanAppealsSettings() {
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Anonymous Moderators</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Should moderators remain anonymous when processing appeals?</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={anonymousMods} onChange={() => setAnonymousMods(!anonymousMods)} />
           </div>
 
           <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -89,7 +109,7 @@ export default function BanAppealsSettings() {
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Multiple Submissions</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Should users be able to submit multiple appeals?</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={multipleSubmissions} onChange={() => setMultipleSubmissions(!multipleSubmissions)} />
           </div>
 
           <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -97,13 +117,13 @@ export default function BanAppealsSettings() {
               <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Invite Unbanned Members</label>
               <span className="form-hint" style={{ fontSize: '12px' }}>Send invite when ban appeal is accepted?</span>
             </div>
-            <Toggle defaultChecked={false} />
+            <Toggle checked={inviteUnbanned} onChange={() => setInviteUnbanned(!inviteUnbanned)} />
           </div>
 
           <div className="form-group">
             <label style={{ color: '#fff' }}>Submission Cooldown (Days)</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Wait time before submitting another appeal.</span>
-            <input type="number" className="dash-input" defaultValue={3} />
+            <input type="number" className="dash-input" value={cooldownDays} onChange={e => setCooldownDays(parseInt(e.target.value) || 3)} />
           </div>
 
         </div>
@@ -139,7 +159,7 @@ export default function BanAppealsSettings() {
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button onClick={() => alert('Settings saved!')} className="dash-btn primary" style={{ width: '100%', padding: '12px' }}>Save Appeals Settings</button>
+        <button onClick={handleSave} className="dash-btn primary" style={{ width: '100%', padding: '12px' }} disabled={saving}>{saving ? 'Saving...' : 'Save Appeals Settings'}</button>
       </div>
     </div>
   );

@@ -2,23 +2,34 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function LevelingSystemSettings() {
+export default function LevelingSystemSettings({ config, channels, roles, onSave, saving }) {
+  const lvlCfg = config?.leveling || {};
   // Local state for tabs and inputs to make the UI interactive
   const [statTab, setStatTab] = useState('messages'); // 'messages', 'voice', 'reactions'
-  const [levelUpMode, setLevelUpMode] = useState('blacklist');
-  const [levelRoleMode, setLevelRoleMode] = useState('blacklist');
-  const [levelRoles, setLevelRoles] = useState([]);
-  const [statRoles, setStatRoles] = useState([]);
+  const [levelUpMode, setLevelUpMode] = useState(lvlCfg.level_up_mode || 'blacklist');
+  const [levelRoleMode, setLevelRoleMode] = useState(lvlCfg.level_role_mode || 'blacklist');
+  const [levelRoles, setLevelRoles] = useState(lvlCfg.level_roles || []);
+  const [statRoles, setStatRoles] = useState(lvlCfg.stat_roles || []);
+  const [msgXpEnabled, setMsgXpEnabled] = useState(lvlCfg.msg_xp_enabled !== false);
+  const [voiceXpEnabled, setVoiceXpEnabled] = useState(lvlCfg.voice_xp_enabled || false);
+  const [reactionXpEnabled, setReactionXpEnabled] = useState(lvlCfg.reaction_xp_enabled || false);
   
-  // Dummy options for dropdowns
-  const channelOptions = [
-    { value: '1', label: '# general' },
-    { value: '2', label: '# commands' },
-  ];
-  const roleOptions = [
-    { value: '1', label: '@ VIP' },
-    { value: '2', label: '@ Muted' },
-  ];
+  const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
+  const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+
+  const handleSave = () => {
+    onSave({
+      leveling: {
+        level_up_mode: levelUpMode,
+        level_role_mode: levelRoleMode,
+        level_roles: levelRoles,
+        stat_roles: statRoles,
+        msg_xp_enabled: msgXpEnabled,
+        voice_xp_enabled: voiceXpEnabled,
+        reaction_xp_enabled: reactionXpEnabled
+      }
+    });
+  };
 
   return (
     <div className="dash-settings-module">
@@ -352,7 +363,7 @@ export default function LevelingSystemSettings() {
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }}>Save All Leveling Settings</button>
+        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save All Leveling Settings'}</button>
       </div>
     </div>
   );

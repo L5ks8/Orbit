@@ -1,7 +1,25 @@
 import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 
-export default function SecuritySettings() {
+export default function SecuritySettings({ config, onSave, saving }) {
+  const secCfg = config?.security || {};
+
+  const [antiNukeEnabled, setAntiNukeEnabled] = useState(secCfg.anti_nuke_enabled !== false);
+  const [antiScamEnabled, setAntiScamEnabled] = useState(secCfg.anti_scam_enabled !== false);
+  const [threshold, setThreshold] = useState(secCfg.anti_nuke_threshold || 3);
+  const [timeWindow, setTimeWindow] = useState(secCfg.anti_nuke_time_window || 10);
+
+  const handleSave = () => {
+    onSave({
+      security: {
+        anti_nuke_enabled: antiNukeEnabled,
+        anti_scam_enabled: antiScamEnabled,
+        anti_nuke_threshold: threshold,
+        anti_nuke_time_window: timeWindow
+      }
+    });
+  };
+
   return (
     <div className="dash-settings-module">
       <div className="dash-settings-header">
@@ -19,20 +37,20 @@ export default function SecuritySettings() {
             <h3 style={{ margin: 0, color: '#fff', fontSize: '15px', fontWeight: '600' }}>Anti-Nuke System</h3>
             <span className="form-hint" style={{ fontSize: '12px', marginTop: '4px', display: 'block' }}>Automatically protect your server against rogue administrators deleting channels or roles.</span>
           </div>
-          <Toggle defaultChecked={false} />
+          <Toggle checked={antiNukeEnabled} onChange={() => setAntiNukeEnabled(!antiNukeEnabled)} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
           <div className="form-group">
             <label style={{ color: '#fff' }}>Anti-Nuke Threshold</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>How many destructive actions within the time window will trigger the system?</span>
-            <input type="number" className="dash-input" defaultValue={3} />
+            <input type="number" className="dash-input" value={threshold} onChange={e => setThreshold(parseInt(e.target.value) || 3)} min="1" />
           </div>
 
           <div className="form-group">
             <label style={{ color: '#fff' }}>Time Window (Seconds)</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>The timeframe in which actions are counted. (e.g. 3 actions in 10 seconds)</span>
-            <input type="number" className="dash-input" defaultValue={10} />
+            <input type="number" className="dash-input" value={timeWindow} onChange={e => setTimeWindow(parseInt(e.target.value) || 10)} min="1" />
           </div>
         </div>
       </div>
@@ -43,12 +61,12 @@ export default function SecuritySettings() {
             <h3 style={{ margin: 0, color: '#fff', fontSize: '15px', fontWeight: '600' }}>Anti-Scam & Phishing</h3>
             <span className="form-hint" style={{ fontSize: '12px', marginTop: '4px', display: 'block' }}>Automatically detect and delete known phishing and scam links (e.g. fake Discord Nitro links).</span>
           </div>
-          <Toggle defaultChecked={false} />
+          <Toggle checked={antiScamEnabled} onChange={() => setAntiScamEnabled(!antiScamEnabled)} />
         </div>
       </div>
 
       <div style={{ marginTop: '32px' }}>
-        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }}>Save Security Settings</button>
+        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Security Settings'}</button>
       </div>
     </div>
   );

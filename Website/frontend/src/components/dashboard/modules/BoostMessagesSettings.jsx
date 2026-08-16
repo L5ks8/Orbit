@@ -2,31 +2,44 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function BoostMessagesSettings() {
-  const [enabled, setEnabled] = useState(false);
-  const [mode, setMode] = useState('embed'); // 'image' or 'embed'
+export default function BoostMessagesSettings({ config, channels, roles, onSave, saving }) {
+  const bCfg = config?.boost || {};
+  const [enabled, setEnabled] = useState(bCfg.enabled || false);
+  const [mode, setMode] = useState(bCfg.msg_mode || 'embed');
+  const [channel, setChannel] = useState(bCfg.channel_id || '');
   
   // Message State
-  const [content, setContent] = useState('Thank you for boosting the server, {user}!');
+  const [content, setContent] = useState(bCfg.message || 'Thank you for boosting the server, {user}!');
   
   // Embed State
-  const [embedColor, setEmbedColor] = useState('#EB459E');
-  const [embedAuthor, setEmbedAuthor] = useState('');
-  const [embedTitle, setEmbedTitle] = useState('SERVER BOOST');
-  const [embedDesc, setEmbedDesc] = useState('');
-  const [embedFooter, setEmbedFooter] = useState('');
+  const [embedColor, setEmbedColor] = useState(bCfg.embed_color || '#EB459E');
+  const [embedAuthor, setEmbedAuthor] = useState(bCfg.embed_author || '');
+  const [embedTitle, setEmbedTitle] = useState(bCfg.embed_title || 'SERVER BOOST');
+  const [embedDesc, setEmbedDesc] = useState(bCfg.embed_description || '');
+  const [embedFooter, setEmbedFooter] = useState(bCfg.embed_footer || '');
 
   // Image Card State
-  const [bgImageUrl, setBgImageUrl] = useState('');
+  const [bgImageUrl, setBgImageUrl] = useState(bCfg.image_url || '');
 
-  const channelOptions = [
-    { value: '1', label: '# general' },
-    { value: '2', label: '# announcements' }
-  ];
-  
-  const roleOptions = [
-    { value: '1', label: '@ Booster' }
-  ];
+  const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
+  const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+
+  const handleSave = () => {
+    onSave({
+      boost: {
+        enabled,
+        channel_id: channel,
+        message: content,
+        msg_mode: mode,
+        image_url: bgImageUrl,
+        embed_author: embedAuthor,
+        embed_title: embedTitle,
+        embed_description: embedDesc,
+        embed_footer: embedFooter,
+        embed_color: embedColor
+      }
+    });
+  };
 
   return (
     <div className="dash-settings-module">
@@ -231,6 +244,10 @@ export default function BoostMessagesSettings() {
 
           </div>
         </div>
+      </div>
+
+      <div style={{ marginTop: '24px' }}>
+        <button className="dash-btn primary" style={{ width: '100%', padding: '12px' }} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Boost Settings'}</button>
       </div>
     </div>
   );
