@@ -3,16 +3,20 @@ import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function AutoresponderSettings({ config, channels, onSave, saving, onReset }) {
-  const arCfg = config?.autoresponder || [];
+  const arCfg = config?.autoresponder || {};
   
-  const [triggers, setTriggers] = useState(
-    arCfg.map((t, i) => ({
-      id: t.id || i + 1,
-      trigger: t.trigger || '',
-      reply: t.reply || '',
+  // Convert dictionary { "trigger": { response: "reply", exact_match: true } } to array
+  const initialTriggers = Object.keys(arCfg).map((trigger, i) => {
+    const t = arCfg[trigger];
+    return {
+      id: Date.now() + i, // Generate unique ID
+      trigger: trigger,
+      reply: t.response || t.reply || '', // Support both "response" (backend) and "reply"
       exactMatch: t.exact_match || false
-    }))
-  );
+    };
+  });
+
+  const [triggers, setTriggers] = useState(initialTriggers);
   const [editingTrigger, setEditingTrigger] = useState(null);
 
   const handleSaveTrigger = (e) => {
@@ -42,13 +46,19 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
   };
 
   const getPayload = () => {
+    const autoresponderDict = {};
+    triggers.forEach(t => {
+      // Use trigger as key, as expected by the Python backend
+      autoresponderDict[t.trigger] = {
+        response: t.reply, // Backend uses "response"
+        exact_match: t.exactMatch,
+        channel_id: null,
+        use_ai: false
+      };
+    });
+    
     return {
-      autoresponder: triggers.map(t => ({
-        id: t.id,
-        trigger: t.trigger,
-        reply: t.reply,
-        exact_match: t.exactMatch
-      }))
+      autoresponder: autoresponderDict
     };
   };
 
