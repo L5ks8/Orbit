@@ -16,7 +16,11 @@ export default function Settings({ guildId }) {
   useEffect(() => {
     if (!guildId) return;
     setLoading(true);
-    fetch(`/api/config/${guildId}`)
+    fetch(`/api/config/${guildId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         const s = data.config?.settings || {};
@@ -43,7 +47,10 @@ export default function Settings({ guildId }) {
     setSaving(true);
     fetch(`/api/config/${guildId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
       body: JSON.stringify({ settings })
     })
       .then(res => res.json())

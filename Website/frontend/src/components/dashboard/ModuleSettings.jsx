@@ -35,7 +35,11 @@ export default function ModuleSettings({ guildId }) {
   React.useEffect(() => {
     if (!guildId) return;
     setLoading(true);
-    fetch(`/api/config/${guildId}`)
+    fetch(`/api/config/${guildId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setServerData(data);
@@ -52,7 +56,10 @@ export default function ModuleSettings({ guildId }) {
     try {
       const res = await fetch(`/api/config/${guildId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify(payload)
       });
       const data = await res.json();

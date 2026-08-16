@@ -35,7 +35,11 @@ export default function Modules({ guildId }) {
 
   useEffect(() => {
     if (!guildId) return;
-    fetch(`/api/config/${guildId}`)
+    fetch(`/api/config/${guildId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setConfig(data);
