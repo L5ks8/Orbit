@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
+import DiscordPreview from '../../ui/DiscordPreview';
 
 export default function GoodbyeMessagesSettings({ config, channels, onSave, saving }) {
   const gCfg = config?.goodbye || {};
 
   const [enabled, setEnabled] = useState(gCfg.enabled || false);
-  const [mode, setMode] = useState(gCfg.msg_mode || 'embed'); // 'image' or 'embed'
+  const [mode, setMode] = useState(gCfg.msg_mode || 'embed');
   const [channel, setChannel] = useState(gCfg.channel_id || '');
-  
-  // Message State
   const [content, setContent] = useState(gCfg.message || "We're sad to see you go, {user}!");
-  
-  // Embed State
   const [embedColor, setEmbedColor] = useState(gCfg.embed_color || '#ED4245');
   const [embedAuthor, setEmbedAuthor] = useState(gCfg.embed_author || '');
   const [embedTitle, setEmbedTitle] = useState(gCfg.embed_title || 'MEMBER LEFT');
   const [embedDesc, setEmbedDesc] = useState(gCfg.embed_description || '');
   const [embedFooter, setEmbedFooter] = useState(gCfg.embed_footer || '');
-
-  // Image Card State
+  const [embedImage, setEmbedImage] = useState(gCfg.embed_image || '');
+  const [embedThumbnail, setEmbedThumbnail] = useState(gCfg.embed_thumbnail || '');
   const [bgImageUrl, setBgImageUrl] = useState(gCfg.image_url || '');
 
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
@@ -27,21 +24,11 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
   const handleSave = () => {
     onSave({
       goodbye: {
-        enabled,
-        channel_id: channel,
-        message: content,
-        msg_mode: mode,
-        image_url: bgImageUrl,
-        embed_author: embedAuthor,
-        embed_title: embedTitle,
-        embed_description: embedDesc,
-        embed_footer: embedFooter,
-        embed_color: embedColor,
-        // Preserve other fields
-        embed_image: gCfg.embed_image || '',
-        embed_thumbnail: gCfg.embed_thumbnail || '',
-        embed_author_icon: gCfg.embed_author_icon || '',
-        embed_footer_icon: gCfg.embed_footer_icon || '',
+        enabled, channel_id: channel, message: content, msg_mode: mode,
+        image_url: bgImageUrl, embed_author: embedAuthor, embed_title: embedTitle,
+        embed_description: embedDesc, embed_footer: embedFooter, embed_color: embedColor,
+        embed_image: embedImage, embed_thumbnail: embedThumbnail,
+        embed_author_icon: gCfg.embed_author_icon || '', embed_footer_icon: gCfg.embed_footer_icon || '',
         embed_fields: gCfg.embed_fields || []
       }
     });
@@ -71,32 +58,15 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
         <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '20px' }}>Message Builder</h3>
         
         <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-          <button 
-            className={`dash-btn ${mode === 'image' ? 'primary' : 'secondary'}`} 
-            onClick={() => setMode('image')}
-          >
-            Image Card
-          </button>
-          <button 
-            className={`dash-btn ${mode === 'embed' ? 'primary' : 'secondary'}`} 
-            onClick={() => setMode('embed')}
-          >
-            Embed Message
-          </button>
+          <button className={`dash-btn ${mode === 'image' ? 'primary' : 'secondary'}`} onClick={() => setMode('image')}>Image Card</button>
+          <button className={`dash-btn ${mode === 'embed' ? 'primary' : 'secondary'}`} onClick={() => setMode('embed')}>Embed Message</button>
         </div>
 
         <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
-          {/* Builder Form (Left Column) */}
           <div style={{ flex: '1 1 400px' }}>
             <div className="form-group" style={{ marginBottom: '20px' }}>
               <label style={{ color: '#fff' }}>Content Text (Outside Embed)</label>
-              <textarea 
-                className="dash-input" 
-                style={{ width: '100%', height: '80px', resize: 'vertical' }} 
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Message outside the embed..."
-              />
+              <textarea className="dash-input" style={{ width: '100%', height: '80px', resize: 'vertical' }} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Message outside the embed..." />
             </div>
 
             {mode === 'embed' && (
@@ -104,41 +74,16 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ color: '#fff' }}>Embed Color</label>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <input 
-                      type="color" 
-                      value={embedColor} 
-                      onChange={(e) => setEmbedColor(e.target.value)}
-                      style={{ width: '40px', height: '40px', padding: 0, border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'transparent' }}
-                    />
-                    <input 
-                      type="text" 
-                      className="dash-input" 
-                      value={embedColor}
-                      onChange={(e) => setEmbedColor(e.target.value)}
-                      style={{ width: '100px' }}
-                    />
+                    <input type="color" value={embedColor} onChange={(e) => setEmbedColor(e.target.value)} style={{ width: '40px', height: '40px', padding: 0, border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'transparent' }} />
+                    <input type="text" className="dash-input" value={embedColor} onChange={(e) => setEmbedColor(e.target.value)} style={{ width: '100px' }} />
                   </div>
                 </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Author Name</label>
-                  <input type="text" className="dash-input" placeholder="Author..." value={embedAuthor} onChange={(e) => setEmbedAuthor(e.target.value)} />
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Title</label>
-                  <input type="text" className="dash-input" placeholder="Title..." value={embedTitle} onChange={(e) => setEmbedTitle(e.target.value)} />
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Description</label>
-                  <textarea className="dash-input" style={{ width: '100%', height: '100px', resize: 'vertical' }} placeholder="Description..." value={embedDesc} onChange={(e) => setEmbedDesc(e.target.value)} />
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Footer Text</label>
-                  <input type="text" className="dash-input" placeholder="Footer..." value={embedFooter} onChange={(e) => setEmbedFooter(e.target.value)} />
-                </div>
+                <div className="form-group" style={{ margin: 0 }}><label style={{ color: '#fff' }}>Author Name</label><input type="text" className="dash-input" placeholder="Author..." value={embedAuthor} onChange={(e) => setEmbedAuthor(e.target.value)} /></div>
+                <div className="form-group" style={{ margin: 0 }}><label style={{ color: '#fff' }}>Title</label><input type="text" className="dash-input" placeholder="Title..." value={embedTitle} onChange={(e) => setEmbedTitle(e.target.value)} /></div>
+                <div className="form-group" style={{ margin: 0 }}><label style={{ color: '#fff' }}>Description</label><textarea className="dash-input" style={{ width: '100%', height: '100px', resize: 'vertical' }} placeholder="Description..." value={embedDesc} onChange={(e) => setEmbedDesc(e.target.value)} /></div>
+                <div className="form-group" style={{ margin: 0 }}><label style={{ color: '#fff' }}>Image URL</label><input type="text" className="dash-input" placeholder="https://..." value={embedImage} onChange={(e) => setEmbedImage(e.target.value)} /></div>
+                <div className="form-group" style={{ margin: 0 }}><label style={{ color: '#fff' }}>Footer Text</label><input type="text" className="dash-input" placeholder="Footer..." value={embedFooter} onChange={(e) => setEmbedFooter(e.target.value)} /></div>
+                <div className="form-group" style={{ margin: 0 }}><label style={{ color: '#fff' }}>Thumbnail URL</label><input type="text" className="dash-input" placeholder="https://..." value={embedThumbnail} onChange={(e) => setEmbedThumbnail(e.target.value)} /></div>
               </div>
             )}
 
@@ -147,84 +92,29 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ color: '#fff' }}>Background Image URL</label>
                   <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Provide a direct URL to an image (png/jpg/gif).</span>
-                  <input 
-                    type="text" 
-                    className="dash-input" 
-                    placeholder="https://example.com/image.png" 
-                    value={bgImageUrl}
-                    onChange={(e) => setBgImageUrl(e.target.value)}
-                  />
+                  <input type="text" className="dash-input" placeholder="https://example.com/image.png" value={bgImageUrl} onChange={(e) => setBgImageUrl(e.target.value)} />
                 </div>
               </div>
             )}
           </div>
 
-          {/* Live Preview (Right Column) */}
           <div style={{ flex: '1 1 400px' }}>
-            <label style={{ color: '#fff', display: 'block', marginBottom: '12px', fontWeight: '600' }}>Live Discord Preview</label>
-            <div style={{ background: '#313338', borderRadius: '8px', padding: '16px', display: 'flex', gap: '16px', fontFamily: '"gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#5865F2', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>
-                O
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ color: '#F2F3F5', fontWeight: '500', fontSize: '16px' }}>Orbit</span>
-                  <span style={{ background: '#5865F2', color: '#fff', fontSize: '10px', padding: '2px 4px', borderRadius: '3px', fontWeight: 'bold', textTransform: 'uppercase' }}>Bot</span>
-                  <span style={{ color: '#949BA4', fontSize: '12px' }}>Today at 12:00 PM</span>
-                </div>
+            <DiscordPreview
+              content={content}
+              embedColor={embedColor}
+              embedAuthor={embedAuthor}
+              embedTitle={embedTitle}
+              embedDesc={embedDesc}
+              embedFooter={embedFooter}
+              embedImage={embedImage}
+              embedThumbnail={embedThumbnail}
+              imageUrl={bgImageUrl}
+              mode={mode}
+              accentColor="#ED4245"
+              cardTitle="GOODBYE"
+              channels={channels}
+            />
 
-                {content && (
-                  <div style={{ color: '#DBDEE1', fontSize: '14px', marginBottom: '8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {content}
-                  </div>
-                )}
-
-                {mode === 'embed' && (embedAuthor || embedTitle || embedDesc || embedFooter) && (
-                  <div style={{ background: '#2B2D31', borderRadius: '4px', borderLeft: `4px solid ${embedColor}`, padding: '12px 16px', maxWidth: '432px' }}>
-                    {embedAuthor && (
-                      <div style={{ color: '#F2F3F5', fontSize: '13.5px', fontWeight: '600', marginBottom: '8px' }}>
-                        {embedAuthor}
-                      </div>
-                    )}
-                    {embedTitle && (
-                      <div style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: '700', marginBottom: '4px' }}>
-                        {embedTitle}
-                      </div>
-                    )}
-                    {embedDesc && (
-                      <div style={{ color: '#DBDEE1', fontSize: '13.5px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', marginBottom: '8px' }}>
-                        {embedDesc}
-                      </div>
-                    )}
-                    {embedFooter && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                        <span style={{ color: '#949BA4', fontSize: '11px' }}>{embedFooter}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {mode === 'image' && (
-                  <div style={{ maxWidth: '400px', borderRadius: '8px', overflow: 'hidden', position: 'relative', background: '#2B2D31', minHeight: '150px' }}>
-                    {bgImageUrl ? (
-                      <img src={bgImageUrl} style={{ width: '100%', display: 'block', objectFit: 'cover' }} alt="Goodbye Card Background" onError={(e) => e.target.style.display = 'none'} />
-                    ) : (
-                      <div style={{ width: '100%', height: '200px', background: 'linear-gradient(45deg, #1f2023, #2b2d31)' }}></div>
-                    )}
-                    
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.2))', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '30px' }}>
-                      <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#313338', marginBottom: '12px', border: '3px solid #111', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        <img src="https://cdn.discordapp.com/embed/avatars/0.png" style={{ width: '100%' }} alt="User Avatar" />
-                      </div>
-                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: '800', fontStyle: 'italic', letterSpacing: '1px' }}>GOODBYE</div>
-                      <div style={{ color: '#fff', fontSize: '14px', opacity: 0.9 }}>@user</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Helper Variables Box */}
             <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '16px' }}>
               <h4 style={{ fontSize: '13px', color: '#fff', fontWeight: '600', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ED4245" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -237,7 +127,6 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#ED4245', fontWeight: '600' }}>{'{id}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>User ID</span></div>
               </div>
             </div>
-
           </div>
         </div>
 

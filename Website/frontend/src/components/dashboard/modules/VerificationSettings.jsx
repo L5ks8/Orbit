@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
+import DiscordPreview from '../../ui/DiscordPreview';
 
 export default function VerificationSettings({ config, roles, onSave, saving }) {
   const vCfg = config?.verify || {};
@@ -116,12 +117,15 @@ export default function VerificationSettings({ config, roles, onSave, saving }) 
 
           {/* Preview */}
           <div style={{ flex: '1 1 300px' }}>
-            <label style={{ color: '#fff', display: 'block', marginBottom: '12px', fontWeight: '600' }}>Preview</label>
-            <div style={{ background: '#2B2D31', borderRadius: '4px', borderLeft: `4px solid ${embedColor}`, padding: '16px', maxWidth: '432px' }}>
-              {embedTitle && <div style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>{embedTitle}</div>}
-              {embedDesc && <div style={{ color: '#DBDEE1', fontSize: '13.5px', whiteSpace: 'pre-wrap' }}>{embedDesc}</div>}
-              {embedImage && <img src={embedImage} style={{ width: '100%', borderRadius: '4px', marginTop: '12px' }} alt="" onError={e => e.target.style.display = 'none'} />}
-            </div>
+            <DiscordPreview
+              embedColor={embedColor}
+              embedTitle={embedTitle}
+              embedDesc={embedDesc}
+              embedImage={embedImage}
+              mode="embed"
+              accentColor="#5865F2"
+              roles={roles}
+            />
           </div>
         </div>
       </div>

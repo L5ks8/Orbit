@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
+import DiscordPreview from '../../ui/DiscordPreview';
 
 export default function BoostMessagesSettings({ config, channels, roles, onSave, saving }) {
   const bCfg = config?.boost || {};
@@ -165,68 +166,20 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
 
           {/* Live Preview (Right Column) */}
           <div style={{ flex: '1 1 400px' }}>
-            <label style={{ color: '#fff', display: 'block', marginBottom: '12px', fontWeight: '600' }}>Live Discord Preview</label>
-            <div style={{ background: '#313338', borderRadius: '8px', padding: '16px', display: 'flex', gap: '16px', fontFamily: '"gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#EB459E', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>
-                O
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ color: '#F2F3F5', fontWeight: '500', fontSize: '16px' }}>Orbit</span>
-                  <span style={{ background: '#5865F2', color: '#fff', fontSize: '10px', padding: '2px 4px', borderRadius: '3px', fontWeight: 'bold', textTransform: 'uppercase' }}>Bot</span>
-                  <span style={{ color: '#949BA4', fontSize: '12px' }}>Today at 12:00 PM</span>
-                </div>
-
-                {content && (
-                  <div style={{ color: '#DBDEE1', fontSize: '14px', marginBottom: '8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {content}
-                  </div>
-                )}
-
-                {mode === 'embed' && (embedAuthor || embedTitle || embedDesc || embedFooter) && (
-                  <div style={{ background: '#2B2D31', borderRadius: '4px', borderLeft: `4px solid ${embedColor}`, padding: '12px 16px', maxWidth: '432px' }}>
-                    {embedAuthor && (
-                      <div style={{ color: '#F2F3F5', fontSize: '13.5px', fontWeight: '600', marginBottom: '8px' }}>
-                        {embedAuthor}
-                      </div>
-                    )}
-                    {embedTitle && (
-                      <div style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: '700', marginBottom: '4px' }}>
-                        {embedTitle}
-                      </div>
-                    )}
-                    {embedDesc && (
-                      <div style={{ color: '#DBDEE1', fontSize: '13.5px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', marginBottom: '8px' }}>
-                        {embedDesc}
-                      </div>
-                    )}
-                    {embedFooter && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                        <span style={{ color: '#949BA4', fontSize: '11px' }}>{embedFooter}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {mode === 'image' && (
-                  <div style={{ maxWidth: '400px', borderRadius: '8px', overflow: 'hidden', position: 'relative', background: '#2B2D31', minHeight: '150px' }}>
-                    {bgImageUrl ? (
-                      <img src={bgImageUrl} style={{ width: '100%', display: 'block', objectFit: 'cover' }} alt="Boost Card Background" onError={(e) => e.target.style.display = 'none'} />
-                    ) : (
-                      <div style={{ width: '100%', height: '200px', background: 'linear-gradient(45deg, #1f2023, #2b2d31)' }}></div>
-                    )}
-                    
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to right, rgba(235,69,158,0.3), rgba(0,0,0,0.6))', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '30px' }}>
-                      <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#313338', marginBottom: '12px', border: '3px solid #EB459E', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        <img src="https://cdn.discordapp.com/embed/avatars/0.png" style={{ width: '100%' }} alt="User Avatar" />
-                      </div>
-                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: '800', fontStyle: 'italic', letterSpacing: '1px' }}>SERVER BOOST</div>
-                      <div style={{ color: '#fff', fontSize: '14px', opacity: 0.9 }}>@user</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <DiscordPreview
+              content={content}
+              embedColor={embedColor}
+              embedAuthor={embedAuthor}
+              embedTitle={embedTitle}
+              embedDesc={embedDesc}
+              embedFooter={embedFooter}
+              imageUrl={bgImageUrl}
+              mode={mode}
+              accentColor="#EB459E"
+              cardTitle="SERVER BOOST"
+              channels={channels}
+              roles={roles}
+            />
 
             {/* Helper Variables Box */}
             <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '16px' }}>
