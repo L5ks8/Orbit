@@ -79,13 +79,19 @@ export default function Settings({ guildId }) {
       <h1 className="dash-title">Server Settings</h1>
       <p className="dash-subtitle">Configure basic Orbit behavior for this server.</p>
 
-      <div className="dash-card settings-card" style={{ padding: '24px', marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>Manager Roles</h3>
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '16px' }}>
+      <div style={{ 
+        background: 'rgba(255,255,255,0.02)', 
+        border: '1px solid rgba(255,255,255,0.05)', 
+        borderRadius: '8px', 
+        padding: '24px', 
+        marginBottom: '24px' 
+      }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>Manager Roles</h3>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', marginBottom: '20px', lineHeight: '1.5' }}>
           Users with these roles can access this dashboard and configure Orbit, even if they don't have Administrator permissions in Discord.
         </p>
         
-        <div style={{ marginBottom: '16px' }}>
+        <div>
           <CustomSelect 
             isMulti
             options={roleOptions}
@@ -96,13 +102,19 @@ export default function Settings({ guildId }) {
         </div>
       </div>
 
-      <div className="dash-card settings-card" style={{ padding: '24px', marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>General Features</h3>
+      <div style={{ 
+        background: 'rgba(255,255,255,0.02)', 
+        border: '1px solid rgba(255,255,255,0.05)', 
+        borderRadius: '8px', 
+        padding: '24px', 
+        marginBottom: '24px' 
+      }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '24px' }}>General Features</h3>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
-            <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Autoresponder Module</label>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Enable or disable the custom autoresponder system.</span>
+            <label style={{ margin: 0, color: '#fff', display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>Autoresponder Module</label>
+            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>Enable or disable the custom autoresponder system.</span>
           </div>
           <Toggle 
             checked={settings.autoresponder_enabled} 
@@ -112,8 +124,8 @@ export default function Settings({ guildId }) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Messages Tracking</label>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Should Orbit track and log message counts for statistics?</span>
+            <label style={{ margin: 0, color: '#fff', display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>Messages Tracking</label>
+            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>Should Orbit track and log message counts for statistics?</span>
           </div>
           <Toggle 
             checked={settings.messages_enabled} 
