@@ -119,9 +119,9 @@ export default function VerificationSettings({ config, roles, onSave, saving }) 
           <div style={{ flex: '1 1 300px' }}>
             <DiscordPreview
               embedColor={embedColor}
-              embedTitle={embedTitle}
-              embedDesc={embedDesc}
-              embedImage={embedImage}
+              embedTitle={embedTitle || 'Server Verification'}
+              embedDesc={embedDesc || 'Please click the button below to verify your account and gain access to the server.'}
+              embedImage={embedImage || 'https://raw.githubusercontent.com/L5ks8/Orbit/main/assets/verify-banner.png'}
               mode="embed"
               accentColor="#5865F2"
               roles={roles}

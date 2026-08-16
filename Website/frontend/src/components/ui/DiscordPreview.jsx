@@ -101,13 +101,13 @@ function formatInline(text, channels = [], roles = []) {
         {match[1]}
       </code>
     )},
-    // Custom animated emoji <a:name:id>
-    { regex: /<a:(\w+):(\d+)>/, render: (match) => (
-      <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.gif`} alt={match[1]} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} />
+    // Custom animated emoji <a:name:id> or <a:id>
+    { regex: /<a:(?:([^:]*):)?(\d+)>/, render: (match) => (
+      <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.gif`} alt={match[1] || 'emoji'} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} />
     )},
-    // Custom emoji <:name:id>
-    { regex: /<:(\w+):(\d+)>/, render: (match) => (
-      <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.webp`} alt={match[1]} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} />
+    // Custom emoji <:name:id> or <:id>
+    { regex: /<:(?:([^:]*):)?(\d+)>/, render: (match) => (
+      <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.webp`} alt={match[1] || 'emoji'} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} />
     )},
     // Channel mention <#id>
     { regex: /<#(\d+)>/, render: (match) => {

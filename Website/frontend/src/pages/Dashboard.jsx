@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Modules from '../components/dashboard/Modules';
@@ -14,6 +14,9 @@ function DashboardInner() {
   const { user, loading } = useAuth();
   const [guildName, setGuildName] = useState('Loading...');
   const [guildIcon, setGuildIcon] = useState(null);
+  const [allGuilds, setAllGuilds] = useState([]);
+  const [showServerDropdown, setShowServerDropdown] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!guildId) return;
@@ -26,6 +29,7 @@ function DashboardInner() {
         } else if (data && data.guilds) {
           guildsArray = data.guilds;
         }
+        setAllGuilds(guildsArray);
         
         const g = guildsArray.find(g => g.id === guildId);
         if (g) {
@@ -48,16 +52,49 @@ function DashboardInner() {
       <Sidebar guildId={guildId} />
       <div className="dash-main">
         <div className="dash-topbar">
-          <div className="dash-server-selector">
+          <div className="dash-server-selector" onClick={() => setShowServerDropdown(!showServerDropdown)} style={{ position: 'relative', cursor: 'pointer' }}>
             {guildIcon ? (
               <img src={`https://cdn.discordapp.com/icons/${guildId}/${guildIcon}.png`} alt="" className="dash-server-icon" style={{borderRadius: '50%', background: 'none'}} />
             ) : (
               <div className="dash-server-icon">{guildName.charAt(0)}</div>
             )}
             <span className="dash-server-name">{guildName}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showServerDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
+            
+            {showServerDropdown && (
+              <div className="dash-server-dropdown" style={{
+                position: 'absolute', top: 'calc(100% + 8px)', left: 0, 
+                background: '#2B2D31', borderRadius: '8px', padding: '8px', 
+                minWidth: '240px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 100, border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                <div style={{ padding: '8px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', color: '#949BA4' }}>Your Servers</div>
+                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                  {allGuilds.map(g => (
+                    <div 
+                      key={g.id} 
+                      onClick={(e) => { e.stopPropagation(); setShowServerDropdown(false); navigate(`/dashboard/${g.id}`); }}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', 
+                        borderRadius: '4px', cursor: 'pointer', background: g.id === guildId ? 'rgba(255,255,255,0.05)' : 'transparent' 
+                      }}
+                      onMouseEnter={(e) => { if (g.id !== guildId) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                      onMouseLeave={(e) => { if (g.id !== guildId) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      {g.icon ? (
+                        <img src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                      ) : (
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#313338', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+                          {g.name.charAt(0)}
+                        </div>
+                      )}
+                      <div style={{ color: '#F2F3F5', fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.name}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="dash-user-profile">
             <img src={user ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png"} alt="User Profile" onError={(e)=>{e.target.src='https://cdn.discordapp.com/embed/avatars/0.png'}} />
