@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import CustomSelect from '../ui/CustomSelect';
 
 export default function Leaderboard({ guildId }) {
   const [data, setData] = useState(null);
@@ -15,6 +16,14 @@ export default function Leaderboard({ guildId }) {
       .finally(() => setLoading(false));
   }, [guildId, sortCategory]);
 
+  const sortOptions = [
+    { value: 'total_xp', label: 'Total XP' },
+    { value: 'message_count', label: 'Messages' },
+    { value: 'voice_minutes', label: 'Voice Time (Hours)' },
+    { value: 'reaction_count', label: 'Reactions' },
+    { value: 'invites', label: 'Invites' }
+  ];
+
   return (
     <div className="dash-leaderboard">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -22,22 +31,13 @@ export default function Leaderboard({ guildId }) {
           <h1 className="dash-title">Leaderboard</h1>
           <p className="dash-subtitle">See who's the most active in your server.</p>
         </div>
-        <select 
-          value={sortCategory} 
-          onChange={(e) => setSortCategory(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: '#fff',
-            borderRadius: '6px',
-            outline: 'none'
-          }}
-        >
-          <option value="total_xp">Total XP</option>
-          <option value="voice_minutes">Voice Time (Min)</option>
-          <option value="invites">Invites</option>
-        </select>
+        <div style={{ width: '220px', position: 'relative', zIndex: 10 }}>
+          <CustomSelect 
+            options={sortOptions} 
+            value={sortCategory} 
+            onChange={setSortCategory} 
+          />
+        </div>
       </div>
 
       <div className="dash-card" style={{ padding: '0', overflow: 'hidden' }}>
