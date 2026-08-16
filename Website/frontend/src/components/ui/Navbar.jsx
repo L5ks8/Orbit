@@ -120,21 +120,21 @@ export default function Navbar({ onSearchClick }) {
                   <span>Guides and references</span>
                 </div>
               </Link>
-              <Link to="#" className="mega-menu-item">
+              <Link to="/benchmarks" className="mega-menu-item">
                 <div className="mega-menu-icon"><ChartIcon /></div>
                 <div className="mega-menu-text">
                   <strong>Benchmarks</strong>
                   <span>Performance comparisons</span>
                 </div>
               </Link>
-              <Link to="#" className="mega-menu-item">
+              <a href="https://discord.gg/" target="_blank" rel="noopener noreferrer" className="mega-menu-item" style={{ textDecoration: 'none' }}>
                 <div className="mega-menu-icon"><ChatIcon /></div>
                 <div className="mega-menu-text">
                   <strong>Community</strong>
                   <span>Join our Discord</span>
                 </div>
-              </Link>
-              <Link to="#" className="mega-menu-item">
+              </a>
+              <Link to="/status" className="mega-menu-item">
                 <div className="mega-menu-icon"><ActivityIcon /></div>
                 <div className="mega-menu-text">
                   <strong>Status</strong>

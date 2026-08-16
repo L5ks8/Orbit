@@ -6,6 +6,8 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Docs from './pages/Docs';
 import Guides from './pages/Guides';
+import Benchmarks from './pages/Benchmarks';
+import Status from './pages/Status';
 import Dashboard from './pages/Dashboard';
 import Appeal from './pages/Appeal';
 import Navbar from './components/ui/Navbar';
@@ -60,6 +62,8 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
           <Route path="/" element={<Landing />} />
           <Route path="/docs" element={<Docs />} />
           <Route path="/guides" element={<Guides />} />
+          <Route path="/benchmarks" element={<Benchmarks />} />
+          <Route path="/status" element={<Status />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/appeal/:customUrl" element={<Appeal />} />
