@@ -155,7 +155,7 @@ export default function VerificationSettings({ config, channels, roles, onSave, 
                 return;
               }
               toast('Sending Verification Panel...', 'info');
-              fetch(`/api/action/${guildId}/send_verify`, {
+              fetch(`/api/action/${guildId}/send_verify_panel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ channel_id: panelChannel })

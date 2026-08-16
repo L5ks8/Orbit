@@ -241,6 +241,7 @@ class ConfigMixin:
             },
             "logs": logs_cfg,
             "automation": {
+                "enabled": automation_cfg.get("enabled", False),
                 "media_only_channels": automation_cfg.get("media_only", {}).get("channels", []),
                 "media_ignore_bots": automation_cfg.get("media_only", {}).get("ignore_bots", True),
                 "command_only_channels": automation_cfg.get("command_only", {}).get("channels", []),
@@ -613,6 +614,7 @@ class ConfigMixin:
                 new_flat = data["automation"]
                 
                 new_auto = {
+                    "enabled": bool(new_flat.get("enabled", False)),
                     "media_only": {
                         "channels": new_flat.get("media_only_channels", []),
                         "ignore_bots": bool(new_flat.get("media_ignore_bots", True))

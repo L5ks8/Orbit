@@ -11,6 +11,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
   const autCfg = config?.automation || {};
   
   // States for dynamic lists
+  const [enabled, setEnabled] = useState(autCfg.enabled || false);
   const [fileChannels, setFileChannels] = useState(autCfg.file_channels || []);
   const [reactionChannels, setReactionChannels] = useState(autCfg.reaction_channels || []);
   const [mediaChannels, setMediaChannels] = useState((autCfg.media_only_channels || []).map(String));
@@ -43,6 +44,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
 
   const getPayload = () => ({
       automation: {
+        enabled: enabled,
         media_only_channels: mediaChannels,
         command_only_channels: cmdChannels,
         media_ignore_bots: mediaBotIgnore,
@@ -80,7 +82,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
             <h1 className="dash-title">Channel Automation</h1>
             <p className="dash-subtitle" style={{ marginBottom: 0 }}>Manage automated actions for specific channels.</p>
           </div>
-          
+          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
         </div>
       </div>
       

@@ -15,6 +15,8 @@ class ChannelAutomationListener(commands.Cog):
             return
 
         config = load_automation_config(message.guild.id)
+        if not config.get("enabled", False):
+            return
         
         # 1. Media-Only Channels
         media_cfg = config.get("media_only", {})
