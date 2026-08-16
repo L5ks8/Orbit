@@ -6,22 +6,6 @@ from aiohttp import web
 import aiohttp
 import discord
 from typing import Dict, Any
-from Commands.Welcome._storage import load_welcome_config, save_welcome_config
-from Commands.Goodbye._storage import load_goodbye_config, save_goodbye_config
-from Commands.AutoMod._storage import load_automod_config, save_automod_config
-from Commands.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
-from Commands.AutoResponder._storage import load_responses, save_responses
-from Commands.JoinRole._storage import load_join_roles, save_join_roles
-from Commands.Log._storage import load_log_config, save_log_config
-from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
-from Commands.Boost._storage import load_boost_config, save_boost_config
-from Commands.Level._storage import load_level_config, save_level_config
-from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
-from aiohttp import web
-import discord
-import os
-import secrets
-import aiohttp
 
 class AuthMixin:
     def get_redirect_uri(self, request: web.Request) -> str:
@@ -77,6 +61,34 @@ class AuthMixin:
                 token_info = await resp.json()
                 access_token = token_info["access_token"]
 
+            headers = {"Authorization": f"Bearer {access_token}"}
+            async with session.get("https://discord.com/api/users/@me", headers=headers) as resp:
+                if resp.status != 200:
+                    return web.Response(text="Failed to fetch user info", status=400)
+                user_info = await resp.json()
+
+        session_id = secrets.token_urlsafe(32)
+        self.sessions[session_id] = {
+            "id": user_info["id"],
+            "username": user_info["username"],
+            "avatar": user_info.get("avatar"),
+            "access_token": access_token
+        }
+        
+        response = web.HTTPFound(next_url)
+        response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
+        return response
+
+    async def handle_logout(self, request: web.Request):
+        session_id = request.cookies.get("orbit_session")
+        if session_id in self.sessions:
+            del self.sessions[session_id]
+        response = web.HTTPFound("/")
+        response.del_cookie("orbit_session")
+        return response
+
+    async def api_user(self, request: web.Request):
+        session = await self.get_user_session(request)
         if not session:
             return web.json_response({"error": "Not authenticated"}, status=401)
         return web.json_response(session)
@@ -102,4 +114,3 @@ class AuthMixin:
             return web.json_response({"error": "User not found"}, status=404)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
-
