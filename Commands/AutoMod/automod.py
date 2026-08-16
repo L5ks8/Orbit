@@ -8,7 +8,7 @@ async def automod_group(ctx: commands.Context):
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command can only be used inside a server.", discord.Color.red()), ephemeral=True)
         from Commands.AutoMod._views import AutoModDashboardLayout
-from Commands._utils import make_embed
+        from Commands._utils import make_embed
         view = AutoModDashboardLayout(ctx.guild.id)
         await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 

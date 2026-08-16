@@ -36,7 +36,7 @@ class AutoModPrefixFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.AutoMod.automod import automod_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "automod" not in bot.all_commands:
         bot.add_command(automod_group)
     await bot.add_cog(AutoModCommand(bot))

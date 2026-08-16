@@ -268,7 +268,7 @@ class BlackjackCommand(commands.Cog):
         if not ctx.guild:
             return True
         from Commands.Economy._storage import load_economy_config
-from Commands._utils import make_embed
+        from Commands._utils import make_embed
         config = load_economy_config(ctx.guild.id)
         if not config.get("enabled", True):
             await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)

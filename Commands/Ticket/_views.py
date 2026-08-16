@@ -363,7 +363,7 @@ class PersistentTicketPanelLayout(discord.ui.View):
         
         async def _btn_create_cb(interaction: discord.Interaction):
             from Commands.Ticket._storage import is_blacklisted
-from Commands._utils import make_embed
+            from Commands._utils import make_embed
             if interaction.guild and is_blacklisted(interaction.guild.id, interaction.user.id):
                 return await interaction.response.send_message(embed=make_embed("You are blacklisted from opening support tickets on this server.", discord.Color.red()), ephemeral=True)
             

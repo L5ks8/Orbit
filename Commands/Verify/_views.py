@@ -147,7 +147,7 @@ class PersistentVerifyLayout(discord.ui.View):
                 import secrets
                 token = secrets.token_urlsafe(16)
                 from Commands.Verify._storage import WEB_VERIFY_SESSIONS
-from Commands._utils import make_embed
+                from Commands._utils import make_embed
                 WEB_VERIFY_SESSIONS[token] = {
                     "user_id": interaction.user.id,
                     "guild_id": interaction.guild.id,

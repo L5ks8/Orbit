@@ -1,4 +1,4 @@
-﻿import json
+import json
 import pathlib
 import discord
 from discord.ext import commands
@@ -24,7 +24,7 @@ def _save_status(act_type: str, text: str, status_str: str = "online"):
 def _load_status() -> dict | None:
     try:
         from Database.mongodb import get_db
-from Commands._utils import make_embed
+        from Commands._utils import make_embed
         db = get_db()
         if db is not None:
             doc = db["OwnerOnly_BotStatus"].find_one({"_id": "GLOBAL"})

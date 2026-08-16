@@ -27,7 +27,7 @@ class JoinRoleListCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.JoinRole.joinrole import joinrole_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "joinrole" not in bot.all_commands:
         bot.add_command(joinrole_group)
     await bot.add_cog(JoinRoleListCog(bot))

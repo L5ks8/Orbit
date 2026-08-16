@@ -336,7 +336,7 @@ async def render_transcript_cmd(interaction: discord.Interaction, file: discord.
             return await interaction.followup.send(embed=make_embed("Failed to render image.", discord.Color.red()), ephemeral=True)
             
         import io
-from Commands._utils import make_embed
+        from Commands._utils import make_embed
         b = io.BytesIO()
         img.save(b, format='PNG')
         b.seek(0)

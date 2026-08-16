@@ -151,7 +151,7 @@ class CoinflipCommand(commands.Cog):
         dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
         
         import asyncio
-from Commands._utils import make_embed
+        from Commands._utils import make_embed
         await asyncio.sleep(1.5)
         await view.flip(dummy_inter)
 

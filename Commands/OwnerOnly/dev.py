@@ -143,7 +143,7 @@ class DevCommand(commands.Cog):
     @commands.is_owner()
     async def dev_cmd(self, ctx: commands.Context):
         from Commands.OwnerOnly._monitor import record_command
-from Commands._utils import make_embed
+        from Commands._utils import make_embed
         record_command("dev", str(ctx.author))
         if ctx.guild is not None:
             try:

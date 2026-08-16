@@ -26,7 +26,7 @@ class ReminderCancelCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Reminder.remind import remind_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "remind" not in bot.all_commands:
         bot.add_command(remind_group)
     await bot.add_cog(ReminderCancelCog(bot))

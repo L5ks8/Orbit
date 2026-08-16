@@ -192,7 +192,7 @@ class SlotsCommand(commands.Cog):
 
         if session.base_xp > 0 and ctx.guild and ctx.author:
             from Commands.Level._storage import grant_minigame_xp
-from Commands._utils import make_embed
+            from Commands._utils import make_embed
             xp_earned = await grant_minigame_xp(ctx.guild, ctx.author, ctx.channel, session.base_xp)
             if xp_earned > 0:
                 session.outcome_text += f" *( +{xp_earned} XP)*"

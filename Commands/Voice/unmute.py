@@ -56,7 +56,7 @@ class VcUnmutePrefixFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Voice.voice import voice_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(VcUnmuteCommand(bot))

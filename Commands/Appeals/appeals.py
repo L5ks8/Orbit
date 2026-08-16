@@ -30,7 +30,7 @@ class AppealView(discord.ui.View):
 
     async def get_appeals_cfg(self):
         from Commands.Appeals._storage import load_appeals_config
-from Commands._utils import make_embed
+        from Commands._utils import make_embed
         return load_appeals_config(self.guild_id)
 
     async def handle_decision(self, interaction: discord.Interaction, is_accept: bool):

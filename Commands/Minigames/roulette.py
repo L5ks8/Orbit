@@ -178,7 +178,7 @@ class RouletteCommand(commands.Cog):
         dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
         
         import asyncio
-from Commands._utils import make_embed
+        from Commands._utils import make_embed
         await asyncio.sleep(2.0)
         await view.spin(dummy_inter)
 

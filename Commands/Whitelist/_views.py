@@ -80,7 +80,7 @@ class WhitelistListLayout(discord.ui.View):
             except Exception:
                 self.clear_items()
                 from discord.ui import Container, TextDisplay
-from Commands._utils import make_embed
+                from Commands._utils import make_embed
                 self.add_item(Container(TextDisplay(content="### Whitelist overview closed.")))
                 await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
                 self.stop()

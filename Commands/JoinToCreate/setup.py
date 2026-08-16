@@ -74,7 +74,7 @@ class JTCSetupPrefixFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.JoinToCreate.tempvoice import tempvoice_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "tempvoice" not in bot.all_commands:
         bot.add_command(tempvoice_group)
     await bot.add_cog(JTCSetupCog(bot))

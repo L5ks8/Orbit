@@ -99,6 +99,6 @@ async def vc_say_error(ctx: commands.Context, error):
 
 async def setup(bot: commands.Bot):
     from Commands.Voice.voice import voice_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)

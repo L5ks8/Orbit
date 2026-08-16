@@ -44,7 +44,7 @@ async def role_group(ctx: commands.Context):
                         return await _do_removerole(ctx, target, found_role, "Toggled via quick -role command")
                     else:
                         from Commands.Role.add import _do_addrole
-from Commands._utils import make_embed
+                        from Commands._utils import make_embed
                         return await _do_addrole(ctx, target, found_role, "Toggled via quick -role command")
 
         await ctx.send(embed=make_embed("Please use `/role info`, `/role all`, `/role rall`, `/role create`, `/role remove`, or `/role settings`."), ephemeral=True)

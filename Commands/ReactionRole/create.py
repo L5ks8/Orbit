@@ -70,7 +70,7 @@ class ReactionRoleCreateCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.ReactionRole.reactionrole import reactionrole_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "reactionrole" not in bot.all_commands:
         bot.add_command(reactionrole_group)
     await bot.add_cog(ReactionRoleCreateCog(bot))

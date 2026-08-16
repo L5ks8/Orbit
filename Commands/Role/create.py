@@ -53,7 +53,7 @@ class RoleCreateCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Role.role import role_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleCreateCog(bot))

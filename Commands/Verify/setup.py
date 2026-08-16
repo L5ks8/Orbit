@@ -96,7 +96,7 @@ class VerifySetupFallback(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Verify.verify import verify_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "verify" not in bot.all_commands:
         bot.add_command(verify_group)
     bot.add_view(PersistentVerifyLayout())

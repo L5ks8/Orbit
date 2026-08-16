@@ -75,7 +75,7 @@ class ChannelCreateCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Commands.Channel.channel import channel_group
-from Commands._utils import make_embed
+    from Commands._utils import make_embed
     if "channel" not in bot.all_commands:
         bot.add_command(channel_group)
     await bot.add_cog(ChannelCreateCog(bot))
