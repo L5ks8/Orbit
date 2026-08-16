@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function Navbar({ onSearchClick }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const dropdownRef = useRef(null);
+  const timeoutRef = useRef(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -16,12 +16,15 @@ export default function Navbar({ onSearchClick }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleDropdown = (menu) => {
-    if (activeDropdown === menu) {
+  const handleMouseEnter = (menu) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setActiveDropdown(menu);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
       setActiveDropdown(null);
-    } else {
-      setActiveDropdown(menu);
-    }
+    }, 150);
   };
 
   return (
@@ -38,8 +41,8 @@ export default function Navbar({ onSearchClick }) {
         {/* Product Dropdown (Placeholder) */}
         <div 
           className="mega-dropdown-container" 
-          onMouseEnter={() => setActiveDropdown('product')}
-          onMouseLeave={() => setActiveDropdown(null)}
+          onMouseEnter={() => handleMouseEnter('product')}
+          onMouseLeave={handleMouseLeave}
         >
           <div className={`mega-nav-item ${activeDropdown === 'product' ? 'active' : ''}`}>
             Product <ChevronIcon active={activeDropdown === 'product'} />
@@ -82,8 +85,8 @@ export default function Navbar({ onSearchClick }) {
         {/* Solutions Dropdown (Placeholder) */}
         <div 
           className="mega-dropdown-container"
-          onMouseEnter={() => setActiveDropdown('solutions')}
-          onMouseLeave={() => setActiveDropdown(null)}
+          onMouseEnter={() => handleMouseEnter('solutions')}
+          onMouseLeave={handleMouseLeave}
         >
           <div className={`mega-nav-item ${activeDropdown === 'solutions' ? 'active' : ''}`}>
             Solutions <ChevronIcon active={activeDropdown === 'solutions'} />
@@ -104,8 +107,8 @@ export default function Navbar({ onSearchClick }) {
         {/* Resources Dropdown (Matched from image) */}
         <div 
           className="mega-dropdown-container"
-          onMouseEnter={() => setActiveDropdown('resources')}
-          onMouseLeave={() => setActiveDropdown(null)}
+          onMouseEnter={() => handleMouseEnter('resources')}
+          onMouseLeave={handleMouseLeave}
         >
           <div className={`mega-nav-item ${activeDropdown === 'resources' ? 'active' : ''}`} style={activeDropdown === 'resources' ? { background: 'rgba(255,255,255,0.05)', borderRadius: '6px' } : {}}>
             Resources <ChevronIcon active={activeDropdown === 'resources'} />
