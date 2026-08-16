@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function ServerSelector() {
@@ -12,10 +12,14 @@ export default function ServerSelector() {
       fetch('/api/guilds')
         .then(res => res.json())
         .then(data => {
-          if (data && data.guilds) {
+          // Backend returns an array directly
+          if (Array.isArray(data)) {
+            setGuilds(data);
+          } else if (data && data.guilds) {
             setGuilds(data.guilds);
           }
         })
+        .catch(err => console.error("Failed to load guilds:", err))
         .finally(() => setFetching(false));
     } else {
       setFetching(false);
@@ -23,7 +27,12 @@ export default function ServerSelector() {
   }, [user]);
 
   if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#fff'}}>Loading...</div>;
-  if (!user) return <Navigate to="/" />;
+  
+  // If not logged in, redirect to Discord OAuth
+  if (!user) {
+    window.location.href = '/auth/login?next=/dashboard';
+    return <div style={{padding: '50px', textAlign: 'center', color: '#fff'}}>Redirecting to login...</div>;
+  }
 
   return (
     <div style={{ padding: '60px 20px', maxWidth: '800px', margin: '0 auto', color: '#fff' }}>
