@@ -288,6 +288,8 @@ class ConfigMixin:
             if user_perms.get("can_channels") and "serverstats" in data:
                 s_data = data.get("serverstats", {})
                 ss_cfg = load_serverstats_config(guild_id)
+                if "enabled" in s_data:
+                    ss_cfg["enabled"] = bool(s_data["enabled"])
                 ss_cfg["category_id"] = str(s_data.get("category_id", "") or "")
                 ss_cfg["category_name"] = str(s_data.get("category_name", " Server Stats") or " Server Stats")
                 ss_cfg["users_enabled"] = bool(s_data.get("users_enabled"))
