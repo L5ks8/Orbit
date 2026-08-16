@@ -55,8 +55,7 @@ export default function Verify() {
               </svg>
             </div>
             <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '12px' }}>Verification Successful!</h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)' }}>Your account and IP have been securely linked.</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', marginTop: '8px', fontWeight: '500' }}>You can close this tab and return to Discord now.</p>
+            <p style={{ color: 'rgba(255,255,255,0.6)' }}>You have been successfully verified now.</p>
           </>
         )}
         
