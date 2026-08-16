@@ -11,13 +11,9 @@ export default function Sidebar({ guildId }) {
 
   return (
     <div className="dash-sidebar">
-      <div className="dash-sidebar-header">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fff' }}>
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-          <path d="M2 12h20"></path>
-        </svg>
-        <span>Orbit</span>
+      <div className="dash-sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <img src="/logo.png" alt="Orbit Logo" style={{ height: '32px' }} />
+        <span style={{ fontWeight: '600', fontSize: '20px', color: '#fff' }}>Orbit</span>
       </div>
       <nav className="dash-sidebar-nav">
         {links.map((link) => (

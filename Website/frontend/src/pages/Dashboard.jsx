@@ -96,8 +96,9 @@ function DashboardInner() {
               </div>
             )}
           </div>
-          <div className="dash-user-profile">
-            <img src={user ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png"} alt="User Profile" onError={(e)=>{e.target.src='https://cdn.discordapp.com/embed/avatars/0.png'}} />
+          <div className="dash-user-profile" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: '#F2F3F5', fontSize: '14px', fontWeight: '500' }}>{user ? user.username : 'User'}</span>
+            <img src={user ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png"} alt="User Profile" style={{ width: '36px', height: '36px', borderRadius: '50%' }} onError={(e)=>{e.target.src='https://cdn.discordapp.com/embed/avatars/0.png'}} />
           </div>
         </div>
         
