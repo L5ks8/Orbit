@@ -39,24 +39,25 @@ export default function Modules({ guildId }) {
       .then(res => res.json())
       .then(data => {
         setConfig(data);
+        const cfg = data.config || {};
         setEnabledModules({
-          automod: data.automod?.enabled || false,
-          welcome: data.welcome?.enabled || false,
-          level: data.level?.enabled || false,
-          tickets: data.ticket?.enabled || false,
-          appeals: data.appeals?.enabled || false,
-          automation: data.automation?.enabled || false,
-          autoresponder: data.autoresponder_enabled || false,
-          boost: data.boost?.enabled || false,
-          economy: data.economy?.enabled || false,
-          goodbye: data.goodbye?.enabled || false,
-          joinroles: data.joinroles?.enabled || false,
-          logs: data.logs?.enabled || false,
-          messages: data.messages_enabled || false,
-          security: data.security?.enabled || false,
-          serverstats: data.serverstats?.enabled || false,
-          tempvoice: data.tempvoice?.enabled || false,
-          verify: data.verify?.enabled || false,
+          automod: cfg.automod?.enabled || false,
+          welcome: cfg.welcome?.enabled || false,
+          level: cfg.level?.enabled || false,
+          tickets: cfg.ticket?.enabled || false,
+          appeals: cfg.appeals?.enabled || false,
+          automation: cfg.automation?.enabled || false,
+          autoresponder: cfg.autoresponder_enabled || false,
+          boost: cfg.boost?.enabled || false,
+          economy: cfg.economy?.enabled || false,
+          goodbye: cfg.goodbye?.enabled || false,
+          joinroles: cfg.joinroles?.enabled || false,
+          logs: cfg.logs?.enabled || false,
+          messages: cfg.messages_enabled || false,
+          security: cfg.security?.enabled || false,
+          serverstats: cfg.serverstats?.enabled || false,
+          tempvoice: cfg.tempvoice?.enabled || false,
+          verify: cfg.verify?.enabled || false,
         });
       });
   }, [guildId]);

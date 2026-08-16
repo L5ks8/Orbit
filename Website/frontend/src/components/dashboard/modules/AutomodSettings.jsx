@@ -209,6 +209,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
           </div>
         </div>
       )}
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }
