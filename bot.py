@@ -220,7 +220,7 @@ class OrbitBot(commands.Bot):
     async def setup_hook(self):
         try:
             from aiohttp import web
-            from Commands.WebDashboard.web import setup_web_app
+            from Website.backend.main import setup_web_app
             app = setup_web_app(self)
             runner = web.AppRunner(app)
             await runner.setup()
