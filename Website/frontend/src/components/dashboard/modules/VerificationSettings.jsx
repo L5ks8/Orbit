@@ -14,7 +14,7 @@ export default function VerificationSettings({ config, roles, onSave, saving, on
   const [embedTitle, setEmbedTitle] = useState(vCfg.embed_title || '');
   const [embedDesc, setEmbedDesc] = useState(vCfg.embed_description || '');
   const [embedColor, setEmbedColor] = useState(vCfg.embed_color || '#5865F2');
-  const [embedImage, setEmbedImage] = useState(vCfg.embed_image || '');
+  const [embedImage, setEmbedImage] = useState(vCfg.embed_image || 'https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png');
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
@@ -124,7 +124,7 @@ export default function VerificationSettings({ config, roles, onSave, saving, on
               embedColor={embedColor}
               embedTitle={embedTitle || 'Server Verification'}
               embedDesc={embedDesc || 'Please click the button below to verify your account and gain access to the server.'}
-              embedImage={embedImage || 'https://raw.githubusercontent.com/L5ks8/Orbit/main/assets/verify-banner.png'}
+              embedImage={embedImage || 'https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png'}
               mode="embed"
               accentColor="#5865F2"
               roles={roles}
