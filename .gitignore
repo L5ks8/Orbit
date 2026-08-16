@@ -14,5 +14,4 @@ Thumbs.db
 Storage/
 
 Website/frontend/node_modules/
-Website/frontend/dist/
 Website/frontend/.env
