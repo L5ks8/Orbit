@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
-import Navbar from '../components/ui/Navbar';
 
 Chart.register(...registerables);
 
@@ -211,7 +210,6 @@ export default function Status() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0b0b0c', color: '#dbdee1', fontFamily: '"Inter", sans-serif' }}>
-      <Navbar />
       
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '120px 24px 60px' }}>
         
