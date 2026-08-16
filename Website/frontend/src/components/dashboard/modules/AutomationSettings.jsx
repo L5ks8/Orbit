@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { useToast } from '../../ui/Toast';
 
 export default function AutomationSettings({ config, channels, roles, onSave, saving, onReset }) {
-  const { id: guildId } = useParams();
+  const { guildId } = useParams();
   const toast = useToast();
   const autCfg = config?.automation || {};
   
@@ -15,6 +15,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
   const [reactionChannels, setReactionChannels] = useState(autCfg.reaction_channels || []);
   const [mediaChannels, setMediaChannels] = useState((autCfg.media_only_channels || []).map(String));
   const [cmdChannels, setCmdChannels] = useState((autCfg.command_only_channels || []).map(String));
+  const [honeypotEnabled, setHoneypotEnabled] = useState(autCfg.honeypot_enabled ?? false);
   const [honeypotChannel, setHoneypotChannel] = useState(autCfg.honeypot_channel_id || '');
   const [honeypotExemptRoles, setHoneypotExemptRoles] = useState((autCfg.honeypot_exempt_roles || []).map(String));
   const [honeypotMsg, setHoneypotMsg] = useState(autCfg.honeypot_message || '');
@@ -45,6 +46,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
         media_only_channels: mediaChannels,
         command_only_channels: cmdChannels,
         media_ignore_bots: mediaBotIgnore,
+        honeypot_enabled: honeypotEnabled,
         honeypot_channel_id: honeypotChannel,
         honeypot_exempt_roles: honeypotExemptRoles,
         honeypot_message: honeypotMsg,
@@ -110,12 +112,17 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
 
       {/* Auto Ban Channel */}
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '15px', fontWeight: '600', color: '#EF4444', display: 'block', marginBottom: '4px' }}>Auto Ban Channel (Honeypot)</label>
-          <span className="form-hint" style={{ fontSize: '12px', display: 'block' }}>Users posting in this channel will be immediately banned. Ideal for catching compromised accounts.</span>
+        <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <label style={{ fontSize: '15px', fontWeight: '600', color: '#EF4444', display: 'block', marginBottom: '4px' }}>Auto Ban Channel (Honeypot)</label>
+            <span className="form-hint" style={{ fontSize: '12px', display: 'block' }}>Users posting in this channel will be immediately banned. Ideal for catching compromised accounts.</span>
+          </div>
+          <Toggle checked={honeypotEnabled} onChange={() => setHoneypotEnabled(!honeypotEnabled)} />
         </div>
         
-        <div className="form-group" style={{ marginBottom: '16px' }}>
+        {honeypotEnabled && (
+          <>
+            <div className="form-group" style={{ marginBottom: '16px' }}>
           <label style={{ color: '#fff' }}>Honeypot Channel</label>
           <CustomSelect options={channelOptions} value={honeypotChannel} onChange={setHoneypotChannel} placeholder="Select Channel..." />
         </div>
@@ -213,6 +220,8 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
             Send Warning Message to Channel
           </button>
         </div>
+        </>
+        )}
       </div>
 
       {/* File Only Channels */}

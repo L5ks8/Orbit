@@ -244,6 +244,7 @@ class ConfigMixin:
                 "media_only_channels": automation_cfg.get("media_only", {}).get("channels", []),
                 "media_ignore_bots": automation_cfg.get("media_only", {}).get("ignore_bots", True),
                 "command_only_channels": automation_cfg.get("command_only", {}).get("channels", []),
+                "honeypot_enabled": automation_cfg.get("auto_ban", {}).get("enabled", False),
                 "honeypot_channel_id": automation_cfg.get("auto_ban", {}).get("channel_id", ""),
                 "honeypot_exempt_roles": automation_cfg.get("auto_ban", {}).get("exempt_roles", []),
                 "honeypot_message": automation_cfg.get("auto_ban", {}).get("message", ""),
@@ -620,6 +621,7 @@ class ConfigMixin:
                         "channels": new_flat.get("command_only_channels", [])
                     },
                     "auto_ban": {
+                        "enabled": bool(new_flat.get("honeypot_enabled", False)),
                         "channel_id": str(new_flat.get("honeypot_channel_id", "")),
                         "exempt_roles": new_flat.get("honeypot_exempt_roles", []),
                         "message": str(new_flat.get("honeypot_message", "")),

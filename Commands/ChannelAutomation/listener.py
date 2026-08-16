@@ -101,7 +101,8 @@ class ChannelAutomationListener(commands.Cog):
         # 5. Auto Ban Channel (Honeypot)
         auto_ban_cfg = config.get("auto_ban", {})
         ban_channel_id = auto_ban_cfg.get("channel_id")
-        if ban_channel_id and str(message.channel.id) == ban_channel_id:
+        is_enabled = auto_ban_cfg.get("enabled", False)
+        if is_enabled and ban_channel_id and str(message.channel.id) == ban_channel_id:
             if not message.author.bot:
                 exempt_users = auto_ban_cfg.get("exempt_users", [])
                 exempt_roles = auto_ban_cfg.get("exempt_roles", [])
