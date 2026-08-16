@@ -63,7 +63,7 @@ class AskVoice(commands.Cog):
         ]
         response = await asyncio.wait_for(
             self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-3.5-turbo",
                 messages=messages_payload,
             ),
             timeout=20.0,

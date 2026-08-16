@@ -1,4 +1,4 @@
-﻿import os
+import os
 import discord
 from discord.ext import commands
 from g4f.client import AsyncClient
@@ -157,9 +157,8 @@ class GeminiChatbot(commands.Cog):
 
                 response = await asyncio.wait_for(
                     self.client.chat.completions.create(
-                        model='gpt-4o',
-                        messages=messages_payload,
-                        web_search=True
+                        model='gpt-3.5-turbo',
+                        messages=messages_payload
                     ),
                     timeout=20.0
                 )
@@ -308,10 +307,9 @@ class GeminiChatbot(commands.Cog):
                     else:
                         await message.add_reaction("")
                 else:
-                    await message.reply("I'm sorry, I couldn't generate a response.")
-                    
             except Exception as e:
                 print(f"AI Error: {e}")
+                await message.reply(f"I am currently experiencing technical difficulties connecting to my AI providers. Please try again later.\n*(Error: {e})*")
 
     async def _send_chunked(self, message: discord.Message, text: str):
         chunks = [text[i:i+1950] for i in range(0, len(text), 1950)]
