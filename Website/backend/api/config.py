@@ -228,7 +228,20 @@ class ConfigMixin:
                 ]
             },
             "logs": logs_cfg,
-            "automation": automation_cfg,
+            "automation": {
+                "media_only_channels": automation_cfg.get("media_only", {}).get("channels", []),
+                "media_ignore_bots": automation_cfg.get("media_only", {}).get("ignore_bots", True),
+                "command_only_channels": automation_cfg.get("command_only", {}).get("channels", []),
+                "honeypot_channel_id": automation_cfg.get("honeypot", {}).get("channel_id", ""),
+                "honeypot_exempt_roles": automation_cfg.get("honeypot", {}).get("exempt_roles", []),
+                "honeypot_message": automation_cfg.get("honeypot", {}).get("message", ""),
+                "file_channels": automation_cfg.get("file_only", []),
+                "reaction_channels": automation_cfg.get("auto_reaction", []),
+                "counting_enabled": automation_cfg.get("counting", {}).get("enabled", False),
+                "counting_channel_id": automation_cfg.get("counting", {}).get("channel_id", ""),
+                "counting_whitelist_roles": automation_cfg.get("counting", {}).get("whitelisted_roles", []),
+                "solo_counting": automation_cfg.get("counting", {}).get("allow_solo_counting", True),
+            },
             "tempvoice": tempvoice_cfg,
             "level": level_cfg,
             "economy": economy_cfg,
@@ -549,18 +562,37 @@ class ConfigMixin:
             if user_perms.get("can_channels") and "automation" in data:
                 from Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
                 current_auto = load_automation_config(guild_id)
-                new_auto = data["automation"]
-                if isinstance(new_auto, dict) and "counting" in new_auto:
-                    c_data = new_auto["counting"]
-                    if not c_data.get("reset_count_requested"):
-                        curr_cnt = current_auto.get("counting", {})
-                        c_data["current_count"] = curr_cnt.get("current_count", 0)
-                        c_data["last_user_id"] = curr_cnt.get("last_user_id", None)
-                    else:
-                        c_data["current_count"] = 0
-                        c_data["last_user_id"] = None
-                        if "reset_count_requested" in c_data:
-                            del c_data["reset_count_requested"]
+                new_flat = data["automation"]
+                
+                new_auto = {
+                    "media_only": {
+                        "channels": new_flat.get("media_only_channels", []),
+                        "ignore_bots": bool(new_flat.get("media_ignore_bots", True))
+                    },
+                    "command_only": {
+                        "channels": new_flat.get("command_only_channels", [])
+                    },
+                    "honeypot": {
+                        "channel_id": str(new_flat.get("honeypot_channel_id", "")),
+                        "exempt_roles": new_flat.get("honeypot_exempt_roles", []),
+                        "message": str(new_flat.get("honeypot_message", ""))
+                    },
+                    "file_only": new_flat.get("file_channels", []),
+                    "auto_reaction": new_flat.get("reaction_channels", []),
+                    "counting": {
+                        "enabled": bool(new_flat.get("counting_enabled", False)),
+                        "channel_id": str(new_flat.get("counting_channel_id", "")),
+                        "whitelisted_roles": new_flat.get("counting_whitelist_roles", []),
+                        "allow_solo_counting": bool(new_flat.get("solo_counting", True)),
+                        "current_count": current_auto.get("counting", {}).get("current_count", 0),
+                        "last_user_id": current_auto.get("counting", {}).get("last_user_id", None)
+                    }
+                }
+                
+                if new_flat.get("reset_count_requested"):
+                    new_auto["counting"]["current_count"] = 0
+                    new_auto["counting"]["last_user_id"] = None
+
                 save_automation_config(guild_id, new_auto)
 
             if user_perms.get("can_channels") and "logs" in data:
