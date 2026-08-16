@@ -47,11 +47,10 @@ export default function Status() {
     chartInstance.current = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: dataRef.current.map(d => `${d.time}s`),
         datasets: [
           {
             label: 'Orbit',
-            data: dataRef.current.map(d => d.orbit),
+            data: dataRef.current.map(d => ({ x: d.time, y: d.orbit })),
             borderColor: '#5865F2', // Blurple
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -61,7 +60,7 @@ export default function Status() {
           },
           {
             label: 'Others',
-            data: dataRef.current.map(d => d.others),
+            data: dataRef.current.map(d => ({ x: d.time, y: d.others })),
             borderColor: '#ed4245', // Reddish
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -71,7 +70,7 @@ export default function Status() {
           },
           {
             label: 'Database',
-            data: dataRef.current.map(d => d.others * 2 + 10),
+            data: dataRef.current.map(d => ({ x: d.time, y: d.others * 2 + 10 })),
             borderColor: '#fee75c', // Yellow
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -81,7 +80,7 @@ export default function Status() {
           },
           {
             label: 'Cache',
-            data: dataRef.current.map(d => d.others * 3 + 30),
+            data: dataRef.current.map(d => ({ x: d.time, y: d.others * 3 + 30 })),
             borderColor: '#57F287', // Green
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -91,7 +90,7 @@ export default function Status() {
           },
           {
             label: 'Workers',
-            data: dataRef.current.map(d => d.others * 4 + 50),
+            data: dataRef.current.map(d => ({ x: d.time, y: d.others * 4 + 50 })),
             borderColor: '#9b59b6', // Purple
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -104,7 +103,10 @@ export default function Status() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: false,
+        animation: {
+          duration: 1000,
+          easing: 'linear'
+        },
         interaction: {
           mode: 'index',
           intersect: false,
@@ -124,13 +126,19 @@ export default function Status() {
         },
         scales: {
           x: {
+            type: 'linear',
+            min: -60,
+            max: 0,
             grid: {
               color: 'rgba(255, 255, 255, 0.05)',
               drawBorder: false
             },
             ticks: {
               color: '#80848e',
-              maxTicksLimit: 6
+              maxTicksLimit: 7,
+              callback: function(val) {
+                return val + 's';
+              }
             }
           },
           y: {
@@ -170,13 +178,12 @@ export default function Status() {
       });
 
       const chart = chartInstance.current;
-      chart.data.labels = currentData.map(d => `${d.time}s`);
-      chart.data.datasets[0].data = currentData.map(d => d.orbit);
-      chart.data.datasets[1].data = currentData.map(d => d.others);
-      chart.data.datasets[2].data = currentData.map(d => d.others * 2 + 10);
-      chart.data.datasets[3].data = currentData.map(d => d.others * 3 + 30);
-      chart.data.datasets[4].data = currentData.map(d => d.others * 4 + 50);
-      chart.update('none'); 
+      chart.data.datasets[0].data = currentData.map(d => ({ x: d.time, y: d.orbit }));
+      chart.data.datasets[1].data = currentData.map(d => ({ x: d.time, y: d.others }));
+      chart.data.datasets[2].data = currentData.map(d => ({ x: d.time, y: d.others * 2 + 10 }));
+      chart.data.datasets[3].data = currentData.map(d => ({ x: d.time, y: d.others * 3 + 30 }));
+      chart.data.datasets[4].data = currentData.map(d => ({ x: d.time, y: d.others * 4 + 50 }));
+      chart.update(); 
       
       setLastPoll(new Date().toLocaleTimeString());
     }, 1000);
