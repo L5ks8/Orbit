@@ -733,13 +733,7 @@ class ConfigMixin:
 
                 save_economy_config(guild_id, e_cfg)
 
-            if "serverstats" in data:
-                from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
-                ss_cfg = load_serverstats_config(guild_id)
-                new_ss = data["serverstats"]
-                for k, v in new_ss.items():
-                    ss_cfg[k] = v
-                save_serverstats_config(guild_id, ss_cfg)
+
 
             if user_perms.get("can_channels") and "ticket" in data:
                 from Commands.Ticket._storage import load_ticket_config
@@ -770,6 +764,5 @@ class ConfigMixin:
             return web.json_response({"success": True})
         except Exception as e:
             import traceback
-            with open("C:/Users/berkm/Downloads/Orbit/Orbit/error.log", "a") as f:
-                f.write(traceback.format_exc() + "\n")
+            traceback.print_exc()
             return web.json_response({"error": str(e)}, status=400)
