@@ -3,9 +3,11 @@ import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import { useParams } from 'react-router-dom';
+import { useToast } from '../../ui/Toast';
 
 export default function AutomationSettings({ config, channels, roles, onSave, saving, onReset }) {
   const { id: guildId } = useParams();
+  const toast = useToast();
   const autCfg = config?.automation || {};
   
   // States for dynamic lists
@@ -199,10 +201,11 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
                   embed_color: honeypotEmbedColor,
                   embed_thumbnail: honeypotEmbedThumb
                 })
-              }).then(res => {
-                if (res.ok) alert('Message sent!');
-                else alert('Failed to send message.');
-              }).catch(err => alert('Error sending message.'));
+              }).then(async res => {
+                const json = await res.json().catch(() => ({}));
+                if (res.ok) toast('Message sent!', 'success');
+                else toast(`Failed: ${json.error || 'Unknown error'}`, 'error');
+              }).catch(err => toast('Error sending message.', 'error'));
             }}
           >
             Send Warning Message to Channel
