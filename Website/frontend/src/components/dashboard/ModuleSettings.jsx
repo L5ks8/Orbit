@@ -95,6 +95,7 @@ export default function ModuleSettings({ guildId }) {
           guildId={guildId}
           config={serverData.config}
           channels={serverData.channels || []}
+          voiceChannels={serverData.voice_channels || []}
           roles={serverData.roles || []}
           categories={serverData.categories || []}
           onSave={handleSave}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 
-export default function TempVoiceSettings({ config, channels, categories, onSave, saving }) {
+export default function TempVoiceSettings({ config, voiceChannels, categories, onSave, saving }) {
   const tvCfg = config?.tempvoice || {};
 
   const [enabled, setEnabled] = useState(tvCfg.enabled || false);
@@ -14,12 +14,8 @@ export default function TempVoiceSettings({ config, channels, categories, onSave
     }))
   );
 
-  // Use voice_channels from config (passed via channels for text, but we also need voice)
-  // The API returns voice_channels separately — but our parent passes channels (text).
-  // We'll handle this by filtering or using whatever is available.
   const categoryOptions = (categories || []).map(c => ({ value: c.id, label: c.name }));
-  // For voice channels, we use any channel list available
-  const voiceChannelOptions = channels.map(c => ({ value: c.id, label: `🔊 ${c.name}` }));
+  const voiceChannelOptions = (voiceChannels || []).map(c => ({ value: c.id, label: `🔊 ${c.name}` }));
 
   const updateHub = (index, key, value) => {
     setHubs(prev => prev.map((h, i) => i === index ? { ...h, [key]: value } : h));
