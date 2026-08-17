@@ -28,19 +28,26 @@ class ImageFilters(commands.Cog):
             avatar_bytes = await self.get_avatar_bytes(user)
             avatar = Image.open(BytesIO(avatar_bytes)).convert("RGBA")
             
-            # Create a jail bars overlay programmatically
-            jail_overlay = Image.new("RGBA", avatar.size, (0, 0, 0, 0))
-            draw = ImageDraw.Draw(jail_overlay)
-            width, height = avatar.size
-            bar_width = width // 15
-            for x in range(bar_width, width, bar_width * 3):
-                draw.rectangle([x, 0, x + bar_width, height], fill=(50, 50, 50, 200))
-            
-            # Horizontal bars
-            draw.rectangle([0, height//3, width, height//3 + bar_width], fill=(50, 50, 50, 200))
-            draw.rectangle([0, 2*height//3, width, 2*height//3 + bar_width], fill=(50, 50, 50, 200))
-
-            avatar.paste(jail_overlay, (0, 0), jail_overlay)
+            import os
+            jail_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "jailbars.png")
+            if os.path.exists(jail_img_path):
+                jail_overlay = Image.open(jail_img_path).convert("RGBA")
+                jail_overlay = jail_overlay.resize(avatar.size)
+                avatar.paste(jail_overlay, (0, 0), jail_overlay)
+            else:
+                # Create a jail bars overlay programmatically fallback
+                jail_overlay = Image.new("RGBA", avatar.size, (0, 0, 0, 0))
+                draw = ImageDraw.Draw(jail_overlay)
+                width, height = avatar.size
+                bar_width = width // 15
+                for x in range(bar_width, width, bar_width * 3):
+                    draw.rectangle([x, 0, x + bar_width, height], fill=(50, 50, 50, 200))
+                
+                # Horizontal bars
+                draw.rectangle([0, height//3, width, height//3 + bar_width], fill=(50, 50, 50, 200))
+                draw.rectangle([0, 2*height//3, width, 2*height//3 + bar_width], fill=(50, 50, 50, 200))
+    
+                avatar.paste(jail_overlay, (0, 0), jail_overlay)
             
             buffer = BytesIO()
             avatar.save(buffer, "PNG")
