@@ -29,7 +29,7 @@ class ImageFilters(commands.Cog):
             avatar = Image.open(BytesIO(avatar_bytes)).convert("RGBA")
             
             import os
-            jail_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "jailbars.png")
+            jail_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "Website", "frontend", "dist", "img", "jailbars.png")
             if os.path.exists(jail_img_path):
                 jail_overlay = Image.open(jail_img_path).convert("RGBA")
                 jail_overlay = jail_overlay.resize(avatar.size)
