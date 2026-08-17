@@ -312,8 +312,10 @@ class ConfigMixin:
                 new_s = data["settings"]
                 for k, v in new_s.items():
                     s_cfg[k] = v
-                s_cfg["autoresponder_enabled"] = bool(data.get("autoresponder_enabled", False))
-                s_cfg["messages_enabled"] = bool(data.get("messages_enabled", False))
+                if "autoresponder_enabled" in new_s:
+                    s_cfg["autoresponder_enabled"] = bool(new_s["autoresponder_enabled"])
+                if "messages_enabled" in new_s:
+                    s_cfg["messages_enabled"] = bool(new_s["messages_enabled"])
                 save_settings_config(guild_id, s_cfg)
 
             if user_perms.get("is_admin") and "extra_settings" in data:

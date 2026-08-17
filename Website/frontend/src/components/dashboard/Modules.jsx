@@ -72,17 +72,16 @@ export default function Modules({ guildId }) {
     const newState = !enabledModules[id];
     setEnabledModules(prev => ({ ...prev, [id]: newState }));
 
-    let backendKey = id;
-    if (id === 'tickets') backendKey = 'ticket';
-
     const cfg = config.config || {};
     let payload = {};
+    const backendKey = id === 'tickets' ? 'ticket' : id;
 
     if (id === 'autoresponder' || id === 'messages') {
       payload = {
-        settings: cfg.settings || {},
-        autoresponder_enabled: id === 'autoresponder' ? newState : (enabledModules.autoresponder || false),
-        messages_enabled: id === 'messages' ? newState : (enabledModules.messages || false)
+        settings: {
+          autoresponder_enabled: id === 'autoresponder' ? newState : (enabledModules.autoresponder || false),
+          messages_enabled: id === 'messages' ? newState : (enabledModules.messages || false)
+        }
       };
     } else {
       const currentModConfig = cfg[backendKey] || {};
