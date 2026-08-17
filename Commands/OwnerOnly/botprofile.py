@@ -23,6 +23,8 @@ class BotProfile(commands.Cog):
                             from PIL import Image
                             import io
                             img = Image.open(io.BytesIO(data))
+                            if getattr(img, "is_animated", False):
+                                return await ctx.send(embed=discord.Embed(description="Das bereitgestellte GIF ist größer als 10MB (Discord Limit). Bitte komprimiere es zuerst.", color=discord.Color.red()))
                             img.thumbnail((1024, 1024))
                             out = io.BytesIO()
                             img.save(out, format="PNG")
