@@ -14,7 +14,7 @@ export default function Footer() {
       <div className="lp-footer-inner">
         <div>
           <div className="lp-footer-brand">
-            <img src="/logo.png" alt="Orbit" style={{ height: '28px', opacity: 0.8 }} />
+            <img src="/img/logo.png" alt="Orbit" style={{ height: '28px', opacity: 0.8 }} />
             <span>Orbit</span>
           </div>
           <p className="lp-footer-brand-desc">The all-in-one Discord bot for community management. Free forever.</p>

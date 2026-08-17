@@ -74,7 +74,8 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
   };
 
   return (
-    <div className="dash-settings-module">
+    <div className="dash-settings-module">
+
 
       <div className="settings-title-row" style={{ justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>

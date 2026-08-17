@@ -7,7 +7,7 @@ export default function DocsNavbar({ onSearchClick }) {
   return (
     <nav className="navbar" id="main-navbar">
       <Link to="/" className="logo">
-        <img src="/logo.png" alt="Orbit Logo" style={{ height: '36px', opacity: 0.9 }} />
+        <img src="/img/logo.png" alt="Orbit Logo" style={{ height: '36px', opacity: 0.9 }} />
         Orbit
       </Link>
 

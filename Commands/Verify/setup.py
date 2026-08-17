@@ -34,7 +34,7 @@ async def _do_verify_setup(
         color=emb_color
     )
     
-    emb_image = config.get("embed_image", "") or "https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png"
+    emb_image = config.get("embed_image", "") or "https://raw.githubusercontent.com/L5ks8/Orbit/main/Website/frontend/public/img/default_verify.png"
     if emb_image:
         embed.set_image(url=emb_image)
     

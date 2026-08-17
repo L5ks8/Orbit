@@ -31,7 +31,7 @@ export default function Navbar({ onSearchClick }) {
     <nav className={`mega-navbar ${scrolled ? 'scrolled' : ''}`}>
       {/* Left: Logo */}
       <Link to="/" className="mega-navbar-logo">
-        <img src="/logo.png" alt="Orbit" />
+        <img src="/img/logo.png" alt="Orbit" />
         <span>Orbit</span>
       </Link>
 

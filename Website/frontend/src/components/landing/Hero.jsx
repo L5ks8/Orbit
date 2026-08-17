@@ -13,7 +13,7 @@ export default function Hero() {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const logoImg = new Image();
-    logoImg.src = '/logo.png';
+    logoImg.src = '/img/logo.png';
 
     function resizeCanvas() {
       const wrapper = canvas.parentElement;

@@ -12,7 +12,7 @@ export default function Sidebar({ guildId }) {
   return (
     <div className="dash-sidebar">
       <Link to="/" className="dash-sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-        <img src="/logo.png" alt="Orbit Logo" style={{ height: '32px' }} />
+        <img src="/img/logo.png" alt="Orbit Logo" style={{ height: '32px' }} />
         <span style={{ fontWeight: '600', fontSize: '20px', color: '#fff' }}>Orbit</span>
       </Link>
       <nav className="dash-sidebar-nav">

@@ -30,8 +30,8 @@ class BotProfile(commands.Cog):
     @commands.is_owner()
     async def reset_avatar(self, ctx: commands.Context):
         import os
-        # Path to the logo in the Website/frontend/public directory
-        logo_path = os.path.join(os.path.dirname(__file__), "..", "..", "Website", "frontend", "public", "logo.png")
+        # Path to the logo in the Website/frontend/public/img directory
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "..", "Website", "frontend", "public", "img", "logo.png")
         try:
             if os.path.exists(logo_path):
                 with open(logo_path, "rb") as f:
