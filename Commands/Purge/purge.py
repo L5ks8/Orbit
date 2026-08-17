@@ -1,14 +1,14 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 import re
 from Commands._utils import make_embed
 
-async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_name: str = "", user: discord.Member = None, after: str = None):
+async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_name: str = "", user: discord.Member = None, after: str = None, is_all: bool = False):
     if not isinstance(ctx.channel, (discord.TextChannel, discord.VoiceChannel, discord.Thread)):
         return await ctx.send(embed=make_embed("This command can only be used in server channels.", discord.Color.red()), ephemeral=True, delete_after=5)
 
-    if count < 1 or count > 100:
+    if not is_all and (count < 1 or count > 100):
         return await ctx.send(embed=make_embed("Please specify an amount between 1 and 100.", discord.Color.red()), ephemeral=True, delete_after=5)
         
     def final_check(m: discord.Message) -> bool:
@@ -18,7 +18,7 @@ async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_n
             return False
         return True
 
-    purge_kwargs = {"limit": count, "check": final_check}
+    purge_kwargs = {"limit": count if not is_all else None, "check": final_check}
     
     if after:
         if not after.isdigit():
@@ -62,6 +62,12 @@ class PurgeCog(commands.Cog):
     async def purge_group(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, None, "", user, after)
+
+    @purge_group.command(name="all", description="Deletes all messages in the channel (up to 14 days old).")
+    @commands.has_permissions(manage_messages=True)
+    async def purge_all(self, ctx: commands.Context):
+        await ctx.defer(ephemeral=True)
+        await _do_purge(ctx, 0, None, "All", None, None, is_all=True)
 
     @purge_group.command(name="bots", description="Deletes messages sent by bots.")
     @commands.has_permissions(manage_messages=True)
@@ -113,6 +119,7 @@ class PurgeCog(commands.Cog):
         await _do_purge(ctx, count, lambda m: len(m.mentions) > 0 or len(m.role_mentions) > 0, "Mentions", user, after)
 
     @purge_group.error
+    @purge_all.error
     @purge_bots.error
     @purge_embeds.error
     @purge_humans.error
