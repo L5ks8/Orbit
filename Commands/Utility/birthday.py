@@ -12,15 +12,15 @@ class Birthday(commands.Cog):
     def cog_unload(self):
         self.check_birthdays.cancel()
 
-    @app_commands.command(name="setbirthday", description="Save your birthday (Format: DD.MM)")
+    @commands.hybrid_command(name="setbirthday", description="Save your birthday (Format: DD.MM)")
     @app_commands.describe(date="Your birthday in DD.MM format (e.g., 15.08)")
-    async def set_birthday(self, interaction: discord.Interaction, date: str):
+    async def set_birthday(self, ctx: commands.Context, date: str):
         try:
             # Validate format
             day, month = map(int, date.split('.'))
             datetime.date(2000, month, day) # Dummy year to check validity
         except ValueError:
-            return await interaction.response.send_message(
+            return await ctx.send(
                 embed=discord.Embed(description="Invalid format! Please use **DD.MM** (e.g., 15.08)", color=discord.Color.red()),
                 ephemeral=True
             )
@@ -29,16 +29,16 @@ class Birthday(commands.Cog):
         if db is not None:
             collection = db['birthdays']
             collection.update_one(
-                {"user_id": interaction.user.id},
+                {"user_id": ctx.author.id},
                 {"$set": {"day": day, "month": month}},
                 upsert=True
             )
-            await interaction.response.send_message(
+            await ctx.send(
                 embed=discord.Embed(description=f"Your birthday has been successfully set to **{date}**!", color=0x2B2D31),
                 ephemeral=True
             )
         else:
-            await interaction.response.send_message("Database error.", ephemeral=True)
+            await ctx.send("Database error.", ephemeral=True)
 
     @tasks.loop(time=datetime.time(hour=8, minute=0, tzinfo=datetime.timezone.utc))
     async def check_birthdays(self):

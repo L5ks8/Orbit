@@ -7,13 +7,13 @@ class Translate(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @app_commands.command(name="translate", description="Translates text into the desired language.")
+    @commands.hybrid_command(name="translate", description="Translates text into the desired language.")
     @app_commands.describe(
         language="The target language (e.g., 'en' for English, 'es' for Spanish)",
         text="The text to translate"
     )
-    async def translate_cmd(self, interaction: discord.Interaction, language: str, text: str):
-        await interaction.response.defer()
+    async def translate_cmd(self, ctx: commands.Context, language: str, *, text: str):
+        await ctx.defer()
         try:
             translator = GoogleTranslator(source='auto', target=language.lower())
             translated_text = translator.translate(text)
@@ -23,9 +23,9 @@ class Translate(commands.Cog):
             embed.add_field(name="Original", value=text[:1024], inline=False)
             embed.add_field(name=f"Translation ({language})", value=translated_text[:1024], inline=False)
             
-            await interaction.followup.send(embed=embed)
+            await ctx.send(embed=embed)
         except Exception as e:
-            await interaction.followup.send(embed=discord.Embed(description=f"Translation error: {e}", color=discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=discord.Embed(description=f"Translation error: {e}", color=discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Translate(bot))

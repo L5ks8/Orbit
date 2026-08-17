@@ -19,10 +19,10 @@ class ImageFilters(commands.Cog):
         async with self.session.get(url) as resp:
             return await resp.read()
 
-    @app_commands.command(name="jail", description="Put a user behind bars.")
-    async def jail(self, interaction: discord.Interaction, user: discord.Member = None):
-        user = user or interaction.user
-        await interaction.response.defer()
+    @commands.hybrid_command(name="jail", description="Put a user behind bars.")
+    async def jail(self, ctx: commands.Context, user: discord.Member = None):
+        user = user or ctx.author
+        await ctx.defer()
 
         try:
             avatar_bytes = await self.get_avatar_bytes(user)
@@ -46,14 +46,14 @@ class ImageFilters(commands.Cog):
             avatar.save(buffer, "PNG")
             buffer.seek(0)
             
-            await interaction.followup.send(file=discord.File(fp=buffer, filename="jail.png"))
+            await ctx.send(file=discord.File(fp=buffer, filename="jail.png"))
         except Exception as e:
-            await interaction.followup.send(f"Error: {e}")
+            await ctx.send(f"Error: {e}")
 
-    @app_commands.command(name="wasted", description="GTA Wasted effect.")
-    async def wasted(self, interaction: discord.Interaction, user: discord.Member = None):
-        user = user or interaction.user
-        await interaction.response.defer()
+    @commands.hybrid_command(name="wasted", description="GTA Wasted effect.")
+    async def wasted(self, ctx: commands.Context, user: discord.Member = None):
+        user = user or ctx.author
+        await ctx.defer()
 
         try:
             avatar_bytes = await self.get_avatar_bytes(user)
@@ -83,14 +83,14 @@ class ImageFilters(commands.Cog):
             avatar.save(buffer, "PNG")
             buffer.seek(0)
             
-            await interaction.followup.send(file=discord.File(fp=buffer, filename="wasted.png"))
+            await ctx.send(file=discord.File(fp=buffer, filename="wasted.png"))
         except Exception as e:
-            await interaction.followup.send(f"Error: {e}")
+            await ctx.send(f"Error: {e}")
 
-    @app_commands.command(name="triggered", description="Shaking red GIF.")
-    async def triggered(self, interaction: discord.Interaction, user: discord.Member = None):
-        user = user or interaction.user
-        await interaction.response.defer()
+    @commands.hybrid_command(name="triggered", description="Shaking red GIF.")
+    async def triggered(self, ctx: commands.Context, user: discord.Member = None):
+        user = user or ctx.author
+        await ctx.defer()
 
         try:
             avatar_bytes = await self.get_avatar_bytes(user)
@@ -116,14 +116,14 @@ class ImageFilters(commands.Cog):
             frames[0].save(buffer, format="GIF", save_all=True, append_images=frames[1:], duration=20, loop=0)
             buffer.seek(0)
             
-            await interaction.followup.send(file=discord.File(fp=buffer, filename="triggered.gif"))
+            await ctx.send(file=discord.File(fp=buffer, filename="triggered.gif"))
         except Exception as e:
-            await interaction.followup.send(f"Error: {e}")
+            await ctx.send(f"Error: {e}")
 
-    @app_commands.command(name="rip", description="Put a user on a tombstone.")
-    async def rip(self, interaction: discord.Interaction, user: discord.Member = None):
-        user = user or interaction.user
-        await interaction.response.defer()
+    @commands.hybrid_command(name="rip", description="Put a user on a tombstone.")
+    async def rip(self, ctx: commands.Context, user: discord.Member = None):
+        user = user or ctx.author
+        await ctx.defer()
 
         try:
             avatar_bytes = await self.get_avatar_bytes(user)
@@ -150,9 +150,9 @@ class ImageFilters(commands.Cog):
             tombstone.save(buffer, "PNG")
             buffer.seek(0)
             
-            await interaction.followup.send(file=discord.File(fp=buffer, filename="rip.png"))
+            await ctx.send(file=discord.File(fp=buffer, filename="rip.png"))
         except Exception as e:
-            await interaction.followup.send(f"Error: {e}")
+            await ctx.send(f"Error: {e}")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ImageFilters(bot))
