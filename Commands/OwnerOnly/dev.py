@@ -68,8 +68,28 @@ PAGES = [
         "description": (
             "**`-dbwipe <Server-ID>`**\n"
             "> Permanently deletes all database records and local storage for a specific server.\n\n"
+            "**`-wipeuser <User-ID>`**\n"
+            "> Permanently deletes all database records for a specific user.\n\n"
             "**`-clearcache`**\n"
             "> Flushes internal caches (like the prefix cache) to sync with the database."
+        )
+    },
+    {
+        "title": "Development & Testing",
+        "description": (
+            "**`-shell <command>`**\n"
+            "> Executes a system shell command and returns the output.\n\n"
+            "**`-sudo <@user> <command>`**\n"
+            "> Executes a command on behalf of another user."
+        )
+    },
+    {
+        "title": "Bot Profile Management",
+        "description": (
+            "**`-setavatar [url/attachment]` | `-resetavatar`**\n"
+            "> Changes or resets the bot's profile picture.\n\n"
+            "**`-setusername <name>` | `-resetusername`**\n"
+            "> Changes or resets the bot's global username."
         )
     }
 ]
@@ -242,6 +262,27 @@ class DevCommand(commands.Cog):
         
         embed = discord.Embed(description=f"Wiped all database records and storage files for Server ID `{guild_id}`. ({deleted_count} DB records deleted)", color=0x2B2D31)
         await ctx.send(embed=embed)
+
+    @commands.command(name="wipeuser", hidden=True)
+    @commands.is_owner()
+    async def wipe_user(self, ctx: commands.Context, user_id: int):
+        from Database.mongodb import get_db
+        db = get_db()
+        deleted_count = 0
+        if db is not None:
+            for coll_name in db.list_collection_names():
+                coll = db[coll_name]
+                # Try string _id, int user_id, string user_id
+                res1 = coll.delete_many({"_id": str(user_id)})
+                res2 = coll.delete_many({"user_id": user_id})
+                res3 = coll.delete_many({"user_id": str(user_id)})
+                res4 = coll.delete_many({"author_id": user_id})
+                res5 = coll.delete_many({"author_id": str(user_id)})
+                deleted_count += res1.deleted_count + res2.deleted_count + res3.deleted_count + res4.deleted_count + res5.deleted_count
+        
+        embed = discord.Embed(description=f"Wiped all database records for User ID `{user_id}`. ({deleted_count} DB records deleted)", color=0x2B2D31)
+        await ctx.send(embed=embed)
+
 
     @commands.command(name="clearcache", hidden=True)
     @commands.is_owner()
