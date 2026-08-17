@@ -566,9 +566,11 @@ class ConfigMixin:
                 save_verify_config(guild_id, verify_cfg)
 
             if user_perms.get("can_messages") and "autoresponder" in data:
+                from Commands.AutoResponder._storage import save_responses
                 save_responses(guild_id, data["autoresponder"])
 
             if user_perms.get("can_roles") and "joinroles" in data:
+                from Commands.JoinRole._storage import save_join_roles
                 jr_data = data["joinroles"]
                 save_join_roles(guild_id, {
                     "enabled": bool(jr_data.get("enabled", False)),
