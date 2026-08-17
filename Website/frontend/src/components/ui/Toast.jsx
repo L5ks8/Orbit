@@ -7,7 +7,7 @@ let toastIdCounter = 0;
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info', duration = 20000) => {
+  const addToast = useCallback((message, type = 'info', duration = 5000) => {
     const id = ++toastIdCounter;
     setToasts(prev => [...prev, { id, message, type, leaving: false }]);
     setTimeout(() => {
