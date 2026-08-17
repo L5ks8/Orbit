@@ -151,7 +151,7 @@ export default function Navbar({ onSearchClick }) {
 
       <div className="mega-navbar-actions">
         <a href="#" className="mega-nav-item" style={{ paddingRight: '8px' }}>Add to Discord</a>
-        <a href="#" className="mega-nav-item" style={{ paddingRight: '16px' }}>Support Server</a>
+        <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" className="mega-nav-item" style={{ paddingRight: '16px' }}>Support Server</a>
         {user ? (
           <Link to="/dashboard" className="mega-btn-light" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} alt="" style={{width: '20px', height: '20px', borderRadius: '50%'}} onError={(e)=>{e.target.src='https://cdn.discordapp.com/embed/avatars/0.png'}} />
