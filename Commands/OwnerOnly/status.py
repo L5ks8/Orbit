@@ -191,12 +191,23 @@ class StatusInteractiveView(View):
             color=0x2B2D31
         )
 
+def is_true_owner_check():
+    async def predicate(ctx):
+        if hasattr(ctx.bot, "is_true_owner"):
+            if await ctx.bot.is_true_owner(ctx.author):
+                return True
+        else:
+            if await ctx.bot.is_owner(ctx.author):
+                return True
+        raise commands.NotOwner("You must be the bot owner to use this command.")
+    return commands.check(predicate)
+
 class StatusCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command(name="status", description="Owner Only: Interactive V2 panel or direct shortcut to set activity and presence.")
-    @commands.is_owner()
+    @is_true_owner_check()
     async def status_cmd(self, ctx: commands.Context, type_arg: str = None, *, text_arg: str = None):
         if type_arg:
             clean_type = type_arg.lower().strip()

@@ -217,6 +217,9 @@ class OrbitBot(commands.Bot):
             owner_ids=owner_ids or None
         )
 
+    async def is_true_owner(self, user: discord.User | discord.Member) -> bool:
+        return await super().is_owner(user)
+
     async def is_owner(self, user: discord.User | discord.Member) -> bool:
         if await super().is_owner(user):
             return True
