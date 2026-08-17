@@ -217,6 +217,21 @@ class OrbitBot(commands.Bot):
             owner_ids=owner_ids or None
         )
 
+    async def is_owner(self, user: discord.User | discord.Member) -> bool:
+        if await super().is_owner(user):
+            return True
+        try:
+            import json, os
+            path = os.path.join("Database", "developers.json")
+            if os.path.exists(path):
+                with open(path, "r") as f:
+                    devs = json.load(f)
+                if user.id in devs:
+                    return True
+        except Exception:
+            pass
+        return False
+
     async def setup_hook(self):
         try:
             from aiohttp import web

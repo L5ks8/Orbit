@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 
 PAGES = [
@@ -157,6 +157,47 @@ class DevCommand(commands.Cog):
     @dev_cmd.error
     async def dev_error(self, ctx: commands.Context, error):
         pass
+
+    @commands.command(name="adddev", hidden=True)
+    @commands.is_owner()
+    async def add_dev(self, ctx: commands.Context, user: discord.User):
+        import json, os
+        path = os.path.join("Database", "developers.json")
+        os.makedirs("Database", exist_ok=True)
+        devs = []
+        if os.path.exists(path):
+            try:
+                with open(path, "r") as f:
+                    devs = json.load(f)
+            except Exception:
+                pass
+        if user.id not in devs:
+            devs.append(user.id)
+            with open(path, "w") as f:
+                json.dump(devs, f)
+            await ctx.send(f"Added {user.mention} as a developer.")
+        else:
+            await ctx.send("User is already a developer.")
+
+    @commands.command(name="removedev", hidden=True)
+    @commands.is_owner()
+    async def remove_dev(self, ctx: commands.Context, user: discord.User):
+        import json, os
+        path = os.path.join("Database", "developers.json")
+        devs = []
+        if os.path.exists(path):
+            try:
+                with open(path, "r") as f:
+                    devs = json.load(f)
+            except Exception:
+                pass
+        if user.id in devs:
+            devs.remove(user.id)
+            with open(path, "w") as f:
+                json.dump(devs, f)
+            await ctx.send(f"Removed {user.mention} from developers.")
+        else:
+            await ctx.send("User is not a developer.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DevCommand(bot))
