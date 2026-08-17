@@ -28,10 +28,10 @@ export default function Terms() {
       <h2 id="availability">3. Service Availability</h2>
       <p>While we strive for 99.9% uptime, Orbit is provided "as is" without warranties of any kind. We are not responsible for any issues resulting from bot downtime or data loss.</p>
       
-      <p>We reserve the right to temporarily suspend the bot or dashboard for maintenance, upgrades, or to resolve critical bugs. In such events, we will make reasonable efforts to announce the downtime in advance in our Support Server.</p>
+      <p>We reserve the right to temporarily suspend the bot or dashboard for maintenance, upgrades, or to resolve critical bugs. In such events, we will make reasonable efforts to announce the downtime in advance in our <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary)', textDecoration: 'none'}}>Support Server</a>.</p>
 
       <h2 id="modifications">4. Modifications</h2>
-      <p>We reserve the right to modify or discontinue any part of the service with or without notice. Changes to these terms will be communicated in our Support Server.</p>
+      <p>We reserve the right to modify or discontinue any part of the service with or without notice. Changes to these terms will be communicated in our <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary)', textDecoration: 'none'}}>Support Server</a>.</p>
       
       <p>Your continued use of Orbit after any such changes constitutes your acceptance of the new Terms of Service. It is your responsibility to review these terms periodically for updates.</p>
     </LegalLayout>

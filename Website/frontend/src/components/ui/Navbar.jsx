@@ -130,7 +130,7 @@ export default function Navbar({ onSearchClick }) {
                   <span>Performance comparisons</span>
                 </div>
               </Link>
-              <a href="https://discord.gg/" target="_blank" rel="noopener noreferrer" className="mega-menu-item" style={{ textDecoration: 'none' }}>
+              <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" className="mega-menu-item" style={{ textDecoration: 'none' }}>
                 <div className="mega-menu-icon"><ChatIcon /></div>
                 <div className="mega-menu-text">
                   <strong>Community</strong>
