@@ -267,7 +267,9 @@ class ConfigMixin:
             "level": level_cfg,
             "economy": economy_cfg,
             "serverstats": serverstats_cfg,
-            "security": security_cfg
+            "security": security_cfg,
+            "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
+            "messages_enabled": settings_cfg.get("messages_enabled", False)
         }
 
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
@@ -855,6 +857,30 @@ class ConfigMixin:
                         except Exception:
                             pass
             
+            if user_perms.get("can_channels") and "security" in data:
+                from Commands.Security._storage import load_security_config, save_security_config
+                sec_cfg = load_security_config(guild_id)
+                sec_data = data["security"]
+                sec_cfg["enabled"] = bool(sec_data.get("enabled", sec_cfg.get("enabled", False)))
+                sec_cfg["anti_nuke_enabled"] = bool(sec_data.get("anti_nuke_enabled", True))
+                sec_cfg["anti_scam_enabled"] = bool(sec_data.get("anti_scam_enabled", True))
+                sec_cfg["anti_nuke_threshold"] = int(sec_data.get("anti_nuke_threshold", 3))
+                sec_cfg["anti_nuke_time_window"] = int(sec_data.get("anti_nuke_time_window", 10))
+                save_security_config(guild_id, sec_cfg)
+
+            if user_perms.get("can_channels") and "autoresponder" in data:
+                from Commands.AutoResponder._storage import save_responses
+                save_responses(guild_id, data["autoresponder"])
+
+            if user_perms.get("can_channels") and ("autoresponder_enabled" in data or "messages_enabled" in data):
+                from Commands.WebDashboard._storage import load_settings_config, save_settings_config
+                settings_cfg = load_settings_config(guild_id)
+                if "autoresponder_enabled" in data:
+                    settings_cfg["autoresponder_enabled"] = bool(data["autoresponder_enabled"])
+                if "messages_enabled" in data:
+                    settings_cfg["messages_enabled"] = bool(data["messages_enabled"])
+                save_settings_config(guild_id, settings_cfg)
+
             return web.json_response({"success": True})
         except Exception as e:
             import traceback
