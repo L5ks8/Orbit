@@ -869,8 +869,8 @@ class ConfigMixin:
                 save_security_config(guild_id, sec_cfg)
 
             if user_perms.get("can_channels") and "autoresponder" in data:
-                from Commands.AutoResponder._storage import save_responses
-                save_responses(guild_id, data["autoresponder"])
+                import Commands.AutoResponder._storage as ar_storage
+                ar_storage.save_responses(guild_id, data["autoresponder"])
 
             return web.json_response({"success": True})
         except Exception as e:
