@@ -261,6 +261,7 @@ class ConfigMixin:
                 "counting_channel_id": automation_cfg.get("counting", {}).get("channel_id", ""),
                 "counting_whitelist_roles": automation_cfg.get("counting", {}).get("whitelisted_roles", []),
                 "solo_counting": automation_cfg.get("counting", {}).get("allow_solo_counting", True),
+                "current_count": automation_cfg.get("counting", {}).get("current_count", 0),
             },
             "tempvoice": tempvoice_cfg,
             "level": level_cfg,

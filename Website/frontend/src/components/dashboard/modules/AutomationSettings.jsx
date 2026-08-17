@@ -31,6 +31,8 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
   const [countingChannel, setCountingChannel] = useState(autCfg.counting_channel_id || '');
   const [countingWhitelistRoles, setCountingWhitelistRoles] = useState((autCfg.counting_whitelist_roles || []).map(String));
   const [soloCount, setSoloCount] = useState(autCfg.solo_counting !== false);
+  const [currentCount, setCurrentCount] = useState(autCfg.current_count || 0);
+  const [resetCountRequested, setResetCountRequested] = useState(false);
   const [mediaBotIgnore, setMediaBotIgnore] = useState(autCfg.media_ignore_bots || false);
 
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
@@ -63,7 +65,8 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
         counting_enabled: countingEnabled,
         counting_channel_id: countingChannel,
         counting_whitelist_roles: countingWhitelistRoles,
-        solo_counting: soloCount
+        solo_counting: soloCount,
+        reset_count_requested: resetCountRequested
       }
     });
 
@@ -72,6 +75,10 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
 
   const handleSave = () => {
     onSave(getPayload());
+    if (resetCountRequested) {
+      setCurrentCount(0);
+      setResetCountRequested(false);
+    }
   };
 
   return (
@@ -246,9 +253,9 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {fileChannels.map((c, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr auto', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', gap: '16px', alignItems: 'center' }}>
-                  <CustomSelect options={channelOptions} placeholder="Select Channel..." />
-                  <input type="text" className="dash-input" placeholder="e.g. png, jpg, pdf" />
-                  <Toggle defaultChecked={false} />
+                  <CustomSelect options={channelOptions} placeholder="Select Channel..." value={c.channel_id} onChange={(v) => { const newArr = [...fileChannels]; newArr[i].channel_id = v; setFileChannels(newArr); }} />
+                  <input type="text" className="dash-input" placeholder="e.g. png, jpg, pdf" value={c.allowed_extensions || ''} onChange={(e) => { const newArr = [...fileChannels]; newArr[i].allowed_extensions = e.target.value; setFileChannels(newArr); }} />
+                  <Toggle checked={c.ignore_bots || false} onChange={() => { const newArr = [...fileChannels]; newArr[i].ignore_bots = !(c.ignore_bots || false); setFileChannels(newArr); }} />
                   <button onClick={() => setFileChannels(fileChannels.filter((_, idx) => idx !== i))} className="dash-btn danger" style={{ padding: '8px 12px' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
@@ -280,9 +287,9 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {reactionChannels.map((c, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr auto', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', gap: '16px', alignItems: 'center' }}>
-                  <CustomSelect options={channelOptions} placeholder="Select Channel..." />
-                  <input type="text" className="dash-input" placeholder="e.g. 👍" />
-                  <Toggle defaultChecked={false} />
+                  <CustomSelect options={channelOptions} placeholder="Select Channel..." value={c.channel_id} onChange={(v) => { const newArr = [...reactionChannels]; newArr[i].channel_id = v; setReactionChannels(newArr); }} />
+                  <input type="text" className="dash-input" placeholder="e.g. 👍" value={c.emoji || ''} onChange={(e) => { const newArr = [...reactionChannels]; newArr[i].emoji = e.target.value; setReactionChannels(newArr); }} />
+                  <Toggle checked={c.ignore_bots || false} onChange={() => { const newArr = [...reactionChannels]; newArr[i].ignore_bots = !(c.ignore_bots || false); setReactionChannels(newArr); }} />
                   <button onClick={() => setReactionChannels(reactionChannels.filter((_, idx) => idx !== i))} className="dash-btn danger" style={{ padding: '8px 12px' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
@@ -327,11 +334,11 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div>
             <span style={{ fontSize: '14px', fontWeight: '600', color: '#fff', display: 'block', marginBottom: '4px' }}>
-              Current Count: <span style={{ color: '#5865F2' }}>0</span>
+              Current Count: <span style={{ color: '#5865F2' }}>{resetCountRequested ? 0 : currentCount}</span>
             </span>
-            <span style={{ fontSize: '12px', color: '#949BA4' }}>Next number expected: 1</span>
+            <span style={{ fontSize: '12px', color: '#949BA4' }}>Next number expected: {(resetCountRequested ? 0 : currentCount) + 1}</span>
           </div>
-          <button className="dash-btn secondary" style={{ fontSize: '12px', padding: '8px 16px' }}>Reset Count to 0</button>
+          <button onClick={() => setResetCountRequested(true)} className="dash-btn secondary" style={{ fontSize: '12px', padding: '8px 16px' }}>Reset Count to 0</button>
         </div>
       </div>
 
