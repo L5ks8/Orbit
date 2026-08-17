@@ -50,6 +50,8 @@ PAGES = [
             "> Interactively browse or download `Storage/` JSON files.\n\n"
             "**`-dbquery <sql>`**\n"
             "> Execute direct queries via MongoDB Python client.\n\n"
+            "**`-getip <user/ip>`**\n"
+            "> Search verification logs by User ID or IP address.\n\n"
             "**`-dmclear`**\n"
             "> Clears Orbit's recent direct message history in your DMs."
         )
