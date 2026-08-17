@@ -35,6 +35,10 @@ PAGES = [
         "description": (
             "**`-servers` | `-leaveserver` | `-getinvite`**\n"
             "> View all servers, leave a specific server, or generate an invite.\n\n"
+            "**`-guildinfo <Server-ID>`**\n"
+            "> Get detailed statistics about a specific server.\n\n"
+            "**`-analytics`**\n"
+            "> View global bot usage statistics and cache performance.\n\n"
             "**`-gblacklist <id>` | `-gblacklistremove <id>`**\n"
             "> Add or remove a Server ID from the global blacklist.\n\n"
             "**`-cloudbackup` | `-cloudrestore` | `-setbackupchannel`**\n"
@@ -296,6 +300,59 @@ class DevCommand(commands.Cog):
         except Exception as e:
             cleared = f"Failed to clear cache: {e}"
         embed = discord.Embed(description=f"**Caches Cleared:**\n- {cleared}", color=0x2B2D31)
+        await ctx.send(embed=embed)
+
+    @commands.command(name="analytics", aliases=["botstats"], hidden=True)
+    @commands.is_owner()
+    async def bot_analytics(self, ctx: commands.Context):
+        try:
+            from Commands.OwnerOnly._monitor import get_system_metrics
+            metrics = get_system_metrics(self.bot)
+            
+            embed = discord.Embed(title="Orbit Global Analytics", color=0x2B2D31)
+            embed.add_field(name="Total Commands Run", value=f"`{metrics['commands']:,}`", inline=True)
+            embed.add_field(name="Total Messages Seen", value=f"`{metrics['messages']:,}`", inline=True)
+            embed.add_field(name="Error Count", value=f"`{metrics['error_count']}`", inline=True)
+            
+            embed.add_field(name="Servers", value=f"`{metrics['guilds']:,}`", inline=True)
+            embed.add_field(name="Users", value=f"`{metrics['members']:,}`", inline=True)
+            embed.add_field(name="Ping", value=f"`{metrics['ping_ms']}ms`", inline=True)
+            
+            embed.add_field(name="Cache Hits", value=f"`{metrics['cache_hits']:,}`", inline=True)
+            embed.add_field(name="Cache Misses", value=f"`{metrics['cache_misses']:,}`", inline=True)
+            embed.add_field(name="Hit Rate", value=f"`{metrics['cache_hit_rate']}%`", inline=True)
+            
+            embed.set_footer(text=f"Uptime: {metrics['uptime']}")
+            await ctx.send(embed=embed)
+        except Exception as e:
+            await ctx.send(embed=discord.Embed(description=f"Failed to fetch analytics: {e}", color=discord.Color.red()))
+
+    @commands.command(name="guildinfo", hidden=True)
+    @commands.is_owner()
+    async def guild_info(self, ctx: commands.Context, guild_id: int):
+        guild = self.bot.get_guild(guild_id)
+        if not guild:
+            return await ctx.send(embed=discord.Embed(description="I am not in a server with that ID.", color=discord.Color.red()))
+            
+        embed = discord.Embed(title=f"Guild Info: {guild.name}", color=0x2B2D31)
+        if guild.icon:
+            embed.set_thumbnail(url=guild.icon.url)
+            
+        embed.add_field(name="Owner", value=f"{guild.owner} (`{guild.owner_id}`)", inline=False)
+        embed.add_field(name="Members", value=f"{guild.member_count:,}", inline=True)
+        embed.add_field(name="Text Channels", value=str(len(guild.text_channels)), inline=True)
+        embed.add_field(name="Roles", value=str(len(guild.roles)), inline=True)
+        
+        joined_at = discord.utils.format_dt(guild.me.joined_at, "R") if guild.me.joined_at else "Unknown"
+        created_at = discord.utils.format_dt(guild.created_at, "d")
+        
+        embed.add_field(name="Bot Joined", value=joined_at, inline=True)
+        embed.add_field(name="Created", value=created_at, inline=True)
+        
+        features = ", ".join(guild.features) if guild.features else "None"
+        embed.add_field(name="Features", value=f"`{features}`"[:1000], inline=False)
+        
+        embed.set_footer(text=f"Guild ID: {guild.id}")
         await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):
