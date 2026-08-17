@@ -29,7 +29,7 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
       trigger: formData.get('trigger'),
       reply: formData.get('reply'),
       exactMatch: formData.get('exactMatch') === 'on',
-      useAi: editingTrigger.useAi || false,
+      useAi: formData.get('useAi') === 'on',
       channelId: editingTrigger.channelId || null
     };
 
@@ -102,7 +102,7 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
               <div key={t.id} className="form-group inline" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="form-text">
                   <label>"{t.trigger}"</label>
-                  <span className="form-hint">Replies: "{t.reply}" • Exact Match: {t.exactMatch ? 'Yes' : 'No'}</span>
+                  <span className="form-hint">Replies: "{t.reply}" • Exact Match: {t.exactMatch ? 'Yes' : 'No'} • AI Context: {t.useAi ? 'Yes' : 'No'}</span>
                 </div>
                 <button className="dash-btn secondary" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setEditingTrigger(t)}>Edit</button>
               </div>
@@ -139,6 +139,14 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
                     <span className="form-hint">If enabled, the bot will only reply if the message is exactly the trigger phrase.</span>
                   </div>
                   <input type="checkbox" name="exactMatch" defaultChecked={editingTrigger.exactMatch} style={{ width: 'auto' }} />
+                </div>
+
+                <div className="form-group inline" style={{ marginTop: '16px' }}>
+                  <div className="form-text">
+                    <label>Smart AI Context (Requires ChatGPT)</label>
+                    <span className="form-hint">Use AI to detect if the user's message matches the context of the trigger, rather than a dumb text search.</span>
+                  </div>
+                  <input type="checkbox" name="useAi" defaultChecked={editingTrigger.useAi} style={{ width: 'auto' }} />
                 </div>
               </div>
 

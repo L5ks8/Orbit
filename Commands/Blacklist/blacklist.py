@@ -23,7 +23,7 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
 
     success = add_to_blacklist(ctx.guild.id, user_id, reason, ctx.author.id)
     if not success:
-        return await ctx.send(embed=make_embed(f"ID `{user_id}` is already on the command blacklist.", discord.Color.red()), ephemeral=True)
+        return await ctx.send(embed=make_embed(f"ID `{user_id}` is already on the blacklist.", discord.Color.red()), ephemeral=True)
 
     member = ctx.guild.get_member(user_id)
     ban_msg = ""
@@ -40,11 +40,11 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
         "User Blacklisted (`-blacklist add`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}{ban_msg}"
     )
-    await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the command blacklist.{ban_msg}", discord.Color.green()), ephemeral=True)
+    await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the blacklist.{ban_msg}", discord.Color.green()), ephemeral=True)
 
 @commands.hybrid_command(
     name="blacklist",
-    description="Add an ID to the command blacklist."
+    description="Add an ID to the blacklist."
 )
 @commands.has_permissions(administrator=True)
 async def blacklist_cmd(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
