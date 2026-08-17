@@ -12,7 +12,9 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
       id: Date.now() + i, // Generate unique ID
       trigger: trigger,
       reply: t.response || t.reply || '', // Support both "response" (backend) and "reply"
-      exactMatch: t.exact_match || false
+      exactMatch: t.exact_match || false,
+      useAi: t.use_ai || false,
+      channelId: t.channel_id || null
     };
   });
 
@@ -27,6 +29,8 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
       trigger: formData.get('trigger'),
       reply: formData.get('reply'),
       exactMatch: formData.get('exactMatch') === 'on',
+      useAi: editingTrigger.useAi || false,
+      channelId: editingTrigger.channelId || null
     };
 
     let newTriggers;
@@ -52,8 +56,8 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
       autoresponderDict[t.trigger] = {
         response: t.reply, // Backend uses "response"
         exact_match: t.exactMatch,
-        channel_id: null,
-        use_ai: false
+        channel_id: t.channelId,
+        use_ai: t.useAi
       };
     });
     
