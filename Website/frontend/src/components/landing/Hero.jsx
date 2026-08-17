@@ -9,8 +9,11 @@ export default function Hero() {
     const ctx = canvas.getContext('2d');
     let particles = [];
     let animId;
-    const PARTICLE_COUNT = 60;
+    const PARTICLE_COUNT = 45;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const logoImg = new Image();
+    logoImg.src = '/logo.png';
 
     function resizeCanvas() {
       const wrapper = canvas.parentElement;
@@ -18,15 +21,20 @@ export default function Hero() {
       canvas.height = wrapper.offsetHeight;
     }
 
-    function createParticle() {
+    function createParticle(resetY = false) {
+      const isLogo = Math.random() < 0.15; // 15% chance for a logo
+      const startY = resetY ? -100 : Math.random() * canvas.height;
       return {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 1.5 + 0.5,
-        speedX: (Math.random() - 0.5) * 0.3,
-        speedY: (Math.random() - 0.5) * 0.3,
-        opacity: Math.random() * 0.5 + 0.1,
-        pulse: Math.random() * Math.PI * 2
+        x: Math.random() * canvas.width * 1.5 - canvas.width * 0.25,
+        y: startY,
+        size: isLogo ? (Math.random() * 20 + 20) : (Math.random() * 2 + 1),
+        speedY: Math.random() * 5 + 4,
+        speedX: Math.random() * 2 + 1, // falling down and to the right
+        length: Math.random() * 80 + 40,
+        opacity: Math.random() * 0.5 + 0.2,
+        isLogo: isLogo,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.04
       };
     }
 
@@ -39,38 +47,48 @@ export default function Hero() {
 
     function drawParticles() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
       particles.forEach(p => {
         p.x += p.speedX;
         p.y += p.speedY;
-        p.pulse += 0.01;
+        p.rotation += p.rotSpeed;
 
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
-
-        const o = p.opacity * (0.6 + Math.sin(p.pulse) * 0.4);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${o})`;
-        ctx.fill();
-      });
-
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 120) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.04 * (1 - dist / 120)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
+        if (p.y > canvas.height + 150 || p.x > canvas.width + 150) {
+          Object.assign(p, createParticle(true));
         }
-      }
+
+        ctx.globalAlpha = p.opacity;
+        if (p.isLogo && logoImg.complete) {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          ctx.drawImage(logoImg, -p.size/2, -p.size/2, p.size, p.size);
+          ctx.restore();
+        } else if (!p.isLogo) {
+          const v = Math.sqrt(p.speedX * p.speedX + p.speedY * p.speedY);
+          const nx = p.speedX / v;
+          const ny = p.speedY / v;
+          const tailEndX = p.x - nx * p.length;
+          const tailEndY = p.y - ny * p.length;
+          
+          const grad = ctx.createLinearGradient(p.x, p.y, tailEndX, tailEndY);
+          grad.addColorStop(0, `rgba(255, 255, 255, ${p.opacity})`);
+          grad.addColorStop(1, `rgba(255, 255, 255, 0)`);
+          
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(tailEndX, tailEndY);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = p.size;
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+          ctx.fill();
+        }
+      });
+      ctx.globalAlpha = 1.0;
       animId = requestAnimationFrame(drawParticles);
     }
 
@@ -89,9 +107,8 @@ export default function Hero() {
 
   return (
     <section className="lp-hero fade-in-up delay-1">
-      <div className="lp-hero-visual">
-        <div className="lp-orbit-ring"></div>
-        <div className="lp-orbit-ring-2"></div>
+      <div className="lp-hero-visual" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+        <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }}></canvas>
       </div>
 
       <div className="lp-hero-badge fade-in-scale delay-2">
