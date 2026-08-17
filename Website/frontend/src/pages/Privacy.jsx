@@ -28,7 +28,7 @@ export default function Privacy() {
       <p>Individual user data, such as warning history or level progression, can be wiped upon request by server administrators using the built-in commands.</p>
 
       <h2 id="rights">4. Your Rights</h2>
-      <p>Under GDPR, CCPA, and other applicable data protection laws, you have the right to request access to or deletion of your personal data. To exercise these rights, please join our <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary)', textDecoration: 'none'}}>Support Server</a> and open a ticket.</p>
+      <p>Under GDPR, CCPA, and other applicable data protection laws, you have the right to request access to or deletion of your personal data. To exercise these rights, please join our <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary)', textDecoration: 'underline', fontWeight: 'bold'}}>Support Server</a> and open a ticket.</p>
       <p>We will respond to all data requests within 30 days of receipt, free of charge, unless the request is manifestly unfounded or excessive.</p>
     </LegalLayout>
   );
