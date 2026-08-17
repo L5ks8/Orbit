@@ -62,7 +62,7 @@ export default function Leaderboard() {
   };
 
   return (
-    <div className="dash-container" style={{ minHeight: '100vh', padding: '40px 20px', maxWidth: '900px', margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', padding: '120px 20px 40px', maxWidth: '900px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
       
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '40px' }}>
