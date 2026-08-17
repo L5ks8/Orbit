@@ -74,15 +74,7 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
   };
 
   return (
-    <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Auto-Replies</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Make the bot reply automatically to specific trigger words or phrases.</p>
-          </div>
-        </div>
-      </div>
+    <div className="dash-settings-module">
 
       <div className="settings-title-row" style={{ justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>

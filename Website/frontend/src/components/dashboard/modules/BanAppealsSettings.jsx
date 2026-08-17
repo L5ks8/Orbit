@@ -49,14 +49,7 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Appeals System</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Allow banned or muted users to submit an appeal via the web dashboard.</p>
-          </div>
-        </div>
-      </div>
+
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>General</h3>

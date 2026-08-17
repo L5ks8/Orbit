@@ -28,14 +28,7 @@ export default function SecuritySettings({ config, onSave, saving, onReset }) {
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Security Settings</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Protect your server with automated anti-nuke and anti-scam features.</p>
-          </div>
-        </div>
-      </div>
+
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
         <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>

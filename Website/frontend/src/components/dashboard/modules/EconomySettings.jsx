@@ -91,14 +91,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Economy System</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Manage server currency, betting limits, daily rewards, and earning options for members.</p>
-          </div>
-        </div>
-      </div>
+
 
       {/* Money Options */}
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>

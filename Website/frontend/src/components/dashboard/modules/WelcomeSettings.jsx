@@ -52,15 +52,7 @@ export default function WelcomeSettings({ config, channels, onSave, saving, onRe
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Welcome System</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Greet new members when they join the server with a custom welcome card or embed message!</p>
-          </div>
 
-        </div>
-      </div>
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>

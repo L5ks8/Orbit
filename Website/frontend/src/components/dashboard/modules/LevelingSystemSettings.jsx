@@ -105,14 +105,7 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Leveling System</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Reward members with XP for participating in your server.</p>
-          </div>
-        </div>
-      </div>
+
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
         {/* Message XP Card */}

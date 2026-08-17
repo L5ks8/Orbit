@@ -73,14 +73,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Ticket System</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Configure support tickets and send the ticket panel to a channel.</p>
-          </div>
-                  </div>
-      </div>
+
 
       <div className="dash-card settings-card" style={{ marginBottom: '24px' }}>
         <div className="settings-form">

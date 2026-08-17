@@ -94,14 +94,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Auto-Moderation</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Protect your server from spam, links, and malicious accounts.</p>
-          </div>
-        </div>
-      </div>
+
 
       <h3 className="section-heading">Rules</h3>
       <div className="dash-modules-grid" style={{ marginBottom: '24px' }}>

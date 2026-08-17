@@ -20,6 +20,7 @@ import ServerStatsSettings from './modules/ServerStatsSettings';
 import TempVoiceSettings from './modules/TempVoiceSettings';
 import VerificationSettings from './modules/VerificationSettings';
 import LevelingSystemSettings from './modules/LevelingSystemSettings';
+import { modulesList } from './Modules';
 
 export default function ModuleSettings({ guildId }) {
   const { moduleId } = useParams();
@@ -95,16 +96,32 @@ export default function ModuleSettings({ guildId }) {
     if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#fff'}}>Loading module settings...</div>;
     if (!serverData) return <div style={{padding: '50px', textAlign: 'center', color: '#ef4444'}}>Failed to load data.</div>;
 
+    const moduleInfo = modulesList.find(m => m.id === moduleId);
+
     return (
-      <div className="dash-settings">
+      <div className="dash-settings-module">
         <div className="dash-settings-header" style={{ marginBottom: '24px' }}>
-          <Link to={`/dashboard/${guildId}/modules`} className="dash-back-btn">
+          <Link to={`/dashboard/${guildId}/modules`} className="dash-back-btn" style={{ marginBottom: '16px', display: 'inline-flex' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12"></line>
               <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
             Back to Modules
           </Link>
+          
+          {moduleInfo && (
+            <div className="settings-title-row" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div className="module-icon" style={{ background: moduleInfo.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '12px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fff' }}>
+                  {moduleInfo.icon}
+                </svg>
+              </div>
+              <div>
+                <h1 className="dash-title" style={{ fontSize: '24px', marginBottom: '4px' }}>{moduleInfo.name}</h1>
+                <p className="dash-subtitle" style={{ marginBottom: 0, fontSize: '15px' }}>{moduleInfo.desc}</p>
+              </div>
+            </div>
+          )}
         </div>
         <Component 
           key={formKey}

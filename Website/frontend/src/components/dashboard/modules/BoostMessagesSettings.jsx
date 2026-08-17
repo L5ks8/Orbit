@@ -50,14 +50,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Boost Messages</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Celebrate when members boost your server with a custom card or embed message!</p>
-          </div>
-                  </div>
-      </div>
+
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
         <div className="dash-card settings-card" style={{ padding: '20px' }}>

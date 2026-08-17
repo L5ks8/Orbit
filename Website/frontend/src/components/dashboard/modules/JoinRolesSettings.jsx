@@ -27,14 +27,7 @@ export default function JoinRolesSettings({ config, roles, onSave, saving, onRes
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Auto-Roles</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Automatically assign roles when users or bots join.</p>
-          </div>
-                  </div>
-      </div>
+
 
       <div className="dash-card settings-card" style={{ padding: '20px' }}>
         <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>Roles on Join</h3>

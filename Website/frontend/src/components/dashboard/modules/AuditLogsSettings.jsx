@@ -94,14 +94,7 @@ export default function AuditLogsSettings({ config, channels, roles, onSave, sav
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Server Logs</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Track and record server activity seamlessly.</p>
-          </div>
-                  </div>
-      </div>
+
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>Global Options</h3>

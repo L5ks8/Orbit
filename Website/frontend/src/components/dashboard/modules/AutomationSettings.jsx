@@ -83,16 +83,13 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Channel Automation</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Manage automated actions for specific channels.</p>
-          </div>
-          <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
+      <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px', color: '#fff' }}>Enable Automation Module</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>Turn the automation features on or off globally.</p>
         </div>
+        <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
       </div>
-      
       {/* Media & Command Only */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
         <div className="dash-card settings-card" style={{ padding: '20px' }}>

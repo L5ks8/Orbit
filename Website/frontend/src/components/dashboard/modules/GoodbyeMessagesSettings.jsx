@@ -40,14 +40,7 @@ export default function GoodbyeMessagesSettings({ config, channels, onSave, savi
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Goodbye System</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Say farewell to members when they leave the server with a custom goodbye card or embed message!</p>
-          </div>
-                  </div>
-      </div>
+
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>

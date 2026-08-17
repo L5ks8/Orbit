@@ -49,14 +49,7 @@ export default function VerificationSettings({ config, channels, roles, onSave, 
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Verification</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Require users to solve a CAPTCHA or click to verify before accessing channels.</p>
-          </div>
-                  </div>
-      </div>
+
 
       <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>

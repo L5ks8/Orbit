@@ -45,14 +45,7 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
 
   return (
     <div className="dash-settings-module">
-      <div className="dash-settings-header">
-        <div className="settings-title-row">
-          <div>
-            <h1 className="dash-title">Server Stats</h1>
-            <p className="dash-subtitle" style={{ marginBottom: 0 }}>Select Server Data to display in voice channels.</p>
-          </div>
-        </div>
-      </div>
+
 
       <div className="dash-card settings-card" style={{ padding: '24px' }}>
         <div className="form-group" style={{ marginBottom: '24px' }}>
