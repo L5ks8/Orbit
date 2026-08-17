@@ -19,6 +19,14 @@ class BotProfile(commands.Cog):
                 if r.status == 200:
                     data = await r.read()
                     try:
+                        if len(data) > 10 * 1024 * 1024:
+                            from PIL import Image
+                            import io
+                            img = Image.open(io.BytesIO(data))
+                            img.thumbnail((1024, 1024))
+                            out = io.BytesIO()
+                            img.save(out, format="PNG")
+                            data = out.getvalue()
                         await self.bot.user.edit(avatar=data)
                         await ctx.send(embed=discord.Embed(description="Avatar updated successfully.", color=0x2B2D31))
                     except Exception as e:
@@ -75,7 +83,6 @@ class BotProfile(commands.Cog):
             await ctx.send(embed=discord.Embed(description="Username reset to **Orbit**.", color=0x2B2D31))
         except Exception as e:
             await ctx.send(embed=discord.Embed(description=f"Failed to reset username: {e}", color=discord.Color.red()))
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BotProfile(bot))
