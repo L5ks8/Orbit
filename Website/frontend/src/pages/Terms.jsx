@@ -3,10 +3,13 @@ import LegalLayout from '../components/ui/LegalLayout';
 
 export default function Terms() {
   const sections = [
-    { id: 'acceptance', title: '1. Acceptance of Terms' },
-    { id: 'usage', title: '2. Usage Restrictions' },
-    { id: 'availability', title: '3. Service Availability' },
-    { id: 'modifications', title: '4. Modifications' },
+    { id: 'intro', title: 'Introduction' },
+    { id: 'identity', title: 'Identity and Contact' },
+    { id: 'service', title: 'Service Description' },
+    { id: 'obligations', title: 'User Obligations' },
+    { id: 'sanctions', title: 'Sanctions and Enforcement' },
+    { id: 'liability', title: 'Limitation of Liability' },
+    { id: 'contact', title: 'Contact Us' },
   ];
 
   return (
@@ -15,25 +18,41 @@ export default function Terms() {
       lastUpdated="August 2026" 
       sections={sections}
     >
-      <h2 id="acceptance">1. Acceptance of Terms</h2>
-      <p>By inviting Orbit to your Discord server or logging into our Web Dashboard, you agree to comply with and be bound by these Terms of Service. If you do not agree, please do not use the bot.</p>
-      
-      <p>These terms constitute a legally binding agreement made between you, whether personally or on behalf of an entity, and Orbit, concerning your access to and use of the Orbit Discord Bot and the associated website and dashboard.</p>
+      <h2 id="intro">Introduction</h2>
+      <p>Before you begin using Orbit (“Bot”, “Service”), it is essential to understand and agree to these Terms of Service ("ToS", "Terms"). By adding, accessing, or using our Bot, you hereby comply with and are bound by these Terms.</p>
+      <p>The use of Orbit is subject to these legally binding ToS, and by utilizing our Bot, you agree to adhere to them. If you disagree with any part of the ToS, you must refrain from accessing or using the Bot.</p>
+      <p>We reserve the right to modify these ToS at our sole discretion, without any personal notice. Any changes to the ToS will be updated on this page. Your continued use of the Bot post-modification constitutes your acceptance of the revised terms.</p>
 
-      <h2 id="usage">2. Usage Restrictions</h2>
-      <p>You agree not to use Orbit to violate Discord's Terms of Service, distribute malicious content, or engage in targeted harassment. Any abuse of our systems may result in a permanent ban from our services.</p>
-      
-      <p>Furthermore, you agree not to reverse engineer, decompile, or disassemble any part of the Orbit bot or dashboard, nor attempt to bypass any rate limits or security measures we have put in place to ensure the stability of the platform.</p>
+      <h2 id="identity">Identity and Contact</h2>
+      <p>Orbit is operated by the Orbit Development Team. For inquiries regarding the service, please reach out via our Support Server.</p>
 
-      <h2 id="availability">3. Service Availability</h2>
-      <p>While we strive for 99.9% uptime, Orbit is provided "as is" without warranties of any kind. We are not responsible for any issues resulting from bot downtime or data loss.</p>
-      
-      <p>We reserve the right to temporarily suspend the bot or dashboard for maintenance, upgrades, or to resolve critical bugs. In such events, we will make reasonable efforts to announce the downtime in advance in our <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary)', textDecoration: 'underline', fontWeight: 'bold'}}>Support Server</a>.</p>
+      <h2 id="service">Service Description</h2>
+      <p>Orbit provides Discord servers with the ability to verify their joining members and check for the existence of alternate and/or automated accounts, thereby mitigating spam and potential misuse. We strive to offer consistent and high-quality services.</p>
+      <p>Please check the <a href="/privacy" style={{color: 'var(--primary)'}}>Privacy Policy</a> for details around how data is collected and processed.</p>
 
-      <h2 id="modifications">4. Modifications</h2>
-      <p>We reserve the right to modify or discontinue any part of the service with or without notice. Changes to these terms will be communicated in our <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary)', textDecoration: 'underline', fontWeight: 'bold'}}>Support Server</a>.</p>
-      
-      <p>Your continued use of Orbit after any such changes constitutes your acceptance of the new Terms of Service. It is your responsibility to review these terms periodically for updates.</p>
+      <h2 id="obligations">User Obligations</h2>
+      <p>By using Orbit, you agree not to:</p>
+      <ul>
+        <li>Breach Discord's Terms of Service: <a href="https://discord.com/terms" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary)'}}>https://discord.com/terms</a></li>
+        <li>Try to abuse any Orbit systems, included but not limited to: bot, website, servers...</li>
+        <li>Violate intellectual property and copyrights and/or using Orbit's branding for scam purposes</li>
+        <li>Use and exploit Orbit to attempt "doxxing" another user's account or revealing their personal information</li>
+      </ul>
+
+      <h2 id="sanctions">Sanctions and Enforcement Actions</h2>
+      <p>Should users violate the stipulations laid out in these Terms of Service, we reserve the right to undertake one or more of the following enforcement actions:</p>
+      <ul>
+        <li><strong>Warning:</strong> issuance of a formal warning requesting immediate compliance with ToS</li>
+        <li><strong>Immediate termination:</strong> in case of more severe violations, we reserve the right to terminate the service at our sole discretion without prior notice. This includes, but is not limited to, removing the bot from the targeted server and/or wiping all associated data about the server and its members from our systems.</li>
+        <li><strong>Report to Discord:</strong> when needed, we will file a report to Discord's Trust & Safety Team so they can take appropriate action</li>
+        <li><strong>Legal action:</strong> should we deem the breach is impacting our image or finances in a consequential manner, we reserve the right to pursue legal action.</li>
+      </ul>
+
+      <h2 id="liability">Limitation of Liability</h2>
+      <p>To the fullest extent permitted by applicable law, Orbit shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from your access to or use of, or inability to access or use, the Bot.</p>
+
+      <h2 id="contact">Contact Us</h2>
+      <p>For any inquiries, comments, or concerns regarding these ToS, please contact us at our <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary)'}}>Discord Support Server</a>.</p>
     </LegalLayout>
   );
 }
