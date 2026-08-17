@@ -1,9 +1,10 @@
-﻿import io
+import io
 import time
 import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, ChannelSelect, RoleSelect
 from Commands.Ticket._storage import load_ticket_config, create_active_ticket, claim_ticket, close_active_ticket
+from Commands._utils import make_embed
 
 _user_ticket_selections = {}
 
