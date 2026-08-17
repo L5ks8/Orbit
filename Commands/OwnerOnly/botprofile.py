@@ -29,9 +29,24 @@ class BotProfile(commands.Cog):
     @commands.command(name="resetavatar", hidden=True)
     @commands.is_owner()
     async def reset_avatar(self, ctx: commands.Context):
+        import os
+        # Path to the logo in the Website/frontend/public directory
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "..", "Website", "frontend", "public", "logo.png")
         try:
-            await self.bot.user.edit(avatar=None)
-            await ctx.send(embed=discord.Embed(description="Avatar reset successfully.", color=0x2B2D31))
+            if os.path.exists(logo_path):
+                with open(logo_path, "rb") as f:
+                    avatar_bytes = f.read()
+                await self.bot.user.edit(avatar=avatar_bytes)
+                await ctx.send(embed=discord.Embed(description="Avatar reset to default Orbit logo.", color=0x2B2D31))
+            else:
+                # Fallback to None if logo is missing, though it removes the avatar entirely
+                await self.bot.user.edit(avatar=None)
+                await ctx.send(embed=discord.Embed(description="Local logo file not found. Avatar cleared instead.", color=0x2B2D31))
+        except discord.HTTPException as e:
+            if e.code == 50035 and "verified" in str(e).lower():
+                await ctx.send(embed=discord.Embed(description="**Discord API Restriction:** Verified bots cannot change their avatar via commands. Please change it in the [Discord Developer Portal](https://discord.com/developers/applications).", color=discord.Color.red()))
+            else:
+                await ctx.send(embed=discord.Embed(description=f"Failed to reset avatar: {e}", color=discord.Color.red()))
         except Exception as e:
             await ctx.send(embed=discord.Embed(description=f"Failed to reset avatar: {e}", color=discord.Color.red()))
 
@@ -41,6 +56,13 @@ class BotProfile(commands.Cog):
         try:
             await self.bot.user.edit(username=name)
             await ctx.send(embed=discord.Embed(description=f"Username updated to **{name}**.", color=0x2B2D31))
+        except discord.HTTPException as e:
+            if e.code == 50035 and "verified" in str(e).lower():
+                await ctx.send(embed=discord.Embed(description="**Discord API Restriction:** Verified bots cannot change their username via commands. Please change it in the [Discord Developer Portal](https://discord.com/developers/applications).", color=discord.Color.red()))
+            elif e.code == 50035 and "too many users" in str(e).lower():
+                await ctx.send(embed=discord.Embed(description="**Discord API Restriction:** Too many users have this username. Please try another one.", color=discord.Color.red()))
+            else:
+                await ctx.send(embed=discord.Embed(description=f"Failed to update username: {e}", color=discord.Color.red()))
         except Exception as e:
             await ctx.send(embed=discord.Embed(description=f"Failed to update username: {e}", color=discord.Color.red()))
 
