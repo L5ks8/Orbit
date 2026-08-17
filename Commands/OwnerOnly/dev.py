@@ -53,6 +53,15 @@ PAGES = [
             "**`-dmclear`**\n"
             "> Clears Orbit's recent direct message history in your DMs."
         )
+    },
+    {
+        "title": "Access & Permissions",
+        "description": (
+            "**`-adddev <@user>`**\n"
+            "> Add a user as a bot developer (grants owner-only command access).\n\n"
+            "**`-removedev <@user>`**\n"
+            "> Remove a user from the developer list."
+        )
     }
 ]
 
