@@ -164,6 +164,7 @@ class PersistentVerifyLayout(discord.ui.View):
                     description="Please click the button below to solve the CAPTCHA in your browser.\n*This link is unique to you and will expire in 10 minutes.*",
                     color=discord.Color.blurple()
                 )
+                embed.set_footer(text="By clicking, you accept our privacy policy · Support")
                 
                 await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
             except Exception as e:

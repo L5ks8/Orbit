@@ -38,8 +38,6 @@ async def _do_verify_setup(
     if emb_image:
         embed.set_image(url=emb_image)
     
-    embed.set_footer(text="By clicking, you accept our privacy policy · Support")
-    
     btn_verify = discord.ui.Button(label="Verify", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
     view = discord.ui.View(timeout=None)
     view.add_item(btn_verify)
