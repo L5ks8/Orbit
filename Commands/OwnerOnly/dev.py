@@ -193,9 +193,11 @@ class DevCommand(commands.Cog):
             devs.append(user.id)
             with open(path, "w") as f:
                 json.dump(devs, f)
-            await ctx.send(f"Added {user.mention} as a developer.")
+            embed = discord.Embed(description=f"✅ Added {user.mention} as a developer.", color=0x2B2D31)
+            await ctx.send(embed=embed)
         else:
-            await ctx.send("User is already a developer.")
+            embed = discord.Embed(description="❌ User is already a developer.", color=0x2B2D31)
+            await ctx.send(embed=embed)
 
     @commands.command(name="removedev", hidden=True)
     @commands.is_owner()
@@ -213,9 +215,11 @@ class DevCommand(commands.Cog):
             devs.remove(user.id)
             with open(path, "w") as f:
                 json.dump(devs, f)
-            await ctx.send(f"Removed {user.mention} from developers.")
+            embed = discord.Embed(description=f"✅ Removed {user.mention} from developers.", color=0x2B2D31)
+            await ctx.send(embed=embed)
         else:
-            await ctx.send("User is not a developer.")
+            embed = discord.Embed(description="❌ User is not a developer.", color=0x2B2D31)
+            await ctx.send(embed=embed)
 
     @commands.command(name="dbwipe", hidden=True)
     @commands.is_owner()
@@ -236,7 +240,8 @@ class DevCommand(commands.Cog):
         storage_path = os.path.join("Storage", str(guild_id))
         shutil.rmtree(storage_path, ignore_errors=True)
         
-        await ctx.send(f"Wiped all database records and storage files for Server ID `{guild_id}`. ({deleted_count} DB records deleted)")
+        embed = discord.Embed(description=f"🗑️ Wiped all database records and storage files for Server ID `{guild_id}`. ({deleted_count} DB records deleted)", color=0x2B2D31)
+        await ctx.send(embed=embed)
 
     @commands.command(name="clearcache", hidden=True)
     @commands.is_owner()
@@ -247,7 +252,8 @@ class DevCommand(commands.Cog):
             cleared = "Prefix Cache"
         except Exception as e:
             cleared = f"Failed to clear cache: {e}"
-        await ctx.send(f"**Caches Cleared:**\n- {cleared}")
+        embed = discord.Embed(description=f"♻️ **Caches Cleared:**\n- {cleared}", color=0x2B2D31)
+        await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DevCommand(bot))
