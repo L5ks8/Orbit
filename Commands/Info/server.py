@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands._utils import make_embed
 
@@ -36,6 +36,19 @@ class ServerInfoCommand(commands.Cog):
     @commands.hybrid_command(name="serverinfo", aliases=["server"], description="Display complete server statistics and overview.")
     async def serverinfo_cmd(self, ctx: commands.Context):
         await _do_server_info(ctx)
+
+    @commands.hybrid_command(name="membercount", description="Get the server member count.")
+    async def membercount_cmd(self, ctx: commands.Context):
+        if not ctx.guild:
+            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
+            
+        embed = discord.Embed(
+            title="Members",
+            description=str(ctx.guild.member_count or len(ctx.guild.members)),
+            color=0x3B82F6
+        )
+        embed.timestamp = discord.utils.utcnow()
+        await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):
     # Remove old group command if still present
