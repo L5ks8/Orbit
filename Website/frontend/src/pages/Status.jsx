@@ -29,17 +29,13 @@ export default function Status() {
 
     // 1. Generate initial data (60 seconds)
     const data = [];
-    let orbitVal = 550;
-    let othersVal = 20;
     for (let i = -60; i <= 0; i++) {
       data.push({
         time: i,
-        orbit: orbitVal,
-        others: othersVal
+        servers: 0,
+        ram: 0,
+        ping: 0
       });
-      orbitVal += Math.floor(Math.random() * 4 - 2);
-      othersVal += Math.floor(Math.random() * 6 - 3);
-      if (othersVal < 0) othersVal = 0;
     }
     dataRef.current = data;
 
@@ -49,8 +45,8 @@ export default function Status() {
       data: {
         datasets: [
           {
-            label: 'Orbit',
-            data: dataRef.current.map(d => ({ x: d.time, y: d.orbit })),
+            label: 'Servers',
+            data: dataRef.current.map(d => ({ x: d.time, y: d.servers })),
             borderColor: '#5865F2', // Blurple
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -59,39 +55,19 @@ export default function Status() {
             pointHitRadius: 10
           },
           {
-            label: 'Others',
-            data: dataRef.current.map(d => ({ x: d.time, y: d.others })),
-            borderColor: '#ed4245', // Reddish
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            tension: 0.4,
-            pointRadius: 0,
-            pointHitRadius: 10
-          },
-          {
-            label: 'Database',
-            data: dataRef.current.map(d => ({ x: d.time, y: d.others * 2 + 10 })),
-            borderColor: '#fee75c', // Yellow
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            tension: 0.4,
-            pointRadius: 0,
-            pointHitRadius: 10
-          },
-          {
-            label: 'Cache',
-            data: dataRef.current.map(d => ({ x: d.time, y: d.others * 3 + 30 })),
-            borderColor: '#57F287', // Green
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            tension: 0.4,
-            pointRadius: 0,
-            pointHitRadius: 10
-          },
-          {
-            label: 'Workers',
-            data: dataRef.current.map(d => ({ x: d.time, y: d.others * 4 + 50 })),
+            label: 'RAM (MB)',
+            data: dataRef.current.map(d => ({ x: d.time, y: d.ram })),
             borderColor: '#9b59b6', // Purple
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHitRadius: 10
+          },
+          {
+            label: 'Ping (ms)',
+            data: dataRef.current.map(d => ({ x: d.time, y: d.ping })),
+            borderColor: '#57F287', // Green
             backgroundColor: 'transparent',
             borderWidth: 2,
             tension: 0.4,
@@ -156,37 +132,40 @@ export default function Status() {
       }
     });
 
-    const interval = setInterval(() => {
-      const currentData = dataRef.current;
-      const last = currentData[currentData.length - 1];
-      
-      let newOrbit = last.orbit + Math.floor(Math.random() * 6 - 3);
-      let newOthers = last.others + Math.floor(Math.random() * 8 - 4);
-      if (newOthers < 0) newOthers = 0;
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/stats');
+        const stats = await res.json();
+        
+        const currentData = dataRef.current;
+        currentData.shift();
+        
+        for (let i = 0; i < currentData.length; i++) {
+          currentData[i].time = -(currentData.length - i);
+        }
+        
+        currentData.push({
+          time: 0,
+          servers: stats.servers || 0,
+          ram: stats.ram || 0,
+          ping: stats.ping || 0
+        });
 
-      currentData.shift();
-      
-      // Keep times relative -60s to 0s
-      for (let i = 0; i < currentData.length; i++) {
-        currentData[i].time = -(currentData.length - i);
+        const chart = chartInstance.current;
+        if (chart) {
+          chart.data.datasets[0].data = currentData.map(d => ({ x: d.time, y: d.servers }));
+          chart.data.datasets[1].data = currentData.map(d => ({ x: d.time, y: d.ram }));
+          chart.data.datasets[2].data = currentData.map(d => ({ x: d.time, y: d.ping }));
+          chart.update(); 
+        }
+        setLastPoll(new Date().toLocaleTimeString());
+      } catch (err) {
+        console.error("Failed to fetch stats", err);
       }
-      
-      currentData.push({
-        time: 0,
-        orbit: newOrbit,
-        others: newOthers
-      });
-
-      const chart = chartInstance.current;
-      chart.data.datasets[0].data = currentData.map(d => ({ x: d.time, y: d.orbit }));
-      chart.data.datasets[1].data = currentData.map(d => ({ x: d.time, y: d.others }));
-      chart.data.datasets[2].data = currentData.map(d => ({ x: d.time, y: d.others * 2 + 10 }));
-      chart.data.datasets[3].data = currentData.map(d => ({ x: d.time, y: d.others * 3 + 30 }));
-      chart.data.datasets[4].data = currentData.map(d => ({ x: d.time, y: d.others * 4 + 50 }));
-      chart.update(); 
-      
-      setLastPoll(new Date().toLocaleTimeString());
-    }, 1000);
+    };
+    
+    fetchStats();
+    const interval = setInterval(fetchStats, 2000);
 
     return () => {
       clearInterval(interval);
@@ -261,14 +240,18 @@ export default function Status() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', margin: 0 }}>Live Instance Count</h2>
             
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '16px', fontSize: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '12px', height: '3px', background: '#5865F2', borderRadius: '2px' }}></div>
-                <span style={{ fontSize: '13px', color: '#80848e' }}>Orbit</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#5865F2' }}></span>
+                <span style={{ color: '#80848e' }}>Servers</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '12px', height: '3px', background: 'linear-gradient(90deg, #ed4245, #fee75c, #57F287)', borderRadius: '2px' }}></div>
-                <span style={{ fontSize: '13px', color: '#80848e' }}>Others</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#9b59b6' }}></span>
+                <span style={{ color: '#80848e' }}>RAM (MB)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#57F287' }}></span>
+                <span style={{ color: '#80848e' }}>Ping (ms)</span>
               </div>
               <div style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '16px', fontSize: '12px', color: '#80848e' }}>
                 Last poll <strong style={{ color: '#fff', marginLeft: '4px' }}>{lastPoll}</strong>

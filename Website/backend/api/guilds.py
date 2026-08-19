@@ -94,10 +94,15 @@ class GuildsMixin:
         })
 
     async def api_stats(self, request: web.Request):
+        import psutil, os
+        process = psutil.Process(os.getpid())
+        ram_mb = process.memory_info().rss / 1024 ** 2
+        
         return web.json_response({
             "servers": len(self.bot.guilds),
             "users": len(self.bot.users),
-            "ping": round(self.bot.latency * 1000)
+            "ping": round(self.bot.latency * 1000),
+            "ram": round(ram_mb, 2)
         })
 
     async def api_guilds(self, request: web.Request):
