@@ -6,11 +6,18 @@ class AnalyticsCommand(commands.Cog):
         self.bot = bot
 
     @commands.command(name="analytics", aliases=["botstats"], hidden=True)
-    @commands.is_owner()
     async def bot_analytics(self, ctx: commands.Context):
+        if not await self.bot.is_owner(ctx.author):
+            return await ctx.send(embed=discord.Embed(description="You must be the bot owner to use this command.", color=discord.Color.red()))
+            
         try:
             from Commands.OwnerOnly._monitor import get_system_metrics
-            metrics = get_system_metrics(self.bot)
+            try:
+                metrics = get_system_metrics(self.bot)
+            except Exception as e:
+                import traceback
+                tb = traceback.format_exc()
+                return await ctx.send(embed=discord.Embed(title="Metrics Error", description=f"```py\n{tb[:2000]}\n```", color=discord.Color.red()))
             
             embed = discord.Embed(title="Orbit Global Analytics", color=0x2B2D31)
             embed.add_field(name="Total Commands Run", value=f"`{metrics['commands']:,}`", inline=True)
@@ -28,7 +35,9 @@ class AnalyticsCommand(commands.Cog):
             embed.set_footer(text=f"Uptime: {metrics['uptime']}")
             await ctx.send(embed=embed)
         except Exception as e:
-            await ctx.send(embed=discord.Embed(description=f"Failed to fetch analytics: {e}", color=discord.Color.red()))
+            import traceback
+            tb = traceback.format_exc()
+            await ctx.send(embed=discord.Embed(title="Command Error", description=f"```py\n{tb[:2000]}\n```", color=discord.Color.red()))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AnalyticsCommand(bot))
