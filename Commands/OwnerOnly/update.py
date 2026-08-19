@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Commands._utils import make_embed
 
@@ -82,7 +82,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
         btn_invite = discord.ui.Button(
             label="Add Orbit to Your Server",
             style=discord.ButtonStyle.link,
-            url="https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=564430072179831&scope=bot+applications.commands"
+            url="https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=564430072179839&scope=bot+applications.commands"
         )
         view = discord.ui.View()
         view.add_item(btn_website)

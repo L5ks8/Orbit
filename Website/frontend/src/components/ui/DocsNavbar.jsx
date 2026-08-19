@@ -14,7 +14,7 @@ export default function DocsNavbar({ onSearchClick }) {
 
       <div className="nav-right">
         <div className="nav-links">
-          <a href="#" className="nav-link">Add to Discord</a>
+          <a href="https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=564430072179839&scope=bot+applications.commands" target="_blank" rel="noopener noreferrer" className="nav-link">Add to Discord</a>
           <a href="#" className="nav-link">Support Server</a>
         </div>
         <div className="nav-user">

@@ -150,7 +150,7 @@ export default function Navbar({ onSearchClick }) {
       </div>
 
       <div className="mega-navbar-actions">
-        <a href="#" className="mega-nav-item" style={{ paddingRight: '8px' }}>Add to Discord</a>
+        <a href="https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=564430072179839&scope=bot+applications.commands" target="_blank" rel="noopener noreferrer" className="mega-nav-item" style={{ paddingRight: '8px' }}>Add to Discord</a>
         <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" className="mega-nav-item" style={{ paddingRight: '16px' }}>Support Server</a>
         {user ? (
           <Link to="/dashboard" className="mega-btn-light" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>

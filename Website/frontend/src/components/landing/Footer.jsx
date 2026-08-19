@@ -30,7 +30,7 @@ export default function Footer() {
           <h4>Product</h4>
           <div className="lp-footer-links">
             <Link to="/docs">Documentation</Link>
-            <a href="#">Add to Discord</a>
+            <a href="https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=564430072179839&scope=bot+applications.commands" target="_blank" rel="noopener noreferrer">Add to Discord</a>
             <a href="/auth/login" className="lp-footer-login" style={{ textDecoration: 'none', background: 'none', border: 'none', padding: 0 }}>Dashboard</a>
           </div>
         </div>
