@@ -442,33 +442,44 @@ async def global_devmode_prefix_check(ctx: commands.Context):
     return False
 
 async def main():
+    from aiohttp import web
+
+    # Start web server FIRST so Render detects the port immediately
+    port = int(os.environ.get("PORT", 10000))
     try:
-        from aiohttp import web
         from Website.backend.main import setup_web_app
         app = setup_web_app(bot)
-        runner = web.AppRunner(app)
-        await runner.setup()
-        port = int(os.environ.get("PORT", 10000))
-        site = web.TCPSite(runner, "0.0.0.0", port)
-        await site.start()
-        print(f"Web Dashboard started on 0.0.0.0:{port}")
     except Exception as e:
-        print(f"Failed to start Web Dashboard: {e}")
+        print(f"Failed to setup Web Dashboard: {e}")
+        app = web.Application()
 
-    async with bot:
-        await bot.start(TOKEN)
+    # Always add a health endpoint so Render can detect the port
+    async def health(request):
+        return web.Response(text="OK")
+    app.router.add_get("/health", health)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"Web server started on 0.0.0.0:{port}")
+
+    # Now connect the bot with retry logic INSIDE the same event loop
+    # so the web server stays alive between retries
+    while True:
+        try:
+            async with bot:
+                await bot.start(TOKEN)
+        except (discord.HTTPException, discord.GatewayNotFound) as e:
+            print(f"Network error / Cloudflare 522 occurred: {e}")
+            print("Retrying connection in 10 seconds...")
+            await asyncio.sleep(10)
+        except Exception as e:
+            print(f"Fatal error: {e}")
+            break
 
 if __name__ == "__main__":
     if not TOKEN:
         print("Error: No TOKEN found in .env file.")
     else:
-        import time
-        import asyncio
-        while True:
-            try:
-                asyncio.run(main())
-                break
-            except (discord.HTTPException, discord.GatewayNotFound, Exception) as e:
-                print(f"Network error / Cloudflare 522 occurred: {e}")
-                print("Retrying connection in 10 seconds...")
-                time.sleep(10)
+        asyncio.run(main())
