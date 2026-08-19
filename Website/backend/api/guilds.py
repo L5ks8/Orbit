@@ -111,7 +111,7 @@ class GuildsMixin:
         from Database.mongodb import get_db
         import datetime
         db = get_db()
-        if not db:
+        if db is None:
             return web.json_response([])
             
         today = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
