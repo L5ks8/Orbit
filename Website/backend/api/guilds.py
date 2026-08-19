@@ -114,7 +114,7 @@ class GuildsMixin:
         if not db:
             return web.json_response([])
             
-        today = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         past_45_days = today - datetime.timedelta(days=45)
         
         docs = list(db["UptimeStats"].find({"date": {"$gte": past_45_days}}).sort("date", 1))

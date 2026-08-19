@@ -266,8 +266,8 @@ class OrbitBot(commands.Bot):
             import datetime
             db = get_db()
             if db is not None:
-                today_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
-                today_dt = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+                today_dt = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
                 
                 db_up = 1 if db is not None else 0
                 api_up = 1 if not self.is_closed() else 0
