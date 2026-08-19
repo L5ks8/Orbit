@@ -4,8 +4,8 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 // Sub-components for icons
-const CheckIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#23a559" stroke="#151517" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ borderRadius: '50%', background: '#23a559', color: '#151517', padding: '2px' }}>
+const CheckIcon = ({ color = '#23a559' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={color} stroke="#151517" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ borderRadius: '50%', background: color, color: '#151517', padding: '2px' }}>
     <polyline points="20 6 9 17 4 12"></polyline>
   </svg>
 );
@@ -24,6 +24,8 @@ export default function Status() {
   const dataRef = useRef([]);
   const [lastPoll, setLastPoll] = useState(new Date().toLocaleTimeString());
   const [uptimeData, setUptimeData] = useState([]);
+  const [isDevmode, setIsDevmode] = useState(false);
+  const [devmodeReason, setDevmodeReason] = useState("");
 
   useEffect(() => {
     fetch('/api/uptime').then(res => res.json()).then(data => setUptimeData(data)).catch(console.error);
@@ -140,7 +142,14 @@ export default function Status() {
     const fetchStats = async () => {
       try {
         const res = await fetch('/api/stats');
-        const statsHistory = await res.json();
+        const payload = await res.json();
+        
+        // Handle the new payload structure
+        const statsHistory = Array.isArray(payload) ? payload : (payload.history || []);
+        if (payload.devmode !== undefined) {
+            setIsDevmode(payload.devmode);
+            setDevmodeReason(payload.devmode_reason || "");
+        }
         
         const currentData = [];
         const padLen = 30 - statsHistory.length;
@@ -223,11 +232,11 @@ export default function Status() {
       <div style={{ padding: '24px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckIcon />
+            <CheckIcon color={status === 'Operational' ? '#23a559' : '#ed4245'} />
             <span style={{ fontSize: '15px', fontWeight: '500', color: '#fff' }}>{name}</span>
             {name === 'Orbit Bot' && <InfoIcon />}
           </div>
-          <span style={{ color: '#23a559', fontSize: '14px', fontWeight: '500' }}>{label || status}</span>
+          <span style={{ color: status === 'Operational' ? '#23a559' : '#ed4245', fontSize: '14px', fontWeight: '500' }}>{label || status}</span>
         </div>
         <div style={{ display: 'flex', width: '100%' }}>
           {blocks}
@@ -248,7 +257,7 @@ export default function Status() {
 
         {/* Uptime Section */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '64px' }}>
-          <UptimeBars name="Discord Bot" dataKey="bot_pings" status="Operational" />
+          <UptimeBars name="Discord Bot" dataKey="bot_pings" status={isDevmode ? "Maintenance" : "Operational"} />
           <UptimeBars name="Web Dashboard" dataKey="bot_pings" status="Operational" />
           <UptimeBars name="Database Cluster" dataKey="db_pings" status="Operational" />
           <UptimeBars name="Orbit APIs" dataKey="api_pings" status="Operational" label="Up to date" />

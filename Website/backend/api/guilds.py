@@ -95,7 +95,17 @@ class GuildsMixin:
 
     async def api_stats(self, request: web.Request):
         history = getattr(self.bot, "stats_history", [])
-        return web.json_response(list(history))
+        try:
+            from Commands.OwnerOnly._storage import is_devmode_enabled
+            devmode, reason = is_devmode_enabled()
+        except Exception:
+            devmode, reason = False, ""
+            
+        return web.json_response({
+            "history": list(history),
+            "devmode": devmode,
+            "devmode_reason": reason
+        })
 
     async def api_uptime(self, request: web.Request):
         from Database.mongodb import get_db
