@@ -27,7 +27,7 @@ class DBQuery(commands.Cog):
         try:
             # We use eval for expressions (like find, count_documents, etc)
             # Example query: list(db.guilds.find({}).limit(2))
-            result = eval(query, {"db": db, "get_db": get_db, "discord": discord, "bot": self.bot})
+            result = eval(query, {"db": db, "get_db": get_db, "discord": discord, "bot": self.bot, "ctx": ctx})
             
             # Convert result to string or JSON
             try:
