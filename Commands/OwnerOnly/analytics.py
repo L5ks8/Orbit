@@ -6,7 +6,7 @@ class AnalyticsCommand(commands.Cog):
         self.bot = bot
 
     @commands.command(name="analytics", aliases=["botstats"], hidden=True)
-    async def bot_analytics(self, ctx: commands.Context):
+    async def analytics_cmd(self, ctx: commands.Context):
         if not await self.bot.is_owner(ctx.author):
             return await ctx.send(embed=discord.Embed(description="You must be the bot owner to use this command.", color=discord.Color.red()))
             
