@@ -237,6 +237,28 @@ class OrbitBot(commands.Bot):
             pass
         return False
 
+    @discord.ext.tasks.loop(seconds=2)
+    async def live_stats_loop(self):
+        try:
+            import psutil, os, math
+            process = psutil.Process(os.getpid())
+            ram_mb = process.memory_info().rss / 1024 ** 2
+            
+            lat = self.latency
+            if math.isinf(lat) or math.isnan(lat):
+                ping = 0
+            else:
+                ping = round(lat * 1000)
+                
+            self.stats_history.append({
+                "servers": len(self.guilds),
+                "users": len(self.users),
+                "ping": ping,
+                "ram": round(ram_mb, 2)
+            })
+        except Exception as e:
+            print(f"Stats loop error: {e}")
+
     async def setup_hook(self):
         try:
             from aiohttp import web
