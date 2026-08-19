@@ -23,15 +23,20 @@ export default function Status() {
   const chartInstance = useRef(null);
   const dataRef = useRef([]);
   const [lastPoll, setLastPoll] = useState(new Date().toLocaleTimeString());
+  const [uptimeData, setUptimeData] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/uptime').then(res => res.json()).then(data => setUptimeData(data)).catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (!chartRef.current) return;
 
-    // 1. Generate initial data (60 seconds)
+    // 1. Generate initial data (60 seconds / 30 steps of 2s)
     const data = [];
-    for (let i = -60; i <= 0; i++) {
+    for (let i = -30; i <= 0; i++) {
       data.push({
-        time: i,
+        time: i * 2,
         servers: 0,
         ram: 0,
         ping: 0
@@ -135,21 +140,30 @@ export default function Status() {
     const fetchStats = async () => {
       try {
         const res = await fetch('/api/stats');
-        const stats = await res.json();
+        const statsHistory = await res.json();
         
-        const currentData = dataRef.current;
-        currentData.shift();
+        const currentData = [];
+        const padLen = 30 - statsHistory.length;
         
-        for (let i = 0; i < currentData.length; i++) {
-          currentData[i].time = -(currentData.length - i);
+        for (let i = 0; i < padLen; i++) {
+          currentData.push({
+            time: -60 + i * 2,
+            servers: 0,
+            ram: 0,
+            ping: 0
+          });
         }
         
-        currentData.push({
-          time: 0,
-          servers: stats.servers || 0,
-          ram: stats.ram || 0,
-          ping: stats.ping || 0
+        statsHistory.forEach((stat, i) => {
+          currentData.push({
+            time: -60 + (padLen + i) * 2,
+            servers: stat.servers || 0,
+            ram: stat.ram || 0,
+            ping: stat.ping || 0
+          });
         });
+        
+        dataRef.current = currentData;
 
         const chart = chartInstance.current;
         if (chart) {
@@ -176,29 +190,34 @@ export default function Status() {
   }, []);
 
   // Uptime Bars component
-  const UptimeBars = ({ name, status, label }) => {
-    // Generate 60 blocks for 60 days
-    const blocks = Array.from({ length: 45 }).map((_, i) => {
-      // randomly make a few blocks yellow or red for realism, but mostly green
-      let color = '#23a559'; // green
-      const rand = Math.random();
-      if (rand > 0.98) color = '#faa61a'; // yellow (partial outage)
-      else if (rand > 0.995) color = '#ed4245'; // red (major outage)
-      
-      return (
-        <div 
-          key={i} 
-          style={{ 
-            flex: 1, 
-            height: '24px', 
-            backgroundColor: color, 
-            borderRadius: '2px',
-            marginRight: i === 44 ? '0' : '3px'
-          }}
-          title="No downtime recorded on this day"
-        />
-      );
-    });
+  const UptimeBars = ({ name, dataKey, status, label }) => {
+    let blocks;
+    if (uptimeData.length === 0) {
+      blocks = Array.from({ length: 45 }).map((_, i) => (
+        <div key={i} style={{ flex: 1, height: '24px', backgroundColor: '#2f3136', borderRadius: '2px', marginRight: i === 44 ? '0' : '3px' }} />
+      ));
+    } else {
+      blocks = uptimeData.map((day, i) => {
+        const pings = day[dataKey] || 0;
+        let color = '#23a559';
+        if (pings === 0) color = '#ed4245'; // Outage
+        else if (pings < 270) color = '#faa61a'; // Partial Outage
+        
+        return (
+          <div 
+            key={i} 
+            style={{ 
+              flex: 1, 
+              height: '24px', 
+              backgroundColor: color, 
+              borderRadius: '2px',
+              marginRight: i === 44 ? '0' : '3px'
+            }}
+            title={`${day.date}: ${pings} pings`}
+          />
+        );
+      });
+    }
 
     return (
       <div style={{ padding: '24px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -228,11 +247,11 @@ export default function Status() {
         </div>
 
         {/* Uptime Section */}
-        <div style={{ background: '#151517', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '0 24px', marginBottom: '32px' }}>
-          <UptimeBars name="Discord Bot" status="Operational" />
-          <UptimeBars name="Web Dashboard" status="Operational" />
-          <UptimeBars name="Database Cluster" status="Operational" />
-          <UptimeBars name="Orbit APIs" status="Operational" label="Up to date" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '64px' }}>
+          <UptimeBars name="Discord Bot" dataKey="bot_pings" status="Operational" />
+          <UptimeBars name="Web Dashboard" dataKey="bot_pings" status="Operational" />
+          <UptimeBars name="Database Cluster" dataKey="db_pings" status="Operational" />
+          <UptimeBars name="Orbit APIs" dataKey="api_pings" status="Operational" label="Up to date" />
         </div>
 
         {/* Chart Section */}

@@ -172,7 +172,13 @@ class DevLayout(discord.ui.View):
             description=page["description"],
             color=0x2B2D31
         )
-        embed.set_footer(text=f"Page {self.current_page + 1} of {len(PAGES)}")
+        try:
+            import subprocess
+            last_update = subprocess.check_output(["git", "log", "-1", "--format=%cd"], encoding="utf-8", stderr=subprocess.DEVNULL).strip()
+        except Exception:
+            last_update = "Unknown"
+            
+        embed.set_footer(text=f"Page {self.current_page + 1} of {len(PAGES)} • Last Update: {last_update}")
 
         self.clear_items()
         for comp in components:

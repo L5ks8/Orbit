@@ -185,6 +185,8 @@ commands.Context.send = _safe_send
 
 class OrbitBot(commands.Bot):
     def __init__(self):
+        import collections
+        self.stats_history = collections.deque(maxlen=30)
         try:
             from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
             data = _load_status()
@@ -249,6 +251,13 @@ class OrbitBot(commands.Bot):
         except Exception as e:
             print(f"Failed to start Web Dashboard: {e}")
 
+        try:
+            self.live_stats_loop.start()
+            self.uptime_loop.start()
+            print("Background stats tracking started.")
+        except Exception as e:
+            print(f"Failed to start stats tracking: {e}")
+
         commands_dir = pathlib.Path("Commands")
         if not commands_dir.exists():
             commands_dir.mkdir(parents=True, exist_ok=True)
@@ -282,7 +291,7 @@ class OrbitBot(commands.Bot):
                 await self.load_extension(extension)
                 print(f"Loaded: {extension}")
             except Exception as e:
-                print(f"Failed to load {extension}: {e}")
+                print(f"Failed to load standard cog {extension}: {e}")
 
         try:
             synced = await self.tree.sync()

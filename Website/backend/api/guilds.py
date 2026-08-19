@@ -94,16 +94,34 @@ class GuildsMixin:
         })
 
     async def api_stats(self, request: web.Request):
-        import psutil, os
-        process = psutil.Process(os.getpid())
-        ram_mb = process.memory_info().rss / 1024 ** 2
+        history = getattr(self.bot, "stats_history", [])
+        return web.json_response(list(history))
+
+    async def api_uptime(self, request: web.Request):
+        from Database.mongodb import get_db
+        import datetime
+        db = get_db()
+        if not db:
+            return web.json_response([])
+            
+        today = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        past_45_days = today - datetime.timedelta(days=45)
         
-        return web.json_response({
-            "servers": len(self.bot.guilds),
-            "users": len(self.bot.users),
-            "ping": round(self.bot.latency * 1000),
-            "ram": round(ram_mb, 2)
-        })
+        docs = list(db["UptimeStats"].find({"date": {"$gte": past_45_days}}).sort("date", 1))
+        uptime_map = {doc["_id"]: doc for doc in docs}
+        
+        result = []
+        for i in range(44, -1, -1):
+            date_str = (today - datetime.timedelta(days=i)).strftime("%Y-%m-%d")
+            doc = uptime_map.get(date_str, {})
+            result.append({
+                "date": date_str,
+                "bot_pings": doc.get("bot_pings", 0),
+                "db_pings": doc.get("db_pings", 0),
+                "api_pings": doc.get("api_pings", 0)
+            })
+            
+        return web.json_response(result)
 
     async def api_guilds(self, request: web.Request):
         user = await self.get_user_session(request)
