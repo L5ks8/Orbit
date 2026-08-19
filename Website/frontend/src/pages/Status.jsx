@@ -156,7 +156,7 @@ export default function Status() {
         
         for (let i = 0; i < padLen; i++) {
           currentData.push({
-            time: -60 + i * 2,
+            time: -58 + i * 2,
             servers: 0,
             ram: 0,
             ping: 0
@@ -165,7 +165,7 @@ export default function Status() {
         
         statsHistory.forEach((stat, i) => {
           currentData.push({
-            time: -60 + (padLen + i) * 2,
+            time: -58 + (padLen + i) * 2,
             servers: stat.servers || 0,
             ram: stat.ram || 0,
             ping: stat.ping || 0
