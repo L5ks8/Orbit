@@ -5,7 +5,7 @@ import os
 import asyncio
 import pathlib
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import discord.ext.commands.core as core
 from Commands._utils import make_embed
 
@@ -237,7 +237,7 @@ class OrbitBot(commands.Bot):
             pass
         return False
 
-    @discord.ext.tasks.loop(seconds=2)
+    @tasks.loop(seconds=2)
     async def live_stats_loop(self):
         try:
             import psutil, os, math
@@ -258,6 +258,34 @@ class OrbitBot(commands.Bot):
             })
         except Exception as e:
             print(f"Stats loop error: {e}")
+
+    @tasks.loop(minutes=5)
+    async def uptime_loop(self):
+        try:
+            from Database.mongodb import get_db
+            import datetime
+            db = get_db()
+            if db is not None:
+                today_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+                today_dt = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                
+                db_up = 1 if db is not None else 0
+                api_up = 1 if not self.is_closed() else 0
+                
+                db["UptimeStats"].update_one(
+                    {"_id": today_str},
+                    {
+                        "$inc": {
+                            "bot_pings": 1,
+                            "db_pings": db_up,
+                            "api_pings": api_up
+                        },
+                        "$setOnInsert": {"date": today_dt}
+                    },
+                    upsert=True
+                )
+        except Exception as e:
+            print(f"Uptime loop error: {e}")
 
     async def setup_hook(self):
         try:
