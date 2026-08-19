@@ -54,7 +54,7 @@ class UserInfoCommand(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="userinfo", aliases=["user"], description="Display member statistics and roles.")
-    async def userinfo_cmd(self, ctx: commands.Context, user: Union[discord.Member, discord.User] = None):
+    async def userinfo_cmd(self, ctx: commands.Context, user: discord.Member = None):
         await _do_user_info(ctx, user)
 
 async def setup(bot: commands.Bot):
