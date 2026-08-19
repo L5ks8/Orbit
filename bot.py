@@ -289,19 +289,6 @@ class OrbitBot(commands.Bot):
 
     async def setup_hook(self):
         try:
-            from aiohttp import web
-            from Website.backend.main import setup_web_app
-            app = setup_web_app(self)
-            runner = web.AppRunner(app)
-            await runner.setup()
-            port = int(os.environ.get("PORT", 10000))
-            site = web.TCPSite(runner, "0.0.0.0", port)
-            await site.start()
-            print(f"Web Dashboard started on 0.0.0.0:{port}")
-        except Exception as e:
-            print(f"Failed to start Web Dashboard: {e}")
-
-        try:
             self.live_stats_loop.start()
             self.uptime_loop.start()
             print("Background stats tracking started.")
@@ -455,6 +442,19 @@ async def global_devmode_prefix_check(ctx: commands.Context):
     return False
 
 async def main():
+    try:
+        from aiohttp import web
+        from Website.backend.main import setup_web_app
+        app = setup_web_app(bot)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        port = int(os.environ.get("PORT", 10000))
+        site = web.TCPSite(runner, "0.0.0.0", port)
+        await site.start()
+        print(f"Web Dashboard started on 0.0.0.0:{port}")
+    except Exception as e:
+        print(f"Failed to start Web Dashboard: {e}")
+
     async with bot:
         await bot.start(TOKEN)
 
