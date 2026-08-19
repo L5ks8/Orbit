@@ -1402,6 +1402,96 @@ body::after {
   gap: 8px;
 }
 
+/* MOBILE NAVBAR */
+.mega-mobile-actions {
+  display: none;
+}
+
+.mega-mobile-menu-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mega-mobile-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mega-mobile-menu-overlay {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 70px);
+  background: #0a0a0b;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mega-mobile-menu-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mega-mobile-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mega-mobile-menu-subitem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0 16px 24px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+.mega-mobile-menu-subitem:last-child {
+  border-bottom: none;
+}
+
+.mega-mobile-menu-subitem:hover {
+  color: #fff;
+}
+
+@media (max-width: 1024px) {
+  .mega-navbar-links,
+  .mega-navbar-actions {
+    display: none !important;
+  }
+  .mega-mobile-actions {
+    display: flex;
+  }
+  .mega-mobile-menu-btn {
+    display: flex;
+  }
+}
+
+
 /* ==========================================================================
    LEGAL PAGES STYLES
    ========================================================================== */

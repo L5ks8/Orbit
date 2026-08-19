@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 export default function Navbar({ onSearchClick }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpenSection, setMobileOpenSection] = useState(null);
   const timeoutRef = useRef(null);
   const { user } = useAuth();
 
@@ -163,7 +165,93 @@ export default function Navbar({ onSearchClick }) {
           </a>
         )}
       </div>
+
+      {/* Mobile Toggle Button */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }} className="mega-mobile-actions">
+        <a href="https://discord.com/oauth2/authorize?client_id=1130541785233158145&permissions=8&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" className="mega-btn-light" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', borderRadius: '8px' }}>
+          <WindowsIcon /> Add Bot
+        </a>
+        <div className="mega-mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+        </div>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`mega-mobile-menu-overlay ${mobileMenuOpen ? 'active' : ''}`}>
+        
+        {/* Product Section */}
+        <div 
+          className="mega-mobile-menu-item" 
+          onClick={() => setMobileOpenSection(mobileOpenSection === 'product' ? null : 'product')}
+          style={{ cursor: 'pointer' }}
+        >
+          Product <ChevronIcon active={mobileOpenSection === 'product'} />
+        </div>
+        {mobileOpenSection === 'product' && (
+          <div className="mega-mobile-menu-subitems">
+            <Link to="#" className="mega-mobile-menu-subitem"><ShieldCheckIcon /> Auto-Moderation</Link>
+            <Link to="#" className="mega-mobile-menu-subitem"><TicketIcon /> Ticket System</Link>
+            <Link to="#" className="mega-mobile-menu-subitem"><GiftIcon /> Giveaways</Link>
+          </div>
+        )}
+
+        {/* Solutions Section */}
+        <div 
+          className="mega-mobile-menu-item" 
+          onClick={() => setMobileOpenSection(mobileOpenSection === 'solutions' ? null : 'solutions')}
+          style={{ cursor: 'pointer' }}
+        >
+          Solutions <ChevronIcon active={mobileOpenSection === 'solutions'} />
+        </div>
+        {mobileOpenSection === 'solutions' && (
+          <div className="mega-mobile-menu-subitems">
+            <Link to="#" className="mega-mobile-menu-subitem"><UsersIcon /> Communities</Link>
+          </div>
+        )}
+
+        {/* Resources Section */}
+        <div 
+          className="mega-mobile-menu-item" 
+          onClick={() => setMobileOpenSection(mobileOpenSection === 'resources' ? null : 'resources')}
+          style={{ cursor: 'pointer' }}
+        >
+          Resources <ChevronIcon active={mobileOpenSection === 'resources'} />
+        </div>
+        {mobileOpenSection === 'resources' && (
+          <div className="mega-mobile-menu-subitems">
+            <Link to="/docs" className="mega-mobile-menu-subitem" onClick={() => setMobileMenuOpen(false)}><DocIcon /> Documentation</Link>
+            <Link to="/benchmarks" className="mega-mobile-menu-subitem" onClick={() => setMobileMenuOpen(false)}><ChartIcon /> Benchmarks</Link>
+            <a href="https://discord.gg/wekuhwCsUg" target="_blank" rel="noopener noreferrer" className="mega-mobile-menu-subitem"><ChatIcon /> Community</a>
+            <Link to="/status" className="mega-mobile-menu-subitem" onClick={() => setMobileMenuOpen(false)}><ActivityIcon /> Status</Link>
+          </div>
+        )}
+
+        {/* Direct Links */}
+        <Link to="/dashboard" className="mega-mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+        <Link to="/pricing" className="mega-mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+
+      </div>
     </nav>
+  );
+}
+
+// Icons
+function MenuIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
   );
 }
 
