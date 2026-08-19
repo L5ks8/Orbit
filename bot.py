@@ -411,38 +411,44 @@ class OrbitBot(commands.Bot):
             pass
         raise error
 
-bot = OrbitBot()
+def create_bot():
+    """Factory to create a fresh bot instance (needed for clean retries)."""
+    _bot = OrbitBot()
 
-@bot.check
-async def global_blacklist_prefix_check(ctx: commands.Context):
-    if not ctx.guild:
+    @_bot.check
+    async def global_blacklist_prefix_check(ctx: commands.Context):
+        if not ctx.guild:
+            return True
+        from Commands.Blacklist._storage import is_blacklisted
+        if is_blacklisted(ctx.guild.id, ctx.author.id):
+            try:
+                await ctx.send(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), delete_after=5.0)
+            except Exception:
+                pass
+            return False
         return True
-    from Commands.Blacklist._storage import is_blacklisted
-    if is_blacklisted(ctx.guild.id, ctx.author.id):
+
+    @_bot.check
+    async def global_devmode_prefix_check(ctx: commands.Context):
+        from Commands.OwnerOnly._storage import is_devmode_enabled
+        enabled, reason = is_devmode_enabled()
+        if not enabled:
+            return True
+        if await ctx.bot.is_owner(ctx.author):
+            return True
+        view = DevmodeNoticeLayout(reason)
         try:
-            await ctx.send(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), delete_after=5.0)
+            await ctx.send(view=view, delete_after=15.0, allowed_mentions=discord.AllowedMentions.none())
         except Exception:
             pass
         return False
-    return True
 
-@bot.check
-async def global_devmode_prefix_check(ctx: commands.Context):
-    from Commands.OwnerOnly._storage import is_devmode_enabled
-    enabled, reason = is_devmode_enabled()
-    if not enabled:
-        return True
-    if await ctx.bot.is_owner(ctx.author):
-        return True
-    view = DevmodeNoticeLayout(reason)
-    try:
-        await ctx.send(view=view, delete_after=15.0, allowed_mentions=discord.AllowedMentions.none())
-    except Exception:
-        pass
-    return False
+    return _bot
 
 async def main():
     from aiohttp import web
+
+    bot = create_bot()
 
     # Start web server FIRST so Render detects the port immediately
     port = int(os.environ.get("PORT", 10000))
@@ -464,16 +470,20 @@ async def main():
     await site.start()
     print(f"Web server started on 0.0.0.0:{port}")
 
-    # Now connect the bot with retry logic INSIDE the same event loop
-    # so the web server stays alive between retries
+    # Connect bot with retry logic - create a fresh bot on each retry
+    # to avoid "Session is closed" errors
+    retry_delay = 30
     while True:
         try:
             async with bot:
                 await bot.start(TOKEN)
         except (discord.HTTPException, discord.GatewayNotFound) as e:
-            print(f"Network error / Cloudflare 522 occurred: {e}")
-            print("Retrying connection in 10 seconds...")
-            await asyncio.sleep(10)
+            print(f"Network error occurred: {e}")
+            print(f"Retrying connection in {retry_delay} seconds...")
+            await asyncio.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, 300)  # Exponential backoff, max 5 min
+            # Create a fresh bot instance since the old session is closed
+            bot = create_bot()
         except Exception as e:
             print(f"Fatal error: {e}")
             break
