@@ -51,7 +51,7 @@ function DashboardInner() {
   if (!user) return <Navigate to="/" />;
 
   return (
-    <div className="dash-container">
+    <div className="dashboard-grid">
       <Sidebar guildId={guildId} isOpen={sidebarOpen} />
       <div className="dash-main">
         

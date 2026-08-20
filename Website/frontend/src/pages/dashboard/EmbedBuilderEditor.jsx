@@ -220,7 +220,7 @@ export default function EmbedBuilderEditor({
           Back to Messages
         </button>
         <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-          {initialEmbed?.name || 'Neue Nachricht'}
+          {initialEmbed?.name || 'New Message'}
         </span>
       </div>
 
