@@ -50,6 +50,9 @@ export default function Overview({ guildId }) {
   
   const totalMessages = stats?.today_messages || 0;
   const totalMembers = stats?.total_members || guildInfo?.member_count || 0;
+  const activeUsers = stats?.today_active_users || 0;
+  const voiceHours = stats?.today_voice_minutes ? (stats.today_voice_minutes / 60).toFixed(1) : 0;
+  const openTickets = stats?.open_tickets || 0;
 
   // Features Checks
   const isFeatureActive = (key) => {
@@ -139,7 +142,7 @@ export default function Overview({ guildId }) {
               <div className="pb-icon-box bg-cyan-500/10 text-cyan-400"><Activity size={14} /></div>
               <span className="text-xs font-medium text-neutral-400">Active Users</span>
             </div>
-            <p className="text-3xl font-bold tabular-nums leading-none text-white">0</p>
+            <p className="text-3xl font-bold tabular-nums leading-none text-white">{activeUsers}</p>
             <div className="mt-2 flex items-center gap-1.5">
               <span className="pb-badge-green"><ArrowUpRight size={12} />+0%</span>
               <span className="text-[10px] text-neutral-600">vs last week</span>
@@ -150,7 +153,7 @@ export default function Overview({ guildId }) {
               <div className="pb-icon-box bg-purple-500/10 text-purple-400"><Mic size={14} /></div>
               <span className="text-xs font-medium text-neutral-400">Voice Hours</span>
             </div>
-            <p className="text-3xl font-bold tabular-nums leading-none text-white">0</p>
+            <p className="text-3xl font-bold tabular-nums leading-none text-white">{voiceHours}</p>
             <div className="mt-2 flex items-center gap-1.5">
               <span className="pb-badge-green"><ArrowUpRight size={12} />+0%</span>
               <span className="text-[10px] text-neutral-600">vs last week</span>
@@ -161,7 +164,7 @@ export default function Overview({ guildId }) {
               <div className="pb-icon-box bg-neutral-800 text-neutral-400"><Ticket size={14} /></div>
               <span className="text-xs font-medium text-neutral-400">Open Tickets</span>
             </div>
-            <p className="text-3xl font-bold tabular-nums leading-none text-white">0</p>
+            <p className="text-3xl font-bold tabular-nums leading-none text-white">{openTickets}</p>
             <div className="mt-2 flex items-center gap-1.5">
               <span className="text-[10px] text-neutral-500">all clear</span>
             </div>

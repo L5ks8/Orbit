@@ -242,10 +242,17 @@ class GuildsMixin:
         today_str = today.strftime("%Y-%m-%d")
         today_doc = db["GuildStats"].find_one({"_id": f"{guild_id}_{today_str}"}) if db is not None else None
         
+        from Commands.Ticket._storage import load_ticket_config
+        ticket_cfg = load_ticket_config(guild_id)
+        open_tickets = len(ticket_cfg.get("active_tickets", {}))
+        
         return web.json_response({
             "total_members": guild.member_count,
             "today_joins": today_doc.get("joins", 0) if today_doc else 0,
             "today_leaves": today_doc.get("leaves", 0) if today_doc else 0,
             "today_messages": today_doc.get("messages", 0) if today_doc else 0,
+            "today_active_users": len(today_doc.get("active_users", [])) if today_doc and "active_users" in today_doc else 0,
+            "today_voice_minutes": today_doc.get("voice_minutes", 0) if today_doc else 0,
+            "open_tickets": open_tickets,
             "history": stats
         })
