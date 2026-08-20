@@ -1,6 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Toggle from '../ui/Toggle';
+import { useToast } from '../ui/Toast';
+
+import AutomodSettings from './modules/AutomodSettings';
+import TicketSettings from './modules/TicketSettings';
+import AutoresponderSettings from './modules/AutoresponderSettings';
+import WelcomeSettings from './modules/WelcomeSettings';
+import BanAppealsSettings from './modules/BanAppealsSettings';
+import AutomationSettings from './modules/AutomationSettings';
+import BoostMessagesSettings from './modules/BoostMessagesSettings';
+import EconomySettings from './modules/EconomySettings';
+import GoodbyeMessagesSettings from './modules/GoodbyeMessagesSettings';
+import JoinRolesSettings from './modules/JoinRolesSettings';
+import AuditLogsSettings from './modules/AuditLogsSettings';
+import MessageLogsSettings from './modules/MessageLogsSettings';
+import SecuritySettings from './modules/SecuritySettings';
+import ServerStatsSettings from './modules/ServerStatsSettings';
+import TempVoiceSettings from './modules/TempVoiceSettings';
+import VerificationSettings from './modules/VerificationSettings';
+import LevelingSystemSettings from './modules/LevelingSystemSettings';
 
 export const modulesList = [
     { id: 'automod', category: 'Moderation', name: 'Auto-Moderation', desc: 'Automatically filter spam, bad words, and malicious links.', iconColor: 'rgba(239, 68, 68, 0.2)', icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /> },
@@ -22,17 +41,28 @@ export const modulesList = [
     { id: 'tempvoice', category: 'Utility', name: 'Temp Voice', desc: 'Allow users to create their own voice channels.', iconColor: 'rgba(249, 115, 22, 0.2)', icon: <path d="M12 2c-1.7 0-3 1.2-3 2.6v6.8c0 1.4 1.3 2.6 3 2.6s3-1.2 3-2.6V4.6C15 3.2 13.7 2 12 2z M19 10v1.6c0 3.6-3.1 6.4-7 6.4s-7-2.8-7-6.4V10 M12 18v4 M8 22h8" /> },
 
     { id: 'logs', category: 'Logging', name: 'Logs', desc: 'Track everything that happens in your server.', iconColor: 'rgba(99, 102, 241, 0.2)', icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M12 18v-6 M9 15h6" /> },
-  ];
+];
 
 export default function Modules({ guildId }) {
-  const [enabledModules, setEnabledModules] = useState({});
-  const [config, setConfig] = useState(null);
+  const { moduleId } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const [serverData, setServerData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  // Redirect to first module if no module is selected
+  useEffect(() => {
+    if (!moduleId && guildId) {
+      navigate(`/dashboard/${guildId}/modules/automod`, { replace: true });
+    }
+  }, [moduleId, navigate, guildId]);
 
-  const categories = ['All', 'Moderation', 'Engagement', 'Utility', 'Logging'];
+  const handleReset = () => {
+    setFormKey(prev => prev + 1);
+  };
 
   useEffect(() => {
     if (!guildId) return;
@@ -44,27 +74,7 @@ export default function Modules({ guildId }) {
     })
       .then(res => res.json())
       .then(data => {
-        setConfig(data);
-        const cfg = data.config || {};
-        setEnabledModules({
-          automod: cfg.automod?.enabled || false,
-          welcome: cfg.welcome?.enabled || false,
-          level: cfg.level?.enabled || false,
-          tickets: cfg.ticket?.enabled || false,
-          appeals: cfg.appeals?.enabled || false,
-          automation: cfg.automation?.enabled || false,
-          autoresponder: cfg.autoresponder_enabled || false,
-          boost: cfg.boost?.enabled || false,
-          economy: cfg.economy?.enabled || false,
-          goodbye: cfg.goodbye?.enabled || false,
-          joinroles: cfg.joinroles?.enabled || false,
-          logs: cfg.logs?.enabled || false,
-          messages: cfg.messages_enabled || false,
-          security: cfg.security?.enabled || false,
-          serverstats: cfg.serverstats?.enabled || false,
-          tempvoice: cfg.tempvoice?.enabled || false,
-          verify: cfg.verify?.enabled || false,
-        });
+        setServerData(data);
         setLoading(false);
       })
       .catch(err => {
@@ -73,21 +83,64 @@ export default function Modules({ guildId }) {
       });
   }, [guildId]);
 
+  const handleSave = async (payload) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/config/${guildId}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.error) {
+        toast("Failed to save: " + data.error, 'error');
+      } else {
+        // Optimistically update local config state
+        setServerData(prev => {
+          const newConfig = { ...prev.config };
+          Object.keys(payload).forEach(key => {
+            if (typeof payload[key] === 'object' && payload[key] !== null && !Array.isArray(payload[key])) {
+              newConfig[key] = { ...newConfig[key], ...payload[key] };
+            } else {
+              newConfig[key] = payload[key];
+            }
+          });
+          return { ...prev, config: newConfig };
+        });
+        toast("Settings saved successfully!", 'success');
+        handleReset();
+      }
+    } catch (e) {
+      console.error(e);
+      toast("Error saving settings.", 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const toggleModule = (id) => {
-    if (!config) return;
+    if (!serverData) return;
 
-    const newState = !enabledModules[id];
-    setEnabledModules(prev => ({ ...prev, [id]: newState }));
-
-    const cfg = config.config || {};
-    let payload = {};
+    const cfg = serverData.config || {};
     const backendKey = id === 'tickets' ? 'ticket' : id;
+    
+    // Determine current state
+    let currentState = false;
+    if (id === 'autoresponder') currentState = cfg.autoresponder_enabled;
+    else if (id === 'messages') currentState = cfg.messages_enabled;
+    else currentState = cfg[backendKey]?.enabled;
+    
+    const newState = !currentState;
 
+    let payload = {};
     if (id === 'autoresponder' || id === 'messages') {
       payload = {
         settings: {
-          autoresponder_enabled: id === 'autoresponder' ? newState : (enabledModules.autoresponder || false),
-          messages_enabled: id === 'messages' ? newState : (enabledModules.messages || false)
+          autoresponder_enabled: id === 'autoresponder' ? newState : (cfg.autoresponder_enabled || false),
+          messages_enabled: id === 'messages' ? newState : (cfg.messages_enabled || false)
         }
       };
     } else {
@@ -97,6 +150,15 @@ export default function Modules({ guildId }) {
         enabled: newState
       };
     }
+
+    // Optimistic UI update
+    setServerData(prev => {
+      const newConfig = { ...prev.config };
+      if (id === 'autoresponder') newConfig.autoresponder_enabled = newState;
+      else if (id === 'messages') newConfig.messages_enabled = newState;
+      else newConfig[backendKey] = { ...newConfig[backendKey], enabled: newState };
+      return { ...prev, config: newConfig };
+    });
 
     fetch(`/api/config/${guildId}`, {
       method: 'POST',
@@ -110,125 +172,175 @@ export default function Modules({ guildId }) {
       .then(data => {
         if (data.error) {
           console.error("Failed to save:", data.error);
-          setEnabledModules(prev => ({ ...prev, [id]: !newState }));
-        } else {
-          setConfig(prev => ({
-            ...prev,
-            config: {
-              ...prev.config,
-              ...(payload[backendKey] ? { [backendKey]: payload[backendKey] } : payload)
-            }
-          }));
+          toast("Failed to toggle module", "error");
+          // Revert optimistic update
+          setServerData(prev => {
+            const newConfig = { ...prev.config };
+            if (id === 'autoresponder') newConfig.autoresponder_enabled = currentState;
+            else if (id === 'messages') newConfig.messages_enabled = currentState;
+            else newConfig[backendKey] = { ...newConfig[backendKey], enabled: currentState };
+            return { ...prev, config: newConfig };
+          });
         }
       })
       .catch(err => {
         console.error(err);
-        setEnabledModules(prev => ({ ...prev, [id]: !newState }));
+        toast("Network error while toggling module", "error");
       });
   };
 
-  const filteredModules = modulesList.filter(mod => {
-    const matchesCategory = activeCategory === 'All' || mod.category === activeCategory;
-    const matchesSearch = mod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mod.desc.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const getModuleState = (id) => {
+    if (!serverData) return false;
+    const cfg = serverData.config || {};
+    if (id === 'autoresponder') return cfg.autoresponder_enabled || false;
+    if (id === 'messages') return cfg.messages_enabled || false;
+    const backendKey = id === 'tickets' ? 'ticket' : id;
+    return cfg[backendKey]?.enabled || false;
+  };
 
-  if (loading) {
+  const renderModuleContent = () => {
+    if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>Loading module settings...</div>;
+    if (!serverData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#ef4444' }}>Failed to load data.</div>;
+
+    const moduleInfo = modulesList.find(m => m.id === moduleId);
+    
+    let Component;
+    if (moduleId === 'automod') Component = AutomodSettings;
+    else if (moduleId === 'tickets') Component = TicketSettings;
+    else if (moduleId === 'autoresponder') Component = AutoresponderSettings;
+    else if (moduleId === 'welcome') Component = WelcomeSettings;
+    else if (moduleId === 'appeals') Component = BanAppealsSettings;
+    else if (moduleId === 'automation') Component = AutomationSettings;
+    else if (moduleId === 'boost') Component = BoostMessagesSettings;
+    else if (moduleId === 'economy') Component = EconomySettings;
+    else if (moduleId === 'goodbye') Component = GoodbyeMessagesSettings;
+    else if (moduleId === 'joinroles') Component = JoinRolesSettings;
+    else if (moduleId === 'logs') Component = AuditLogsSettings;
+    else if (moduleId === 'messages') Component = MessageLogsSettings;
+    else if (moduleId === 'security') Component = SecuritySettings;
+    else if (moduleId === 'serverstats') Component = ServerStatsSettings;
+    else if (moduleId === 'tempvoice') Component = TempVoiceSettings;
+    else if (moduleId === 'verify') Component = VerificationSettings;
+    else if (moduleId === 'level') Component = LevelingSystemSettings;
+    else return <div style={{ padding: '50px', color: '#fff', textAlign: 'center' }}>Module not found.</div>;
+
     return (
-      <div className="dash-modules" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '400px', color: 'var(--text-muted)' }}>
-        <div style={{ width: '48px', height: '48px', border: '4px solid rgba(255,255,255,0.05)', borderTop: '4px solid #60A5FA', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(96,165,250,0.6))' }}></div>
-        <h3 style={{ fontSize: '18px', marginBottom: '8px', color: '#fff' }}>Loading Modules</h3>
-        <p style={{ color: 'var(--text-muted)' }}>Fetching your server configuration...</p>
-        <style>
-          {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
-        </style>
+      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div style={{ background: moduleInfo.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '16px' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fff' }}>
+                {moduleInfo.icon}
+              </svg>
+            </div>
+            <div>
+              <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#fff', margin: 0, marginBottom: '4px' }}>{moduleInfo.name}</h1>
+              <p style={{ color: '#949ba4', margin: 0, fontSize: '15px' }}>{moduleInfo.desc}</p>
+            </div>
+          </div>
+          <div>
+             <Toggle checked={getModuleState(moduleId)} onChange={() => toggleModule(moduleId)} />
+          </div>
+        </div>
+
+        <Component 
+          key={formKey}
+          guildId={guildId}
+          config={serverData.config}
+          channels={serverData.channels || []}
+          voiceChannels={serverData.voice_channels || []}
+          roles={serverData.roles || []}
+          categories={serverData.categories || []}
+          onSave={handleSave}
+          saving={saving}
+          onReset={handleReset}
+        />
       </div>
     );
-  }
+  };
 
   return (
-    <div className="dash-modules">
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '20px' }}>
-        <div>
-          <h1 className="dash-title">Modules</h1>
-          <p className="dash-subtitle">Enable and configure the features you want to use in your server.</p>
-        </div>
-
-        <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
-          <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </div>
-          <input
-            type="text"
-            placeholder="Search modules..."
-            className="dash-input"
-            style={{ paddingLeft: '38px', borderRadius: '8px' }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', overflowX: 'auto', paddingBottom: '8px' }}>
-        {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '20px',
-              border: 'none',
-              background: activeCategory === cat ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-              color: activeCategory === cat ? '#fff' : 'var(--text-muted)',
-              fontWeight: activeCategory === cat ? '600' : '400',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              whiteSpace: 'nowrap'
-            }}
+    <div style={{ 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      right: 0, 
+      bottom: 0, 
+      background: '#1e1f22', 
+      zIndex: 9999, 
+      display: 'flex' 
+    }}>
+      {/* Left Sidebar */}
+      <div style={{ 
+        width: '320px', 
+        background: '#2b2d31', 
+        borderRight: '1px solid rgba(255,255,255,0.05)', 
+        display: 'flex', 
+        flexDirection: 'column',
+        boxShadow: '4px 0 24px rgba(0,0,0,0.2)'
+      }}>
+        
+        <div style={{ padding: '24px', borderBottom: '1px solid rgba(0,0,0,0.2)', background: '#1e1f22' }}>
+          <button 
+            onClick={() => navigate(`/dashboard/${guildId}/overview`)}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '8px', color: '#dbdee1', textDecoration: 'none', 
+              fontWeight: 500, transition: 'color 0.2s', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontSize: '15px' 
+            }} 
+            onMouseEnter={e => e.currentTarget.style.color = '#fff'} 
+            onMouseLeave={e => e.currentTarget.style.color = '#dbdee1'}
           >
-            {cat}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back to Dashboard
           </button>
-        ))}
-      </div>
-
-      {filteredModules.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ color: 'var(--text-muted)', marginBottom: '12px' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </div>
-          <h3 style={{ fontSize: '18px', marginBottom: '8px', color: '#fff' }}>No modules found</h3>
-          <p style={{ color: 'var(--text-muted)' }}>Try adjusting your search query or changing the category filter.</p>
+          <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, marginTop: '24px', marginBottom: 0 }}>Modules Configuration</h2>
         </div>
-      ) : (
-        <div className="dash-modules-grid">
-          {filteredModules.map((mod) => (
-            <div key={mod.id} className="dash-card module-card">
-              <div className="module-card-header">
-                <div className="module-card-title">
-                  <div className="module-icon" style={{ background: mod.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fff' }}>
+
+        <div style={{ flexGrow: 1, overflowY: 'auto', padding: '16px' }}>
+          {modulesList.map(mod => {
+            const isActive = mod.id === moduleId;
+            const isEnabled = getModuleState(mod.id);
+            return (
+              <div 
+                key={mod.id}
+                style={{ 
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', 
+                  borderRadius: '8px', cursor: 'pointer', marginBottom: '8px',
+                  background: isActive ? 'rgba(88, 101, 242, 0.15)' : 'transparent',
+                  border: isActive ? '1px solid rgba(88, 101, 242, 0.3)' : '1px solid transparent',
+                  transition: 'background 0.2s, border 0.2s'
+                }}
+                onClick={() => navigate(`/dashboard/${guildId}/modules/${mod.id}`)}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ color: isActive ? '#5865F2' : (isEnabled ? '#10b981' : '#949ba4'), transition: 'color 0.2s' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       {mod.icon}
                     </svg>
                   </div>
-                  <h3>{mod.name}</h3>
+                  <span style={{ color: isActive ? '#fff' : '#dbdee1', fontWeight: isActive ? 600 : 500, fontSize: '15px' }}>{mod.name}</span>
                 </div>
-                <Toggle checked={enabledModules[mod.id] || false} onChange={() => toggleModule(mod.id)} />
+                <div 
+                  onClick={e => {
+                    e.stopPropagation();
+                    toggleModule(mod.id);
+                  }}
+                  style={{ opacity: isActive || isEnabled ? 1 : 0.4, transition: 'opacity 0.2s' }}
+                >
+                  <Toggle checked={isEnabled} onChange={() => {}} />
+                </div>
               </div>
-              <p className="module-card-desc">{mod.desc}</p>
-              <div className="module-card-actions">
-                <Link to={`/dashboard/${guildId}/modules/${mod.id}`} className="module-config-btn">
-                  Configure
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
-      )}
+      </div>
+
+      {/* Right Content */}
+      <div style={{ flexGrow: 1, overflowY: 'auto', background: '#313338' }}>
+         {renderModuleContent()}
+      </div>
     </div>
   );
 }

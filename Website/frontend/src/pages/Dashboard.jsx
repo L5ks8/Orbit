@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-do
 import Sidebar from '../components/dashboard/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Modules from '../components/dashboard/Modules';
-import ModuleSettings from '../components/dashboard/ModuleSettings';
+
 import Leaderboard from '../components/dashboard/Leaderboard';
 import Settings from '../components/dashboard/Settings';
 import ServerSelector from './ServerSelector';
@@ -143,7 +143,7 @@ function DashboardInner() {
               <Route path="overview" element={<Overview guildId={guildId} />} />
               <Route path="embed-builder" element={<EmbedBuilder setSidebarOpen={setSidebarOpen} />} />
               <Route path="modules" element={<Modules guildId={guildId} />} />
-              <Route path="modules/:moduleId" element={<ModuleSettings guildId={guildId} />} />
+              <Route path="modules/:moduleId" element={<Modules guildId={guildId} />} />
               <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
               <Route path="settings" element={<Settings guildId={guildId} />} />
             </Routes>
