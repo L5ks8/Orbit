@@ -347,7 +347,11 @@ class LevelCommandsCog(commands.Cog):
     async def leaderboard_prefix(self, ctx: commands.Context):
         config = load_level_config(ctx.guild.id)
         if not config.get("enabled", False):
-            return await ctx.send(embed=make_embed("The Level System is not enabled on this server.", discord.Color.red()))
+            from Commands._utils import get_module_disabled_embed, ModuleDisabledView
+            return await ctx.send(
+                embed=get_module_disabled_embed("Leveling"),
+                view=ModuleDisabledView(ctx.guild.id, "Leveling")
+            )
 
         embed, file = await self._build_leaderboard_data(ctx.guild, "total_xp")
         if embed is None:
