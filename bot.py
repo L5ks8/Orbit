@@ -839,37 +839,7 @@ class OrbitBot(commands.Bot):
                     f"{type(e).__name__}: {e}"
                 )
 
-        # -----------------------------------------
-        # Slash command sync
-        # -----------------------------------------
-
-        try:
-
-            synced = await self.tree.sync()
-
-            total_cmds = 0
-
-            for cmd in synced:
-
-                if hasattr(cmd, "commands"):
-                    total_cmds += (
-                        len(cmd.commands) + 1
-                    )
-                else:
-                    total_cmds += 1
-
-            print(
-                f"Synced {len(synced)} top-level "
-                f"command group(s) "
-                f"({total_cmds} total commands)"
-            )
-
-        except Exception as e:
-
-            print(
-                f"Failed to sync commands: "
-                f"{type(e).__name__}: {e}"
-            )
+        pass
 
         # -----------------------------------------
         # Global View Error Handler
@@ -1151,24 +1121,20 @@ class OrbitBot(commands.Bot):
 
 
 # ============================================================
+# CONSTANTS & GLOBALS
+# ============================================================
+
+TOKEN = os.getenv("TOKEN", "").strip()
+WEB_APP_INSTANCE = None
+
+
+# ============================================================
 # CREATE BOT
 # ============================================================
 
 def create_bot():
 
-    """
-    Creates a completely fresh bot instance.
-
-    IMPORTANT:
-    This function is called again after a connection failure
-    so that a previously closed aiohttp session is never reused.
-    """
-
     bot = OrbitBot()
-
-    # -----------------------------------------
-    # Global blacklist check
-    # -----------------------------------------
 
     @bot.check
     async def global_blacklist_prefix_check(
@@ -1282,7 +1248,9 @@ async def start_web_server():
         # Dashboard expects a bot argument.
         # We pass None because the web server must start
         # independently from Discord.
+        global WEB_APP_INSTANCE
         app = setup_web_app(None)
+        WEB_APP_INSTANCE = app
 
     except Exception as e:
 
@@ -1398,6 +1366,10 @@ async def main():
             )
 
             bot = create_bot()
+            
+            global WEB_APP_INSTANCE
+            if WEB_APP_INSTANCE is not None and 'dashboard' in WEB_APP_INSTANCE:
+                WEB_APP_INSTANCE['dashboard'].bot = bot
 
             print(
                 "Connecting to Discord..."

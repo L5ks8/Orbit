@@ -79,7 +79,8 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
 
 def setup_web_app(bot) -> web.Application:
     dashboard = WebDashboard(bot)
-    app = web.Application(client_max_size=10 * 1024 * 1024)  
+    app = web.Application(client_max_size=10 * 1024 * 1024)
+    app['dashboard'] = dashboard
     
     app.router.add_get("/auth/login", dashboard.handle_login)
     app.router.add_get("/auth/callback", dashboard.handle_callback)
