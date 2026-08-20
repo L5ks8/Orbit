@@ -442,6 +442,7 @@ async def global_devmode_prefix_check(ctx: commands.Context):
     return False
 
 async def main():
+    runner = None
     try:
         from aiohttp import web
         from Website.backend.main import setup_web_app
@@ -456,8 +457,15 @@ async def main():
     except Exception as e:
         print(f"Failed to start Web Dashboard: {e}", flush=True)
 
-    async with bot:
-        await bot.start(TOKEN)
+    try:
+        async with bot:
+            await bot.start(TOKEN)
+    finally:
+        if runner:
+            try:
+                await runner.cleanup()
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     if not TOKEN:
@@ -465,6 +473,7 @@ if __name__ == "__main__":
     else:
         import time
         import asyncio
+        retry_delay = 10
         while True:
             try:
                 asyncio.run(main())
@@ -477,5 +486,10 @@ if __name__ == "__main__":
                 break
             except (discord.HTTPException, discord.GatewayNotFound, Exception) as e:
                 print(f"Bot crashed / Network error occurred: {e}", flush=True)
-                print("Retrying connection in 10 seconds...", flush=True)
-                time.sleep(10)
+                if "429" in str(e) or "1015" in str(e):
+                    print("Cloudflare 1015 / 429 Rate Limit hit. Discord banned this IP temporarily.", flush=True)
+                    retry_delay = min(retry_delay * 2, 3600) # Exponential backoff up to 1 hour
+                else:
+                    retry_delay = 10
+                print(f"Retrying connection in {retry_delay} seconds...", flush=True)
+                time.sleep(retry_delay)
