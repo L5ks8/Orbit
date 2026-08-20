@@ -16,6 +16,11 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
   const [embedToRename, setEmbedToRename] = useState(null);
   const [renameInput, setRenameInput] = useState('');
   
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [embedToDelete, setEmbedToDelete] = useState(null);
+  
+  const [toastMsg, setToastMsg] = useState('');
+  
   const fetchEmbeds = async () => {
     try {
       const res = await fetch(`/api/action/saved_embeds/${guildId}`, {
@@ -78,20 +83,33 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
     }
   };
 
-  const handleDelete = async (e, id) => {
+  const handleDeleteClick = (e, embed) => {
     e.stopPropagation();
-    if (!window.confirm('Are you sure you want to delete this message?')) return;
+    setMenuOpenId(null);
+    setEmbedToDelete(embed);
+    setDeleteModalOpen(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!embedToDelete) return;
     
     try {
-      await fetch(`/api/action/saved_embeds/${guildId}/${id}`, {
+      await fetch(`/api/action/saved_embeds/${guildId}/${embedToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      setEmbeds(prev => prev.filter(emb => emb.id !== id));
+      setEmbeds(prev => prev.filter(emb => emb.id !== embedToDelete.id));
+      setToastMsg('Message deleted successfully!');
+      setTimeout(() => setToastMsg(''), 4000);
     } catch (e) {
       console.error(e);
+      setToastMsg('Error: Failed to delete message');
+      setTimeout(() => setToastMsg(''), 4000);
+    } finally {
+      setDeleteModalOpen(false);
+      setEmbedToDelete(null);
     }
   };
   
@@ -262,7 +280,7 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
                         Rename
                       </div>
                       <div 
-                        onClick={(e) => handleDelete(e, emb.id)}
+                        onClick={(e) => handleDeleteClick(e, emb)}
                         style={{ padding: '8px 12px', color: '#ef4444', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -343,6 +361,94 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
         </div>
       )}
       
+      {/* Delete Modal */}
+      {deleteModalOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            background: '#2b2d31',
+            borderRadius: '12px',
+            padding: '24px',
+            width: '400px',
+            maxWidth: '90%',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#f2f3f5', marginBottom: '8px' }}>Delete Message</h2>
+            <p style={{ color: '#dbdee1', fontSize: '15px', marginBottom: '24px', lineHeight: '1.4' }}>
+              Are you sure you want to delete the message <strong>{embedToDelete?.name || 'Unnamed message'}</strong>?<br/>
+              This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                onClick={() => setDeleteModalOpen(false)}
+                style={{
+                  background: 'transparent', color: '#dbdee1', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 500
+                }}
+                onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                style={{
+                  background: '#ef4444', color: '#fff', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 500, transition: 'background 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
+                onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div style={{
+          position: 'fixed',
+          bottom: '40px',
+          right: '40px',
+          background: toastMsg.startsWith('Error') ? '#ef4444' : '#10b981',
+          color: '#fff',
+          padding: '16px 24px',
+          borderRadius: '8px',
+          boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          zIndex: 9999,
+          animation: 'slideInUp 0.3s ease-out, fadeOut 0.3s ease-in 3.7s forwards'
+        }}>
+          {toastMsg.startsWith('Error') ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          )}
+          <span style={{ fontWeight: 600, fontSize: '15px' }}>{toastMsg}</span>
+          <button 
+            onClick={() => setToastMsg('')}
+            style={{ background: 'transparent', border: 'none', color: '#fff', marginLeft: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      )}
+      
+      <style>{`
+        @keyframes slideInUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+          to { opacity: 0; visibility: hidden; }
+        }
+      `}</style>
     </div>
   );
 }
