@@ -43,7 +43,7 @@ export const modulesList = [
     { id: 'logs', category: 'Logging', name: 'Logs', desc: 'Track everything that happens in your server.', iconColor: 'rgba(99, 102, 241, 0.2)', icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M12 18v-6 M9 15h6" /> },
 ];
 
-export default function Modules({ guildId }) {
+export default function Modules({ guildId, setSidebarOpen }) {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -52,6 +52,14 @@ export default function Modules({ guildId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
+
+  // Close main sidebar when this mounts
+  useEffect(() => {
+    if (setSidebarOpen) setSidebarOpen(false);
+    return () => {
+      if (setSidebarOpen) setSidebarOpen(true);
+    };
+  }, [setSidebarOpen]);
 
   // Redirect to first module if no module is selected
   useEffect(() => {
