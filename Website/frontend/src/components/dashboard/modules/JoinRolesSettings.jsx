@@ -46,7 +46,7 @@ export default function JoinRolesSettings({ config, roles, onSave, saving, onRes
             <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>User Roles</h3>
             <span className="form-hint" style={{ fontSize: '13px' }}>Roles given to new members automatically upon joining.</span>
           </div>
-          <Toggle checked={userRolesEnabled} onChange={setUserRolesEnabled} />
+          <Toggle checked={userRolesEnabled} onChange={(e) => setUserRolesEnabled(e.target.checked)} />
         </div>
         
         {userRolesEnabled && (
@@ -62,7 +62,7 @@ export default function JoinRolesSettings({ config, roles, onSave, saving, onRes
             <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>Bot Roles</h3>
             <span className="form-hint" style={{ fontSize: '13px' }}>Roles given to new bots automatically upon joining.</span>
           </div>
-          <Toggle checked={botRolesEnabled} onChange={setBotRolesEnabled} />
+          <Toggle checked={botRolesEnabled} onChange={(e) => setBotRolesEnabled(e.target.checked)} />
         </div>
         
         {botRolesEnabled && (
@@ -78,7 +78,7 @@ export default function JoinRolesSettings({ config, roles, onSave, saving, onRes
             <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>Tag Roles</h3>
             <span className="form-hint" style={{ fontSize: '13px' }}>If a user wears the Server Tag, they automatically receive this role.</span>
           </div>
-          <Toggle checked={tagRolesEnabled} onChange={setTagRolesEnabled} />
+          <Toggle checked={tagRolesEnabled} onChange={(e) => setTagRolesEnabled(e.target.checked)} />
         </div>
         
         {tagRolesEnabled && (
