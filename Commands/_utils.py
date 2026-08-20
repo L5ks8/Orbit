@@ -9,6 +9,8 @@ class ModuleDisabledView(discord.ui.View):
     def __init__(self, guild_id: int, module_name: str):
         super().__init__()
         tab_name = module_name.lower()
+        if tab_name == "leveling":
+            tab_name = "level"
         base_url = os.environ.get("BASE_URL", "http://localhost:3000").rstrip("/")
         self.add_item(discord.ui.Button(label="Activate Module", style=discord.ButtonStyle.link, url=f"{base_url}/dashboard/{guild_id}/modules/{tab_name}"))
 
