@@ -62,6 +62,25 @@ class ConfigMixin:
 
         from Commands.WebDashboard._storage import load_settings_config
         settings_cfg = load_settings_config(guild_id)
+        
+        # Resolve immune users for the frontend
+        immune_user_ids = settings_cfg.get("immune_users", [])
+        resolved_immune_users = []
+        for uid_str in immune_user_ids:
+            try:
+                uid = int(uid_str)
+                user_obj = self.bot.get_user(uid)
+                if not user_obj:
+                    user_obj = await self.bot.fetch_user(uid)
+                if user_obj:
+                    resolved_immune_users.append({
+                        "id": str(user_obj.id),
+                        "name": user_obj.name,
+                        "avatar": user_obj.avatar.url if user_obj.avatar else user_obj.default_avatar.url
+                    })
+            except Exception:
+                pass
+        settings_cfg["immune_users"] = resolved_immune_users
 
         from Commands.Appeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(guild_id)
@@ -77,8 +96,7 @@ class ConfigMixin:
             "settings": settings_cfg,
             "extra_settings": {
                 "ai_enabled": ai_enabled,
-                "prefix": prefix,
-                "bot_roles": [str(r) for r in joinroles_cfg.get("bot_roles", [])]
+                "prefix": prefix
             },
             "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
             "messages_enabled": settings_cfg.get("messages_enabled", False),
@@ -348,11 +366,7 @@ class ConfigMixin:
                     except Exception:
                         pass
                 
-                # Bot Roles
-                from Commands.JoinRole._storage import load_join_roles, save_join_roles
-                jr_cfg = load_join_roles(guild_id)
-                jr_cfg["bot_roles"] = [int(r) for r in ext.get("bot_roles", []) if r]
-                save_join_roles(guild_id, jr_cfg)
+                # Bot Roles removed from extra_settings (now handled in Auto Roles module)
 
             if user_perms.get("can_channels") and "appeals" in data:
                 from Commands.Appeals._storage import save_appeals_config
