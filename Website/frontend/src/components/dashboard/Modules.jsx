@@ -238,7 +238,7 @@ export default function Modules({ guildId }) {
               <p style={{ color: '#949ba4', margin: 0, fontSize: '15px' }}>{moduleInfo.desc}</p>
             </div>
           </div>
-          <div>
+          <div style={{ pointerEvents: 'auto' }}>
              <Toggle checked={getModuleState(moduleId)} onChange={() => toggleModule(moduleId)} />
           </div>
         </div>
@@ -259,6 +259,8 @@ export default function Modules({ guildId }) {
     );
   };
 
+  const categories = ['Moderation', 'Engagement', 'Utility', 'Logging'];
+
   return (
     <div style={{ 
       position: 'fixed', 
@@ -267,13 +269,13 @@ export default function Modules({ guildId }) {
       right: 0, 
       bottom: 0, 
       background: '#1e1f22', 
-      zIndex: 9999, 
+      zIndex: 999999, 
       display: 'flex' 
     }}>
       {/* Left Sidebar */}
       <div style={{ 
         width: '320px', 
-        background: '#2b2d31', 
+        background: '#111214', 
         borderRight: '1px solid rgba(255,255,255,0.05)', 
         display: 'flex', 
         flexDirection: 'column',
@@ -297,48 +299,61 @@ export default function Modules({ guildId }) {
         </div>
 
         <div style={{ flexGrow: 1, overflowY: 'auto', padding: '16px' }}>
-          {modulesList.map(mod => {
-            const isActive = mod.id === moduleId;
-            const isEnabled = getModuleState(mod.id);
+          {categories.map(cat => {
+            const catModules = modulesList.filter(m => m.category === cat);
+            if (catModules.length === 0) return null;
             return (
-              <div 
-                key={mod.id}
-                style={{ 
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', 
-                  borderRadius: '8px', cursor: 'pointer', marginBottom: '8px',
-                  background: isActive ? 'rgba(88, 101, 242, 0.15)' : 'transparent',
-                  border: isActive ? '1px solid rgba(88, 101, 242, 0.3)' : '1px solid transparent',
-                  transition: 'background 0.2s, border 0.2s'
-                }}
-                onClick={() => navigate(`/dashboard/${guildId}/modules/${mod.id}`)}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ color: isActive ? '#5865F2' : (isEnabled ? '#10b981' : '#949ba4'), transition: 'color 0.2s' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {mod.icon}
-                    </svg>
-                  </div>
-                  <span style={{ color: isActive ? '#fff' : '#dbdee1', fontWeight: isActive ? 600 : 500, fontSize: '15px' }}>{mod.name}</span>
+              <div key={cat} style={{ marginBottom: '24px' }}>
+                <div style={{ padding: '0 8px', marginBottom: '8px', fontSize: '12px', fontWeight: '600', color: '#949ba4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {cat}
                 </div>
-                <div 
-                  onClick={e => {
-                    e.stopPropagation();
-                    toggleModule(mod.id);
-                  }}
-                  style={{ opacity: isActive || isEnabled ? 1 : 0.4, transition: 'opacity 0.2s' }}
-                >
-                  <Toggle checked={isEnabled} onChange={() => {}} />
-                </div>
+                {catModules.map(mod => {
+                  const isActive = mod.id === moduleId;
+                  const isEnabled = getModuleState(mod.id);
+                  return (
+                    <div 
+                      key={mod.id}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', 
+                        borderRadius: '8px', cursor: 'pointer', marginBottom: '4px',
+                        background: isActive ? 'rgba(88, 101, 242, 0.15)' : 'transparent',
+                        border: isActive ? '1px solid rgba(88, 101, 242, 0.3)' : '1px solid transparent',
+                        transition: 'background 0.2s, border 0.2s'
+                      }}
+                      onClick={() => navigate(`/dashboard/${guildId}/modules/${mod.id}`)}
+                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ color: isActive ? '#5865F2' : (isEnabled ? '#10b981' : '#949ba4'), transition: 'color 0.2s' }}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            {mod.icon}
+                          </svg>
+                        </div>
+                        <span style={{ color: isActive ? '#fff' : '#dbdee1', fontWeight: isActive ? 600 : 500, fontSize: '15px' }}>{mod.name}</span>
+                      </div>
+                      <div 
+                        onClick={e => {
+                          e.stopPropagation();
+                          toggleModule(mod.id);
+                        }}
+                        style={{ opacity: isActive || isEnabled ? 1 : 0.4, transition: 'opacity 0.2s', pointerEvents: 'auto' }}
+                      >
+                        <div style={{ pointerEvents: 'none' }}>
+                          <Toggle checked={isEnabled} onChange={() => {}} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )
+            );
           })}
         </div>
       </div>
 
       {/* Right Content */}
-      <div style={{ flexGrow: 1, overflowY: 'auto', background: '#313338' }}>
+      <div style={{ flexGrow: 1, overflowY: 'auto', background: '#1e1f22' }}>
          {renderModuleContent()}
       </div>
     </div>
