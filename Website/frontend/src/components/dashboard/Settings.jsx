@@ -150,7 +150,6 @@ export default function Settings({ guildId }) {
             />
           </div>
 
-          </div>
         </div>
       </div>
       
