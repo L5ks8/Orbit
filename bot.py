@@ -473,23 +473,27 @@ if __name__ == "__main__":
     else:
         import time
         import asyncio
-        retry_delay = 10
-        while True:
-            try:
-                asyncio.run(main())
-                break
-            except discord.errors.LoginFailure as e:
-                print(f"FATAL ERROR: Invalid Token. Please check your TOKEN environment variable. Details: {e}", flush=True)
-                break
-            except discord.errors.PrivilegedIntentsRequired as e:
-                print(f"FATAL ERROR: Privileged Intents are missing. Please enable them in the Discord Developer Portal. Details: {e}", flush=True)
-                break
-            except (discord.HTTPException, discord.GatewayNotFound, Exception) as e:
-                print(f"Bot crashed / Network error occurred: {e}", flush=True)
-                if "429" in str(e) or "1015" in str(e):
-                    print("Cloudflare 1015 / 429 Rate Limit hit. Discord banned this IP temporarily.", flush=True)
-                    retry_delay = min(retry_delay * 2, 3600) # Exponential backoff up to 1 hour
-                else:
-                    retry_delay = 10
-                print(f"Retrying connection in {retry_delay} seconds...", flush=True)
-                time.sleep(retry_delay)
+        import os
+        import sys
+        
+        retry_delay = int(os.environ.get("RETRY_DELAY", 10))
+        
+        try:
+            asyncio.run(main())
+        except discord.errors.LoginFailure as e:
+            print(f"FATAL ERROR: Invalid Token. Please check your TOKEN environment variable. Details: {e}", flush=True)
+        except discord.errors.PrivilegedIntentsRequired as e:
+            print(f"FATAL ERROR: Privileged Intents are missing. Please enable them in the Discord Developer Portal. Details: {e}", flush=True)
+        except Exception as e:
+            print(f"Bot crashed / Network error occurred: {e}", flush=True)
+            if "429" in str(e) or "1015" in str(e):
+                print("Cloudflare 1015 / 429 Rate Limit hit. Discord banned this IP temporarily.", flush=True)
+                retry_delay = min(retry_delay * 2, 3600) # Exponential backoff up to 1 hour
+            else:
+                retry_delay = 10
+            
+            print(f"Retrying connection in {retry_delay} seconds...", flush=True)
+            time.sleep(retry_delay)
+            
+            os.environ["RETRY_DELAY"] = str(retry_delay)
+            os.execv(sys.executable, [sys.executable] + sys.argv)
