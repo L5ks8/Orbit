@@ -101,10 +101,17 @@ class GuildsMixin:
         except Exception:
             devmode, reason = False, ""
             
+        servers = len(self.bot.guilds)
+        users = sum(g.member_count for g in self.bot.guilds if hasattr(g, "member_count") and g.member_count)
+        ping = round(self.bot.latency * 1000)
+
         return web.json_response({
             "history": list(history),
             "devmode": devmode,
-            "devmode_reason": reason
+            "devmode_reason": reason,
+            "servers": servers,
+            "users": users,
+            "ping": ping
         })
 
     async def api_uptime(self, request: web.Request):
