@@ -254,30 +254,24 @@ export default function Overview({ guildId }) {
             </div>
           </div>
           <div className="flex-1 px-4 pb-4 overflow-hidden">
-            <table className="w-full text-left text-sm text-neutral-400 mt-2">
+            <table className="w-full text-left text-sm mt-4">
               <thead>
-                <tr className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase border-b border-neutral-800">
-                  <th className="pb-2 font-semibold">Channel</th>
-                  <th className="pb-2 font-semibold text-center">Messages</th>
-                  <th className="pb-2 font-semibold text-center">% of Activity</th>
-                  <th className="pb-2 font-semibold text-right">Change</th>
+                <tr className="text-[11px] font-bold tracking-wider text-neutral-500 uppercase">
+                  <th className="pb-3 font-semibold w-1/4">Channel</th>
+                  <th className="pb-3 font-semibold w-1/4">Messages</th>
+                  <th className="pb-3 font-semibold w-1/4">% of Activity</th>
+                  <th className="pb-3 font-semibold w-1/4">Change</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-800/60">
+              <tbody>
                 <tr>
-                  <td className="py-3">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-indigo-500/10 text-indigo-400 text-xs font-semibold">
-                      <span className="opacity-70">#</span> chat
-                    </div>
+                  <td className="py-2">
+                    <span className="text-neutral-500 font-semibold mr-1.5">#</span>
+                    <span className="text-white font-semibold">chat</span>
                   </td>
-                  <td className="py-3 text-center text-white font-bold text-[15px]">{totalMessages > 0 ? totalMessages : 8}</td>
-                  <td className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 rounded-full border-2 border-neutral-700"></div>
-                      <span className="text-white font-semibold">100%</span>
-                    </div>
-                  </td>
-                  <td className="py-3 text-right text-green-400 font-semibold">+{totalMessages > 0 ? totalMessages : 8}</td>
+                  <td className="py-2 text-white font-bold text-[15px]">{totalMessages > 0 ? totalMessages : 33}</td>
+                  <td className="py-2 text-white font-bold text-[15px]">100%</td>
+                  <td className="py-2 text-green-400 font-bold text-[15px]">+{totalMessages > 0 ? totalMessages : 33}</td>
                 </tr>
               </tbody>
             </table>
