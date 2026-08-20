@@ -535,6 +535,15 @@ body::after {
     min-height: 0;
     flex-shrink: 0;
     z-index: 10;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), border 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dash-sidebar.closed {
+    width: 0;
+    min-width: 0;
+    padding: 24px 0;
+    border-right-width: 0;
+    overflow: hidden;
 }
 
 .dash-sidebar-header {

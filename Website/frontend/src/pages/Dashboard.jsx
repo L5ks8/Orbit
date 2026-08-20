@@ -17,6 +17,7 @@ function DashboardInner() {
   const [guildIcon, setGuildIcon] = useState(null);
   const [allGuilds, setAllGuilds] = useState([]);
   const [showServerDropdown, setShowServerDropdown] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,11 +52,31 @@ function DashboardInner() {
 
   return (
     <div className="dash-container">
-      <Sidebar guildId={guildId} />
+      <Sidebar guildId={guildId} isOpen={sidebarOpen} />
       <div className="dash-main">
         
         <div className="dash-top-nav">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {!sidebarOpen && (
+              <button 
+                onClick={() => setSidebarOpen(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+                  width: '36px', height: '36px', borderRadius: '8px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                title="Open Sidebar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+            )}
             <div style={{ position: 'relative' }}>
               <div 
                 style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', padding: '6px 12px', borderRadius: '8px', background: showServerDropdown ? 'rgba(255,255,255,0.05)' : 'transparent' }}
@@ -120,7 +141,7 @@ function DashboardInner() {
             <Routes>
               <Route path="/" element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<Overview guildId={guildId} />} />
-              <Route path="embed-builder" element={<EmbedBuilder />} />
+              <Route path="embed-builder" element={<EmbedBuilder setSidebarOpen={setSidebarOpen} />} />
               <Route path="modules" element={<Modules guildId={guildId} />} />
               <Route path="modules/:moduleId" element={<ModuleSettings guildId={guildId} />} />
               <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />

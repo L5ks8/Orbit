@@ -1,17 +1,17 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 
-export default function Sidebar({ guildId }) {
+export default function Sidebar({ guildId, isOpen = true }) {
   const links = [
     { name: 'Overview', path: `/dashboard/${guildId}/overview`, icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
-    { name: 'Embed Builder', path: `/dashboard/${guildId}/embed-builder`, icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8' },
+    { name: 'Embed Builder', path: `/dashboard/${guildId}/embed-builder`, icon: 'M3 3h18v18H3z M3 9h18 M9 21V9' },
     { name: 'Modules', path: `/dashboard/${guildId}/modules`, icon: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z' },
     { name: 'Leaderboard', path: `/dashboard/${guildId}/leaderboard`, icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
     { name: 'Settings', path: `/dashboard/${guildId}/settings`, icon: 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z' },
   ];
 
   return (
-    <div className="dash-sidebar">
+    <div className={`dash-sidebar ${!isOpen ? 'closed' : ''}`}>
       <Link to="/" className="dash-sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
         <img src="/img/logo.png" alt="Orbit Logo" style={{ height: '32px' }} />
         <span style={{ fontWeight: '600', fontSize: '20px', color: '#fff' }}>Orbit</span>

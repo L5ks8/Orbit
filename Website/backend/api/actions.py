@@ -40,14 +40,25 @@ class ActionsMixin:
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
                 
+            content = data.get("content", "").strip()
             title = data.get("title", "").strip()
+            url = data.get("url", "").strip()
             description = data.get("description", "").strip()
             color = data.get("color", "")
             image = data.get("image", "").strip()
             thumbnail = data.get("thumbnail", "").strip()
             
-            if not title and not description and not image and not thumbnail:
-                return web.json_response({"error": "Embed cannot be completely empty"}, status=400)
+            author_name = data.get("author_name", "").strip()
+            author_url = data.get("author_url", "").strip()
+            author_icon = data.get("author_icon", "").strip()
+            
+            footer_text = data.get("footer_text", "").strip()
+            footer_icon = data.get("footer_icon", "").strip()
+            
+            fields = data.get("fields", [])
+            
+            if not title and not description and not image and not thumbnail and not author_name and not fields and not footer_text and not content:
+                return web.json_response({"error": "Message cannot be completely empty"}, status=400)
                 
             embed = discord.Embed()
             
@@ -60,16 +71,42 @@ class ActionsMixin:
                 return t
                 
             if title: embed.title = replace_vars(title)
+            if url: embed.url = url
             if description: embed.description = replace_vars(description)
             
             if color:
                 try: embed.color = discord.Color(int(color.replace("#", ""), 16))
                 except Exception: pass
             
+            if author_name:
+                author_kwargs = {"name": replace_vars(author_name)}
+                if author_url: author_kwargs["url"] = author_url
+                if author_icon: author_kwargs["icon_url"] = author_icon
+                embed.set_author(**author_kwargs)
+                
+            if footer_text:
+                footer_kwargs = {"text": replace_vars(footer_text)}
+                if footer_icon: footer_kwargs["icon_url"] = footer_icon
+                embed.set_footer(**footer_kwargs)
+                
+            for field in fields:
+                fname = field.get("name", "").strip()
+                fval = field.get("value", "").strip()
+                finline = field.get("inline", False)
+                if fname or fval:
+                    embed.add_field(name=replace_vars(fname) or "\u200b", value=replace_vars(fval) or "\u200b", inline=finline)
+            
             if image: embed.set_image(url=image)
             if thumbnail: embed.set_thumbnail(url=thumbnail)
             
-            await channel.send(embed=embed)
+            send_kwargs = {}
+            has_embed = bool(embed.title or embed.description or embed.image or embed.thumbnail or embed.author or embed.fields or embed.footer)
+            if has_embed:
+                send_kwargs["embed"] = embed
+            if content:
+                send_kwargs["content"] = replace_vars(content)
+                
+            await channel.send(**send_kwargs)
             return web.json_response({"success": True})
         except discord.Forbidden:
             return web.json_response({"error": "Bot missing permissions to send messages in that channel"}, status=403)
