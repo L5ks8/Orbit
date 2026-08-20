@@ -442,31 +442,31 @@ async def global_devmode_prefix_check(ctx: commands.Context):
     return False
 
 async def start_bot_loop():
+    import sys
     retry_delay = int(os.environ.get("RETRY_DELAY", 10))
-    while True:
-        try:
-            await bot.start(TOKEN)
-            break  # If it exits cleanly, stop the loop
-        except discord.errors.LoginFailure as e:
-            print(f"FATAL ERROR: Invalid Token. Details: {e}", flush=True)
-            break
-        except discord.errors.PrivilegedIntentsRequired as e:
-            print(f"FATAL ERROR: Privileged Intents missing. Details: {e}", flush=True)
-            break
-        except Exception as e:
-            print(f"Bot crashed / Network error occurred: {e}", flush=True)
-            if "429" in str(e) or "1015" in str(e):
-                print("Cloudflare 1015 / 429 Rate Limit hit. Discord banned this IP temporarily.", flush=True)
-                retry_delay = min(retry_delay * 2, 3600)
-            else:
-                retry_delay = 10
-            
-            print(f"Retrying connection in {retry_delay} seconds...", flush=True)
-            try:
-                await bot.close()
-            except Exception:
-                pass
-            await asyncio.sleep(retry_delay)
+    try:
+        await bot.start(TOKEN)
+    except discord.errors.LoginFailure as e:
+        print(f"FATAL ERROR: Invalid Token. Details: {e}", flush=True)
+        os._exit(1)
+    except discord.errors.PrivilegedIntentsRequired as e:
+        print(f"FATAL ERROR: Privileged Intents missing. Details: {e}", flush=True)
+        os._exit(1)
+    except Exception as e:
+        print(f"Bot crashed / Network error occurred: {e}", flush=True)
+        if "429" in str(e) or "1015" in str(e):
+            print("Cloudflare 1015 / 429 Rate Limit hit. Discord banned this IP temporarily.", flush=True)
+            retry_delay = min(retry_delay * 2, 3600)
+        else:
+            retry_delay = 10
+        
+        print(f"Retrying connection in {retry_delay} seconds...", flush=True)
+        # Sleep asynchronously to keep the web server alive!
+        await asyncio.sleep(retry_delay)
+        
+        # Cleanly restart the process to reset discord.py session state
+        os.environ["RETRY_DELAY"] = str(retry_delay)
+        os.execv(sys.executable, [sys.executable] + sys.argv)
 
 async def main():
     runner = None
