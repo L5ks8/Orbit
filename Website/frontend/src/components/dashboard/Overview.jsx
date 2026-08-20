@@ -253,28 +253,39 @@ export default function Overview({ guildId }) {
               <button className={channelsRange === 'all' ? 'active' : ''} onClick={() => setChannelsRange('all')}>All</button>
             </div>
           </div>
-          <div className="flex-1 px-4 pb-4 overflow-hidden">
-            <table className="w-full text-left text-sm mt-4">
-              <thead>
-                <tr className="text-[11px] font-bold tracking-wider text-neutral-500 uppercase">
-                  <th className="pb-3 font-semibold w-1/4">Channel</th>
-                  <th className="pb-3 font-semibold w-1/4">Messages</th>
-                  <th className="pb-3 font-semibold w-1/4">% of Activity</th>
-                  <th className="pb-3 font-semibold w-1/4">Change</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="py-2">
-                    <span className="text-neutral-500 font-semibold mr-1.5">#</span>
-                    <span className="text-white font-semibold">chat</span>
-                  </td>
-                  <td className="py-2 text-white font-bold text-[15px]">{totalMessages > 0 ? totalMessages : 33}</td>
-                  <td className="py-2 text-white font-bold text-[15px]">100%</td>
-                  <td className="py-2 text-green-400 font-bold text-[15px]">+{totalMessages > 0 ? totalMessages : 33}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="flex-1 px-2 pb-3">
+            <div>
+              <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(56px,auto)_minmax(64px,auto)] sm:grid-cols-[minmax(0,1.4fr)_minmax(70px,1fr)_minmax(90px,1fr)_minmax(110px,1fr)] gap-2 sm:gap-3 px-2.5 pb-1.5">
+                <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Channel</span>
+                <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Messages</span>
+                <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">% of Activity</span>
+                <span className="hidden sm:block text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Change</span>
+              </div>
+              <div className="divide-y divide-neutral-800/40">
+                <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(56px,auto)_minmax(64px,auto)] sm:grid-cols-[minmax(0,1.4fr)_minmax(70px,1fr)_minmax(90px,1fr)_minmax(110px,1fr)] gap-2 sm:gap-3 items-center px-2.5 py-1.5 hover:bg-white/[0.02] transition-colors">
+                  <span className="inline-flex items-center gap-1 min-w-0 px-1.5 py-0.5 bg-indigo-500/15 border border-indigo-500/20 rounded w-fit max-w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-2.5 h-2.5 text-indigo-300 flex-shrink-0">
+                      <line x1="4" x2="20" y1="9" y2="9"></line>
+                      <line x1="4" x2="20" y1="15" y2="15"></line>
+                      <line x1="10" x2="8" y1="3" y2="21"></line>
+                      <line x1="16" x2="14" y1="3" y2="21"></line>
+                    </svg>
+                    <span className="text-[11px] text-indigo-200 font-medium truncate">chat</span>
+                  </span>
+                  <span className="text-sm text-white font-semibold tabular-nums">{totalMessages > 0 ? totalMessages : 33}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative w-5 h-5 flex-shrink-0">
+                      <svg viewBox="0 0 36 36" className="w-5 h-5 -rotate-90">
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="4" className="text-neutral-700"></circle>
+                        <circle cx="18" cy="18" r="15" fill="none" strokeWidth="4" strokeLinecap="round" strokeDasharray="94.2 94.2" className="text-emerald-500"></circle>
+                      </svg>
+                    </div>
+                    <span className="text-xs text-neutral-200 tabular-nums">100%</span>
+                  </div>
+                  <span className="hidden sm:inline text-xs tabular-nums font-medium text-emerald-400">+{totalMessages > 0 ? totalMessages : 33}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
