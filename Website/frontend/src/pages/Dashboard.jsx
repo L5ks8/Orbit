@@ -70,7 +70,7 @@ function DashboardInner() {
       <div className="dash-main">
         
         <div className="dash-top-nav">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px 24px 0 24px' }}>
             {!sidebarOpen && (
               <button 
                 onClick={() => setSidebarOpen(true)}
