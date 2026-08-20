@@ -54,8 +54,13 @@ class UserInfoCommand(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="userinfo", aliases=["user"], description="Display member statistics and roles.")
-    async def userinfo_cmd(self, ctx: commands.Context, user: discord.Member = None):
+    async def userinfo_cmd(self, ctx: commands.Context, user: Union[discord.Member, discord.User] = None):
         await _do_user_info(ctx, user)
+
+    @userinfo_cmd.error
+    async def userinfo_error(self, ctx: commands.Context, error):
+        from Commands._utils import make_embed
+        await ctx.send(embed=make_embed("User not found.", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UserInfoCommand(bot))
