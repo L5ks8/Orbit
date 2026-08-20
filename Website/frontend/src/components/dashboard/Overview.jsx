@@ -9,32 +9,47 @@ export default function Overview({ guildId }) {
   const [stats, setStats] = useState(null);
   const [config, setConfig] = useState(null);
 
+  const [timeRange, setTimeRange] = useState('7');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     if (!guildId) return;
     
-    // Fetch Guild Info (Icon/Name)
-    fetch('/api/guilds')
+    const loadData = () => {
+      fetch('/api/guilds')
+        .then(res => res.json())
+        .then(data => {
+          const guildsArray = Array.isArray(data) ? data : (data.guilds || []);
+          const g = guildsArray.find(g => g.id === guildId);
+          if (g) setGuildInfo(g);
+        })
+        .catch(console.error);
+        
+      fetch(`/api/guild_stats/${guildId}?days=${timeRange === 'all' ? 365 : timeRange}`)
+        .then(res => res.json())
+        .then(data => setStats(data))
+        .catch(console.error);
+        
+      fetch(`/api/config/${guildId}`)
+        .then(res => res.json())
+        .then(data => setConfig(data?.config || null))
+        .catch(console.error);
+    };
+
+    loadData();
+    const interval = setInterval(loadData, 5000);
+    return () => clearInterval(interval);
+  }, [guildId, timeRange]);
+
+  const handleRefreshClick = () => {
+    setIsRefreshing(true);
+    fetch(`/api/guild_stats/${guildId}?days=${timeRange === 'all' ? 365 : timeRange}`)
       .then(res => res.json())
       .then(data => {
-        const guildsArray = Array.isArray(data) ? data : (data.guilds || []);
-        const g = guildsArray.find(g => g.id === guildId);
-        if (g) setGuildInfo(g);
-      })
-      .catch(console.error);
-      
-    // Fetch Guild Stats
-    fetch(`/api/guild_stats/${guildId}`)
-      .then(res => res.json())
-      .then(data => setStats(data))
-      .catch(console.error);
-      
-    // Fetch Config (for features)
-    fetch(`/api/config/${guildId}`)
-      .then(res => res.json())
-      .then(data => setConfig(data?.config || null))
-      .catch(console.error);
-      
-  }, [guildId]);
+        setStats(data);
+        setTimeout(() => setIsRefreshing(false), 500);
+      });
+  };
 
   // Process History Data for Charts
   const historyRaw = stats?.history || [];
@@ -103,8 +118,8 @@ export default function Overview({ guildId }) {
               <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"></div>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-              <span className="hidden sm:inline">Just now</span>
-              <button className="pb-refresh-btn" aria-label="Refresh" onClick={() => window.location.reload()}>
+              <span className="hidden sm:inline">Updated {isRefreshing ? 'now' : 'live'}</span>
+              <button className={`pb-refresh-btn ${isRefreshing ? 'animate-spin' : ''}`} aria-label="Refresh" onClick={handleRefreshClick}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
               </button>
             </div>
@@ -210,11 +225,11 @@ export default function Overview({ guildId }) {
               <p className="text-[11px] text-neutral-500 mt-0.5">Last 7 days</p>
             </div>
             <div className="pb-toggle-group flex-shrink-0">
-              <button>1D</button>
-              <button className="active">1W</button>
-              <button>1M</button>
-              <button>1Y</button>
-              <button>All</button>
+              <button className={timeRange === '1' ? 'active' : ''} onClick={() => setTimeRange('1')}>1D</button>
+              <button className={timeRange === '7' ? 'active' : ''} onClick={() => setTimeRange('7')}>1W</button>
+              <button className={timeRange === '30' ? 'active' : ''} onClick={() => setTimeRange('30')}>1M</button>
+              <button className={timeRange === '365' ? 'active' : ''} onClick={() => setTimeRange('365')}>1Y</button>
+              <button className={timeRange === 'all' ? 'active' : ''} onClick={() => setTimeRange('all')}>All</button>
             </div>
           </div>
           <div className="flex-1 px-2 pb-3">
@@ -235,11 +250,11 @@ export default function Overview({ guildId }) {
             <span className="text-[11px] text-neutral-500">last 7 days</span>
           </div>
           <div className="pb-toggle-group flex-shrink-0">
-            <button>1D</button>
-            <button className="active">1W</button>
-            <button>1M</button>
-            <button>1Y</button>
-            <button>All</button>
+            <button className={timeRange === '1' ? 'active' : ''} onClick={() => setTimeRange('1')}>1D</button>
+            <button className={timeRange === '7' ? 'active' : ''} onClick={() => setTimeRange('7')}>1W</button>
+            <button className={timeRange === '30' ? 'active' : ''} onClick={() => setTimeRange('30')}>1M</button>
+            <button className={timeRange === '365' ? 'active' : ''} onClick={() => setTimeRange('365')}>1Y</button>
+            <button className={timeRange === 'all' ? 'active' : ''} onClick={() => setTimeRange('all')}>All</button>
           </div>
         </div>
         <div className="px-5 pb-3">
