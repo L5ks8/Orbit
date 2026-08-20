@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useParams, useNavigate, useLocation } from 're
 import Sidebar from '../components/dashboard/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Modules from '../components/dashboard/Modules';
-
+import Analytics from '../components/dashboard/Analytics';
 import Leaderboard from '../components/dashboard/Leaderboard';
 import Settings from '../components/dashboard/Settings';
 import ServerSelector from './ServerSelector';
@@ -145,6 +145,7 @@ function DashboardInner() {
             <Routes>
               <Route path="/" element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<Overview guildId={guildId} />} />
+              <Route path="analytics" element={<Analytics />} />
               <Route path="embed-builder" element={<EmbedBuilder setSidebarOpen={setSidebarOpen} />} />
               <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
               <Route path="settings" element={<Settings guildId={guildId} />} />
