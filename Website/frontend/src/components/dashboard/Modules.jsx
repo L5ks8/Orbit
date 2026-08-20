@@ -27,6 +27,7 @@ export const modulesList = [
 export default function Modules({ guildId }) {
   const [enabledModules, setEnabledModules] = useState({});
   const [config, setConfig] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -35,6 +36,7 @@ export default function Modules({ guildId }) {
 
   useEffect(() => {
     if (!guildId) return;
+    setLoading(true);
     fetch(`/api/config/${guildId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -63,6 +65,11 @@ export default function Modules({ guildId }) {
           tempvoice: cfg.tempvoice?.enabled || false,
           verify: cfg.verify?.enabled || false,
         });
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load modules config", err);
+        setLoading(false);
       });
   }, [guildId]);
 
@@ -126,6 +133,19 @@ export default function Modules({ guildId }) {
       mod.desc.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  if (loading) {
+    return (
+      <div className="dash-modules" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '400px', color: 'var(--text-muted)' }}>
+        <div style={{ width: '48px', height: '48px', border: '4px solid rgba(255,255,255,0.05)', borderTop: '4px solid var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '20px' }}></div>
+        <h3 style={{ fontSize: '18px', marginBottom: '8px', color: '#fff' }}>Loading Modules</h3>
+        <p style={{ color: 'var(--text-muted)' }}>Fetching your server configuration...</p>
+        <style>
+          {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
+        </style>
+      </div>
+    );
+  }
 
   return (
     <div className="dash-modules">
