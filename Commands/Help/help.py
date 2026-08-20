@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import ActionRow, Button, Select
@@ -114,6 +114,27 @@ PAGES = [
             "• `/deleteinvite <code>` — Delete a specific invite code.\n"
             "• `/purge-invite-codes <condition>` — Bulk delete invite codes.\n"
             "• `/exportinvitedlist [user]` — Export an invite list to a CSV file."
+        )
+    },
+    {
+        "title": "Leveling System",
+        "description": (
+            "**Server XP & Ranks:**\n\n"
+            "• `/rank [user]` — Check your or someone else's current level and XP.\n"
+            "• `/leaderboard` — View the top most active members in the server.\n"
+            "• `/xp add/remove/set/transfer` — Manage or transfer member XP."
+        )
+    },
+    {
+        "title": "Economy System",
+        "description": (
+            "**Global Currency & Virtual Economy:**\n\n"
+            "• `/balance [user]` — View your wallet and bank balance.\n"
+            "• `/work` — Work to earn some coins.\n"
+            "• `/daily` — Claim your daily reward.\n"
+            "• `/baltop` — View the richest members.\n"
+            "• `/inventory` — View the items you own.\n"
+            "• `/open_chest <chest_name>` — Open a reward chest."
         )
     }
 ]
