@@ -92,7 +92,13 @@ export default function Settings({ guildId }) {
     }
   };
 
-  if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>Loading settings...</div>;
+  if (loading) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', background: '#09090b', color: '#949ba4' }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#5865F2', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
+      <div style={{ fontSize: '15px', fontWeight: 500 }}>Loading settings...</div>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 

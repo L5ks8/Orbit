@@ -201,7 +201,6 @@ export default function Modules({ guildId }) {
   };
 
   const renderModuleContent = () => {
-    if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>Loading module settings...</div>;
     if (!serverData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#ef4444' }}>Failed to load data.</div>;
 
     const moduleInfo = modulesList.find(m => m.id === moduleId);
@@ -262,6 +261,17 @@ export default function Modules({ guildId }) {
   };
 
   const categories = ['Moderation', 'Engagement', 'Utility', 'Logging'];
+
+  if (loading) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: '#09090b', color: '#949ba4' }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#5865F2', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
+      <div style={{ fontSize: '15px', fontWeight: 500 }}>Loading modules...</div>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+  if (!serverData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: '#09090b', color: '#ef4444' }}>Failed to load data.</div>;
+
+  const content = renderModuleContent();
 
   return (
     <React.Fragment>
@@ -355,7 +365,7 @@ export default function Modules({ guildId }) {
 
       {/* Right Content */}
       <div style={{ flexGrow: 1, overflowY: 'auto', background: '#111214' }}>
-         {renderModuleContent()}
+         {content}
       </div>
       </div>
     </React.Fragment>

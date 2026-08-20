@@ -878,6 +878,15 @@ class ConfigMixin:
                 import Commands.AutoResponder._storage as ar_storage
                 ar_storage.save_responses(guild_id, data["autoresponder"])
 
+            if "autoresponder_enabled" in data or "messages_enabled" in data:
+                from Commands.WebDashboard._storage import load_settings_config, save_settings_config
+                s_cfg = load_settings_config(guild_id)
+                if "autoresponder_enabled" in data:
+                    s_cfg["autoresponder_enabled"] = bool(data["autoresponder_enabled"])
+                if "messages_enabled" in data:
+                    s_cfg["messages_enabled"] = bool(data["messages_enabled"])
+                save_settings_config(guild_id, s_cfg)
+
             return web.json_response({"success": True})
         except Exception as e:
             import traceback
