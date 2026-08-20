@@ -1,0 +1,55 @@
+import SaveBar from '../../ui/SaveBar';
+import React, { useState } from 'react';
+import CustomSelect from '../../ui/CustomSelect';
+
+export default function JoinRolesSettings({ config, roles, onSave, saving, onReset }) {
+  const jrCfg = config?.joinroles || {};
+
+    const [userRoles, setUserRoles] = useState((jrCfg.user_roles || []).map(String));
+  const [botRoles, setBotRoles] = useState((jrCfg.bot_roles || []).map(String));
+
+  const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
+
+  const getPayload = () => ({
+      joinroles: {
+        enabled: jrCfg.enabled || false,
+        user_roles: userRoles,
+        bot_roles: botRoles
+      }
+    });
+
+  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const isDirty = JSON.stringify(getPayload()) !== initialState;
+
+  const handleSave = () => {
+    onSave(getPayload());
+  };
+
+  return (
+    <div className="dash-settings-module">
+
+
+      <div className="dash-card settings-card" style={{ padding: '20px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>Roles on Join</h3>
+
+        <div className="form-group" style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '14px', fontWeight: '600', color: '#fff', display: 'block', marginBottom: '4px' }}>User Roles</label>
+          <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Roles given to new members automatically.</span>
+          <CustomSelect options={roleOptions} value={userRoles} onChange={setUserRoles} isMulti={true} placeholder="Select Roles..." />
+        </div>
+
+        <div className="form-group" style={{ margin: 0 }}>
+          <label style={{ fontSize: '14px', fontWeight: '600', color: '#fff', display: 'block', marginBottom: '4px' }}>Bot Roles</label>
+          <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Roles given to new bots automatically.</span>
+          <CustomSelect options={roleOptions} value={botRoles} onChange={setBotRoles} isMulti={true} placeholder="Select Roles..." />
+        </div>
+
+        <div className="settings-footer" style={{ marginTop: '24px' }}>
+          
+        </div>
+      </div>
+    
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
+    </div>
+  );
+}

@@ -1,0 +1,114 @@
+from Database.mongodb import get_config, set_config
+import json
+import pathlib
+import threading
+from typing import Dict, Any
+
+STORAGE_ROOT = pathlib.Path("Storage")
+_jtc_config_cache: Dict[int, Dict[str, Any]] = {}
+_jtc_channels_cache: Dict[int, Dict[str, Dict[str, Any]]] = {}
+_jtc_lock = threading.Lock()
+
+def _get_config_path(guild_id: int) -> pathlib.Path:
+    folder = STORAGE_ROOT / str(guild_id)
+    if not folder.exists():
+        folder.mkdir(parents=True, exist_ok=True)
+    return folder / "jtc_config.json"
+
+def _get_channels_path(guild_id: int) -> pathlib.Path:
+    folder = STORAGE_ROOT / str(guild_id)
+    if not folder.exists():
+        folder.mkdir(parents=True, exist_ok=True)
+    return folder / "jtc_channels.json"
+
+def load_jtc_config(guild_id: int) -> Dict[str, Any]:
+    with _jtc_lock:
+        if guild_id in _jtc_config_cache:
+            return _jtc_config_cache[guild_id]
+        path = _get_config_path(guild_id)
+        try:
+            data = get_config("JoinToCreate", guild_id)
+            if not data:
+                data = {
+                    "enabled": False,
+                    "hubs": []
+                }
+            else:
+                if "hubs" not in data:
+                    data["hubs"] = []
+                    if data.get("hub_channel_id"):
+                        data["hubs"].append({
+                            "hub_channel_id": data.get("hub_channel_id"),
+                            "category_id": data.get("category_id"),
+                            "default_user_limit": data.get("default_user_limit", 0)
+                        })
+            _jtc_config_cache[guild_id] = data
+            return data
+        except Exception:
+            default_cfg = {
+                "enabled": False,
+                "hubs": []
+            }
+            _jtc_config_cache[guild_id] = default_cfg
+            return default_cfg
+
+def save_jtc_config(guild_id: int, data: Dict[str, Any]) -> None:
+    with _jtc_lock:
+        _jtc_config_cache[guild_id] = data
+        path = _get_config_path(guild_id)
+        if True:
+            set_config("JoinToCreate", guild_id, data)
+
+def load_active_channels(guild_id: int) -> Dict[str, Dict[str, Any]]:
+    with _jtc_lock:
+        if guild_id in _jtc_channels_cache:
+            return _jtc_channels_cache[guild_id]
+        path = _get_channels_path(guild_id)
+        try:
+            data = get_config("JoinToCreate_Channels", guild_id)
+            if not data:
+                data = {}
+            _jtc_channels_cache[guild_id] = data
+            return data
+        except Exception:
+            _jtc_channels_cache[guild_id] = {}
+            return _jtc_channels_cache[guild_id]
+
+def save_active_channels(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
+    with _jtc_lock:
+        _jtc_channels_cache[guild_id] = data
+        path = _get_channels_path(guild_id)
+        if True:
+            set_config("JoinToCreate_Channels", guild_id, data)
+
+def get_active_channel(guild_id: int, channel_id: int) -> Dict[str, Any] | None:
+    data = load_active_channels(guild_id)
+    return data.get(str(channel_id))
+
+def create_active_channel(guild_id: int, channel_id: int, owner_id: int, message_id: int = 0) -> Dict[str, Any]:
+    data = load_active_channels(guild_id)
+    entry = {
+        "channel_id": channel_id,
+        "owner_id": owner_id,
+        "locked": False,
+        "hidden": False,
+        "limit": 0,
+        "trusted_users": [],
+        "message_id": message_id
+    }
+    data[str(channel_id)] = entry
+    save_active_channels(guild_id, data)
+    return entry
+
+def update_active_channel(guild_id: int, channel_id: int, entry: Dict[str, Any]) -> None:
+    data = load_active_channels(guild_id)
+    data[str(channel_id)] = entry
+    save_active_channels(guild_id, data)
+
+def remove_active_channel(guild_id: int, channel_id: int) -> None:
+    data = load_active_channels(guild_id)
+    ch_str = str(channel_id)
+    if ch_str in data:
+        del data[ch_str]
+        save_active_channels(guild_id, data)
+
