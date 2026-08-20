@@ -137,7 +137,7 @@ export default function Modules({ guildId }) {
   if (loading) {
     return (
       <div className="dash-modules" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '400px', color: 'var(--text-muted)' }}>
-        <div style={{ width: '48px', height: '48px', border: '4px solid rgba(255,255,255,0.05)', borderTop: '4px solid var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '20px' }}></div>
+        <div style={{ width: '48px', height: '48px', border: '4px solid rgba(255,255,255,0.05)', borderTop: '4px solid #60A5FA', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(96,165,250,0.6))' }}></div>
         <h3 style={{ fontSize: '18px', marginBottom: '8px', color: '#fff' }}>Loading Modules</h3>
         <p style={{ color: 'var(--text-muted)' }}>Fetching your server configuration...</p>
         <style>
