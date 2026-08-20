@@ -270,7 +270,7 @@ export default function Modules({ guildId, setSidebarOpen }) {
   const categories = ['Moderation', 'Engagement', 'Utility', 'Logging'];
 
   return (
-    <>
+    <React.Fragment>
       <style>
         {`
           .dash-sidebar { display: none !important; }
@@ -281,9 +281,13 @@ export default function Modules({ guildId, setSidebarOpen }) {
         `}
       </style>
       <div style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 999999,
         display: 'flex', 
-        height: '100vh', 
-        width: '100vw', 
         background: '#1e1f22'
       }}>
       {/* Left Sidebar */}
@@ -371,6 +375,6 @@ export default function Modules({ guildId, setSidebarOpen }) {
          {renderModuleContent()}
       </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }
