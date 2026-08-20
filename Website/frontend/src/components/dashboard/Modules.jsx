@@ -370,6 +370,7 @@ export default function Modules({ guildId, setSidebarOpen }) {
       <div style={{ flexGrow: 1, overflowY: 'auto', background: '#1e1f22' }}>
          {renderModuleContent()}
       </div>
+      </div>
     </>
   );
 }
