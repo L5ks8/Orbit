@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import os
 
 def make_embed(description: str, color: discord.Color = discord.Color.blurple()) -> discord.Embed:
     return discord.Embed(description=description, color=color)
