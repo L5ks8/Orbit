@@ -4,6 +4,7 @@ import App from './App.jsx'
 import './styles/variables.css'
 import './styles/global.css'
 import './styles/animations.css'
+import './styles/dashboard.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
