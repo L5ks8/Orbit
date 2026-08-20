@@ -445,6 +445,133 @@ export const docsData = {
         />
       </>
     )
+  },
+  appeals: {
+    title: 'Ban Appeals',
+    icon: <ShieldCheckIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'setup', label: 'Setup' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Allow banned users to submit an appeal to be unbanned. Orbit automatically manages the process and logs appeals for staff review.
+        </p>
+
+        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Setup</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Appeals Channel', type: 'Channel', description: 'The channel where appeal requests will be posted for staff to review.' }
+          ]}
+        />
+      </>
+    )
+  },
+  security: {
+    title: 'Server Security',
+    icon: <ShieldIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Advanced server protection that prevents malicious bots and nukers from destroying your server.
+        </p>
+        <PropertiesTable 
+          properties={[
+            { name: 'Anti-Nuke', type: 'System', description: 'Detects and stops mass bans, kicks, and channel deletions instantly.' },
+            { name: 'Anti-Raid', type: 'System', description: 'Stops mass bot joins during raids by temporarily locking down the server.' }
+          ]}
+        />
+      </>
+    )
+  },
+  boost: {
+    title: 'Boost Messages',
+    icon: <StarIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Celebrate server boosts by sending a customized message whenever a member boosts your community.
+        </p>
+        <PropertiesTable 
+          properties={[
+            { name: 'Boost Channel', type: 'Channel', description: 'The channel where the announcement is posted.' },
+            { name: 'Message Content', type: 'Text', description: 'Custom text. Variables like {user} and {server} are supported.' }
+          ]}
+        />
+      </>
+    )
+  },
+  economy: {
+    title: 'Economy System',
+    icon: <GiftIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Engage your members with a global currency, shops, and gambling.
+        </p>
+        <PropertiesTable 
+          properties={[
+            { name: 'Commands', type: 'Commands', description: '/balance, /work, /rob, /slots, and more to earn and spend currency.' },
+            { name: 'Global Economy', type: 'System', description: 'Currency is shared globally across all servers running Orbit.' }
+          ]}
+        />
+      </>
+    )
+  },
+  serverstats: {
+    title: 'Server Stats',
+    icon: <ActivityIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Display live server statistics in voice channel names.
+        </p>
+        <PropertiesTable 
+          properties={[
+            { name: 'Total Members', type: 'Voice Channel', description: 'Displays the total number of members in the server.' },
+            { name: 'Online Members', type: 'Voice Channel', description: 'Displays the number of currently online members.' }
+          ]}
+        />
+      </>
+    )
+  },
+  'automations-autoresponder': {
+    title: 'Auto Responder',
+    toc: [
+      { id: 'overview', label: 'Overview' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Automatically reply to specific trigger words or phrases with custom text.
+        </p>
+        <PropertiesTable 
+          properties={[
+            { name: 'Trigger Word', type: 'Text', description: 'The exact phrase or word that triggers the response.' },
+            { name: 'Response', type: 'Text', description: 'The bots reply.' }
+          ]}
+        />
+      </>
+    )
   }
 };
 
@@ -590,6 +717,22 @@ export default function Docs() {
           )}
 
           <div 
+            id="btn-security"
+            className={`docs-nav-item ${activeTab === 'security' ? 'active' : ''}`}
+            onClick={() => handleTabChange('security')}
+          >
+            {docsData.security.icon} {docsData.security.title}
+          </div>
+
+          <div 
+            id="btn-appeals"
+            className={`docs-nav-item ${activeTab === 'appeals' ? 'active' : ''}`}
+            onClick={() => handleTabChange('appeals')}
+          >
+            {docsData.appeals.icon} {docsData.appeals.title}
+          </div>
+
+          <div 
             id="btn-verification"
             className={`docs-nav-item ${activeTab === 'verification' ? 'active' : ''}`}
             onClick={() => handleTabChange('verification')}
@@ -603,6 +746,30 @@ export default function Docs() {
             onClick={() => handleTabChange('leveling')}
           >
             {docsData.leveling.icon} {docsData.leveling.title}
+          </div>
+
+          <div 
+            id="btn-economy"
+            className={`docs-nav-item ${activeTab === 'economy' ? 'active' : ''}`}
+            onClick={() => handleTabChange('economy')}
+          >
+            {docsData.economy.icon} {docsData.economy.title}
+          </div>
+
+          <div 
+            id="btn-boost"
+            className={`docs-nav-item ${activeTab === 'boost' ? 'active' : ''}`}
+            onClick={() => handleTabChange('boost')}
+          >
+            {docsData.boost.icon} {docsData.boost.title}
+          </div>
+
+          <div 
+            id="btn-serverstats"
+            className={`docs-nav-item ${activeTab === 'serverstats' ? 'active' : ''}`}
+            onClick={() => handleTabChange('serverstats')}
+          >
+            {docsData.serverstats.icon} {docsData.serverstats.title}
           </div>
 
           <div 
@@ -683,6 +850,12 @@ export default function Docs() {
                 onClick={() => handleTabChange('automations-respond')}
               >
                 Honeypot
+              </div>
+              <div 
+                className={`docs-sub-item ${activeTab === 'automations-autoresponder' ? 'active' : ''}`}
+                onClick={() => handleTabChange('automations-autoresponder')}
+              >
+                Auto Responder
               </div>
             </div>
           )}
