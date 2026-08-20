@@ -43,7 +43,7 @@ export const modulesList = [
     { id: 'logs', category: 'Logging', name: 'Logs', desc: 'Track everything that happens in your server.', iconColor: 'rgba(99, 102, 241, 0.2)', icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M12 18v-6 M9 15h6" /> },
 ];
 
-export default function Modules({ guildId, setSidebarOpen }) {
+export default function Modules({ guildId }) {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -53,13 +53,7 @@ export default function Modules({ guildId, setSidebarOpen }) {
   const [saving, setSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
-  // Close main sidebar when this mounts
-  useEffect(() => {
-    if (setSidebarOpen) setSidebarOpen(false);
-    return () => {
-      if (setSidebarOpen) setSidebarOpen(true);
-    };
-  }, [setSidebarOpen]);
+
 
   // Redirect to first module if no module is selected
   useEffect(() => {
@@ -271,24 +265,12 @@ export default function Modules({ guildId, setSidebarOpen }) {
 
   return (
     <React.Fragment>
-      <style>
-        {`
-          .dash-sidebar { display: none !important; }
-          .dash-top-nav { display: none !important; }
-          .dash-content-area { padding: 0 !important; overflow: hidden !important; }
-          .dashboard-grid { flex: 1; }
-          .dash-main { padding: 0 !important; }
-        `}
-      </style>
       <div style={{ 
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 999999,
-        display: 'flex', 
-        background: '#1e1f22'
+        display: 'flex',
+        height: '100vh',
+        width: '100vw',
+        background: '#1e1f22',
+        overflow: 'hidden'
       }}>
       {/* Left Sidebar */}
       <div style={{ 

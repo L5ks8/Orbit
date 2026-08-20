@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Modules from '../components/dashboard/Modules';
@@ -19,6 +19,8 @@ function DashboardInner() {
   const [showServerDropdown, setShowServerDropdown] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isModules = location.pathname.includes('/modules');
 
   useEffect(() => {
     if (!guildId) return;
@@ -49,6 +51,15 @@ function DashboardInner() {
 
   if (loading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>;
   if (!user) return <Navigate to="/" />;
+
+  if (isModules) {
+    return (
+      <Routes>
+        <Route path="modules" element={<Modules guildId={guildId} />} />
+        <Route path="modules/:moduleId" element={<Modules guildId={guildId} />} />
+      </Routes>
+    );
+  }
 
   return (
     <div className="dashboard-grid">
@@ -142,8 +153,8 @@ function DashboardInner() {
               <Route path="/" element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<Overview guildId={guildId} />} />
               <Route path="embed-builder" element={<EmbedBuilder setSidebarOpen={setSidebarOpen} />} />
-              <Route path="modules" element={<Modules guildId={guildId} />} />
-              <Route path="modules/:moduleId" element={<Modules guildId={guildId} />} />
+              <Route path="modules" element={<Modules guildId={guildId} setSidebarOpen={setSidebarOpen} />} />
+              <Route path="modules/:moduleId" element={<Modules guildId={guildId} setSidebarOpen={setSidebarOpen} />} />
               <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
               <Route path="settings" element={<Settings guildId={guildId} />} />
             </Routes>
