@@ -32,12 +32,20 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         dist_dir = os.path.join("Website", "frontend", "dist")
         file_path = os.path.join(dist_dir, path)
         if path and os.path.exists(file_path) and os.path.isfile(file_path):
-            return web.FileResponse(file_path)
+            if path == "index.html":
+                pass # Let it fall through to the dynamic replacement block below
+            else:
+                return web.FileResponse(file_path)
             
         # Fallback to index.html for SPA
         index_path = os.path.join(dist_dir, "index.html")
         if os.path.exists(index_path):
-            return web.FileResponse(index_path)
+            with open(index_path, "r", encoding="utf-8") as f:
+                html = f.read()
+            base_url = os.environ.get("BASE_URL", "")
+            if base_url:
+                html = html.replace("%VITE_BASE_URL%", base_url)
+            return web.Response(text=html, content_type="text/html")
             
         return web.Response(text="React Build Not Found. Run npm run build in Website/frontend", status=404)
 

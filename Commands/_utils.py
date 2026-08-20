@@ -8,7 +8,8 @@ class ModuleDisabledView(discord.ui.View):
     def __init__(self, guild_id: int, module_name: str):
         super().__init__()
         tab_name = module_name.lower()
-        self.add_item(discord.ui.Button(label="Activate Module", style=discord.ButtonStyle.link, url=f"https://orbit-498b.onrender.com/?server={guild_id}&tab={tab_name}"))
+        base_url = os.environ.get("BASE_URL")
+        self.add_item(discord.ui.Button(label="Activate Module", style=discord.ButtonStyle.link, url=f"{base_url}/?server={guild_id}&tab={tab_name}"))
 
 def get_module_disabled_embed(module_name: str) -> discord.Embed:
     return discord.Embed(
@@ -87,7 +88,8 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
                     custom_url = appeals_cfg.get("custom_url", "orbit")
                     import urllib.parse
                     encoded_url = urllib.parse.quote(custom_url)
-                    desc += f"\n\n**Appeals:** You can appeal this punishment at: https://orbit-498b.onrender.com/appeal/{encoded_url}"
+                    base_url = os.environ.get("BASE_URL")
+                    desc += f"\n\n**Appeals:** You can appeal this punishment at: {base_url}/appeal/{encoded_url}"
 
         embed = discord.Embed(
             description=desc,

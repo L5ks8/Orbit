@@ -158,7 +158,7 @@ class PersistentVerifyLayout(discord.ui.View):
                 
                 view = discord.ui.View()
                 import os
-                base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
+                base_url = os.environ.get("BASE_URL")
                 view.add_item(discord.ui.Button(label="Open Verification Page", style=discord.ButtonStyle.link, url=f"{base_url}/verify/{token}"))
                 
                 embed = discord.Embed(

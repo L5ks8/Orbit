@@ -75,7 +75,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
         )
 
         import os
-        base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
+        base_url = os.environ.get("BASE_URL")
         btn_website = discord.ui.Button(
             label="Website & Dashboard",
             style=discord.ButtonStyle.link,

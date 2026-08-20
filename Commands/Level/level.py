@@ -120,7 +120,7 @@ class LevelCommandsCog(commands.Cog):
         
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
         import os
-        base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
+        base_url = os.environ.get("BASE_URL")
         embed = discord.Embed(
             title=cat["title"],
             description=f"[Want to see more than Top 10?]({base_url}/leaderboard/{guild.id})",
