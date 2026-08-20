@@ -255,15 +255,24 @@ export default function Overview({ guildId }) {
           </div>
           <div className="flex-1 px-2 pb-3">
             <div>
-              <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(56px,auto)_minmax(64px,auto)] sm:grid-cols-[minmax(0,1.4fr)_minmax(70px,1fr)_minmax(90px,1fr)_minmax(110px,1fr)] gap-2 sm:gap-3 px-2.5 pb-1.5">
+              <div 
+                style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(70px, 1fr) minmax(90px, 1fr) minmax(110px, 1fr)' }}
+                className="gap-2 sm:gap-3 px-2.5 pb-1.5"
+              >
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Channel</span>
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Messages</span>
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">% of Activity</span>
                 <span className="hidden sm:block text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Change</span>
               </div>
               <div className="divide-y divide-neutral-800/40">
-                <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(56px,auto)_minmax(64px,auto)] sm:grid-cols-[minmax(0,1.4fr)_minmax(70px,1fr)_minmax(90px,1fr)_minmax(110px,1fr)] gap-2 sm:gap-3 items-center px-2.5 py-1.5 hover:bg-white/[0.02] transition-colors">
-                  <span className="inline-flex items-center gap-1 min-w-0 px-1.5 py-0.5 bg-indigo-500/15 border border-indigo-500/20 rounded w-fit max-w-full">
+                <div 
+                  style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(70px, 1fr) minmax(90px, 1fr) minmax(110px, 1fr)' }}
+                  className="gap-2 sm:gap-3 items-center px-2.5 py-1.5 hover:bg-white/[0.02] transition-colors"
+                >
+                  <span 
+                    style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', borderColor: 'rgba(99, 102, 241, 0.2)' }}
+                    className="inline-flex items-center gap-1 min-w-0 px-1.5 py-0.5 border rounded w-fit max-w-full"
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-2.5 h-2.5 text-indigo-300 flex-shrink-0">
                       <line x1="4" x2="20" y1="9" y2="9"></line>
                       <line x1="4" x2="20" y1="15" y2="15"></line>
