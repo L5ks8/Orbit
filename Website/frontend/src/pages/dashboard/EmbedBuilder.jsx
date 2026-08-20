@@ -12,6 +12,10 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
   
   const [menuOpenId, setMenuOpenId] = useState(null);
   
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [embedToRename, setEmbedToRename] = useState(null);
+  const [renameInput, setRenameInput] = useState('');
+  
   const fetchEmbeds = async () => {
     try {
       const res = await fetch(`/api/action/saved_embeds/${guildId}`, {
@@ -91,14 +95,25 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
     }
   };
   
-  const handleRename = async (e, embed) => {
+  const handleRenameClick = (e, embed) => {
     e.stopPropagation();
     setMenuOpenId(null);
-    const newName = window.prompt('Enter a new name for this message:', embed.name);
-    if (!newName || newName.trim() === '' || newName === embed.name) return;
+    setEmbedToRename(embed);
+    setRenameInput(embed.name || '');
+    setRenameModalOpen(true);
+  };
+  
+  const confirmRename = async () => {
+    if (!embedToRename) return;
+    const newName = renameInput.trim();
+    if (!newName || newName === embedToRename.name) {
+      setRenameModalOpen(false);
+      return;
+    }
     
-    const updated = { ...embed, name: newName };
+    const updated = { ...embedToRename, name: newName };
     await handleSave(updated, false);
+    setRenameModalOpen(false);
   };
 
   const handleCreateNew = () => {
@@ -238,7 +253,7 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
                         Edit
                       </div>
                       <div 
-                        onClick={(e) => handleRename(e, emb)}
+                        onClick={(e) => handleRenameClick(e, emb)}
                         style={{ padding: '8px 12px', color: '#dbdee1', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
                         onMouseEnter={e => e.currentTarget.style.background = '#383a40'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -264,6 +279,70 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
           
         </div>
       </div>
+      
+      {/* Rename Modal */}
+      {renameModalOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            background: '#2b2d31',
+            borderRadius: '12px',
+            padding: '24px',
+            width: '400px',
+            maxWidth: '90%',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#f2f3f5', marginBottom: '16px' }}>Rename Message</h2>
+            <input 
+              autoFocus
+              type="text" 
+              value={renameInput}
+              onChange={e => setRenameInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && confirmRename()}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                background: '#1e1f22',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: '6px',
+                color: '#dbdee1',
+                fontSize: '15px',
+                marginBottom: '24px',
+                outline: 'none'
+              }}
+              onFocus={e => e.target.style.borderColor = '#5865F2'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                onClick={() => setRenameModalOpen(false)}
+                style={{
+                  background: 'transparent', color: '#dbdee1', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 500
+                }}
+                onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmRename}
+                style={{
+                  background: '#5865F2', color: '#fff', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 500, transition: 'background 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#4752c4'}
+                onMouseLeave={e => e.currentTarget.style.background = '#5865F2'}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 }
