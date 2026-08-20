@@ -217,13 +217,20 @@ class GuildsMixin:
         today = datetime.now(timezone.utc)
         
         stats = []
+        today_doc = None
         if db is not None:
+            doc_ids = []
             for i in range(days - 1, -1, -1):
                 d = today - timedelta(days=i)
                 date_str = d.strftime("%Y-%m-%d")
-                doc_id = f"{guild_id}_{date_str}"
+                doc_ids.append(f"{guild_id}_{date_str}")
                 
-                doc = db["GuildStats"].find_one({"_id": doc_id})
+            docs = list(db["GuildStats"].find({"_id": {"$in": doc_ids}}))
+            doc_map = {doc["_id"]: doc for doc in docs}
+            
+            for doc_id in doc_ids:
+                doc = doc_map.get(doc_id)
+                date_str = doc_id.split("_")[1]
                 if doc:
                     stats.append({
                         "date": date_str,
@@ -238,9 +245,9 @@ class GuildsMixin:
                         "leaves": 0,
                         "messages": 0
                     })
-        
-        today_str = today.strftime("%Y-%m-%d")
-        today_doc = db["GuildStats"].find_one({"_id": f"{guild_id}_{today_str}"}) if db is not None else None
+                    
+            today_str = today.strftime("%Y-%m-%d")
+            today_doc = doc_map.get(f"{guild_id}_{today_str}")
         
         from Commands.Ticket._storage import load_ticket_config
         ticket_cfg = load_ticket_config(guild_id)
