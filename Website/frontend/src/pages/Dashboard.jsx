@@ -50,7 +50,10 @@ function DashboardInner() {
   }, [guildId]);
 
   if (loading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>;
-  if (!user) return <Navigate to="/" />;
+  if (!user) {
+    window.location.href = `/auth/login?next=${encodeURIComponent(location.pathname)}`;
+    return null;
+  }
 
   if (isModules) {
     return (
