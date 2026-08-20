@@ -109,6 +109,7 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
     app.router.add_post("/api/action/{id}/send_embed", dashboard.api_action_send_embed)
+    app.router.add_post("/api/action/send_custom_embed/{id}", dashboard.api_action_send_custom_embed)
     app.router.add_post("/api/action/{id}/send_honeypot", dashboard.api_action_send_honeypot)
     app.router.add_get("/api/messages/{id}", dashboard.api_get_messages)
     app.router.add_post("/api/messages/{id}", dashboard.api_save_message)

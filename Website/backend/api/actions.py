@@ -20,6 +20,64 @@ from Commands.ServerStats._storage import load_serverstats_config, save_serverst
 
 
 class ActionsMixin:
+    async def api_action_send_custom_embed(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or (not user_perms.get("can_channels") and not user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
+            
+        try:
+            data = await request.json()
+            channel_id = data.get("channel_id")
+            if not channel_id:
+                return web.json_response({"error": "No channel_id provided"}, status=400)
+                
+            channel = guild.get_channel(int(channel_id))
+            if not channel:
+                return web.json_response({"error": "Channel not found"}, status=400)
+                
+            title = data.get("title", "").strip()
+            description = data.get("description", "").strip()
+            color = data.get("color", "")
+            image = data.get("image", "").strip()
+            thumbnail = data.get("thumbnail", "").strip()
+            
+            if not title and not description and not image and not thumbnail:
+                return web.json_response({"error": "Embed cannot be completely empty"}, status=400)
+                
+            embed = discord.Embed()
+            
+            # Helper to replace basic variables and emojis
+            def replace_vars(text):
+                if not text: return text
+                t = text.replace("{user}", request.headers.get("X-User-ID", "Unknown User"))
+                t = t.replace("{server}", guild.name)
+                t = t.replace("{membercount}", str(guild.member_count))
+                return t
+                
+            if title: embed.title = replace_vars(title)
+            if description: embed.description = replace_vars(description)
+            
+            if color:
+                try: embed.color = discord.Color(int(color.replace("#", ""), 16))
+                except Exception: pass
+            
+            if image: embed.set_image(url=image)
+            if thumbnail: embed.set_thumbnail(url=thumbnail)
+            
+            await channel.send(embed=embed)
+            return web.json_response({"success": True})
+        except discord.Forbidden:
+            return web.json_response({"error": "Bot missing permissions to send messages in that channel"}, status=403)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_action_send_verify(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():

@@ -34,6 +34,7 @@ class ConfigMixin:
         voice_channels = [{"id": str(c.id), "name": c.name} for c in guild.voice_channels]
         categories = [{"id": str(c.id), "name": c.name} for c in guild.categories]
         roles = [{"id": str(r.id), "name": r.name, "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe"} for r in guild.roles if not r.is_default()]
+        emojis = [{"id": str(e.id), "name": e.name, "animated": e.animated} for e in guild.emojis]
 
         welcome_cfg = load_welcome_config(guild_id)
         automod_cfg = load_automod_config(guild_id)
@@ -290,6 +291,7 @@ class ConfigMixin:
             "voice_channels": voice_channels,
             "categories": categories,
             "roles": roles,
+            "emojis": emojis,
             "config": config_data
         })
 

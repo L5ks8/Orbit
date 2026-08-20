@@ -7,6 +7,7 @@ import ModuleSettings from '../components/dashboard/ModuleSettings';
 import Leaderboard from '../components/dashboard/Leaderboard';
 import Settings from '../components/dashboard/Settings';
 import ServerSelector from './ServerSelector';
+import EmbedBuilder from './dashboard/EmbedBuilder';
 import { useAuth } from '../context/AuthContext';
 
 function DashboardInner() {
@@ -45,72 +46,87 @@ function DashboardInner() {
       });
   }, [guildId]);
 
-  if (loading) return null;
+  if (loading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>;
   if (!user) return <Navigate to="/" />;
+
   return (
     <div className="dash-container">
       <Sidebar guildId={guildId} />
       <div className="dash-main">
-        <div className="dash-topbar" style={{ zIndex: 50, position: 'relative' }}>
-          <div className="dash-server-selector" onClick={() => setShowServerDropdown(!showServerDropdown)} style={{ position: 'relative', cursor: 'pointer' }}>
-            {guildIcon ? (
-              <img src={`https://cdn.discordapp.com/icons/${guildId}/${guildIcon}.png`} alt="" className="dash-server-icon" style={{borderRadius: '50%', background: 'none'}} />
-            ) : (
-              <div className="dash-server-icon">{guildName.charAt(0)}</div>
-            )}
-            <span className="dash-server-name">{guildName}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showServerDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-            
-            {showServerDropdown && (
-              <div className="dash-server-dropdown" style={{
-                position: 'absolute', top: 'calc(100% + 8px)', left: 0, 
-                background: '#2B2D31', borderRadius: '8px', padding: '8px', 
-                minWidth: '240px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 100, border: '1px solid rgba(255,255,255,0.05)'
-              }}>
-                <div style={{ padding: '8px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', color: '#949BA4' }}>Your Servers</div>
-                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  {allGuilds.map(g => (
-                    <div 
-                      key={g.id} 
-                      onClick={(e) => { e.stopPropagation(); setShowServerDropdown(false); navigate(`/dashboard/${g.id}`); }}
-                      style={{ 
-                        display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', 
-                        borderRadius: '4px', cursor: 'pointer', background: g.id === guildId ? 'rgba(255,255,255,0.05)' : 'transparent' 
-                      }}
-                      onMouseEnter={(e) => { if (g.id !== guildId) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
-                      onMouseLeave={(e) => { if (g.id !== guildId) e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      {g.icon ? (
-                        <img src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
-                      ) : (
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#313338', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
-                          {g.name.charAt(0)}
-                        </div>
-                      )}
-                      <div style={{ color: '#F2F3F5', fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.name}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="dash-user-profile" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ color: '#F2F3F5', fontSize: '14px', fontWeight: '500' }}>{user ? user.username : 'User'}</span>
-            <img src={user ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png"} alt="User Profile" style={{ width: '36px', height: '36px', borderRadius: '50%' }} onError={(e)=>{e.target.src='https://cdn.discordapp.com/embed/avatars/0.png'}} />
-          </div>
-        </div>
         
-        <div className="dash-content-area">
-          <Routes>
-            <Route path="/" element={<Navigate to="overview" replace />} />
-            <Route path="overview" element={<Overview guildId={guildId} />} />
-            <Route path="modules" element={<Modules guildId={guildId} />} />
-            <Route path="modules/:moduleId" element={<ModuleSettings guildId={guildId} />} />
-            <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
-            <Route path="settings" element={<Settings guildId={guildId} />} />
-          </Routes>
+        <div className="dash-top-nav">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ position: 'relative' }}>
+              <div 
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', padding: '6px 12px', borderRadius: '8px', background: showServerDropdown ? 'rgba(255,255,255,0.05)' : 'transparent' }}
+                onClick={() => setShowServerDropdown(!showServerDropdown)}
+              >
+                {guildIcon ? (
+                  <img src={`https://cdn.discordapp.com/icons/${guildId}/${guildIcon}.png`} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                ) : (
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#313338', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+                    {guildName.charAt(0)}
+                  </div>
+                )}
+                <span style={{ color: '#F2F3F5', fontSize: '16px', fontWeight: '600' }}>{guildName}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, transform: showServerDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+
+              {showServerDropdown && (
+                <div style={{ 
+                  position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1e1f22', border: '1px solid rgba(255,255,255,0.05)', 
+                  borderRadius: '8px', padding: '8px', minWidth: '240px', zIndex: 100, boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
+                  maxHeight: '400px', display: 'flex', flexDirection: 'column'
+                }}>
+                  <div style={{ padding: '8px', fontSize: '12px', fontWeight: '600', color: '#949ba4', textTransform: 'uppercase' }}>Your Servers</div>
+                  <div style={{ overflowY: 'auto' }}>
+                    {allGuilds.map(g => (
+                      <div 
+                        key={g.id}
+                        onClick={() => {
+                          setShowServerDropdown(false);
+                          navigate(`/dashboard/${g.id}/overview`);
+                        }}
+                        style={{ 
+                          display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', 
+                          borderRadius: '4px', cursor: 'pointer', background: g.id === guildId ? 'rgba(255,255,255,0.05)' : 'transparent' 
+                        }}
+                        onMouseEnter={(e) => { if (g.id !== guildId) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                        onMouseLeave={(e) => { if (g.id !== guildId) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        {g.icon ? (
+                          <img src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                        ) : (
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#313338', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+                            {g.name.charAt(0)}
+                          </div>
+                        )}
+                        <div style={{ color: '#F2F3F5', fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="dash-user-profile" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: '#F2F3F5', fontSize: '14px', fontWeight: '500' }}>{user ? user.username : 'User'}</span>
+              <img src={user ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png"} alt="User Profile" style={{ width: '36px', height: '36px', borderRadius: '50%' }} onError={(e)=>{e.target.src='https://cdn.discordapp.com/embed/avatars/0.png'}} />
+            </div>
+          </div>
+          
+          <div className="dash-content-area">
+            <Routes>
+              <Route path="/" element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<Overview guildId={guildId} />} />
+              <Route path="embed-builder" element={<EmbedBuilder />} />
+              <Route path="modules" element={<Modules guildId={guildId} />} />
+              <Route path="modules/:moduleId" element={<ModuleSettings guildId={guildId} />} />
+              <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
+              <Route path="settings" element={<Settings guildId={guildId} />} />
+            </Routes>
+          </div>
         </div>
       </div>
     </div>
