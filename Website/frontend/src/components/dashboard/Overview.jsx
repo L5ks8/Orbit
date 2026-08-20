@@ -3,30 +3,16 @@ import { useAuth } from '../../context/AuthContext';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Users, MessageSquare, Activity, Mic, Ticket, Settings, ArrowUpRight, ArrowRight, ShieldAlert, ShieldCheck, UserMinus, Vote, UserPlus, Gift, Layers, Bot } from 'lucide-react';
 
-const activityData = [
-  { name: 'Aug 14', messages: 0 },
-  { name: 'Aug 15', messages: 1 },
-  { name: 'Aug 16', messages: 0 },
-  { name: 'Aug 17', messages: 4 },
-  { name: 'Aug 18', messages: 0 },
-  { name: 'Aug 19', messages: 0 },
-];
-
-const barData = [
-  { name: '08/18 20h', messages: 0 },
-  { name: '08/19 04h', messages: 1 },
-  { name: '08/19 12h', messages: 0 },
-  { name: '08/19 20h', messages: 3 },
-  { name: '08/20 04h', messages: 0 },
-  { name: '08/20 12h', messages: 0 },
-];
-
 export default function Overview({ guildId }) {
   const { user } = useAuth();
   const [guildInfo, setGuildInfo] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [config, setConfig] = useState(null);
 
   useEffect(() => {
     if (!guildId) return;
+    
+    // Fetch Guild Info (Icon/Name)
     fetch('/api/guilds')
       .then(res => res.json())
       .then(data => {
@@ -35,7 +21,59 @@ export default function Overview({ guildId }) {
         if (g) setGuildInfo(g);
       })
       .catch(console.error);
+      
+    // Fetch Guild Stats
+    fetch(`/api/guild_stats/${guildId}`)
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(console.error);
+      
+    // Fetch Config (for features)
+    fetch(`/api/config/${guildId}`)
+      .then(res => res.json())
+      .then(data => setConfig(data?.config || null))
+      .catch(console.error);
+      
   }, [guildId]);
+
+  // Process History Data for Charts
+  const historyRaw = stats?.history || [];
+  
+  // Area Chart (Last 7 days activity)
+  const activityData = historyRaw.map(day => {
+    const d = new Date(day.date);
+    return {
+      name: `${d.toLocaleString('en-US', { month: 'short' })} ${d.getDate()}`,
+      messages: day.messages || 0
+    };
+  });
+  
+  const totalMessages = stats?.today_messages || 0;
+  const totalMembers = stats?.total_members || guildInfo?.member_count || 0;
+
+  // Features Checks
+  const isFeatureActive = (key) => {
+    if (!config) return false;
+    switch(key) {
+      case 'welcome': return config.welcome?.enabled;
+      case 'polls': return false; // Or find if polls exist
+      case 'tickets': return config.ticket?.enabled;
+      case 'automod': return config.automod?.enabled;
+      case 'voice': return config.tempvoice?.enabled;
+      case 'invites': return false; 
+      case 'verification': return config.verify?.enabled;
+      case 'giveaways': return false;
+      case 'kick': return config.automod?.anti_alt?.enabled || false;
+      case 'embeds': return config.messages_enabled;
+      case 'botprofile': return false;
+      default: return false;
+    }
+  };
+
+  const activeFeaturesCount = [
+    'welcome', 'polls', 'tickets', 'automod', 'voice', 'invites', 
+    'verification', 'giveaways', 'kick', 'embeds', 'botprofile'
+  ].filter(isFeatureActive).length;
 
   return (
     <div className="pb-overview-container">
@@ -54,7 +92,7 @@ export default function Overview({ guildId }) {
             </div>
             <div>
               <h1 className="text-xl font-semibold text-white truncate">{guildInfo?.name || 'Loading...'}</h1>
-              <p className="text-xs text-neutral-500 mt-1 tabular-nums">3 members</p>
+              <p className="text-xs text-neutral-500 mt-1 tabular-nums">{totalMembers} members</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -63,7 +101,7 @@ export default function Overview({ guildId }) {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-neutral-500">
               <span className="hidden sm:inline">Just now</span>
-              <button className="pb-refresh-btn" aria-label="Refresh">
+              <button className="pb-refresh-btn" aria-label="Refresh" onClick={() => window.location.reload()}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
               </button>
             </div>
@@ -79,7 +117,7 @@ export default function Overview({ guildId }) {
               <div className="pb-icon-box bg-blue-500/10 text-blue-400"><Users size={14} /></div>
               <span className="text-xs font-medium text-neutral-400">Members</span>
             </div>
-            <p className="text-3xl font-bold tabular-nums leading-none text-white">3</p>
+            <p className="text-3xl font-bold tabular-nums leading-none text-white">{totalMembers}</p>
             <div className="mt-2 flex items-center gap-1.5">
               <span className="pb-badge-green"><ArrowUpRight size={12} />+0%</span>
               <span className="text-[10px] text-neutral-600">vs last week</span>
@@ -90,7 +128,7 @@ export default function Overview({ guildId }) {
               <div className="pb-icon-box bg-green-500/10 text-green-400"><MessageSquare size={14} /></div>
               <span className="text-xs font-medium text-neutral-400">Messages</span>
             </div>
-            <p className="text-3xl font-bold tabular-nums leading-none text-white">0</p>
+            <p className="text-3xl font-bold tabular-nums leading-none text-white">{totalMessages}</p>
             <div className="mt-2 flex items-center gap-1.5">
               <span className="pb-badge-green"><ArrowUpRight size={12} />+0%</span>
               <span className="text-[10px] text-neutral-600">vs last week</span>
@@ -136,8 +174,8 @@ export default function Overview({ guildId }) {
         <div className="pb-card flex flex-col">
           <div className="px-4 pt-4 pb-2 flex items-start justify-between gap-3">
             <div>
-              <p className="text-[13px] text-neutral-400 font-medium">Messages · Last 48 hours</p>
-              <p className="text-3xl font-bold text-white tabular-nums mt-1">0</p>
+              <p className="text-[13px] text-neutral-400 font-medium">Messages · Last 7 Days</p>
+              <p className="text-3xl font-bold text-white tabular-nums mt-1">{totalMessages}</p>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
@@ -145,17 +183,17 @@ export default function Overview({ guildId }) {
                 <span className="text-[10px] text-green-400 font-semibold uppercase tracking-wider">Live</span>
               </div>
               <div className="pb-toggle-group">
-                <button className="active">48h</button>
-                <button>60m</button>
+                <button className="active">1W</button>
               </div>
             </div>
           </div>
           <div className="px-5 pb-5 mt-4" style={{ height: '180px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+              <BarChart data={activityData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#262626" />
                 <XAxis dataKey="name" stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
                 <YAxis stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
+                <RechartsTooltip cursor={{fill: '#262626'}} contentStyle={{backgroundColor: '#171717', borderColor: '#262626', color: '#fff'}} />
                 <Bar dataKey="messages" fill="#22c55e" radius={[2, 2, 0, 0]} barSize={10} />
               </BarChart>
             </ResponsiveContainer>
@@ -203,7 +241,7 @@ export default function Overview({ guildId }) {
         </div>
         <div className="px-5 pb-3">
           <div className="flex flex-col">
-            <span className="text-4xl font-bold text-white tabular-nums leading-none">0</span>
+            <span className="text-4xl font-bold text-white tabular-nums leading-none">{totalMessages}</span>
             <span className="text-[11px] text-neutral-500 mt-1">Messages</span>
           </div>
         </div>
@@ -219,6 +257,7 @@ export default function Overview({ guildId }) {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#262626" />
               <XAxis dataKey="name" stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
               <YAxis stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
+              <RechartsTooltip contentStyle={{backgroundColor: '#171717', borderColor: '#262626', color: '#fff'}} />
               <Area type="monotone" dataKey="messages" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorMessages)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -232,65 +271,21 @@ export default function Overview({ guildId }) {
             <div className="flex items-center gap-2.5">
               <Settings size={16} className="text-neutral-500" />
               <span className="text-sm font-semibold text-white">Features</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold tabular-nums bg-amber-500/10 text-amber-400">0/15</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold tabular-nums bg-amber-500/10 text-amber-400">{activeFeaturesCount}/11</span>
             </div>
           </div>
           <div className="flex flex-col flex-1 divide-y divide-neutral-800/60 pb-features-list">
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><MessageSquare size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Welcome</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><Vote size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Polls</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><Ticket size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Ticketsystem</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><ShieldAlert size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Auto-Mod</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><Mic size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Voice Channels</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><UserPlus size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Invites</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><ShieldCheck size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Verification</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><Gift size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Giveaways</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><UserMinus size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Inactive Kick</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><Layers size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Embeds</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
-            <div className="pb-feature-item">
-              <div className="pb-feature-icon"><Bot size={14} /></div>
-              <span className="flex-1 truncate text-[13px] font-medium text-white">Bot Profile</span>
-              <span className="pb-feature-inactive" title="Inactive"></span>
-            </div>
+            <FeatureItem icon={<MessageSquare size={14} />} name="Welcome" active={isFeatureActive('welcome')} />
+            <FeatureItem icon={<Vote size={14} />} name="Polls" active={isFeatureActive('polls')} />
+            <FeatureItem icon={<Ticket size={14} />} name="Ticketsystem" active={isFeatureActive('tickets')} />
+            <FeatureItem icon={<ShieldAlert size={14} />} name="Auto-Mod" active={isFeatureActive('automod')} />
+            <FeatureItem icon={<Mic size={14} />} name="Voice Channels" active={isFeatureActive('voice')} />
+            <FeatureItem icon={<UserPlus size={14} />} name="Invites" active={isFeatureActive('invites')} />
+            <FeatureItem icon={<ShieldCheck size={14} />} name="Verification" active={isFeatureActive('verification')} />
+            <FeatureItem icon={<Gift size={14} />} name="Giveaways" active={isFeatureActive('giveaways')} />
+            <FeatureItem icon={<UserMinus size={14} />} name="Inactive Kick" active={isFeatureActive('kick')} />
+            <FeatureItem icon={<Layers size={14} />} name="Embeds" active={isFeatureActive('embeds')} />
+            <FeatureItem icon={<Bot size={14} />} name="Bot Profile" active={isFeatureActive('botprofile')} />
           </div>
         </div>
         
@@ -313,6 +308,20 @@ export default function Overview({ guildId }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function FeatureItem({ icon, name, active }) {
+  return (
+    <div className="pb-feature-item">
+      <div className="pb-feature-icon">{icon}</div>
+      <span className="flex-1 truncate text-[13px] font-medium text-white">{name}</span>
+      {active ? (
+        <span className="pb-feature-active" title="Active" style={{width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.5)'}}></span>
+      ) : (
+        <span className="pb-feature-inactive" title="Inactive"></span>
+      )}
     </div>
   );
 }
