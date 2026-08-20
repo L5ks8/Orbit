@@ -451,19 +451,32 @@ export const docsData = {
     icon: <ShieldCheckIcon />,
     toc: [
       { id: 'overview', label: 'Overview' },
-      { id: 'setup', label: 'Setup' }
+      { id: 'setup', label: 'Setup & Usage' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Allow banned users to submit an appeal to be unbanned. Orbit automatically manages the process and logs appeals for staff review.
+          Sometimes mistakes happen, or users reform. The Ban Appeals module allows banned users to submit a formal appeal through a secure web portal linked to your server. Orbit manages the entire pipeline, routing appeals directly to your staff for review.
         </p>
 
-        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Setup</h2>
+        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Setup & Usage</h2>
+        
+        <SyntaxBlock 
+          title="Appeal Link Format"
+          syntax={[
+            { text: 'https://', type: 'punct' },
+            { text: (import.meta.env.VITE_BASE_URL || '').replace(/^https?:\/\//, ''), type: 'keyword' },
+            { text: '/appeal/', type: 'type' },
+            { text: '<your-server-id>', type: 'punct' }
+          ]}
+        />
+        
         <PropertiesTable 
           properties={[
-            { name: 'Appeals Channel', type: 'Channel', description: 'The channel where appeal requests will be posted for staff to review.' }
+            { name: 'Appeals Channel', type: 'Channel', description: 'The private staff channel where new appeals will be posted as rich embeds.' },
+            { name: 'Accepting Appeals', type: 'Action', description: 'Staff can click the green "Accept" button on the appeal embed. Orbit will automatically unban the user and attempt to DM them an invite link.' },
+            { name: 'Denying Appeals', type: 'Action', description: 'Staff can click the red "Deny" button to reject the appeal, keeping the ban in place and preventing spam.' }
           ]}
         />
       </>
@@ -473,18 +486,23 @@ export const docsData = {
     title: 'Server Security',
     icon: <ShieldIcon />,
     toc: [
-      { id: 'overview', label: 'Overview' }
+      { id: 'overview', label: 'Overview' },
+      { id: 'anti-nuke', label: 'Anti-Nuke Protection' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Advanced server protection that prevents malicious bots and nukers from destroying your server.
+          Orbit's Security module acts as an impenetrable shield against server nukes, rogue administrators, and massive bot raids. It monitors API events in real-time and acts faster than humanly possible.
         </p>
+        
+        <h2 id="anti-nuke" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Anti-Nuke Protection</h2>
         <PropertiesTable 
           properties={[
-            { name: 'Anti-Nuke', type: 'System', description: 'Detects and stops mass bans, kicks, and channel deletions instantly.' },
-            { name: 'Anti-Raid', type: 'System', description: 'Stops mass bot joins during raids by temporarily locking down the server.' }
+            { name: 'Mass Bans', type: 'Threshold System', description: 'If an admin bans too many users within a few seconds, Orbit will strip their permissions and halt the nuke.' },
+            { name: 'Channel Deletions', type: 'Threshold System', description: 'Prevents rogue bots or hijacked staff accounts from wiping your server\'s channels.' },
+            { name: 'Anti-Raid (Join Surge)', type: 'Automated Lockdown', description: 'If an abnormal amount of accounts join simultaneously, Orbit temporarily pauses all invites to stop the raid.' },
+            { name: 'Whitelist', type: 'Configuration', description: 'You can explicitly whitelist trusted bots (like Dyno or Carl-bot) so their actions are ignored by the Anti-Nuke.' }
           ]}
         />
       </>
@@ -494,18 +512,34 @@ export const docsData = {
     title: 'Boost Messages',
     icon: <StarIcon />,
     toc: [
-      { id: 'overview', label: 'Overview' }
+      { id: 'overview', label: 'Overview' },
+      { id: 'customization', label: 'Customization' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Celebrate server boosts by sending a customized message whenever a member boosts your community.
+          Boosting a server is a generous act. The Boost Messages module lets you automatically celebrate these members in a designated channel with custom fanfare.
         </p>
+
+        <h2 id="customization" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Customization</h2>
+        <SyntaxBlock 
+          title="Example Configuration"
+          syntax={[
+            { text: 'Thank you ', type: 'text' },
+            { text: '{user}', type: 'keyword' },
+            { text: ' for boosting ', type: 'text' },
+            { text: '{server}', type: 'keyword' },
+            { text: '! We are now at ', type: 'text' },
+            { text: '{boostcount}', type: 'type' },
+            { text: ' boosts.', type: 'text' }
+          ]}
+        />
         <PropertiesTable 
           properties={[
-            { name: 'Boost Channel', type: 'Channel', description: 'The channel where the announcement is posted.' },
-            { name: 'Message Content', type: 'Text', description: 'Custom text. Variables like {user} and {server} are supported.' }
+            { name: 'Boost Channel', type: 'Channel', description: 'The specific channel (e.g., #announcements) where the boost message is posted.' },
+            { name: '{boostcount}', type: 'Variable', description: 'Dynamically displays the new total number of server boosts.' },
+            { name: '{user} / {server}', type: 'Variable', description: 'Mentions the booster and displays the server name.' }
           ]}
         />
       </>
@@ -515,18 +549,24 @@ export const docsData = {
     title: 'Economy System',
     icon: <GiftIcon />,
     toc: [
-      { id: 'overview', label: 'Overview' }
+      { id: 'overview', label: 'Overview' },
+      { id: 'commands', label: 'Commands & Mechanics' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Engage your members with a global currency, shops, and gambling.
+          Engage your community with a fully-fledged, globally persistent Economy System. Members can earn currency, gamble, buy items, and compete on the leaderboards.
         </p>
+
+        <h2 id="commands" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Commands & Mechanics</h2>
         <PropertiesTable 
           properties={[
-            { name: 'Commands', type: 'Commands', description: '/balance, /work, /rob, /slots, and more to earn and spend currency.' },
-            { name: 'Global Economy', type: 'System', description: 'Currency is shared globally across all servers running Orbit.' }
+            { name: '/work', type: 'Earning', description: 'Work a random job every few hours to earn a steady paycheck.' },
+            { name: '/daily', type: 'Earning', description: 'Claim a daily reward. Keep your streak alive for massive bonuses.' },
+            { name: '/slots & /coinflip', type: 'Gambling', description: 'Risk your hard-earned coins for a chance to double or triple your wealth.' },
+            { name: '/rob', type: 'Interaction', description: 'Attempt to steal coins from another user. Fails randomly, resulting in a fine!' },
+            { name: '/balance', type: 'Information', description: 'Check your current wallet balance and bank storage.' }
           ]}
         />
       </>
@@ -536,18 +576,23 @@ export const docsData = {
     title: 'Server Stats',
     icon: <ActivityIcon />,
     toc: [
-      { id: 'overview', label: 'Overview' }
+      { id: 'overview', label: 'Overview' },
+      { id: 'setup', label: 'How it works' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Display live server statistics in voice channel names.
+          Showcase your community's growth directly in your channel list. The Server Stats module creates locked voice channels that dynamically update their names to reflect live metrics.
         </p>
+        
+        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>How it works</h2>
         <PropertiesTable 
           properties={[
-            { name: 'Total Members', type: 'Voice Channel', description: 'Displays the total number of members in the server.' },
-            { name: 'Online Members', type: 'Voice Channel', description: 'Displays the number of currently online members.' }
+            { name: 'Total Members', type: 'Metric', description: 'Creates a channel like "📊 Members: 1,402". Updates when users join or leave.' },
+            { name: 'Online Members', type: 'Metric', description: 'Creates a channel showing how many users are currently online or idle.' },
+            { name: 'Rate Limiting', type: 'Background System', description: 'Orbit intelligently batches updates every 10 minutes to prevent your server from hitting Discord API rate limits.' },
+            { name: 'Channel Positioning', type: 'Setup', description: 'You can drag and drop these voice channels anywhere in your server (usually at the very top).' }
           ]}
         />
       </>
@@ -556,18 +601,36 @@ export const docsData = {
   'automations-autoresponder': {
     title: 'Auto Responder',
     toc: [
-      { id: 'overview', label: 'Overview' }
+      { id: 'overview', label: 'Overview' },
+      { id: 'examples', label: 'Examples & Tips' }
     ],
     content: (
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Automatically reply to specific trigger words or phrases with custom text.
+          The Auto Responder acts as your server's FAQ bot. It listens for specific trigger words or phrases and instantly replies with pre-configured text, saving your staff hours of answering repetitive questions.
         </p>
+
+        <h2 id="examples" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Examples & Tips</h2>
+        <SyntaxBlock 
+          title="Common Use Cases"
+          syntax={[
+            { text: 'Trigger: ', type: 'keyword' },
+            { text: 'ip\n', type: 'type' },
+            { text: 'Response: ', type: 'keyword' },
+            { text: 'You can join our server at play.example.com!\n\n', type: 'text' },
+            { text: 'Trigger: ', type: 'keyword' },
+            { text: 'support\n', type: 'type' },
+            { text: 'Response: ', type: 'keyword' },
+            { text: 'Need help? Please open a ticket in the #support channel.', type: 'text' }
+          ]}
+        />
+        
         <PropertiesTable 
           properties={[
-            { name: 'Trigger Word', type: 'Text', description: 'The exact phrase or word that triggers the response.' },
-            { name: 'Response', type: 'Text', description: 'The bots reply.' }
+            { name: 'Trigger Word', type: 'Input', description: 'The exact phrase or word that triggers the response. It is case-insensitive.' },
+            { name: 'Response', type: 'Output', description: 'The bot\'s reply. You can include links and discord formatting (like bolding and italics).' },
+            { name: 'Spam Prevention', type: 'System', description: 'Orbit has a built-in cooldown to prevent the auto-responder from spamming the chat if multiple users type the trigger.' }
           ]}
         />
       </>
