@@ -452,9 +452,9 @@ async def main():
         port = int(os.environ.get("PORT", 10000))
         site = web.TCPSite(runner, "0.0.0.0", port)
         await site.start()
-        print(f"Web Dashboard started on 0.0.0.0:{port}")
+        print(f"Web Dashboard started on 0.0.0.0:{port}", flush=True)
     except Exception as e:
-        print(f"Failed to start Web Dashboard: {e}")
+        print(f"Failed to start Web Dashboard: {e}", flush=True)
 
     async with bot:
         await bot.start(TOKEN)
@@ -469,7 +469,13 @@ if __name__ == "__main__":
             try:
                 asyncio.run(main())
                 break
+            except discord.errors.LoginFailure as e:
+                print(f"FATAL ERROR: Invalid Token. Please check your TOKEN environment variable. Details: {e}", flush=True)
+                break
+            except discord.errors.PrivilegedIntentsRequired as e:
+                print(f"FATAL ERROR: Privileged Intents are missing. Please enable them in the Discord Developer Portal. Details: {e}", flush=True)
+                break
             except (discord.HTTPException, discord.GatewayNotFound, Exception) as e:
-                print(f"Network error / Cloudflare 522 occurred: {e}")
-                print("Retrying connection in 10 seconds...")
+                print(f"Bot crashed / Network error occurred: {e}", flush=True)
+                print("Retrying connection in 10 seconds...", flush=True)
                 time.sleep(10)
