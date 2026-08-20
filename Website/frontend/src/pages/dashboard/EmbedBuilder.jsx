@@ -91,16 +91,18 @@ export default function EmbedBuilder() {
           background: 'var(--bg-secondary)', 
           borderRadius: '12px', 
           border: '1px solid var(--border-color)', 
-          padding: '24px' 
+          padding: '24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
         }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Editor</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px', color: 'var(--text-primary)' }}>Editor</h2>
           
           <div className="dash-form-group">
-            <label>Target Channel</label>
+            <label style={{ fontWeight: 500 }}>Target Channel</label>
             <select 
               value={channelId} 
               onChange={e => setChannelId(e.target.value)}
               className="dash-input"
+              style={{ padding: '10px 12px', cursor: 'pointer' }}
             >
               <option value="">-- Select a Channel --</option>
               {channels.map(c => (
@@ -110,19 +112,20 @@ export default function EmbedBuilder() {
           </div>
 
           <div className="dash-form-group">
-            <label>Title</label>
+            <label style={{ fontWeight: 500 }}>Title</label>
             <input 
               type="text" 
               value={embedTitle} 
               onChange={e => setEmbedTitle(e.target.value)} 
               className="dash-input"
               placeholder="My Awesome Announcement"
+              style={{ padding: '10px 12px' }}
             />
           </div>
 
           <div className="dash-form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <label style={{ margin: 0 }}>Description</label>
+              <label style={{ margin: 0, fontWeight: 500 }}>Description</label>
             </div>
             <textarea 
               value={embedDescription} 
@@ -130,94 +133,113 @@ export default function EmbedBuilder() {
               className="dash-input"
               rows="6"
               placeholder="Type your message here..."
-              style={{ resize: 'vertical' }}
+              style={{ resize: 'vertical', padding: '12px' }}
             />
           </div>
 
-          <div className="dash-form-group" style={{ marginTop: '16px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 600 }}>Quick Insert Variables</p>
+          <div className="dash-form-group" style={{ marginTop: '20px', background: 'rgba(0,0,0,0.15)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Quick Insert Variables</p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button 
-                className="dash-btn" 
-                style={{ padding: '4px 8px', fontSize: '12px' }}
                 onClick={() => insertText(setEmbedDescription, '{user}')}
+                style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.1)'}
               >{"{user}"}</button>
               <button 
-                className="dash-btn" 
-                style={{ padding: '4px 8px', fontSize: '12px' }}
                 onClick={() => insertText(setEmbedDescription, '{server}')}
+                style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.1)'}
               >{"{server}"}</button>
               <button 
-                className="dash-btn" 
-                style={{ padding: '4px 8px', fontSize: '12px' }}
                 onClick={() => insertText(setEmbedDescription, '{membercount}')}
+                style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.1)'}
               >{"{membercount}"}</button>
               <button 
-                className="dash-btn" 
-                style={{ padding: '4px 8px', fontSize: '12px' }}
-                onClick={() => insertText(setEmbedDescription, '<#123456> (Channel Mention)')}
+                onClick={() => insertText(setEmbedDescription, '<#123456>')}
+                style={{ background: 'rgba(88, 101, 242, 0.2)', color: '#c9cdfb', border: 'none', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={e => e.target.style.background = 'rgba(88, 101, 242, 0.3)'}
+                onMouseLeave={e => e.target.style.background = 'rgba(88, 101, 242, 0.2)'}
               >Channel Mention</button>
             </div>
             
             {emojis.length > 0 && (
               <>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '12px 0 8px', fontWeight: 600 }}>Server Emojis (Click to insert)</p>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', maxHeight: '100px', overflowY: 'auto' }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '16px 0 12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Server Emojis</p>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', maxHeight: '120px', overflowY: 'auto', padding: '4px' }}>
                   {emojis.map(e => (
-                    <img 
+                    <div 
                       key={e.id}
-                      src={`https://cdn.discordapp.com/emojis/${e.id}.${e.animated ? 'gif' : 'png'}`}
-                      alt={e.name}
                       title={`:${e.name}:`}
                       onClick={() => insertText(setEmbedDescription, `<${e.animated ? 'a' : ''}:${e.name}:${e.id}>`)}
-                      style={{ width: '24px', height: '24px', cursor: 'pointer', borderRadius: '4px' }}
-                    />
+                      style={{ 
+                        width: '32px', height: '32px', cursor: 'pointer', borderRadius: '6px', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(255,255,255,0.05)', transition: 'all 0.2s' 
+                      }}
+                      onMouseEnter={ev => { ev.currentTarget.style.background = 'rgba(255,255,255,0.15)'; ev.currentTarget.style.transform = 'scale(1.1)'; }}
+                      onMouseLeave={ev => { ev.currentTarget.style.background = 'rgba(255,255,255,0.05)'; ev.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      <img 
+                        src={`https://cdn.discordapp.com/emojis/${e.id}.${e.animated ? 'gif' : 'png'}`}
+                        alt={e.name}
+                        style={{ width: '24px', height: '24px' }}
+                      />
+                    </div>
                   ))}
                 </div>
               </>
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '24px' }}>
             <div className="dash-form-group">
-              <label>Color</label>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <label style={{ fontWeight: 500 }}>Embed Color</label>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <input 
                   type="color" 
                   value={embedColor} 
                   onChange={e => setEmbedColor(e.target.value)}
-                  style={{ width: '40px', height: '40px', padding: '0', border: 'none', borderRadius: '8px', cursor: 'pointer', background: 'transparent' }}
+                  style={{ 
+                    width: '44px', height: '44px', padding: '0', border: 'none', 
+                    borderRadius: '8px', cursor: 'pointer', background: 'transparent' 
+                  }}
                 />
                 <input 
                   type="text" 
                   value={embedColor} 
                   onChange={e => setEmbedColor(e.target.value)}
                   className="dash-input"
-                  style={{ flexGrow: 1 }}
+                  style={{ flexGrow: 1, padding: '10px 12px', fontFamily: 'monospace', fontSize: '14px' }}
                 />
               </div>
             </div>
           </div>
 
           <div className="dash-form-group">
-            <label>Image URL (Optional)</label>
+            <label style={{ fontWeight: 500 }}>Image URL (Optional)</label>
             <input 
               type="text" 
               value={embedImage} 
               onChange={e => setEmbedImage(e.target.value)} 
               className="dash-input"
               placeholder="https://example.com/image.png"
+              style={{ padding: '10px 12px' }}
             />
           </div>
 
           <div className="dash-form-group">
-            <label>Thumbnail URL (Optional)</label>
+            <label style={{ fontWeight: 500 }}>Thumbnail URL (Optional)</label>
             <input 
               type="text" 
               value={embedThumbnail} 
               onChange={e => setEmbedThumbnail(e.target.value)} 
               className="dash-input"
               placeholder="https://example.com/thumb.png"
+              style={{ padding: '10px 12px' }}
             />
           </div>
 
@@ -226,12 +248,15 @@ export default function EmbedBuilder() {
               className="dash-btn primary" 
               onClick={handleSend}
               disabled={isSubmitting}
-              style={{ width: '100%', padding: '12px' }}
+              style={{ width: '100%', padding: '14px', fontSize: '16px', fontWeight: 600, borderRadius: '8px' }}
             >
               {isSubmitting ? 'Sending...' : 'Send to Channel'}
             </button>
             {statusMsg && (
-              <span style={{ color: statusMsg.includes('Error') ? '#ef4444' : '#10b981', fontSize: '14px', whiteSpace: 'nowrap' }}>
+              <span style={{ 
+                color: statusMsg.includes('Error') ? '#ef4444' : '#10b981', 
+                fontSize: '14px', whiteSpace: 'nowrap', fontWeight: 500 
+              }}>
                 {statusMsg}
               </span>
             )}
@@ -240,84 +265,93 @@ export default function EmbedBuilder() {
 
         {/* RIGHT PANEL: Live Preview */}
         <div>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px', color: 'var(--text-secondary)' }}>Live Preview</h2>
-          
-          <div style={{
-            background: '#313338',
-            borderRadius: '8px',
-            padding: '16px',
-            fontFamily: '"gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif',
-            color: '#dbdee1'
-          }}>
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '8px' }}>
-              <img 
-                src="/img/logo.png" 
-                style={{ width: '40px', height: '40px', borderRadius: '50%' }} 
-                alt="Bot Avatar"
-              />
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontWeight: 500, color: '#f2f3f5', fontSize: '16px' }}>Orbit</span>
-                  <span style={{ background: '#5865F2', color: '#fff', fontSize: '10px', padding: '0 4px', borderRadius: '4px', height: '15px', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>APP</span>
-                  <span style={{ color: '#949ba4', fontSize: '12px' }}>Today at 12:00 PM</span>
+          <div style={{ position: 'sticky', top: '24px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px', color: 'var(--text-primary)' }}>Live Preview</h2>
+            
+            <div style={{
+              background: '#313338',
+              borderRadius: '8px',
+              padding: '16px',
+              fontFamily: '"gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif',
+              color: '#dbdee1',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '8px' }}>
+                <img 
+                  src="/img/logo.png" 
+                  style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                  alt="Bot Avatar"
+                  onError={(e) => { e.target.src = 'https://cdn.discordapp.com/embed/avatars/0.png' }}
+                />
+                <div style={{ flexGrow: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: 500, color: '#f2f3f5', fontSize: '16px' }}>Orbit</span>
+                    <span style={{ background: '#5865F2', color: '#fff', fontSize: '10px', padding: '0 4px', borderRadius: '4px', height: '15px', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>APP</span>
+                    <span style={{ color: '#949ba4', fontSize: '12px' }}>Today at 12:00 PM</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div style={{ marginLeft: '56px' }}>
-              <div style={{ 
-                background: '#2b2d31', 
-                borderRadius: '4px', 
-                borderLeft: `4px solid ${embedColor || '#202225'}`,
-                padding: '16px',
-                maxWidth: '520px',
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '16px'
-              }}>
-                <div style={{ flexGrow: 1, overflow: 'hidden' }}>
-                  {embedTitle && (
-                    <div style={{ color: '#f2f3f5', fontWeight: 600, fontSize: '16px', marginBottom: '8px' }}>
-                      {embedTitle}
+              <div style={{ marginLeft: '56px' }}>
+                {(!embedTitle && !embedDescription && !embedImage && !embedThumbnail) ? (
+                  <div style={{ color: '#949ba4', fontStyle: 'italic', fontSize: '14px', marginTop: '4px' }}>
+                    Start typing to see your embed preview...
+                  </div>
+                ) : (
+                  <div style={{ 
+                    background: '#2b2d31', 
+                    borderRadius: '4px', 
+                    borderLeft: `4px solid ${embedColor || '#202225'}`,
+                    padding: '16px',
+                    maxWidth: '520px',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '16px'
+                  }}>
+                    <div style={{ flexGrow: 1, overflow: 'hidden' }}>
+                      {embedTitle && (
+                        <div style={{ color: '#f2f3f5', fontWeight: 600, fontSize: '16px', marginBottom: '8px' }}>
+                          {embedTitle}
+                        </div>
+                      )}
+                      {embedDescription && (
+                        <div style={{ 
+                          color: '#dbdee1', 
+                          fontSize: '14px', 
+                          lineHeight: '1.375',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word'
+                        }}>
+                          {embedDescription.split(/(<@[!&]?\d+>|<#\d+>)/g).map((part, i) => {
+                            if (part.startsWith('<#') || part.startsWith('<@')) {
+                              return <span key={i} style={{ background: 'rgba(88, 101, 242, 0.3)', color: '#c9cdfb', padding: '0 2px', borderRadius: '3px' }}>{part}</span>;
+                            }
+                            return part.split(/(<a?:[a-zA-Z0-9_]+:\d+>)/g).map((subpart, j) => {
+                              const emojiMatch = subpart.match(/<a?:([a-zA-Z0-9_]+):(\d+)>/);
+                              if (emojiMatch) {
+                                const isAnim = subpart.startsWith('<a:');
+                                return <img key={`${i}-${j}`} src={`https://cdn.discordapp.com/emojis/${emojiMatch[2]}.${isAnim ? 'gif' : 'png'}`} alt={emojiMatch[1]} style={{ width: '22px', height: '22px', verticalAlign: 'middle', display: 'inline-block', margin: '0 1px' }} />;
+                              }
+                              return <span key={`${i}-${j}`}>{subpart}</span>;
+                            });
+                          })}
+                        </div>
+                      )}
+                      {embedImage && (
+                        <div style={{ marginTop: '16px', borderRadius: '4px', overflow: 'hidden' }}>
+                          <img src={embedImage} alt="Embed" style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {embedDescription && (
-                    <div style={{ 
-                      color: '#dbdee1', 
-                      fontSize: '14px', 
-                      lineHeight: '1.375',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word'
-                    }}>
-                      {embedDescription.split(/(<@[!&]?\d+>|<#\d+>)/g).map((part, i) => {
-                        if (part.startsWith('<#') || part.startsWith('<@')) {
-                          return <span key={i} style={{ background: 'rgba(88, 101, 242, 0.3)', color: '#c9cdfb', padding: '0 2px', borderRadius: '3px' }}>{part}</span>;
-                        }
-                        return part.split(/(<a?:[a-zA-Z0-9_]+:\d+>)/g).map((subpart, j) => {
-                          const emojiMatch = subpart.match(/<a?:([a-zA-Z0-9_]+):(\d+)>/);
-                          if (emojiMatch) {
-                            const isAnim = subpart.startsWith('<a:');
-                            return <img key={`${i}-${j}`} src={`https://cdn.discordapp.com/emojis/${emojiMatch[2]}.${isAnim ? 'gif' : 'png'}`} alt={emojiMatch[1]} style={{ width: '22px', height: '22px', verticalAlign: 'middle', display: 'inline-block' }} />;
-                          }
-                          return <span key={`${i}-${j}`}>{subpart}</span>;
-                        });
-                      })}
-                    </div>
-                  )}
-                  {embedImage && (
-                    <div style={{ marginTop: '16px', borderRadius: '4px', overflow: 'hidden' }}>
-                      <img src={embedImage} alt="Embed" style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }} />
-                    </div>
-                  )}
-                </div>
-                {embedThumbnail && (
-                  <div style={{ flexShrink: 0 }}>
-                    <img src={embedThumbnail} alt="Thumbnail" style={{ width: '80px', height: '80px', borderRadius: '4px', objectFit: 'cover' }} />
+                    {embedThumbnail && (
+                      <div style={{ flexShrink: 0 }}>
+                        <img src={embedThumbnail} alt="Thumbnail" style={{ width: '80px', height: '80px', borderRadius: '4px', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-
           </div>
         </div>
       </div>
