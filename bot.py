@@ -441,6 +441,33 @@ async def global_devmode_prefix_check(ctx: commands.Context):
         pass
     return False
 
+async def start_bot_loop():
+    retry_delay = int(os.environ.get("RETRY_DELAY", 10))
+    while True:
+        try:
+            await bot.start(TOKEN)
+            break  # If it exits cleanly, stop the loop
+        except discord.errors.LoginFailure as e:
+            print(f"FATAL ERROR: Invalid Token. Details: {e}", flush=True)
+            break
+        except discord.errors.PrivilegedIntentsRequired as e:
+            print(f"FATAL ERROR: Privileged Intents missing. Details: {e}", flush=True)
+            break
+        except Exception as e:
+            print(f"Bot crashed / Network error occurred: {e}", flush=True)
+            if "429" in str(e) or "1015" in str(e):
+                print("Cloudflare 1015 / 429 Rate Limit hit. Discord banned this IP temporarily.", flush=True)
+                retry_delay = min(retry_delay * 2, 3600)
+            else:
+                retry_delay = 10
+            
+            print(f"Retrying connection in {retry_delay} seconds...", flush=True)
+            try:
+                await bot.close()
+            except Exception:
+                pass
+            await asyncio.sleep(retry_delay)
+
 async def main():
     runner = None
     try:
@@ -457,43 +484,22 @@ async def main():
     except Exception as e:
         print(f"Failed to start Web Dashboard: {e}", flush=True)
 
-    try:
-        async with bot:
-            await bot.start(TOKEN)
-    finally:
-        if runner:
-            try:
-                await runner.cleanup()
-            except Exception:
-                pass
+    # Start the bot in the same event loop, letting it handle its own retries
+    await start_bot_loop()
+    
+    if runner:
+        try:
+            await runner.cleanup()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     if not TOKEN:
         print("Error: No TOKEN found in .env file.")
     else:
-        import time
         import asyncio
         import os
-        import sys
-        
-        retry_delay = int(os.environ.get("RETRY_DELAY", 10))
-        
         try:
             asyncio.run(main())
-        except discord.errors.LoginFailure as e:
-            print(f"FATAL ERROR: Invalid Token. Please check your TOKEN environment variable. Details: {e}", flush=True)
-        except discord.errors.PrivilegedIntentsRequired as e:
-            print(f"FATAL ERROR: Privileged Intents are missing. Please enable them in the Discord Developer Portal. Details: {e}", flush=True)
-        except Exception as e:
-            print(f"Bot crashed / Network error occurred: {e}", flush=True)
-            if "429" in str(e) or "1015" in str(e):
-                print("Cloudflare 1015 / 429 Rate Limit hit. Discord banned this IP temporarily.", flush=True)
-                retry_delay = min(retry_delay * 2, 3600) # Exponential backoff up to 1 hour
-            else:
-                retry_delay = 10
-            
-            print(f"Retrying connection in {retry_delay} seconds...", flush=True)
-            time.sleep(retry_delay)
-            
-            os.environ["RETRY_DELAY"] = str(retry_delay)
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+        except KeyboardInterrupt:
+            print("Bot shutdown requested.")
