@@ -221,8 +221,12 @@ class ConfigMixin:
             "autoresponder": autoresponder_cfg,
             "joinroles": {
                 "enabled": joinroles_cfg.get("enabled", False),
+                "user_roles_enabled": joinroles_cfg.get("user_roles_enabled", False),
                 "user_roles": [str(r) for r in joinroles_cfg.get("user_roles", [])],
-                "bot_roles": [str(r) for r in joinroles_cfg.get("bot_roles", [])]
+                "bot_roles_enabled": joinroles_cfg.get("bot_roles_enabled", False),
+                "bot_roles": [str(r) for r in joinroles_cfg.get("bot_roles", [])],
+                "tag_roles_enabled": joinroles_cfg.get("tag_roles_enabled", False),
+                "tag_role": str(joinroles_cfg.get("tag_role", "")) if joinroles_cfg.get("tag_role") else ""
             },
             "ticket": {
                 "enabled": ticket_cfg.get("enabled", False),
@@ -576,8 +580,12 @@ class ConfigMixin:
                 jr_data = data["joinroles"]
                 save_join_roles(guild_id, {
                     "enabled": bool(jr_data.get("enabled", False)),
+                    "user_roles_enabled": bool(jr_data.get("user_roles_enabled", False)),
                     "user_roles": [int(r) for r in jr_data.get("user_roles", []) if r],
-                    "bot_roles": [int(r) for r in jr_data.get("bot_roles", []) if r]
+                    "bot_roles_enabled": bool(jr_data.get("bot_roles_enabled", False)),
+                    "bot_roles": [int(r) for r in jr_data.get("bot_roles", []) if r],
+                    "tag_roles_enabled": bool(jr_data.get("tag_roles_enabled", False)),
+                    "tag_role": int(jr_data.get("tag_role")) if jr_data.get("tag_role") else None
                 })
 
             if user_perms.get("can_channels") and "ticket" in data:

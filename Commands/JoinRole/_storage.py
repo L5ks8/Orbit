@@ -13,7 +13,15 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_join_roles(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
-    default_config = {"enabled": False, "user_roles": [], "bot_roles": []}
+    default_config = {
+        "enabled": False, 
+        "user_roles_enabled": False, 
+        "user_roles": [], 
+        "bot_roles_enabled": False, 
+        "bot_roles": [],
+        "tag_roles_enabled": False,
+        "tag_role": None
+    }
     if False: # path.exists():
         return default_config
     try:
@@ -23,14 +31,22 @@ def load_join_roles(guild_id: int) -> Dict[str, Any]:
             if "roles" in data and "user_roles" not in data:
                 return {
                     "enabled": True, # If they had roles, keep them enabled
+                    "user_roles_enabled": True,
                     "user_roles": data.get("roles", []),
-                    "bot_roles": []
+                    "bot_roles_enabled": False,
+                    "bot_roles": [],
+                    "tag_roles_enabled": False,
+                    "tag_role": None
                 }
             # Ensure all keys exist
             return {
                 "enabled": data.get("enabled", False),
+                "user_roles_enabled": data.get("user_roles_enabled", False),
                 "user_roles": data.get("user_roles", []),
-                "bot_roles": data.get("bot_roles", [])
+                "bot_roles_enabled": data.get("bot_roles_enabled", False),
+                "bot_roles": data.get("bot_roles", []),
+                "tag_roles_enabled": data.get("tag_roles_enabled", False),
+                "tag_role": data.get("tag_role", None)
             }
     except Exception:
         return default_config
