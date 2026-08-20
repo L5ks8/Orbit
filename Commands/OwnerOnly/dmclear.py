@@ -41,7 +41,7 @@ class DmClearCommand(commands.Cog):
                 description=f"Cleaned up `{deleted_count}` Orbit message(s) from our DM history.",
                 color=0x2B2D31
             )
-            await ctx.author.send(embed=embed)
+            await ctx.author.send(embed=embed, delete_after=5.0)
         except Exception:
             pass
 
