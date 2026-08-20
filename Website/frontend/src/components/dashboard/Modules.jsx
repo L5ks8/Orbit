@@ -270,16 +270,22 @@ export default function Modules({ guildId, setSidebarOpen }) {
   const categories = ['Moderation', 'Engagement', 'Utility', 'Logging'];
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      right: 0, 
-      bottom: 0, 
-      background: '#1e1f22', 
-      zIndex: 999999, 
-      display: 'flex' 
-    }}>
+    <>
+      <style>
+        {`
+          .dash-sidebar { display: none !important; }
+          .dash-top-nav { display: none !important; }
+          .dash-content-area { padding: 0 !important; overflow: hidden !important; }
+          .dashboard-grid { flex: 1; }
+          .dash-main { padding: 0 !important; }
+        `}
+      </style>
+      <div style={{ 
+        display: 'flex', 
+        height: '100vh', 
+        width: '100vw', 
+        background: '#1e1f22'
+      }}>
       {/* Left Sidebar */}
       <div style={{ 
         width: '320px', 
@@ -364,6 +370,6 @@ export default function Modules({ guildId, setSidebarOpen }) {
       <div style={{ flexGrow: 1, overflowY: 'auto', background: '#1e1f22' }}>
          {renderModuleContent()}
       </div>
-    </div>
+    </>
   );
 }
