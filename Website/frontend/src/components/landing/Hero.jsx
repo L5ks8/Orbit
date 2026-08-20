@@ -9,11 +9,8 @@ export default function Hero() {
     const ctx = canvas.getContext('2d');
     let particles = [];
     let animId;
-    const PARTICLE_COUNT = 45;
+    const PARTICLE_COUNT = 25;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    const logoImg = new Image();
-    logoImg.src = '/img/logo.png';
 
     function resizeCanvas() {
       const wrapper = canvas.parentElement;
@@ -22,19 +19,20 @@ export default function Hero() {
     }
 
     function createParticle(resetY = false) {
-      const isLogo = Math.random() < 0.15; // 15% chance for a logo
-      const startY = resetY ? -100 : Math.random() * canvas.height;
+      // Start further up/left to allow for diagonal falling across the whole screen
+      const startY = resetY ? -(Math.random() * 200 + 100) : Math.random() * canvas.height;
+      
+      // Speed multiplier for depth effect (some are fast and close, some are slow and far)
+      const depth = Math.random() * 0.8 + 0.2; 
+      
       return {
-        x: Math.random() * canvas.width * 1.5 - canvas.width * 0.25,
+        x: resetY ? Math.random() * canvas.width * 1.5 - canvas.width * 0.5 : Math.random() * canvas.width,
         y: startY,
-        size: isLogo ? (Math.random() * 20 + 20) : (Math.random() * 2 + 1),
-        speedY: Math.random() * 5 + 4,
-        speedX: Math.random() * 2 + 1, // falling down and to the right
-        length: Math.random() * 80 + 40,
-        opacity: Math.random() * 0.5 + 0.2,
-        isLogo: isLogo,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.04
+        size: depth * 1.5 + 0.5,
+        speedX: depth * 3 + 1, // Fall diagonally down and right
+        speedY: depth * 3 + 1,
+        length: depth * 120 + 40,
+        opacity: depth * 0.6 + 0.1
       };
     }
 
@@ -51,42 +49,41 @@ export default function Hero() {
       particles.forEach(p => {
         p.x += p.speedX;
         p.y += p.speedY;
-        p.rotation += p.rotSpeed;
 
         if (p.y > canvas.height + 150 || p.x > canvas.width + 150) {
           Object.assign(p, createParticle(true));
         }
 
-        ctx.globalAlpha = p.opacity;
-        if (p.isLogo && logoImg.complete) {
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rotation);
-          ctx.drawImage(logoImg, -p.size/2, -p.size/2, p.size, p.size);
-          ctx.restore();
-        } else if (!p.isLogo) {
-          const v = Math.sqrt(p.speedX * p.speedX + p.speedY * p.speedY);
-          const nx = p.speedX / v;
-          const ny = p.speedY / v;
-          const tailEndX = p.x - nx * p.length;
-          const tailEndY = p.y - ny * p.length;
-          
-          const grad = ctx.createLinearGradient(p.x, p.y, tailEndX, tailEndY);
-          grad.addColorStop(0, `rgba(255, 255, 255, ${p.opacity})`);
-          grad.addColorStop(1, `rgba(255, 255, 255, 0)`);
-          
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(tailEndX, tailEndY);
-          ctx.strokeStyle = grad;
-          ctx.lineWidth = p.size;
-          ctx.stroke();
-          
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
-          ctx.fill();
-        }
+        const v = Math.sqrt(p.speedX * p.speedX + p.speedY * p.speedY);
+        const nx = p.speedX / v;
+        const ny = p.speedY / v;
+        const tailEndX = p.x - nx * p.length;
+        const tailEndY = p.y - ny * p.length;
+        
+        // Glow effect for the head
+        ctx.shadowBlur = p.size * 5;
+        ctx.shadowColor = `rgba(167, 139, 250, ${p.opacity * 0.8})`; // Subtle purple/blue glow
+
+        // Tail gradient
+        const grad = ctx.createLinearGradient(p.x, p.y, tailEndX, tailEndY);
+        grad.addColorStop(0, `rgba(255, 255, 255, ${p.opacity})`);
+        grad.addColorStop(1, `rgba(255, 255, 255, 0)`);
+        
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(tailEndX, tailEndY);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = p.size * 0.8;
+        ctx.stroke();
+        
+        // Head
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity + 0.2})`;
+        ctx.fill();
+        
+        // Reset shadow for next particle
+        ctx.shadowBlur = 0;
       });
       ctx.globalAlpha = 1.0;
       animId = requestAnimationFrame(drawParticles);
