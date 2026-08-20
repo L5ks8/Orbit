@@ -18,8 +18,80 @@ from Commands.Boost._storage import load_boost_config, save_boost_config
 from Commands.Level._storage import load_level_config, save_level_config
 from Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
 
+from Commands.EmbedBuilder._storage import load_embeds_config, save_embeds_config
 
 class ActionsMixin:
+    async def api_action_get_saved_embeds(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        data = load_embeds_config(guild_id)
+        return web.json_response(data.get("embeds", []))
+
+    async def api_action_save_embed(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        try:
+            payload = await request.json()
+            data = load_embeds_config(guild_id)
+            embeds = data.get("embeds", [])
+            
+            # If payload has an 'id', update it, else create a new one
+            embed_id = payload.get("id")
+            if embed_id:
+                for idx, emb in enumerate(embeds):
+                    if emb.get("id") == embed_id:
+                        # Update fields but preserve id
+                        embeds[idx] = payload
+                        break
+                else:
+                    embeds.append(payload)
+            else:
+                payload["id"] = secrets.token_hex(8)
+                if not payload.get("name"):
+                    payload["name"] = "Neue Nachricht"
+                embeds.append(payload)
+                
+            data["embeds"] = embeds
+            save_embeds_config(guild_id, data)
+            
+            return web.json_response({"success": True, "id": payload.get("id")})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_action_delete_saved_embed(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        embed_id = request.match_info.get("embed_id")
+        
+        if not guild_id_str.isdigit() or not embed_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        data = load_embeds_config(guild_id)
+        embeds = data.get("embeds", [])
+        
+        data["embeds"] = [e for e in embeds if e.get("id") != embed_id]
+        save_embeds_config(guild_id, data)
+        
+        return web.json_response({"success": True})
+
     async def api_action_send_custom_embed(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
