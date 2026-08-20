@@ -1,10 +1,11 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 
+from Commands._utils import make_embed
+from discord.ui import Container, TextDisplay, Separator, LayoutView
 from Commands.Verify._storage import load_verify_config, remove_pending_kick
 from Commands.Verify._views import CAPTCHA_SESSIONS
-from Commands.Verify.verify import verify_group
 
 async def _do_verify_user(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
@@ -62,40 +63,26 @@ async def _do_verify_user(ctx: commands.Context, member: discord.Member):
     except Exception as e:
         await ctx.send(embed=make_embed(f"An error occurred manually verifying {member.mention}: {e}", discord.Color.red()), ephemeral=True)
 
-@verify_group.command(name="user", description="Manually verify a member.")
-@commands.has_permissions(manage_guild=True)
-@app_commands.describe(member="The member to manually verify")
-async def user_cmd(ctx: commands.Context, member: discord.Member):
-    await _do_verify_user(ctx, member)
-
 class VerifyUserCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @user_cmd.error
-    async def user_error(self, ctx: commands.Context, error):
+    @commands.hybrid_command(name="verify", description="Manually verify a member.")
+    @commands.has_permissions(manage_guild=True)
+    @app_commands.describe(member="The member to manually verify")
+    async def verify_cmd(self, ctx: commands.Context, member: discord.Member):
+        await _do_verify_user(ctx, member)
+
+    @verify_cmd.error
+    async def verify_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Server permission to manually verify members.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: `-verify user <@member>`", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `-verify <@member>`", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.MemberNotFound, commands.BadArgument)):
             await ctx.send(embed=make_embed("Member not found in this server.", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-class VerifyUserFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="vf_user", aliases=["verifyuser"], hidden=True)
-    @commands.has_permissions(manage_guild=True)
-    async def user_prefix(self, ctx: commands.Context, member: discord.Member):
-        await _do_verify_user(ctx, member)
-
 async def setup(bot: commands.Bot):
-    from Commands.Verify.verify import verify_group
-    from Commands._utils import make_embed
-    if "verify" not in bot.all_commands:
-        bot.add_command(verify_group)
     await bot.add_cog(VerifyUserCog(bot))
-    await bot.add_cog(VerifyUserFallback(bot))
