@@ -20,8 +20,6 @@ function DashboardInner() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const isModules = location.pathname.includes('/modules');
-
   useEffect(() => {
     if (!guildId) return;
     fetch('/api/guilds')
@@ -55,14 +53,6 @@ function DashboardInner() {
     return null;
   }
 
-  if (isModules) {
-    return (
-      <Routes>
-        <Route path="modules" element={<Modules guildId={guildId} />} />
-        <Route path="modules/:moduleId" element={<Modules guildId={guildId} />} />
-      </Routes>
-    );
-  }
 
   return (
     <div className="dashboard-grid">
@@ -156,10 +146,9 @@ function DashboardInner() {
               <Route path="/" element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<Overview guildId={guildId} />} />
               <Route path="embed-builder" element={<EmbedBuilder setSidebarOpen={setSidebarOpen} />} />
-              <Route path="modules" element={<Modules guildId={guildId} setSidebarOpen={setSidebarOpen} />} />
-              <Route path="modules/:moduleId" element={<Modules guildId={guildId} setSidebarOpen={setSidebarOpen} />} />
               <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
               <Route path="settings" element={<Settings guildId={guildId} />} />
+              <Route path=":moduleId" element={<Modules guildId={guildId} />} />
             </Routes>
           </div>
         </div>

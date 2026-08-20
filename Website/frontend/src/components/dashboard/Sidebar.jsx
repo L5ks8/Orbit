@@ -1,13 +1,68 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
+import { 
+  LayoutDashboard, Bot, User, Activity, 
+  MessageSquare, Users, UserPlus, Shield, 
+  ShieldAlert, ShieldCheck, Ticket, Zap, 
+  Settings, BarChart3, Database, FileText,
+  Volume2
+} from 'lucide-react';
 
 export default function Sidebar({ guildId, isOpen = true }) {
-  const links = [
-    { name: 'Overview', path: `/dashboard/${guildId}/overview`, icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
-    { name: 'Messages', path: `/dashboard/${guildId}/embed-builder`, icon: '' },
-    { name: 'Modules', path: `/dashboard/${guildId}/modules`, icon: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z' },
-    { name: 'Leaderboard', path: `/dashboard/${guildId}/leaderboard`, icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
-    { name: 'Settings', path: `/dashboard/${guildId}/settings`, icon: 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z' },
+  const sections = [
+    {
+      title: 'MAIN AREA',
+      links: [
+        { name: 'Overview', path: `/dashboard/${guildId}/overview`, icon: <LayoutDashboard size={18} /> },
+        { name: 'AI Builder', path: `/dashboard/${guildId}/ai-builder`, icon: <Bot size={18} /> },
+        { name: 'Bot Profile', path: `/dashboard/${guildId}/bot-profile`, icon: <User size={18} /> },
+        { name: 'Analytics', path: `/dashboard/${guildId}/analytics`, icon: <Activity size={18} /> },
+      ]
+    },
+    {
+      title: 'WELCOME & ONBOARDING',
+      links: [
+        { name: 'Welcome', path: `/dashboard/${guildId}/welcome`, icon: <MessageSquare size={18} /> },
+        { name: 'Roles', path: `/dashboard/${guildId}/joinroles`, icon: <Users size={18} /> },
+        { name: 'Invite Tracker', path: `/dashboard/${guildId}/invites`, icon: <UserPlus size={18} /> },
+      ]
+    },
+    {
+      title: 'MODERATION',
+      links: [
+        { name: 'Auto-Moderation', path: `/dashboard/${guildId}/automod`, icon: <Shield size={18} /> },
+        { name: 'Ban Appeals', path: `/dashboard/${guildId}/appeals`, icon: <ShieldAlert size={18} /> },
+        { name: 'Security', path: `/dashboard/${guildId}/security`, icon: <ShieldCheck size={18} /> },
+        { name: 'Verification', path: `/dashboard/${guildId}/verify`, icon: <ShieldCheck size={18} /> },
+        { name: 'Logs', path: `/dashboard/${guildId}/logs`, icon: <FileText size={18} /> },
+      ]
+    },
+    {
+      title: 'ENGAGEMENT',
+      links: [
+        { name: 'Leveling System', path: `/dashboard/${guildId}/level`, icon: <Activity size={18} /> },
+        { name: 'Leaderboard', path: `/dashboard/${guildId}/leaderboard`, icon: <BarChart3 size={18} /> },
+        { name: 'Boost Messages', path: `/dashboard/${guildId}/boost`, icon: <Zap size={18} /> },
+        { name: 'Economy', path: `/dashboard/${guildId}/economy`, icon: <Database size={18} /> },
+        { name: 'Server Stats', path: `/dashboard/${guildId}/serverstats`, icon: <BarChart3 size={18} /> },
+      ]
+    },
+    {
+      title: 'UTILITY',
+      links: [
+        { name: 'Support Tickets', path: `/dashboard/${guildId}/tickets`, icon: <Ticket size={18} /> },
+        { name: 'Automation', path: `/dashboard/${guildId}/automation`, icon: <Zap size={18} /> },
+        { name: 'Auto Responder', path: `/dashboard/${guildId}/autoresponder`, icon: <MessageSquare size={18} /> },
+        { name: 'Embed Builder', path: `/dashboard/${guildId}/embed-builder`, icon: <MessageSquare size={18} /> },
+        { name: 'Temp Voice', path: `/dashboard/${guildId}/tempvoice`, icon: <Volume2 size={18} /> },
+      ]
+    },
+    {
+      title: 'SYSTEM',
+      links: [
+        { name: 'Settings', path: `/dashboard/${guildId}/settings`, icon: <Settings size={18} /> },
+      ]
+    }
   ];
 
   return (
@@ -16,33 +71,35 @@ export default function Sidebar({ guildId, isOpen = true }) {
         <img src="/img/logo.png" alt="Orbit Logo" style={{ height: '32px' }} />
         <span style={{ fontWeight: '600', fontSize: '20px', color: '#fff' }}>Orbit</span>
       </Link>
-      <nav className="dash-sidebar-nav">
-        {links.map((link) => (
-          <NavLink 
-            key={link.name} 
-            to={link.path} 
-            className={({ isActive }) => `dash-nav-link ${isActive ? 'active' : ''}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {link.name === 'Overview' && <path d={link.icon} />}
-              {link.name === 'Overview' && <polyline points="9 22 9 12 15 12 15 22"></polyline>}
-              
-              {link.name === 'Messages' && <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>}
-              
-              {link.name === 'Modules' && <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>}
-              {link.name === 'Modules' && <line x1="3" y1="9" x2="21" y2="9"></line>}
-              {link.name === 'Modules' && <line x1="9" y1="21" x2="9" y2="9"></line>}
-
-              {link.name === 'Leaderboard' && <path d={link.icon}></path>}
-
-              {link.name === 'Settings' && <path d={link.icon}></path>}
-              {link.name === 'Settings' && <circle cx="12" cy="12" r="3"></circle>}
-            </svg>
-            {link.name}
-          </NavLink>
+      <nav className="dash-sidebar-nav" style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+        {sections.map((section, idx) => (
+          <div key={idx} style={{ marginBottom: '16px' }}>
+            <div style={{ 
+              fontSize: '11px', 
+              fontWeight: '700', 
+              color: '#52525b', 
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              padding: '0 12px',
+              marginBottom: '8px'
+            }}>
+              {section.title}
+            </div>
+            {section.links.map((link) => (
+              <NavLink 
+                key={link.name} 
+                to={link.path} 
+                className={({ isActive }) => `dash-nav-link ${isActive ? 'active' : ''}`}
+                style={{ padding: '8px 12px', margin: '2px 0' }}
+              >
+                {link.icon}
+                {link.name}
+              </NavLink>
+            ))}
+          </div>
         ))}
       </nav>
-      <div className="dash-sidebar-footer">
+      <div className="dash-sidebar-footer" style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <NavLink to="/dashboard" className="dash-nav-link back-to-home">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
