@@ -12,30 +12,30 @@ export default function Overview({ guildId }) {
   const [timeRange, setTimeRange] = useState('7');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
+  const loadData = () => {
     if (!guildId) return;
     
-    const loadData = () => {
-      fetch('/api/guilds')
-        .then(res => res.json())
-        .then(data => {
-          const guildsArray = Array.isArray(data) ? data : (data.guilds || []);
-          const g = guildsArray.find(g => g.id === guildId);
-          if (g) setGuildInfo(g);
-        })
-        .catch(console.error);
-        
-      fetch(`/api/guild_stats/${guildId}?days=${timeRange === 'all' ? 365 : timeRange}`)
-        .then(res => res.json())
-        .then(data => setStats(data))
-        .catch(console.error);
-        
-      fetch(`/api/config/${guildId}`)
-        .then(res => res.json())
-        .then(data => setConfig(data?.config || null))
-        .catch(console.error);
-    };
+    fetch('/api/guilds')
+      .then(res => res.json())
+      .then(data => {
+        const guildsArray = Array.isArray(data) ? data : (data.guilds || []);
+        const g = guildsArray.find(g => String(g.id) === String(guildId));
+        if (g) setGuildInfo(g);
+      })
+      .catch(console.error);
+      
+    fetch(`/api/guild_stats/${guildId}?days=${timeRange === 'all' ? 365 : timeRange}`)
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(console.error);
+      
+    fetch(`/api/config/${guildId}`)
+      .then(res => res.json())
+      .then(data => setConfig(data?.config || null))
+      .catch(console.error);
+  };
 
+  useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
@@ -43,12 +43,8 @@ export default function Overview({ guildId }) {
 
   const handleRefreshClick = () => {
     setIsRefreshing(true);
-    fetch(`/api/guild_stats/${guildId}?days=${timeRange === 'all' ? 365 : timeRange}`)
-      .then(res => res.json())
-      .then(data => {
-        setStats(data);
-        setTimeout(() => setIsRefreshing(false), 500);
-      });
+    loadData();
+    setTimeout(() => setIsRefreshing(false), 500);
   };
 
   // Process History Data for Charts

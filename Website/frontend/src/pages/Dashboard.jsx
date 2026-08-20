@@ -35,7 +35,7 @@ function DashboardInner() {
         }
         setAllGuilds(guildsArray);
         
-        const g = guildsArray.find(g => g.id === guildId);
+        const g = guildsArray.find(g => String(g.id) === String(guildId));
         if (g) {
           setGuildName(g.name);
           setGuildIcon(g.icon);
