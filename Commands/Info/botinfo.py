@@ -31,7 +31,8 @@ class BotInfoCommand(commands.Cog):
         embed.add_field(name="Bot Information", value=bot_info, inline=True)
         
         # Links Field
-        dashboard_url = "https://orbit-498b.onrender.com"
+        import os
+        dashboard_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
         support_url = "https://discord.gg/orbit"
         
         links = (

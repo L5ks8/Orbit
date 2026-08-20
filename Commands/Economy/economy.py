@@ -160,7 +160,9 @@ class EconomyCommand(commands.Cog):
 
             lines.append(f"{prefix} **{display_name}** — {symbol} `{bal:,}`")
 
-        desc_with_link = f"[Want to see more than Top 10?](https://orbit-498b.onrender.com/leaderboard/{ctx.guild.id}?sort=balance)\n\n" + "\n".join(lines)
+        import os
+        base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
+        desc_with_link = f"[Want to see more than Top 10?]({base_url}/leaderboard/{ctx.guild.id}?sort=balance)\n\n" + "\n".join(lines)
         embed = discord.Embed(
             title=f" {ctx.guild.name} — Wealth Leaderboard",
             description=desc_with_link,

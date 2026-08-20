@@ -74,10 +74,12 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
             icon_url=interaction.client.user.display_avatar.url if interaction.client.user else None
         )
 
+        import os
+        base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
         btn_website = discord.ui.Button(
             label="Website & Dashboard",
             style=discord.ButtonStyle.link,
-            url="https://orbit-498b.onrender.com"
+            url=base_url
         )
         btn_invite = discord.ui.Button(
             label="Add Orbit to Your Server",

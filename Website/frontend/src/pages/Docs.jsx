@@ -98,7 +98,7 @@ export const docsData = {
           title="Accessing the Dashboard"
           syntax={[
             { text: 'https://', type: 'punct' },
-            { text: 'orbit-498b.onrender.com', type: 'keyword' },
+            { text: (import.meta.env.VITE_BASE_URL || 'orbit-498b.onrender.com').replace(/^https?:\/\//, ''), type: 'keyword' },
             { text: '/dashboard', type: 'type' }
           ]}
         />

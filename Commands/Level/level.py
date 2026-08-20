@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from Commands.Level._storage import (
@@ -119,9 +119,11 @@ class LevelCommandsCog(commands.Cog):
         )
         
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
+        import os
+        base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
         embed = discord.Embed(
             title=cat["title"],
-            description=f"[Want to see more than Top 10?](https://orbit-498b.onrender.com/leaderboard/{guild.id})",
+            description=f"[Want to see more than Top 10?]({base_url}/leaderboard/{guild.id})",
             color=0x2B2D31
         )
         embed.set_image(url="attachment://leaderboard.png")

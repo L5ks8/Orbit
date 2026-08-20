@@ -157,11 +157,13 @@ class PersistentVerifyLayout(discord.ui.View):
                 }
                 
                 view = discord.ui.View()
-                view.add_item(discord.ui.Button(label="Open Verification Page", style=discord.ButtonStyle.link, url=f"https://orbit-498b.onrender.com/verify/{token}"))
+                import os
+                base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
+                view.add_item(discord.ui.Button(label="Open Verification Page", style=discord.ButtonStyle.link, url=f"{base_url}/verify/{token}"))
                 
                 embed = discord.Embed(
                     title="Web Security Verification",
-                    description="Please click the button below to solve the CAPTCHA in your browser.\n*This link is unique to you and will expire in 10 minutes.*\n\nBy clicking, you accept our [privacy policy](https://orbit-498b.onrender.com/privacy) · [Support](https://discord.gg/wekuhwCsUg)",
+                    description=f"Please click the button below to solve the CAPTCHA in your browser.\n*This link is unique to you and will expire in 10 minutes.*\n\nBy clicking, you accept our [privacy policy]({base_url}/privacy) · [Support](https://discord.gg/wekuhwCsUg)",
                     color=discord.Color.blurple()
                 )
                 

@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 import io
 from discord import app_commands
 from discord.ext import commands
@@ -65,9 +65,11 @@ class LeaderboardCommand(commands.Cog):
         )
         
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
+        import os
+        base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
         embed = discord.Embed(
             title="Invite Leaderboard",
-            description=f"[Want to see more than Top {limit}?](https://orbit-498b.onrender.com/leaderboard/{ctx.guild.id}?sort=invites)",
+            description=f"[Want to see more than Top {limit}?]({base_url}/leaderboard/{ctx.guild.id}?sort=invites)",
             color=0x2B2D31
         )
         embed.set_image(url="attachment://leaderboard.png")

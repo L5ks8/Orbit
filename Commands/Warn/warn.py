@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Commands.Warn._storage import add_warning, get_user_warnings
@@ -90,7 +90,9 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
                 custom_url = appeals_cfg.get("custom_url", "orbit")
                 import urllib.parse
                 encoded_url = urllib.parse.quote(custom_url)
-                dm_embed.add_field(name="Appeals", value=f"You can appeal this warning at: https://orbit-498b.onrender.com/appeal/{encoded_url}", inline=False)
+                import os
+                base_url = os.environ.get("BASE_URL", "https://orbit-498b.onrender.com")
+                dm_embed.add_field(name="Appeals", value=f"You can appeal this warning at: {base_url}/appeal/{encoded_url}", inline=False)
 
         await user.send(embed=dm_embed)
     except Exception:
