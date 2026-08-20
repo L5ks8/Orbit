@@ -1,14 +1,15 @@
 import json
 import os
 import secrets
+import pathlib
 from typing import Dict, Any
 
-from Commands._utils import BASE_PATH
+STORAGE_ROOT = pathlib.Path("Storage")
 
 def _get_embedbuilder_path(guild_id: int) -> str:
-    path = os.path.join(BASE_PATH, str(guild_id), "embedbuilder")
-    os.makedirs(path, exist_ok=True)
-    return os.path.join(path, "embeds.json")
+    path = STORAGE_ROOT / str(guild_id) / "embedbuilder"
+    path.mkdir(parents=True, exist_ok=True)
+    return str(path / "embeds.json")
 
 def load_embeds_config(guild_id: int) -> Dict[str, Any]:
     file_path = _get_embedbuilder_path(guild_id)
