@@ -429,7 +429,7 @@ export default function Overview({ guildId }) {
         </div>
 
         {/* Recent Mod Activity — exact 1:1 from provided HTML */}
-        <div className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
+        <div className="pb-col-mod bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
             <div className="flex items-center gap-2.5">
               <ShieldAlert className="w-4 h-4 text-neutral-500" />
