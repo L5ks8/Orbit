@@ -103,7 +103,8 @@ class GuildsMixin:
             
         servers = len(self.bot.guilds)
         users = sum(g.member_count for g in self.bot.guilds if hasattr(g, "member_count") and g.member_count)
-        ping = round(self.bot.latency * 1000)
+        import math
+        ping = round(self.bot.latency * 1000) if not math.isnan(self.bot.latency) else 0
 
         return web.json_response({
             "history": list(history),
