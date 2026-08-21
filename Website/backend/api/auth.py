@@ -82,9 +82,95 @@ class AuthMixin:
             next_url = next_url.replace("&popup=1", "").replace("?popup=1", "").replace("popup=1", "")
             if not next_url or next_url == "?":
                 next_url = "/"
-            # Return HTML that sets the cookie and closes the popup
-            html = f"""<!DOCTYPE html><html><head><title>Login successful</title></head>
-<body><script>window.close();</script><p>Login successful. You can close this window.</p></body></html>"""
+            # Return HTML that shows authenticating -> success -> closes
+            html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Orbit</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .card {
+    background: #171717;
+    border: 1px solid #262626;
+    border-radius: 20px;
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 340px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .icon-wrap {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: #262626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    position: relative;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid #404040;
+    border-top-color: #a3a3a3;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .checkmark {
+    display: none;
+    width: 40px; height: 40px;
+  }
+  .checkmark svg {
+    width: 40px; height: 40px;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  p { font-size: 14px; color: #737373; line-height: 1.5; }
+  .success .icon-wrap { background: rgba(34, 197, 94, 0.12); }
+  .success .spinner { display: none; }
+  .success .checkmark { display: block; }
+  .success h2 { color: #22c55e; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="icon-wrap">
+    <div class="spinner"></div>
+    <div class="checkmark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+  </div>
+  <h2 id="title">Authenticating...</h2>
+  <p id="desc">Please wait while we complete your login.</p>
+</div>
+<script>
+  setTimeout(function() {
+    document.getElementById('card').classList.add('success');
+    document.getElementById('title').textContent = 'Login successful!';
+    document.getElementById('desc').textContent = 'You can now close this window.';
+    setTimeout(function() { window.close(); }, 1500);
+  }, 800);
+</script>
+</body>
+</html>"""
             response = web.Response(text=html, content_type="text/html")
             response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
             return response
