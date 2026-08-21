@@ -41,7 +41,7 @@ export default function Moderation({ guildId }) {
                   tabIndex="0"
                   style={{ cursor: "default" }}
                 >
-                  <div className="pointer-events-none select-none flex flex-col flex-1">
+                  <div className="flex flex-col flex-1">
                     <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] ">
                       <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -167,7 +167,7 @@ export default function Moderation({ guildId }) {
                   tabIndex="0"
                   style={{ cursor: "default" }}
                 >
-                  <div className="pointer-events-none select-none flex flex-col flex-1">
+                  <div className="flex flex-col flex-1">
                     <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                       <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3 min-w-0">
@@ -1209,7 +1209,7 @@ export default function Moderation({ guildId }) {
                         tabIndex="0"
                         style={{ cursor: "default" }}
                       >
-                        <div className="pointer-events-none select-none flex flex-col flex-1">
+                        <div className="flex flex-col flex-1">
                           <div className="flex items-center justify-between">
                             <label className="text-sm text-neutral-200">
                               Caps filter
@@ -1637,7 +1637,7 @@ export default function Moderation({ guildId }) {
                     tabIndex="0"
                     style={{ cursor: "default" }}
                   >
-                    <div className="pointer-events-none select-none flex flex-col flex-1">
+                    <div className="flex flex-col flex-1">
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
                           <svg
