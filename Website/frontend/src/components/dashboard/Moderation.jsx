@@ -52,7 +52,7 @@ export default function Moderation({ guildId }) {
         </div>
       </div>
       <div className="mt-6">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr,340px] gap-4 md:items-stretch min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 lg:items-stretch min-w-0">
           <div className="flex flex-col gap-4 min-w-0 scroll-mt-24">
             {/* AI Moderation Card */}
             <div
@@ -573,10 +573,10 @@ export default function Moderation({ guildId }) {
           </div>
 
           {/* Right Column - Recent Actions & Warnings */}
-          <div className="md:relative flex flex-col">
-            <div className="flex flex-col gap-4 md:absolute md:inset-0">
+          <div className="lg:relative flex flex-col">
+            <div className="flex flex-col gap-4 lg:absolute lg:inset-0">
               {/* Recent Actions */}
-              <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col md:flex-1 md:min-h-0">
+              <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col lg:flex-1 lg:min-h-0">
                 <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-neutral-800">
                   <div className="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gavel w-4 h-4 text-neutral-400">
@@ -590,8 +590,8 @@ export default function Moderation({ guildId }) {
                   </div>
                   <span className="text-xs text-neutral-600 tabular-nums">2 total</span>
                 </div>
-                <div className="flex flex-col md:flex-1 md:min-h-0">
-                  <div className="divide-y divide-neutral-800/40 overflow-y-auto scrollbar-thin max-h-[420px] md:max-h-none md:flex-1 md:min-h-0">
+                <div className="flex flex-col lg:flex-1 lg:min-h-0">
+                  <div className="divide-y divide-neutral-800/40 overflow-y-auto scrollbar-thin max-h-[420px] lg:max-h-none lg:flex-1 lg:min-h-0">
                     <div className="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
                       <div className="grid place-items-center w-8 h-8 rounded-lg bg-neutral-800 flex-shrink-0 mt-0.5">
                         <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gavel w-3.5 h-3.5">
@@ -633,7 +633,7 @@ export default function Moderation({ guildId }) {
               </div>
 
               {/* Warnings */}
-              <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col md:flex-1 md:min-h-0">
+              <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col lg:flex-1 lg:min-h-0">
                 <div className="flex items-center gap-2 px-4 sm:px-5 py-3 border-b border-neutral-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-triangle w-4 h-4 text-amber-400">
                     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
@@ -658,7 +658,7 @@ export default function Moderation({ guildId }) {
                     <button className="inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out enabled:active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-800 text-black dark:text-white border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 focus:ring-neutral-400/20 px-3.5 py-2 text-xs">Search</button>
                   </div>
                 </div>
-                <div className="h-[440px] md:h-auto md:flex-1 md:min-h-0 overflow-y-auto scrollbar-thin flex flex-col">
+                <div className="h-[440px] lg:h-auto lg:flex-1 lg:min-h-0 overflow-y-auto scrollbar-thin flex flex-col">
                   <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
                     <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search w-6 h-6 text-neutral-800 mx-auto mb-3">
                       <circle cx={11} cy={11} r={8} />
