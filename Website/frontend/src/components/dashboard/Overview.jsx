@@ -378,40 +378,41 @@ export default function Overview({ guildId }) {
             <button className={activityRange === 'all' ? 'active' : ''} onClick={() => setActivityRange('all')}>All</button>
           </div>
         </div>
-        <div className="px-5 pb-1 flex items-end justify-between">
-          <div className="flex gap-4">
+        
+        <div className="flex justify-between items-end px-5 pb-1">
+          <div className="flex items-start gap-4">
             <div className="flex flex-col">
-              <div className="flex items-baseline gap-3">
-                <span className="text-[40px] font-bold text-white tabular-nums leading-none">{totalMessages > 0 ? totalMessages : 20}</span>
-                {(() => {
-                  const percentChange = 100.0;
-                  const isUptrend = percentChange >= 0;
-                  const TrendIcon = isUptrend ? ArrowUpRight : ArrowDownRight;
-                  const trendColor = isUptrend ? 'text-emerald-400' : 'text-red-400';
-                  
-                  return (
-                    <div className={`flex items-baseline gap-1 ${trendColor}`}>
-                      <TrendIcon strokeWidth={2.5} className="w-4 h-4 mb-0.5" />
-                      <span className="text-2xl font-bold">{Math.abs(percentChange).toFixed(1)}%</span>
-                      <span className="text-[10px] font-bold tracking-wider uppercase ml-1">{isUptrend ? 'Uptrend' : 'Downtrend'}</span>
-                    </div>
-                  );
-                })()}
-              </div>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-[13px] text-neutral-500">messages</span>
-                <span className="text-[13px] text-neutral-400">
-                  {totalMessages > 0 ? '+' + totalMessages : '+33'} vs prev week
-                </span>
-              </div>
+              <span className="text-[40px] font-bold text-white tabular-nums leading-none tracking-tight">{totalMessages > 0 ? totalMessages : 20}</span>
+              <span className="text-[13px] text-neutral-500 mt-2">messages</span>
+            </div>
+            
+            <div className="flex flex-col pt-1.5 gap-2">
+              {(() => {
+                const percentChange = 100.0;
+                const isUptrend = percentChange >= 0;
+                const TrendIcon = isUptrend ? ArrowUpRight : ArrowDownRight;
+                const trendColor = isUptrend ? 'text-emerald-400' : 'text-red-400';
+                return (
+                  <div className={`flex items-center gap-1 ${trendColor} leading-none`}>
+                    <TrendIcon strokeWidth={2.5} className="w-4 h-4" />
+                    <span className="text-xl font-bold leading-none">{Math.abs(percentChange).toFixed(1)}%</span>
+                    <span className="text-[10px] font-bold tracking-wider uppercase ml-1">{isUptrend ? 'Uptrend' : 'Downtrend'}</span>
+                  </div>
+                );
+              })()}
+              <span className="text-[13px] text-neutral-400">
+                +{totalMessages > 0 ? totalMessages : 33} vs prev week
+              </span>
             </div>
           </div>
-          <div className="flex items-baseline gap-1.5 pb-2">
+
+          <div className="flex items-center gap-1.5 mb-2">
             <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Peak</span>
-            <span className="text-[15px] font-bold text-amber-400">Aug 20</span>
-            <span className="text-[13px] text-neutral-500">· {totalMessages > 0 ? totalMessages : 20} msgs</span>
+            <span className="text-xs font-bold text-amber-400">{activityData.length > 0 && Math.max(...activityData.map(d => d.messages)) > 0 ? activityData.find(d => d.messages === Math.max(...activityData.map(d => d.messages)))?.name : 'Aug 20'}</span>
+            <span className="text-xs text-neutral-500">· {activityData.length > 0 && Math.max(...activityData.map(d => d.messages)) > 0 ? Math.max(...activityData.map(d => d.messages)) : 20} msgs</span>
           </div>
         </div>
+
         <div className="px-5 pb-4" style={{ height: '220px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={activityData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
@@ -425,7 +426,22 @@ export default function Overview({ guildId }) {
               <XAxis dataKey="name" stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
               <YAxis stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
               <RechartsTooltip contentStyle={{backgroundColor: '#171717', borderColor: '#262626', color: '#fff'}} />
-              <Area type="monotone" dataKey="messages" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorMessages)" />
+              <Area 
+                type="monotone" 
+                dataKey="messages" 
+                stroke="#22c55e" 
+                strokeWidth={2} 
+                fillOpacity={1} 
+                fill="url(#colorMessages)"
+                dot={(props) => {
+                  const { cx, cy, payload } = props;
+                  const maxMessages = Math.max(...activityData.map(d => d.messages), 1);
+                  if (payload.messages === maxMessages && payload.messages > 0) {
+                    return <circle key={`dot-${payload.name}`} cx={cx} cy={cy} r={4} fill="#fbbf24" stroke="#fff" strokeWidth={2} />;
+                  }
+                  return null;
+                }}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
