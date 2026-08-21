@@ -8,6 +8,7 @@ export default function ServerSelector() {
   const [guilds, setGuilds] = useState([]);
   const [fetching, setFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   const loadGuilds = () => {
     setFetching(true);
@@ -148,7 +149,7 @@ export default function ServerSelector() {
         }
         .search-input {
           width: 100%;
-          padding: 12px 16px 12px 48px;
+          padding: 12px 16px 12px 48px !important;
           background-color: #171717;
           border: 1px solid #262626;
           border-radius: 12px;
@@ -162,6 +163,77 @@ export default function ServerSelector() {
           border-color: #fff;
         }
         
+        .profile-dropdown {
+          position: absolute;
+          top: 64px;
+          right: 32px;
+          width: 224px;
+          background-color: #171717;
+          border: 1px solid #262626;
+          border-radius: 12px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+          z-index: 60;
+          overflow: hidden;
+        }
+        .profile-dropdown-header {
+          padding: 12px 16px;
+          border-bottom: 1px solid #262626;
+        }
+        .profile-dropdown-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: #fff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin: 0;
+        }
+        .profile-dropdown-id {
+          font-size: 12px;
+          color: #737373;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin: 2px 0 0 0;
+        }
+        .profile-dropdown-link {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 16px;
+          font-size: 14px;
+          color: #a3a3a3;
+          text-decoration: none;
+          transition: all 0.2s;
+        }
+        .profile-dropdown-link:hover {
+          color: #fff;
+          background-color: #262626;
+        }
+        .profile-dropdown-logout {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          padding: 10px 16px;
+          font-size: 14px;
+          color: #f87171;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: left;
+        }
+        .profile-dropdown-logout:hover {
+          color: #fca5a5;
+          background-color: rgba(239, 68, 68, 0.1);
+        }
+        .profile-dropdown-divider {
+          border-top: 1px solid #262626;
+          padding-top: 4px;
+          margin-top: 4px;
+        }
+
         .section-title {
           display: flex;
           align-items: center;
@@ -406,11 +478,16 @@ export default function ServerSelector() {
           <div style={{ width: '1px', height: '32px', backgroundColor: '#404040' }}></div>
           <h1 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', margin: 0 }}>Dashboard</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
           <button className="header-btn" aria-label="Notifications">
             <Bell size={20} />
           </button>
-          <button className="header-btn" aria-label="User menu" style={{ padding: '4px 6px' }}>
+          <button 
+            className="header-btn" 
+            aria-label="User menu" 
+            style={{ padding: '4px 6px' }}
+            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+          >
             <img 
               src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64` : '/img/logo.png'} 
               alt={user.username} 
@@ -423,6 +500,35 @@ export default function ServerSelector() {
             </div>
             <ChevronDown size={16} style={{ marginLeft: '8px' }} />
           </button>
+          
+          {showProfileDropdown && (
+            <div className="profile-dropdown">
+              <div className="profile-dropdown-header">
+                <p className="profile-dropdown-name">{user.username}</p>
+                <p className="profile-dropdown-id">ID: {user.id || '1195055294380781629'}</p>
+              </div>
+              <div style={{ padding: '4px 0' }}>
+                <a href="/" className="profile-dropdown-link">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                  Home
+                </a>
+                <a href="/dashboard" className="profile-dropdown-link">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg>
+                  My Servers
+                </a>
+                <a href="/settings" className="profile-dropdown-link">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  Settings
+                </a>
+              </div>
+              <div className="profile-dropdown-divider">
+                <button className="profile-dropdown-logout" onClick={() => window.location.href = '/auth/logout'}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
