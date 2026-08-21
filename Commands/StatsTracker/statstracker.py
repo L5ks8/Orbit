@@ -58,7 +58,7 @@ class StatsTracker(commands.Cog):
         # Track active users (joined voice)
         if after.channel and not before.channel:
             db = get_db()
-            if db:
+            if db is not None:
                 today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
                 doc_id = f"{member.guild.id}_{today_str}"
                 try:
