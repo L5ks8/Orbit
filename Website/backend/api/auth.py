@@ -75,6 +75,20 @@ class AuthMixin:
             "access_token": access_token
         }
         
+        # Check if this was a popup login
+        is_popup = "popup=1" in state or "&popup=1" in next_url
+        if is_popup:
+            # Clean popup param from next_url
+            next_url = next_url.replace("&popup=1", "").replace("?popup=1", "").replace("popup=1", "")
+            if not next_url or next_url == "?":
+                next_url = "/"
+            # Return HTML that sets the cookie and closes the popup
+            html = f"""<!DOCTYPE html><html><head><title>Login successful</title></head>
+<body><script>window.close();</script><p>Login successful. You can close this window.</p></body></html>"""
+            response = web.Response(text=html, content_type="text/html")
+            response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
+            return response
+        
         response = web.HTTPFound(next_url)
         response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
         return response

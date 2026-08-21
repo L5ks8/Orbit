@@ -49,8 +49,17 @@ function DashboardInner() {
 
   if (loading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>;
   if (!user) {
-    window.location.href = `/auth/login?next=${encodeURIComponent(location.pathname)}`;
-    return null;
+    const loginUrl = `/auth/login?next=${encodeURIComponent(location.pathname)}&popup=1`;
+    const w = 500, h = 700;
+    const left = window.screenX + (window.outerWidth - w) / 2;
+    const top = window.screenY + (window.outerHeight - h) / 2;
+    const popup = window.open(loginUrl, 'orbitlogin', `width=${w},height=${h},left=${left},top=${top},popup=yes`);
+    if (popup) {
+      const timer = setInterval(() => {
+        if (popup.closed) { clearInterval(timer); window.location.reload(); }
+      }, 500);
+    }
+    return <div style={{ color: '#fff', padding: '20px' }}>Waiting for login...</div>;
   }
 
 

@@ -41,8 +41,20 @@ export default function ServerSelector() {
   );
   
   if (!user) {
-    window.location.href = '/auth/login?next=/dashboard';
-    return <div className="selector-page flex-center">Redirecting to login...</div>;
+    const loginUrl = '/auth/login?next=/dashboard&popup=1';
+    const w = 500, h = 700;
+    const left = window.screenX + (window.outerWidth - w) / 2;
+    const top = window.screenY + (window.outerHeight - h) / 2;
+    const popup = window.open(loginUrl, 'orbitlogin', `width=${w},height=${h},left=${left},top=${top},popup=yes`);
+    if (popup) {
+      const timer = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(timer);
+          window.location.reload();
+        }
+      }, 500);
+    }
+    return <div className="selector-page flex-center">Waiting for login...</div>;
   }
 
   // Filter based on search query
@@ -452,14 +464,16 @@ export default function ServerSelector() {
           padding: 8px 12px;
           background-color: transparent;
           border: 1px solid #404040;
-          color: #fff;
+          color: #a3a3a3;
           font-size: 13px;
           font-weight: 500;
           border-radius: 8px;
           transition: all 0.2s;
         }
         .server-card:hover .action-add-bot {
-          background-color: #262626;
+          background-color: #fff;
+          color: #000;
+          border-color: #fff;
         }
         
         /* Notifications Dropdown */
@@ -740,7 +754,18 @@ export default function ServerSelector() {
                     <button 
                       key={guild.id} 
                       className="server-card" 
-                      onClick={() => { window.location.href = `https://discord.com/api/oauth2/authorize?client_id=123456789012345678&permissions=8&scope=bot%20applications.commands&guild_id=${guild.id}`; }}
+                      onClick={() => {
+                        const url = `https://discord.com/api/oauth2/authorize?client_id=1480221897131299037&permissions=564430072179839&scope=bot%20applications.commands&guild_id=${guild.id}`;
+                        const w = 500, h = 750;
+                        const left = window.screenX + (window.outerWidth - w) / 2;
+                        const top = window.screenY + (window.outerHeight - h) / 2;
+                        const popup = window.open(url, 'addbot', `width=${w},height=${h},left=${left},top=${top},popup=yes`);
+                        if (popup) {
+                          const timer = setInterval(() => {
+                            if (popup.closed) { clearInterval(timer); loadGuilds(); }
+                          }, 500);
+                        }
+                      }}
                     >
                       <div className="server-card-bg"></div>
                       <div className="card-content">

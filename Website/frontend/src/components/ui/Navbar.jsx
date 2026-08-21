@@ -158,9 +158,20 @@ export default function Navbar({ onSearchClick }) {
             Dashboard
           </Link>
         ) : (
-          <a href="/auth/login" className="mega-btn-light">
+          <button onClick={(e) => {
+            e.preventDefault();
+            const w = 500, h = 700;
+            const left = window.screenX + (window.outerWidth - w) / 2;
+            const top = window.screenY + (window.outerHeight - h) / 2;
+            const popup = window.open('/auth/login?popup=1', 'orbitlogin', `width=${w},height=${h},left=${left},top=${top},popup=yes`);
+            if (popup) {
+              const timer = setInterval(() => {
+                if (popup.closed) { clearInterval(timer); window.location.reload(); }
+              }, 500);
+            }
+          }} className="mega-btn-light" style={{ cursor: 'pointer', border: 'none' }}>
             Login <LoginIcon />
-          </a>
+          </button>
         )}
       </div>
     </nav>
