@@ -330,17 +330,21 @@ class OrbitBot(commands.Bot):
             except Exception as e:
                 print(f"Failed to load standard cog {extension}: {e}")
 
-        try:
-            synced = await self.tree.sync()
-            total_cmds = 0
-            for cmd in synced:
-                if hasattr(cmd, 'commands'):
-                    total_cmds += len(cmd.commands) + 1
-                else:
-                    total_cmds += 1
-            print(f"Synced {len(synced)} top-level command group(s) ({total_cmds} total subcommands & commands across all modules)")
-        except Exception as e:
-            print(f"Failed to sync commands: {e}")
+        async def background_sync():
+            try:
+                synced = await self.tree.sync()
+                total_cmds = 0
+                for cmd in synced:
+                    if hasattr(cmd, 'commands'):
+                        total_cmds += len(cmd.commands) + 1
+                    else:
+                        total_cmds += 1
+                print(f"Synced {len(synced)} top-level command group(s) ({total_cmds} total subcommands & commands across all modules)")
+            except Exception as e:
+                print(f"Failed to sync commands: {e}")
+                
+        import asyncio
+        asyncio.create_task(background_sync())
 
         _old_view_error = discord.ui.View.on_error
         async def _global_view_error(view_self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item):
