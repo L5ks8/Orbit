@@ -133,12 +133,12 @@ html {
     scroll-padding-top: 72px;
 }
 
-* {
+@layer base { * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
+} }
 
 body {
     background-color: var(--bg-base);

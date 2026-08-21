@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import CustomSelect from '../ui/CustomSelect';
-import SaveBar from '../ui/SaveBar';
-import { useToast } from '../ui/Toast';
+import CustomSelect from '../../ui/CustomSelect';
+import SaveBar from '../../ui/SaveBar';
+import { useToast } from '../../ui/Toast';
 
 const TailwindToggle = ({ checked, onChange }) => (
-  <button type="button" role="switch" aria-checked={checked} onClick={onChange} className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-blue-500' : 'bg-neutral-200 dark:bg-neutral-700'}`}><span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px]' : 'translate-x-[3px]'}`} /></button>
+  <button 
+    type="button" 
+    role="switch" 
+    aria-checked={checked} 
+    onClick={onChange}
+    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700'}`}
+  >
+    <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900'}`} />
+  </button>
 );
 
 
@@ -40,7 +48,6 @@ export default function Moderation({ guildId }) {
 
   // States
   const [aiAutomodEnabled, setAiAutomodEnabled] = useState(false);
-  const [aiImageEnabled, setAiImageEnabled] = useState(false);
   const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', words: [], exempt_words: [], level: 'relaxed' });
   const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', sensitivity: 'normal' });
   const [antiLink, setAntiLink] = useState({ enabled: false, block_invites: true, allow_media: true, allow_gifs: true, action: 'delete', always_allowed: [], always_blocked: [] });
@@ -60,7 +67,6 @@ export default function Moderation({ guildId }) {
         exempt_channels: exemptions.channels,
         exempt_roles: exemptions.roles,
         ai_automod: { enabled: aiAutomodEnabled },
-          ai_image_moderation: { enabled: aiImageEnabled },
         banned_words: { ...bannedWords },
         anti_spam: { ...antiSpam },
         anti_link: { ...antiLink },
@@ -147,7 +153,27 @@ export default function Moderation({ guildId }) {
 
   return (
     <div className="pb-overview-container">
-      
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm bg-red-50/90 dark:bg-red-500/20 text-red-700 dark:text-red-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={24}
+            height={24}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="lucide lucide-alert-circle w-4 h-4"
+          >
+            <circle cx={12} cy={12} r={10} />
+            <line x1={12} x2={12} y1={8} y2={12} />
+            <line x1={12} x2="12.01" y1={16} y2={16} />
+          </svg>
+          <span className="text-sm">These changes require Pro</span>
+        </div>
+      </div>
       <div data-tour="feature-header" className="scroll-mt-24">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -176,10 +202,16 @@ export default function Moderation({ guildId }) {
         </div>
       </div>
       <div className="mt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 lg:items-start min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 lg:items-stretch min-w-0">
           <div className="flex flex-col gap-4 min-w-0 scroll-mt-24 w-full">
             {/* AI Moderation Card */}
-            <div className="relative flex flex-col w-full">
+            <div
+              className="relative flex flex-col w-full"
+              role="button"
+              tabIndex={0}
+              style={{ cursor: "default" }}
+            >
+              <div className="pointer-events-none select-none flex flex-col">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -206,14 +238,38 @@ export default function Moderation({ guildId }) {
                       <span className="text-sm font-medium text-white truncate">
                         AI Moderation
                       </span>
-                      
+                      <span className="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-indigo-400 border-indigo-500/20 bg-gradient-to-b from-indigo-400/25 to-indigo-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width={10}
+                          height={10}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.25"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide lucide-crown shrink-0 -ml-px opacity-90"
+                          aria-hidden="true"
+                        >
+                          <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+                        </svg>
+                        Pro
+                      </span>
                       <span className="text-[10px] px-1.5 py-0.5 bg-white/10 text-neutral-300 rounded font-semibold uppercase tracking-[0.08em]">
                         Beta
                       </span>
                     </div>
                     <div className="flex items-center gap-2.5 flex-shrink-0">
                       <div className="flex items-center gap-3">
-                        <TailwindToggle checked={logs.message_deletes} onChange={() => setLogs({ ...logs, message_deletes: !logs.message_deletes })} />
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked="false"
+                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"
+                        >
+                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -255,9 +311,16 @@ export default function Moderation({ guildId }) {
                   </button>
                 </div>
               </div>
+            </div>
 
             {/* AI Image Moderation Card */}
-            <div className="relative flex flex-col w-full">
+            <div
+              className="relative flex flex-col w-full"
+              role="button"
+              tabIndex={0}
+              style={{ cursor: "default" }}
+            >
+              <div className="pointer-events-none select-none flex flex-col">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
@@ -285,16 +348,41 @@ export default function Moderation({ guildId }) {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-sm font-medium text-white text-balance">AI Image Moderation</h3>
-                          
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width={24}
+                              height={24}
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="lucide lucide-lock w-3 h-3 -ml-0.5"
+                            >
+                              <rect width={18} height={11} x={3} y={11} rx={2} ry={2} />
+                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            Pro
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={logs.message_edits} onChange={() => setLogs({ ...logs, message_edits: !logs.message_edits })} />
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked="false"
+                        className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"
+                      >
+                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
             {/* Content Filter */}
             <div data-tour="content-filter" className="scroll-mt-24 w-full">
@@ -372,7 +460,13 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">When a match is found</label>
                       </div>
                       <div className="space-y-3">
-                          <ActionSelector value={bannedWords.action} onChange={val => setBannedWords({ ...bannedWords, action: val })} />
+                        <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Delete</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Ban</button>
+                        </div>
                         <div className="flex items-center gap-2.5">
                           <span className="text-sm text-neutral-400">Banned for</span>
                           <div className="relative">
@@ -455,50 +549,30 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">Sensitivity</label>
                     </div>
                     <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, minmax(0px, 1fr))" }}>
-                      {['Relaxed', 'Normal', 'Strict'].map((level) => {
-                        const isSelected = antiSpam.sensitivity.toLowerCase() === level.toLowerCase();
-                        let bgClass, borderClass, textClass, barColors;
-                        
-                        if (isSelected) {
-                          borderClass = 'border-blue-500/50';
-                          bgClass = 'bg-blue-500/10';
-                          textClass = 'text-white';
-                          if (level === 'Relaxed') {
-                             barColors = ['bg-blue-400', 'bg-neutral-700', 'bg-neutral-700'];
-                          } else if (level === 'Normal') {
-                             barColors = ['bg-blue-400', 'bg-blue-400', 'bg-neutral-700'];
-                          } else {
-                             barColors = ['bg-blue-400', 'bg-blue-400', 'bg-blue-400'];
-                          }
-                        } else {
-                          borderClass = 'border-neutral-800 hover:border-neutral-700';
-                          bgClass = 'bg-neutral-800/40';
-                          textClass = 'text-neutral-400';
-                          if (level === 'Relaxed') {
-                             barColors = ['bg-neutral-500', 'bg-neutral-700', 'bg-neutral-700'];
-                          } else if (level === 'Normal') {
-                             barColors = ['bg-neutral-500', 'bg-neutral-500', 'bg-neutral-700'];
-                          } else {
-                             barColors = ['bg-neutral-500', 'bg-neutral-500', 'bg-neutral-500'];
-                          }
-                        }
-
-                        return (
-                          <button 
-                            key={level} 
-                            type="button" 
-                            onClick={() => setAntiSpam({ ...antiSpam, sensitivity: level.toLowerCase() })}
-                            className={`rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 ${borderClass} ${bgClass}`}
-                          >
-                            <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                              <span className={`w-1 rounded-full transition-colors ${barColors[0]}`} style={{ height: 7 }} />
-                              <span className={`w-1 rounded-full transition-colors ${barColors[1]}`} style={{ height: "11.5px" }} />
-                              <span className={`w-1 rounded-full transition-colors ${barColors[2]}`} style={{ height: 16 }} />
-                            </span>
-                            <span className={`text-[13px] font-medium leading-none ${textClass}`}>{level}</span>
-                          </button>
-                        );
-                      })}
+                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
+                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
+                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
+                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: "11.5px" }} />
+                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
+                        </span>
+                        <span className="text-[13px] font-medium leading-none text-neutral-400">Relaxed</span>
+                      </button>
+                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-blue-500/50 bg-blue-500/10">
+                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
+                          <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: 7 }} />
+                          <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: "11.5px" }} />
+                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
+                        </span>
+                        <span className="text-[13px] font-medium leading-none text-white">Normal</span>
+                      </button>
+                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
+                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
+                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
+                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: "11.5px" }} />
+                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 16 }} />
+                        </span>
+                        <span className="text-[13px] font-medium leading-none text-neutral-400">Strict</span>
+                      </button>
                     </div>
                   </div>
 
@@ -530,7 +604,13 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">When triggered</label>
                     </div>
                     <div className="space-y-3">
-                      <ActionSelector value={antiSpam.action} onChange={val => setAntiSpam({ ...antiSpam, action: val })} />
+                      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -598,7 +678,13 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">When a link is blocked</label>
                     </div>
                     <div className="space-y-3">
-                      <ActionSelector value={antiLink.action} onChange={val => setAntiLink({ ...antiLink, action: val })} />
+                      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -625,7 +711,8 @@ export default function Moderation({ guildId }) {
           </div>
 
           {/* Right Column - Recent Actions & Warnings */}
-          <div className="flex flex-col gap-4 sticky top-24 h-fit max-h-[calc(100vh-8rem)]">
+          <div className="lg:relative flex flex-col">
+            <div className="flex flex-col gap-4 lg:absolute lg:inset-0">
               {/* Recent Actions */}
               <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col lg:flex-1 lg:min-h-0">
                 <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-neutral-800">
@@ -637,7 +724,7 @@ export default function Moderation({ guildId }) {
                       <path d="m9 7 8 8" />
                       <path d="m21 11-8-8" />
                     </svg>
-                    <span className="text-sm font-semibold text-white">Recent mod activity</span>
+                    <span className="text-sm font-medium text-white">Recent actions</span>
                   </div>
                   <span className="text-xs text-neutral-600 tabular-nums">2 total</span>
                 </div>
@@ -718,6 +805,7 @@ export default function Moderation({ guildId }) {
                     <p className="text-sm text-neutral-600 text-pretty">Enter a user ID to view warnings</p>
                   </div>
                 </div>
+              </div>
             </div>
           </div>
         </div>
@@ -747,7 +835,7 @@ export default function Moderation({ guildId }) {
                       <div className="flex items-center justify-between">
                         <label className="text-sm text-neutral-200">Caps filter</label>
                         <div className="flex items-center gap-3">
-                          <TailwindToggle checked={general.caps_filter_enabled} onChange={() => setGeneral({ ...general, caps_filter_enabled: !general.caps_filter_enabled })} />
+                          <TailwindToggle checked={antiLink.block_invites} onChange={() => setAntiLink({ ...antiLink, block_invites: !antiLink.block_invites })} />
                         </div>
                       </div>
                       <div className="mt-3 pointer-events-none opacity-50">
@@ -829,13 +917,20 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="w-full">
                   <div className="relative">
-                    <CustomSelect options={channelOptions} value={logs.message_logs_channel} onChange={(val) => setLogs({ ...logs, message_logs_channel: val })} placeholder="Select log channel..." />
+                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
+                      <div className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
+                          <path d="m6 9 6 6 6-6" />
+                        </svg>
+                      </div>
+                    </button>
                   </div>
                 </div>
                 <div className="flex gap-5">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={logs.message_edits} onChange={() => setLogs({ ...logs, message_edits: !logs.message_edits })} />
+                      <TailwindToggle checked={general.caps_filter_enabled} onChange={() => setGeneral({ ...general, caps_filter_enabled: !general.caps_filter_enabled })} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil w-3.5 h-3.5 text-neutral-500">
@@ -847,7 +942,7 @@ export default function Moderation({ guildId }) {
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={logs.message_deletes} onChange={() => setLogs({ ...logs, message_deletes: !logs.message_deletes })} />
+                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"><span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" /></button>
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash2 w-3.5 h-3.5 text-neutral-500">
@@ -876,13 +971,20 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="w-full">
                   <div className="relative">
-                    <CustomSelect options={channelOptions} value={logs.member_logs_channel} onChange={(val) => setLogs({ ...logs, member_logs_channel: val })} placeholder="Select log channel..." />
+                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
+                      <div className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
+                          <path d="m6 9 6 6 6-6" />
+                        </svg>
+                      </div>
+                    </button>
                   </div>
                 </div>
                 <div className="flex gap-5">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={logs.member_joins} onChange={() => setLogs({ ...logs, member_joins: !logs.member_joins })} />
+                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"><span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" /></button>
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-in w-3.5 h-3.5 text-neutral-500">
@@ -895,7 +997,7 @@ export default function Moderation({ guildId }) {
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={logs.member_leaves} onChange={() => setLogs({ ...logs, member_leaves: !logs.member_leaves })} />
+                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"><span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" /></button>
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-out w-3.5 h-3.5 text-neutral-500">
@@ -933,12 +1035,19 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="w-full">
                       <div className="relative">
-                        <CustomSelect options={channelOptions} value={logs.voice_logs_channel} onChange={(val) => setLogs({ ...logs, voice_logs_channel: val })} placeholder="Select log channel..." />
+                        <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                          <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
+                          <div className="flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
+                              <path d="m6 9 6 6 6-6" />
+                            </svg>
+                          </div>
+                        </button>
                       </div>
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <TailwindToggle checked={logs.voice_activity} onChange={() => setLogs({ ...logs, voice_activity: !logs.voice_activity })} />
+                        <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"><span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" /></button>
                       </div>
                       <span className="text-xs text-neutral-400">Log Voice Activity</span>
                     </label>
@@ -960,7 +1069,14 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="w-full">
                   <div className="relative">
-                    <CustomSelect options={channelOptions} value={logs.mod_logs_channel} onChange={(val) => setLogs({ ...logs, mod_logs_channel: val })} placeholder="Select log channel..." />
+                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
+                      <div className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
+                          <path d="m6 9 6 6 6-6" />
+                        </svg>
+                      </div>
+                    </button>
                   </div>
                 </div>
                 <p className="text-xs text-neutral-600 leading-relaxed text-pretty">Warns, bans, kicks, timeouts &amp; unbans</p>
