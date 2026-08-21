@@ -255,7 +255,6 @@ export default function Moderation({ guildId }) {
                   </button>
                 </div>
               </div>
-            </div>
 
             {/* AI Image Moderation Card */}
             <div className="relative flex flex-col w-full">
@@ -296,7 +295,6 @@ export default function Moderation({ guildId }) {
                   </div>
                 </div>
               </div>
-            </div>
 
             {/* Content Filter */}
             <div data-tour="content-filter" className="scroll-mt-24 w-full">

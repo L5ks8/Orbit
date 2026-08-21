@@ -4,23 +4,6 @@ import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
 const LOGS_CATEGORIES = [
-    { id: "moderation_action", title: "Moderation Action" },
-    { id: "auto_moderation", title: "Auto Moderation" },
-    { id: "member_banned", title: "Member Banned" },
-    { id: "member_unbanned", title: "Member Unbanned" },
-    { id: "member_kicked", title: "Member Kicked" },
-    { id: "message_deleted", title: "Message Deleted" },
-    { id: "message_edited", title: "Message Edited" },
-    { id: "bulk_message_delete", title: "Bulk Message Delete" },
-    { id: "member_joined", title: "Member Joined" },
-    { id: "member_left", title: "Member Left" },
-    { id: "member_joined_voice", title: "Joined Voice Channel" },
-    { id: "member_left_voice", title: "Left Voice Channel" },
-    { id: "member_moved_voice", title: "Moved Voice Channel" },
-    { id: "voice_mute", title: "Voice Muted" },
-    { id: "voice_unmute", title: "Voice Unmuted" },
-    { id: "voice_deafen", title: "Server Deafened" },
-    { id: "voice_undeafen", title: "Server Undeafened" },
     { id: "role_created", title: "Role Created" },
     { id: "role_deleted", title: "Role Deleted" },
     { id: "role_updated", title: "Role Updated" },
