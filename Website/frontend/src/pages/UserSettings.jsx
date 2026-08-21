@@ -1,10 +1,105 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Check, Plus, ExternalLink, Globe, ChevronDown, Sparkles, Monitor, MapPin } from 'lucide-react';
+import { ArrowLeft, Check, Plus, ExternalLink, Globe, ChevronDown, Sparkles, Monitor, MapPin, Search } from 'lucide-react';
+
+const timezones = [
+  { group: 'PACIFIC', items: [
+    { id: 'Midway', name: 'Midway', offset: 'UTC-11', time: '8:26 PM' },
+    { id: 'Hawaii', name: 'Hawaii', offset: 'UTC-10', time: '9:26 PM' },
+    { id: 'Guam', name: 'Guam', offset: 'UTC+10', time: '5:26 PM' },
+    { id: 'Tahiti', name: 'Tahiti', offset: 'UTC-10', time: '9:26 PM' },
+  ]},
+  { group: 'AMERICAS', items: [
+    { id: 'Alaska', name: 'Alaska', offset: 'UTC-8', time: '11:26 PM' },
+    { id: 'Los_Angeles', name: 'Los Angeles', offset: 'UTC-8', time: '11:26 PM' },
+    { id: 'New_York', name: 'New York', offset: 'UTC-5', time: '2:26 AM' },
+    { id: 'Sao_Paulo', name: 'São Paulo', offset: 'UTC-3', time: '4:26 AM' },
+  ]},
+  { group: 'EUROPE', items: [
+    { id: 'London', name: 'London', offset: 'UTC+0', time: '7:26 AM' },
+    { id: 'Berlin', name: 'Berlin', offset: 'UTC+2', time: '9:26 AM' },
+    { id: 'Paris', name: 'Paris', offset: 'UTC+2', time: '9:26 AM' },
+  ]},
+  { group: 'ASIA', items: [
+    { id: 'Tokyo', name: 'Tokyo', offset: 'UTC+9', time: '4:26 PM' },
+    { id: 'Seoul', name: 'Seoul', offset: 'UTC+9', time: '4:26 PM' },
+    { id: 'Shanghai', name: 'Shanghai', offset: 'UTC+8', time: '3:26 PM' },
+  ]}
+];
+
+const languages = [
+  { id: 'en', flag: '🇺🇸', name: 'English', sub: '' },
+  { id: 'es', flag: '🇪🇸', name: 'Español', sub: 'Spanish' },
+  { id: 'fr', flag: '🇫🇷', name: 'Français', sub: 'French' },
+  { id: 'de', flag: '🇩🇪', name: 'Deutsch', sub: 'German' },
+  { id: 'pt', flag: '🇧🇷', name: 'Português', sub: 'Portuguese' },
+  { id: 'it', flag: '🇮🇹', name: 'Italiano', sub: 'Italian' },
+  { id: 'ja', flag: '🇯🇵', name: '日本語', sub: 'Japanese' },
+  { id: 'ko', flag: '🇰🇷', name: '한국어', sub: 'Korean' },
+  { id: 'zh', flag: '🇨🇳', name: '中文', sub: 'Chinese' },
+  { id: 'ru', flag: '🇷🇺', name: 'Русский', sub: 'Russian' }
+];
+
+const getBrowserOS = () => {
+  if (typeof navigator === 'undefined') return "Unknown on Unknown";
+  const ua = navigator.userAgent;
+  let browser = "Unknown Browser";
+  let os = "Unknown OS";
+  
+  if (ua.indexOf("Firefox") > -1) browser = "Firefox";
+  else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) browser = "Opera";
+  else if (ua.indexOf("Trident") > -1) browser = "Internet Explorer";
+  else if (ua.indexOf("Edge") > -1 || ua.indexOf("Edg") > -1) browser = "Edge";
+  else if (ua.indexOf("Chrome") > -1) browser = "Chrome";
+  else if (ua.indexOf("Safari") > -1) browser = "Safari";
+  
+  if (ua.indexOf("Win") > -1) os = "Windows";
+  else if (ua.indexOf("Mac") > -1) os = "macOS";
+  else if (ua.indexOf("Linux") > -1) os = "Linux";
+  else if (ua.indexOf("Android") > -1) os = "Android";
+  else if (ua.indexOf("like Mac") > -1) os = "iOS";
+  
+  return `${browser} on ${os}`;
+};
 
 export default function UserSettings() {
   const { user } = useAuth();
+  
+  const [activeLang, setActiveLang] = useState(localStorage.getItem('peak_lang') || 'en');
+  const [selectedTz, setSelectedTz] = useState('Auto-detect (Europe/Berlin)');
+  const [showTzDropdown, setShowTzDropdown] = useState(false);
+  const [tzSearch, setTzSearch] = useState('');
+  const [deviceInfo, setDeviceInfo] = useState('');
+  
+  const tzRef = useRef(null);
+
+  useEffect(() => {
+    setDeviceInfo(getBrowserOS());
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tzRef.current && !tzRef.current.contains(event.target)) {
+        setShowTzDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLangChange = (langId) => {
+    setActiveLang(langId);
+    localStorage.setItem('peak_lang', langId);
+  };
+
+  const filteredTz = timezones.map(group => ({
+    ...group,
+    items: group.items.filter(item => 
+      item.name.toLowerCase().includes(tzSearch.toLowerCase()) || 
+      item.offset.toLowerCase().includes(tzSearch.toLowerCase())
+    )
+  })).filter(group => group.items.length > 0);
 
   if (!user) {
     return <div style={{ color: '#fff', padding: '24px' }}>Loading...</div>;
@@ -312,6 +407,9 @@ export default function UserSettings() {
         }
         .us-lang-icon {
           font-size: 18px;
+          width: 24px;
+          display: inline-block;
+          text-align: center;
         }
         .us-lang-info {
           flex: 1;
@@ -378,6 +476,7 @@ export default function UserSettings() {
         }
         .us-tz-body {
           padding: 20px;
+          position: relative;
         }
         .us-tz-dropdown-btn {
           width: 100%;
@@ -404,6 +503,88 @@ export default function UserSettings() {
           margin: 12px 0 0 0;
         }
         
+        /* Timezone Dropdown Overlay */
+        .us-tz-overlay {
+          position: absolute;
+          top: 70px;
+          left: 20px;
+          right: 20px;
+          background-color: #121212;
+          border: 1px solid #262626;
+          border-radius: 12px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+          z-index: 50;
+          max-height: 400px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .us-tz-search-wrap {
+          padding: 12px;
+          border-bottom: 1px solid #262626;
+          position: relative;
+        }
+        .us-tz-search-input {
+          width: 100%;
+          padding: 8px 12px 8px 36px;
+          background-color: transparent;
+          border: 1px solid #262626;
+          border-radius: 8px;
+          color: #fff;
+          font-size: 14px;
+          outline: none;
+          box-sizing: border-box;
+        }
+        .us-tz-search-input:focus {
+          border-color: #404040;
+        }
+        .us-tz-search-icon {
+          position: absolute;
+          left: 22px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #737373;
+        }
+        .us-tz-list {
+          overflow-y: auto;
+          flex: 1;
+        }
+        .us-tz-list-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 16px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          border-bottom: 1px solid #1a1a1a;
+        }
+        .us-tz-list-item:hover {
+          background-color: #1a1a1a;
+        }
+        .us-tz-list-item.active {
+          background-color: rgba(255, 255, 255, 0.03);
+        }
+        .us-tz-item-name {
+          font-size: 14px;
+          font-weight: 500;
+          color: #fff;
+          margin: 0;
+        }
+        .us-tz-item-sub {
+          font-size: 12px;
+          color: #737373;
+          margin: 4px 0 0 0;
+        }
+        .us-tz-group-title {
+          font-size: 11px;
+          font-weight: 600;
+          color: #737373;
+          padding: 8px 16px;
+          background-color: #0a0a0a;
+          margin: 0;
+          text-transform: uppercase;
+        }
+
         /* Security */
         .us-sec-card {
           border: 1px solid #262626;
@@ -587,60 +768,125 @@ export default function UserSettings() {
           <div style={{ marginBottom: '40px' }}>
             <p className="us-desc">Choose your display language. Your region is auto-detected from your browser.</p>
             <div className="us-lang-grid">
-              <button className="us-lang-btn active">
-                <span className="us-lang-icon">🇺🇸</span>
-                <div className="us-lang-info">
-                  <span className="us-lang-name">English</span>
-                </div>
-                <Check size={16} color="#4ade80" />
-              </button>
-              <button className="us-lang-btn">
-                <span className="us-lang-icon">🇪🇸</span>
-                <div className="us-lang-info">
-                  <span className="us-lang-name">Español</span>
-                  <span className="us-lang-sub">Spanish</span>
-                </div>
-              </button>
-              <button className="us-lang-btn">
-                <span className="us-lang-icon">🇫🇷</span>
-                <div className="us-lang-info">
-                  <span className="us-lang-name">Français</span>
-                  <span className="us-lang-sub">French</span>
-                </div>
-              </button>
-              <button className="us-lang-btn">
-                <span className="us-lang-icon">🇩🇪</span>
-                <div className="us-lang-info">
-                  <span className="us-lang-name">Deutsch</span>
-                  <span className="us-lang-sub">German</span>
-                </div>
-              </button>
+              {languages.map(lang => (
+                <button 
+                  key={lang.id} 
+                  className={`us-lang-btn ${activeLang === lang.id ? 'active' : ''}`}
+                  onClick={() => handleLangChange(lang.id)}
+                >
+                  <span className="us-lang-icon">{lang.flag}</span>
+                  <div className="us-lang-info">
+                    <span className="us-lang-name">{lang.name}</span>
+                    {lang.sub && <span className="us-lang-sub">{lang.sub}</span>}
+                  </div>
+                  {activeLang === lang.id && <Check size={16} color="#4ade80" />}
+                </button>
+              ))}
             </div>
           </div>
 
           <div>
             <p className="us-desc">Time zone — auto-detected from your browser, or pick one to override.</p>
-            <div className="us-tz-card">
+            <div className="us-tz-card" ref={tzRef}>
               <div className="us-tz-header">
                 <div className="us-tz-left">
                   <div className="us-tz-icon">
                     <Globe size={16} />
                   </div>
                   <div>
-                    <p className="us-tz-time">9:20 AM <span>UTC+2</span></p>
-                    <p className="us-tz-loc">Europe/Berlin <span>· auto-detected</span></p>
+                    <p className="us-tz-time">
+                      {selectedTz === 'Auto-detect (Europe/Berlin)' ? '9:26 AM' : selectedTz.split(' · ')[2]} 
+                      <span> {selectedTz === 'Auto-detect (Europe/Berlin)' ? 'UTC+2' : selectedTz.split(' · ')[1]}</span>
+                    </p>
+                    <p className="us-tz-loc">
+                      {selectedTz === 'Auto-detect (Europe/Berlin)' ? 'Europe/Berlin' : selectedTz.split(' · ')[0]} 
+                      {selectedTz === 'Auto-detect (Europe/Berlin)' && <span>· auto-detected</span>}
+                    </p>
                   </div>
                 </div>
               </div>
               <div className="us-tz-body">
-                <button className="us-tz-dropdown-btn">
+                <button className="us-tz-dropdown-btn" onClick={() => setShowTzDropdown(!showTzDropdown)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                    <Sparkles size={14} color="#737373" />
-                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Auto-detect (Europe/Berlin)</span>
+                    <Sparkles size={14} color={selectedTz.includes('Auto-detect') ? '#4ade80' : '#737373'} />
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {selectedTz}
+                    </span>
                   </div>
                   <ChevronDown size={16} color="#737373" />
                 </button>
                 <p className="us-tz-note">All dates and times across the dashboard will be shown in this zone.</p>
+                
+                {showTzDropdown && (
+                  <div className="us-tz-overlay">
+                    <div className="us-tz-search-wrap">
+                      <Search size={16} className="us-tz-search-icon" />
+                      <input 
+                        type="text" 
+                        placeholder="Search city or zone..." 
+                        className="us-tz-search-input"
+                        value={tzSearch}
+                        onChange={(e) => setTzSearch(e.target.value)}
+                      />
+                    </div>
+                    <div className="us-tz-list">
+                      
+                      {/* Auto-detect item */}
+                      {(!tzSearch || 'auto-detect'.includes(tzSearch.toLowerCase())) && (
+                        <div 
+                          className={`us-tz-list-item ${selectedTz === 'Auto-detect (Europe/Berlin)' ? 'active' : ''}`}
+                          onClick={() => {
+                            setSelectedTz('Auto-detect (Europe/Berlin)');
+                            setShowTzDropdown(false);
+                          }}
+                        >
+                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80' }}>
+                              <Sparkles size={14} />
+                            </div>
+                            <div>
+                              <p className="us-tz-item-name">Auto-detect</p>
+                              <p className="us-tz-item-sub">Match my device · Europe/Berlin · 9:26 AM</p>
+                            </div>
+                          </div>
+                          {selectedTz === 'Auto-detect (Europe/Berlin)' && <Check size={16} color="#4ade80" />}
+                        </div>
+                      )}
+
+                      {/* Timezone list */}
+                      {filteredTz.map((group) => (
+                        <div key={group.group}>
+                          <p className="us-tz-group-title">{group.group}</p>
+                          {group.items.map(item => {
+                            const label = `${item.name} · ${item.offset} · ${item.time}`;
+                            return (
+                              <div 
+                                key={item.id}
+                                className={`us-tz-list-item ${selectedTz === label ? 'active' : ''}`}
+                                onClick={() => {
+                                  setSelectedTz(label);
+                                  setShowTzDropdown(false);
+                                }}
+                              >
+                                <div>
+                                  <p className="us-tz-item-name">{item.name}</p>
+                                  <p className="us-tz-item-sub">{item.offset} · {item.time}</p>
+                                </div>
+                                {selectedTz === label && <Check size={16} color="#4ade80" />}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                      
+                      {filteredTz.length === 0 && (
+                        <div style={{ padding: '24px', textAlign: 'center', color: '#737373', fontSize: '14px' }}>
+                          No timezones found.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -657,7 +903,7 @@ export default function UserSettings() {
                 </div>
                 <div>
                   <p className="us-sec-title">
-                    Chrome on Windows
+                    {deviceInfo || 'Chrome on Windows'}
                     <span className="us-sec-current">Current</span>
                   </p>
                   <p className="us-sec-loc">
