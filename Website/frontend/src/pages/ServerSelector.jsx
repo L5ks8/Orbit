@@ -9,6 +9,7 @@ export default function ServerSelector() {
   const [fetching, setFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const loadGuilds = () => {
     setFetching(true);
@@ -443,18 +444,90 @@ export default function ServerSelector() {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 16px;
-          background-color: #262626;
+          padding: 8px 12px;
+          background-color: transparent;
+          border: 1px solid #404040;
           color: #fff;
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 500;
-          border-radius: 12px;
+          border-radius: 8px;
           transition: all 0.2s;
         }
         .server-card:hover .action-add-bot {
-          background-color: #fff;
-          color: #000;
+          background-color: #262626;
         }
+        
+        /* Notifications Dropdown */
+        .notifications-dropdown {
+          position: absolute;
+          top: 64px;
+          right: 32px;
+          width: 320px;
+          background-color: #171717;
+          border: 1px solid #262626;
+          border-radius: 12px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+          z-index: 60;
+          overflow: hidden;
+        }
+        .notif-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px;
+          border-bottom: 1px solid #262626;
+        }
+        .notif-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: #fff;
+          margin: 0;
+        }
+        .notif-clear {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          font-weight: 500;
+          color: #737373;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+        .notif-clear:hover {
+          color: #fff;
+        }
+        .notif-body {
+          padding: 48px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        .notif-icon-wrap {
+          width: 56px;
+          height: 56px;
+          background-color: #262626;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #737373;
+          margin-bottom: 20px;
+        }
+        .notif-empty-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: #fff;
+          margin: 0 0 6px 0;
+        }
+        .notif-empty-desc {
+          font-size: 13px;
+          color: #737373;
+          margin: 0;
+        }
+
         
         .divider-row {
           display: flex;
@@ -479,14 +552,18 @@ export default function ServerSelector() {
           <h1 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', margin: 0 }}>Dashboard</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
-          <button className="header-btn" aria-label="Notifications">
+          <button 
+            className="header-btn" 
+            aria-label="Notifications" 
+            onClick={() => { setShowNotifications(!showNotifications); setShowProfileDropdown(false); }}
+          >
             <Bell size={20} />
           </button>
           <button 
             className="header-btn" 
             aria-label="User menu" 
             style={{ padding: '4px 6px' }}
-            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+            onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowNotifications(false); }}
           >
             <img 
               src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64` : '/img/logo.png'} 
@@ -526,6 +603,25 @@ export default function ServerSelector() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
                   Logout
                 </button>
+              </div>
+            </div>
+          )}
+
+          {showNotifications && (
+            <div className="notifications-dropdown">
+              <div className="notif-header">
+                <h3 className="notif-title">Notifications</h3>
+                <button className="notif-clear">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 7 17l-5-5"></path><path d="m22 10-7.5 7.5L13 16"></path></svg>
+                  Clear all
+                </button>
+              </div>
+              <div className="notif-body">
+                <div className="notif-icon-wrap">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                </div>
+                <h4 className="notif-empty-title">You're all caught up</h4>
+                <p className="notif-empty-desc">Milestones, recaps and alerts will show up here.</p>
               </div>
             </div>
           )}
