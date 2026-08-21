@@ -9,7 +9,7 @@ class StatsTracker(commands.Cog):
         self.bot = bot
         self.voice_join_times = {}
 
-    def _increment_stat(self, guild_id: int, stat_name: str, amount: int = 1, user_id: int = None):
+    def _increment_stat(self, guild_id: int, stat_name: str, amount: int = 1, user_id: int = None, channel_id: int = None):
         db = get_db()
         if db is None:
             return
@@ -24,6 +24,10 @@ class StatsTracker(commands.Cog):
                 "date": today_str
             }
         }
+        
+        if channel_id:
+            update_data["$inc"][f"channels.{channel_id}"] = amount
+            
         if user_id:
             update_data["$addToSet"] = {"active_users": user_id}
             
@@ -40,7 +44,21 @@ class StatsTracker(commands.Cog):
     async def on_message(self, message: discord.Message):
         if not message.guild or message.author.bot:
             return
-        self._increment_stat(message.guild.id, "messages", 1, message.author.id)
+            
+        guild_id = message.guild.id
+        self._increment_stat(guild_id, "messages", 1, message.author.id, message.channel.id)
+        
+        if not hasattr(self.bot, 'recent_messages'):
+            self.bot.recent_messages = {}
+            
+        if guild_id not in self.bot.recent_messages:
+            self.bot.recent_messages[guild_id] = []
+            
+        now = time.time()
+        self.bot.recent_messages[guild_id].append(now)
+        
+        cutoff = now - 3900 # 65 minutes
+        self.bot.recent_messages[guild_id] = [ts for ts in self.bot.recent_messages[guild_id] if ts > cutoff]
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

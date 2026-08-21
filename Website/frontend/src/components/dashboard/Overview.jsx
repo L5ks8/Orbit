@@ -14,11 +14,12 @@ export default function Overview({ guildId }) {
   const [channelsRange, setChannelsRange] = useState('7');
   const [activityRange, setActivityRange] = useState('7');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [liveStats, setLiveStats] = useState(null);
 
   const loadData = () => {
-    if (!guildId) return;
+    if (!guildId) return Promise.resolve();
     
-    fetch('/api/guilds')
+    const p1 = fetch('/api/guilds')
       .then(res => res.json())
       .then(data => {
         const guildsArray = Array.isArray(data) ? data : (data.guilds || []);
@@ -27,20 +28,27 @@ export default function Overview({ guildId }) {
       })
       .catch(console.error);
       
-    fetch(`/api/guild_stats/${guildId}?days=365`)
+    const p2 = fetch(`/api/guild_stats/${guildId}?days=365`)
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(console.error);
       
-    fetch(`/api/config/${guildId}`)
+    const p3 = fetch(`/api/guild_stats_live/${guildId}`)
+      .then(res => res.json())
+      .then(data => setLiveStats(data))
+      .catch(console.error);
+      
+    const p4 = fetch(`/api/config/${guildId}`)
       .then(res => res.json())
       .then(data => setConfig(data?.config || null))
       .catch(console.error);
 
-    fetch(`/api/mod_activity/${guildId}`)
+    const p5 = fetch(`/api/mod_activity/${guildId}`)
       .then(res => res.json())
       .then(data => setModActivity(data || []))
       .catch(console.error);
+      
+    return Promise.all([p1, p2, p3, p4, p5]);
   };
 
   useEffect(() => {
@@ -50,9 +58,9 @@ export default function Overview({ guildId }) {
   }, [guildId]);
 
   const handleRefreshClick = () => {
+    if (isRefreshing) return;
     setIsRefreshing(true);
-    loadData();
-    setTimeout(() => setIsRefreshing(false), 500);
+    loadData().finally(() => setIsRefreshing(false));
   };
 
   // Process History Data for Charts
@@ -80,14 +88,19 @@ export default function Overview({ guildId }) {
   let displayedMessagesCount = stats?.today_messages || 0;
   
   if (messagesRange === '60m') {
-    const now = new Date();
-    displayedMessagesCount = 0; // Like in screenshot
-    for (let i = 59; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 60000);
-      messagesChartData.push({
-        name: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
-        messages: 0
-      });
+    if (liveStats && liveStats.live_60m) {
+      messagesChartData = liveStats.live_60m;
+      displayedMessagesCount = liveStats.total_60m || 0;
+    } else {
+      const now = new Date();
+      displayedMessagesCount = 0; 
+      for (let i = 59; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 60000);
+        messagesChartData.push({
+          name: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
+          messages: 0
+        });
+      }
     }
   } else if (messagesRange === '48h') {
     const now = new Date();
@@ -346,7 +359,7 @@ export default function Overview({ guildId }) {
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Change</span>
               </div>
               <div className="divide-y divide-neutral-800/40">
-                {(stats?.top_channels || [
+                {(stats?.top_channels?.length > 0 ? stats.top_channels : [
                   { name: 'media', messages: 34, percentage: 51, change: 34 },
                   { name: 'chat', messages: 33, percentage: 49, change: 33 }
                 ]).map((channel, i) => {

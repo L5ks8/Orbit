@@ -223,6 +223,7 @@ class GuildsMixin:
         
         stats = []
         today_doc = None
+        channels_agg = {}
         if db is not None:
             doc_ids = []
             for i in range(days - 1, -1, -1):
@@ -243,6 +244,9 @@ class GuildsMixin:
                         "leaves": doc.get("leaves", 0),
                         "messages": doc.get("messages", 0)
                     })
+                    if "channels" in doc:
+                        for cid, count in doc["channels"].items():
+                            channels_agg[cid] = channels_agg.get(cid, 0) + count
                 else:
                     stats.append({
                         "date": date_str,
@@ -258,6 +262,18 @@ class GuildsMixin:
         ticket_cfg = load_ticket_config(guild_id)
         open_tickets = len(ticket_cfg.get("active_tickets", {}))
         
+        total_msgs = sum(channels_agg.values()) if channels_agg else 1
+        top_channels = []
+        for cid, count in sorted(channels_agg.items(), key=lambda x: x[1], reverse=True)[:5]:
+            ch = guild.get_channel(int(cid))
+            if ch:
+                top_channels.append({
+                    "name": ch.name,
+                    "messages": count,
+                    "percentage": round((count / total_msgs) * 100),
+                    "change": count
+                })
+        
         return web.json_response({
             "total_members": guild.member_count,
             "today_joins": today_doc.get("joins", 0) if today_doc else 0,
@@ -266,8 +282,45 @@ class GuildsMixin:
             "today_active_users": len(today_doc.get("active_users", [])) if today_doc and "active_users" in today_doc else 0,
             "today_voice_minutes": today_doc.get("voice_minutes", 0) if today_doc else 0,
             "open_tickets": open_tickets,
-            "history": stats
+            "history": stats,
+            "top_channels": top_channels
         })
+
+    async def api_guild_stats_live(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        recent = []
+        if hasattr(self.bot, 'recent_messages'):
+            recent = self.bot.recent_messages.get(guild_id, [])
+            
+        import time
+        now = time.time()
+        
+        minutes = [0] * 60
+        for ts in recent:
+            diff_sec = now - ts
+            if 0 <= diff_sec < 3600:
+                minute_idx = 59 - int(diff_sec / 60)
+                if 0 <= minute_idx < 60:
+                    minutes[minute_idx] += 1
+                
+        from datetime import datetime, timedelta, timezone
+        result = []
+        for i in range(60):
+            d = datetime.now(timezone.utc) - timedelta(minutes=59 - i)
+            result.append({
+                "name": f"{d.hour:02d}:{d.minute:02d}",
+                "messages": minutes[i]
+            })
+            
+        return web.json_response({"live_60m": result, "total_60m": sum(minutes)})
 
     async def api_mod_activity(self, request: web.Request):
         guild_id_str = request.match_info.get("id")

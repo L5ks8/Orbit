@@ -110,6 +110,7 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_get("/api/guilds", dashboard.api_guilds)
     app.router.add_get("/api/config/{id}", dashboard.api_get_config)
     app.router.add_get("/api/guild_stats/{id}", dashboard.api_guild_stats)
+    app.router.add_get("/api/guild_stats_live/{id}", dashboard.api_guild_stats_live)
     app.router.add_get("/api/mod_activity/{id}", dashboard.api_mod_activity)
     app.router.add_post("/api/config/{id}", dashboard.api_post_config)
     app.router.add_post("/api/action/{id}/setup_serverstats", dashboard.api_action_setup_serverstats)
