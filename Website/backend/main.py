@@ -60,6 +60,12 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
             
         member = bot_guild.get_member(int(user["id"]))
         if not member:
+            try:
+                member = await bot_guild.fetch_member(int(user["id"]))
+            except Exception:
+                pass
+                
+        if not member:
             return None, None
             
         perms = member.guild_permissions
