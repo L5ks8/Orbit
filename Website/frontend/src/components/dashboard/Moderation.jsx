@@ -5,6 +5,27 @@ export default function Moderation({ guildId }) {
     <div className="moderation-container w-full h-full">
       <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
         <div>
+          <div className="fixed bottom-4 right-4 z-50">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm bg-red-50/90 dark:bg-red-500/20 text-red-700 dark:text-red-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-alert-circle w-4 h-4"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" x2="12" y1="8" y2="12" />
+                <line x1="12" x2="12.01" y1="16" y2="16" />
+              </svg>
+              <span className="text-sm">These changes require Pro</span>
+            </div>
+          </div>
           <div data-tour="feature-header" className="scroll-mt-24">
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -21,9 +42,9 @@ export default function Moderation({ guildId }) {
                     strokeLinejoin="round"
                     className="lucide lucide-shield-alert w-5 h-5"
                   >
-                    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
-                    <path d="M12 8v4"></path>
-                    <path d="M12 16h.01"></path>
+                    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                    <path d="M12 8v4" />
+                    <path d="M12 16h.01" />
                   </svg>
                 </span>
                 <h1 className="text-base font-medium text-white truncate">
@@ -41,7 +62,7 @@ export default function Moderation({ guildId }) {
                   tabIndex="0"
                   style={{ cursor: "default" }}
                 >
-                  <div className="flex flex-col flex-1">
+                  <div className="pointer-events-none select-none flex flex-col flex-1">
                     <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] ">
                       <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -58,11 +79,11 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-sparkles w-4 h-4"
                             >
-                              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
-                              <path d="M5 3v4"></path>
-                              <path d="M19 17v4"></path>
-                              <path d="M3 5h4"></path>
-                              <path d="M17 19h4"></path>
+                              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                              <path d="M5 3v4" />
+                              <path d="M19 17v4" />
+                              <path d="M3 5h4" />
+                              <path d="M17 19h4" />
                             </svg>
                           </span>
                           <span className="text-sm font-medium text-white truncate">
@@ -82,7 +103,7 @@ export default function Moderation({ guildId }) {
                               className="lucide lucide-crown shrink-0 -ml-px opacity-90"
                               aria-hidden="true"
                             >
-                              <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path>
+                              <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
                             </svg>
                             Pro
                           </span>
@@ -127,8 +148,8 @@ export default function Moderation({ guildId }) {
                               y="11"
                               rx="2"
                               ry="2"
-                            ></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                           </svg>
                         </div>
                         <p className="text-sm font-semibold text-white mb-3 text-balance">
@@ -167,7 +188,7 @@ export default function Moderation({ guildId }) {
                   tabIndex="0"
                   style={{ cursor: "default" }}
                 >
-                  <div className="flex flex-col flex-1">
+                  <div className="pointer-events-none select-none flex flex-col flex-1">
                     <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                       <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3 min-w-0">
@@ -184,12 +205,12 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-scan-eye w-4 h-4"
                             >
-                              <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
-                              <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
-                              <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
-                              <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
-                              <circle cx="12" cy="12" r="1"></circle>
-                              <path d="M5 12s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5"></path>
+                              <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                              <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                              <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                              <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                              <circle cx="12" cy="12" r="1" />
+                              <path d="M5 12s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5" />
                             </svg>
                           </div>
                           <div className="min-w-0">
@@ -217,8 +238,8 @@ export default function Moderation({ guildId }) {
                                     y="11"
                                     rx="2"
                                     ry="2"
-                                  ></rect>
-                                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                  />
+                                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                 </svg>
                                 Pro
                               </span>
@@ -256,7 +277,7 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-filter w-4 h-4"
                           >
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
                           </svg>
                         </span>
                         <span className="text-sm font-medium text-white truncate">
@@ -432,7 +453,7 @@ export default function Moderation({ guildId }) {
                             <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800 ">
                               <button
                                 type="button"
-                                className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm"
+                                className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300"
                               >
                                 Delete
                               </button>
@@ -456,10 +477,37 @@ export default function Moderation({ guildId }) {
                               </button>
                               <button
                                 type="button"
-                                className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300"
+                                className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm"
                               >
                                 Ban
                               </button>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-sm text-neutral-400">
+                                Banned for
+                              </span>
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1.5 h-10 sm:h-8 pl-3 pr-2 rounded-lg bg-neutral-800 border border-neutral-700 hover:border-neutral-600 text-sm text-white transition-[color,border-color,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                                >
+                                  Permanent
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="lucide lucide-chevron-down w-3.5 h-3.5 text-neutral-500 transition-transform duration-200 ease-out "
+                                  >
+                                    <path d="m6 9 6 6 6-6" />
+                                  </svg>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -486,7 +534,7 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-chevron-down w-4 h-4 transition-transform duration-200 ease-out "
                             >
-                              <path d="m6 9 6 6 6-6"></path>
+                              <path d="m6 9 6 6 6-6" />
                             </svg>
                           </span>
                         </button>
@@ -534,7 +582,7 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-zap w-4 h-4"
                           >
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                           </svg>
                         </span>
                         <span className="text-sm font-medium text-white truncate">
@@ -568,7 +616,7 @@ export default function Moderation({ guildId }) {
                           strokeLinejoin="round"
                           className="lucide lucide-zap w-4 h-4 text-blue-400 flex-shrink-0"
                         >
-                          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                         </svg>
                         <p className="text-sm text-neutral-200 leading-snug text-pretty">
                           Catches a member sending{" "}
@@ -681,7 +729,7 @@ export default function Moderation({ guildId }) {
                             <input
                               min="2"
                               max="20"
-                              autocomplete="off"
+                              autoComplete="off"
                               className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&amp;::-webkit-outer-spin-button]:appearance-none [&amp;::-webkit-inner-spin-button]:appearance-none"
                               type="number"
                               value="5"
@@ -701,7 +749,7 @@ export default function Moderation({ guildId }) {
                             <input
                               min="1"
                               max="60"
-                              autocomplete="off"
+                              autoComplete="off"
                               className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&amp;::-webkit-outer-spin-button]:appearance-none [&amp;::-webkit-inner-spin-button]:appearance-none"
                               type="number"
                               value="5"
@@ -776,9 +824,9 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-link2 w-4 h-4"
                           >
-                            <path d="M9 17H7A5 5 0 0 1 7 7h2"></path>
-                            <path d="M15 7h2a5 5 0 1 1 0 10h-2"></path>
-                            <line x1="8" x2="16" y1="12" y2="12"></line>
+                            <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+                            <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
+                            <line x1="8" x2="16" y1="12" y2="12" />
                           </svg>
                         </span>
                         <span className="text-sm font-medium text-white truncate">
@@ -919,7 +967,7 @@ export default function Moderation({ guildId }) {
                             <input
                               placeholder="youtube.com, twitter.com..."
                               title=""
-                              autocomplete="off"
+                              autoComplete="off"
                               className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5"
                               value=""
                             />
@@ -935,7 +983,7 @@ export default function Moderation({ guildId }) {
                             <input
                               placeholder="spam-site.com..."
                               title=""
-                              autocomplete="off"
+                              autoComplete="off"
                               className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5"
                               value=""
                             />
@@ -963,11 +1011,11 @@ export default function Moderation({ guildId }) {
                           strokeLinejoin="round"
                           className="lucide lucide-gavel w-4 h-4 text-neutral-400"
                         >
-                          <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"></path>
-                          <path d="m16 16 6-6"></path>
-                          <path d="m8 8 6-6"></path>
-                          <path d="m9 7 8 8"></path>
-                          <path d="m21 11-8-8"></path>
+                          <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8" />
+                          <path d="m16 16 6-6" />
+                          <path d="m8 8 6-6" />
+                          <path d="m9 7 8 8" />
+                          <path d="m21 11-8-8" />
                         </svg>
                         <span className="text-sm font-medium text-white">
                           Recent actions
@@ -993,11 +1041,11 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-gavel w-3.5 h-3.5"
                             >
-                              <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"></path>
-                              <path d="m16 16 6-6"></path>
-                              <path d="m8 8 6-6"></path>
-                              <path d="m9 7 8 8"></path>
-                              <path d="m21 11-8-8"></path>
+                              <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8" />
+                              <path d="m16 16 6-6" />
+                              <path d="m8 8 6-6" />
+                              <path d="m9 7 8 8" />
+                              <path d="m21 11-8-8" />
                             </svg>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1014,7 +1062,7 @@ export default function Moderation({ guildId }) {
                             </p>
                           </div>
                           <span className="text-[10px] text-neutral-600 tabular-nums flex-shrink-0 mt-1.5">
-                            2h ago
+                            3h ago
                           </span>
                         </div>
                         <div className="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
@@ -1031,9 +1079,9 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-volume-x w-3.5 h-3.5"
                             >
-                              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                              <line x1="22" x2="16" y1="9" y2="15"></line>
-                              <line x1="16" x2="22" y1="9" y2="15"></line>
+                              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                              <line x1="22" x2="16" y1="9" y2="15" />
+                              <line x1="16" x2="22" y1="9" y2="15" />
                             </svg>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1050,7 +1098,7 @@ export default function Moderation({ guildId }) {
                             </p>
                           </div>
                           <span className="text-[10px] text-neutral-600 tabular-nums flex-shrink-0 mt-1.5">
-                            2h ago
+                            3h ago
                           </span>
                         </div>
                       </div>
@@ -1070,9 +1118,9 @@ export default function Moderation({ guildId }) {
                         strokeLinejoin="round"
                         className="lucide lucide-alert-triangle w-4 h-4 text-amber-400"
                       >
-                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-                        <path d="M12 9v4"></path>
-                        <path d="M12 17h.01"></path>
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                        <path d="M12 9v4" />
+                        <path d="M12 17h.01" />
                       </svg>
                       <span className="text-sm font-medium text-white">
                         Warnings
@@ -1095,12 +1143,12 @@ export default function Moderation({ guildId }) {
                                 strokeLinejoin="round"
                                 className="lucide lucide-search w-3.5 h-3.5"
                               >
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.3-4.3"></path>
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.3-4.3" />
                               </svg>
                             </div>
                             <input
-                              autocomplete="off"
+                              autoComplete="off"
                               title=""
                               className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 pl-11   "
                               placeholder="Discord user ID..."
@@ -1127,8 +1175,8 @@ export default function Moderation({ guildId }) {
                           strokeLinejoin="round"
                           className="lucide lucide-search w-6 h-6 text-neutral-800 mx-auto mb-3"
                         >
-                          <circle cx="11" cy="11" r="8"></circle>
-                          <path d="m21 21-4.3-4.3"></path>
+                          <circle cx="11" cy="11" r="8" />
+                          <path d="m21 21-4.3-4.3" />
                         </svg>
                         <p className="text-sm text-neutral-600 text-pretty">
                           Enter a user ID to view warnings
@@ -1161,8 +1209,8 @@ export default function Moderation({ guildId }) {
                       strokeLinejoin="round"
                       className="lucide lucide-settings w-4 h-4 text-neutral-400"
                     >
-                      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                      <circle cx="12" cy="12" r="3" />
                     </svg>
                     <span className="text-sm font-medium text-white">
                       General settings
@@ -1195,7 +1243,7 @@ export default function Moderation({ guildId }) {
                                 strokeLinejoin="round"
                                 className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
                               >
-                                <path d="m6 9 6 6 6-6"></path>
+                                <path d="m6 9 6 6 6-6" />
                               </svg>
                             </div>
                           </button>
@@ -1209,7 +1257,7 @@ export default function Moderation({ guildId }) {
                         tabIndex="0"
                         style={{ cursor: "default" }}
                       >
-                        <div className="flex flex-col flex-1">
+                        <div className="pointer-events-none select-none flex flex-col flex-1">
                           <div className="flex items-center justify-between">
                             <label className="text-sm text-neutral-200">
                               Caps filter
@@ -1230,8 +1278,8 @@ export default function Moderation({ guildId }) {
                               <input
                                 min="50"
                                 max="100"
-                                disabled
-                                autocomplete="off"
+                                disabled=""
+                                autoComplete="off"
                                 className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&amp;::-webkit-outer-spin-button]:appearance-none [&amp;::-webkit-inner-spin-button]:appearance-none"
                                 type="number"
                                 value="70"
@@ -1252,7 +1300,7 @@ export default function Moderation({ guildId }) {
                         <input
                           min="0"
                           max="50"
-                          autocomplete="off"
+                          autoComplete="off"
                           className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&amp;::-webkit-outer-spin-button]:appearance-none [&amp;::-webkit-inner-spin-button]:appearance-none"
                           type="number"
                           value="5"
@@ -1279,7 +1327,7 @@ export default function Moderation({ guildId }) {
                         strokeLinejoin="round"
                         className="lucide lucide-shield w-4 h-4 text-neutral-400"
                       >
-                        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+                        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
                       </svg>
                       <span className="text-sm font-medium text-white">
                         Exemptions
@@ -1338,7 +1386,7 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform "
                             >
-                              <path d="m6 9 6 6 6-6"></path>
+                              <path d="m6 9 6 6 6-6" />
                             </svg>
                           </button>
                         </div>
@@ -1371,7 +1419,7 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform "
                             >
-                              <path d="m6 9 6 6 6-6"></path>
+                              <path d="m6 9 6 6 6-6" />
                             </svg>
                           </button>
                         </div>
@@ -1394,7 +1442,7 @@ export default function Moderation({ guildId }) {
                     strokeLinejoin="round"
                     className="lucide lucide-message-square w-4 h-4 text-neutral-400"
                   >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
                   <span className="text-sm font-medium text-white">
                     Logging
@@ -1415,7 +1463,7 @@ export default function Moderation({ guildId }) {
                         strokeLinejoin="round"
                         className="lucide lucide-message-square w-3.5 h-3.5 text-blue-400"
                       >
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                       </svg>
                       <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                         Message Logs
@@ -1443,7 +1491,7 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
                             >
-                              <path d="m6 9 6 6 6-6"></path>
+                              <path d="m6 9 6 6 6-6" />
                             </svg>
                           </div>
                         </button>
@@ -1474,8 +1522,8 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-pencil w-3.5 h-3.5 text-neutral-500"
                           >
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
-                            <path d="m15 5 4 4"></path>
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                            <path d="m15 5 4 4" />
                           </svg>
                           Edits
                         </span>
@@ -1504,11 +1552,11 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-trash2 w-3.5 h-3.5 text-neutral-500"
                           >
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                            <line x1="10" x2="10" y1="11" y2="17"></line>
-                            <line x1="14" x2="14" y1="11" y2="17"></line>
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                            <line x1="10" x2="10" y1="11" y2="17" />
+                            <line x1="14" x2="14" y1="11" y2="17" />
                           </svg>
                           Deletes
                         </span>
@@ -1529,10 +1577,10 @@ export default function Moderation({ guildId }) {
                         strokeLinejoin="round"
                         className="lucide lucide-users w-3.5 h-3.5 text-green-400"
                       >
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                       </svg>
                       <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                         Member Logs
@@ -1560,7 +1608,7 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
                             >
-                              <path d="m6 9 6 6 6-6"></path>
+                              <path d="m6 9 6 6 6-6" />
                             </svg>
                           </div>
                         </button>
@@ -1591,9 +1639,9 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-log-in w-3.5 h-3.5 text-neutral-500"
                           >
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                            <polyline points="10 17 15 12 10 7"></polyline>
-                            <line x1="15" x2="3" y1="12" y2="12"></line>
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                            <polyline points="10 17 15 12 10 7" />
+                            <line x1="15" x2="3" y1="12" y2="12" />
                           </svg>
                           Joins
                         </span>
@@ -1622,9 +1670,9 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-log-out w-3.5 h-3.5 text-neutral-500"
                           >
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" x2="9" y1="12" y2="12"></line>
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" x2="9" y1="12" y2="12" />
                           </svg>
                           Leaves
                         </span>
@@ -1637,7 +1685,7 @@ export default function Moderation({ guildId }) {
                     tabIndex="0"
                     style={{ cursor: "default" }}
                   >
-                    <div className="flex flex-col flex-1">
+                    <div className="pointer-events-none select-none flex flex-col flex-1">
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
                           <svg
@@ -1652,9 +1700,9 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-mic w-3.5 h-3.5 text-purple-400"
                           >
-                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                            <line x1="12" x2="12" y1="19" y2="22"></line>
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" x2="12" y1="19" y2="22" />
                           </svg>
                           <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                             Voice Logs
@@ -1673,11 +1721,11 @@ export default function Moderation({ guildId }) {
                               className="lucide lucide-sparkles shrink-0 -ml-px opacity-90"
                               aria-hidden="true"
                             >
-                              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
-                              <path d="M5 3v4"></path>
-                              <path d="M19 17v4"></path>
-                              <path d="M3 5h4"></path>
-                              <path d="M17 19h4"></path>
+                              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                              <path d="M5 3v4" />
+                              <path d="M19 17v4" />
+                              <path d="M3 5h4" />
+                              <path d="M17 19h4" />
                             </svg>
                             Starter
                           </span>
@@ -1704,7 +1752,7 @@ export default function Moderation({ guildId }) {
                                   strokeLinejoin="round"
                                   className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
                                 >
-                                  <path d="m6 9 6 6 6-6"></path>
+                                  <path d="m6 9 6 6 6-6" />
                                 </svg>
                               </div>
                             </button>
@@ -1742,11 +1790,11 @@ export default function Moderation({ guildId }) {
                         strokeLinejoin="round"
                         className="lucide lucide-gavel w-3.5 h-3.5 text-red-400"
                       >
-                        <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"></path>
-                        <path d="m16 16 6-6"></path>
-                        <path d="m8 8 6-6"></path>
-                        <path d="m9 7 8 8"></path>
-                        <path d="m21 11-8-8"></path>
+                        <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8" />
+                        <path d="m16 16 6-6" />
+                        <path d="m8 8 6-6" />
+                        <path d="m9 7 8 8" />
+                        <path d="m21 11-8-8" />
                       </svg>
                       <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                         Mod Action Logs
@@ -1774,7 +1822,7 @@ export default function Moderation({ guildId }) {
                               strokeLinejoin="round"
                               className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
                             >
-                              <path d="m6 9 6 6 6-6"></path>
+                              <path d="m6 9 6 6 6-6" />
                             </svg>
                           </div>
                         </button>
@@ -1799,10 +1847,10 @@ export default function Moderation({ guildId }) {
                       strokeLinejoin="round"
                       className="lucide lucide-eye-off w-3.5 h-3.5 text-neutral-500"
                     >
-                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
-                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
-                      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
-                      <line x1="2" x2="22" y1="2" y2="22"></line>
+                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                      <line x1="2" x2="22" y1="2" y2="22" />
                     </svg>
                     <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                       Ignored Channels
@@ -1832,62 +1880,10 @@ export default function Moderation({ guildId }) {
                             strokeLinejoin="round"
                             className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform "
                           >
-                            <path d="m6 9 6 6 6-6"></path>
+                            <path d="m6 9 6 6 6-6" />
                           </svg>
                         </button>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-4 min-w-0">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-wand-2 w-3.5 h-3.5 text-neutral-500">
-                      <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"></path>
-                      <path d="m14 7 3 3"></path>
-                      <path d="M5 6v4"></path>
-                      <path d="M19 14v4"></path>
-                      <path d="M10 2v2"></path>
-                      <path d="M7 8H3"></path>
-                      <path d="M21 16h-4"></path>
-                      <path d="M11 3H9"></path>
-                    </svg>
-                    <span className="text-xs font-semibold text-white uppercase tracking-wider">Recent actions</span>
-                  </div>
-                  <span className="text-[11px] font-medium text-neutral-500">2 total</span>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-3 p-3 bg-neutral-900 border border-neutral-800 rounded-xl hover:bg-neutral-800/80 transition-colors">
-                    <div className="grid place-items-center w-8 h-8 rounded-lg bg-neutral-800 shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/></svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm font-semibold text-white truncate">Orbit#7034</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 font-semibold tracking-wide">UNTIMEOUT</span>
-                        </div>
-                        <span className="text-[11px] text-neutral-500 shrink-0">3h ago</span>
-                      </div>
-                      <p className="text-xs text-neutral-400 truncate">Removed via timeout quick-action</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 p-3 bg-neutral-900 border border-neutral-800 rounded-xl hover:bg-neutral-800/80 transition-colors">
-                    <div className="grid place-items-center w-8 h-8 rounded-lg bg-neutral-800 shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm font-semibold text-white truncate">Orbit#7034</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-semibold tracking-wide border border-amber-500/20">TIMEOUT</span>
-                        </div>
-                        <span className="text-[11px] text-neutral-500 shrink-0">3h ago</span>
-                      </div>
-                      <p className="text-xs text-neutral-400 truncate">No reason provided</p>
                     </div>
                   </div>
                 </div>
