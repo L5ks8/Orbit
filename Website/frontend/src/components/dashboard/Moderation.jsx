@@ -53,10 +53,10 @@ export default function Moderation({ guildId }) {
       </div>
       <div className="mt-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 lg:items-stretch min-w-0">
-          <div className="flex flex-col gap-4 min-w-0 scroll-mt-24">
+          <div className="flex flex-col gap-4 min-w-0 scroll-mt-24 w-full">
             {/* AI Moderation Card */}
             <div
-              className="relative flex flex-col"
+              className="relative flex flex-col w-full"
               role="button"
               tabIndex={0}
               style={{ cursor: "default" }}
@@ -165,7 +165,7 @@ export default function Moderation({ guildId }) {
 
             {/* AI Image Moderation Card */}
             <div
-              className="relative flex flex-col"
+              className="relative flex flex-col w-full"
               role="button"
               tabIndex={0}
               style={{ cursor: "default" }}
@@ -235,7 +235,7 @@ export default function Moderation({ guildId }) {
             </div>
 
             {/* Content Filter */}
-            <div data-tour="content-filter" className="scroll-mt-24">
+            <div data-tour="content-filter" className="scroll-mt-24 w-full">
               <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                 <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -676,7 +676,7 @@ export default function Moderation({ guildId }) {
         <div data-tour="moderation-actions" className="mt-5 pt-5 border-t border-neutral-800 space-y-4 scroll-mt-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* General Settings */}
-            <div data-tour="moderation-log" className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] scroll-mt-24">
+            <div data-tour="moderation-log" className="w-full bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] scroll-mt-24">
               <div className="flex items-center gap-2 px-4 sm:px-5 py-3 border-b border-neutral-800">
                 <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings w-4 h-4 text-neutral-400">
                   <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
