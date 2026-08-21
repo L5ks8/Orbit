@@ -50,11 +50,13 @@ export default function ServerSelector() {
     g.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Split into active and inactive. 
-  // A guild is active if bot_in_server is true or isActive is true.
-  // Otherwise it's inactive (bot not added yet).
-  const activeGuilds = filteredGuilds.filter(g => g.bot_in_server === true || g.isActive === true);
-  const inactiveGuilds = filteredGuilds.filter(g => !activeGuilds.includes(g) && g.owner); // Only show owned inactive servers
+  // A guild is active if bot_in_server is explicitly NOT false (handles missing fields as active)
+  // or if isActive is explicitly NOT false.
+  const activeGuilds = filteredGuilds.filter(g => g.bot_in_server !== false && g.isActive !== false);
+  
+  // A guild is inactive if bot_in_server is explicitly false, or isActive is explicitly false.
+  // We only show inactive servers where the user is the owner.
+  const inactiveGuilds = filteredGuilds.filter(g => (g.bot_in_server === false || g.isActive === false) && g.owner);
 
   return (
     <div className="selector-page">
