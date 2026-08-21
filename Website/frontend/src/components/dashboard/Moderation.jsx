@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Moderation({ guildId }) {
   return (
-    <div className="max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 w-full">
+    <div className="pb-overview-container">
       <div className="fixed bottom-4 right-4 z-50">
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm bg-red-50/90 dark:bg-red-500/20 text-red-700 dark:text-red-400">
           <svg
@@ -125,7 +125,7 @@ export default function Moderation({ guildId }) {
                   </div>
                   <button
                     type="button"
-                    className="w-full px-5 py-9 text-center group rounded-2xl transition-[background-color] hover:bg-white/[0.015] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                    className="block w-full px-5 py-9 text-center group rounded-2xl transition-[background-color] hover:bg-white/[0.015] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                   >
                     <div className="mx-auto w-11 h-11 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-[transform,background-color] group-hover:bg-violet-500/15 group-active:scale-[0.96]">
                       <svg
