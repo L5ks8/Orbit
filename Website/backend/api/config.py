@@ -162,6 +162,8 @@ class ConfigMixin:
                     "action": automod_cfg.get("banned_words", {}).get("action", "warn"),
                     "timeout_duration_min": automod_cfg.get("banned_words", {}).get("timeout_duration_min", 5),
                     "words": automod_cfg.get("banned_words", {}).get("words", []),
+                    "allowed_words": automod_cfg.get("banned_words", {}).get("allowed_words", []),
+                    "filter_level": automod_cfg.get("banned_words", {}).get("filter_level", "relaxed"),
                     "exempt_channels": automod_cfg.get("banned_words", {}).get("exempt_channels", []),
                     "exempt_roles": automod_cfg.get("banned_words", {}).get("exempt_roles", [])
                 },
@@ -222,6 +224,15 @@ class ConfigMixin:
                     "enabled": automod_cfg.get("ai_automod", {}).get("enabled", False),
                     "min_words": automod_cfg.get("ai_automod", {}).get("min_words", 3),
                     "action": automod_cfg.get("ai_automod", {}).get("action", "delete")
+                },
+                "ai_image": {
+                    "enabled": automod_cfg.get("ai_image", {}).get("enabled", False),
+                    "action": automod_cfg.get("ai_image", {}).get("action", "delete")
+                },
+                "anti_zalgo": {
+                    "enabled": automod_cfg.get("anti_zalgo", {}).get("enabled", False),
+                    "action": automod_cfg.get("anti_zalgo", {}).get("action", "warn"),
+                    "timeout_duration_min": automod_cfg.get("anti_zalgo", {}).get("timeout_duration_min", 5)
                 }
             },
             "verify": {
@@ -527,7 +538,11 @@ class ConfigMixin:
                                 else:
                                     automod_cfg[key][field_name] = raw
 
-                save_submodule("banned_words", {}, [{"name": "words", "type": list, "default": []}])
+                save_submodule("banned_words", {}, [
+                    {"name": "words", "type": list, "default": []},
+                    {"name": "allowed_words", "type": list, "default": []},
+                    {"name": "filter_level", "type": str, "default": "relaxed"}
+                ])
                 save_submodule("anti_spam", {}, [
                     {"name": "max_messages", "type": int, "default": 5},
                     {"name": "time_window_sec", "type": int, "default": 3}
@@ -538,6 +553,8 @@ class ConfigMixin:
                 save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
                 save_submodule("anti_bot", {"action": "kick"}, [])
                 save_submodule("ai_automod", {"action": "delete"}, [{"name": "min_words", "type": int, "default": 3}])
+                save_submodule("ai_image", {"action": "delete"}, [])
+                save_submodule("anti_zalgo", {"action": "warn"}, [])
 
                 if "anti_alt" not in automod_cfg:
                     automod_cfg["anti_alt"] = {}

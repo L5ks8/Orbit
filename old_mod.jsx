@@ -48,22 +48,17 @@ export default function Moderation({ guildId }) {
 
   // States
   const [aiAutomodEnabled, setAiAutomodEnabled] = useState(false);
-  const [aiImageEnabled, setAiImageEnabled] = useState(false);
-  const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, words: [], allowed_words: [], filter_level: 'relaxed' });
-  const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', timeout_duration_min: 5 });
-  const [antiLink, setAntiLink] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, blocked_domains: [] });
-  const [antiInvites, setAntiInvites] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5 });
-  const [mentionSpam, setMentionSpam] = useState({ enabled: false, max_mentions: 5, action: 'timeout', timeout_duration_min: 5 });
-  const [antiZalgo, setAntiZalgo] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5 });
-  const [antiCaps, setAntiCaps] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5 });
-  
-  const [general, setGeneral] = useState({ log_channel: '' });
+  const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', words: [], exempt_words: [], level: 'relaxed' });
+  const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', sensitivity: 'normal' });
+  const [antiLink, setAntiLink] = useState({ enabled: false, block_invites: true, allow_media: true, allow_gifs: true, action: 'delete', always_allowed: [], always_blocked: [] });
+  const [general, setGeneral] = useState({ log_channel: '', caps_filter_enabled: false, max_mentions: 5 });
   const [exemptions, setExemptions] = useState({ roles: [], channels: [] });
-  
-  const [recentActions, setRecentActions] = useState([]);
-  const [warnSearchId, setWarnSearchId] = useState('');
-  const [warnSearchData, setWarnSearchData] = useState(null);
-  const [searchingWarns, setSearchingWarns] = useState(false);
+  const [logs, setLogs] = useState({
+    message_logs_channel: '', message_edits: false, message_deletes: false,
+    member_logs_channel: '', member_joins: false, member_leaves: false,
+    voice_logs_channel: '', voice_activity: false,
+    mod_logs_channel: '', ignored_channels: []
+  });
 
   const getPayload = () => {
     return {
@@ -71,62 +66,21 @@ export default function Moderation({ guildId }) {
         enabled: serverData?.config?.automod?.enabled ?? true,
         exempt_channels: exemptions.channels,
         exempt_roles: exemptions.roles,
-        ai_automod: { enabled: aiAutomodEnabled, action: 'delete' },
-        ai_image: { enabled: aiImageEnabled, action: 'delete' },
+        ai_automod: { enabled: aiAutomodEnabled },
         banned_words: { ...bannedWords },
         anti_spam: { ...antiSpam },
         anti_link: { ...antiLink },
-        anti_invites: { ...antiInvites },
-        mention_spam: { ...mentionSpam },
-        anti_zalgo: { ...antiZalgo },
-        anti_caps: { ...antiCaps }
+        anti_caps: { enabled: general.caps_filter_enabled },
+        mention_spam: { max_mentions: general.max_mentions }
       }
     };
   };
 
   const [initialPayload, setInitialPayload] = useState('');
 
-  const fetchRecentActions = async () => {
-    try {
-      const res = await fetch(`/api/mod_activity/${guildId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setRecentActions(data);
-      }
-    } catch (e) {
-      console.error("Failed to load recent actions", e);
-    }
-  };
-
-  const searchWarns = async () => {
-    if (!warnSearchId) return;
-    setSearchingWarns(true);
-    try {
-      const res = await fetch(`/api/warns/${guildId}/${warnSearchId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      const data = await res.json();
-      if (!data.error) {
-        setWarnSearchData(data);
-      } else {
-        setWarnSearchData([]);
-      }
-    } catch (e) {
-      console.error(e);
-      setWarnSearchData([]);
-    } finally {
-      setSearchingWarns(false);
-    }
-  };
-
   useEffect(() => {
     if (!guildId) return;
     setLoading(true);
-    
-    fetchRecentActions();
-    
     fetch(`/api/config/${guildId}`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
@@ -136,15 +90,14 @@ export default function Moderation({ guildId }) {
         const amCfg = data?.config?.automod || {};
         
         setAiAutomodEnabled(amCfg.ai_automod?.enabled || false);
-        setAiImageEnabled(amCfg.ai_image?.enabled || false);
         setBannedWords({ ...bannedWords, ...amCfg.banned_words });
         setAntiSpam({ ...antiSpam, ...amCfg.anti_spam });
         setAntiLink({ ...antiLink, ...amCfg.anti_link });
-        setAntiInvites({ ...antiInvites, ...amCfg.anti_invites });
-        setMentionSpam({ ...mentionSpam, ...amCfg.mention_spam });
-        setAntiZalgo({ ...antiZalgo, ...amCfg.anti_zalgo });
-        setAntiCaps({ ...antiCaps, ...amCfg.anti_caps });
-        
+        setGeneral({ 
+          log_channel: '', 
+          caps_filter_enabled: amCfg.anti_caps?.enabled || false, 
+          max_mentions: amCfg.mention_spam?.max_mentions || 5 
+        });
         setExemptions({
           roles: (amCfg.exempt_roles || []).map(String),
           channels: (amCfg.exempt_channels || []).map(String)
@@ -200,6 +153,27 @@ export default function Moderation({ guildId }) {
 
   return (
     <div className="pb-overview-container">
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm bg-red-50/90 dark:bg-red-500/20 text-red-700 dark:text-red-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={24}
+            height={24}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="lucide lucide-alert-circle w-4 h-4"
+          >
+            <circle cx={12} cy={12} r={10} />
+            <line x1={12} x2={12} y1={8} y2={12} />
+            <line x1={12} x2="12.01" y1={16} y2={16} />
+          </svg>
+          <span className="text-sm">These changes require Pro</span>
+        </div>
+      </div>
       <div data-tour="feature-header" className="scroll-mt-24">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -237,7 +211,7 @@ export default function Moderation({ guildId }) {
               tabIndex={0}
               style={{ cursor: "default" }}
             >
-              <div className="flex flex-col">
+              <div className="pointer-events-none select-none flex flex-col">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -264,7 +238,24 @@ export default function Moderation({ guildId }) {
                       <span className="text-sm font-medium text-white truncate">
                         AI Moderation
                       </span>
-                      
+                      <span className="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-indigo-400 border-indigo-500/20 bg-gradient-to-b from-indigo-400/25 to-indigo-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width={10}
+                          height={10}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.25"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide lucide-crown shrink-0 -ml-px opacity-90"
+                          aria-hidden="true"
+                        >
+                          <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+                        </svg>
+                        Pro
+                      </span>
                       <span className="text-[10px] px-1.5 py-0.5 bg-white/10 text-neutral-300 rounded font-semibold uppercase tracking-[0.08em]">
                         Beta
                       </span>
@@ -329,7 +320,7 @@ export default function Moderation({ guildId }) {
               tabIndex={0}
               style={{ cursor: "default" }}
             >
-              <div className="flex flex-col">
+              <div className="pointer-events-none select-none flex flex-col">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
@@ -735,35 +726,46 @@ export default function Moderation({ guildId }) {
                     </svg>
                     <span className="text-sm font-medium text-white">Recent actions</span>
                   </div>
-                  <span className="text-xs text-neutral-600 tabular-nums">{recentActions.length} total</span>
+                  <span className="text-xs text-neutral-600 tabular-nums">2 total</span>
                 </div>
                 <div className="flex flex-col lg:flex-1 lg:min-h-0">
                   <div className="divide-y divide-neutral-800/40 overflow-y-auto scrollbar-thin max-h-[420px] lg:max-h-none lg:flex-1 lg:min-h-0">
-                    {recentActions.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-neutral-500">No recent actions</div>
-                    ) : (
-                      recentActions.map((action, i) => (
-                        <div key={i} className="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
-                          <div className="grid place-items-center w-8 h-8 rounded-lg bg-neutral-800 flex-shrink-0 mt-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gavel w-3.5 h-3.5">
-                              <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8" />
-                              <path d="m16 16 6-6" />
-                              <path d="m8 8 6-6" />
-                              <path d="m9 7 8 8" />
-                              <path d="m21 11-8-8" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-white font-medium truncate">{action.target_name}</span>
-                              <span className="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider tabular-nums bg-neutral-800 text-neutral-400 border border-neutral-700">{action.action}</span>
-                            </div>
-                            <p className="text-xs text-neutral-500 mt-1 truncate">{action.reason}</p>
-                          </div>
-                          <span className="text-[10px] text-neutral-600 tabular-nums flex-shrink-0 mt-1.5">{new Date(action.timestamp * 1000).toLocaleTimeString()}</span>
+                    <div className="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
+                      <div className="grid place-items-center w-8 h-8 rounded-lg bg-neutral-800 flex-shrink-0 mt-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gavel w-3.5 h-3.5">
+                          <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8" />
+                          <path d="m16 16 6-6" />
+                          <path d="m8 8 6-6" />
+                          <path d="m9 7 8 8" />
+                          <path d="m21 11-8-8" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-white font-medium truncate">Orbit#7034</span>
+                          <span className="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider tabular-nums bg-neutral-800 text-neutral-400 border border-neutral-700">untimeout</span>
                         </div>
-                      ))
-                    )}
+                        <p className="text-xs text-neutral-500 mt-1 truncate">Removed via timeout quick-action</p>
+                      </div>
+                      <span className="text-[10px] text-neutral-600 tabular-nums flex-shrink-0 mt-1.5">4h ago</span>
+                    </div>
+                    <div className="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
+                      <div className="grid place-items-center w-8 h-8 rounded-lg bg-orange-500/10 flex-shrink-0 mt-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-volume-x w-3.5 h-3.5">
+                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                          <line x1={22} x2={16} y1={9} y2={15} />
+                          <line x1={16} x2={22} y1={9} y2={15} />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-white font-medium truncate">Orbit#7034</span>
+                          <span className="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider tabular-nums bg-orange-500/10 text-orange-400 border border-orange-500/20">timeout</span>
+                        </div>
+                        <p className="text-xs text-neutral-500 mt-1 truncate">No reason provided</p>
+                      </div>
+                      <span className="text-[10px] text-neutral-600 tabular-nums flex-shrink-0 mt-1.5">4h ago</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -788,41 +790,20 @@ export default function Moderation({ guildId }) {
                             <path d="m21 21-4.3-4.3" />
                           </svg>
                         </div>
-                        <input autoComplete="off" value={warnSearchId} onChange={(e) => setWarnSearchId(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') searchWarns() }} className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 pl-11" placeholder="Discord user ID..." />
+                        <input autoComplete="off" title="" className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 pl-11" placeholder="Discord user ID..." defaultValue="" />
                       </div>
                     </div>
-                    <button type="button" onClick={searchWarns} disabled={searchingWarns} className="inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out enabled:active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-800 text-black dark:text-white border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 focus:ring-neutral-400/20 px-3.5 py-2 text-xs">
-                      {searchingWarns ? 'Searching...' : 'Search'}
-                    </button>
+                    <button className="inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out enabled:active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-800 text-black dark:text-white border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 focus:ring-neutral-400/20 px-3.5 py-2 text-xs">Search</button>
                   </div>
                 </div>
                 <div className="h-[440px] lg:h-auto lg:flex-1 lg:min-h-0 overflow-y-auto scrollbar-thin flex flex-col">
-                  {!warnSearchData ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
-                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search w-6 h-6 text-neutral-800 mx-auto mb-3">
-                        <circle cx={11} cy={11} r={8} />
-                        <path d="m21 21-4.3-4.3" />
-                      </svg>
-                      <p className="text-sm text-neutral-600 text-pretty">Enter a user ID to view warnings</p>
-                    </div>
-                  ) : warnSearchData.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
-                      <p className="text-sm text-neutral-500">No warnings found for this user.</p>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-neutral-800/40">
-                      {warnSearchData.map((warn, i) => (
-                        <div key={i} className="flex flex-col gap-1 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color]">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-white font-medium">Warn ID: {warn.id}</span>
-                            <span className="text-[10px] text-neutral-600">{new Date(warn.timestamp * 1000).toLocaleDateString()}</span>
-                          </div>
-                          <p className="text-xs text-neutral-400">Moderator: {warn.mod_name}</p>
-                          <p className="text-sm text-neutral-300 mt-1">{warn.reason}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search w-6 h-6 text-neutral-800 mx-auto mb-3">
+                      <circle cx={11} cy={11} r={8} />
+                      <path d="m21 21-4.3-4.3" />
+                    </svg>
+                    <p className="text-sm text-neutral-600 text-pretty">Enter a user ID to view warnings</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -850,16 +831,16 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="px-4 sm:px-5 py-3">
                   <div className="relative" role="button" tabIndex={0} style={{ cursor: "default" }}>
-                    <div className="flex flex-col">
+                    <div className="pointer-events-none select-none flex flex-col">
                       <div className="flex items-center justify-between">
                         <label className="text-sm text-neutral-200">Caps filter</label>
                         <div className="flex items-center gap-3">
                           <TailwindToggle checked={antiLink.block_invites} onChange={() => setAntiLink({ ...antiLink, block_invites: !antiLink.block_invites })} />
                         </div>
                       </div>
-                      <div className="mt-3">
-                        <div className="flex items-center h-10 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10 ">
-                          <input min={50} max={100}  autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" defaultValue={70} />
+                      <div className="mt-3 pointer-events-none opacity-50">
+                        <div className="flex items-center h-10 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10 opacity-50 cursor-not-allowed">
+                          <input min={50} max={100} disabled autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" defaultValue={70} />
                           <span className="pr-3 text-xs font-medium text-neutral-500 flex-shrink-0 select-none">% caps</span>
                         </div>
                       </div>
@@ -1032,7 +1013,7 @@ export default function Moderation({ guildId }) {
 
               {/* Voice Logs */}
               <div className="relative" role="button" tabIndex={0} style={{ cursor: "default" }}>
-                <div className="flex flex-col">
+                <div className="pointer-events-none select-none flex flex-col">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mic w-3.5 h-3.5 text-purple-400">

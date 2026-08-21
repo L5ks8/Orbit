@@ -352,3 +352,32 @@ class GuildsMixin:
             })
             
         return web.json_response(results)
+
+    async def api_get_user_warns(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        user_id_str = request.match_info.get("user_id")
+        if not guild_id_str.isdigit() or not user_id_str.isdigit():
+            return web.json_response({"error": "Invalid ID"}, status=400)
+        guild_id = int(guild_id_str)
+        user_id = int(user_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        from Commands.Warn._storage import get_warn_history
+        warns = get_warn_history(guild_id, user_id)
+        
+        results = []
+        for warn in warns:
+            mod = guild.get_member(warn.get("moderator_id"))
+            mod_name = mod.name if mod else f"Mod {warn.get('moderator_id')}"
+            
+            results.append({
+                "reason": warn.get("reason", "No reason provided"),
+                "mod_name": mod_name,
+                "timestamp": warn.get("timestamp", 0),
+                "id": warn.get("warn_id", "Unknown")
+            })
+            
+        return web.json_response(results)
