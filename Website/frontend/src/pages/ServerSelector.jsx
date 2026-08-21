@@ -1,315 +1,582 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Bell, ChevronDown, RefreshCw, Search, Crown, Bot, Pin, ArrowRight, Plus } from 'lucide-react';
 
 export default function ServerSelector() {
   const { user, loading } = useAuth();
   const [guilds, setGuilds] = useState([]);
   const [fetching, setFetching] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const loadGuilds = () => {
+    setFetching(true);
+    fetch('/api/guilds')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setGuilds(data);
+        } else if (data && data.guilds) {
+          setGuilds(data.guilds);
+        }
+      })
+      .catch(err => console.error("Failed to load guilds:", err))
+      .finally(() => setFetching(false));
+  };
 
   useEffect(() => {
     if (user) {
-      fetch('/api/guilds')
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            setGuilds(data);
-          } else if (data && data.guilds) {
-            setGuilds(data.guilds);
-          }
-        })
-        .catch(err => console.error("Failed to load guilds:", err))
-        .finally(() => setFetching(false));
+      loadGuilds();
     } else {
       setFetching(false);
     }
   }, [user]);
 
   if (loading) return (
-    <div style={styles.loadingContainer}>
-      <div style={styles.spinner}></div>
-      <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: '16px' }}>Loading...</p>
+    <div className="selector-page flex-center">
+      <div className="spinner"></div>
     </div>
   );
   
   if (!user) {
     window.location.href = '/auth/login?next=/dashboard';
-    return <div style={styles.loadingContainer}><p style={{ color: 'rgba(255,255,255,0.5)' }}>Redirecting to login...</p></div>;
+    return <div className="selector-page flex-center">Redirecting to login...</div>;
   }
 
-  return (
-    <div style={styles.page}>
-      {/* Background glow effects */}
-      <div style={styles.bgGlow1}></div>
-      <div style={styles.bgGlow2}></div>
+  // Filter based on search query
+  const filteredGuilds = guilds.filter(g => 
+    g.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-      <div style={styles.container}>
-        {/* Header */}
-        <div style={styles.header}>
-          <div style={styles.userRow}>
+  // Split into active and inactive. 
+  // For now we assume if g.bot_in_server or g.isActive is true it's active.
+  // If the API doesn't provide this, we fallback to treating all as active, 
+  // or you can adjust this logic based on your actual backend response.
+  const activeGuilds = filteredGuilds.filter(g => g.bot_in_server !== false && g.isActive !== false);
+  const inactiveGuilds = filteredGuilds.filter(g => g.bot_in_server === false || g.isActive === false);
+
+  return (
+    <div className="selector-page">
+      <style>{`
+        .selector-page {
+          min-height: 100vh;
+          background-color: #0a0a0a;
+          color: #f5f5f5;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .flex-center {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .spinner {
+          width: 24px;
+          height: 24px;
+          border: 2px solid rgba(255,255,255,0.1);
+          border-top-color: rgba(255,255,255,0.5);
+          border-radius: 50%;
+          animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .header {
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          height: 64px;
+          background-color: rgba(23, 23, 23, 0.9);
+          backdrop-filter: blur(4px);
+          border-bottom: 1px solid #262626;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 32px;
+        }
+        
+        .header-btn {
+          padding: 8px;
+          border-radius: 12px;
+          color: #a3a3a3;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .header-btn:hover {
+          color: #fff;
+          background-color: #262626;
+        }
+        
+        .main-container {
+          max-width: 1152px;
+          margin: 0 auto;
+          padding: 32px 16px;
+        }
+        
+        .page-title {
+          font-size: 24px;
+          font-weight: 700;
+          color: #fff;
+          margin: 0;
+        }
+        
+        .refresh-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #a3a3a3;
+          background-color: #171717;
+          border: 1px solid #262626;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .refresh-btn:hover {
+          background-color: #262626;
+          border-color: #404040;
+        }
+        
+        .search-container {
+          position: relative;
+          margin-bottom: 32px;
+        }
+        .search-input {
+          width: 100%;
+          padding: 12px 16px 12px 48px;
+          background-color: #171717;
+          border: 1px solid #262626;
+          border-radius: 12px;
+          color: #fff;
+          font-size: 16px;
+          outline: none;
+          transition: all 0.2s;
+          box-sizing: border-box;
+        }
+        .search-input:focus {
+          border-color: #fff;
+        }
+        
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+          font-size: 12px;
+          font-weight: 500;
+          color: #737373;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(1, 1fr);
+          gap: 16px;
+        }
+        @media (min-width: 640px) {
+          .grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1024px) {
+          .grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        .server-card {
+          position: relative;
+          background-color: #171717;
+          border: 1px solid #262626;
+          border-radius: 16px;
+          padding: 20px;
+          text-align: left;
+          text-decoration: none;
+          color: #fff;
+          display: block;
+          width: 100%;
+          box-sizing: border-box;
+          transition: all 0.2s;
+          overflow: hidden;
+          cursor: pointer;
+        }
+        .server-card:hover {
+          border-color: rgba(255, 255, 255, 0.3);
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .server-card-bg {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom right, #0a0a0a, #262626);
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+        .server-card:hover .server-card-bg {
+          opacity: 1;
+        }
+        
+        .card-content {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          z-index: 10;
+        }
+        
+        .server-icon-container {
+          position: relative;
+          flex-shrink: 0;
+        }
+        .server-icon {
+          width: 56px;
+          height: 56px;
+          border-radius: 12px;
+          object-fit: cover;
+          transition: transform 0.3s;
+          box-shadow: 0 0 0 2px #262626;
+        }
+        .server-card:hover .server-icon {
+          transform: scale(1.05);
+          box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+        }
+        .server-icon.inactive {
+          filter: grayscale(100%);
+        }
+        .server-card:hover .server-icon.inactive {
+          filter: grayscale(0%);
+        }
+        
+        .bot-badge {
+          position: absolute;
+          bottom: -4px;
+          right: -4px;
+          width: 20px;
+          height: 20px;
+          background-color: #22c55e;
+          border-radius: 50%;
+          border: 2px solid #0a0a0a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.5);
+        }
+        
+        .server-info {
+          flex: 1;
+          min-width: 0;
+        }
+        .server-name {
+          font-size: 16px;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin: 0;
+          transition: color 0.2s;
+        }
+        .server-card:hover .server-name {
+          color: #d4d4d4;
+        }
+        
+        .pin-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #737373;
+          background: transparent;
+          border: none;
+          opacity: 0;
+          transition: all 0.2s;
+          margin: -8px;
+        }
+        .server-card:hover .pin-btn {
+          opacity: 1;
+        }
+        .pin-btn:hover {
+          color: #fff;
+        }
+        
+        .status-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-top: 4px;
+        }
+        .status-active {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 14px;
+          color: #22c55e;
+        }
+        .pulse-dot {
+          width: 6px;
+          height: 6px;
+          background-color: #22c55e;
+          border-radius: 50%;
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .5; }
+        }
+        
+        .badge-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 8px;
+        }
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 2px 8px;
+          font-size: 10px;
+          font-weight: 500;
+          border-radius: 9999px;
+        }
+        .badge-free {
+          background-color: #262626;
+          color: #a3a3a3;
+        }
+        .badge-owner {
+          background-color: rgba(234, 179, 8, 0.2);
+          color: #eab308;
+        }
+        
+        .action-arrow {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          background-color: #0a0a0a;
+          color: #737373;
+          border-radius: 12px;
+          transition: all 0.2s;
+        }
+        .server-card:hover .action-arrow {
+          background-color: #fff;
+          color: #000;
+          transform: scale(1.1);
+        }
+        
+        .action-add-bot {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          background-color: #262626;
+          color: #fff;
+          font-size: 14px;
+          font-weight: 500;
+          border-radius: 12px;
+          transition: all 0.2s;
+        }
+        .server-card:hover .action-add-bot {
+          background-color: #fff;
+          color: #000;
+        }
+        
+        .divider-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 32px 0 16px;
+        }
+        .divider-line {
+          flex: 1;
+          height: 1px;
+          background-color: #262626;
+        }
+      `}</style>
+
+      {/* Header */}
+      <header className="header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '8px' }} className="header-btn">
+            <img src="/img/logo.png" alt="Orbit" width="28" height="28" style={{ borderRadius: '8px' }} />
+          </Link>
+          <div style={{ width: '1px', height: '32px', backgroundColor: '#404040' }}></div>
+          <h1 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', margin: 0 }}>Dashboard</h1>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button className="header-btn" aria-label="Notifications">
+            <Bell size={20} />
+          </button>
+          <button className="header-btn" aria-label="User menu" style={{ padding: '4px 6px' }}>
             <img 
-              src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64` : 'https://cdn.discordapp.com/embed/avatars/0.png'} 
-              alt="" 
-              style={styles.userAvatar}
-              onError={(e) => { e.target.src = 'https://cdn.discordapp.com/embed/avatars/0.png'; }}
+              src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64` : '/img/logo.png'} 
+              alt={user.username} 
+              style={{ width: '32px', height: '32px', borderRadius: '12px', border: '2px solid #404040' }}
+              onError={(e) => { e.target.src = '/img/logo.png'; }}
             />
-            <div>
-              <p style={styles.greeting}>Welcome back,</p>
-              <h2 style={styles.username}>{user.username}</h2>
+            <div style={{ textAlign: 'left', marginLeft: '8px' }} className="hidden sm:block">
+              <p style={{ fontSize: '14px', fontWeight: '500', color: '#fff', margin: 0 }}>{user.username}</p>
+              <p style={{ fontSize: '10px', color: '#737373', margin: 0 }}>Member</p>
             </div>
+            <ChevronDown size={16} style={{ marginLeft: '8px' }} />
+          </button>
+        </div>
+      </header>
+
+      {/* Main */}
+      <main className="main-container">
+        {/* Title & Refresh */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 className="page-title">Your Servers</h1>
+            <p style={{ fontSize: '14px', color: '#737373', margin: '4px 0 0' }}>{activeGuilds.length} active server{activeGuilds.length !== 1 ? 's' : ''}</p>
           </div>
-          <a href="/auth/logout" style={styles.logoutBtn}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            Logout
-          </a>
+          <button className="refresh-btn" onClick={loadGuilds}>
+            <RefreshCw size={16} className={fetching ? 'animate-spin' : ''} />
+            Refresh
+          </button>
         </div>
 
-        <div style={styles.divider}></div>
+        {/* Search */}
+        <div className="search-container">
+          <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#737373' }} />
+          <input 
+            type="text" 
+            placeholder="Search servers..." 
+            className="search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
-        {/* Title */}
-        <h1 style={styles.title}>Select a Server</h1>
-        <p style={styles.subtitle}>Choose a server where Orbit is active to manage its configuration.</p>
-
-        {/* Server Grid */}
         {fetching ? (
-          <div style={styles.loadingContainer}>
-            <div style={styles.spinner}></div>
-            <p style={{ color: 'rgba(255,255,255,0.4)', marginTop: '12px', fontSize: '14px' }}>Loading your servers...</p>
-          </div>
-        ) : guilds.length === 0 ? (
-          <div style={styles.emptyState}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"></circle><path d="M8 15h8M9 9h.01M15 9h.01"></path></svg>
-            <p style={{ color: 'rgba(255,255,255,0.4)', marginTop: '16px', fontSize: '15px' }}>No servers found where you have admin permissions.</p>
-            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '13px', marginTop: '4px' }}>Make sure Orbit is invited to your server.</p>
+          <div className="flex-center" style={{ height: '200px' }}>
+            <div className="spinner"></div>
           </div>
         ) : (
-          <div style={styles.grid}>
-            {guilds.map(guild => (
-              <Link 
-                key={guild.id} 
-                to={`/dashboard/${guild.id}/overview`}
-                style={styles.card}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                }}
-              >
-                <div style={styles.cardInner}>
-                  {guild.icon ? (
-                    <img 
-                      src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`} 
-                      alt={guild.name} 
-                      style={styles.guildIcon}
-                    />
-                  ) : (
-                    <div style={styles.guildIconPlaceholder}>
-                      {guild.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div style={styles.guildInfo}>
-                    <span style={styles.guildName}>{guild.name}</span>
-                    {guild.owner && (
-                      <span style={styles.ownerBadge}>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/></svg>
-                        Owner
-                      </span>
-                    )}
-                  </div>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            
+            {/* Owned / Active */}
+            {activeGuilds.length > 0 && (
+              <div>
+                <div className="section-title">
+                  <Crown size={14} />
+                  <span>Owned</span>
                 </div>
-              </Link>
-            ))}
+                <div className="grid">
+                  {activeGuilds.map(guild => (
+                    <Link key={guild.id} to={`/dashboard/${guild.id}/overview`} className="server-card">
+                      <div className="server-card-bg"></div>
+                      <div className="card-content">
+                        <div className="server-icon-container">
+                          {guild.icon ? (
+                            <img src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`} alt={guild.name} className="server-icon" onError={(e) => { e.target.src = '/img/logo.png'; }} />
+                          ) : (
+                            <div className="server-icon" style={{ backgroundColor: '#262626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+                              {guild.name.charAt(0)}
+                            </div>
+                          )}
+                          <div className="bot-badge">
+                            <Bot size={10} color="#fff" />
+                          </div>
+                        </div>
+                        <div className="server-info">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <h3 className="server-name">{guild.name}</h3>
+                            <button className="pin-btn" onClick={(e) => { e.preventDefault(); }}>
+                              <Pin size={12} />
+                            </button>
+                          </div>
+                          <div className="status-row">
+                            <div className="status-active">
+                              <span className="pulse-dot"></span>
+                              <span>Active</span>
+                            </div>
+                          </div>
+                          <div className="badge-row">
+                            <span className="badge badge-free">Free</span>
+                            {guild.owner && (
+                              <span className="badge badge-owner">
+                                <Crown size={12} />
+                                Owner
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="action-arrow">
+                          <ArrowRight size={20} />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Not yet added */}
+            {inactiveGuilds.length > 0 && (
+              <div>
+                <div className="divider-row">
+                  <div className="divider-line"></div>
+                  <span className="section-title" style={{ margin: 0 }}>
+                    <Plus size={12} />
+                    Not yet added
+                  </span>
+                  <div className="divider-line"></div>
+                </div>
+                
+                <div className="grid">
+                  {inactiveGuilds.map(guild => (
+                    <button 
+                      key={guild.id} 
+                      className="server-card" 
+                      onClick={() => { window.location.href = `https://discord.com/api/oauth2/authorize?client_id=123456789012345678&permissions=8&scope=bot%20applications.commands&guild_id=${guild.id}`; }}
+                    >
+                      <div className="server-card-bg"></div>
+                      <div className="card-content">
+                        <div className="server-icon-container">
+                          {guild.icon ? (
+                            <img src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`} alt={guild.name} className="server-icon inactive" onError={(e) => { e.target.src = '/img/logo.png'; }} />
+                          ) : (
+                            <div className="server-icon inactive" style={{ backgroundColor: '#262626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold', border: '2px dashed #404040' }}>
+                              {guild.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="server-info">
+                          <h3 className="server-name">{guild.name}</h3>
+                          <p style={{ fontSize: '14px', color: '#737373', margin: '2px 0 0' }}>Bot not installed</p>
+                          <div className="badge-row">
+                            {guild.owner && (
+                              <span className="badge badge-owner">
+                                <Crown size={12} />
+                                Owner
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="action-add-bot">
+                          <Bot size={16} />
+                          <span className="hidden sm:inline">Add Bot</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeGuilds.length === 0 && inactiveGuilds.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                <p style={{ color: '#737373', fontSize: '16px' }}>No servers found.</p>
+              </div>
+            )}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: '100vh',
-    background: '#0a0a0a',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  bgGlow1: {
-    position: 'absolute',
-    top: '-200px',
-    left: '-100px',
-    width: '500px',
-    height: '500px',
-    background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)',
-    borderRadius: '50%',
-    pointerEvents: 'none',
-  },
-  bgGlow2: {
-    position: 'absolute',
-    bottom: '-150px',
-    right: '-100px',
-    width: '400px',
-    height: '400px',
-    background: 'radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 70%)',
-    borderRadius: '50%',
-    pointerEvents: 'none',
-  },
-  container: {
-    maxWidth: '720px',
-    margin: '0 auto',
-    padding: '60px 24px 80px',
-    position: 'relative',
-    zIndex: 1,
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '24px',
-  },
-  userRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '14px',
-  },
-  userAvatar: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '50%',
-    border: '2px solid rgba(255,255,255,0.1)',
-  },
-  greeting: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: '12px',
-    margin: 0,
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-  },
-  username: {
-    color: '#fff',
-    fontSize: '18px',
-    fontWeight: '600',
-    margin: 0,
-  },
-  logoutBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    color: 'rgba(255,255,255,0.4)',
-    textDecoration: 'none',
-    fontSize: '13px',
-    padding: '8px 14px',
-    borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,0.06)',
-    background: 'rgba(255,255,255,0.03)',
-    transition: 'all 0.2s',
-  },
-  divider: {
-    height: '1px',
-    background: 'rgba(255,255,255,0.06)',
-    marginBottom: '32px',
-  },
-  title: {
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#fff',
-    margin: '0 0 8px',
-    letterSpacing: '-0.5px',
-  },
-  subtitle: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: '15px',
-    margin: '0 0 32px',
-    lineHeight: '1.5',
-  },
-  grid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  card: {
-    display: 'block',
-    textDecoration: 'none',
-    color: '#fff',
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.06)',
-    borderRadius: '12px',
-    padding: '14px 18px',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-  },
-  cardInner: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '14px',
-  },
-  guildIcon: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '12px',
-    objectFit: 'cover',
-    flexShrink: 0,
-  },
-  guildIconPlaceholder: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '12px',
-    background: 'rgba(255,255,255,0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '18px',
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.5)',
-    flexShrink: 0,
-  },
-  guildInfo: {
-    flex: 1,
-    minWidth: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-  },
-  guildName: {
-    fontSize: '15px',
-    fontWeight: '500',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  ownerBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px',
-    fontSize: '11px',
-    color: '#fbbf24',
-    fontWeight: '500',
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '60px 20px',
-  },
-  loadingContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '80px 20px',
-    minHeight: '60vh',
-  },
-  spinner: {
-    width: '24px',
-    height: '24px',
-    border: '2px solid rgba(255,255,255,0.1)',
-    borderTopColor: 'rgba(255,255,255,0.5)',
-    borderRadius: '50%',
-    animation: 'spin 0.6s linear infinite',
-  },
-};
