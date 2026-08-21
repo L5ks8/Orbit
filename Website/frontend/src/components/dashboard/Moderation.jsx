@@ -266,7 +266,7 @@ export default function Moderation({ guildId }) {
                       </div>
                       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, minmax(0px, 1fr))" }}>
                         <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-amber-500/50 bg-amber-500/10">
-                          <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
+                          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
                             <span className="w-1 rounded-full transition-colors bg-amber-400" style={{ height: 7 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 10 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 13 }} />
@@ -275,7 +275,7 @@ export default function Moderation({ guildId }) {
                           <span className="text-[13px] font-medium leading-none text-white">Relaxed</span>
                         </button>
                         <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                          <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
+                          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 13 }} />
@@ -284,7 +284,7 @@ export default function Moderation({ guildId }) {
                           <span className="text-[13px] font-medium leading-none text-neutral-400">Moderate</span>
                         </button>
                         <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                          <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
+                          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 13 }} />
@@ -293,7 +293,7 @@ export default function Moderation({ guildId }) {
                           <span className="text-[13px] font-medium leading-none text-neutral-400">Strict</span>
                         </button>
                         <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                          <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
+                          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 13 }} />
@@ -404,7 +404,7 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, minmax(0px, 1fr))" }}>
                       <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                        <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
+                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
                           <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                           <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: "11.5px" }} />
                           <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
@@ -412,7 +412,7 @@ export default function Moderation({ guildId }) {
                         <span className="text-[13px] font-medium leading-none text-neutral-400">Relaxed</span>
                       </button>
                       <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-blue-500/50 bg-blue-500/10">
-                        <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
+                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
                           <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: 7 }} />
                           <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: "11.5px" }} />
                           <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
@@ -420,7 +420,7 @@ export default function Moderation({ guildId }) {
                         <span className="text-[13px] font-medium leading-none text-white">Normal</span>
                       </button>
                       <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                        <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
+                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
                           <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                           <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: "11.5px" }} />
                           <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 16 }} />
@@ -1016,3 +1016,4 @@ export default function Moderation({ guildId }) {
     </div>
   );
 }
+
