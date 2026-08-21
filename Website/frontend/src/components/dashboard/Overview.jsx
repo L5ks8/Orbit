@@ -456,22 +456,20 @@ export default function Overview({ guildId }) {
               return acc;
             }, {})).map(([type, count]) => {
               const isTimeout = type.includes("timeout") && !type.includes("un");
+              const isBan = type.includes("ban") && !type.includes("un");
+              const isKick = type.includes("kick");
+              
+              const colorClass = isTimeout ? 'bg-amber-500/10 text-amber-400' 
+                               : isBan ? 'bg-red-500/10 text-red-400' 
+                               : isKick ? 'bg-blue-500/10 text-blue-400' 
+                               : 'bg-neutral-800 text-neutral-400';
+
               return (
-                <span key={type} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${isTimeout ? 'bg-amber-500/10 text-amber-400' : 'bg-neutral-800 text-neutral-400'}`}>
-                  {isTimeout ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clock w-2.5 h-2.5">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gavel w-2.5 h-2.5">
-                      <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8" />
-                      <path d="m16 16 6-6" />
-                      <path d="m8 8 6-6" />
-                      <path d="m9 7 8 8" />
-                      <path d="m21 11-8-8" />
-                    </svg>
-                  )}
+                <span key={type} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${colorClass}`}>
+                  {isTimeout ? <Clock className="w-2.5 h-2.5" /> 
+                   : isBan ? <ShieldAlert className="w-2.5 h-2.5" /> 
+                   : isKick ? <UserMinus className="w-2.5 h-2.5" /> 
+                   : <Gavel className="w-2.5 h-2.5" />}
                   <span className="tabular-nums">{count}</span>
                   <span className="opacity-80">{type}</span>
                 </span>
@@ -490,7 +488,14 @@ export default function Overview({ guildId }) {
               </div>
             ) : modActivity.map((act, i) => {
               const actionName = act.action || "Unknown";
-              const isTimeout = actionName.toLowerCase().includes("timeout") && !actionName.toLowerCase().includes("un");
+              const typeLow = actionName.toLowerCase();
+              const isTimeout = typeLow.includes("timeout") && !typeLow.includes("un");
+              const isBan = typeLow.includes("ban") && !typeLow.includes("un");
+              const isKick = typeLow.includes("kick");
+              
+              const colorBg = isTimeout ? 'bg-amber-500/10' : isBan ? 'bg-red-500/10' : isKick ? 'bg-blue-500/10' : 'bg-neutral-800';
+              const colorText = isTimeout ? 'text-amber-400' : isBan ? 'text-red-400' : isKick ? 'text-blue-400' : 'text-neutral-400';
+              
               let timeStr = "just now";
               if (act.timestamp) {
                 const diff = Math.floor(Date.now()/1000 - act.timestamp);
@@ -502,25 +507,20 @@ export default function Overview({ guildId }) {
               
               return (
                 <div key={i} className="flex items-center gap-2.5 px-4 py-2 hover:bg-neutral-800/30 transition-colors group" title={`${actionName} · ${act.reason || 'No reason provided'} · by ${act.mod_name || 'Unknown'}`}>
-                  <div className={`w-6 h-6 rounded-md ${isTimeout ? 'bg-amber-500/10' : 'bg-neutral-800'} flex items-center justify-center flex-shrink-0`}>
+                  <div className={`w-6 h-6 rounded-md ${colorBg} flex items-center justify-center flex-shrink-0`}>
                     {isTimeout ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clock w-3.5 h-3.5 text-amber-400">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
+                      <Clock className={`w-3.5 h-3.5 ${colorText}`} />
+                    ) : isBan ? (
+                      <ShieldAlert className={`w-3.5 h-3.5 ${colorText}`} />
+                    ) : isKick ? (
+                      <UserMinus className={`w-3.5 h-3.5 ${colorText}`} />
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gavel w-3.5 h-3.5 text-neutral-400">
-                        <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8" />
-                        <path d="m16 16 6-6" />
-                        <path d="m8 8 6-6" />
-                        <path d="m9 7 8 8" />
-                        <path d="m21 11-8-8" />
-                      </svg>
+                      <Gavel className={`w-3.5 h-3.5 ${colorText}`} />
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 flex-1 min-w-0">
                     <span className="text-[13px] font-medium text-white truncate flex-shrink-0 max-w-[96px] sm:max-w-[140px]">{act.target_name || 'Unknown'}</span>
-                    <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${isTimeout ? 'bg-amber-500/10 text-amber-400' : 'bg-neutral-800 text-neutral-400'} flex-shrink-0`}>
+                    <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${colorBg} ${colorText} flex-shrink-0`}>
                       {actionName}
                     </span>
                     <span className="text-[11px] text-neutral-500 truncate">{act.reason || 'No reason provided'}</span>
