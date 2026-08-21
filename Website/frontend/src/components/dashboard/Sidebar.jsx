@@ -30,7 +30,7 @@ export default function Sidebar({ guildId, isOpen = true }) {
     {
       title: 'MODERATION',
       links: [
-        { name: 'Auto-Moderation', path: `/dashboard/${guildId}/automod`, icon: <Shield size={16} /> },
+    
         { name: 'Ban Appeals', path: `/dashboard/${guildId}/appeals`, icon: <ShieldAlert size={16} /> },
         { name: 'Security', path: `/dashboard/${guildId}/security`, icon: <ShieldCheck size={16} /> },
         { name: 'Verification', path: `/dashboard/${guildId}/verify`, icon: <ShieldCheck size={16} /> },
