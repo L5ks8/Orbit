@@ -267,3 +267,34 @@ class GuildsMixin:
             "open_tickets": open_tickets,
             "history": stats
         })
+
+    async def api_mod_activity(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        from Commands.Log._modlog_storage import get_recent_modlogs
+        logs = get_recent_modlogs(guild_id)
+        
+        results = []
+        for log in logs:
+            target = guild.get_member(log.get("user_id"))
+            mod = guild.get_member(log.get("moderator_id"))
+            
+            target_name = target.name if target else f"User {log.get('user_id')}"
+            mod_name = mod.name if mod else f"Mod {log.get('moderator_id')}"
+            
+            results.append({
+                "action": log.get("action_type", "Unknown"),
+                "reason": log.get("reason", "No reason provided"),
+                "target_name": target_name,
+                "mod_name": mod_name,
+                "timestamp": log.get("timestamp", 0)
+            })
+            
+        return web.json_response(results)

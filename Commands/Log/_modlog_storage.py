@@ -56,3 +56,17 @@ def get_modlogs_by_moderator(guild_id: int, moderator_id: int) -> List[Dict[str,
     except Exception as e:
         print(f"ModLog Error: Failed to retrieve entries for moderator: {e}")
         return []
+
+def get_recent_modlogs(guild_id: int) -> List[Dict[str, Any]]:
+    if modlogs_col is None:
+        return []
+    try:
+        cutoff = int(time.time()) - (24 * 3600)
+        # Delete older than 24h
+        modlogs_col.delete_many({"guild_id": guild_id, "timestamp": {"$lt": cutoff}})
+        # Fetch recent
+        cursor = modlogs_col.find({"guild_id": guild_id}).sort("timestamp", pymongo.DESCENDING).limit(10)
+        return list(cursor)
+    except Exception as e:
+        print(f"ModLog Error: Failed to get/cleanup recent modlogs: {e}")
+        return []
