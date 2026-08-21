@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { 
-  LayoutDashboard, Bot, User, Activity, 
-  MessageSquare, Users, UserPlus, Shield, 
-  ShieldAlert, ShieldCheck, Ticket, Zap, 
+import {
+  LayoutDashboard, Bot, User, Activity,
+  MessageSquare, Users, UserPlus, Shield,
+  ShieldAlert, ShieldCheck, Ticket, Zap,
   Settings, BarChart3, Database, FileText,
   Volume2, ChevronLeft, ExternalLink
 } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function Sidebar({ guildId, isOpen = true }) {
     {
       title: 'MODERATION',
       links: [
-    
+        { name: 'Auto-Moderation', path: `/dashboard/${guildId}/automod`, icon: <Shield size={16} /> },
         { name: 'Ban Appeals', path: `/dashboard/${guildId}/appeals`, icon: <ShieldAlert size={16} /> },
         { name: 'Security', path: `/dashboard/${guildId}/security`, icon: <ShieldCheck size={16} /> },
         { name: 'Verification', path: `/dashboard/${guildId}/verify`, icon: <ShieldCheck size={16} /> },
@@ -172,7 +172,7 @@ export default function Sidebar({ guildId, isOpen = true }) {
           color: #fff;
         }
       `}</style>
-      
+
       {/* We keep dash-sidebar for responsive toggling behavior but override its base styling internally */}
       <div className={`dash-sidebar ${!isOpen ? 'closed' : ''}`} style={{ padding: 0, backgroundColor: '#171717', borderRight: 'none' }}>
         <div className="custom-sidebar">
@@ -191,7 +191,7 @@ export default function Sidebar({ guildId, isOpen = true }) {
               </Link>
             </div>
           </div>
-          
+
           {/* Server Selector */}
           <div className="custom-sidebar-server">
             <Link to="/dashboard" className="custom-server-btn">
@@ -203,7 +203,7 @@ export default function Sidebar({ guildId, isOpen = true }) {
               <ChevronLeft size={16} color="#a3a3a3" />
             </Link>
           </div>
-          
+
           {/* Nav */}
           <nav className="custom-sidebar-nav">
             {sections.map((section, idx) => (
@@ -211,9 +211,9 @@ export default function Sidebar({ guildId, isOpen = true }) {
                 <p className="custom-nav-title">{section.title}</p>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {section.links.map((link) => (
-                    <NavLink 
-                      key={link.name} 
-                      to={link.path} 
+                    <NavLink
+                      key={link.name}
+                      to={link.path}
                       className={({ isActive }) => `custom-nav-link ${isActive ? 'active' : ''}`}
                     >
                       {link.icon}
@@ -224,7 +224,7 @@ export default function Sidebar({ guildId, isOpen = true }) {
               </div>
             ))}
           </nav>
-          
+
           {/* Footer (No Plan Ad, just links) */}
           <div className="custom-sidebar-footer">
             <div className="custom-footer-links">
