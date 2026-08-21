@@ -105,7 +105,7 @@ export default function Moderation({ guildId }) {
                       </div>
                       <button
                         type="button"
-                        className="w-full px-5 py-9 text-center group rounded-2xl transition-[background-color] hover:bg-white/[0.015] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                        className="block w-full px-5 py-9 text-center group rounded-2xl transition-[background-color] hover:bg-white/[0.015] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                       >
                         <div className="mx-auto w-11 h-11 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-[transform,background-color] group-hover:bg-violet-500/15 group-active:scale-[0.96]">
                           <svg
@@ -1836,6 +1836,58 @@ export default function Moderation({ guildId }) {
                           </svg>
                         </button>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-4 min-w-0">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-wand-2 w-3.5 h-3.5 text-neutral-500">
+                      <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"></path>
+                      <path d="m14 7 3 3"></path>
+                      <path d="M5 6v4"></path>
+                      <path d="M19 14v4"></path>
+                      <path d="M10 2v2"></path>
+                      <path d="M7 8H3"></path>
+                      <path d="M21 16h-4"></path>
+                      <path d="M11 3H9"></path>
+                    </svg>
+                    <span className="text-xs font-semibold text-white uppercase tracking-wider">Recent actions</span>
+                  </div>
+                  <span className="text-[11px] font-medium text-neutral-500">2 total</span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-3 p-3 bg-neutral-900 border border-neutral-800 rounded-xl hover:bg-neutral-800/80 transition-colors">
+                    <div className="grid place-items-center w-8 h-8 rounded-lg bg-neutral-800 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/></svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm font-semibold text-white truncate">Orbit#7034</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 font-semibold tracking-wide">UNTIMEOUT</span>
+                        </div>
+                        <span className="text-[11px] text-neutral-500 shrink-0">3h ago</span>
+                      </div>
+                      <p className="text-xs text-neutral-400 truncate">Removed via timeout quick-action</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 p-3 bg-neutral-900 border border-neutral-800 rounded-xl hover:bg-neutral-800/80 transition-colors">
+                    <div className="grid place-items-center w-8 h-8 rounded-lg bg-neutral-800 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm font-semibold text-white truncate">Orbit#7034</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-semibold tracking-wide border border-amber-500/20">TIMEOUT</span>
+                        </div>
+                        <span className="text-[11px] text-neutral-500 shrink-0">3h ago</span>
+                      </div>
+                      <p className="text-xs text-neutral-400 truncate">No reason provided</p>
                     </div>
                   </div>
                 </div>
