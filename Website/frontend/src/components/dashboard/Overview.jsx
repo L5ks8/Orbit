@@ -427,34 +427,38 @@ export default function Overview({ guildId }) {
             <FeatureItem icon={<Bot size={14} />} name="Bot Profile" active={isFeatureActive('botprofile')} />
           </div>
         </div>
-        <div className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden pb-col-mod">
+        <div className="pb-card flex flex-col pb-col-mod">
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
             <div className="flex items-center gap-2.5">
               <ShieldAlert size={16} className="text-neutral-500" />
-              <span className="text-sm font-semibold text-white">Recent mod activity</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-neutral-800 text-neutral-400 font-medium tabular-nums">{modActivity.length}</span>
+              <span className="text-sm font-semibold text-white">Recent Mod Activity</span>
+              {modActivity.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-neutral-800 text-neutral-400 font-medium tabular-nums">{modActivity.length}</span>
+              )}
             </div>
-            <a className="relative -my-2 py-2 text-xs text-neutral-500 hover:text-neutral-300 transition-[transform,color] duration-150 ease-out active:scale-[0.96] inline-flex items-center gap-1 group focus-visible:outline-none focus-visible:text-neutral-200" href={`/dashboard/${guildId}/moderation`}>
+            <button className="pb-view-all group">
               View all <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
-            </a>
+            </button>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 px-4 py-2.5 border-b border-neutral-800/60 bg-neutral-900/50">
-            {Object.entries(modActivity.reduce((acc, a) => {
-              const type = (a.action || "Unknown").toLowerCase();
-              acc[type] = (acc[type] || 0) + 1;
-              return acc;
-            }, {})).map(([type, count]) => {
-              const isTimeout = type.includes("timeout") && !type.includes("un");
-              return (
-                <span key={type} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${isTimeout ? 'bg-amber-500/10 text-amber-400' : 'bg-neutral-800 text-neutral-400'}`}>
-                  {isTimeout ? <Clock size={10} /> : <Gavel size={10} />}
-                  <span className="tabular-nums">{count}</span>
-                  <span className="opacity-80">{type}</span>
-                </span>
-              );
-            })}
-          </div>
+          {modActivity.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 px-4 py-2.5 border-b border-neutral-800/60 bg-neutral-900/50">
+              {Object.entries(modActivity.reduce((acc, a) => {
+                const type = (a.action || "Unknown").toLowerCase();
+                acc[type] = (acc[type] || 0) + 1;
+                return acc;
+              }, {})).map(([type, count]) => {
+                const isTimeout = type.includes("timeout") && !type.includes("un");
+                return (
+                  <span key={type} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${isTimeout ? 'bg-amber-500/10 text-amber-400' : 'bg-neutral-800 text-neutral-400'}`}>
+                    {isTimeout ? <Clock size={10} /> : <Gavel size={10} />}
+                    <span className="tabular-nums">{count}</span>
+                    <span className="opacity-80">{type}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
           <div className="flex flex-col flex-1 min-h-0 divide-y divide-neutral-800/60 overflow-y-auto scrollbar-thin">
             {modActivity.length === 0 ? (
