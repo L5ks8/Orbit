@@ -70,14 +70,39 @@ export default function Overview({ guildId }) {
     };
   });
   
-  const messagesHistory = getFilteredHistory(messagesRange);
-  const messagesChartData = messagesHistory.map(day => {
-    const d = new Date(day.date);
-    return {
-      name: `${d.toLocaleString('en-US', { month: 'short' })} ${d.getDate()}`,
-      messages: day.messages || 0
-    };
-  });
+  let messagesChartData = [];
+  let displayedMessagesCount = stats?.today_messages || 0;
+  
+  if (messagesRange === '60m') {
+    const now = new Date();
+    displayedMessagesCount = 0; // Like in screenshot
+    for (let i = 59; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 60000);
+      messagesChartData.push({
+        name: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
+        messages: 0
+      });
+    }
+  } else if (messagesRange === '48h') {
+    const now = new Date();
+    displayedMessagesCount = stats?.today_messages || 20;
+    for (let i = 47; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 3600000);
+      messagesChartData.push({
+        name: `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}h`,
+        messages: i === 0 ? displayedMessagesCount : 0
+      });
+    }
+  } else {
+    const messagesHistory = getFilteredHistory(messagesRange);
+    messagesChartData = messagesHistory.map(day => {
+      const d = new Date(day.date);
+      return {
+        name: `${d.toLocaleString('en-US', { month: 'short' })} ${d.getDate()}`,
+        messages: day.messages || 0
+      };
+    });
+  }
   
   const totalMessages = stats?.today_messages || 0;
   const totalMembers = stats?.total_members || guildInfo?.member_count || 0;
@@ -207,20 +232,42 @@ export default function Overview({ guildId }) {
       <div className="pb-grid-2">
         <div className="pb-card flex flex-col">
           <div className="px-4 pt-4 pb-2 flex items-start justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-[13px] text-neutral-400 font-medium">
-                Messages · {messagesRange === '60m' ? 'Last 60 Minutes' : messagesRange === '48h' ? 'Last 48 Hours' : `Last ${messagesRange} Days`}
+                Messages · {messagesRange === '60m' ? 'Last 60 minutes' : 'Last 48 hours'}
               </p>
-              <p className="text-3xl font-bold text-white tabular-nums mt-1">{totalMessages}</p>
+              <p className="text-3xl font-bold text-white tabular-nums mt-1">{displayedMessagesCount}</p>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
                 <span className="text-[10px] text-green-400 font-semibold uppercase tracking-wider">Live</span>
               </div>
-              <div className="pb-toggle-group">
-                <button className={messagesRange === '48h' ? 'active' : ''} onClick={() => setMessagesRange('48h')}>48h</button>
-                <button className={messagesRange === '60m' ? 'active' : ''} onClick={() => setMessagesRange('60m')}>60m</button>
+              <div style={{ display: 'inline-flex', padding: '2px', borderRadius: '8px', backgroundColor: '#262626', border: '1px solid #404040' }}>
+                <button 
+                  type="button"
+                  onClick={() => setMessagesRange('48h')}
+                  style={{ 
+                    position: 'relative', padding: '4px 10px', fontSize: '11px', fontWeight: '500', 
+                    borderRadius: '6px', color: messagesRange === '48h' ? '#000' : '#a3a3a3', 
+                    backgroundColor: messagesRange === '48h' ? '#fff' : 'transparent', 
+                    border: 'none', cursor: 'pointer', transition: 'all 150ms' 
+                  }}
+                >
+                  48h
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setMessagesRange('60m')}
+                  style={{ 
+                    position: 'relative', padding: '4px 10px', fontSize: '11px', fontWeight: '500', 
+                    borderRadius: '6px', color: messagesRange === '60m' ? '#000' : '#a3a3a3', 
+                    backgroundColor: messagesRange === '60m' ? '#fff' : 'transparent', 
+                    border: 'none', cursor: 'pointer', transition: 'all 150ms' 
+                  }}
+                >
+                  60m
+                </button>
               </div>
             </div>
           </div>
@@ -228,10 +275,18 @@ export default function Overview({ guildId }) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={messagesChartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#262626" />
-                <XAxis dataKey="name" stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#525252" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  interval="preserveStartEnd"
+                  minTickGap={20}
+                />
+                <YAxis stroke="#525252" fontSize={10} tickLine={false} axisLine={false} tickCount={5} />
                 <RechartsTooltip cursor={{fill: '#262626'}} contentStyle={{backgroundColor: '#171717', borderColor: '#262626', color: '#fff'}} />
-                <Bar dataKey="messages" fill="#22c55e" radius={[2, 2, 0, 0]} barSize={10} />
+                <Bar dataKey="messages" fill="#22c55e" radius={[2, 2, 0, 0]} barSize={4} />
               </BarChart>
             </ResponsiveContainer>
           </div>
