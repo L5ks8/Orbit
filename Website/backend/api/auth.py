@@ -18,7 +18,12 @@ class AuthMixin:
             
         import urllib.parse
         next_url = request.query.get("next", "/")
-        state = urllib.parse.quote(next_url)
+        popup = request.query.get("popup", "")
+        # Encode popup flag into state so it survives the OAuth redirect
+        state_val = next_url
+        if popup == "1":
+            state_val = next_url + ("&" if "?" in next_url else "?") + "popup=1"
+        state = urllib.parse.quote(state_val)
             
         redirect_uri = self.get_redirect_uri(request)
         discord_login_url = (

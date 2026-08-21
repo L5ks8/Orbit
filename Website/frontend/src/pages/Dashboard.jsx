@@ -49,17 +49,39 @@ function DashboardInner() {
 
   if (loading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>;
   if (!user) {
-    const loginUrl = `/auth/login?next=${encodeURIComponent(location.pathname)}&popup=1`;
-    const w = 500, h = 700;
-    const left = window.screenX + (window.outerWidth - w) / 2;
-    const top = window.screenY + (window.outerHeight - h) / 2;
-    const popup = window.open(loginUrl, 'orbitlogin', `width=${w},height=${h},left=${left},top=${top},popup=yes`);
-    if (popup) {
-      const timer = setInterval(() => {
-        if (popup.closed) { clearInterval(timer); window.location.reload(); }
-      }, 500);
-    }
-    return <div style={{ color: '#fff', padding: '20px' }}>Waiting for login...</div>;
+    const openLoginPopup = () => {
+      const loginUrl = `/auth/login?next=${encodeURIComponent(location.pathname)}&popup=1`;
+      const w = 500, h = 700;
+      const left = window.screenX + (window.outerWidth - w) / 2;
+      const top = window.screenY + (window.outerHeight - h) / 2;
+      const popup = window.open(loginUrl, 'orbitlogin', `width=${w},height=${h},left=${left},top=${top},popup=yes`);
+      if (popup) {
+        const timer = setInterval(() => {
+          if (popup.closed) { clearInterval(timer); window.location.reload(); }
+        }, 500);
+      }
+    };
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0a0a0a' }}>
+        <div style={{ 
+          background: '#171717', border: '1px solid #262626', borderRadius: '20px', 
+          padding: '48px 40px', textAlign: 'center', maxWidth: '380px', width: '90%',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+        }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#fff', margin: '0 0 8px' }}>Login Required</h2>
+          <p style={{ fontSize: '14px', color: '#737373', margin: '0 0 24px' }}>Sign in with Discord to continue.</p>
+          <button 
+            onClick={openLoginPopup}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '10px',
+              padding: '12px 28px', background: '#5865F2', color: '#fff',
+              border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '600',
+              cursor: 'pointer', width: '100%', justifyContent: 'center'
+            }}
+          >Login with Discord</button>
+        </div>
+      </div>
+    );
   }
 
 

@@ -41,20 +41,59 @@ export default function ServerSelector() {
   );
   
   if (!user) {
-    const loginUrl = '/auth/login?next=/dashboard&popup=1';
-    const w = 500, h = 700;
-    const left = window.screenX + (window.outerWidth - w) / 2;
-    const top = window.screenY + (window.outerHeight - h) / 2;
-    const popup = window.open(loginUrl, 'orbitlogin', `width=${w},height=${h},left=${left},top=${top},popup=yes`);
-    if (popup) {
-      const timer = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(timer);
-          window.location.reload();
-        }
-      }, 500);
-    }
-    return <div className="selector-page flex-center">Waiting for login...</div>;
+    const openLoginPopup = () => {
+      const loginUrl = '/auth/login?next=/dashboard&popup=1';
+      const w = 500, h = 700;
+      const left = window.screenX + (window.outerWidth - w) / 2;
+      const top = window.screenY + (window.outerHeight - h) / 2;
+      const popup = window.open(loginUrl, 'orbitlogin', `width=${w},height=${h},left=${left},top=${top},popup=yes`);
+      if (popup) {
+        const timer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(timer);
+            window.location.reload();
+          }
+        }, 500);
+      }
+    };
+    return (
+      <div className="selector-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ 
+          background: '#171717', border: '1px solid #262626', borderRadius: '20px', 
+          padding: '48px 40px', textAlign: 'center', maxWidth: '380px', width: '90%',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+        }}>
+          <div style={{
+            width: '64px', height: '64px', borderRadius: '50%', background: '#262626',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px'
+          }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+              <polyline points="10 17 15 12 10 7"></polyline>
+              <line x1="15" x2="3" y1="12" y2="12"></line>
+            </svg>
+          </div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#fff', margin: '0 0 8px' }}>Login Required</h2>
+          <p style={{ fontSize: '14px', color: '#737373', margin: '0 0 24px', lineHeight: '1.5' }}>Sign in with Discord to access your dashboard.</p>
+          <button 
+            onClick={openLoginPopup}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '10px',
+              padding: '12px 28px', background: '#5865F2', color: '#fff',
+              border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '600',
+              cursor: 'pointer', transition: 'all 0.2s', width: '100%', justifyContent: 'center'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#4752C4'}
+            onMouseLeave={e => e.currentTarget.style.background = '#5865F2'}
+          >
+            <svg width="20" height="20" viewBox="0 0 71 55" fill="currentColor">
+              <path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.8 40.8 0 00-1.8 3.7 54 54 0 00-16.2 0A37.3 37.3 0 0025.4.3a.2.2 0 00-.2-.1 58.4 58.4 0 00-14.7 4.6.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.1a58.9 58.9 0 0018 9.1.2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.7.2.2 0 01 0-.4 31 31 0 001.1-.9.2.2 0 01.2 0 42 42 0 0035.8 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .3 36.4 36.4 0 01-5.5 2.7.2.2 0 00-.1.4 47.2 47.2 0 003.6 5.8.2.2 0 00.2.1 58.7 58.7 0 0018-9.1v-.1c1.4-14.8-2.3-27.7-9.9-39.1a.2.2 0 00-.1-.1zM23.7 37.3c-3.4 0-6.2-3.1-6.2-7s2.8-7 6.2-7 6.3 3.2 6.2 7-2.7 7-6.2 7zm22.9 0c-3.4 0-6.2-3.1-6.2-7s2.7-7 6.2-7 6.3 3.2 6.2 7-2.7 7-6.2 7z"/>
+            </svg>
+            Login with Discord
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Filter based on search query
