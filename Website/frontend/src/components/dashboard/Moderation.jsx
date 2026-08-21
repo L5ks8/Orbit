@@ -1,6 +1,148 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import CustomSelect from '../../ui/CustomSelect';
+import SaveBar from '../../ui/SaveBar';
+import { useToast } from '../../ui/Toast';
+
+const TailwindToggle = ({ checked, onChange }) => (
+  <button type="button" role="switch" aria-checked={checked} onClick={onChange} className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-blue-500' : 'bg-neutral-200 dark:bg-neutral-700'}`}><span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px]' : 'translate-x-[3px]'}`} /></button>
+);
+
+
+
+const ActionSelector = ({ value, onChange }) => {
+  const actions = ['Delete', 'Warn', 'Timeout', 'Kick', 'Ban'];
+  return (
+    <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
+      {actions.map(action => {
+        const isSelected = value.toLowerCase() === action.toLowerCase();
+        return (
+          <button
+            key={action}
+            type="button"
+            onClick={() => onChange(action.toLowerCase())}
+            className={`flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${isSelected ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+          >
+            {action}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function Moderation({ guildId }) {
+  const toast = useToast();
+  
+  const [serverData, setServerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+
+  // States
+  const [aiAutomodEnabled, setAiAutomodEnabled] = useState(false);
+  const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', words: [], exempt_words: [], level: 'relaxed' });
+  const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', sensitivity: 'normal' });
+  const [antiLink, setAntiLink] = useState({ enabled: false, block_invites: true, allow_media: true, allow_gifs: true, action: 'delete', always_allowed: [], always_blocked: [] });
+  const [general, setGeneral] = useState({ log_channel: '', caps_filter_enabled: false, max_mentions: 5 });
+  const [exemptions, setExemptions] = useState({ roles: [], channels: [] });
+  const [logs, setLogs] = useState({
+    message_logs_channel: '', message_edits: false, message_deletes: false,
+    member_logs_channel: '', member_joins: false, member_leaves: false,
+    voice_logs_channel: '', voice_activity: false,
+    mod_logs_channel: '', ignored_channels: []
+  });
+
+  const getPayload = () => {
+    return {
+      automod: {
+        enabled: serverData?.config?.automod?.enabled ?? true,
+        exempt_channels: exemptions.channels,
+        exempt_roles: exemptions.roles,
+        ai_automod: { enabled: aiAutomodEnabled },
+        banned_words: { ...bannedWords },
+        anti_spam: { ...antiSpam },
+        anti_link: { ...antiLink },
+        anti_caps: { enabled: general.caps_filter_enabled },
+        mention_spam: { max_mentions: general.max_mentions }
+      }
+    };
+  };
+
+  const [initialPayload, setInitialPayload] = useState('');
+
+  useEffect(() => {
+    if (!guildId) return;
+    setLoading(true);
+    fetch(`/api/config/${guildId}`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setServerData(data);
+        const amCfg = data?.config?.automod || {};
+        
+        setAiAutomodEnabled(amCfg.ai_automod?.enabled || false);
+        setBannedWords({ ...bannedWords, ...amCfg.banned_words });
+        setAntiSpam({ ...antiSpam, ...amCfg.anti_spam });
+        setAntiLink({ ...antiLink, ...amCfg.anti_link });
+        setGeneral({ 
+          log_channel: '', 
+          caps_filter_enabled: amCfg.anti_caps?.enabled || false, 
+          max_mentions: amCfg.mention_spam?.max_mentions || 5 
+        });
+        setExemptions({
+          roles: (amCfg.exempt_roles || []).map(String),
+          channels: (amCfg.exempt_channels || []).map(String)
+        });
+        
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load moderation config", err);
+        setLoading(false);
+      });
+  }, [guildId, formKey]);
+  
+  useEffect(() => {
+    if (!loading) {
+       setInitialPayload(JSON.stringify(getPayload()));
+    }
+  }, [loading]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = getPayload();
+      const res = await fetch(`/api/config/${guildId}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.error) {
+        toast("Failed to save: " + data.error, 'error');
+      } else {
+        toast("Settings saved successfully!", 'success');
+        setInitialPayload(JSON.stringify(payload));
+      }
+    } catch (e) {
+      console.error(e);
+      toast("Error saving settings.", 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isDirty = initialPayload && JSON.stringify(getPayload()) !== initialPayload;
+
+  if (loading) return <div className="text-neutral-400 p-8">Loading moderation settings...</div>;
+
+  const channelOptions = serverData?.channels ? serverData.channels.map(c => ({ value: c.id, label: `# ${c.name}` })) : [];
+  const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color })) : [];
+
   return (
     <div className="pb-overview-container">
       <div className="fixed bottom-4 right-4 z-50">
@@ -112,14 +254,7 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="flex items-center gap-2.5 flex-shrink-0">
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked="false"
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"
-                        >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                        </button>
+                        <TailwindToggle checked={logs.message_deletes} onChange={() => setLogs({ ...logs, message_deletes: !logs.message_deletes })} />
                       </div>
                     </div>
                   </div>
@@ -220,14 +355,7 @@ export default function Moderation({ guildId }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked="false"
-                        className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"
-                      >
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                      </button>
+                      <TailwindToggle checked={logs.message_edits} onChange={() => setLogs({ ...logs, message_edits: !logs.message_edits })} />
                     </div>
                   </div>
                 </div>
@@ -249,9 +377,7 @@ export default function Moderation({ guildId }) {
                   <div className="flex items-center gap-2.5 flex-shrink-0">
                     <span className="inline-flex">
                       <div className="flex items-center gap-3">
-                        <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                        </button>
+                        <TailwindToggle checked={aiAutomodEnabled} onChange={() => setAiAutomodEnabled(!aiAutomodEnabled)} />
                       </div>
                     </span>
                   </div>
@@ -312,13 +438,7 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">When a match is found</label>
                       </div>
                       <div className="space-y-3">
-                        <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Delete</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Ban</button>
-                        </div>
+                          <ActionSelector value={bannedWords.action} onChange={val => setBannedWords({ ...bannedWords, action: val })} />
                         <div className="flex items-center gap-2.5">
                           <span className="text-sm text-neutral-400">Banned for</span>
                           <div className="relative">
@@ -378,9 +498,7 @@ export default function Moderation({ guildId }) {
                   </div>
                   <div className="flex items-center gap-2.5 flex-shrink-0">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                      </button>
+                      <TailwindToggle checked={bannedWords.enabled} onChange={() => setBannedWords({ ...bannedWords, enabled: !bannedWords.enabled })} />
                     </div>
                   </div>
                 </div>
@@ -403,30 +521,50 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">Sensitivity</label>
                     </div>
                     <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, minmax(0px, 1fr))" }}>
-                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: "11.5px" }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
-                        </span>
-                        <span className="text-[13px] font-medium leading-none text-neutral-400">Relaxed</span>
-                      </button>
-                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-blue-500/50 bg-blue-500/10">
-                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                          <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: 7 }} />
-                          <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: "11.5px" }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
-                        </span>
-                        <span className="text-[13px] font-medium leading-none text-white">Normal</span>
-                      </button>
-                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: "11.5px" }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 16 }} />
-                        </span>
-                        <span className="text-[13px] font-medium leading-none text-neutral-400">Strict</span>
-                      </button>
+                      {['Relaxed', 'Normal', 'Strict'].map((level) => {
+                        const isSelected = antiSpam.sensitivity.toLowerCase() === level.toLowerCase();
+                        let bgClass, borderClass, textClass, barColors;
+                        
+                        if (isSelected) {
+                          borderClass = 'border-blue-500/50';
+                          bgClass = 'bg-blue-500/10';
+                          textClass = 'text-white';
+                          if (level === 'Relaxed') {
+                             barColors = ['bg-blue-400', 'bg-neutral-700', 'bg-neutral-700'];
+                          } else if (level === 'Normal') {
+                             barColors = ['bg-blue-400', 'bg-blue-400', 'bg-neutral-700'];
+                          } else {
+                             barColors = ['bg-blue-400', 'bg-blue-400', 'bg-blue-400'];
+                          }
+                        } else {
+                          borderClass = 'border-neutral-800 hover:border-neutral-700';
+                          bgClass = 'bg-neutral-800/40';
+                          textClass = 'text-neutral-400';
+                          if (level === 'Relaxed') {
+                             barColors = ['bg-neutral-500', 'bg-neutral-700', 'bg-neutral-700'];
+                          } else if (level === 'Normal') {
+                             barColors = ['bg-neutral-500', 'bg-neutral-500', 'bg-neutral-700'];
+                          } else {
+                             barColors = ['bg-neutral-500', 'bg-neutral-500', 'bg-neutral-500'];
+                          }
+                        }
+
+                        return (
+                          <button 
+                            key={level} 
+                            type="button" 
+                            onClick={() => setAntiSpam({ ...antiSpam, sensitivity: level.toLowerCase() })}
+                            className={`rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 ${borderClass} ${bgClass}`}
+                          >
+                            <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
+                              <span className={`w-1 rounded-full transition-colors ${barColors[0]}`} style={{ height: 7 }} />
+                              <span className={`w-1 rounded-full transition-colors ${barColors[1]}`} style={{ height: "11.5px" }} />
+                              <span className={`w-1 rounded-full transition-colors ${barColors[2]}`} style={{ height: 16 }} />
+                            </span>
+                            <span className={`text-[13px] font-medium leading-none ${textClass}`}>{level}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -437,7 +575,7 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">Messages</label>
                       </div>
                       <div className="flex items-center h-10 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
-                        <input min={2} max={20} autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" defaultValue={5} />
+                        <input min={2} max={20} autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={antiSpam.max_messages} onChange={(e) => setAntiSpam({ ...antiSpam, max_messages: parseInt(e.target.value) || 5 })} />
                         <span className="pr-3 text-xs font-medium text-neutral-500 flex-shrink-0 select-none">msgs</span>
                       </div>
                     </div>
@@ -446,7 +584,7 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">Time Window</label>
                       </div>
                       <div className="flex items-center h-10 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
-                        <input min={1} max={60} autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" defaultValue={5} />
+                        <input min={1} max={60} autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={antiSpam.time_window_sec} onChange={(e) => setAntiSpam({ ...antiSpam, time_window_sec: parseInt(e.target.value) || 5 })} />
                         <span className="pr-3 text-xs font-medium text-neutral-500 flex-shrink-0 select-none">sec</span>
                       </div>
                     </div>
@@ -458,13 +596,7 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">When triggered</label>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
-                      </div>
+                      <ActionSelector value={antiSpam.action} onChange={val => setAntiSpam({ ...antiSpam, action: val })} />
                     </div>
                   </div>
                 </div>
@@ -487,9 +619,7 @@ export default function Moderation({ guildId }) {
                   </div>
                   <div className="flex items-center gap-2.5 flex-shrink-0">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                      </button>
+                      <TailwindToggle checked={antiSpam.enabled} onChange={() => setAntiSpam({ ...antiSpam, enabled: !antiSpam.enabled })} />
                     </div>
                   </div>
                 </div>
@@ -501,9 +631,7 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="flex-shrink-0">
                       <div className="flex items-center gap-3">
-                        <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                        </button>
+                        <TailwindToggle checked={antiLink.enabled} onChange={() => setAntiLink({ ...antiLink, enabled: !antiLink.enabled })} />
                       </div>
                     </div>
                   </div>
@@ -514,9 +642,7 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="flex-shrink-0">
                       <div className="flex items-center gap-3">
-                        <button type="button" role="switch" aria-checked="true" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white">
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black" />
-                        </button>
+                        <TailwindToggle checked={antiLink.allow_media} onChange={() => setAntiLink({ ...antiLink, allow_media: !antiLink.allow_media })} />
                       </div>
                     </div>
                   </div>
@@ -527,9 +653,7 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="flex-shrink-0">
                       <div className="flex items-center gap-3">
-                        <button type="button" role="switch" aria-checked="true" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white">
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black" />
-                        </button>
+                        <TailwindToggle checked={antiLink.allow_gifs} onChange={() => setAntiLink({ ...antiLink, allow_gifs: !antiLink.allow_gifs })} />
                       </div>
                     </div>
                   </div>
@@ -540,13 +664,7 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">When a link is blocked</label>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
-                      </div>
+                      <ActionSelector value={antiLink.action} onChange={val => setAntiLink({ ...antiLink, action: val })} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -688,16 +806,7 @@ export default function Moderation({ guildId }) {
                 <div className="px-4 sm:px-5 py-3">
                   <label className="text-sm text-neutral-200 block mb-2">Log Channel</label>
                   <div className="w-full">
-                    <div className="relative">
-                      <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                        <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                        <div className="flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                            <path d="m6 9 6 6 6-6" />
-                          </svg>
-                        </div>
-                      </button>
-                    </div>
+                    <CustomSelect options={channelOptions} value={general.log_channel} onChange={(val) => setGeneral({ ...general, log_channel: val })} placeholder="Select log channel..." />
                   </div>
                 </div>
                 <div className="px-4 sm:px-5 py-3">
@@ -706,9 +815,7 @@ export default function Moderation({ guildId }) {
                       <div className="flex items-center justify-between">
                         <label className="text-sm text-neutral-200">Caps filter</label>
                         <div className="flex items-center gap-3">
-                          <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                            <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                          </button>
+                          <TailwindToggle checked={general.caps_filter_enabled} onChange={() => setGeneral({ ...general, caps_filter_enabled: !general.caps_filter_enabled })} />
                         </div>
                       </div>
                       <div className="mt-3 pointer-events-none opacity-50">
@@ -723,7 +830,7 @@ export default function Moderation({ guildId }) {
                 <div className="px-4 sm:px-5 py-3">
                   <label className="text-sm text-neutral-200 block mb-2">Max Mentions</label>
                   <div className="flex items-center h-10 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
-                    <input min={0} max={50} autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" defaultValue={5} />
+                    <input min={0} max={50} autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={general.max_mentions} onChange={(e) => setGeneral({ ...general, max_mentions: parseInt(e.target.value) || 5 })} />
                     <span className="pr-3 text-xs font-medium text-neutral-500 flex-shrink-0 select-none">per msg</span>
                   </div>
                 </div>
@@ -758,31 +865,13 @@ export default function Moderation({ guildId }) {
                 <div>
                   <label className="text-sm text-neutral-200 block mb-2">Exempt Roles</label>
                   <div className="w-full">
-                    <div className="relative">
-                      <button type="button" className="w-full flex items-center justify-between gap-2 min-h-[40px] px-3 py-1.5 bg-neutral-800 border rounded-xl text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                        <div className="flex-1 flex flex-wrap gap-1">
-                          <span className="text-neutral-500 text-sm py-0.5">Select roles...</span>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </button>
-                    </div>
+                    <CustomSelect options={roleOptions} value={exemptions.roles} onChange={(val) => setExemptions({ ...exemptions, roles: val })} isMulti placeholder="Select roles..." />
                   </div>
                 </div>
                 <div>
                   <label className="text-sm text-neutral-200 block mb-2">Exempt Channels</label>
                   <div className="w-full">
-                    <div className="relative">
-                      <button type="button" className="w-full flex items-center justify-between gap-2 min-h-[40px] px-3 py-1.5 bg-neutral-800 border rounded-xl text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                        <div className="flex-1 flex flex-wrap gap-1">
-                          <span className="text-neutral-500 text-sm py-0.5">Select channels...</span>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </button>
-                    </div>
+                    <CustomSelect options={channelOptions} value={exemptions.channels} onChange={(val) => setExemptions({ ...exemptions, channels: val })} isMulti placeholder="Select channels..." />
                   </div>
                 </div>
               </div>
@@ -808,22 +897,13 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="w-full">
                   <div className="relative">
-                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                      <div className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </div>
-                    </button>
+                    <CustomSelect options={channelOptions} value={logs.message_logs_channel} onChange={(val) => setLogs({ ...logs, message_logs_channel: val })} placeholder="Select log channel..." />
                   </div>
                 </div>
                 <div className="flex gap-5">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                      </button>
+                      <TailwindToggle checked={logs.message_edits} onChange={() => setLogs({ ...logs, message_edits: !logs.message_edits })} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil w-3.5 h-3.5 text-neutral-500">
@@ -835,9 +915,7 @@ export default function Moderation({ guildId }) {
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                      </button>
+                      <TailwindToggle checked={logs.message_deletes} onChange={() => setLogs({ ...logs, message_deletes: !logs.message_deletes })} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash2 w-3.5 h-3.5 text-neutral-500">
@@ -866,22 +944,13 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="w-full">
                   <div className="relative">
-                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                      <div className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </div>
-                    </button>
+                    <CustomSelect options={channelOptions} value={logs.member_logs_channel} onChange={(val) => setLogs({ ...logs, member_logs_channel: val })} placeholder="Select log channel..." />
                   </div>
                 </div>
                 <div className="flex gap-5">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                      </button>
+                      <TailwindToggle checked={logs.member_joins} onChange={() => setLogs({ ...logs, member_joins: !logs.member_joins })} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-in w-3.5 h-3.5 text-neutral-500">
@@ -894,9 +963,7 @@ export default function Moderation({ guildId }) {
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                      </button>
+                      <TailwindToggle checked={logs.member_leaves} onChange={() => setLogs({ ...logs, member_leaves: !logs.member_leaves })} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-out w-3.5 h-3.5 text-neutral-500">
@@ -934,21 +1001,12 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="w-full">
                       <div className="relative">
-                        <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                          <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                          <div className="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                              <path d="m6 9 6 6 6-6" />
-                            </svg>
-                          </div>
-                        </button>
+                        <CustomSelect options={channelOptions} value={logs.voice_logs_channel} onChange={(val) => setLogs({ ...logs, voice_logs_channel: val })} placeholder="Select log channel..." />
                       </div>
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700">
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                        </button>
+                        <TailwindToggle checked={logs.voice_activity} onChange={() => setLogs({ ...logs, voice_activity: !logs.voice_activity })} />
                       </div>
                       <span className="text-xs text-neutral-400">Log Voice Activity</span>
                     </label>
@@ -970,14 +1028,7 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="w-full">
                   <div className="relative">
-                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                      <div className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </div>
-                    </button>
+                    <CustomSelect options={channelOptions} value={logs.mod_logs_channel} onChange={(val) => setLogs({ ...logs, mod_logs_channel: val })} placeholder="Select log channel..." />
                   </div>
                 </div>
                 <p className="text-xs text-neutral-600 leading-relaxed text-pretty">Warns, bans, kicks, timeouts &amp; unbans</p>
