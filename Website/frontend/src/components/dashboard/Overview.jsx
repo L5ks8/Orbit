@@ -326,34 +326,45 @@ export default function Overview({ guildId }) {
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Change</span>
               </div>
               <div className="divide-y divide-neutral-800/40">
-                <div 
-                  style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(70px, 1fr) minmax(90px, 1fr) minmax(110px, 1fr)' }}
-                  className="gap-2 sm:gap-3 items-center px-2.5 py-1.5 hover:bg-white/[0.02] transition-colors"
-                >
-                  <span 
-                    style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', borderColor: 'rgba(99, 102, 241, 0.2)' }}
-                    className="inline-flex items-center gap-1.5 min-w-0 px-2.5 py-1.5 border rounded-md w-fit max-w-full"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-3.5 h-3.5 text-indigo-300 flex-shrink-0">
-                      <line x1="4" x2="20" y1="9" y2="9"></line>
-                      <line x1="4" x2="20" y1="15" y2="15"></line>
-                      <line x1="10" x2="8" y1="3" y2="21"></line>
-                      <line x1="16" x2="14" y1="3" y2="21"></line>
-                    </svg>
-                    <span className="text-xs text-indigo-200 font-semibold truncate">chat</span>
-                  </span>
-                  <span className="text-sm text-white font-semibold tabular-nums">{totalMessages > 0 ? totalMessages : 33}</span>
-                  <div className="flex items-center gap-1.5">
-                    <div className="relative w-5 h-5 flex-shrink-0">
-                      <svg viewBox="0 0 36 36" className="w-5 h-5 -rotate-90">
-                        <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="4" className="text-neutral-700"></circle>
-                        <circle cx="18" cy="18" r="15" fill="none" strokeWidth="4" strokeLinecap="round" strokeDasharray="94.2 94.2" className="text-emerald-500"></circle>
-                      </svg>
+                {(stats?.top_channels || [
+                  { name: 'media', messages: 34, percentage: 51, change: 34 },
+                  { name: 'chat', messages: 33, percentage: 49, change: 33 }
+                ]).map((channel, i) => {
+                  const circumference = 2 * Math.PI * 15;
+                  const strokeDasharray = `${(channel.percentage / 100) * circumference} ${circumference}`;
+                  
+                  return (
+                    <div 
+                      key={i}
+                      style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(70px, 1fr) minmax(90px, 1fr) minmax(110px, 1fr)' }}
+                      className="gap-2 sm:gap-3 items-center px-2.5 py-1.5 hover:bg-white/[0.02] transition-colors"
+                    >
+                      <span 
+                        style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', borderColor: 'rgba(99, 102, 241, 0.2)' }}
+                        className="inline-flex items-center gap-1.5 min-w-0 px-2.5 py-1.5 border rounded-md w-fit max-w-full"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-3.5 h-3.5 text-indigo-300 flex-shrink-0">
+                          <line x1="4" x2="20" y1="9" y2="9"></line>
+                          <line x1="4" x2="20" y1="15" y2="15"></line>
+                          <line x1="10" x2="8" y1="3" y2="21"></line>
+                          <line x1="16" x2="14" y1="3" y2="21"></line>
+                        </svg>
+                        <span className="text-xs text-indigo-200 font-semibold truncate">{channel.name}</span>
+                      </span>
+                      <span className="text-sm text-white font-semibold tabular-nums">{channel.messages}</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="relative w-5 h-5 flex-shrink-0">
+                          <svg viewBox="0 0 36 36" className="w-5 h-5 -rotate-90">
+                            <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="4" className="text-neutral-700"></circle>
+                            <circle cx="18" cy="18" r="15" fill="none" strokeWidth="4" strokeLinecap="round" strokeDasharray={strokeDasharray} className="text-emerald-500"></circle>
+                          </svg>
+                        </div>
+                        <span className="text-xs text-neutral-200 tabular-nums">{channel.percentage}%</span>
+                      </div>
+                      <span className="text-xs tabular-nums font-medium text-emerald-400">+{channel.change}</span>
                     </div>
-                    <span className="text-xs text-neutral-200 tabular-nums">100%</span>
-                  </div>
-                  <span className="text-xs tabular-nums font-medium text-emerald-400">+{totalMessages > 0 ? totalMessages : 33}</span>
-                </div>
+                  );
+                })}
               </div>
             </div>
           </div>
