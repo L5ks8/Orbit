@@ -526,7 +526,7 @@ export default function UserSettings() {
         }
         .us-tz-search-input {
           width: 100%;
-          padding: 8px 12px 8px 36px;
+          padding: 8px 12px 8px 36px !important;
           background-color: transparent;
           border: 1px solid #262626;
           border-radius: 8px;
@@ -576,11 +576,14 @@ export default function UserSettings() {
           margin: 4px 0 0 0;
         }
         .us-tz-group-title {
+          position: sticky;
+          top: 0;
+          z-index: 10;
           font-size: 11px;
           font-weight: 600;
           color: #737373;
           padding: 8px 16px;
-          background-color: #0a0a0a;
+          background-color: #121212;
           margin: 0;
           text-transform: uppercase;
         }
@@ -829,30 +832,31 @@ export default function UserSettings() {
                         onChange={(e) => setTzSearch(e.target.value)}
                       />
                     </div>
-                    <div className="us-tz-list">
-                      
-                      {/* Auto-detect item */}
-                      {(!tzSearch || 'auto-detect'.includes(tzSearch.toLowerCase())) && (
-                        <div 
-                          className={`us-tz-list-item ${selectedTz === 'Auto-detect (Europe/Berlin)' ? 'active' : ''}`}
-                          onClick={() => {
-                            setSelectedTz('Auto-detect (Europe/Berlin)');
-                            setShowTzDropdown(false);
-                          }}
-                        >
-                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80' }}>
-                              <Sparkles size={14} />
-                            </div>
-                            <div>
-                              <p className="us-tz-item-name">Auto-detect</p>
-                              <p className="us-tz-item-sub">Match my device · Europe/Berlin · 9:26 AM</p>
-                            </div>
+                    
+                    {/* Auto-detect item (Fixed, non-scrollable) */}
+                    {(!tzSearch || 'auto-detect'.includes(tzSearch.toLowerCase())) && (
+                      <div 
+                        className={`us-tz-list-item ${selectedTz === 'Auto-detect (Europe/Berlin)' ? 'active' : ''}`}
+                        style={{ borderBottom: '1px solid #262626' }}
+                        onClick={() => {
+                          setSelectedTz('Auto-detect (Europe/Berlin)');
+                          setShowTzDropdown(false);
+                        }}
+                      >
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80' }}>
+                            <Sparkles size={14} />
                           </div>
-                          {selectedTz === 'Auto-detect (Europe/Berlin)' && <Check size={16} color="#4ade80" />}
+                          <div>
+                            <p className="us-tz-item-name">Auto-detect</p>
+                            <p className="us-tz-item-sub">Match my device · Europe/Berlin · 9:26 AM</p>
+                          </div>
                         </div>
-                      )}
+                        {selectedTz === 'Auto-detect (Europe/Berlin)' && <Check size={16} color="#4ade80" />}
+                      </div>
+                    )}
 
+                    <div className="us-tz-list">
                       {/* Timezone list */}
                       {filteredTz.map((group) => (
                         <div key={group.group}>
