@@ -51,11 +51,10 @@ export default function ServerSelector() {
   );
 
   // Split into active and inactive. 
-  // For now we assume if g.bot_in_server or g.isActive is true it's active.
-  // If the API doesn't provide this, we fallback to treating all as active, 
-  // or you can adjust this logic based on your actual backend response.
-  const activeGuilds = filteredGuilds.filter(g => g.bot_in_server !== false && g.isActive !== false);
-  const inactiveGuilds = filteredGuilds.filter(g => g.bot_in_server === false || g.isActive === false);
+  // A guild is active if bot_in_server is true or isActive is true.
+  // Otherwise it's inactive (bot not added yet).
+  const activeGuilds = filteredGuilds.filter(g => g.bot_in_server === true || g.isActive === true);
+  const inactiveGuilds = filteredGuilds.filter(g => !activeGuilds.includes(g) && g.owner); // Only show owned inactive servers
 
   return (
     <div className="selector-page">
@@ -722,7 +721,60 @@ export default function ServerSelector() {
               </div>
             )}
 
-            {activeGuilds.length === 0 && (
+            {/* Not yet added */}
+            {inactiveGuilds.length > 0 && (
+              <div>
+                <div className="divider-row">
+                  <div className="divider-line"></div>
+                  <span className="section-title" style={{ margin: 0 }}>
+                    <Plus size={12} />
+                    Not yet added
+                  </span>
+                  <div className="divider-line"></div>
+                </div>
+                
+                <div className="grid">
+                  {inactiveGuilds.map(guild => (
+                    <button 
+                      key={guild.id} 
+                      className="server-card" 
+                      onClick={() => { window.location.href = `https://discord.com/api/oauth2/authorize?client_id=123456789012345678&permissions=8&scope=bot%20applications.commands&guild_id=${guild.id}`; }}
+                    >
+                      <div className="server-card-bg"></div>
+                      <div className="card-content">
+                        <div className="server-icon-container">
+                          {guild.icon ? (
+                            <img src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`} alt={guild.name} className="server-icon inactive" onError={(e) => { e.target.src = '/img/logo.png'; }} />
+                          ) : (
+                            <div className="server-icon inactive" style={{ backgroundColor: '#262626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold', border: '2px dashed #404040' }}>
+                              {guild.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="server-info">
+                          <h3 className="server-name">{guild.name}</h3>
+                          <p style={{ fontSize: '14px', color: '#737373', margin: '2px 0 0' }}>Bot not installed</p>
+                          <div className="badge-row">
+                            {guild.owner && (
+                              <span className="badge badge-owner">
+                                <Crown size={12} />
+                                Owner
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="action-add-bot">
+                          <Bot size={16} />
+                          <span className="hidden sm:inline">Add Bot</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeGuilds.length === 0 && inactiveGuilds.length === 0 && (
               <div style={{ textAlign: 'center', padding: '60px 0' }}>
                 <p style={{ color: '#737373', fontSize: '16px' }}>No servers found.</p>
               </div>
