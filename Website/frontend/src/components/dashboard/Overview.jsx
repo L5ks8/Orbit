@@ -374,15 +374,15 @@ export default function Overview({ guildId }) {
                     >
                       <span 
                         style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', borderColor: 'rgba(99, 102, 241, 0.2)' }}
-                        className="inline-flex items-center gap-1.5 min-w-0 px-2.5 py-1.5 border rounded-md w-fit max-w-full"
+                        className="inline-flex items-center gap-1.5 min-w-0 px-2 py-1 border rounded-md w-fit max-w-full"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-3.5 h-3.5 text-indigo-300 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-3 h-3 text-indigo-300 flex-shrink-0">
                           <line x1="4" x2="20" y1="9" y2="9"></line>
                           <line x1="4" x2="20" y1="15" y2="15"></line>
                           <line x1="10" x2="8" y1="3" y2="21"></line>
                           <line x1="16" x2="14" y1="3" y2="21"></line>
                         </svg>
-                        <span className="text-xs text-indigo-200 font-semibold truncate">{channel.name}</span>
+                        <span className="text-[11px] text-indigo-200 font-semibold truncate">{channel.name}</span>
                       </span>
                       <span className="text-sm text-white font-semibold tabular-nums">{channel.messages}</span>
                       <div className="flex items-center gap-1.5">
