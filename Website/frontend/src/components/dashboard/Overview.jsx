@@ -323,7 +323,7 @@ export default function Overview({ guildId }) {
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Channel</span>
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Messages</span>
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">% of Activity</span>
-                <span className="hidden sm:block text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Change</span>
+                <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Change</span>
               </div>
               <div className="divide-y divide-neutral-800/40">
                 <div 
@@ -332,15 +332,15 @@ export default function Overview({ guildId }) {
                 >
                   <span 
                     style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', borderColor: 'rgba(99, 102, 241, 0.2)' }}
-                    className="inline-flex items-center gap-1 min-w-0 px-1.5 py-0.5 border rounded w-fit max-w-full"
+                    className="inline-flex items-center gap-1.5 min-w-0 px-2.5 py-1.5 border rounded-md w-fit max-w-full"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-2.5 h-2.5 text-indigo-300 flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-3.5 h-3.5 text-indigo-300 flex-shrink-0">
                       <line x1="4" x2="20" y1="9" y2="9"></line>
                       <line x1="4" x2="20" y1="15" y2="15"></line>
                       <line x1="10" x2="8" y1="3" y2="21"></line>
                       <line x1="16" x2="14" y1="3" y2="21"></line>
                     </svg>
-                    <span className="text-[11px] text-indigo-200 font-medium truncate">chat</span>
+                    <span className="text-xs text-indigo-200 font-semibold truncate">chat</span>
                   </span>
                   <span className="text-sm text-white font-semibold tabular-nums">{totalMessages > 0 ? totalMessages : 33}</span>
                   <div className="flex items-center gap-1.5">
@@ -352,7 +352,7 @@ export default function Overview({ guildId }) {
                     </div>
                     <span className="text-xs text-neutral-200 tabular-nums">100%</span>
                   </div>
-                  <span className="hidden sm:inline text-xs tabular-nums font-medium text-emerald-400">+{totalMessages > 0 ? totalMessages : 33}</span>
+                  <span className="text-xs tabular-nums font-medium text-emerald-400">+{totalMessages > 0 ? totalMessages : 33}</span>
                 </div>
               </div>
             </div>
