@@ -151,11 +151,11 @@ class GuildsMixin:
             async with session.get("https://discord.com/api/users/@me/guilds", headers=headers) as resp:
                 if resp.status != 200:
                     err_text = await resp.text()
-                    print(f"[api_guilds] Discord API error {resp.status}: {err_text}")
+                    print(f"[api_guilds] Discord API error {resp.status}: {err_text}", flush=True)
                     return web.json_response({"error": "Failed to fetch guilds"}, status=400)
                 user_guilds = await resp.json()
         
-        print(f"[api_guilds] User {user.get('username')} has {len(user_guilds)} total guilds, bot is in {len(self.bot.guilds)} guilds")
+        print(f"[api_guilds] User {user.get('username')} has {len(user_guilds)} total guilds, bot is in {len(self.bot.guilds)} guilds", flush=True)
                 
         from Commands.WebDashboard._storage import load_settings_config
         manageable_guilds = []
@@ -197,7 +197,7 @@ class GuildsMixin:
                 "bot_in_server": bot_in_server
             })
         
-        print(f"[api_guilds] Returning {len(manageable_guilds)} manageable guilds")
+        print(f"[api_guilds] Returning {len(manageable_guilds)} manageable guilds", flush=True)
         return web.json_response(manageable_guilds)
 
     async def api_guild_stats(self, request: web.Request):
