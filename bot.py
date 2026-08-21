@@ -469,6 +469,8 @@ async def start_bot_loop():
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
 async def main():
+    import discord
+    discord.utils.setup_logging()
     runner = None
     try:
         from aiohttp import web
