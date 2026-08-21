@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Moderation({ guildId }) {
   return (
-    <div>
+    <div className="max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 w-full">
       <div className="fixed bottom-4 right-4 z-50">
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm bg-red-50/90 dark:bg-red-500/20 text-red-700 dark:text-red-400">
           <svg
