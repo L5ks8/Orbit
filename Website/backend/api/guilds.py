@@ -173,23 +173,27 @@ class GuildsMixin:
                 continue
                 
             bot_guild = self.bot.get_guild(int(g["id"]))
-            if not bot_guild:
-                continue
+            bot_in_server = bot_guild is not None
                 
             # Additional manager role check for users without direct perms
             if not (is_admin or manage_guild):
+                if not bot_in_server:
+                    continue
                 settings_cfg = load_settings_config(int(g["id"]))
                 manager_roles = settings_cfg.get("manager_roles", [])
                 if manager_roles:
                     member = bot_guild.get_member(int(user["id"]))
                     if not (member and any(str(r.id) in manager_roles for r in member.roles)):
                         continue
+                else:
+                    continue
 
             manageable_guilds.append({
                 "id": g["id"],
                 "name": g["name"],
                 "icon": g.get("icon"),
-                "owner": is_owner
+                "owner": is_owner,
+                "bot_in_server": bot_in_server
             })
         
         print(f"[api_guilds] Returning {len(manageable_guilds)} manageable guilds")
