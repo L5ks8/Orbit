@@ -61,7 +61,7 @@ export default function Moderation({ guildId }) {
               tabIndex={0}
               style={{ cursor: "default" }}
             >
-              <div className="pointer-events-none select-none flex flex-col flex-1">
+              <div className="pointer-events-none select-none flex flex-col">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -170,7 +170,7 @@ export default function Moderation({ guildId }) {
               tabIndex={0}
               style={{ cursor: "default" }}
             >
-              <div className="pointer-events-none select-none flex flex-col flex-1">
+              <div className="pointer-events-none select-none flex flex-col">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
@@ -265,7 +265,7 @@ export default function Moderation({ guildId }) {
                         <span className="text-xs text-neutral-500 tabular-nums">203 words</span>
                       </div>
                       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, minmax(0px, 1fr))" }}>
-                        <button type="button" className="rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-amber-500/50 bg-amber-500/10">
+                        <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-amber-500/50 bg-amber-500/10">
                           <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
                             <span className="w-1 rounded-full transition-colors bg-amber-400" style={{ height: 7 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 10 }} />
@@ -274,7 +274,7 @@ export default function Moderation({ guildId }) {
                           </span>
                           <span className="text-[13px] font-medium leading-none text-white">Relaxed</span>
                         </button>
-                        <button type="button" className="rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
+                        <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
                           <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
@@ -283,7 +283,7 @@ export default function Moderation({ guildId }) {
                           </span>
                           <span className="text-[13px] font-medium leading-none text-neutral-400">Moderate</span>
                         </button>
-                        <button type="button" className="rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
+                        <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
                           <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
@@ -292,7 +292,7 @@ export default function Moderation({ guildId }) {
                           </span>
                           <span className="text-[13px] font-medium leading-none text-neutral-400">Strict</span>
                         </button>
-                        <button type="button" className="rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
+                        <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
                           <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                             <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
@@ -313,11 +313,11 @@ export default function Moderation({ guildId }) {
                       </div>
                       <div className="space-y-3">
                         <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Delete</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Ban</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Delete</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
+                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Ban</button>
                         </div>
                         <div className="flex items-center gap-2.5">
                           <span className="text-sm text-neutral-400">Banned for</span>
@@ -403,7 +403,7 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">Sensitivity</label>
                     </div>
                     <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, minmax(0px, 1fr))" }}>
-                      <button type="button" className="rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
+                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
                         <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
                           <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                           <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: "11.5px" }} />
@@ -411,7 +411,7 @@ export default function Moderation({ guildId }) {
                         </span>
                         <span className="text-[13px] font-medium leading-none text-neutral-400">Relaxed</span>
                       </button>
-                      <button type="button" className="rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-blue-500/50 bg-blue-500/10">
+                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-blue-500/50 bg-blue-500/10">
                         <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
                           <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: 7 }} />
                           <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: "11.5px" }} />
@@ -419,7 +419,7 @@ export default function Moderation({ guildId }) {
                         </span>
                         <span className="text-[13px] font-medium leading-none text-white">Normal</span>
                       </button>
-                      <button type="button" className="rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
+                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
                         <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
                           <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
                           <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: "11.5px" }} />
@@ -459,11 +459,11 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="space-y-3">
                       <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
                       </div>
                     </div>
                   </div>
@@ -541,11 +541,11 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="space-y-3">
                       <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
+                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
                       </div>
                     </div>
                   </div>
@@ -702,7 +702,7 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="px-4 sm:px-5 py-3">
                   <div className="relative" role="button" tabIndex={0} style={{ cursor: "default" }}>
-                    <div className="pointer-events-none select-none flex flex-col flex-1">
+                    <div className="pointer-events-none select-none flex flex-col">
                       <div className="flex items-center justify-between">
                         <label className="text-sm text-neutral-200">Caps filter</label>
                         <div className="flex items-center gap-3">
@@ -912,7 +912,7 @@ export default function Moderation({ guildId }) {
 
               {/* Voice Logs */}
               <div className="relative" role="button" tabIndex={0} style={{ cursor: "default" }}>
-                <div className="pointer-events-none select-none flex flex-col flex-1">
+                <div className="pointer-events-none select-none flex flex-col">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mic w-3.5 h-3.5 text-purple-400">
