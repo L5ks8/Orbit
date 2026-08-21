@@ -40,6 +40,7 @@ export default function Moderation({ guildId }) {
 
   // States
   const [aiAutomodEnabled, setAiAutomodEnabled] = useState(false);
+  const [aiImageEnabled, setAiImageEnabled] = useState(false);
   const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', words: [], exempt_words: [], level: 'relaxed' });
   const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', sensitivity: 'normal' });
   const [antiLink, setAntiLink] = useState({ enabled: false, block_invites: true, allow_media: true, allow_gifs: true, action: 'delete', always_allowed: [], always_blocked: [] });
@@ -59,6 +60,7 @@ export default function Moderation({ guildId }) {
         exempt_channels: exemptions.channels,
         exempt_roles: exemptions.roles,
         ai_automod: { enabled: aiAutomodEnabled },
+          ai_image_moderation: { enabled: aiImageEnabled },
         banned_words: { ...bannedWords },
         anti_spam: { ...antiSpam },
         anti_link: { ...antiLink },
@@ -145,27 +147,7 @@ export default function Moderation({ guildId }) {
 
   return (
     <div className="pb-overview-container">
-      <div className="fixed bottom-4 right-4 z-50">
-        <div className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm bg-red-50/90 dark:bg-red-500/20 text-red-700 dark:text-red-400">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width={24}
-            height={24}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="lucide lucide-alert-circle w-4 h-4"
-          >
-            <circle cx={12} cy={12} r={10} />
-            <line x1={12} x2={12} y1={8} y2={12} />
-            <line x1={12} x2="12.01" y1={16} y2={16} />
-          </svg>
-          <span className="text-sm">These changes require Pro</span>
-        </div>
-      </div>
+      
       <div data-tour="feature-header" className="scroll-mt-24">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -194,16 +176,10 @@ export default function Moderation({ guildId }) {
         </div>
       </div>
       <div className="mt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 lg:items-stretch min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 lg:items-start min-w-0">
           <div className="flex flex-col gap-4 min-w-0 scroll-mt-24 w-full">
             {/* AI Moderation Card */}
-            <div
-              className="relative flex flex-col w-full"
-              role="button"
-              tabIndex={0}
-              style={{ cursor: "default" }}
-            >
-              <div className="pointer-events-none select-none flex flex-col">
+            <div className="relative flex flex-col w-full">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -230,24 +206,7 @@ export default function Moderation({ guildId }) {
                       <span className="text-sm font-medium text-white truncate">
                         AI Moderation
                       </span>
-                      <span className="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-indigo-400 border-indigo-500/20 bg-gradient-to-b from-indigo-400/25 to-indigo-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width={10}
-                          height={10}
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.25"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-crown shrink-0 -ml-px opacity-90"
-                          aria-hidden="true"
-                        >
-                          <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
-                        </svg>
-                        Pro
-                      </span>
+                      
                       <span className="text-[10px] px-1.5 py-0.5 bg-white/10 text-neutral-300 rounded font-semibold uppercase tracking-[0.08em]">
                         Beta
                       </span>
@@ -299,13 +258,7 @@ export default function Moderation({ guildId }) {
             </div>
 
             {/* AI Image Moderation Card */}
-            <div
-              className="relative flex flex-col w-full"
-              role="button"
-              tabIndex={0}
-              style={{ cursor: "default" }}
-            >
-              <div className="pointer-events-none select-none flex flex-col">
+            <div className="relative flex flex-col w-full">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
@@ -333,24 +286,7 @@ export default function Moderation({ guildId }) {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-sm font-medium text-white text-balance">AI Image Moderation</h3>
-                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width={24}
-                              height={24}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="lucide lucide-lock w-3 h-3 -ml-0.5"
-                            >
-                              <rect width={18} height={11} x={3} y={11} rx={2} ry={2} />
-                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                            Pro
-                          </span>
+                          
                         </div>
                       </div>
                     </div>
@@ -691,8 +627,7 @@ export default function Moderation({ guildId }) {
           </div>
 
           {/* Right Column - Recent Actions & Warnings */}
-          <div className="lg:relative flex flex-col">
-            <div className="flex flex-col gap-4 lg:absolute lg:inset-0">
+          <div className="flex flex-col gap-4 sticky top-24 h-fit max-h-[calc(100vh-8rem)]">
               {/* Recent Actions */}
               <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col lg:flex-1 lg:min-h-0">
                 <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-neutral-800">
@@ -704,7 +639,7 @@ export default function Moderation({ guildId }) {
                       <path d="m9 7 8 8" />
                       <path d="m21 11-8-8" />
                     </svg>
-                    <span className="text-sm font-medium text-white">Recent actions</span>
+                    <span className="text-sm font-semibold text-white">Recent mod activity</span>
                   </div>
                   <span className="text-xs text-neutral-600 tabular-nums">2 total</span>
                 </div>
@@ -785,7 +720,6 @@ export default function Moderation({ guildId }) {
                     <p className="text-sm text-neutral-600 text-pretty">Enter a user ID to view warnings</p>
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         </div>
