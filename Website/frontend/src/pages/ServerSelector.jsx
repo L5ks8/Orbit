@@ -299,7 +299,6 @@ export default function ServerSelector() {
           font-size: 12px;
           font-weight: 500;
           color: #737373;
-          text-transform: uppercase;
           letter-spacing: 0.05em;
         }
         
