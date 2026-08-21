@@ -28,7 +28,7 @@ export default function Overview({ guildId }) {
       })
       .catch(console.error);
       
-    const p2 = fetch(`/api/guild_stats/${guildId}?days=365`)
+    const p2 = fetch(`/api/guild_stats/${guildId}?days=${channelsRange === 'all' ? 365 : channelsRange}`)
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(console.error);
@@ -55,12 +55,12 @@ export default function Overview({ guildId }) {
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
-  }, [guildId]);
+  }, [guildId, channelsRange]);
 
   const handleRefreshClick = () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
-    loadData().finally(() => setIsRefreshing(false));
+    loadData().finally(() => setTimeout(() => setIsRefreshing(false), 500));
   };
 
   // Process History Data for Charts
@@ -359,10 +359,8 @@ export default function Overview({ guildId }) {
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Change</span>
               </div>
               <div className="divide-y divide-neutral-800/40">
-                {(stats?.top_channels?.length > 0 ? stats.top_channels : [
-                  { name: 'media', messages: 34, percentage: 51, change: 34 },
-                  { name: 'chat', messages: 33, percentage: 49, change: 33 }
-                ]).map((channel, i) => {
+                {(stats?.top_channels || []).length > 0 ? (
+                  stats.top_channels.map((channel, i) => {
                   const circumference = 2 * Math.PI * 15;
                   const strokeDasharray = `${(channel.percentage / 100) * circumference} ${circumference}`;
                   
@@ -397,7 +395,10 @@ export default function Overview({ guildId }) {
                       <span className="text-xs tabular-nums font-medium text-emerald-400">+{channel.change}</span>
                     </div>
                   );
-                })}
+                })
+                ) : (
+                  <div className="py-4 text-center text-sm text-neutral-500">No channel activity found for this period.</div>
+                )}
               </div>
             </div>
           </div>

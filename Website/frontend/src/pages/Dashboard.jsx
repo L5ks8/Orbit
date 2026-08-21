@@ -8,6 +8,7 @@ import Leaderboard from '../components/dashboard/Leaderboard';
 import Settings from '../components/dashboard/Settings';
 import ServerSelector from './ServerSelector';
 import EmbedBuilder from './dashboard/EmbedBuilder';
+import Moderation from '../components/dashboard/Moderation';
 import { useAuth } from '../context/AuthContext';
 
 function DashboardInner() {
@@ -122,6 +123,7 @@ function DashboardInner() {
               <Route path="embed-builder" element={<EmbedBuilder setSidebarOpen={setSidebarOpen} />} />
               <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
               <Route path="settings" element={<Settings guildId={guildId} />} />
+              <Route path="automod" element={<Moderation guildId={guildId} />} />
               <Route path=":moduleId" element={<Modules guildId={guildId} />} />
             </Routes>
           </div>
