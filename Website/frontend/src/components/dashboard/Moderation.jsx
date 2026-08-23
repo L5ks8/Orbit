@@ -177,6 +177,7 @@ export default function Moderation({ guildId }) {
   // States
   const [aiAutomodEnabled, setAiAutomodEnabled] = useState(false);
   const [aiImageEnabled, setAiImageEnabled] = useState(false);
+  const [bannedWordsSearch, setBannedWordsSearch] = useState('');
   const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, words: [], allowed_words: [], filter_level: 'relaxed' });
   const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', timeout_duration_min: 5 });
   const [antiLink, setAntiLink] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, blocked_domains: [] });
@@ -562,7 +563,7 @@ export default function Moderation({ guildId }) {
                                   <circle cx="11" cy="11" r="8"></circle>
                                   <path d="m21 21-4.3-4.3"></path>
                                 </svg>
-                                <input placeholder="Search words..." className="w-full h-10 pr-9 bg-neutral-700/50 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 hover:bg-neutral-700 transition-all duration-150 ease-out focus:border-neutral-600 focus:bg-neutral-700 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" />
+                                <input value={bannedWordsSearch} onChange={(e) => setBannedWordsSearch(e.target.value)} placeholder="Search words..." className="w-full h-10 pr-9 bg-neutral-700/50 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 hover:bg-neutral-700 transition-all duration-150 ease-out focus:border-neutral-600 focus:bg-neutral-700 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" />
                               </div>
                             </div>
                             <div className="flex gap-2">
@@ -589,10 +590,10 @@ export default function Moderation({ guildId }) {
                           </div>
                           <div className="px-4 py-4 max-h-[280px] overflow-y-auto scrollbar-thin">
                             <div className="flex flex-wrap gap-1.5">
-                              {(bannedWords.words||[]).map((w, idx) => (
+                              {(bannedWords.words||[]).filter(w => w.toLowerCase().includes(bannedWordsSearch.toLowerCase())).map((w, idx) => (
                                 <span key={idx} className="inline-flex items-center gap-1 max-w-full break-all pl-2.5 pr-1 py-1 text-xs bg-neutral-700/50 text-neutral-300 rounded-lg font-mono group hover:bg-neutral-700 transition-[background-color] duration-150 ease-out">
                                   {w}
-                                  <button onClick={() => setBannedWords({ ...bannedWords, words: bannedWords.words.filter((_, i) => i !== idx) })} aria-label="Remove word" className="grid place-items-center w-6 h-6 -my-1 text-neutral-600 hover:text-red-400 transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
+                                  <button onClick={() => setBannedWords({ ...bannedWords, words: bannedWords.words.filter(word => word !== w) })} aria-label="Remove word" className="grid place-items-center w-6 h-6 -my-1 text-neutral-600 hover:text-red-400 transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x w-3 h-3">
                                       <path d="M18 6 6 18"></path>
                                       <path d="m6 6 12 12"></path>
@@ -632,7 +633,7 @@ export default function Moderation({ guildId }) {
                       {((bannedWords.allowed_words||[]).length > 0) && (
                         <div className="flex flex-wrap gap-2 mt-3">
                           {bannedWords.allowed_words.map((w, idx) => (
-                            <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs font-medium text-white group cursor-pointer hover:bg-neutral-700 transition-colors" onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter((_, i) => i !== idx) })}>
+                            <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs font-medium text-white group cursor-pointer hover:bg-neutral-700 transition-colors" onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter(word => word !== w) })}>
                               {w}
                               <button aria-label="Remove word" className="p-0.5 rounded-md text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
