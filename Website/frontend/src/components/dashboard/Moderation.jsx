@@ -969,15 +969,15 @@ export default function Moderation({ guildId }) {
                 </div>
                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                   <div className="flex items-center gap-3">
-                    <span className="text-xs tabular-nums text-neutral-500">0/25 roles</span>
+                    <span className="text-xs tabular-nums text-neutral-500">{exemptions.roles?.length || 0}/25 roles</span>
                     <div className="w-16 h-1 rounded-full bg-neutral-800 overflow-hidden">
-                      <div className="h-full rounded-full transition-all bg-white/60" style={{ width: "0%" }} />
+                      <div className="h-full rounded-full transition-all bg-white/60" style={{ width: `${Math.min(100, ((exemptions.roles?.length || 0) / 25) * 100)}%` }} />
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs tabular-nums text-neutral-500">0/25 channels</span>
+                    <span className="text-xs tabular-nums text-neutral-500">{exemptions.channels?.length || 0}/25 channels</span>
                     <div className="w-16 h-1 rounded-full bg-neutral-800 overflow-hidden">
-                      <div className="h-full rounded-full transition-all bg-white/60" style={{ width: "0%" }} />
+                      <div className="h-full rounded-full transition-all bg-white/60" style={{ width: `${Math.min(100, ((exemptions.channels?.length || 0) / 25) * 100)}%` }} />
                     </div>
                   </div>
                 </div>
