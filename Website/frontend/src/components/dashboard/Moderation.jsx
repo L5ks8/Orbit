@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
 import SaveBar from '../ui/SaveBar';
 import { useToast } from '../ui/Toast';
@@ -9,9 +9,9 @@ const TailwindToggle = ({ checked, onChange }) => (
     role="switch" 
     aria-checked={checked} 
     onClick={onChange}
-    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700'}`}
+    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-black border border-white/20' : 'bg-neutral-700'}`}
   >
-    <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900'}`} />
+    <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px] bg-white' : 'translate-x-[3px] bg-neutral-400'}`} />
   </button>
 );
 
@@ -37,6 +37,39 @@ const ActionSelector = ({ value, onChange }) => {
     </div>
   );
 };
+
+
+const FilterLevelSelector = ({ value, onChange, levels }) => (
+  <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${levels.length}, minmax(0px, 1fr))` }}>
+    {levels.map(level => {
+      const isSelected = value.toLowerCase() === level.id.toLowerCase();
+      const colorClass = level.color === 'amber' ? 'amber-500' : level.color === 'blue' ? 'blue-500' : 'neutral-500';
+      const bgClass = level.color === 'amber' ? 'amber-400' : level.color === 'blue' ? 'blue-400' : 'neutral-500';
+      
+      return (
+        <button
+          key={level.id}
+          type="button"
+          onClick={() => onChange(level.id.toLowerCase())}
+          className={`rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 ${
+            isSelected 
+              ? `border-${colorClass}/50 bg-${colorClass}/10` 
+              : 'border-neutral-800 bg-neutral-800/40 hover:border-neutral-700'
+          }`}
+        >
+          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
+            {level.bars.map((h, i) => (
+              <span key={i} className={`w-1 rounded-full transition-colors ${isSelected && i < level.activeBars ? `bg-${bgClass}` : 'bg-neutral-700'}`} style={{ height: h }} />
+            ))}
+          </span>
+          <span className={`text-[13px] font-medium leading-none ${isSelected ? 'text-white' : 'text-neutral-400'}`}>
+            {level.label}
+          </span>
+        </button>
+      );
+    })}
+  </div>
+);
 
 export default function Moderation({ guildId }) {
   const toast = useToast();
@@ -390,7 +423,7 @@ export default function Moderation({ guildId }) {
                   <div className="flex items-center gap-2.5 flex-shrink-0">
                     <span className="inline-flex">
                       <div className="flex items-center gap-3">
-                        <TailwindToggle checked={aiAutomodEnabled} onChange={() => setAiAutomodEnabled(!aiAutomodEnabled)} />
+                        <TailwindToggle checked={bannedWords.enabled} onChange={() => setBannedWords({ ...bannedWords, enabled: !bannedWords.enabled })} />
                       </div>
                     </span>
                   </div>
@@ -403,44 +436,16 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">Filter level</label>
                         <span className="text-xs text-neutral-500 tabular-nums">203 words</span>
                       </div>
-                      <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, minmax(0px, 1fr))" }}>
-                        <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-amber-500/50 bg-amber-500/10">
-                          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                            <span className="w-1 rounded-full transition-colors bg-amber-400" style={{ height: 7 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 10 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 13 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
-                          </span>
-                          <span className="text-[13px] font-medium leading-none text-white">Relaxed</span>
-                        </button>
-                        <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 13 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
-                          </span>
-                          <span className="text-[13px] font-medium leading-none text-neutral-400">Moderate</span>
-                        </button>
-                        <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 13 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
-                          </span>
-                          <span className="text-[13px] font-medium leading-none text-neutral-400">Strict</span>
-                        </button>
-                        <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                          <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 10 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 13 }} />
-                            <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 16 }} />
-                          </span>
-                          <span className="text-[13px] font-medium leading-none text-neutral-400">Maximum</span>
-                        </button>
-                      </div>
+                      <FilterLevelSelector 
+                        value={bannedWords.filter_level} 
+                        onChange={(val) => setBannedWords({ ...bannedWords, filter_level: val })} 
+                        levels={[
+                          { id: 'relaxed', label: 'Relaxed', color: 'amber', activeBars: 1, bars: ['7px', '10px', '13px', '16px'] },
+                          { id: 'moderate', label: 'Moderate', color: 'amber', activeBars: 2, bars: ['7px', '10px', '13px', '16px'] },
+                          { id: 'strict', label: 'Strict', color: 'amber', activeBars: 3, bars: ['7px', '10px', '13px', '16px'] },
+                          { id: 'maximum', label: 'Maximum', color: 'amber', activeBars: 4, bars: ['7px', '10px', '13px', '16px'] }
+                        ]} 
+                      />
                     </div>
                   </div>
 
@@ -451,23 +456,21 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">When a match is found</label>
                       </div>
                       <div className="space-y-3">
-                        <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Delete</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                          <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Ban</button>
-                        </div>
+                        <ActionSelector value={bannedWords.action} onChange={(val) => setBannedWords({ ...bannedWords, action: val })} />
                         <div className="flex items-center gap-2.5">
                           <span className="text-sm text-neutral-400">Banned for</span>
-                          <div className="relative">
-                            <button type="button" className="inline-flex items-center gap-1.5 h-10 sm:h-8 pl-3 pr-2 rounded-lg bg-neutral-800 border border-neutral-700 hover:border-neutral-600 text-sm text-white transition-[color,border-color,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                              Permanent
-                              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-3.5 h-3.5 text-neutral-500 transition-transform duration-200 ease-out">
-                                <path d="m6 9 6 6 6-6" />
-                              </svg>
-                            </button>
-                          </div>
+                          <CustomSelect 
+                              value={bannedWords.timeout_duration_min} 
+                              onChange={(val) => setBannedWords({ ...bannedWords, timeout_duration_min: parseInt(val) })} 
+                              options={[
+                                { value: 5, label: '5 minutes' },
+                                { value: 60, label: '1 hour' },
+                                { value: 1440, label: '1 day' },
+                                { value: 10080, label: '1 week' },
+                                { value: -1, label: 'Permanent' }
+                              ]} 
+                              className="bg-neutral-800 border-neutral-700 hover:border-neutral-600 text-sm text-white"
+                            />
                         </div>
                       </div>
                     </div>
@@ -475,16 +478,48 @@ export default function Moderation({ guildId }) {
 
                   {/* Edit word list */}
                   <div>
-                    <button type="button" className="flex items-center justify-between w-full min-h-[44px] py-2 text-left group rounded-lg transition-[scale] duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                      <span className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">Edit word list</span>
-                      <span className="flex items-center gap-2 text-xs text-neutral-500">
-                        203 words
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 transition-transform duration-200 ease-out">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </span>
-                    </button>
-                  </div>
+                      <div className="flex items-baseline justify-between gap-3 mb-2">
+                        <label className="text-sm font-medium text-neutral-300">Filtered Words</label>
+                      </div>
+                      <div className="flex gap-2 mb-3">
+                        <input 
+                          id="banned_word_input"
+                          placeholder="Add a word to filter..." 
+                          className="flex-1 h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" 
+                          type="text" 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.target.value.trim()) {
+                              setBannedWords({ ...bannedWords, words: [...bannedWords.words, e.target.value.trim()] });
+                              e.target.value = '';
+                            }
+                          }}
+                        />
+                        <button 
+                          onClick={() => {
+                            const input = document.getElementById('banned_word_input');
+                            if (input.value.trim()) {
+                              setBannedWords({ ...bannedWords, words: [...bannedWords.words, input.value.trim()] });
+                              input.value = '';
+                            }
+                          }}
+                          className="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {bannedWords.words.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {bannedWords.words.map(w => (
+                            <span key={w} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-200">
+                              {w}
+                              <button onClick={() => setBannedWords({ ...bannedWords, words: bannedWords.words.filter(x => x !== w) })} className="p-0.5 rounded-md hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
                   {/* Always allow these words */}
                   <div>
@@ -494,9 +529,43 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="space-y-2.5">
                       <div className="flex gap-2">
-                        <input placeholder="Add a word that should never be filtered..." className="flex-1 h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" defaultValue="" />
-                        <button className="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0">Add</button>
+                        <input 
+                          id="allowed_word_input"
+                          placeholder="Add a word that should never be filtered..." 
+                          className="flex-1 h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" 
+                          type="text" 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.target.value.trim()) {
+                              setBannedWords({ ...bannedWords, allowed_words: [...bannedWords.allowed_words, e.target.value.trim()] });
+                              e.target.value = '';
+                            }
+                          }}
+                        />
+                        <button 
+                          onClick={() => {
+                            const input = document.getElementById('allowed_word_input');
+                            if (input.value.trim()) {
+                              setBannedWords({ ...bannedWords, allowed_words: [...bannedWords.allowed_words, input.value.trim()] });
+                              input.value = '';
+                            }
+                          }}
+                          className="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0"
+                        >
+                          Add
+                        </button>
                       </div>
+                      {bannedWords.allowed_words.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {bannedWords.allowed_words.map(w => (
+                            <span key={w} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs font-medium text-white">
+                              {w}
+                              <button onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter(x => x !== w) })} className="p-0.5 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -539,33 +608,21 @@ export default function Moderation({ guildId }) {
                     <div className="flex items-baseline justify-between gap-3 mb-2">
                       <label className="text-sm font-medium text-neutral-300">Sensitivity</label>
                     </div>
-                    <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, minmax(0px, 1fr))" }}>
-                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: "11.5px" }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
-                        </span>
-                        <span className="text-[13px] font-medium leading-none text-neutral-400">Relaxed</span>
-                      </button>
-                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-blue-500/50 bg-blue-500/10">
-                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                          <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: 7 }} />
-                          <span className="w-1 rounded-full transition-colors bg-blue-400" style={{ height: "11.5px" }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-700" style={{ height: 16 }} />
-                        </span>
-                        <span className="text-[13px] font-medium leading-none text-white">Normal</span>
-                      </button>
-                      <button type="button" className="rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 border-neutral-800 bg-neutral-800/40 hover:border-neutral-700">
-                        <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
-                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 7 }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: "11.5px" }} />
-                          <span className="w-1 rounded-full transition-colors bg-neutral-500" style={{ height: 16 }} />
-                        </span>
-                        <span className="text-[13px] font-medium leading-none text-neutral-400">Strict</span>
-                      </button>
+                    <FilterLevelSelector 
+                        value={antiSpam.sensitivity || 'normal'} 
+                        onChange={(val) => {
+                          const settings = val === 'relaxed' ? { max_messages: 7, time_window_sec: 5 } :
+                                           val === 'normal'  ? { max_messages: 5, time_window_sec: 5 } :
+                                           val === 'strict'  ? { max_messages: 3, time_window_sec: 5 } : {};
+                          setAntiSpam({ ...antiSpam, sensitivity: val, ...settings });
+                        }} 
+                        levels={[
+                          { id: 'relaxed', label: 'Relaxed', color: 'blue', activeBars: 1, bars: ['7px', '11.5px', '16px'] },
+                          { id: 'normal', label: 'Normal', color: 'blue', activeBars: 2, bars: ['7px', '11.5px', '16px'] },
+                          { id: 'strict', label: 'Strict', color: 'blue', activeBars: 3, bars: ['7px', '11.5px', '16px'] }
+                        ]} 
+                      />
                     </div>
-                  </div>
 
                   {/* Messages & Time Window */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -595,13 +652,7 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">When triggered</label>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
-                      </div>
+                      <ActionSelector value={antiSpam.action} onChange={(val) => setAntiSpam({ ...antiSpam, action: val })} />
                     </div>
                   </div>
                 </div>
@@ -669,13 +720,7 @@ export default function Moderation({ guildId }) {
                       <label className="text-sm font-medium text-neutral-300">When a link is blocked</label>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-700 text-white shadow-sm">Delete</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Warn</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Timeout</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Kick</button>
-                        <button type="button" className="flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-500 hover:text-neutral-300">Ban</button>
-                      </div>
+                      <ActionSelector value={antiLink.action} onChange={(val) => setAntiLink({ ...antiLink, action: val })} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1116,6 +1161,7 @@ export default function Moderation({ guildId }) {
     </div>
   );
 }
+
 
 
 
