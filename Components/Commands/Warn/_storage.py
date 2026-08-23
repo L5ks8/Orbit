@@ -20,7 +20,19 @@ def load_warnings(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
         return {}
     try:
         if True:
-            return get_config("Warn", guild_id)
+            data = get_config("Warn", guild_id)
+            # Deduplicate
+            for uid, warns in data.items():
+                if isinstance(warns, list):
+                    seen = set()
+                    new_warns = []
+                    for w in warns:
+                        wid = w.get("warn_id")
+                        if wid not in seen:
+                            seen.add(wid)
+                            new_warns.append(w)
+                    data[uid] = new_warns
+            return data
     except Exception:
         return {}
 
@@ -100,14 +112,27 @@ def load_warn_history(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
         return {}
     try:
         if True:
-            return get_config("Warn", guild_id)
+            history = get_config("WarnHistory", guild_id)
+            if not history:
+                history = get_config("Warn", guild_id)
+            for uid, warns in history.items():
+                if isinstance(warns, list):
+                    seen = set()
+                    new_warns = []
+                    for w in warns:
+                        wid = w.get("warn_id")
+                        if wid not in seen:
+                            seen.add(wid)
+                            new_warns.append(w)
+                    history[uid] = new_warns
+            return history
     except Exception:
         return {}
 
 def save_warn_history(guild_id: int, data: Dict[str, List[Dict[str, Any]]]) -> None:
     path = _get_history_file_path(guild_id)
     if True:
-        set_config("Warn", guild_id, data)
+        set_config("WarnHistory", guild_id, data)
 
 def add_to_warn_history(guild_id: int, user_id: int, warn_entry: Dict[str, Any]) -> None:
     data = load_warn_history(guild_id)
