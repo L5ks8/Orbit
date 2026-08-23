@@ -249,12 +249,20 @@ class AutoModListener(commands.Cog):
             if uid not in self.spam_cache[gid]:
                 self.spam_cache[gid][uid] = []
 
-            self.spam_cache[gid][uid] = [t for t in self.spam_cache[gid][uid] if now - t <= t_win]
-            self.spam_cache[gid][uid].append(now)
+            self.spam_cache[gid][uid] = [(t, m_id) for t, m_id in self.spam_cache[gid][uid] if now - t <= t_win]
+            self.spam_cache[gid][uid].append((now, message.id))
 
             if len(self.spam_cache[gid][uid]) >= m_msgs:
+                msg_ids = [m_id for t, m_id in self.spam_cache[gid][uid]]
                 self.spam_cache[gid][uid] = []
-                await do_action(spam_cfg, f"AutoMod: Message flood ({m_msgs}+ messages in {t_win}s)")
+                
+                try:
+                    messages_to_delete = [discord.Object(id=m_id) for m_id in msg_ids]
+                    await message.channel.delete_messages(messages_to_delete)
+                except Exception:
+                    pass
+
+                await do_action(spam_cfg, f"AutoMod: Message flood ({m_msgs}+ messages in {t_win}s)", delete_msg=False)
                 return
 
         ai_cfg = config.get("ai_automod", {})

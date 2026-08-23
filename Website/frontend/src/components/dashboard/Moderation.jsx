@@ -622,7 +622,7 @@ export default function Moderation({ guildId }) {
                               {(bannedWords.words||[]).filter(w => w.toLowerCase().includes(bannedWordsSearch.toLowerCase())).map((w, idx) => (
                                 <span key={idx} className="inline-flex items-center gap-1 max-w-full break-all pl-2.5 pr-1 py-1 text-xs bg-neutral-700/50 text-neutral-300 rounded-lg font-mono group hover:bg-neutral-700 transition-[background-color] duration-150 ease-out">
                                   {w}
-                                  <button onClick={() => setBannedWords({ ...bannedWords, words: bannedWords.words.filter(word => word !== w) })} aria-label="Remove word" className="grid place-items-center w-6 h-6 -my-1 text-neutral-600 hover:text-red-400 transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
+                                  <button onClick={() => setBannedWords({ ...bannedWords, words: bannedWords.words.filter(word => word !== w) })} aria-label="Remove word" className="grid place-items-center w-6 h-6 -my-1 text-red-500/80 hover:text-red-400 transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x w-3 h-3">
                                       <path d="M18 6 6 18"></path>
                                       <path d="m6 6 12 12"></path>
@@ -664,7 +664,7 @@ export default function Moderation({ guildId }) {
                           {bannedWords.allowed_words.map((w, idx) => (
                             <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs font-medium text-white group cursor-pointer hover:bg-neutral-700 transition-colors" onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter(word => word !== w) })}>
                               {w}
-                              <button aria-label="Remove word" className="p-0.5 rounded-md text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
+                              <button aria-label="Remove word" className="p-0.5 rounded-md text-red-500/80 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M18 6 6 18"></path>
                                   <path d="m6 6 12 12"></path>
