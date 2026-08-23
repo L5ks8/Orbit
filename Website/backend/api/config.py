@@ -572,8 +572,6 @@ class ConfigMixin:
                 save_submodule("anti_caps", {}, [])
                 save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
                 save_submodule("anti_bot", {"action": "kick"}, [])
-                save_submodule("ai_automod", {"action": "delete"}, [{"name": "min_words", "type": int, "default": 3}])
-                save_submodule("ai_image", {"action": "delete"}, [])
                 save_submodule("anti_zalgo", {"action": "warn"}, [])
 
                 if "anti_alt" not in automod_cfg:

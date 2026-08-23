@@ -279,61 +279,7 @@ class AutoModListener(commands.Cog):
                 await do_action(spam_cfg, f"AutoMod: Message flood ({m_msgs}+ messages in {t_win}s)", delete_msg=False)
                 return
 
-        ai_cfg = config.get("ai_automod", {})
-        if ai_cfg.get("enabled", False) and not is_exempt(ai_cfg):
-            import re
-            text = message.content
 
-            flagged = None
-            if re.search(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}(?:\.\d{1,3})?\b', text):
-                flagged = "IP address"
-            elif re.search(r'[A-Za-z0-9_-]{24,}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,}', text):
-                flagged = "Discord token"
-            elif re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}\b', text):
-                flagged = "Email address"
-            elif re.search(r'(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}', text):
-                digits = re.sub(r'\D', '', text)
-                if len(digits) >= 7:
-                    flagged = "Phone number"
-
-            if flagged:
-                await do_action(ai_cfg, f"AutoMod: AI Content Filter - {flagged}")
-                return
-
-            min_words = ai_cfg.get("min_words", 3)
-            if len(text.split()) >= min_words:
-                try:
-                    import g4f
-                    from g4f.client import AsyncClient
-                    providers = [
-                        getattr(g4f.Provider, "Blackbox", None),
-                        getattr(g4f.Provider, "DDG", None),
-                        getattr(g4f.Provider, "DuckDuckGo", None),
-                        getattr(g4f.Provider, "FreeGpt", None),
-                        getattr(g4f.Provider, "ChatGptEs", None),
-                    ]
-                    valid_providers = [p for p in providers if p is not None]
-                    if hasattr(g4f.Provider, "RetryProvider") and valid_providers:
-                        client = AsyncClient(provider=g4f.Provider.RetryProvider(valid_providers))
-                    else:
-                        client = AsyncClient()
-
-                    prompt = (f"Read this Discord message and decide if it should be deleted.\n"
-                              f"Delete if it contains: severe insults, slurs, bypassed slurs (like 'f*ck'), or extreme toxicity.\n"
-                              f"Do NOT delete normal chat, mild banter, or jokes.\n"
-                              f"Message: '{text}'\n"
-                              f"Answer ONLY YES or NO.")
-
-                    res = await client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[{"role": "user", "content": prompt}],
-                    )
-                    answer = res.choices[0].message.content.strip().lower()
-                    if "yes" in answer:
-                        await do_action(ai_cfg, "AutoMod: AI Content Filter")
-                        return
-                except Exception:
-                    pass
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

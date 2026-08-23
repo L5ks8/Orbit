@@ -14,7 +14,6 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
     { id: 'anti_caps', name: 'Anti Caps', desc: 'Prevent sending messages with exclusively capital letters.', icon: 'M4 7V4h16v3 M9 20h6 M12 4v16' },
     { id: 'mention_spam', name: 'Mention Spam', desc: 'Prevent sending messages with too many mentions.', icon: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' },
     { id: 'anti_alt', name: 'Anti-Alt Account', desc: 'Automatically act on newly created accounts joining the server.', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75' },
-    { id: 'ai_automod', name: 'AI Content Filter', desc: 'Uses AI to detect context-aware toxicity, slurs, and bypassed insults.', icon: 'M12 2v20 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
     { id: 'anti_bot', name: 'Anti-Bot Add', desc: 'Automatically blocks unauthorized bots from joining and punishes the inviter.', icon: 'M3 11h18v10H3z M12 5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M12 7v4 M8 16h8' }
   ];
 
@@ -260,7 +259,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
               )}
 
               {/* EXCEPTIONS */}
-              {editingForm.id !== 'anti_alt' && editingForm.id !== 'anti_bot' && editingForm.id !== 'ai_automod' && (
+              {editingForm.id !== 'anti_alt' && editingForm.id !== 'anti_bot'  && (
                 <>
                   <div className="form-group" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                     <label>Allowed Channels</label>

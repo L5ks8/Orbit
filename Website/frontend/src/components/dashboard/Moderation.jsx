@@ -191,8 +191,6 @@ export default function Moderation({ guildId }) {
   const [formKey, setFormKey] = useState(0);
 
   // States
-  const [aiAutomodEnabled, setAiAutomodEnabled] = useState(false);
-  const [aiImageEnabled, setAiImageEnabled] = useState(false);
   const [bannedWordsSearch, setBannedWordsSearch] = useState('');
   const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, words: [], allowed_words: [], filter_level: 'relaxed' });
   const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', timeout_duration_min: 5 });
@@ -239,8 +237,6 @@ export default function Moderation({ guildId }) {
         enabled: serverData?.config?.automod?.enabled ?? true,
         exempt_channels: exemptions.channels,
         exempt_roles: exemptions.roles,
-        ai_automod: { enabled: aiAutomodEnabled, action: 'delete' },
-        ai_image: { enabled: aiImageEnabled, action: 'delete' },
         banned_words: { ...bannedWords },
         anti_spam: { ...antiSpam },
         anti_link: { ...antiLink },
@@ -302,9 +298,6 @@ export default function Moderation({ guildId }) {
       .then(data => {
         setServerData(data);
         const amCfg = data?.config?.automod || {};
-        
-        setAiAutomodEnabled(amCfg.ai_automod?.enabled || false);
-        setAiImageEnabled(amCfg.ai_image?.enabled || false);
         setBannedWords(prev => ({ ...prev, ...amCfg.banned_words }));
         setAntiSpam(prev => ({ ...prev, ...amCfg.anti_spam }));
         setAntiLink(prev => ({ ...prev, ...amCfg.anti_link }));
@@ -410,136 +403,6 @@ export default function Moderation({ guildId }) {
       <div className="mt-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1.1fr] gap-4 lg:items-stretch min-w-0">
           <div className="flex flex-col gap-4 min-w-0 scroll-mt-24 w-full">
-            {/* AI Moderation Card */}
-            <div
-              className="relative flex flex-col w-full"
-              role="button"
-              tabIndex={0}
-              style={{ cursor: "default" }}
-            >
-              <div className="flex flex-col">
-                <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-                  <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="flex-shrink-0 transition-colors text-neutral-500">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width={24}
-                          height={24}
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-sparkles w-4 h-4"
-                        >
-                          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                          <path d="M5 3v4" />
-                          <path d="M19 17v4" />
-                          <path d="M3 5h4" />
-                          <path d="M17 19h4" />
-                        </svg>
-                      </span>
-                      <span className="text-sm font-medium text-white truncate">
-                        AI Moderation
-                      </span>
-                      
-                      <span className="text-[10px] px-1.5 py-0.5 bg-white/10 text-neutral-300 rounded font-semibold uppercase tracking-[0.08em]">
-                        Beta
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2.5 flex-shrink-0">
-                      <div className="flex items-center gap-3">
-                        <TailwindToggle checked={aiAutomodEnabled} onChange={() => setAiAutomodEnabled(!aiAutomodEnabled)} />
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="block w-full px-5 py-9 text-center group rounded-2xl transition-[background-color]"
-                  >
-                    <div className="mx-auto w-11 h-11 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-[transform,background-color]">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={24}
-                        height={24}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-sparkles w-4 h-4 text-violet-400"
-                      >
-                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                        <path d="M5 3v4" />
-                        <path d="M19 17v4" />
-                        <path d="M3 5h4" />
-                        <path d="M17 19h4" />
-                      </svg>
-                    </div>
-                    <p className="text-sm font-semibold text-white mb-3 text-balance">
-                      Reads what people mean, not just keywords
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto mb-4">
-                      <span className="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Hate speech</span>
-                      <span className="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Harassment</span>
-                      <span className="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Threats</span>
-                      <span className="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Violence</span>
-                      <span className="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Sexual content</span>
-                      <span className="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Self-harm</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* AI Image Moderation Card */}
-            <div
-              className="relative flex flex-col w-full"
-              role="button"
-              tabIndex={0}
-              style={{ cursor: "default" }}
-            >
-              <div className="flex flex-col">
-                <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-                  <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="grid place-items-center w-9 h-9 rounded-xl bg-violet-500/10 text-violet-300 border border-violet-500/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] shrink-0">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width={24}
-                          height={24}
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-scan-eye w-4 h-4"
-                        >
-                          <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-                          <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-                          <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-                          <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-                          <circle cx={12} cy={12} r={1} />
-                          <path d="M5 12s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5" />
-                        </svg>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-sm font-medium text-white text-balance">AI Image Moderation</h3>
-                          
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <TailwindToggle checked={aiImageEnabled} onChange={() => setAiImageEnabled(!aiImageEnabled)} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
                         {/* Content Filter */}
             <div data-tour="content-filter" className="scroll-mt-24 w-full">
