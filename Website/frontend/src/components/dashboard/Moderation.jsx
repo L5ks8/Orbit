@@ -253,6 +253,9 @@ export default function Moderation({ guildId }) {
         mention_spam: { ...mentionSpam },
         anti_zalgo: { ...antiZalgo },
         anti_caps: { ...antiCaps }
+      },
+      logs: {
+        ...logs
       }
     };
   };
@@ -318,6 +321,17 @@ export default function Moderation({ guildId }) {
         setExemptions({
           roles: (amCfg.exempt_roles || []).map(String),
           channels: (amCfg.exempt_channels || []).map(String)
+        });
+        
+        const lCfg = data?.config?.logs || {};
+        setLogs({
+          enabled: lCfg.enabled ?? true,
+          executor_in_logs: lCfg.executor_in_logs || false,
+          global_exempt_channels: lCfg.global_exempt_channels || [],
+          global_exempt_roles: lCfg.global_exempt_roles || [],
+          categories: lCfg.categories || {},
+          channels: lCfg.channels || {},
+          roles: lCfg.roles || {}
         });
         
         setLoading(false);

@@ -720,7 +720,7 @@ class ConfigMixin:
 
                 save_automation_config(guild_id, new_auto)
 
-            if user_perms.get("can_channels") and "logs" in data:
+            if user_perms.get("can_moderation") and "logs" in data:
                 l_cfg = load_log_config(guild_id)
                 l_data = data["logs"]
                 
