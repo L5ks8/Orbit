@@ -1,7 +1,0 @@
-﻿    @app_commands.command(name="ask", description="Ask Orbit a question â€“ the answer is spoken in the voice channel.")
-    @app_commands.command(name="backups", description="List all server backups.")
-    @app_commands.command(name="getchannel", description="Get a channel's name by its ID or channel selection.")
-    @app_commands.command(name="rank", description="View your or another member's rank card.")
-    @app_commands.command(name="leaderboard", description="View the server's XP leaderboard.")
-    @app_commands.command(name="emoji", description="Steals an emoji and adds it to your server")
-    @app_commands.command(name="emojiurl", description="Steals an emoji using its URL and adds it to your server")
