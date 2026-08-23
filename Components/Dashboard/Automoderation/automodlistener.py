@@ -2,7 +2,7 @@ import discord
 import time
 import datetime
 from discord.ext import commands
-from Components.Commands.AutoMod._storage import load_automod_config
+from Components.Dashboard.Automoderation._storage import load_automod_config
 from Components.Commands.Warn._storage import add_warning, get_user_warnings
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Log._storage import log_event

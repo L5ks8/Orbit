@@ -242,7 +242,7 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_serverstats_config(message.guild.id, cfg)
                                         elif raw_mod_name == "AutoMod":
-                                            from Components.Commands.AutoMod._storage import load_automod_config, save_automod_config
+                                            from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
                                             cfg = load_automod_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_automod_config(message.guild.id, cfg)

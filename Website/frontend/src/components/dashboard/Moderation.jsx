@@ -282,11 +282,10 @@ export default function Moderation({ guildId }) {
                       </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="block w-full px-5 py-9 text-center group rounded-2xl transition-[background-color] hover:bg-white/[0.015] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                  <div
+                    className="block w-full px-5 py-9 text-center group rounded-2xl transition-[background-color]"
                   >
-                    <div className="mx-auto w-11 h-11 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-[transform,background-color] group-hover:bg-violet-500/15 group-active:scale-[0.96]">
+                    <div className="mx-auto w-11 h-11 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-[transform,background-color]">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width={24}
@@ -297,10 +296,13 @@ export default function Moderation({ guildId }) {
                         strokeWidth={2}
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="lucide lucide-lock w-4 h-4 text-violet-400 group-hover:text-violet-300 transition-[color]"
+                        className="lucide lucide-sparkles w-4 h-4 text-violet-400"
                       >
-                        <rect width={18} height={11} x={3} y={11} rx={2} ry={2} />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                        <path d="M5 3v4" />
+                        <path d="M19 17v4" />
+                        <path d="M3 5h4" />
+                        <path d="M17 19h4" />
                       </svg>
                     </div>
                     <p className="text-sm font-semibold text-white mb-3 text-balance">
@@ -314,10 +316,7 @@ export default function Moderation({ guildId }) {
                       <span className="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Sexual content</span>
                       <span className="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Self-harm</span>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-white text-black text-sm font-medium shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-[transform,background-color] group-hover:bg-neutral-200 group-active:scale-[0.96] group-disabled:group-active:scale-100">
-                      Upgrade to Pro
-                    </span>
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -357,24 +356,7 @@ export default function Moderation({ guildId }) {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-sm font-medium text-white text-balance">AI Image Moderation</h3>
-                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width={24}
-                              height={24}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="lucide lucide-lock w-3 h-3 -ml-0.5"
-                            >
-                              <rect width={18} height={11} x={3} y={11} rx={2} ry={2} />
-                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                            Pro
-                          </span>
+                          
                         </div>
                       </div>
                     </div>
