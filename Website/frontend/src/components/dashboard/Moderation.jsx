@@ -576,7 +576,7 @@ export default function Moderation({ guildId }) {
                                   <circle cx="11" cy="11" r="8"></circle>
                                   <path d="m21 21-4.3-4.3"></path>
                                 </svg>
-                                <input placeholder="Search words..." className="w-full h-10 pr-9 bg-[#2A2A2A] border border-neutral-600" style={{ paddingLeft: "2.5rem" }} rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" />
+                                <input placeholder="Search words..." className="w-full h-10 pr-9 bg-[#2A2A2A] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" />
                               </div>
                             </div>
                             <div className="flex gap-2">
@@ -585,7 +585,7 @@ export default function Moderation({ guildId }) {
                                   <path d="M5 12h14"></path>
                                   <path d="M12 5v14"></path>
                                 </svg>
-                                <input id="banned_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-[#2A2A2A] border border-neutral-600" style={{ paddingLeft: "2.5rem" }} rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
+                                <input id="banned_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-[#2A2A2A] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" onKeyDown={(e) => {
                                   if (e.key === 'Enter' && e.target.value.trim()) {
                                     setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), e.target.value.trim()] });
                                     e.target.value = '';
@@ -641,7 +641,7 @@ export default function Moderation({ guildId }) {
                                   <path d="M5 12h14"></path>
                                   <path d="M12 5v14"></path>
                                 </svg>
-                                <input id="allowed_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-[#2A2A2A] border border-neutral-600" style={{ paddingLeft: "2.5rem" }} rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
+                                <input id="allowed_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-[#2A2A2A] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" onKeyDown={(e) => {
                                   if (e.key === 'Enter' && e.target.value.trim()) {
                                     setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words||[]), e.target.value.trim()] });
                                     e.target.value = '';
