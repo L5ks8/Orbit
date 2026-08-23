@@ -71,20 +71,34 @@ class ImageFilters(commands.Cog):
             enhancer = ImageEnhance.Brightness(avatar)
             avatar = enhancer.enhance(0.5)
 
-            # Draw "WASTED" banner
+            # Draw "WASTED" banner overlay
             width, height = avatar.size
-            draw = ImageDraw.Draw(avatar)
-            banner_height = height // 4
-            banner_y = (height - banner_height) // 2
             
-            # Semi-transparent red/black banner
-            draw.rectangle([0, banner_y, width, banner_y + banner_height], fill=(0, 0, 0, 150))
-            
-            # Attempt to draw text (using default font since we don't have a local TTF)
-            # In a real bot, you'd load a font: ImageFont.truetype("impact.ttf", size)
-            text = "W A S T E D"
-            # We'll just draw it simply.
-            draw.text((width//2 - 40, banner_y + banner_height//2 - 10), text, fill=(255, 0, 0, 255))
+            import os
+            wasted_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "Assets", "fun", "wasted_text.png")
+            if os.path.exists(wasted_img_path):
+                overlay = Image.open(wasted_img_path).convert("RGBA")
+                # Resize the overlay to fit the avatar width
+                o_width, o_height = overlay.size
+                new_height = int(o_height * (width / o_width))
+                overlay = overlay.resize((width, new_height))
+                
+                # Draw a dark bar behind it
+                draw = ImageDraw.Draw(avatar)
+                bar_height = height // 4
+                bar_y = (height - bar_height) // 2
+                draw.rectangle([0, bar_y, width, bar_y + bar_height], fill=(0, 0, 0, 150))
+                
+                # Paste the wasted text on top
+                paste_y = (height - new_height) // 2
+                avatar.paste(overlay, (0, paste_y), overlay)
+            else:
+                draw = ImageDraw.Draw(avatar)
+                banner_height = height // 4
+                banner_y = (height - banner_height) // 2
+                draw.rectangle([0, banner_y, width, banner_y + banner_height], fill=(0, 0, 0, 150))
+                text = "W A S T E D"
+                draw.text((width//2 - 40, banner_y + banner_height//2 - 10), text, fill=(255, 0, 0, 255))
 
             buffer = BytesIO()
             avatar.save(buffer, "PNG")
@@ -139,19 +153,25 @@ class ImageFilters(commands.Cog):
             # Grayscale the avatar
             avatar = ImageOps.grayscale(avatar).convert("RGBA")
             
-            # Create a simple tombstone shape
-            width, height = avatar.size
-            tombstone = Image.new("RGBA", (width + 40, height + 80), (0, 0, 0, 0))
-            draw = ImageDraw.Draw(tombstone)
-            
-            # Gray background for tombstone
-            draw.rounded_rectangle([0, 0, width + 40, height + 80], radius=40, fill=(100, 100, 100, 255))
-            
-            # Write RIP
-            draw.text(((width + 40)//2 - 15, 10), "R.I.P", fill=(0, 0, 0, 255))
-            
-            # Paste avatar
-            tombstone.paste(avatar, (20, 40), avatar)
+            import os
+            rip_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "Assets", "fun", "rip_tombstone.png")
+            if os.path.exists(rip_img_path):
+                tombstone = Image.open(rip_img_path).convert("RGBA")
+                # Resize avatar to fit under RIP
+                av_size = 200
+                avatar = avatar.resize((av_size, av_size))
+                # Paste avatar centered, below the RIP text
+                # tombstone is 500x602. Center x is 250.
+                paste_x = (500 - av_size) // 2
+                paste_y = 300
+                tombstone.paste(avatar, (paste_x, paste_y), avatar)
+            else:
+                width, height = avatar.size
+                tombstone = Image.new("RGBA", (width + 40, height + 80), (0, 0, 0, 0))
+                draw = ImageDraw.Draw(tombstone)
+                draw.rounded_rectangle([0, 0, width + 40, height + 80], radius=40, fill=(100, 100, 100, 255))
+                draw.text(((width + 40)//2 - 15, 10), "R.I.P", fill=(0, 0, 0, 255))
+                tombstone.paste(avatar, (20, 40), avatar)
 
             buffer = BytesIO()
             tombstone.save(buffer, "PNG")
