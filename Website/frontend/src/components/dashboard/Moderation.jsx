@@ -196,7 +196,7 @@ export default function Moderation({ guildId }) {
   const [bannedWordsSearch, setBannedWordsSearch] = useState('');
   const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, words: [], allowed_words: [], filter_level: 'relaxed' });
   const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', timeout_duration_min: 5 });
-  const [antiLink, setAntiLink] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, blocked_domains: [] });
+  const [antiLink, setAntiLink] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, blocked_domains: [], allowed_domains: [], allow_media: false, allow_gifs: false });
   const [antiInvites, setAntiInvites] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5 });
   const [mentionSpam, setMentionSpam] = useState({ enabled: false, max_mentions: 5, action: 'timeout', timeout_duration_min: 5 });
   const [antiZalgo, setAntiZalgo] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5 });
@@ -209,6 +209,29 @@ export default function Moderation({ guildId }) {
   const [warnSearchId, setWarnSearchId] = useState('');
   const [warnSearchData, setWarnSearchData] = useState(null);
   const [searchingWarns, setSearchingWarns] = useState(false);
+
+  const profanity_basic = ["fuck", "shit", "bitch", "asshole", "cunt", "nigger", "nigga", "faggot", "whore", "slut", "dick", "cock", "pussy"];
+  const profanity_strict = [...profanity_basic, "bastard", "motherfucker", "twat", "wanker", "prick", "retard", "dyke", "tranny", "kys", "kill yourself"];
+  const profanity_maximum = [...profanity_strict, "crap", "damn", "ass", "piss", "boobs", "tits", "vagina", "penis", "cum", "jizz", "wank"];
+  
+  const getPredefinedWords = (level) => {
+    if (level === 'maximum') return profanity_maximum;
+    if (level === 'strict') return profanity_strict;
+    if (level === 'moderate') return profanity_basic;
+    return [];
+  };
+
+  const predefinedWords = getPredefinedWords(bannedWords.filter_level);
+  const allBannedWords = Array.from(new Set([...(bannedWords.words || []), ...predefinedWords])).filter(w => !(bannedWords.allowed_words || []).includes(w));
+
+  const removeBannedWord = (w) => {
+    if (predefinedWords.includes(w)) {
+      setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words || []), w] });
+    }
+    if ((bannedWords.words || []).includes(w)) {
+      setBannedWords({ ...bannedWords, words: bannedWords.words.filter(word => word !== w) });
+    }
+  };
 
   const getPayload = () => {
     return {
@@ -544,7 +567,7 @@ export default function Moderation({ guildId }) {
                     <div>
                       <div className="flex items-baseline justify-between gap-3 mb-2">
                         <label className="text-sm font-medium text-neutral-300">Filter level</label>
-                        <span className="text-xs text-neutral-500 tabular-nums">{bannedWords.words?.length || 0} words</span>
+                        <span className="text-xs text-neutral-500 tabular-nums">{allBannedWords.length} words</span>
                       </div>
                       <FilterLevelSelector 
                         value={bannedWords.filter_level} 
@@ -575,7 +598,7 @@ export default function Moderation({ guildId }) {
                   <div>
                     <button type="button" className="flex items-center justify-between w-full min-h-[44px] py-2 text-left group rounded-lg transition-[scale] duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" onClick={(e) => { e.currentTarget.nextElementSibling.classList.toggle('hidden'); }}>
                       <span className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">Edit word list</span>
-                      <span className="flex items-center gap-2 text-xs text-neutral-500">{bannedWords.words?.length || 0} words
+                      <span className="flex items-center gap-2 text-xs text-neutral-500">{allBannedWords.length} words
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 transition-transform duration-200 ease-out rotate-180">
                           <path d="m6 9 6 6 6-6"></path>
                         </svg>
@@ -602,7 +625,12 @@ export default function Moderation({ guildId }) {
                                 </svg>
                                 <input id="banned_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-neutral-700/50 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 hover:bg-neutral-700 transition-all duration-150 ease-out focus:border-neutral-600 focus:bg-neutral-700 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" onKeyDown={(e) => {
                                   if (e.key === 'Enter' && e.target.value.trim()) {
-                                    setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), e.target.value.trim()] });
+                                    const w = e.target.value.trim();
+                                    if ((bannedWords.allowed_words || []).includes(w)) {
+                                      setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter(word => word !== w) });
+                                    } else if (!allBannedWords.includes(w)) {
+                                      setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), w] });
+                                    }
                                     e.target.value = '';
                                   }
                                 }} />
@@ -610,7 +638,12 @@ export default function Moderation({ guildId }) {
                               <button onClick={() => {
                                 const input = document.getElementById('banned_word_input');
                                 if (input.value.trim()) {
-                                  setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), input.value.trim()] });
+                                  const w = input.value.trim();
+                                  if ((bannedWords.allowed_words || []).includes(w)) {
+                                    setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter(word => word !== w) });
+                                  } else if (!allBannedWords.includes(w)) {
+                                    setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), w] });
+                                  }
                                   input.value = '';
                                 }
                               }} className="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0">Add</button>
@@ -618,10 +651,10 @@ export default function Moderation({ guildId }) {
                           </div>
                           <div className="px-4 py-4 max-h-[280px] overflow-y-auto scrollbar-thin">
                             <div className="flex flex-wrap gap-1.5">
-                              {(bannedWords.words||[]).filter(w => w.toLowerCase().includes(bannedWordsSearch.toLowerCase())).map((w, idx) => (
+                              {allBannedWords.filter(w => w.toLowerCase().includes(bannedWordsSearch.toLowerCase())).map((w, idx) => (
                                 <span key={idx} className="inline-flex items-center gap-1 max-w-full break-all pl-2.5 pr-1 py-1 text-xs bg-neutral-700/50 text-neutral-300 rounded-lg font-mono group hover:bg-neutral-700 transition-[background-color] duration-150 ease-out">
                                   {w}
-                                  <button onClick={() => setBannedWords({ ...bannedWords, words: bannedWords.words.filter(word => word !== w) })} aria-label="Remove word" className="grid place-items-center w-6 h-6 -my-1 text-red-500/80 hover:text-red-400 transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
+                                  <button onClick={() => removeBannedWord(w)} aria-label="Remove word" className="grid place-items-center w-6 h-6 -my-1 text-red-500/80 hover:text-red-400 transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x w-3 h-3">
                                       <path d="M18 6 6 18"></path>
                                       <path d="m6 6 12 12"></path>
@@ -795,7 +828,7 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="flex-shrink-0">
                       <div className="flex items-center gap-3">
-                        <TailwindToggle checked={antiLink.enabled} onChange={() => setAntiLink({ ...antiLink, enabled: !antiLink.enabled })} />
+                        <TailwindToggle checked={antiInvites.enabled} onChange={() => setAntiInvites({ ...antiInvites, enabled: !antiInvites.enabled })} />
                       </div>
                     </div>
                   </div>
@@ -837,7 +870,21 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">Always allowed</label>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5 min-h-[40px] px-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl cursor-text hover:border-neutral-600 transition-[border-color] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
-                        <input placeholder="youtube.com, twitter.com..." title="" autoComplete="off" className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5" defaultValue="" />
+                        {(antiLink.allowed_domains || []).map((domain, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 rounded-lg bg-neutral-700/50 text-xs font-medium text-neutral-300 group">
+                            {domain}
+                            <button type="button" aria-label="Remove domain" onClick={() => setAntiLink({ ...antiLink, allowed_domains: antiLink.allowed_domains.filter(d => d !== domain) })} className="p-0.5 rounded-md text-red-500/80 hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                            </button>
+                          </span>
+                        ))}
+                        <input placeholder="youtube.com, twitter.com..." title="" autoComplete="off" className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5" onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            setAntiLink({ ...antiLink, allowed_domains: [...(antiLink.allowed_domains || []), e.target.value.trim()] });
+                            e.target.value = '';
+                          }
+                        }} />
                       </div>
                     </div>
                     <div>
@@ -845,7 +892,21 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">Always blocked</label>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5 min-h-[40px] px-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl cursor-text hover:border-neutral-600 transition-[border-color] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
-                        <input placeholder="spam-site.com..." title="" autoComplete="off" className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5" defaultValue="" />
+                        {(antiLink.blocked_domains || []).map((domain, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 rounded-lg bg-neutral-700/50 text-xs font-medium text-neutral-300 group">
+                            {domain}
+                            <button type="button" aria-label="Remove domain" onClick={() => setAntiLink({ ...antiLink, blocked_domains: antiLink.blocked_domains.filter(d => d !== domain) })} className="p-0.5 rounded-md text-red-500/80 hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                            </button>
+                          </span>
+                        ))}
+                        <input placeholder="spam-site.com..." title="" autoComplete="off" className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5" onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            e.preventDefault();
+                            setAntiLink({ ...antiLink, blocked_domains: [...(antiLink.blocked_domains || []), e.target.value.trim()] });
+                            e.target.value = '';
+                          }
+                        }} />
                       </div>
                     </div>
                   </div>

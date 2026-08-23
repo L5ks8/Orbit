@@ -208,17 +208,31 @@ class AutoModListener(commands.Cog):
 
         link_cfg = config.get("anti_link", {})
         if link_cfg.get("enabled", False) and not is_exempt(link_cfg):
-            blocked = link_cfg.get("blocked_domains", [])
-
-            if blocked:
-                if any(domain in content_lower for domain in blocked if domain):
-                    await do_action(link_cfg, "AutoMod: Unauthorized link detected")
-                    return
-            else:
+            import re
+            url_pattern = re.compile(r'https?://(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)')
+            urls = url_pattern.findall(content_lower)
+            
+            if urls:
+                allowed_domains = link_cfg.get("allowed_domains", [])
+                blocked_domains = link_cfg.get("blocked_domains", [])
+                allow_media = link_cfg.get("allow_media", False)
+                allow_gifs = link_cfg.get("allow_gifs", False)
                 
-                if "http://" in content_lower or "https://" in content_lower:
-                    await do_action(link_cfg, "AutoMod: Unauthorized link detected")
-                    return
+                if allow_media:
+                    allowed_domains.extend(["cdn.discordapp.com", "media.discordapp.net"])
+                if allow_gifs:
+                    allowed_domains.extend(["tenor.com", "giphy.com"])
+                
+                for url in urls:
+                    is_allowed = any(ad.strip() in url for ad in allowed_domains if ad.strip())
+                    is_blocked = any(bd.strip() in url for bd in blocked_domains if bd.strip())
+                    
+                    if is_allowed:
+                        continue
+                        
+                    if is_blocked or not blocked_domains:
+                        await do_action(link_cfg, "AutoMod: Unauthorized link detected")
+                        return
 
         caps_cfg = config.get("anti_caps", {})
         if caps_cfg.get("enabled", False) and not is_exempt(caps_cfg):

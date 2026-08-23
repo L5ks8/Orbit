@@ -187,7 +187,10 @@ class ConfigMixin:
                     "enabled": automod_cfg.get("anti_link", {}).get("enabled", False),
                     "action": automod_cfg.get("anti_link", {}).get("action", "warn"),
                     "timeout_duration_min": automod_cfg.get("anti_link", {}).get("timeout_duration_min", 5),
-                    "blocked_domains": automod_cfg.get("anti_link", {}).get("blocked_domains", ["discord.gg/", "discord.com/invite/"]),
+                    "blocked_domains": automod_cfg.get("anti_link", {}).get("blocked_domains", []),
+                    "allowed_domains": automod_cfg.get("anti_link", {}).get("allowed_domains", []),
+                    "allow_media": automod_cfg.get("anti_link", {}).get("allow_media", False),
+                    "allow_gifs": automod_cfg.get("anti_link", {}).get("allow_gifs", False),
                     "exempt_channels": automod_cfg.get("anti_link", {}).get("exempt_channels", []),
                     "exempt_roles": automod_cfg.get("anti_link", {}).get("exempt_roles", [])
                 },
@@ -547,6 +550,8 @@ class ConfigMixin:
                                     automod_cfg[key][field_name] = raw
                             elif ef["type"] == str:
                                 automod_cfg[key][field_name] = str(src.get(field_name, ef["default"]))
+                            elif ef["type"] == bool:
+                                automod_cfg[key][field_name] = bool(src.get(field_name, ef["default"]))
 
                 save_submodule("banned_words", {}, [
                     {"name": "words", "type": list, "default": []},
@@ -558,7 +563,12 @@ class ConfigMixin:
                     {"name": "time_window_sec", "type": int, "default": 3}
                 ])
                 save_submodule("anti_invites", {}, [])
-                save_submodule("anti_link", {}, [{"name": "blocked_domains", "type": list, "default": []}])
+                save_submodule("anti_link", {}, [
+                    {"name": "blocked_domains", "type": list, "default": []},
+                    {"name": "allowed_domains", "type": list, "default": []},
+                    {"name": "allow_media", "type": bool, "default": False},
+                    {"name": "allow_gifs", "type": bool, "default": False}
+                ])
                 save_submodule("anti_caps", {}, [])
                 save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
                 save_submodule("anti_bot", {"action": "kick"}, [])
