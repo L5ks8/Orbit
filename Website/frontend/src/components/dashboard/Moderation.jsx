@@ -327,7 +327,7 @@ export default function Moderation({ guildId }) {
         setTimeout(() => setSaveStatus('idle'), 4000);
       } else {
         setSaveStatus('success');
-        setSaveMessage("Success");
+        setSaveMessage("Saved");
         setInitialPayload(payloadString);
         setTimeout(() => setSaveStatus('idle'), 3000);
       }
