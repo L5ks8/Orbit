@@ -1,0 +1,23 @@
+﻿import discord
+from discord.ext import commands
+from Components.Commands.Blacklist._views import BlacklistListLayout
+from Components.Commands._utils import make_embed
+
+async def _do_bl_list(ctx: commands.Context):
+    if not ctx.guild:
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
+    view = BlacklistListLayout(ctx.guild, ctx.bot, ctx.author.id)
+    await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
+
+class BlacklistListCog(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @commands.hybrid_command(name="checkblacklist", aliases=["bl_list", "blacklist_view"], description="Lists all blacklisted users with options to add/remove IDs.")
+    @commands.has_permissions(administrator=True)
+    async def checkblacklist(self, ctx: commands.Context):
+        await _do_bl_list(ctx)
+
+async def setup(bot: commands.Bot):
+    bot.remove_command("checkblacklist")
+    await bot.add_cog(BlacklistListCog(bot))

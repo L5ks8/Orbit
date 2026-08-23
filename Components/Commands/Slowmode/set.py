@@ -1,0 +1,61 @@
+﻿import discord
+from discord.ext import commands
+from discord.ui import Container, TextDisplay, Separator
+from Components.Commands.Slowmode.slowmode import slowmode_group
+
+
+
+async def _do_slowmode_set(ctx: commands.Context, seconds: int, channel: discord.TextChannel | None):
+    await ctx.defer()
+    target_channel = channel or ctx.channel
+    if not isinstance(target_channel, discord.TextChannel):
+        return await ctx.send(embed=make_embed("Please specify a valid text channel.", discord.Color.red()), ephemeral=True)
+
+    if seconds < 0 or seconds > 21600:
+        return await ctx.send(embed=make_embed("Slowmode delay must be between 0 and 21600 seconds (6 hours).", discord.Color.red()), ephemeral=True)
+
+    try:
+        await target_channel.edit(slowmode_delay=seconds, reason=f"Slowmode set by {ctx.author}")
+        embed = discord.Embed(title="Slowmode Enabled", color=discord.Color.orange())
+        embed.add_field(name="Channel", value=target_channel.mention, inline=False)
+        embed.add_field(name="Delay", value=f"`{seconds} seconds` between messages", inline=False)
+        embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+    except discord.Forbidden:
+        await ctx.send(embed=make_embed("I do not have sufficient permissions to edit slowmode in this channel.", discord.Color.red()), ephemeral=True)
+    except Exception as e:
+        await ctx.send(embed=make_embed(f"Error setting slowmode: {e}", discord.Color.red()), ephemeral=True)
+
+@slowmode_group.command(name="set", description="Set channel slowmode delay.")
+@commands.has_permissions(manage_channels=True)
+@commands.bot_has_permissions(manage_channels=True)
+async def slowmode_set_cmd(ctx: commands.Context, seconds: int, channel: discord.TextChannel = None):
+    await _do_slowmode_set(ctx, seconds, channel)
+
+class SlowmodeSetCommand(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @slowmode_set_cmd.error
+    async def slowmodeset_error(self, ctx: commands.Context, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send(embed=make_embed("You need Manage Channels permission to configure slowmode.", discord.Color.red()), ephemeral=True)
+        else:
+            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
+
+class SlowmodeSetPrefixFallback(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @commands.command(name="sm_set", aliases=["slowmodeset"], hidden=True)
+    @commands.has_permissions(manage_channels=True)
+    async def slowmode_set_prefix(self, ctx: commands.Context, seconds: int, channel: discord.TextChannel = None):
+        await _do_slowmode_set(ctx, seconds, channel)
+
+async def setup(bot: commands.Bot):
+    from Components.Commands.Slowmode.slowmode import slowmode_group
+    from Components.Commands._utils import make_embed
+    if "slowmode" not in bot.all_commands:
+        bot.add_command(slowmode_group)
+    await bot.add_cog(SlowmodeSetCommand(bot))
+    await bot.add_cog(SlowmodeSetPrefixFallback(bot))

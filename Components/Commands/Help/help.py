@@ -1,0 +1,241 @@
+import discord
+from discord import app_commands
+from discord.ext import commands
+from discord.ui import ActionRow, Button, Select
+from Components.Commands._utils import make_embed
+
+
+
+PAGES = [
+    {
+        "title": "Overview & Navigation",
+        "description": (
+            "**Welcome to Orbit Help!** Orbit is your all-in-one Discord moderation, voice, and engagement bot.\n\n"
+            "**Command Prefixes:**\n"
+            "> • **Slash Commands:** Type `/` to see all available slash commands with auto-completion.\n"
+            "> • **Prefix Commands:** Use `-command` (or `@Orbit command`).\n\n"
+            "**Navigation:**\n"
+            "Use the `Previous` and `Next` buttons below, or pick a specific command category from the dropdown selector to jump directly to that page!"
+        )
+    },
+    {
+        "title": "Moderation & Punishments",
+        "description": (
+            "**Server Moderation & Enforcement Commands:**\n\n"
+            "• `/ban <user> [reason]` — Permanently ban a member (`-ban @user Spam`).\n"
+            "• `/unban <user_id> [reason]` — Unban a user by their Discord user ID (`-unban 123456789`).\n"
+            "• `/kick <user> [reason]` — Kick a member from the server (`-kick @user`).\n"
+            "• `/timeout <user> <duration> [reason]` — Mute/restrict a member (`-timeout @user 10m`).\n"
+            "• `/untimeout <user> [reason]` — Remove an active timeout (`-untimeout @user`).\n"
+            "• `/mute <user> <duration> [reason]` — Assign the server Muted role (`-mute @user 1h`).\n"
+            "• `/unmute <user> [reason]` — Remove the Muted role (`-unmute @user`).\n"
+            "• `/purge <amount> [user]` — Bulk delete up to 100 messages (`-purge 50 @user`)."
+        )
+    },
+    {
+        "title": "Warning & Infraction System",
+        "description": (
+            "**Persistent Warning & Blacklist Management:**\n\n"
+            "• `/warn <user> <reason>` — Issue a permanent warning (`-warn @user Rule 3 violation`).\n"
+            "• `/warnings <user>` — View a paginated card of all warnings for a member (`-warnings @user`).\n"
+            "• `/delwarn <user> <warn_id>` — Delete a specific warning ID (`-delwarn @user W-1234`).\n"
+            "• `/clearwarnings <user>` — Remove all warnings from a member (`-clearwarnings @user`).\n"
+            "• `/blacklist add <target>` — Block a user, channel, or role from using bot commands.\n"
+            "• `/blacklist remove/list/check` — Manage and check server command blacklists."
+        )
+    },
+    {
+        "title": "Channel & Voice Management",
+        "description": (
+            "**Text & Voice Channel Controls:**\n\n"
+            "• `/lock [channel] [reason]` — Lock a text channel (`-lock #general`).\n"
+            "• `/unlock [channel]` — Unlock a text channel (`-unlock #general`).\n"
+            "• `/slowmodeset <seconds> [channel]` — Set channel slowmode (`-slowmodeset 10 #general`).\n"
+            "• `/slowmoderemove [channel]` — Remove channel slowmode (`-slowmoderemove #general`).\n"
+            "• `/vclock [channel]` & `/vcunlock [channel]` — Lock or unlock a voice channel (`-vclock`).\n"
+            "• `/vclimit <limit> [channel]` — Set voice user limit (`-vclimit 5`).\n"
+            "• `/vcban <user>` & `/vcunban <user>` — Ban or unban a member from voice (`-vcban @user`).\n"
+            "• `/vcmute <user>` & `/vcunmute <user>` — Server-mute or unmute a member in voice.\n"
+            "• `/move <user> <channel>` — Move a voice member (`-move @user #voice-2`)."
+        )
+    },
+    {
+        "title": "Role & Auto-Join Systems",
+        "description": (
+            "**Server Role & AutoRole Configuration:**\n\n"
+            "• `/addrole <user> <role>` — Grant a role to a member (`-addrole @user @Member`).\n"
+            "• `/removerole <user> <role>` — Remove a role from a member (`-removerole @user @Member`).\n"
+            "• `/roleinfo <role>` — Display detailed stats and permissions for a role (`-roleinfo @Member`).\n"
+            "• `/role all <role>` & `/role rall <role>` — Give or take a role from ALL members (`-role all @Update`).\n"
+            "• `/allroles` — Display a complete card listing all server roles and member counts (`-allroles`).\n"
+            "• `/joinrole add <role>` — Add a role given automatically upon joining (`-joinrole add @Member`).\n"
+            "• `/joinrole remove <role>` & `/joinrole list` — Remove or list automatic join roles."
+        )
+    },
+    {
+        "title": "Giveaways, Polls & Welcome",
+        "description": (
+            "**Community Engagement & Greetings:**\n\n"
+            "• `/giveaway <duration> <winners> <prize>` — Start an interactive giveaway (`-giveaway 1d 1 Nitro`).\n"
+            "• `/gend <giveaway_id>` — End a giveaway early and announce winners (`-gend G-849201`).\n"
+            "• `/greroll <giveaway_id> [winners]` — Reroll new winners (`-greroll G-849201 1`).\n"
+            "• `/poll <question> <options> <duration>` — Create a multi-option poll (`-poll 'Color?' 'Red,Blue' 1h`).\n"
+            "• `/fastpoll <question> [duration]` — Create a Yes/No poll (`-fastpoll 'Good bot?' 24h`).\n"
+            "• `/pollclose <poll_id>` — Close a poll early (`-pollclose P-849201`).\n"
+            "• `/welcome setup <#channel> [message]` — Enable custom welcome notifications (`-welcome setup #welcome`).\n"
+            "• `/welcome toggle/reset/status` — Toggle, reset, or view welcome system status."
+        )
+    },
+    {
+        "title": "Utility, Info & Media",
+        "description": (
+            "**Server Stats, User Info & Tools:**\n\n"
+            "• `/serverinfo` — Display complete server statistics and creation details (`-serverinfo`).\n"
+            "• `/userinfo [user]` — Display member join dates and account history (`-userinfo @user`).\n"
+            "• `/avatar [user]` & `/banner [user]` — Fetch high-res profile avatars and banners (`-avatar @user`).\n"
+            "• `/ping` — Check bot latency and WebSocket connection speed (`-ping`).\n"
+            "• `/say <message>` — Repeat a message (`-say Hello world`).\n"
+            "• `/dm <user> <message>` — Direct message a member (`-dm @user Check this out`).\n"
+            "• `/afk [reason]` & `/afkremove` — Set or clear your AFK status (`-afk Sleeping`)."
+        )
+    },
+    {
+        "title": "Invite Tracking & Management",
+        "description": (
+            "**Invite Stats & Code Management:**\n\n"
+            "• `/invites [user]` — View a member's invite stats (`-invites @user`).\n"
+            "• `/invitecodes [user]` — View all invite codes and their uses (`-invitecodes @user`).\n"
+            "• `/invitedlist [user]` — Display a paginated list of members invited by a user (`-invitedlist @user`).\n"
+            "• `/inviter [user]` — Find out who invited a specific member (`-inviter @user`).\n"
+            "• `/leaderboard invites` — View the top inviters in the server.\n"
+            "• `/addinvites` & `/removeinvites` — Add or remove bonus invites for a user.\n"
+            "• `/addfakeinvites` & `/removefakeinvites` — Manage fake invites.\n"
+            "• `/resetinvites [user]` — Reset invites for a user or the whole server.\n"
+            "• `/deleteinvite <code>` — Delete a specific invite code.\n"
+            "• `/purge-invite-codes <condition>` — Bulk delete invite codes.\n"
+            "• `/exportinvitedlist [user]` — Export an invite list to a CSV file."
+        )
+    },
+    {
+        "title": "Leveling System",
+        "description": (
+            "**Server XP & Ranks:**\n\n"
+            "• `/rank [user]` — Check your or someone else's current level and XP.\n"
+            "• `/leaderboard` — View the top most active members in the server.\n"
+            "• `/xp add/remove/set/transfer` — Manage or transfer member XP."
+        )
+    },
+    {
+        "title": "Economy System",
+        "description": (
+            "**Global Currency & Virtual Economy:**\n\n"
+            "• `/balance [user]` — View your wallet and bank balance.\n"
+            "• `/work` — Work to earn some coins.\n"
+            "• `/daily` — Claim your daily reward.\n"
+            "• `/baltop` — View the richest members.\n"
+            "• `/inventory` — View the items you own.\n"
+            "• `/open_chest <chest_name>` — Open a reward chest."
+        )
+    }
+]
+
+class HelpCategorySelect(discord.ui.Select):
+    def __init__(self, parent_view: "HelpLayout"):
+        self.parent_view = parent_view
+        options = [
+            discord.SelectOption(
+                label=page["title"],
+                description=f"View commands inside {page['title'].split(' ', 1)[-1]}",
+                value=str(idx),
+                default=(idx == parent_view.current_page)
+            )
+            for idx, page in enumerate(PAGES)
+        ]
+        super().__init__(placeholder="Jump directly to a category...", options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user.id != self.parent_view.author_id:
+            return await interaction.response.send_message(embed=make_embed("You cannot control this help panel.", discord.Color.red()), ephemeral=True)
+        
+        page_idx = int(self.values[0])
+        self.parent_view.current_page = page_idx
+        await interaction.response.edit_message(**self.parent_view.get_kwargs())
+
+class HelpLayout(discord.ui.View):
+    def __init__(self, bot: commands.Bot, author_id: int, guild_id: int = None, current_page: int = 0):
+        super().__init__(timeout=300)
+        self.bot = bot
+        self.author_id = author_id
+        self.guild_id = guild_id or 0
+        self.current_page = current_page
+
+    def get_kwargs(self):
+        page = PAGES[self.current_page]
+        icon_url = self.bot.user.avatar.with_size(256).url if (self.bot.user and self.bot.user.avatar) else None
+
+        select_menu = HelpCategorySelect(self)
+
+        btn_prev = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=(self.current_page == 0))
+        btn_page = discord.ui.Button(label=f"Page {self.current_page + 1}/{len(PAGES)}", style=discord.ButtonStyle.primary, disabled=True)
+        btn_next = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=(self.current_page == len(PAGES) - 1))
+        btn_close = discord.ui.Button(label="Close", style=discord.ButtonStyle.danger)
+
+        async def prev_cb(interaction: discord.Interaction):
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message(embed=make_embed("You cannot control this help panel.", discord.Color.red()), ephemeral=True)
+            if self.current_page > 0:
+                self.current_page -= 1
+                await interaction.response.edit_message(**self.get_kwargs())
+
+        async def next_cb(interaction: discord.Interaction):
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message(embed=make_embed("You cannot control this help panel.", discord.Color.red()), ephemeral=True)
+            if self.current_page < len(PAGES) - 1:
+                self.current_page += 1
+                await interaction.response.edit_message(**self.get_kwargs())
+
+        async def close_cb(interaction: discord.Interaction):
+            if interaction.user.id != self.author_id:
+                return await interaction.response.send_message(embed=make_embed("You cannot control this help panel.", discord.Color.red()), ephemeral=True)
+            try:
+                await interaction.message.delete()
+            except Exception:
+                pass
+
+        btn_prev.callback = prev_cb
+        btn_next.callback = next_cb
+        btn_close.callback = close_cb
+
+        components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
+
+        embed = discord.Embed(
+            title=f"Orbit Command Guide: {page['title']}",
+            description=page["description"],
+            color=discord.Color.blue()
+        )
+        if icon_url:
+            embed.set_thumbnail(url=icon_url)
+        embed.set_footer(text=f"Page {self.current_page + 1} of {len(PAGES)}")
+
+        self.clear_items()
+        for comp in components:
+            self.add_item(comp)
+
+        return {"embed": embed, "view": self}
+
+class HelpCommandCog(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @commands.hybrid_command(name="help", description="Displays an interactive paginated guide of all Orbit commands.")
+    async def help_cmd(self, ctx: commands.Context):
+        await ctx.defer()
+        view = HelpLayout(self.bot, ctx.author.id, ctx.guild.id if ctx.guild else 0, 0)
+        await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
+
+    @help_cmd.error
+    async def help_error(self, ctx: commands.Context, error):
+        await ctx.send(embed=make_embed(f"An error occurred displaying help: {error}", discord.Color.red()), ephemeral=True)
+
+async def setup(bot: commands.Bot):
+    await bot.add_cog(HelpCommandCog(bot))

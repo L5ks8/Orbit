@@ -5,8 +5,9 @@ import os
 import asyncio
 import pathlib
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import discord.ext.commands.core as core
+from Components.Commands._utils import make_embed
 
 def custom_has_permissions(**perms: bool):
     def decorator(func):
@@ -80,7 +81,7 @@ async def send_dev_error(bot, source: str, error):
             msg = str(error)[:300]
             
         embed = discord.Embed(
-            title="⚠️ System Error Captured", 
+            title="️ System Error Captured", 
             description=f"**Source:** {source}\n**Message:** {msg}", 
             color=discord.Color.red()
         )
@@ -102,18 +103,18 @@ class DevmodeNoticeLayout(discord.ui.LayoutView):
 class OrbitCommandTree(discord.app_commands.CommandTree):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.guild:
-            from Commands.Blacklist._storage import is_blacklisted
+            from Components.Commands.Blacklist._storage import is_blacklisted
             if is_blacklisted(interaction.guild.id, interaction.user.id):
                 try:
                     if interaction.response.is_done():
-                        await interaction.followup.send("You are blacklisted from using bot commands on this server.", ephemeral=True)
+                        await interaction.followup.send(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), ephemeral=True)
                     else:
-                        await interaction.response.send_message("You are blacklisted from using bot commands on this server.", ephemeral=True)
+                        await interaction.response.send_message(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), ephemeral=True)
                 except Exception:
                     pass
                 return False
 
-        from Commands.OwnerOnly._storage import is_devmode_enabled
+        from Components.Commands.OwnerOnly._storage import is_devmode_enabled
         enabled, reason = is_devmode_enabled()
         if not enabled:
             return True
@@ -131,7 +132,7 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
 
     async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
         try:
-            from Commands.OwnerOnly._monitor import record_error
+            from Components.Commands.OwnerOnly._monitor import record_error
             cmd_name = interaction.command.name if interaction.command else "Component/Modal"
             error_val = getattr(error, "original", error)
             record_error(f"AppCommand/UI Error [{cmd_name}]", error_val)
@@ -140,7 +141,7 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             pass
         try:
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"An error occurred: `{error}`", ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"An error occurred: `{error}`", discord.Color.red()), ephemeral=True)
         except Exception:
             pass
 
@@ -159,7 +160,7 @@ async def get_prefix(bot, message: discord.Message):
         
     # Fetch from DB
     try:
-        from Database.mongodb import get_db
+        from Components.Database.mongodb import get_db
         db = get_db()
         if db is not None:
             doc = db["GuildSettings"].find_one({"_id": guild_id}, {"prefix": 1})
@@ -174,10 +175,20 @@ async def get_prefix(bot, message: discord.Message):
     PREFIX_CACHE[guild_id] = PREFIX
     return commands.when_mentioned_or(PREFIX)(bot, message)
 
+# Patch commands.Context.send to handle ephemeral kwarg safely for prefix commands
+_old_send = commands.Context.send
+async def _safe_send(self, *args, **kwargs):
+    if self.interaction is None:
+        kwargs.pop("ephemeral", None)
+    return await _old_send(self, *args, **kwargs)
+commands.Context.send = _safe_send
+
 class OrbitBot(commands.Bot):
     def __init__(self):
+        import collections
+        self.stats_history = collections.deque(maxlen=30)
         try:
-            from Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
+            from Components.Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
             data = _load_status()
             if data and isinstance(data, dict):
                 act = _build_activity(data.get("type", "clear"), data.get("text", ""))
@@ -189,32 +200,110 @@ class OrbitBot(commands.Bot):
             act = None
             discord_status = None
             
+        owner_ids = set()
+        env_owners = os.environ.get("OWNER_IDS") or os.environ.get("BOT_OWNER_ID") or os.environ.get("OWNER")
+        if env_owners:
+            try:
+                parsed = {int(x.strip()) for x in env_owners.split(",") if x.strip().isdigit()}
+                owner_ids.update(parsed)
+            except Exception:
+                pass
+            
         super().__init__(
             command_prefix=get_prefix,
             intents=intents,
             help_command=None,
             tree_cls=OrbitCommandTree,
             activity=act,
-            status=discord_status
+            status=discord_status,
+            owner_ids=owner_ids or None
         )
+
+    async def is_true_owner(self, user: discord.User | discord.Member) -> bool:
+        return await super().is_owner(user)
+
+    async def is_owner(self, user: discord.User | discord.Member) -> bool:
+        if await super().is_owner(user):
+            return True
+        try:
+            import json, os
+            path = os.path.join("Components/Database", "developers.json")
+            if os.path.exists(path):
+                with open(path, "r") as f:
+                    devs = json.load(f)
+                if user.id in devs:
+                    return True
+        except Exception:
+            pass
+        return False
+
+    @tasks.loop(seconds=2)
+    async def live_stats_loop(self):
+        try:
+            import psutil, os, math
+            process = psutil.Process(os.getpid())
+            ram_mb = process.memory_info().rss / 1024 ** 2
+            
+            lat = self.latency
+            if math.isinf(lat) or math.isnan(lat):
+                ping = 0
+            else:
+                ping = round(lat * 1000)
+                
+            self.stats_history.append({
+                "servers": len(self.guilds),
+                "users": len(self.users),
+                "ping": ping,
+                "ram": round(ram_mb, 2)
+            })
+        except Exception as e:
+            print(f"Stats loop error: {e}")
+
+    @tasks.loop(minutes=5)
+    async def uptime_loop(self):
+        try:
+            from Components.Database.mongodb import get_db
+            import datetime
+            db = get_db()
+            if db is not None:
+                today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+                today_dt = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+                
+                db_up = 1 if db is not None else 0
+                api_up = 1 if not self.is_closed() else 0
+                
+                db["UptimeStats"].update_one(
+                    {"_id": today_str},
+                    {
+                        "$inc": {
+                            "bot_pings": 1,
+                            "db_pings": db_up,
+                            "api_pings": api_up
+                        },
+                        "$setOnInsert": {"date": today_dt}
+                    },
+                    upsert=True
+                )
+        except Exception as e:
+            print(f"Uptime loop error: {e}")
 
     async def setup_hook(self):
         try:
-            from aiohttp import web
-            from Commands.WebDashboard.web import setup_web_app
-            app = setup_web_app(self)
-            runner = web.AppRunner(app)
-            await runner.setup()
-            port = int(os.environ.get("PORT", 10000))
-            site = web.TCPSite(runner, "0.0.0.0", port)
-            await site.start()
-            print(f"Web Dashboard started on 0.0.0.0:{port}")
+            self.live_stats_loop.start()
+            self.uptime_loop.start()
+            print("Background stats tracking started.")
         except Exception as e:
-            print(f"Failed to start Web Dashboard: {e}")
+            print(f"Failed to start stats tracking: {e}")
 
-        commands_dir = pathlib.Path("Commands")
+        commands_dir = pathlib.Path("Components/Commands")
         if not commands_dir.exists():
             commands_dir.mkdir(parents=True, exist_ok=True)
+            
+        try:
+            from Components.Commands.Verify._views import PersistentVerifyLayout
+            self.add_view(PersistentVerifyLayout())
+        except Exception as e:
+            print(f"Failed to add PersistentVerifyLayout: {e}")
 
         # Load root command group modules first (e.g. Commands/Role/role.py, Commands/Ticket/ticket.py)
         for file_path in commands_dir.rglob("*.py"):
@@ -239,47 +328,51 @@ class OrbitBot(commands.Bot):
                 await self.load_extension(extension)
                 print(f"Loaded: {extension}")
             except Exception as e:
-                print(f"Failed to load {extension}: {e}")
+                print(f"Failed to load standard cog {extension}: {e}")
 
-        try:
-            synced = await self.tree.sync()
-            total_cmds = 0
-            for cmd in synced:
-                if hasattr(cmd, 'commands'):
-                    total_cmds += len(cmd.commands) + 1
-                else:
-                    total_cmds += 1
-            print(f"Synced {len(synced)} top-level command group(s) ({total_cmds} total subcommands & commands across all modules)")
-        except Exception as e:
-            print(f"Failed to sync commands: {e}")
+        async def background_sync():
+            try:
+                synced = await self.tree.sync()
+                total_cmds = 0
+                for cmd in synced:
+                    if hasattr(cmd, 'commands'):
+                        total_cmds += len(cmd.commands) + 1
+                    else:
+                        total_cmds += 1
+                print(f"Synced {len(synced)} top-level command group(s) ({total_cmds} total subcommands & commands across all modules)")
+            except Exception as e:
+                print(f"Failed to sync commands: {e}")
+                
+        import asyncio
+        asyncio.create_task(background_sync())
 
         _old_view_error = discord.ui.View.on_error
-        async def _global_view_error(view_self, error, item, interaction: discord.Interaction):
+        async def _global_view_error(view_self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item):
             try:
-                from Commands.OwnerOnly._monitor import record_error
+                from Components.Commands.OwnerOnly._monitor import record_error
                 source_name = f"UI View Error [{view_self.__class__.__name__} -> {item.__class__.__name__}]"
                 record_error(source_name, error)
                 await send_dev_error(interaction.client, source_name, error)
             except Exception:
                 pass
-            await _old_view_error(view_self, error, item, interaction)
+            await _old_view_error(view_self, interaction, error, item)
         discord.ui.View.on_error = _global_view_error
 
         _old_modal_error = discord.ui.Modal.on_error
-        async def _global_modal_error(modal_self, error, interaction: discord.Interaction):
+        async def _global_modal_error(modal_self, interaction: discord.Interaction, error: Exception):
             try:
-                from Commands.OwnerOnly._monitor import record_error
+                from Components.Commands.OwnerOnly._monitor import record_error
                 source_name = f"UI Modal Error [{modal_self.__class__.__name__}]"
                 record_error(source_name, error)
                 await send_dev_error(interaction.client, source_name, error)
             except Exception:
                 pass
-            await _old_modal_error(modal_self, error, interaction)
+            await _old_modal_error(modal_self, interaction, error)
         discord.ui.Modal.on_error = _global_modal_error
 
     async def on_error(self, event_method: str, *args, **kwargs):
         try:
-            from Commands.OwnerOnly._monitor import record_error
+            from Components.Commands.OwnerOnly._monitor import record_error
             import sys
             exc_type, exc_value, exc_tb = sys.exc_info()
             if exc_value:
@@ -298,7 +391,7 @@ class OrbitBot(commands.Bot):
     async def on_message(self, message: discord.Message):
         if not message.author.bot:
             try:
-                from Commands.OwnerOnly._monitor import record_message
+                from Components.Commands.OwnerOnly._monitor import record_message
                 record_message()
             except Exception:
                 pass
@@ -309,12 +402,12 @@ class OrbitBot(commands.Bot):
             return
         if hasattr(error, "original") and isinstance(error.original, discord.app_commands.errors.CommandSignatureMismatch):
             try:
-                await ctx.send("Command definitions have just been updated! Please try running the command again.", ephemeral=True)
+                await ctx.send(embed=make_embed("Command definitions have just been updated! Please try running the command again.", discord.Color.green()), ephemeral=True)
             except Exception:
                 pass
             return
         try:
-            from Commands.OwnerOnly._monitor import record_error
+            from Components.Commands.OwnerOnly._monitor import record_error
             error_val = getattr(error, "original", error)
             record_error("Command Error", error_val)
             await send_dev_error(ctx.bot, "Command Error", error_val)
@@ -328,10 +421,10 @@ bot = OrbitBot()
 async def global_blacklist_prefix_check(ctx: commands.Context):
     if not ctx.guild:
         return True
-    from Commands.Blacklist._storage import is_blacklisted
+    from Components.Commands.Blacklist._storage import is_blacklisted
     if is_blacklisted(ctx.guild.id, ctx.author.id):
         try:
-            await ctx.send("You are blacklisted from using bot commands on this server.", delete_after=5.0)
+            await ctx.send(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), delete_after=5.0)
         except Exception:
             pass
         return False
@@ -339,7 +432,7 @@ async def global_blacklist_prefix_check(ctx: commands.Context):
 
 @bot.check
 async def global_devmode_prefix_check(ctx: commands.Context):
-    from Commands.OwnerOnly._storage import is_devmode_enabled
+    from Components.Commands.OwnerOnly._storage import is_devmode_enabled
     enabled, reason = is_devmode_enabled()
     if not enabled:
         return True
@@ -352,21 +445,67 @@ async def global_devmode_prefix_check(ctx: commands.Context):
         pass
     return False
 
-async def main():
-    async with bot:
+async def start_bot_loop():
+    import sys
+    retry_delay = int(os.environ.get("RETRY_DELAY", 10))
+    try:
         await bot.start(TOKEN)
+    except discord.errors.LoginFailure as e:
+        print(f"FATAL ERROR: Invalid Token. Details: {e}", flush=True)
+        os._exit(1)
+    except discord.errors.PrivilegedIntentsRequired as e:
+        print(f"FATAL ERROR: Privileged Intents missing. Details: {e}", flush=True)
+        os._exit(1)
+    except Exception as e:
+        print(f"Bot crashed / Network error occurred: {e}", flush=True)
+        if "429" in str(e) or "1015" in str(e):
+            print("Cloudflare 1015 / 429 Rate Limit hit. Discord banned this IP temporarily.", flush=True)
+            retry_delay = min(retry_delay * 2, 3600)
+        else:
+            retry_delay = 10
+        
+        print(f"Retrying connection in {retry_delay} seconds...", flush=True)
+        # Sleep asynchronously to keep the web server alive!
+        await asyncio.sleep(retry_delay)
+        
+        # Cleanly restart the process to reset discord.py session state
+        os.environ["RETRY_DELAY"] = str(retry_delay)
+        os.execv(sys.executable, [sys.executable] + sys.argv)
+
+async def main():
+    import discord
+    discord.utils.setup_logging()
+    runner = None
+    try:
+        from aiohttp import web
+        from Website.backend.main import setup_web_app
+        import os
+        app = setup_web_app(bot)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        port = int(os.environ.get("PORT", 10000))
+        site = web.TCPSite(runner, "0.0.0.0", port)
+        await site.start()
+        print(f"Web Dashboard started on 0.0.0.0:{port}", flush=True)
+    except Exception as e:
+        print(f"Failed to start Web Dashboard: {e}", flush=True)
+
+    # Start the bot in the same event loop, letting it handle its own retries
+    await start_bot_loop()
+    
+    if runner:
+        try:
+            await runner.cleanup()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     if not TOKEN:
         print("Error: No TOKEN found in .env file.")
     else:
-        import time
         import asyncio
-        while True:
-            try:
-                asyncio.run(main())
-                break
-            except (discord.HTTPException, discord.GatewayNotFound, Exception) as e:
-                print(f"Network error / Cloudflare 522 occurred: {e}")
-                print("Retrying connection in 10 seconds...")
-                time.sleep(10)
+        import os
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            print("Bot shutdown requested.")
