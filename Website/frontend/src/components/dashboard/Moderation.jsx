@@ -185,7 +185,7 @@ export default function Moderation({ guildId }) {
   
   const [serverData, setServerData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [initialPayload, setInitialPayload] = useState('');
+  const [initialBannedWordsStr, setInitialBannedWordsStr] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'success' | 'error'
   const [saveMessage, setSaveMessage] = useState('');
   const [formKey, setFormKey] = useState(0);
@@ -305,7 +305,7 @@ export default function Moderation({ guildId }) {
   
   useEffect(() => {
     if (!loading) {
-       setInitialPayload(JSON.stringify(getPayload()));
+       setInitialBannedWordsStr(JSON.stringify(bannedWords));
     }
   }, [loading]);
   const handleSave = async (payloadStr) => {
@@ -328,7 +328,7 @@ export default function Moderation({ guildId }) {
       } else {
         setSaveStatus('success');
         setSaveMessage("Saved");
-        setInitialPayload(payloadString);
+        setInitialBannedWordsStr(JSON.stringify(JSON.parse(payloadString).automod.banned_words));
         setTimeout(() => setSaveStatus('idle'), 3000);
       }
     } catch (e) {
@@ -339,16 +339,17 @@ export default function Moderation({ guildId }) {
     }
   };
 
-  const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialPayload && currentPayloadStr !== initialPayload;
+  const currentBannedWordsStr = JSON.stringify(bannedWords);
+  const isDirty = initialBannedWordsStr && currentBannedWordsStr !== initialBannedWordsStr;
 
   useEffect(() => {
-    if (!initialPayload || !isDirty) return;
+    if (!initialBannedWordsStr || !isDirty) return;
+    const currentPayloadStr = JSON.stringify(getPayload());
     const timeoutId = setTimeout(() => {
       handleSave(currentPayloadStr);
     }, 1500);
     return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, initialPayload, isDirty]);
+  }, [currentBannedWordsStr, initialBannedWordsStr, isDirty]);
 
   if (loading) return <div className="text-neutral-400 p-8">Loading moderation settings...</div>;
 
