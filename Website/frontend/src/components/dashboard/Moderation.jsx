@@ -138,23 +138,37 @@ const FilterLevelSelector = ({ value, onChange, levels }) => (
   <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${levels.length}, minmax(0px, 1fr))` }}>
     {levels.map(level => {
       const isSelected = value.toLowerCase() === level.id.toLowerCase();
-      const colorClass = level.color === 'amber' ? 'amber-500' : level.color === 'blue' ? 'blue-500' : 'neutral-500';
-      const bgClass = level.color === 'amber' ? 'amber-400' : level.color === 'blue' ? 'blue-400' : 'neutral-500';
+      
+      let borderClass = 'border-neutral-800 hover:border-neutral-700';
+      let bgOuterClass = 'bg-neutral-800/40';
+      let bgInnerClass = 'bg-neutral-700';
+      
+      if (isSelected) {
+        if (level.color === 'amber') {
+          borderClass = 'border-amber-500/50';
+          bgOuterClass = 'bg-amber-500/10';
+          bgInnerClass = 'bg-amber-400';
+        } else if (level.color === 'blue') {
+          borderClass = 'border-blue-500/50';
+          bgOuterClass = 'bg-blue-500/10';
+          bgInnerClass = 'bg-blue-400';
+        } else {
+          borderClass = 'border-neutral-500/50';
+          bgOuterClass = 'bg-neutral-500/10';
+          bgInnerClass = 'bg-neutral-400';
+        }
+      }
       
       return (
         <button
           key={level.id}
           type="button"
           onClick={() => onChange(level.id.toLowerCase())}
-          className={`rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 ${
-            isSelected 
-              ? `border-${colorClass}/50 bg-${colorClass}/10` 
-              : 'border-neutral-800 bg-neutral-800/40 hover:border-neutral-700'
-          }`}
+          className={`rounded-xl border px-2 py-4 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 ${borderClass} ${bgOuterClass}`}
         >
           <span className="flex items-end" style={{ gap: "3px", height: "16px" }} aria-hidden="true">
             {level.bars.map((h, i) => (
-              <span key={i} className={`w-1 rounded-full transition-colors ${isSelected && i < level.activeBars ? `bg-${bgClass}` : 'bg-neutral-700'}`} style={{ height: h }} />
+              <span key={i} className={`w-1 rounded-full transition-colors ${isSelected && i < level.activeBars ? bgInnerClass : 'bg-neutral-700'}`} style={{ height: h }} />
             ))}
           </span>
           <span className={`text-[13px] font-medium leading-none ${isSelected ? 'text-white' : 'text-neutral-400'}`}>
@@ -295,7 +309,6 @@ export default function Moderation({ guildId }) {
     }
   }, [loading]);
   const handleSave = async (payloadStr) => {
-    if (saveStatus === 'saving') return;
     setSaveStatus('saving');
     try {
       const payloadString = typeof payloadStr === 'string' ? payloadStr : JSON.stringify(getPayload());
