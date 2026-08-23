@@ -356,7 +356,7 @@ export default function Moderation({ guildId }) {
         </div>
       </div>
       <div className="mt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 lg:items-stretch min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-4 lg:items-stretch min-w-0">
           <div className="flex flex-col gap-4 min-w-0 scroll-mt-24 w-full">
             {/* AI Moderation Card */}
             <div
@@ -676,9 +676,9 @@ export default function Moderation({ guildId }) {
                     </svg>
                     <p className="text-sm text-neutral-200 leading-snug text-pretty">
                       Catches a member sending{" "}
-                      <span className="font-semibold text-white tabular-nums">5</span>{" "}
+                      <span className="font-semibold text-white tabular-nums">{antiSpam.max_messages || 5}</span>{" "}
                       messages in{" "}
-                      <span className="font-semibold text-white tabular-nums">5s</span>
+                      <span className="font-semibold text-white tabular-nums">{antiSpam.time_window_sec || 5}s</span>
                     </p>
                   </div>
 
@@ -709,8 +709,8 @@ export default function Moderation({ guildId }) {
                       <div className="flex items-baseline justify-between gap-3 mb-2">
                         <label className="text-sm font-medium text-neutral-300">Messages</label>
                       </div>
-                      <div className="flex items-center h-10 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
-                        <input min={2} max={20} autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={antiSpam.max_messages} onChange={(e) => setAntiSpam({ ...antiSpam, max_messages: parseInt(e.target.value) || 5 })} />
+                      <div className="flex items-center h-10 bg-neutral-950 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
+                        <input min={2} max={20} autoComplete="off" className="h-full w-full !bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={antiSpam.max_messages} onChange={(e) => setAntiSpam({ ...antiSpam, max_messages: parseInt(e.target.value) || 5 })} />
                         <span className="pr-3 text-xs font-medium text-neutral-500 flex-shrink-0 select-none">msgs</span>
                       </div>
                     </div>
@@ -718,8 +718,8 @@ export default function Moderation({ guildId }) {
                       <div className="flex items-baseline justify-between gap-3 mb-2">
                         <label className="text-sm font-medium text-neutral-300">Time Window</label>
                       </div>
-                      <div className="flex items-center h-10 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
-                        <input min={1} max={60} autoComplete="off" className="h-full w-full bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={antiSpam.time_window_sec} onChange={(e) => setAntiSpam({ ...antiSpam, time_window_sec: parseInt(e.target.value) || 5 })} />
+                      <div className="flex items-center h-10 bg-neutral-950 border border-neutral-700 hover:border-neutral-600 rounded-xl transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-within:border-neutral-600 focus-within:ring-2 focus-within:ring-white/10">
+                        <input min={1} max={60} autoComplete="off" className="h-full w-full !bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={antiSpam.time_window_sec} onChange={(e) => setAntiSpam({ ...antiSpam, time_window_sec: parseInt(e.target.value) || 5 })} />
                         <span className="pr-3 text-xs font-medium text-neutral-500 flex-shrink-0 select-none">sec</span>
                       </div>
                     </div>
