@@ -537,6 +537,8 @@ class ConfigMixin:
                                     automod_cfg[key][field_name] = [x.strip() for x in raw.split(",") if x.strip()]
                                 else:
                                     automod_cfg[key][field_name] = raw
+                            elif ef["type"] == str:
+                                automod_cfg[key][field_name] = str(src.get(field_name, ef["default"]))
 
                 save_submodule("banned_words", {}, [
                     {"name": "words", "type": list, "default": []},

@@ -171,7 +171,9 @@ export default function Moderation({ guildId }) {
   
   const [serverData, setServerData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [initialPayload, setInitialPayload] = useState('');
+  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'success' | 'error'
+  const [saveMessage, setSaveMessage] = useState('');
   const [formKey, setFormKey] = useState(0);
 
   // States
@@ -213,7 +215,7 @@ export default function Moderation({ guildId }) {
     };
   };
 
-  const [initialPayload, setInitialPayload] = useState('');
+
 
   const fetchRecentActions = async () => {
     try {
@@ -266,13 +268,13 @@ export default function Moderation({ guildId }) {
         
         setAiAutomodEnabled(amCfg.ai_automod?.enabled || false);
         setAiImageEnabled(amCfg.ai_image?.enabled || false);
-        setBannedWords({ ...bannedWords, ...amCfg.banned_words });
-        setAntiSpam({ ...antiSpam, ...amCfg.anti_spam });
-        setAntiLink({ ...antiLink, ...amCfg.anti_link });
-        setAntiInvites({ ...antiInvites, ...amCfg.anti_invites });
-        setMentionSpam({ ...mentionSpam, ...amCfg.mention_spam });
-        setAntiZalgo({ ...antiZalgo, ...amCfg.anti_zalgo });
-        setAntiCaps({ ...antiCaps, ...amCfg.anti_caps });
+        setBannedWords(prev => ({ ...prev, ...amCfg.banned_words }));
+        setAntiSpam(prev => ({ ...prev, ...amCfg.anti_spam }));
+        setAntiLink(prev => ({ ...prev, ...amCfg.anti_link }));
+        setAntiInvites(prev => ({ ...prev, ...amCfg.anti_invites }));
+        setMentionSpam(prev => ({ ...prev, ...amCfg.mention_spam }));
+        setAntiZalgo(prev => ({ ...prev, ...amCfg.anti_zalgo }));
+        setAntiCaps(prev => ({ ...prev, ...amCfg.anti_caps }));
         
         setExemptions({
           roles: (amCfg.exempt_roles || []).map(String),
@@ -292,35 +294,48 @@ export default function Moderation({ guildId }) {
        setInitialPayload(JSON.stringify(getPayload()));
     }
   }, [loading]);
-
-  const handleSave = async () => {
-    setSaving(true);
+  const handleSave = async (payloadStr) => {
+    if (saveStatus === 'saving') return;
+    setSaveStatus('saving');
     try {
-      const payload = getPayload();
+      const payloadString = typeof payloadStr === 'string' ? payloadStr : JSON.stringify(getPayload());
       const res = await fetch(`/api/config/${guildId}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(payload)
+        body: payloadString
       });
       const data = await res.json();
       if (data.error) {
-        toast("Failed to save: " + data.error, 'error');
+        setSaveStatus('error');
+        setSaveMessage("Failed to save: " + data.error);
+        setTimeout(() => setSaveStatus('idle'), 4000);
       } else {
-        toast("Settings saved successfully!", 'success');
-        setInitialPayload(JSON.stringify(payload));
+        setSaveStatus('success');
+        setSaveMessage("Success");
+        setInitialPayload(payloadString);
+        setTimeout(() => setSaveStatus('idle'), 3000);
       }
     } catch (e) {
       console.error(e);
-      toast("Error saving settings.", 'error');
-    } finally {
-      setSaving(false);
+      setSaveStatus('error');
+      setSaveMessage("Error saving settings");
+      setTimeout(() => setSaveStatus('idle'), 4000);
     }
   };
 
-  const isDirty = initialPayload && JSON.stringify(getPayload()) !== initialPayload;
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = initialPayload && currentPayloadStr !== initialPayload;
+
+  useEffect(() => {
+    if (!initialPayload || !isDirty) return;
+    const timeoutId = setTimeout(() => {
+      handleSave(currentPayloadStr);
+    }, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [currentPayloadStr, initialPayload, isDirty]);
 
   if (loading) return <div className="text-neutral-400 p-8">Loading moderation settings...</div>;
 
@@ -1238,6 +1253,38 @@ export default function Moderation({ guildId }) {
           </div>
         </div>
       </div>
+
+      {saveStatus !== 'idle' && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border backdrop-blur-md ${
+            saveStatus === 'success' 
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+              : saveStatus === 'error'
+              ? 'bg-red-500/10 border-red-500/20 text-red-400'
+              : 'bg-neutral-800/80 border-neutral-700/50 text-neutral-300'
+          }`}>
+            {saveStatus === 'saving' && (
+              <svg className="animate-spin w-4 h-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
+            {saveStatus === 'success' && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            )}
+            {saveStatus === 'error' && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x">
+                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+              </svg>
+            )}
+            <span className="text-sm font-medium">
+              {saveStatus === 'saving' ? 'Saving...' : saveMessage}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
