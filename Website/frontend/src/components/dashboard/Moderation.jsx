@@ -278,7 +278,7 @@ export default function Moderation({ guildId }) {
       .then(res => res.json())
       .then(data => {
         setServerData(data);
-        const amCfg = data?.automod || {};
+        const amCfg = data?.config?.automod || {};
         
         setAiAutomodEnabled(amCfg.ai_automod?.enabled || false);
         setAiImageEnabled(amCfg.ai_image?.enabled || false);
