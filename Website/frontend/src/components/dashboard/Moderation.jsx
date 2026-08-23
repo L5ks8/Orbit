@@ -19,11 +19,11 @@ const TailwindToggle = ({ checked, onChange }) => (
 
 const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) => {
   const actions = [
-    { id: 'delete', label: 'Löschen' },
-    { id: 'warn', label: 'Verwarnen' },
+    { id: 'delete', label: 'Delete' },
+    { id: 'warn', label: 'Warn' },
     { id: 'timeout', label: 'Timeout' },
-    { id: 'kick', label: 'Kicken' },
-    { id: 'ban', label: 'Bannen' }
+    { id: 'kick', label: 'Kick' },
+    { id: 'ban', label: 'Ban' }
   ];
   
   const timeoutOptions = [
