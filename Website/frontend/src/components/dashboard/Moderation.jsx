@@ -462,13 +462,13 @@ export default function Moderation({ guildId }) {
               </div>
             </div>
 
-            {/* Content Filter */}
+                        {/* Content Filter */}
             <div data-tour="content-filter" className="scroll-mt-24 w-full">
               <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                 <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="flex-shrink-0 transition-colors text-neutral-500">
-                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-filter w-4 h-4">
+                    <span className="flex-shrink-0 transition-colors text-amber-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-filter w-4 h-4">
                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
                       </svg>
                     </span>
@@ -488,7 +488,7 @@ export default function Moderation({ guildId }) {
                     <div>
                       <div className="flex items-baseline justify-between gap-3 mb-2">
                         <label className="text-sm font-medium text-neutral-300">Filter level</label>
-                        <span className="text-xs text-neutral-500 tabular-nums">203 words</span>
+                        <span className="text-xs text-neutral-500 tabular-nums">{bannedWords.words?.length || 0} words</span>
                       </div>
                       <FilterLevelSelector 
                         value={bannedWords.filter_level} 
@@ -510,118 +510,132 @@ export default function Moderation({ guildId }) {
                         <label className="text-sm font-medium text-neutral-300">When a match is found</label>
                       </div>
                       <div className="space-y-3">
-                        <ActionSelector value={bannedWords.action} onChange={(val) => setBannedWords({ ...bannedWords, action: val })} />
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-sm text-neutral-400">Banned for</span>
-                          <CustomSelect 
-                              value={bannedWords.timeout_duration_min} 
-                              onChange={(val) => setBannedWords({ ...bannedWords, timeout_duration_min: parseInt(val) })} 
-                              options={[
-                                { value: 5, label: '5 minutes' },
-                                { value: 60, label: '1 hour' },
-                                { value: 1440, label: '1 day' },
-                                { value: 10080, label: '1 week' },
-                                { value: -1, label: 'Permanent' }
-                              ]} 
-                              className="bg-neutral-800 border-neutral-700 hover:border-neutral-600 text-sm text-white"
-                            />
-                        </div>
+                        <ActionSelector value={bannedWords.action} onChange={(val) => setBannedWords({ ...bannedWords, action: val })} durationValue={bannedWords.timeout_duration_min} onDurationChange={(val) => setBannedWords({ ...bannedWords, timeout_duration_min: parseInt(val) })} />
                       </div>
                     </div>
                   </div>
 
                   {/* Edit word list */}
                   <div>
-                      <div className="flex items-baseline justify-between gap-3 mb-2">
-                        <label className="text-sm font-medium text-neutral-300">Filtered Words</label>
-                      </div>
-                      <div className="flex gap-2 mb-3">
-                        <input 
-                          id="banned_word_input"
-                          placeholder="Add a word to filter..." 
-                          className="flex-1 h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" 
-                          type="text" 
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.target.value.trim()) {
-                              setBannedWords({ ...bannedWords, words: [...bannedWords.words, e.target.value.trim()] });
-                              e.target.value = '';
-                            }
-                          }}
-                        />
-                        <button 
-                          onClick={() => {
-                            const input = document.getElementById('banned_word_input');
-                            if (input.value.trim()) {
-                              setBannedWords({ ...bannedWords, words: [...bannedWords.words, input.value.trim()] });
-                              input.value = '';
-                            }
-                          }}
-                          className="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0"
-                        >
-                          Add
-                        </button>
-                      </div>
-                      {bannedWords.words.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {bannedWords.words.map(w => (
-                            <span key={w} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-200">
-                              {w}
-                              <button onClick={() => setBannedWords({ ...bannedWords, words: bannedWords.words.filter(x => x !== w) })} className="p-0.5 rounded-md hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                              </button>
-                            </span>
-                          ))}
+                    <button type="button" className="flex items-center justify-between w-full min-h-[44px] py-2 text-left group rounded-lg transition-[scale] duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" onClick={(e) => { e.currentTarget.nextElementSibling.classList.toggle('hidden'); }}>
+                      <span className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">Edit word list</span>
+                      <span className="flex items-center gap-2 text-xs text-neutral-500">{bannedWords.words?.length || 0} words
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 transition-transform duration-200 ease-out rotate-180">
+                          <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                      </span>
+                    </button>
+                    <div className="overflow-hidden hidden">
+                      <div className="pt-4">
+                        <div className="bg-neutral-800/30 rounded-xl border border-neutral-800 overflow-hidden">
+                          <div className="px-4 py-4 border-b border-neutral-800/60 space-y-2.5">
+                            <div className="flex gap-2">
+                              <div className="flex-1 relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                  <circle cx="11" cy="11" r="8"></circle>
+                                  <path d="m21 21-4.3-4.3"></path>
+                                </svg>
+                                <input placeholder="Search words..." className="w-full h-10 pl-10 pr-9 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" />
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <div className="flex-1 relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                  <path d="M5 12h14"></path>
+                                  <path d="M12 5v14"></path>
+                                </svg>
+                                <input id="banned_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pl-10 pr-3 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && e.target.value.trim()) {
+                                    setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), e.target.value.trim()] });
+                                    e.target.value = '';
+                                  }
+                                }} />
+                              </div>
+                              <button onClick={() => {
+                                const input = document.getElementById('banned_word_input');
+                                if (input.value.trim()) {
+                                  setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), input.value.trim()] });
+                                  input.value = '';
+                                }
+                              }} className="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-lg hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0">Add</button>
+                            </div>
+                          </div>
+                          <div className="px-4 py-4 max-h-[280px] overflow-y-auto scrollbar-thin">
+                            <div className="flex flex-wrap gap-1.5">
+                              {(bannedWords.words||[]).map((w, idx) => (
+                                <span key={idx} className="inline-flex items-center gap-1 max-w-full break-all pl-2.5 pr-1 py-1 text-xs bg-neutral-700/50 text-neutral-300 rounded-lg font-mono group hover:bg-neutral-700 transition-[background-color] duration-150 ease-out">
+                                  {w}
+                                  <button onClick={() => setBannedWords({ ...bannedWords, words: bannedWords.words.filter((_, i) => i !== idx) })} aria-label="Remove word" className="grid place-items-center w-6 h-6 -my-1 text-neutral-600 hover:text-red-400 transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x w-3 h-3">
+                                      <path d="M18 6 6 18"></path>
+                                      <path d="m6 6 12 12"></path>
+                                    </svg>
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-
-                  {/* Always allow these words */}
-                  <div>
-                    <div className="flex items-baseline justify-between gap-3 mb-2">
-                      <label className="text-sm font-medium text-neutral-300">Always allow these words</label>
-                      <span className="text-xs text-neutral-500 tabular-nums">0 words</span>
-                    </div>
-                    <div className="space-y-2.5">
-                      <div className="flex gap-2">
-                        <input 
-                          id="allowed_word_input"
-                          placeholder="Add a word that should never be filtered..." 
-                          className="flex-1 h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" 
-                          type="text" 
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.target.value.trim()) {
-                              setBannedWords({ ...bannedWords, allowed_words: [...bannedWords.allowed_words, e.target.value.trim()] });
-                              e.target.value = '';
-                            }
-                          }}
-                        />
-                        <button 
-                          onClick={() => {
-                            const input = document.getElementById('allowed_word_input');
-                            if (input.value.trim()) {
-                              setBannedWords({ ...bannedWords, allowed_words: [...bannedWords.allowed_words, input.value.trim()] });
-                              input.value = '';
-                            }
-                          }}
-                          className="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0"
-                        >
-                          Add
-                        </button>
                       </div>
-                      {bannedWords.allowed_words.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {bannedWords.allowed_words.map(w => (
-                            <span key={w} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs font-medium text-white">
-                              {w}
-                              <button onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter(x => x !== w) })} className="p-0.5 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
+                  
+                  {/* Always allow these words */}
+                  <div>
+                    <button type="button" className="flex items-center justify-between w-full min-h-[44px] py-2 text-left group rounded-lg transition-[scale] duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" onClick={(e) => { e.currentTarget.nextElementSibling.classList.toggle('hidden'); }}>
+                      <span className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">Always allow these words</span>
+                      <span className="flex items-center gap-2 text-xs text-neutral-500">{bannedWords.allowed_words?.length || 0} words
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 transition-transform duration-200 ease-out rotate-180">
+                          <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                      </span>
+                    </button>
+                    <div className="overflow-hidden hidden">
+                      <div className="pt-4">
+                        <div className="bg-neutral-800/30 rounded-xl border border-neutral-800 overflow-hidden">
+                          <div className="px-4 py-4 border-b border-neutral-800/60 space-y-2.5">
+                            <div className="flex gap-2">
+                              <div className="flex-1 relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                  <path d="M5 12h14"></path>
+                                  <path d="M12 5v14"></path>
+                                </svg>
+                                <input id="allowed_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pl-10 pr-3 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && e.target.value.trim()) {
+                                    setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words||[]), e.target.value.trim()] });
+                                    e.target.value = '';
+                                  }
+                                }} />
+                              </div>
+                              <button onClick={() => {
+                                const input = document.getElementById('allowed_word_input');
+                                if (input.value.trim()) {
+                                  setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words||[]), input.value.trim()] });
+                                  input.value = '';
+                                }
+                              }} className="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-lg hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0">Add</button>
+                            </div>
+                          </div>
+                          <div className="px-4 py-4 max-h-[280px] overflow-y-auto scrollbar-thin">
+                            <div className="flex flex-wrap gap-1.5">
+                              {(bannedWords.allowed_words||[]).map((w, idx) => (
+                                <span key={idx} className="inline-flex items-center gap-1 max-w-full break-all pl-2.5 pr-1 py-1 text-xs bg-neutral-700/50 text-neutral-300 rounded-lg font-mono group hover:bg-neutral-700 transition-[background-color] duration-150 ease-out">
+                                  {w}
+                                  <button onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter((_, i) => i !== idx) })} aria-label="Remove word" className="grid place-items-center w-6 h-6 -my-1 text-neutral-600 hover:text-red-400 transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x w-3 h-3">
+                                      <path d="M18 6 6 18"></path>
+                                      <path d="m6 6 12 12"></path>
+                                    </svg>
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
