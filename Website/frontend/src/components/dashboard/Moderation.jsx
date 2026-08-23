@@ -576,7 +576,7 @@ export default function Moderation({ guildId }) {
                                   <circle cx="11" cy="11" r="8"></circle>
                                   <path d="m21 21-4.3-4.3"></path>
                                 </svg>
-                                <input placeholder="Search words..." className="w-full h-10 pr-9 bg-[#2A2A2A] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" />
+                                <input placeholder="Search words..." className="w-full h-10 pr-9 bg-neutral-800 border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" />
                               </div>
                             </div>
                             <div className="flex gap-2">
@@ -585,7 +585,7 @@ export default function Moderation({ guildId }) {
                                   <path d="M5 12h14"></path>
                                   <path d="M12 5v14"></path>
                                 </svg>
-                                <input id="banned_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-[#2A2A2A] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" onKeyDown={(e) => {
+                                <input id="banned_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-neutral-800 border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" onKeyDown={(e) => {
                                   if (e.key === 'Enter' && e.target.value.trim()) {
                                     setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), e.target.value.trim()] });
                                     e.target.value = '';
@@ -630,7 +630,7 @@ export default function Moderation({ guildId }) {
                     <div className="space-y-2.5">
                       <div className="flex gap-2">
                         <div className="flex-1 relative">
-                          <input id="allowed_word_input" placeholder="Add a word that should never be filtered..." className="w-full h-10 px-3 bg-[#2A2A2A] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
+                          <input id="allowed_word_input" placeholder="Add a word that should never be filtered..." className="w-full h-10 px-3 bg-neutral-800 border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
                             if (e.key === 'Enter' && e.target.value.trim()) {
                               setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words||[]), e.target.value.trim()] });
                               e.target.value = '';
@@ -648,7 +648,7 @@ export default function Moderation({ guildId }) {
                       {((bannedWords.allowed_words||[]).length > 0) && (
                         <div className="flex flex-wrap gap-2 mt-3">
                           {bannedWords.allowed_words.map((w, idx) => (
-                            <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-[#2A2A2A] border border-neutral-700 text-xs font-medium text-white group cursor-pointer hover:bg-neutral-700 transition-colors" onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter((_, i) => i !== idx) })}>
+                            <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs font-medium text-white group cursor-pointer hover:bg-neutral-700 transition-colors" onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter((_, i) => i !== idx) })}>
                               {w}
                               <button aria-label="Remove word" className="p-0.5 rounded-md text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
