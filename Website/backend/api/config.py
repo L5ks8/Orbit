@@ -369,6 +369,11 @@ class ConfigMixin:
                     new_prefix = ext.get("prefix", "-").strip()
                     if not new_prefix: new_prefix = "-"
                     db["GuildSettings"].update_one({"_id": guild_id}, {"$set": {"prefix": new_prefix}}, upsert=True)
+                    try:
+                        import bot
+                        bot.PREFIX_CACHE[guild_id] = new_prefix
+                    except Exception:
+                        pass
                     
                     # Try to clear bot's memory cache
                     try:
