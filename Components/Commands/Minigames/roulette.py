@@ -2,6 +2,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from Components.Commands.Minigames.minigames import minigames_group
 from Components.Commands.Economy._storage import (
     load_economy_config,
     get_user_balance,
@@ -122,7 +123,7 @@ class RouletteCommand(commands.Cog):
         return True
 
 
-    @commands.hybrid_command(name="roulette", description="Bet money and spin the roulette wheel (`/roulette <bet> <color>`).")
+    @minigames_group.command(name="roulette", description="Bet money and spin the roulette wheel (`/roulette <bet> <color>`).")
     @app_commands.describe(
         bet="Amount of money to bet",
         choice="Red, Black, or Green"

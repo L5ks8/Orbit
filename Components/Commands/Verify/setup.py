@@ -1,4 +1,4 @@
-import discord
+﻿import discord
 from discord import app_commands
 from discord.ext import commands
 
@@ -98,7 +98,7 @@ class VerifySetupFallback(commands.Cog):
 async def setup(bot: commands.Bot):
     from Components.Commands.Verify.verify import verify_group
     from Components.Commands._utils import make_embed
-    if "verify" not in bot.all_commands:
+    if "verification" not in bot.all_commands:
         bot.add_command(verify_group)
     bot.add_view(PersistentVerifyLayout())
     await bot.add_cog(VerifySetupCog(bot))

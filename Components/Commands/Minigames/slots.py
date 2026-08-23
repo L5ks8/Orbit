@@ -2,6 +2,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from Components.Commands.Minigames.minigames import minigames_group
 from Components.Commands.Economy._storage import (
     load_economy_config,
     get_user_balance,
@@ -150,7 +151,7 @@ class SlotsCommand(commands.Cog):
         return True
 
 
-    @commands.hybrid_command(name="slots", description="Bet money and spin the interactive V2 Casino Slot Machine (`/slots <bet>`).")
+    @minigames_group.command(name="slots", description="Bet money and spin the interactive V2 Casino Slot Machine (`/slots <bet>`).")
     @app_commands.describe(bet="Amount of money to bet (e.g. 50)")
     async def slots_cmd(self, ctx: commands.Context, bet: int = 10):
         await ctx.defer()

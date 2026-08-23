@@ -55,7 +55,7 @@ class VerifyToggleFallback(commands.Cog):
 async def setup(bot: commands.Bot):
     from Components.Commands.Verify.verify import verify_group
     from Components.Commands._utils import make_embed
-    if "verify" not in bot.all_commands:
+    if "verification" not in bot.all_commands:
         bot.add_command(verify_group)
     await bot.add_cog(VerifyToggleCog(bot))
     await bot.add_cog(VerifyToggleFallback(bot))

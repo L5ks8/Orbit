@@ -305,8 +305,9 @@ class GeminiChatbot(commands.Cog):
                     if text_response:
                         await self._send_chunked(message, text_response)
                     else:
-                        await message.add_reaction("")
+                        await message.add_reaction("✅")
                 else:
+                    pass
             except Exception as e:
                 print(f"AI Error: {e}")
                 await message.reply(f"I am currently experiencing technical difficulties connecting to my AI providers. Please try again later.\n*(Error: {e})*")

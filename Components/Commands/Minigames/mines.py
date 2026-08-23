@@ -3,6 +3,7 @@ import math
 import discord
 from discord import app_commands
 from discord.ext import commands
+from Components.Commands.Minigames.minigames import minigames_group
 from Components.Commands.Economy._storage import (
     load_economy_config,
     get_user_balance,
@@ -223,7 +224,7 @@ class MinesCommand(commands.Cog):
         return True
 
 
-    @commands.hybrid_command(name="mines", description="Play a game of Mines (`/mines <bet> <mines_count>`).")
+    @minigames_group.command(name="mines", description="Play a game of Mines (`/mines <bet> <mines_count>`).")
     @app_commands.describe(
         bet="Amount of money to bet (e.g. 50)",
         mines_count="Number of mines (1-15, default is 3)"

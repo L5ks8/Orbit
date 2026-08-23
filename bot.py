@@ -317,9 +317,10 @@ class OrbitBot(commands.Bot):
                 except Exception as e:
                     print(f"Failed to load root group {extension}: {e}")
 
-        # Load subcommands and remaining modules
         for file_path in commands_dir.rglob("*.py"):
             if file_path.name.startswith("_"):
+                continue
+            if file_path.stem in ["image_gen", "transcript_render", "rank_card", "leaderboard_card"]:
                 continue
             if file_path.stem.lower() == file_path.parent.name.lower():
                 continue

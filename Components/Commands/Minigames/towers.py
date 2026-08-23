@@ -2,6 +2,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from Components.Commands.Minigames.minigames import minigames_group
 from Components.Commands.Economy._storage import (
     load_economy_config,
     get_user_balance,
@@ -222,7 +223,7 @@ class TowersCommand(commands.Cog):
         return True
 
 
-    @commands.hybrid_command(name="towers", description="Play a game of Towers (`/towers <bet>`).")
+    @minigames_group.command(name="towers", description="Play a game of Towers (`/towers <bet>`).")
     @app_commands.describe(bet="Amount of money to bet (e.g. 50)")
     async def towers_cmd(self, ctx: commands.Context, bet: int = 10):
         await ctx.defer()

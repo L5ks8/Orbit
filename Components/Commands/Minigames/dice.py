@@ -2,6 +2,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from Components.Commands.Minigames.minigames import minigames_group
 from Components.Commands.Economy._storage import (
     load_economy_config,
     get_user_balance,
@@ -105,7 +106,7 @@ class DiceCommand(commands.Cog):
         return True
 
 
-    @commands.hybrid_command(name="dice", description="Bet money and roll two dice (`/dice <bet>`).")
+    @minigames_group.command(name="dice", description="Bet money and roll two dice (`/dice <bet>`).")
     @app_commands.describe(bet="Amount of money to bet")
     async def dice_cmd(self, ctx: commands.Context, bet: int):
         await ctx.defer()

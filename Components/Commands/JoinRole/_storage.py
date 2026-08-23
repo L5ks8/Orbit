@@ -55,3 +55,27 @@ def save_join_roles(guild_id: int, data: Dict[str, Any]) -> None:
     path = _get_file_path(guild_id)
     if True:
         set_config("JoinRole", guild_id, data)
+
+def add_join_role(guild_id: int, role_id: int) -> bool:
+    data = load_join_roles(guild_id)
+    if role_id not in data["user_roles"]:
+        data["user_roles"].append(role_id)
+        save_join_roles(guild_id, data)
+        return True
+    return False
+
+def remove_join_role(guild_id: int, role_id: int) -> bool:
+    data = load_join_roles(guild_id)
+    if role_id in data["user_roles"]:
+        data["user_roles"].remove(role_id)
+        save_join_roles(guild_id, data)
+        return True
+    return False
+
+def clear_join_roles(guild_id: int) -> bool:
+    data = load_join_roles(guild_id)
+    if len(data["user_roles"]) > 0:
+        data["user_roles"] = []
+        save_join_roles(guild_id, data)
+        return True
+    return False
