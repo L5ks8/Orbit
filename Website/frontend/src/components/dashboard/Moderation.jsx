@@ -202,6 +202,15 @@ export default function Moderation({ guildId }) {
   
   const [general, setGeneral] = useState({ log_channel: '' });
   const [exemptions, setExemptions] = useState({ roles: [], channels: [] });
+  const [logs, setLogs] = useState({
+    enabled: true,
+    executor_in_logs: false,
+    global_exempt_channels: [],
+    global_exempt_roles: [],
+    categories: {},
+    channels: {},
+    roles: {}
+  });
   
   const [recentActions, setRecentActions] = useState([]);
   const [warnSearchId, setWarnSearchId] = useState('');
@@ -904,7 +913,7 @@ export default function Moderation({ guildId }) {
                 <div className="px-4 sm:px-5 py-3">
                   <label className="text-sm text-neutral-200 block mb-2">Log Channel</label>
                   <div className="w-full">
-                    <CustomSelect options={channelOptions} value={general.log_channel} onChange={(val) => setGeneral({ ...general, log_channel: val })} placeholder="Select log channel..." />
+                    <CustomSelect options={channelOptions} value={logs.channels?.auto_moderation} onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, auto_moderation: val }})} placeholder="Select log channel..." />
                   </div>
                 </div>
                 <div className="px-4 sm:px-5 py-3">
@@ -994,21 +1003,17 @@ export default function Moderation({ guildId }) {
                   <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Message Logs</span>
                 </div>
                 <div className="w-full">
-                  <div className="relative">
-                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                      <div className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
+                  <CustomSelect 
+                    options={channelOptions} 
+                    value={logs.channels?.message_deleted || logs.channels?.message_edited} 
+                    onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, message_deleted: val, message_edited: val, bulk_message_delete: val }})} 
+                    placeholder="Select log channel..." 
+                  />
                 </div>
                 <div className="flex gap-5">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={general.caps_filter_enabled} onChange={() => setGeneral({ ...general, caps_filter_enabled: !general.caps_filter_enabled })} />
+                      <TailwindToggle checked={logs.categories?.message_edited || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, message_edited: !logs.categories?.message_edited }})} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil w-3.5 h-3.5 text-neutral-500">
@@ -1020,7 +1025,7 @@ export default function Moderation({ guildId }) {
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"><span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" /></button>
+                      <TailwindToggle checked={logs.categories?.message_deleted || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, message_deleted: !logs.categories?.message_deleted, bulk_message_delete: !logs.categories?.message_deleted }})} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash2 w-3.5 h-3.5 text-neutral-500">
@@ -1048,21 +1053,17 @@ export default function Moderation({ guildId }) {
                   <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Member Logs</span>
                 </div>
                 <div className="w-full">
-                  <div className="relative">
-                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                      <div className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
+                  <CustomSelect 
+                    options={channelOptions} 
+                    value={logs.channels?.member_joined || logs.channels?.member_left} 
+                    onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, member_joined: val, member_left: val }})} 
+                    placeholder="Select log channel..." 
+                  />
                 </div>
                 <div className="flex gap-5">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"><span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" /></button>
+                      <TailwindToggle checked={logs.categories?.member_joined || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, member_joined: !logs.categories?.member_joined }})} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-in w-3.5 h-3.5 text-neutral-500">
@@ -1075,7 +1076,7 @@ export default function Moderation({ guildId }) {
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"><span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" /></button>
+                      <TailwindToggle checked={logs.categories?.member_left || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, member_left: !logs.categories?.member_left }})} />
                     </div>
                     <span className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-out w-3.5 h-3.5 text-neutral-500">
@@ -1112,20 +1113,16 @@ export default function Moderation({ guildId }) {
                       </span>
                     </div>
                     <div className="w-full">
-                      <div className="relative">
-                        <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                          <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                          <div className="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                              <path d="m6 9 6 6 6-6" />
-                            </svg>
-                          </div>
-                        </button>
-                      </div>
+                      <CustomSelect 
+                        options={channelOptions} 
+                        value={logs.channels?.member_joined_voice || logs.channels?.member_left_voice} 
+                        onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, member_joined_voice: val, member_left_voice: val, member_moved_voice: val }})} 
+                        placeholder="Select log channel..." 
+                      />
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <button type="button" role="switch" aria-checked="false" className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"><span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" /></button>
+                        <TailwindToggle checked={logs.categories?.member_joined_voice || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, member_joined_voice: !logs.categories?.member_joined_voice, member_left_voice: !logs.categories?.member_joined_voice, member_moved_voice: !logs.categories?.member_joined_voice }})} />
                       </div>
                       <span className="text-xs text-neutral-400">Log Voice Activity</span>
                     </label>
@@ -1146,16 +1143,12 @@ export default function Moderation({ guildId }) {
                   <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Mod Action Logs</span>
                 </div>
                 <div className="w-full">
-                  <div className="relative">
-                    <button type="button" className="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                      <span className="min-w-0 truncate text-sm text-neutral-500"># select channel</span>
-                      <div className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200">
-                          <path d="m6 9 6 6 6-6" />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
+                  <CustomSelect 
+                    options={channelOptions} 
+                    value={logs.channels?.moderation_action} 
+                    onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, moderation_action: val }})} 
+                    placeholder="Select log channel..." 
+                  />
                 </div>
                 <p className="text-xs text-neutral-600 leading-relaxed text-pretty">Warns, bans, kicks, timeouts &amp; unbans</p>
               </div>
@@ -1174,16 +1167,13 @@ export default function Moderation({ guildId }) {
               </div>
               <div className="mt-3">
                 <div className="w-full">
-                  <div className="relative">
-                    <button type="button" className="w-full flex items-center justify-between gap-2 min-h-[40px] px-3 py-1.5 bg-neutral-800 border rounded-xl text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                      <div className="flex-1 flex flex-wrap gap-1">
-                        <span className="text-neutral-500 text-sm py-0.5">Select channels to exclude...</span>
-                      </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform">
-                        <path d="m6 9 6 6 6-6" />
-                      </svg>
-                    </button>
-                  </div>
+                  <CustomSelect 
+                    options={channelOptions} 
+                    value={logs.global_exempt_channels} 
+                    onChange={(val) => setLogs({ ...logs, global_exempt_channels: val })} 
+                    isMulti 
+                    placeholder="Select channels to exclude..." 
+                  />
                 </div>
               </div>
             </div>
