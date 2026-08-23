@@ -695,7 +695,7 @@ export default function Moderation({ guildId }) {
                   </div>
                   <div className="flex items-center gap-2.5 flex-shrink-0">
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={bannedWords.enabled} onChange={() => setBannedWords({ ...bannedWords, enabled: !bannedWords.enabled })} />
+                      <TailwindToggle checked={antiSpam.enabled} onChange={() => setAntiSpam({ ...antiSpam, enabled: !antiSpam.enabled })} />
                     </div>
                   </div>
                 </div>
