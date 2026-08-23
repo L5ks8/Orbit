@@ -278,7 +278,7 @@ export default function Moderation({ guildId }) {
       .then(res => res.json())
       .then(data => {
         setServerData(data);
-        const amCfg = data?.config?.automod || {};
+        const amCfg = data?.automod || {};
         
         setAiAutomodEnabled(amCfg.ai_automod?.enabled || false);
         setAiImageEnabled(amCfg.ai_image?.enabled || false);
@@ -784,7 +784,7 @@ export default function Moderation({ guildId }) {
                   </div>
                   <div className="flex items-center gap-2.5 flex-shrink-0">
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={antiSpam.enabled} onChange={() => setAntiSpam({ ...antiSpam, enabled: !antiSpam.enabled })} />
+                      <TailwindToggle checked={antiLink.enabled} onChange={() => setAntiLink({ ...antiLink, enabled: !antiLink.enabled })} />
                     </div>
                   </div>
                 </div>

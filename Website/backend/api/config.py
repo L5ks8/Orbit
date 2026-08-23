@@ -499,8 +499,10 @@ class ConfigMixin:
                 save_boost_config(guild_id, boost_cfg)
 
             if user_perms.get("can_messages") and "automod" in data:
-                automod_cfg = load_automod_config(guild_id)
-                am = data.get("automod", {})
+                automod_cfg = get_config("AutoMod", guild_id)
+                if not isinstance(automod_cfg, dict):
+                    automod_cfg = {}
+                am = data["automod"]
                 automod_cfg["enabled"] = bool(am.get("enabled"))
                 
                 gec = am.get("exempt_channels", [])
