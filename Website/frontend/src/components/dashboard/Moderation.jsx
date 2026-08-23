@@ -9,35 +9,89 @@ const TailwindToggle = ({ checked, onChange }) => (
     role="switch" 
     aria-checked={checked} 
     onClick={onChange}
-    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-black border border-white/20' : 'bg-neutral-700'}`}
+    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white border border-white/20' : 'bg-neutral-700'}`}
   >
-    <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px] bg-white' : 'translate-x-[3px] bg-neutral-400'}`} />
+    <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
   </button>
 );
 
 
 
-const ActionSelector = ({ value, onChange }) => {
-  const actions = ['Delete', 'Warn', 'Timeout', 'Kick', 'Ban'];
+const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) => {
+  const actions = [
+    { id: 'delete', label: 'Löschen' },
+    { id: 'warn', label: 'Verwarnen' },
+    { id: 'timeout', label: 'Timeout' },
+    { id: 'kick', label: 'Kicken' },
+    { id: 'ban', label: 'Bannen' }
+  ];
+  
+  const timeoutOptions = [
+    { value: '60', label: '1 min' },
+    { value: '300', label: '5 min' },
+    { value: '600', label: '10 min' },
+    { value: '3600', label: '1 hour' },
+    { value: '86400', label: '1 day' },
+    { value: '604800', label: '1 week' }
+  ];
+  
+  const banOptions = [
+    { value: '0', label: 'Permanent' },
+    { value: '86400', label: '1 day' },
+    { value: '604800', label: '7 days' },
+    { value: '2592000', label: '30 days' }
+  ];
+
   return (
-    <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
-      {actions.map(action => {
-        const isSelected = value.toLowerCase() === action.toLowerCase();
-        return (
-          <button
-            key={action}
-            type="button"
-            onClick={() => onChange(action.toLowerCase())}
-            className={`flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${isSelected ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
-          >
-            {action}
-          </button>
-        );
-      })}
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-[#1A1A1A] border border-neutral-800">
+        {actions.map(action => {
+          const isSelected = value.toLowerCase() === action.id;
+          return (
+            <button
+              key={action.id}
+              type="button"
+              onClick={() => onChange(action.id)}
+              className={`flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${isSelected ? 'bg-[#2D2D2D] text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+            >
+              {action.label}
+            </button>
+          );
+        })}
+      </div>
+      
+      {value.toLowerCase() === 'timeout' && (
+        <div className="flex items-center gap-4 mt-1 mb-2">
+          <span className="text-sm font-medium text-white min-w-[100px]">Timed out for</span>
+          <div className="w-[140px]">
+            <CustomSelect
+              options={timeoutOptions}
+              value={durationValue}
+              onChange={onDurationChange}
+              placeholder="5 min"
+              darker={true}
+            />
+          </div>
+        </div>
+      )}
+      
+      {value.toLowerCase() === 'ban' && (
+        <div className="flex items-center gap-4 mt-1 mb-2">
+          <span className="text-sm font-medium text-white min-w-[100px]">Banned for</span>
+          <div className="w-[140px]">
+            <CustomSelect
+              options={banOptions}
+              value={durationValue}
+              onChange={onDurationChange}
+              placeholder="Permanent"
+              darker={true}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
 
 const FilterLevelSelector = ({ value, onChange, levels }) => (
   <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${levels.length}, minmax(0px, 1fr))` }}>
