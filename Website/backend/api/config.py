@@ -339,6 +339,7 @@ class ConfigMixin:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
             
         try:
+            from Components.Database.mongodb import get_config
             data = await request.json()
 
             if user_perms.get("is_admin") and "settings" in data:
