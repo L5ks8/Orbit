@@ -9,9 +9,9 @@ const TailwindToggle = ({ checked, onChange }) => (
       role="switch" 
       aria-checked={checked} 
       onClick={onChange}
-      className={`peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 disabled:cursor-not-allowed disabled:opacity-50 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
+      className={`peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 disabled:cursor-not-allowed disabled:opacity-50 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
     >
-      <span className={`pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0 transition-transform ${checked ? 'translate-x-5 bg-black' : 'translate-x-0 bg-neutral-400'}`} />
+      <span className={`pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0 transition-transform duration-200 ease-in-out ${checked ? 'translate-x-5 bg-black' : 'translate-x-0 bg-neutral-400'}`} />
     </button>
 );
 
@@ -568,7 +568,7 @@ export default function Moderation({ guildId }) {
                     </button>
                     <div className="overflow-hidden hidden">
                       <div className="pt-4">
-                        <div className="bg-[#121212]/30 rounded-xl border border-neutral-800 overflow-hidden">
+                        <div className="bg-neutral-800/30 rounded-xl border border-neutral-800 overflow-hidden">
                           <div className="px-4 py-4 border-b border-neutral-800/60 space-y-2.5">
                             <div className="flex gap-2">
                               <div className="flex-1 relative">
@@ -576,7 +576,7 @@ export default function Moderation({ guildId }) {
                                   <circle cx="11" cy="11" r="8"></circle>
                                   <path d="m21 21-4.3-4.3"></path>
                                 </svg>
-                                <input placeholder="Search words..." className="w-full h-10 pr-9 bg-[#121212] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" />
+                                <input placeholder="Search words..." className="w-full h-10 pr-9 bg-neutral-800 border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" />
                               </div>
                             </div>
                             <div className="flex gap-2">
@@ -585,7 +585,7 @@ export default function Moderation({ guildId }) {
                                   <path d="M5 12h14"></path>
                                   <path d="M12 5v14"></path>
                                 </svg>
-                                <input id="banned_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-[#121212] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" onKeyDown={(e) => {
+                                <input id="banned_word_input" placeholder="Add a word and press Enter..." className="w-full h-10 pr-3 bg-neutral-800 border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" style={{ paddingLeft: "2.5rem" }} type="text" onKeyDown={(e) => {
                                   if (e.key === 'Enter' && e.target.value.trim()) {
                                     setBannedWords({ ...bannedWords, words: [...(bannedWords.words||[]), e.target.value.trim()] });
                                     e.target.value = '';
@@ -630,7 +630,7 @@ export default function Moderation({ guildId }) {
                     <div className="space-y-2.5">
                       <div className="flex gap-2">
                         <div className="flex-1 relative">
-                          <input id="allowed_word_input" placeholder="Add a word that should never be filtered..." className="w-full h-10 px-3 bg-[#121212] border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
+                          <input id="allowed_word_input" placeholder="Add a word that should never be filtered..." className="w-full h-10 px-3 bg-neutral-800 border border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
                             if (e.key === 'Enter' && e.target.value.trim()) {
                               setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words||[]), e.target.value.trim()] });
                               e.target.value = '';
@@ -648,7 +648,7 @@ export default function Moderation({ guildId }) {
                       {((bannedWords.allowed_words||[]).length > 0) && (
                         <div className="flex flex-wrap gap-2 mt-3">
                           {bannedWords.allowed_words.map((w, idx) => (
-                            <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-[#121212] border border-neutral-700 text-xs font-medium text-white group cursor-pointer hover:bg-neutral-700 transition-colors" onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter((_, i) => i !== idx) })}>
+                            <span key={idx} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs font-medium text-white group cursor-pointer hover:bg-neutral-700 transition-colors" onClick={() => setBannedWords({ ...bannedWords, allowed_words: bannedWords.allowed_words.filter((_, i) => i !== idx) })}>
                               {w}
                               <button aria-label="Remove word" className="p-0.5 rounded-md text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -910,7 +910,7 @@ export default function Moderation({ guildId }) {
                             <path d="m21 21-4.3-4.3" />
                           </svg>
                         </div>
-                        <input autoComplete="off" value={warnSearchId} onChange={(e) => setWarnSearchId(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') searchWarns() }} className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 pl-11" placeholder="Discord user ID..." />
+                        <input autoComplete="off" value={warnSearchId} onChange={(e) => setWarnSearchId(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') searchWarns() }} className="w-full pr-4 pl-[44px] py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600" placeholder="Discord user ID..." />
                       </div>
                     </div>
                     <button type="button" onClick={searchWarns} disabled={searchingWarns} className="inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out enabled:active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-800 text-black dark:text-white border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 focus:ring-neutral-400/20 px-3.5 py-2 text-xs">
