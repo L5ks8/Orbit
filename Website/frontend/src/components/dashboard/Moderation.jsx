@@ -185,7 +185,7 @@ export default function Moderation({ guildId }) {
   
   const [serverData, setServerData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [initialBannedWordsStr, setInitialBannedWordsStr] = useState('');
+  const [initialStateStr, setInitialStateStr] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'success' | 'error'
   const [saveMessage, setSaveMessage] = useState('');
   const [formKey, setFormKey] = useState(0);
@@ -305,7 +305,7 @@ export default function Moderation({ guildId }) {
   
   useEffect(() => {
     if (!loading) {
-       setInitialBannedWordsStr(JSON.stringify(bannedWords));
+       setInitialStateStr(JSON.stringify(getPayload()));
     }
   }, [loading]);
   const handleSave = async (payloadStr) => {
@@ -328,7 +328,7 @@ export default function Moderation({ guildId }) {
       } else {
         setSaveStatus('success');
         setSaveMessage("Saved");
-        setInitialBannedWordsStr(JSON.stringify(JSON.parse(payloadString).automod.banned_words));
+        setInitialStateStr(payloadString);
         setTimeout(() => setSaveStatus('idle'), 3000);
       }
     } catch (e) {
@@ -339,17 +339,16 @@ export default function Moderation({ guildId }) {
     }
   };
 
-  const currentBannedWordsStr = JSON.stringify(bannedWords);
-  const isDirty = initialBannedWordsStr && currentBannedWordsStr !== initialBannedWordsStr;
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
 
   useEffect(() => {
-    if (!initialBannedWordsStr || !isDirty) return;
-    const currentPayloadStr = JSON.stringify(getPayload());
+    if (!initialStateStr || !isDirty) return;
     const timeoutId = setTimeout(() => {
       handleSave(currentPayloadStr);
     }, 1500);
     return () => clearTimeout(timeoutId);
-  }, [currentBannedWordsStr, initialBannedWordsStr, isDirty]);
+  }, [currentPayloadStr, initialStateStr, isDirty]);
 
   if (loading) return <div className="text-neutral-400 p-8">Loading moderation settings...</div>;
 
@@ -1270,12 +1269,12 @@ export default function Moderation({ guildId }) {
 
       {saveStatus !== 'idle' && (
         <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
-          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border backdrop-blur-md ${
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg ${
             saveStatus === 'success' 
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+              ? 'bg-emerald-600 text-white' 
               : saveStatus === 'error'
-              ? 'bg-red-500/10 border-red-500/20 text-red-400'
-              : 'bg-neutral-800/80 border-neutral-700/50 text-neutral-300'
+              ? 'bg-red-600 text-white'
+              : 'bg-neutral-800 text-neutral-200'
           }`}>
             {saveStatus === 'saving' && (
               <svg className="animate-spin w-4 h-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
