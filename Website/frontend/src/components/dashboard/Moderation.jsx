@@ -17,6 +17,47 @@ const TailwindToggle = ({ checked, onChange }) => (
 
 
 
+
+const ModerationSelect = ({ value, onChange, options, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedLabel = options.find(o => String(o.value) === String(value))?.label || placeholder;
+
+  return (
+    <div className="relative">
+      <button 
+        type="button" 
+        onClick={() => setIsOpen(!isOpen)}
+        className="inline-flex items-center gap-1.5 h-10 sm:h-8 pl-3 pr-2 rounded-lg bg-neutral-800 border border-neutral-700 hover:border-neutral-600 text-sm text-white transition-[color,border-color,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+      >
+        {selectedLabel}
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide lucide-chevron-down w-3.5 h-3.5 text-neutral-500 transition-transform duration-200 ease-out ${isOpen ? 'rotate-180' : ''}`}>
+          <path d="m6 9 6 6 6-6"></path>
+        </svg>
+      </button>
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}></div>
+          <div className="absolute z-20 mt-1 left-0 min-w-[130px] p-1 rounded-lg bg-neutral-800 border border-neutral-700 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_18px_40px_-20px_rgba(0,0,0,0.9)]">
+            {options.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-[color,background-color,scale] duration-150 active:scale-[0.98] hover:bg-white/5 ${String(value) === String(opt.value) ? 'text-white' : 'text-neutral-400'}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) => {
   const actions = [
     { id: 'delete', label: 'Delete' },
@@ -64,12 +105,12 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
         <div className="flex items-center gap-2.5 mt-3">
           <span className="text-sm text-neutral-400">Timed out for</span>
           <div className="w-[140px]">
-            <CustomSelect
+            <ModerationSelect
               options={timeoutOptions}
               value={durationValue}
               onChange={onDurationChange}
               placeholder="5 min"
-              darker={false}
+              
             />
           </div>
         </div>
@@ -79,12 +120,12 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
         <div className="flex items-center gap-2.5 mt-3">
           <span className="text-sm text-neutral-400">Banned for</span>
           <div className="w-[140px]">
-            <CustomSelect
+            <ModerationSelect
               options={banOptions}
               value={durationValue}
               onChange={onDurationChange}
               placeholder="Permanent"
-              darker={false}
+              
             />
           </div>
         </div>
