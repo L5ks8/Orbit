@@ -9,7 +9,7 @@ const TailwindToggle = ({ checked, onChange }) => (
     role="switch" 
     aria-checked={checked} 
     onClick={onChange}
-    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white border border-white/20' : 'bg-neutral-700'}`}
+    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
   >
     <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
   </button>
@@ -44,7 +44,7 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-[#1A1A1A] border border-neutral-800">
+      <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
         {actions.map(action => {
           const isSelected = value.toLowerCase() === action.id;
           return (
@@ -52,7 +52,7 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
               key={action.id}
               type="button"
               onClick={() => onChange(action.id)}
-              className={`flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-[color,background-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${isSelected ? 'bg-[#2D2D2D] text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+              className={`flex-1 whitespace-nowrap px-2.5 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-[color,background-color,box-shadow,scale] duration-150 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${isSelected ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
             >
               {action.label}
             </button>
@@ -61,8 +61,8 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
       </div>
       
       {value.toLowerCase() === 'timeout' && (
-        <div className="flex items-center gap-4 mt-1 mb-2">
-          <span className="text-sm font-medium text-white min-w-[100px]">Timed out for</span>
+        <div className="flex items-center gap-2.5 mt-3">
+          <span className="text-sm text-neutral-400">Timed out for</span>
           <div className="w-[140px]">
             <CustomSelect
               options={timeoutOptions}
@@ -76,8 +76,8 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
       )}
       
       {value.toLowerCase() === 'ban' && (
-        <div className="flex items-center gap-4 mt-1 mb-2">
-          <span className="text-sm font-medium text-white min-w-[100px]">Banned for</span>
+        <div className="flex items-center gap-2.5 mt-3">
+          <span className="text-sm text-neutral-400">Banned for</span>
           <div className="w-[140px]">
             <CustomSelect
               options={banOptions}
