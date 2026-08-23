@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Whitelist._storage import is_whitelisted
@@ -51,7 +51,7 @@ class MuteCommand(commands.Cog):
             return await ctx.send(embed=make_embed("This user is already muted.", discord.Color.red()), ephemeral=True)
 
         try:
-            from Components.Commands._utils import send_moderation_dm, make_embed
+            from Components.Commands._utils import send_moderation_dm
             await send_moderation_dm(target, ctx.guild.name, "muted", reason, guild_id=ctx.guild.id)
 
             await target.add_roles(role, reason=f"Muted by {ctx.author} | Reason: {reason}")
