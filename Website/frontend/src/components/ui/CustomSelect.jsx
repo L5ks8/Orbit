@@ -43,7 +43,9 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
       if (currentValues.includes(String(val))) {
         onChange(currentValues.filter(v => v !== String(val)));
       } else {
-        onChange([...currentValues, String(val)]);
+        if (currentValues.length < 25) {
+          onChange([...currentValues, String(val)]);
+        }
       }
     } else {
       onChange(String(val));
@@ -136,7 +138,7 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
                 >
                   {opt.color && <span className="color-dot" style={{ backgroundColor: opt.color, marginRight: '8px' }}></span>}
                   {opt.label}
-                  {isSelected && isMulti && (
+                  {isSelected && (
                     <svg style={{ marginLeft: 'auto' }} xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   )}
                 </div>

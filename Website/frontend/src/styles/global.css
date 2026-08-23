@@ -3690,7 +3690,7 @@ input:checked + .toggle-slider:before {
 }
 
 .dash-custom-select-option.selected {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
   color: #fff;
   font-weight: 600;
 }
@@ -3723,8 +3723,9 @@ input:checked + .toggle-slider:before {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 13px;
+  font-weight: 600;
   color: #fff;
 }
 
