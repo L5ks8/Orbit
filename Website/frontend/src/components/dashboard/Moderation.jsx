@@ -9,9 +9,9 @@ const TailwindToggle = ({ checked, onChange }) => (
       role="switch" 
       aria-checked={checked} 
       onClick={onChange}
-      className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-800'}`}
+      className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
     >
-      <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
+      <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-300 ease-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
     </button>
 );
 
@@ -399,14 +399,7 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="flex items-center gap-2.5 flex-shrink-0">
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked="false"
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"
-                        >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                        </button>
+                        <TailwindToggle checked={aiAutomodEnabled} onChange={() => setAiAutomodEnabled(!aiAutomodEnabled)} />
                       </div>
                     </div>
                   </div>
@@ -489,14 +482,7 @@ export default function Moderation({ guildId }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked="false"
-                        className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700"
-                      >
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                      </button>
+                      <TailwindToggle checked={aiImageEnabled} onChange={() => setAiImageEnabled(!aiImageEnabled)} />
                     </div>
                   </div>
                 </div>
@@ -629,14 +615,12 @@ export default function Moderation({ guildId }) {
                     </div>
                     <div className="space-y-2.5">
                       <div className="flex gap-2">
-                        <div className="flex-1 relative">
-                          <input id="allowed_word_input" placeholder="Add a word that should never be filtered..." className="flex-1 h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.target.value.trim()) {
-                              setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words||[]), e.target.value.trim()] });
-                              e.target.value = '';
-                            }
-                          }} />
-                        </div>
+                        <input id="allowed_word_input" placeholder="Add a word that should never be filtered..." className="flex-1 h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 outline-none hover:border-neutral-600 transition-[border-color,box-shadow] duration-150 ease-out focus:border-neutral-600 focus:ring-2 focus:ring-white/10" type="text" onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.target.value.trim()) {
+                            setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words||[]), e.target.value.trim()] });
+                            e.target.value = '';
+                          }
+                        }} />
                         <button onClick={() => {
                           const input = document.getElementById('allowed_word_input');
                           if (input.value.trim()) {
