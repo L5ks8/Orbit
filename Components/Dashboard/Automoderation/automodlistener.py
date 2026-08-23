@@ -151,12 +151,38 @@ class AutoModListener(commands.Cog):
                 await log_event(message.guild, "auto_moderation", "AutoMod Triggered", f"**User:** {message.author.mention}\n**Reason:** {reason}\n**Action Taken:** {action.upper()}\n**Escalation:** {escalation_str}", target_channel_obj=message.channel)
             except Exception:
                 pass
+            try:
+                from Components.Commands.Log._modlog_storage import add_modlog
+                add_modlog(message.guild.id, message.author.id, self.bot.user.id, f"AutoMod ({action.capitalize()})", reason)
+            except Exception:
+                pass
 
         banned_cfg = config.get("banned_words", {})
         if banned_cfg.get("enabled", False) and not is_exempt(banned_cfg):
-            words = banned_cfg.get("words", [])
+            filter_level = banned_cfg.get("filter_level", "relaxed")
+            allowed_words = banned_cfg.get("allowed_words", [])
+            custom_words = banned_cfg.get("words", [])
+            
+            # Predefined word lists based on filter level
+            profanity_basic = ["fuck", "shit", "bitch", "asshole", "cunt", "nigger", "nigga", "faggot", "whore", "slut", "dick", "cock", "pussy"]
+            profanity_strict = profanity_basic + ["bastard", "motherfucker", "twat", "wanker", "prick", "retard", "dyke", "tranny", "kys", "kill yourself"]
+            profanity_maximum = profanity_strict + ["crap", "damn", "ass", "piss", "boobs", "tits", "vagina", "penis", "cum", "jizz", "wank"]
+            
+            words_to_check = set(custom_words)
+            if filter_level == "moderate":
+                words_to_check.update(profanity_basic)
+            elif filter_level == "strict":
+                words_to_check.update(profanity_strict)
+            elif filter_level == "maximum":
+                words_to_check.update(profanity_maximum)
+                
+            safe_content_lower = content_lower
+            for aw in allowed_words:
+                if not aw.strip(): continue
+                safe_content_lower = safe_content_lower.replace(aw.strip().lower(), " " * len(aw.strip()))
+
             import re
-            for w in words:
+            for w in words_to_check:
                 w = w.strip()
                 if not w: continue
                 # Handle asterisk wildcards
@@ -169,8 +195,8 @@ class AutoModListener(commands.Cog):
                 else:
                     pattern = r"\b" + re.escape(w) + r"\b"
                 
-                if re.search(pattern, content_lower):
-                    await do_action(banned_cfg, "AutoMod: Banned word detected")
+                if re.search(pattern, safe_content_lower):
+                    await do_action(banned_cfg, f"AutoMod: Banned word detected ({w})")
                     return
 
         invites_cfg = config.get("anti_invites", {})
