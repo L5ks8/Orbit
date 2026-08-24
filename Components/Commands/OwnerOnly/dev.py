@@ -45,7 +45,9 @@ PAGES = [
             "**`-cloudbackup` | `-cloudrestore` | `-setbackupchannel`**\n"
             "> Configures automated database backup/restore loop.\n\n"
             "**`-broadcast <message>`**\n"
-            "> Send a direct message to all server owners."
+            "> Send a direct message to all server owners.\n\n"
+            "**`-message <id|all> <message>`**\n"
+            "> Send a dashboard notification to a specific user or all users."
         )
     },
     {
