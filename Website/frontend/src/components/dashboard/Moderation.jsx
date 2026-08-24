@@ -968,7 +968,7 @@ export default function Moderation({ guildId }) {
                 <div className="px-4 sm:px-5 py-3">
                   <label className="text-sm text-neutral-200 block mb-2">Log Channel</label>
                   <div className="w-full">
-                    <CustomSelect options={channelOptions} value={logs.channels?.auto_moderation} onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, auto_moderation: val }})} placeholder="Select log channel..." />
+                    <CustomSelect options={channelOptions} value={logs.channels?.auto_moderation} onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, auto_moderation: val }, categories: { ...logs.categories, auto_moderation: !!val } })} placeholder="Select log channel..." />
                   </div>
                 </div>
                 <div className="px-4 sm:px-5 py-3">
@@ -1201,7 +1201,7 @@ export default function Moderation({ guildId }) {
                   <CustomSelect 
                     options={channelOptions} 
                     value={logs.channels?.moderation_action} 
-                    onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, moderation_action: val }})} 
+                    onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, moderation_action: val }, categories: { ...logs.categories, moderation_action: !!val, mod_command_used: !!val, member_banned: !!val, member_unbanned: !!val, member_kicked: !!val } })} 
                     placeholder="Select log channel..." 
                   />
                 </div>
