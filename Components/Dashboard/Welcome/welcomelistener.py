@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Commands.Welcome._storage import load_welcome_config
-from Components.Commands.Welcome._views import format_welcome_string
+from Components.Dashboard.Welcome._storage import load_welcome_config
+from Components.Dashboard.Welcome._views import format_welcome_string
 import re
 
 class WelcomeListener(commands.Cog):
@@ -140,7 +140,7 @@ class WelcomeListener(commands.Cog):
         # Default Image mode
         formatted = fmt_text(config.get("message", ""))
 
-        from Components.Commands.Welcome.image_gen import generate_welcome_image
+        from Components.Dashboard.Welcome.image_gen import generate_welcome_image
         import aiohttp
         import pathlib
 

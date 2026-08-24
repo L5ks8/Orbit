@@ -1,13 +1,41 @@
-import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
-
+import SaveBar from '../../ui/SaveBar';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
+const TailwindToggle = ({ checked, onChange }) => (
+    <button 
+      type="button" 
+      role="switch" 
+      aria-checked={checked} 
+      onClick={onChange}
+      className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
+    >
+      <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-all duration-300 ease-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
+    </button>
+);
+
+const ModuleHeader = ({ title, description, enabled, onToggle, hasToggle = true }) => (
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div>
+      <h2 className="text-2xl font-bold text-white tracking-tight mb-1">{title}</h2>
+      <p className="text-neutral-400 text-sm">{description}</p>
+    </div>
+    {hasToggle && (
+      <div className="flex items-center gap-3 px-4 py-2 bg-neutral-800/50 rounded-xl border border-neutral-800">
+        <span className="text-sm font-medium text-neutral-300">
+          {enabled ? 'Enabled' : 'Disabled'}
+        </span>
+        <TailwindToggle checked={enabled} onChange={onToggle} />
+      </div>
+    )}
+  </div>
+);
+
 export default function WelcomeSettings({ config, channels, onSave, saving, onReset }) {
   const wCfg = config?.welcome || {};
-  
 
+  const [enabled, setEnabled] = useState(wCfg.enabled || false);
   const [mode, setMode] = useState(wCfg.msg_mode || 'image');
   const [channel, setChannel] = useState(wCfg.channel_id || '');
   const [welcomeText, setWelcomeText] = useState(wCfg.message || '');
@@ -25,7 +53,7 @@ export default function WelcomeSettings({ config, channels, onSave, saving, onRe
 
   const getPayload = () => ({
       welcome: {
-        enabled: wCfg.enabled || false,
+        enabled: enabled,
         channel_id: channel,
         message: welcomeText,
         msg_mode: mode,
@@ -51,82 +79,121 @@ export default function WelcomeSettings({ config, channels, onSave, saving, onRe
   };
 
   return (
-    <div className="dash-settings-module">
+    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8 sm:py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <ModuleHeader 
+        title="Welcome System" 
+        description="Greet new members when they join your server with a customized message or image card."
+        enabled={enabled}
+        onToggle={() => setEnabled(!enabled)}
+      />
 
-
-      <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
-        <div className="form-group" style={{ marginBottom: 0 }}>
-          <label style={{ color: '#fff' }}>Welcome Channel</label>
-          <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Where should the bot post the welcome message?</span>
-          <CustomSelect options={channelOptions} value={channel} onChange={setChannel} placeholder="Select Channel..." />
-        </div>
-      </div>
-
-      <div className="dash-card settings-card" style={{ padding: '24px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '20px' }}>Message Builder</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6">
         
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-          <button className={`dash-btn ${mode === 'image' ? 'primary' : 'secondary'}`} onClick={() => setMode('image')}>Image Card</button>
-          <button className={`dash-btn ${mode === 'embed' ? 'primary' : 'secondary'}`} onClick={() => setMode('embed')}>Embed Message</button>
-        </div>
+        {/* Main Settings Column */}
+        <div className="flex flex-col gap-6">
+          
+          {/* Channel Selection */}
+          <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl flex flex-col gap-4">
+            <h3 className="text-lg font-semibold text-white">Target Channel</h3>
+            <p className="text-sm text-neutral-400">Select the channel where the bot should send the welcome messages.</p>
+            <div className="w-full">
+              <CustomSelect options={channelOptions} value={channel} onChange={setChannel} placeholder="Select Channel..." />
+            </div>
+          </div>
 
-        <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
-          {/* Builder Form */}
-          <div style={{ flex: '1 1 400px' }}>
-            <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label style={{ color: '#fff' }}>Content Text (Outside Embed)</label>
-              <textarea className="dash-input" style={{ width: '100%', height: '80px', resize: 'vertical' }} value={welcomeText} onChange={(e) => setWelcomeText(e.target.value)} placeholder="Welcome {user} to {server}!" />
+          {/* Message Builder */}
+          <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl flex flex-col gap-6">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Message Builder</h3>
+              <p className="text-sm text-neutral-400">Choose between an Image Card or an Embed Message and customize the content.</p>
+            </div>
+            
+            <div className="flex gap-2">
+              <button 
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${mode === 'image' ? 'bg-white text-black shadow-sm' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}
+                onClick={() => setMode('image')}
+              >
+                Image Card
+              </button>
+              <button 
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${mode === 'embed' ? 'bg-white text-black shadow-sm' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}
+                onClick={() => setMode('embed')}
+              >
+                Embed Message
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-neutral-300">Content Text (Outside Embed/Image)</label>
+              <textarea 
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600 transition-all resize-y min-h-[80px]"
+                value={welcomeText} 
+                onChange={(e) => setWelcomeText(e.target.value)} 
+                placeholder="Welcome {user} to {server}!" 
+              />
             </div>
 
             {mode === 'embed' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Embed Color</label>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <input type="color" value={embedColor} onChange={(e) => setEmbedColor(e.target.value)} style={{ width: '40px', height: '40px', padding: 0, border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'transparent' }} />
-                    <input type="text" className="dash-input" value={embedColor} onChange={(e) => setEmbedColor(e.target.value)} style={{ width: '100px' }} />
+              <div className="flex flex-col gap-4 p-5 bg-neutral-950/50 rounded-xl border border-neutral-800/50">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-neutral-300">Embed Color</label>
+                  <div className="flex items-center gap-3">
+                    <input type="color" value={embedColor} onChange={(e) => setEmbedColor(e.target.value)} className="w-10 h-10 p-1 bg-neutral-950 border border-neutral-800 rounded-lg cursor-pointer" />
+                    <input type="text" className="bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none w-32" value={embedColor} onChange={(e) => setEmbedColor(e.target.value)} />
                   </div>
                 </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Author Name</label>
-                  <input type="text" className="dash-input" placeholder="Author..." value={embedAuthor} onChange={(e) => setEmbedAuthor(e.target.value)} />
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-neutral-300">Author Name</label>
+                    <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 transition-all" placeholder="Author..." value={embedAuthor} onChange={(e) => setEmbedAuthor(e.target.value)} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-neutral-300">Title</label>
+                    <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 transition-all" placeholder="Title..." value={embedTitle} onChange={(e) => setEmbedTitle(e.target.value)} />
+                  </div>
                 </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Title</label>
-                  <input type="text" className="dash-input" placeholder="Title..." value={embedTitle} onChange={(e) => setEmbedTitle(e.target.value)} />
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-neutral-300">Description</label>
+                  <textarea className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 transition-all resize-y min-h-[100px]" placeholder="Description..." value={embedDescription} onChange={(e) => setEmbedDescription(e.target.value)} />
                 </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Description</label>
-                  <textarea className="dash-input" style={{ width: '100%', height: '100px', resize: 'vertical' }} placeholder="Description..." value={embedDescription} onChange={(e) => setEmbedDescription(e.target.value)} />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-neutral-300">Image URL</label>
+                    <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 transition-all" placeholder="https://..." value={embedImage} onChange={(e) => setEmbedImage(e.target.value)} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-neutral-300">Thumbnail URL</label>
+                    <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 transition-all" placeholder="https://..." value={embedThumbnail} onChange={(e) => setEmbedThumbnail(e.target.value)} />
+                  </div>
                 </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Image URL</label>
-                  <input type="text" className="dash-input" placeholder="https://..." value={embedImage} onChange={(e) => setEmbedImage(e.target.value)} />
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Footer Text</label>
-                  <input type="text" className="dash-input" placeholder="Footer..." value={embedFooter} onChange={(e) => setEmbedFooter(e.target.value)} />
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Thumbnail URL</label>
-                  <input type="text" className="dash-input" placeholder="https://..." value={embedThumbnail} onChange={(e) => setEmbedThumbnail(e.target.value)} />
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-neutral-300">Footer Text</label>
+                  <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 transition-all" placeholder="Footer..." value={embedFooter} onChange={(e) => setEmbedFooter(e.target.value)} />
                 </div>
               </div>
             )}
 
             {mode === 'image' && (
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label style={{ color: '#fff' }}>Background Image URL</label>
-                  <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Provide a direct URL to an image (png/jpg/gif).</span>
-                  <input type="text" className="dash-input" placeholder="https://example.com/image.png" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+              <div className="flex flex-col gap-4 p-5 bg-neutral-950/50 rounded-xl border border-neutral-800/50">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-neutral-300">Background Image URL</label>
+                  <p className="text-xs text-neutral-500">Provide a direct URL to an image (png/jpg/gif).</p>
+                  <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 transition-all" placeholder="https://example.com/image.png" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
                 </div>
               </div>
             )}
+
           </div>
 
-          {/* Live Preview */}
-          <div style={{ flex: '1 1 400px' }}>
+        </div>
+
+        {/* Sidebar Column (Preview & Variables) */}
+        <div className="flex flex-col gap-6">
+          <div className="sticky top-[100px] flex flex-col gap-6">
             <DiscordPreview
               content={welcomeText}
               embedColor={embedColor}
@@ -143,27 +210,40 @@ export default function WelcomeSettings({ config, channels, onSave, saving, onRe
               channels={channels}
             />
 
-            {/* Variables Box */}
-            <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '16px' }}>
-              <h4 style={{ fontSize: '13px', color: '#fff', fontWeight: '600', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5865F2" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                Variables You Can Use
+            {/* Variables Guide */}
+            <div className="p-5 bg-neutral-900 border border-neutral-800 rounded-2xl">
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-white mb-4">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Variables Guide
               </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#5865F2', fontWeight: '600' }}>{'{user}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>@User</span></div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#5865F2', fontWeight: '600' }}>{'{server}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>Server Name</span></div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#5865F2', fontWeight: '600' }}>{'{count}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>Member Count</span></div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}><code style={{ color: '#5865F2', fontWeight: '600' }}>{'{id}'}</code> <span style={{ color: '#949BA4', float: 'right' }}>User ID</span></div>
+              <div className="grid grid-cols-1 gap-2.5">
+                <div className="flex items-center justify-between p-2.5 bg-neutral-950 rounded-lg border border-neutral-800/50">
+                  <code className="text-xs font-semibold text-blue-400">{'{user}'}</code>
+                  <span className="text-xs text-neutral-500">@User</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 bg-neutral-950 rounded-lg border border-neutral-800/50">
+                  <code className="text-xs font-semibold text-blue-400">{'{server}'}</code>
+                  <span className="text-xs text-neutral-500">Server Name</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 bg-neutral-950 rounded-lg border border-neutral-800/50">
+                  <code className="text-xs font-semibold text-blue-400">{'{count}'}</code>
+                  <span className="text-xs text-neutral-500">Member Count</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 bg-neutral-950 rounded-lg border border-neutral-800/50">
+                  <code className="text-xs font-semibold text-blue-400">{'{id}'}</code>
+                  <span className="text-xs text-neutral-500">User ID</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="settings-footer" style={{ marginTop: '32px' }}>
-          
-        </div>
       </div>
-    
+
       <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
