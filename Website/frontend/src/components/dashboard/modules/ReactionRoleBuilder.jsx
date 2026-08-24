@@ -157,7 +157,7 @@ export default function ReactionRoleBuilder({
 
         {/* Content Grid */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-[1fr,360px] min-h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr,360px] min-h-full">
             
             {/* Left Column */}
             <div className="divide-y divide-neutral-800/60">
@@ -349,13 +349,13 @@ export default function ReactionRoleBuilder({
             </div>
 
             {/* Right Column: Live Preview */}
-            <div className="flex flex-col border-t md:border-t-0 md:border-l border-neutral-800/60 bg-neutral-900/40">
+            <div className="flex flex-col border-t lg:border-t-0 lg:border-l border-neutral-800/60 bg-neutral-900/40">
               <div className="px-4 py-2.5 border-b border-neutral-800/60 flex items-center gap-2 flex-shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye w-3.5 h-3.5 text-neutral-500"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                 <span className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Preview</span>
               </div>
               <div className="flex-1 p-4 overflow-y-auto">
-                <div className="rounded-xl overflow-hidden border border-neutral-800 md:sticky md:top-0">
+                <div className="rounded-xl overflow-hidden border border-neutral-800 lg:sticky lg:top-0">
                   <div className="flex items-center gap-2 px-3 py-2 bg-[#2f3136] border-b border-neutral-900/50">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-3.5 h-3.5 text-neutral-500"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>
                     <span className="text-[12px] font-medium text-neutral-300 truncate">
