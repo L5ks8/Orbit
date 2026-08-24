@@ -277,12 +277,12 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_automation_config(message.guild.id, cfg)
                                         elif raw_mod_name == "TempVoice":
-                                            from Components.Commands.JoinToCreate._storage import load_jtc_config, save_jtc_config
+                                            from Components.Systems.JoinToCreate._storage import load_jtc_config, save_jtc_config
                                             cfg = load_jtc_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_jtc_config(message.guild.id, cfg)
                                         elif raw_mod_name == "JoinRoles":
-                                            from Components.Commands.JoinRole._storage import load_join_roles, save_join_roles
+                                            from Components.Systems.JoinRole._storage import load_join_roles, save_join_roles
                                             cfg = load_join_roles(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_join_roles(message.guild.id, cfg)
@@ -320,4 +320,5 @@ class GeminiChatbot(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GeminiChatbot(bot))
+
 

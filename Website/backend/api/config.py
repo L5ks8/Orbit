@@ -11,7 +11,7 @@ from Components.Commands.Goodbye._storage import load_goodbye_config, save_goodb
 from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
 from Components.Commands.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
 from Components.Commands.AutoResponder._storage import load_responses, save_responses
-from Components.Commands.JoinRole._storage import load_join_roles, save_join_roles
+from Components.Systems.JoinRole._storage import load_join_roles, save_join_roles
 from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Components.Commands.Boost._storage import load_boost_config, save_boost_config
@@ -49,7 +49,7 @@ class ConfigMixin:
         logs_cfg = load_log_config(guild_id)
         automation_cfg = load_automation_config(guild_id)
         
-        from Components.Commands.JoinToCreate._storage import load_jtc_config
+        from Components.Systems.JoinToCreate._storage import load_jtc_config
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
         
@@ -626,7 +626,7 @@ class ConfigMixin:
                 save_responses(guild_id, data["autoresponder"])
 
             if user_perms.get("can_roles") and "joinroles" in data:
-                from Components.Commands.JoinRole._storage import save_join_roles
+                from Components.Systems.JoinRole._storage import save_join_roles
                 jr_data = data["joinroles"]
                 save_join_roles(guild_id, {
                     "enabled": bool(jr_data.get("enabled", False)),
@@ -751,7 +751,7 @@ class ConfigMixin:
                 save_log_config(guild_id, l_cfg)
 
             if user_perms.get("can_channels") and "tempvoice" in data:
-                from Components.Commands.JoinToCreate._storage import load_jtc_config, save_jtc_config
+                from Components.Systems.JoinToCreate._storage import load_jtc_config, save_jtc_config
                 jtc_cfg = load_jtc_config(guild_id)
                 jtc_data = data["tempvoice"]
                 
@@ -950,3 +950,4 @@ class ConfigMixin:
             import traceback
             traceback.print_exc()
             return web.json_response({"error": str(e)}, status=400)
+

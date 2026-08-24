@@ -1,8 +1,8 @@
 import asyncio
 import discord
 from discord.ext import commands
-from Components.Commands.JoinToCreate._storage import load_jtc_config, load_active_channels, create_active_channel, update_active_channel, remove_active_channel, get_active_channel
-from Components.Commands.JoinToCreate._views import PersistentJTCControlLayout
+from Components.Systems.JoinToCreate._storage import load_jtc_config, load_active_channels, create_active_channel, update_active_channel, remove_active_channel, get_active_channel
+from Components.Systems.JoinToCreate._views import PersistentJTCControlLayout
 
 class JTCListenerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -115,4 +115,5 @@ class JTCListenerCog(commands.Cog):
 async def setup(bot: commands.Bot):
     bot.add_view(PersistentJTCControlLayout())
     await bot.add_cog(JTCListenerCog(bot))
+
 
