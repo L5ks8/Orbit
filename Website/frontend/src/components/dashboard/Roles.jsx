@@ -380,7 +380,8 @@ export default function Roles({ guildId }) {
                                   setRrBuilderOpen(true);
                                 }}
                                 data-tour="reactionroles-create"
-                                className="scroll-mt-24 group rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                                style={{ borderStyle: 'dashed' }}
+                                className="scroll-mt-24 group rounded-xl border border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                               >
                                 <span className="grid place-items-center w-8 h-8 rounded-full bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
                                   <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4">
@@ -393,8 +394,6 @@ export default function Roles({ guildId }) {
                             );
                           }
                           
-                          const isLastThree = idx >= 6 - Math.min(reactionRoles.length, 5); // Assuming max 9 panels, the last 3 are hidden on mobile
-                          
                           return (
                             <button
                               key={`empty-${idx}`}
@@ -404,7 +403,8 @@ export default function Roles({ guildId }) {
                                 setRrBuilderOpen(true);
                               }}
                               aria-label="Add a reaction panel"
-                              className={`group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${isLastThree ? 'hidden lg:grid' : ''}`}
+                              style={{ borderStyle: 'dashed' }}
+                              className="group rounded-xl border border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                                 <path d="M5 12h14" />
