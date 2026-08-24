@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { toast } from 'react-hot-toast';
+import { useToast } from '../../ui/Toast';
 
 export default function BotProfile({ guildId }) {
   const [config, setConfig] = useState({
@@ -8,6 +8,8 @@ export default function BotProfile({ guildId }) {
     banner_url: '',
     bio: ''
   });
+  
+  const toast = useToast();
   
   const [isSaving, setIsSaving] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -41,11 +43,11 @@ export default function BotProfile({ guildId }) {
       })
       .then(res => res.json())
       .then(data => {
-        if (data.error) toast.error("Failed to save bot profile");
+        if (data.error) toast("Failed to save bot profile", "error");
       })
       .catch(err => {
         console.error("Save error", err);
-        toast.error("Failed to save bot profile");
+        toast("Failed to save bot profile", "error");
       })
       .finally(() => setIsSaving(false));
     }, 1500);
@@ -59,7 +61,7 @@ export default function BotProfile({ guildId }) {
     const formData = new FormData();
     formData.append('file', file);
     
-    const loadingToast = toast.loading("Uploading image...");
+    toast("Uploading image...", "info", 2000);
     try {
       const res = await fetch(`/api/upload/image`, {
         method: 'POST',
@@ -68,12 +70,12 @@ export default function BotProfile({ guildId }) {
       const data = await res.json();
       if (data.url) {
         setConfig(prev => ({ ...prev, [field]: data.url }));
-        toast.success("Image uploaded", { id: loadingToast });
+        toast("Image uploaded", "success");
       } else {
-        toast.error(data.error || "Failed to upload", { id: loadingToast });
+        toast(data.error || "Failed to upload", "error");
       }
     } catch (err) {
-      toast.error("Upload error", { id: loadingToast });
+      toast("Upload error", "error");
     }
   };
 
