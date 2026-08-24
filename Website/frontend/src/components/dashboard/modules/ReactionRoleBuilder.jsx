@@ -2,6 +2,218 @@ import React, { useState, useEffect } from "react";
 import { useToast } from "../../ui/Toast";
 import CustomSelect from "../../ui/CustomSelect";
 
+
+const PREDEFINED_TEMPLATES = {
+  "Normal": {
+    "title": "Role Selection",
+    "description": "",
+    "behavior": "multi",
+    "roles": []
+  },
+  "Color": {
+    "title": "\ud83c\udfa8 Pick your color",
+    "description": "Tap a button to recolor your name.",
+    "behavior": "multi",
+    "roles": [
+      {
+        "emoji": "\ud83d\udd34",
+        "label": "Red",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udfe0",
+        "label": "Orange",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udfe1",
+        "label": "Yellow",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udfe2",
+        "label": "Green",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udd35",
+        "label": "Blue",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udfe3",
+        "label": "Purple",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83e\udeb7",
+        "label": "Pink",
+        "role_id": ""
+      },
+      {
+        "emoji": "\u26aa",
+        "label": "White",
+        "role_id": ""
+      }
+    ]
+  },
+  "Pronouns": {
+    "title": "\ud83e\udeaa Pronouns",
+    "description": "Pick any that apply.",
+    "behavior": "multi",
+    "roles": [
+      {
+        "emoji": "\ud83d\udfe6",
+        "label": "He / Him",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udfea",
+        "label": "She / Her",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udfe9",
+        "label": "They / Them",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udfe8",
+        "label": "Any pronouns",
+        "role_id": ""
+      },
+      {
+        "emoji": "\u2b1c",
+        "label": "Ask me",
+        "role_id": ""
+      }
+    ]
+  },
+  "Region": {
+    "title": "\ud83c\udf0d Where are you from?",
+    "description": "Tag your region so people know roughly when you're online.",
+    "behavior": "multi",
+    "roles": [
+      {
+        "emoji": "\ud83c\uddfa\ud83c\uddf8",
+        "label": "North America",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83c\udde7\ud83c\uddf7",
+        "label": "Latin America",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83c\uddea\ud83c\uddfa",
+        "label": "Europe",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83c\udf0d",
+        "label": "Africa / Middle East",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83c\uddef\ud83c\uddf5",
+        "label": "Asia",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83c\udde6\ud83c\uddfa",
+        "label": "Oceania",
+        "role_id": ""
+      }
+    ]
+  },
+  "Game Pings": {
+    "title": "\ud83c\udfae Game pings",
+    "description": "Pick which games you want to be pinged for.",
+    "behavior": "multi",
+    "roles": [
+      {
+        "emoji": "\ud83c\udfaf",
+        "label": "Valorant",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83e\ude82",
+        "label": "Fortnite",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83e\uddbe",
+        "label": "Apex Legends",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udca3",
+        "label": "CS2",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83e\uddd9",
+        "label": "League of Legends",
+        "role_id": ""
+      },
+      {
+        "emoji": "\u26cf\ufe0f",
+        "label": "Minecraft",
+        "role_id": ""
+      }
+    ]
+  },
+  "Notifications": {
+    "title": "\ud83d\udd14 Notification opt-ins",
+    "description": "Choose what to get pinged for.",
+    "behavior": "multi",
+    "roles": [
+      {
+        "emoji": "\ud83d\udce3",
+        "label": "Announcements",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83c\udf89",
+        "label": "Events",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83c\udf81",
+        "label": "Giveaways",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udcca",
+        "label": "Polls",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83d\udee0\ufe0f",
+        "label": "Updates",
+        "role_id": ""
+      },
+      {
+        "emoji": "\ud83c\udfac",
+        "label": "Streams",
+        "role_id": ""
+      }
+    ]
+  },
+  "Verify Gate": {
+    "title": "\u2705 Verify to enter",
+    "description": "Confirm you've read the rules to unlock the rest of the server.",
+    "behavior": "verify",
+    "roles": [
+      {
+        "emoji": "\u2705",
+        "label": "I agree to the rules",
+        "role_id": ""
+      }
+    ]
+  }
+};
+
 export default function ReactionRoleBuilder({
   isOpen,
   onClose,
@@ -21,12 +233,13 @@ export default function ReactionRoleBuilder({
   const [components, setComponents] = useState([]);
 
   // Behavior & Settings (Mock state for UI)
-  const [behavior, setBehavior] = useState("pick_one");
+  const [behavior, setBehavior] = useState(initialData?.mode || "pick_one");
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
         setChannelId(initialData.channel_id || "");
+        setBehavior(initialData.mode || "pick_one");
         const e = initialData.embed || {};
         setEmbedTitle(e.title || "🎨 Pick your color");
         setEmbedDesc(e.description || "Tap a button to recolor your name.");
@@ -48,6 +261,18 @@ export default function ReactionRoleBuilder({
 
   const channels = serverData?.channels || [];
   const roles = serverData?.roles || [];
+  const handleApplyTemplate = (templateName) => {
+    const t = PREDEFINED_TEMPLATES[templateName];
+    if (!t) return;
+    setEmbedTitle(t.title);
+    setEmbedDesc(t.description);
+    setBehavior(t.behavior);
+    setComponents(t.roles.map(r => ({
+      ...r,
+      _id: Math.random().toString(36).substr(2, 9)
+    })));
+  };
+
 
   const handleSave = async () => {
     if (!channelId) return toast.error("Channel is required");
@@ -58,39 +283,42 @@ export default function ReactionRoleBuilder({
       const payload = {
         name: embedTitle || "Reaction Role",
         channel_id: channelId,
-        button_type: "toggle", // static for now
+        button_type: "toggle",
+        mode: behavior,
         embed: {
           title: embedTitle,
           description: embedDesc,
-          color: "#5865F2", // Default discord color
+          color: "#5865F2",
         },
         components: components.map(c => ({
           label: c.label,
           emoji: c.emoji,
           role_id: c.role_id,
-          style: 2, // Secondary
+          style: 2,
         }))
       };
 
-      const url = initialData 
-        ? `/api/dashboard/${guildId}/reactionroles/${initialData.id}`
-        : `/api/dashboard/${guildId}/reactionroles`;
+      if (initialData) payload.id = initialData.id;
+
+      const url = `/api/reactionroles/${guildId}`;
 
       const res = await fetch(url, {
-        method: initialData ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: JSON.stringify(payload)
       });
 
       if (!res.ok) throw new Error("Failed to save");
       
       const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
       toast.success("Reaction role saved successfully!");
       if (onSaveSuccess) onSaveSuccess();
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error("Error saving reaction role");
+      toast.error(err.message || "Error saving reaction role");
     } finally {
       setIsSaving(false);
     }
@@ -163,27 +391,20 @@ export default function ReactionRoleBuilder({
             {/* Left Column */}
             <div className="divide-y divide-neutral-800/60">
               
-              {/* Start with a template (Static) */}
+              {/* Start with a template */}
               <div className="px-5 py-4">
                 <p className="text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-2">Start with a template</p>
                 <div className="flex flex-wrap gap-1.5">
-                  <button type="button" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-palette w-3.5 h-3.5"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Color
-                  </button>
-                  {/* Additional template buttons removed for brevity in code generation, user wanted the look but it's optional */}
-                  <button type="button" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-type w-3.5 h-3.5"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>Pronouns
-                  </button>
-                  <button type="button" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-globe w-3.5 h-3.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>Region
-                  </button>
-                  <button type="button" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gamepad2 w-3.5 h-3.5"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg>Game pings
-                  </button>
+                  {Object.keys(PREDEFINED_TEMPLATES).filter(k => k !== "Normal").map(tName => (
+                    <button key={tName} onClick={() => handleApplyTemplate(tName)} type="button" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                      {tName}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Behavior (Static UI mock) */}
+
+              {/* Behavior */}
               <div className="px-5 py-4">
                 <p className="text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-2">Behavior</p>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 p-1 rounded-xl bg-neutral-800/50 border border-neutral-800">
@@ -416,7 +637,10 @@ export default function ReactionRoleBuilder({
                   if(!window.confirm("Delete this panel?")) return;
                   setIsSaving(true);
                   try {
-                    const res = await fetch(`/api/dashboard/${guildId}/reactionroles/${initialData.id}`, { method: 'DELETE' });
+                    const res = await fetch(`/api/reactionroles/${guildId}/${initialData.id}`, { 
+                      method: 'DELETE',
+                      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                    });
                     if (res.ok) {
                       toast.success("Panel deleted");
                       if(onDeleteSuccess) onDeleteSuccess();

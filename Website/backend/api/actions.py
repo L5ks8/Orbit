@@ -653,7 +653,7 @@ class ActionsMixin:
         guild_id = int(request.match_info['id'])
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild: return web.json_response({"error": "Forbidden"}, status=403)
-        from Components.Systems.ReactionRole._storage import load_reaction_roles
+        from Components.Dashboard.Roles.reaction_panels import load_reaction_roles
         return web.json_response(load_reaction_roles(guild_id))
 
     async def api_save_reactionrole(self, request: web.Request):
@@ -671,7 +671,7 @@ class ActionsMixin:
                 data["id"] = msg_id
             data["guild_id"] = str(guild_id)
             if not data.get("name"): data["name"] = "Untitled Reaction Role"
-            from Components.Systems.ReactionRole._storage import save_reaction_role
+            from Components.Dashboard.Roles.reaction_panels import save_reaction_role
             save_reaction_role(guild_id, data)
             return web.json_response({"success": True, "id": msg_id})
         except Exception as e:
@@ -684,7 +684,7 @@ class ActionsMixin:
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild: return web.json_response({"error": "Forbidden"}, status=403)
         msg_id = request.match_info['msg_id']
-        from Components.Systems.ReactionRole._storage import delete_reaction_role
+        from Components.Dashboard.Roles.reaction_panels import delete_reaction_role
         delete_reaction_role(guild_id, msg_id)
         return web.json_response({"success": True})
         
@@ -703,7 +703,7 @@ class ActionsMixin:
             channel = guild.get_channel(int(channel_id))
             if not channel: return web.json_response({"error": "Channel not found"}, status=404)
             
-            from Components.Systems.ReactionRole._storage import load_reaction_roles
+            from Components.Dashboard.Roles.reaction_panels import load_reaction_roles
             rrs = load_reaction_roles(guild_id)
             rr = next((r for r in rrs if r.get("id") == msg_id), None)
             if not rr: return web.json_response({"error": "Reaction Role not found in database"}, status=404)
