@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '../ui/Toast';
+import LoadingScreen from '../ui/LoadingScreen';
 
 export default function BotProfile({ guildId }) {
   const [config, setConfig] = useState({
@@ -13,6 +14,7 @@ export default function BotProfile({ guildId }) {
   
   const [isSaving, setIsSaving] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const avatarInputRef = useRef(null);
   const bannerInputRef = useRef(null);
   
@@ -21,13 +23,20 @@ export default function BotProfile({ guildId }) {
       .then(res => res.json())
       .then(data => {
         if (!data.error) {
-          setConfig(data);
+          setConfig({
+            nickname: data.nickname || '',
+            avatar_url: data.avatar_url || '',
+            banner_url: data.banner_url || '',
+            bio: data.bio || ''
+          });
         }
         setHasLoaded(true);
+        setInitialLoading(false);
       })
       .catch(err => {
         console.error("Failed to load bot profile", err);
         setHasLoaded(true);
+        setInitialLoading(false);
       });
   }, [guildId]);
   
@@ -44,6 +53,7 @@ export default function BotProfile({ guildId }) {
       .then(res => res.json())
       .then(data => {
         if (data.error) toast("Failed to save bot profile", "error");
+        else toast("Profile saved", "success");
       })
       .catch(err => {
         console.error("Save error", err);
@@ -118,6 +128,33 @@ export default function BotProfile({ guildId }) {
       </div>
     );
   };
+
+  if (initialLoading) {
+    return (
+      <div className="pb-overview-container" style={{ maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+        <div data-tour="feature-header" className="scroll-mt-24">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bot w-5 h-5">
+                  <path d="M12 8V4H8"></path>
+                  <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                  <path d="M2 14h2"></path>
+                  <path d="M20 14h2"></path>
+                  <path d="M15 13v2"></path>
+                  <path d="M9 13v2"></path>
+                </svg>
+              </span>
+              <h1 className="text-base font-medium text-white truncate">Bot Profile</h1>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6" style={{ minHeight: '400px' }}>
+          <LoadingScreen message="Loading profile..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-overview-container" style={{ maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
@@ -203,10 +240,10 @@ export default function BotProfile({ guildId }) {
                         maxLength="32" 
                         className="w-full bg-neutral-950 border rounded-xl px-3.5 py-2.5 pr-14 text-[14px] text-white placeholder:text-neutral-600 outline-none transition-colors border-neutral-800 hover:border-neutral-700 focus:border-neutral-600" 
                         type="text" 
-                        value={config.nickname}
+                        value={config.nickname || ''}
                         onChange={(e) => setConfig({ ...config, nickname: e.target.value })}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] tabular-nums text-neutral-600">{config.nickname.length}/32</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] tabular-nums text-neutral-600">{(config.nickname || '').length}/32</span>
                     </div>
                   </div>
                   <div className="border-t border-neutral-800/60 pt-4 flex-1 flex flex-col">
@@ -313,10 +350,10 @@ export default function BotProfile({ guildId }) {
                     maxLength="190" 
                     rows="3" 
                     className="w-full min-h-[86px] bg-neutral-950 border rounded-xl px-3.5 py-2.5 pr-14 text-[14px] text-white placeholder:text-neutral-600 outline-none transition-colors resize-y border-neutral-800 hover:border-neutral-700 focus:border-neutral-600"
-                    value={config.bio}
+                    value={config.bio || ''}
                     onChange={(e) => setConfig({ ...config, bio: e.target.value })}
                   ></textarea>
-                  <span className="absolute right-3 top-3 text-[11px] tabular-nums text-neutral-600">{config.bio.length}/190</span>
+                  <span className="absolute right-3 top-3 text-[11px] tabular-nums text-neutral-600">{(config.bio || '').length}/190</span>
                 </div>
               </div>
             </div>
