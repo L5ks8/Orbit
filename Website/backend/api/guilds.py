@@ -6,7 +6,7 @@ from aiohttp import web
 import aiohttp
 import discord
 from typing import Dict, Any
-from Components.Commands.Welcome._storage import load_welcome_config, save_welcome_config
+from Components.Dashboard.Welcome._storage import load_welcome_config, save_welcome_config
 from Components.Commands.Goodbye._storage import load_goodbye_config, save_goodbye_config
 from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
 from Components.Commands.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick

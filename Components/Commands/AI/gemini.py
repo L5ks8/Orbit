@@ -252,7 +252,7 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_log_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Welcome":
-                                            from Components.Commands.Welcome._storage import load_welcome_config, save_welcome_config
+                                            from Components.Dashboard.Welcome._storage import load_welcome_config, save_welcome_config
                                             cfg = load_welcome_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_welcome_config(message.guild.id, cfg)
