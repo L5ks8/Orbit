@@ -209,7 +209,7 @@ export default function Roles({ guildId }) {
                         <button
                           type="button"
                           aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 hidden lg:grid"
+                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -230,7 +230,7 @@ export default function Roles({ guildId }) {
                         <button
                           type="button"
                           aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 hidden lg:grid"
+                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -251,7 +251,7 @@ export default function Roles({ guildId }) {
                         <button
                           type="button"
                           aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 hidden lg:grid"
+                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -318,14 +318,14 @@ export default function Roles({ guildId }) {
                         Given to every member the moment they join, before they
                         do anything.
                       </p>
-                      <div className="jsx-556cf662b09b3c73 w-full">
-                        <div className="jsx-556cf662b09b3c73 relative">
+                      <div className=" w-full">
+                        <div className=" relative">
                           <button
                             type="button"
-                            className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 min-h-[40px] px-3 py-1.5 bg-neutral-800 border rounded-xl text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer"
+                            className=" w-full flex items-center justify-between gap-2 min-h-[40px] px-3 py-1.5 bg-neutral-800 border rounded-xl text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer"
                           >
-                            <div className="jsx-556cf662b09b3c73 flex-1 flex flex-wrap gap-1">
-                              <span className="jsx-556cf662b09b3c73 text-neutral-500 text-sm py-0.5">
+                            <div className=" flex-1 flex flex-wrap gap-1">
+                              <span className=" text-neutral-500 text-sm py-0.5">
                                 Select roles...
                               </span>
                             </div>
@@ -576,16 +576,16 @@ export default function Roles({ guildId }) {
                         as the boost lasts, and loses it when they stop.
                       </p>
                       <div className="mt-0">
-                        <div className="jsx-556cf662b09b3c73 w-full">
-                          <div className="jsx-556cf662b09b3c73 relative">
+                        <div className=" w-full">
+                          <div className=" relative">
                             <button
                               type="button"
-                              className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
+                              className=" w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
                             >
-                              <span className="jsx-556cf662b09b3c73 min-w-0 truncate text-sm text-neutral-500">
+                              <span className=" min-w-0 truncate text-sm text-neutral-500">
                                 Pick the booster role...
                               </span>
-                              <div className="jsx-556cf662b09b3c73 flex items-center gap-1">
+                              <div className=" flex items-center gap-1">
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   width={24}
@@ -646,16 +646,16 @@ export default function Roles({ guildId }) {
                       </p>
                       <div className="mt-3 flex items-end gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="jsx-556cf662b09b3c73 w-full">
-                            <div className="jsx-556cf662b09b3c73 relative">
+                          <div className=" w-full">
+                            <div className=" relative">
                               <button
                                 type="button"
-                                className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
+                                className=" w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
                               >
-                                <span className="jsx-556cf662b09b3c73 min-w-0 truncate text-sm text-neutral-500">
+                                <span className=" min-w-0 truncate text-sm text-neutral-500">
                                   Role...
                                 </span>
-                                <div className="jsx-556cf662b09b3c73 flex items-center gap-1">
+                                <div className=" flex items-center gap-1">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width={24}
@@ -677,7 +677,7 @@ export default function Roles({ guildId }) {
                         </div>
                         <input
                           min={1}
-                          className="w-20 h-10 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white text-center tabular-nums focus:outline-none focus:border-neutral-500"
+                          className="!w-20 h-10 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white text-center tabular-nums focus:outline-none focus:border-neutral-500"
                           aria-label="days in server"
                           type="number"
                           defaultValue={7}
@@ -742,16 +742,16 @@ export default function Roles({ guildId }) {
                       </p>
                       <div className="mt-3 flex items-end gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="jsx-556cf662b09b3c73 w-full">
-                            <div className="jsx-556cf662b09b3c73 relative">
+                          <div className=" w-full">
+                            <div className=" relative">
                               <button
                                 type="button"
-                                className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
+                                className=" w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
                               >
-                                <span className="jsx-556cf662b09b3c73 min-w-0 truncate text-sm text-neutral-500">
+                                <span className=" min-w-0 truncate text-sm text-neutral-500">
                                   Role...
                                 </span>
-                                <div className="jsx-556cf662b09b3c73 flex items-center gap-1">
+                                <div className=" flex items-center gap-1">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width={24}
@@ -773,7 +773,7 @@ export default function Roles({ guildId }) {
                         </div>
                         <input
                           min={1}
-                          className="w-20 h-10 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white text-center tabular-nums focus:outline-none focus:border-neutral-500"
+                          className="!w-20 h-10 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white text-center tabular-nums focus:outline-none focus:border-neutral-500"
                           aria-label="days active"
                           type="number"
                           defaultValue={7}
