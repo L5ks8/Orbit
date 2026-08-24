@@ -10,6 +10,7 @@ import ServerSelector from './ServerSelector';
 import EmbedBuilder from './dashboard/EmbedBuilder';
 import Moderation from '../components/dashboard/Moderation';
 import BotProfile from '../components/dashboard/BotProfile';
+import TopNav from '../components/dashboard/TopNav';
 import { useAuth } from '../context/AuthContext';
 
 function DashboardInner() {
@@ -92,29 +93,8 @@ function DashboardInner() {
       <Sidebar guildId={guildId} isOpen={sidebarOpen} />
       <div className="dash-main">
         
-        <div className="dash-top-nav">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px 24px 0 24px' }}>
-            {!sidebarOpen && (
-              <button 
-                onClick={() => setSidebarOpen(true)}
-                style={{
-                  background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
-                  width: '36px', height: '36px', borderRadius: '8px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                title="Open Sidebar"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="3" y1="12" x2="21" y2="12"></line>
-                  <line x1="3" y1="6" x2="21" y2="6"></line>
-                  <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-              </button>
-            )}
-          </div>
+        <div className="dash-top-nav-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <TopNav guildName={guildName} setSidebarOpen={setSidebarOpen} />
           
           <div className="dash-content-area">
             <Routes>
