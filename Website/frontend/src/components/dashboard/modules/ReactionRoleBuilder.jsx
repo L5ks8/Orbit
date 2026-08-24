@@ -247,8 +247,10 @@ export default function ReactionRoleBuilder({
         const e = initialData.embed || {};
         setEmbedTitle(e.title || "🎨 Pick your color");
         setEmbedDesc(e.description || "Tap a button to recolor your name.");
+        setPostToDiscord(initialData.post_to_discord ?? true);
         
-        setComponents((initialData.components || []).map(c => ({
+        const loadedComponents = initialData.components || initialData.roles || [];
+        setComponents(loadedComponents.map(c => ({
           ...c,
           _id: Math.random().toString(36).substr(2, 9)
         })));

@@ -672,8 +672,8 @@ class ActionsMixin:
             data["guild_id"] = str(guild_id)
             if not data.get("name"): data["name"] = "Untitled Reaction Role"
             from Components.Dashboard.Roles.reaction_panels import save_reaction_role
-            
-            post_to_discord = data.pop("post_to_discord", False)
+
+            post_to_discord = data.get("post_to_discord", False)
             channel_id_str = data.get("channel_id")
             msg_sent_id = None
             if post_to_discord and channel_id_str:
