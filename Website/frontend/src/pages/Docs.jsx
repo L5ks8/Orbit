@@ -789,8 +789,7 @@ export const docsData = {
       { id: 'overview', label: 'Overview' },
       { id: 'general', label: 'General / Utility' },
       { id: 'moderation', label: 'Moderation' },
-      { id: 'features', label: 'Feature Commands' },
-      { id: 'owner', label: 'Owner & Dev' }
+      { id: 'features', label: 'Feature Commands' }
     ],
     content: (
       <>
@@ -832,13 +831,6 @@ export const docsData = {
           ]}
         />
 
-        <h2 id="owner" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Owner & Developer Commands</h2>
-        <PropertiesTable 
-          properties={[
-            { name: '-message <all | server_id> <msg>', type: 'Command', description: 'Sends a global notification to the Dashboard. Accessible only by Bot Owners.' },
-            { name: '-dev', type: 'Command', description: 'Developer-only command for reloading cogs and managing backend tasks.' }
-          ]}
-        />
       </>
     )
   }
