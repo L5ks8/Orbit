@@ -11,6 +11,7 @@ import EmbedBuilder from './dashboard/EmbedBuilder';
 import Moderation from '../components/dashboard/Moderation';
 import BotProfile from '../components/dashboard/BotProfile';
 import Invites from '../components/dashboard/Invites';
+import Roles from '../components/dashboard/Roles';
 import TopNav from '../components/dashboard/TopNav';
 import { useAuth } from '../context/AuthContext';
 
@@ -102,6 +103,7 @@ function DashboardInner() {
               <Route path="/" element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<Overview guildId={guildId} />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="roles" element={<Roles guildId={guildId} />} />
               <Route path="bot-profile" element={<BotProfile guildId={guildId} />} />
               <Route path="invites" element={<Invites />} />
               <Route path="embed-builder" element={<EmbedBuilder setSidebarOpen={setSidebarOpen} />} />
