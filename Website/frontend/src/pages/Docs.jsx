@@ -98,7 +98,7 @@ export const docsData = {
           title="Accessing the Dashboard"
           syntax={[
             { text: 'https://', type: 'punct' },
-            { text: (import.meta.env.VITE_BASE_URL || '').replace(/^https?:\/\//, ''), type: 'keyword' },
+            { text: (import.meta.env.VITE_BASE_URL || '').replace(/^https?:\/\/\/?/, ''), type: 'keyword' },
             { text: '/dashboard', type: 'type' }
           ]}
         />
@@ -109,6 +109,171 @@ export const docsData = {
             { name: 'Login', type: 'Action', description: 'Click the Login button to authenticate with your Discord account via OAuth2.' },
             { name: 'Server Selection', type: 'Navigation', description: 'Select any server where you hold the "Manage Server" or "Administrator" permission.' },
             { name: 'Saving Changes', type: 'Action', description: 'Always remember to click the green "Save Changes" button in the navigation bar when modifying settings.' }
+          ]}
+        />
+      </>
+    )
+  },
+  'dashboard-overview': {
+    title: 'Dashboard Overview',
+    icon: <ActivityIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'stats', label: 'Server Statistics' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          The Overview tab is your command center. It provides a quick summary of your server's health, recent activity, and essential statistics at a glance.
+        </p>
+        
+        <h2 id="stats" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Server Statistics</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Total Members', type: 'Metric', description: 'Displays the total number of members currently in your server.' },
+            { name: 'Messages Today', type: 'Metric', description: 'Shows the volume of messages sent across all channels in the last 24 hours.' },
+            { name: 'Active Voice', type: 'Metric', description: 'The number of users currently participating in voice channels.' },
+            { name: 'Recent Joins', type: 'List', description: 'A quick feed of the newest members to join your community.' }
+          ]}
+        />
+      </>
+    )
+  },
+  'bot-profile': {
+    title: 'Bot Profile',
+    icon: <SettingsIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'customization', label: 'Customization Options' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Personalize Orbit to match your community's branding. The Bot Profile tab allows you to completely customize how Orbit appears in your server.
+        </p>
+        
+        <h2 id="customization" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Customization Options</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Bot Name (Nickname)', type: 'Text', description: "Change the name Orbit uses when sending messages and appearing in the member list." },
+            { name: 'Avatar', type: 'Image Upload', description: "Upload a custom profile picture for the bot." },
+            { name: 'Profile Banner', type: 'Image Upload', description: "Set a custom banner for the bot's profile card." },
+            { name: 'About Me', type: 'Text', description: "Customize the bot's bio/description." }
+          ]}
+        />
+      </>
+    )
+  },
+  'roles-reaction': {
+    title: 'Roles & Reaction Roles',
+    icon: <ZapIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'reaction-builder', label: 'Reaction Role Builder' },
+      { id: 'automations', label: 'Role Automations' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          The Roles tab is a powerful suite for managing how users acquire roles. It includes the Reaction Role builder, Auto Roles, and advanced role retention systems.
+        </p>
+        
+        <h2 id="reaction-builder" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Reaction Role Builder</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '16px' }}>
+          Create interactive panels that allow users to self-assign roles by clicking buttons.
+        </p>
+        <PropertiesTable 
+          properties={[
+            { name: 'Panel Creation', type: 'Action', description: 'Click "New panel" to open the Reaction Role Builder. You can customize the embed title, description, color, and add multiple buttons.' },
+            { name: 'Button Types', type: 'Setting', description: 'Choose between "Toggle" (click to add/remove) or "Add Only" (can only acquire the role).' },
+            { name: 'Posting Panels', type: 'Action', description: 'Once saved, click the "Post" button on the panel card to send it directly to the selected Discord channel. The button will turn green ("Posted") upon success.' }
+          ]}
+        />
+
+        <h2 id="automations" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginTop: '48px' }}>Role Automations</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Sticky Roles', type: 'Toggle', description: 'If a member leaves and rejoins the server, Orbit will automatically restore their previous roles.' },
+            { name: 'Booster Role', type: 'Role Assignment', description: 'Select a special role to automatically give to anyone who boosts the server. It is removed if they stop boosting.' },
+            { name: 'Auto Roles', type: 'Role Assignment', description: 'Automatically assign specific roles the moment a new user joins the server.' }
+          ]}
+        />
+      </>
+    )
+  },
+  'invites-tracker': {
+    title: 'Invites Tracker',
+    icon: <GuideIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'rewards', label: 'Invite Rewards' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Track who brings the most people to your server. The Invites tab lets you monitor invite links, identify top inviters, and set up automated rewards.
+        </p>
+        
+        <h2 id="rewards" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Invite Rewards</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Milestone Roles', type: 'Configuration', description: 'Automatically grant a role when a user reaches a certain number of successful invites (e.g., 10 invites = "Recruiter" role).' },
+            { name: 'Fake Invite Detection', type: 'System', description: 'Orbit detects users trying to game the system using alt accounts (leaves within 5 minutes are penalized).' },
+            { name: 'Vanity Tracking', type: 'Metric', description: "Track how many users join specifically through your server's custom vanity URL (if applicable)." }
+          ]}
+        />
+      </>
+    )
+  },
+  'analytics': {
+    title: 'Analytics & Leaderboard',
+    icon: <ActivityIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'leaderboards', label: 'Leaderboards' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Dive deep into your community's engagement. The Analytics tab provides historical data on messages, joins, and voice activity.
+        </p>
+        
+        <h2 id="leaderboards" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Leaderboards</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Message Leaderboard', type: 'Ranking', description: 'See who the most active chatters are in your server.' },
+            { name: 'Voice Leaderboard', type: 'Ranking', description: 'Track which users spend the most time in voice channels.' },
+            { name: 'Economy Leaderboard', type: 'Ranking', description: 'View the richest members based on their wallet and bank balances.' }
+          ]}
+        />
+      </>
+    )
+  },
+  'settings': {
+    title: 'Server Settings',
+    icon: <SettingsIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'configuration', label: 'Configuration' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          The Settings tab is where you manage global bot configurations, data privacy, and premium status for your server.
+        </p>
+        
+        <h2 id="configuration" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Configuration</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Command Prefix', type: 'Setting', description: 'Change the prefix used for text commands (default is usually `-`). Note: Slash commands `/` are always available.' },
+            { name: 'Language', type: 'Setting', description: 'Set the primary language Orbit uses when responding to commands and errors.' },
+            { name: 'Data Reset', type: 'Action', description: 'Danger Zone: Allows server owners to permanently delete all Orbit data associated with the server.' }
           ]}
         />
       </>
@@ -134,7 +299,8 @@ export const docsData = {
             { name: 'Bad Words', type: 'Toggle', description: 'Blocks messages containing profanity or words you specify in your custom blacklist.' },
             { name: 'Spam Prevention', type: 'Toggle', description: 'Detects users sending messages too quickly (rate-limiting).' },
             { name: 'Invite Links', type: 'Toggle', description: 'Automatically deletes discord.gg/ invite links sent by unauthorized users.' },
-            { name: 'Mass Mentions', type: 'Toggle', description: 'Prevents ghost-pings and mass-pings by limiting the number of allowed mentions per message.' }
+            { name: 'Mass Mentions', type: 'Toggle', description: 'Prevents ghost-pings and mass-pings by limiting the number of allowed mentions per message.' },
+            { name: 'Capital Letters', type: 'Toggle', description: 'Deletes messages consisting primarily of ALL CAPS to reduce visual spam.' }
           ]}
         />
       </>
@@ -156,7 +322,7 @@ export const docsData = {
         <h2 id="actions" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Automated Actions</h2>
         <PropertiesTable 
           properties={[
-            { name: 'Warn', type: 'Punishment', description: 'Adds a formal warning to the user\'s history. Useful for initial infractions.' },
+            { name: 'Warn', type: 'Punishment', description: "Adds a formal warning to the user's history. Useful for initial infractions." },
             { name: 'Timeout', type: 'Punishment', description: 'Temporarily mutes the user. You can configure the duration (e.g., 10 minutes, 1 hour).' },
             { name: 'Softban', type: 'Punishment', description: 'Bans and immediately unbans the user, which kicks them and deletes their recent messages.' },
             { name: 'Ban', type: 'Punishment', description: 'Permanently removes the user from the server for severe or repeated infractions.' }
@@ -192,6 +358,68 @@ export const docsData = {
         <PropertiesTable 
           properties={[
             { name: 'Log Channel', type: 'Channel', description: 'The specific Discord channel where Orbit will send moderation embeds. Keep this private for staff only.' }
+          ]}
+        />
+      </>
+    )
+  },
+  security: {
+    title: 'Server Security',
+    icon: <ShieldIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'anti-nuke', label: 'Anti-Nuke Protection' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Orbit's Security module acts as an impenetrable shield against server nukes, rogue administrators, and massive bot raids. It monitors API events in real-time and acts faster than humanly possible.
+        </p>
+        
+        <h2 id="anti-nuke" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Anti-Nuke Protection</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Mass Bans', type: 'Threshold System', description: 'If an admin bans too many users within a few seconds, Orbit will strip their permissions and halt the nuke.' },
+            { name: 'Channel Deletions', type: 'Threshold System', description: 'Prevents rogue bots or hijacked staff accounts from wiping your server\'s channels.' },
+            { name: 'Anti-Raid (Join Surge)', type: 'Automated Lockdown', description: 'If an abnormal amount of accounts join simultaneously, Orbit temporarily pauses all invites to stop the raid.' },
+            { name: 'Whitelist', type: 'Configuration', description: 'You can explicitly whitelist trusted bots (like Dyno or Carl-bot) so their actions are ignored by the Anti-Nuke.' }
+          ]}
+        />
+      </>
+    )
+  },
+  appeals: {
+    title: 'Ban Appeals',
+    icon: <ShieldCheckIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'setup', label: 'Setup & Usage' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Sometimes mistakes happen, or users reform. The Ban Appeals module allows banned users to submit a formal appeal through a secure web portal linked to your server. Orbit manages the entire pipeline, routing appeals directly to your staff for review.
+        </p>
+
+        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Setup & Usage</h2>
+        
+        <SyntaxBlock 
+          title="Appeal Link Format"
+          syntax={[
+            { text: 'https://', type: 'punct' },
+            { text: (import.meta.env.VITE_BASE_URL || '').replace(/^https?:\/\/\/?/, ''), type: 'keyword' },
+            { text: '/appeal/', type: 'type' },
+            { text: '<your-server-id>', type: 'punct' }
+          ]}
+        />
+        
+        <PropertiesTable 
+          properties={[
+            { name: 'Appeals Channel', type: 'Channel', description: 'The private staff channel where new appeals will be posted as rich embeds.' },
+            { name: 'Accepting Appeals', type: 'Action', description: 'Staff can click the green "Accept" button on the appeal embed. Orbit will automatically unban the user and attempt to DM them an invite link.' },
+            { name: 'Denying Appeals', type: 'Action', description: 'Staff can click the red "Deny" button to reject the appeal, keeping the ban in place and preventing spam.' }
           ]}
         />
       </>
@@ -243,6 +471,96 @@ export const docsData = {
             { name: 'XP Multiplier', type: 'Decimal', description: 'Global multiplier for XP gain. E.g., 1.5x gives 50% more XP.' },
             { name: 'Level Up Messages', type: 'Toggle', description: 'Send a congratulatory message when a user levels up. Can be routed to a specific channel.' },
             { name: 'Role Rewards', type: 'Map<Level, Role>', description: 'Automatically assign specific Discord roles when users reach milestones (e.g., Level 10 gets "Active Member").' }
+          ]}
+        />
+      </>
+    )
+  },
+  economy: {
+    title: 'Economy System',
+    icon: <GiftIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'commands', label: 'Commands & Mechanics' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Engage your community with a fully-fledged, globally persistent Economy System. Members can earn currency, gamble, buy items, and compete on the leaderboards.
+        </p>
+
+        <h2 id="commands" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Commands & Mechanics</h2>
+        <PropertiesTable 
+          properties={[
+            { name: '/work', type: 'Earning', description: 'Work a random job every few hours to earn a steady paycheck.' },
+            { name: '/daily', type: 'Earning', description: 'Claim a daily reward. Keep your streak alive for massive bonuses.' },
+            { name: '/slots & /coinflip', type: 'Gambling', description: 'Risk your hard-earned coins for a chance to double or triple your wealth.' },
+            { name: '/rob', type: 'Interaction', description: 'Attempt to steal coins from another user. Fails randomly, resulting in a fine!' },
+            { name: '/balance', type: 'Information', description: 'Check your current wallet balance and bank storage.' }
+          ]}
+        />
+      </>
+    )
+  },
+  boost: {
+    title: 'Boost Messages',
+    icon: <StarIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'customization', label: 'Customization' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Boosting a server is a generous act. The Boost Messages module lets you automatically celebrate these members in a designated channel with custom fanfare.
+        </p>
+
+        <h2 id="customization" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Customization</h2>
+        <SyntaxBlock 
+          title="Example Configuration"
+          syntax={[
+            { text: 'Thank you ', type: 'text' },
+            { text: '{user}', type: 'keyword' },
+            { text: ' for boosting ', type: 'text' },
+            { text: '{server}', type: 'keyword' },
+            { text: '! We are now at ', type: 'text' },
+            { text: '{boostcount}', type: 'type' },
+            { text: ' boosts.', type: 'text' }
+          ]}
+        />
+        <PropertiesTable 
+          properties={[
+            { name: 'Boost Channel', type: 'Channel', description: 'The specific channel (e.g., #announcements) where the boost message is posted.' },
+            { name: '{boostcount}', type: 'Variable', description: 'Dynamically displays the new total number of server boosts.' },
+            { name: '{user} / {server}', type: 'Variable', description: 'Mentions the booster and displays the server name.' }
+          ]}
+        />
+      </>
+    )
+  },
+  serverstats: {
+    title: 'Server Stats',
+    icon: <ActivityIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'setup', label: 'How it works' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Showcase your community's growth directly in your channel list. The Server Stats module creates locked voice channels that dynamically update their names to reflect live metrics.
+        </p>
+        
+        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>How it works</h2>
+        <PropertiesTable 
+          properties={[
+            { name: 'Total Members', type: 'Metric', description: 'Creates a channel like "📊 Members: 1,402". Updates when users join or leave.' },
+            { name: 'Online Members', type: 'Metric', description: 'Creates a channel showing how many users are currently online or idle.' },
+            { name: 'Rate Limiting', type: 'Background System', description: 'Orbit intelligently batches updates every 10 minutes to prevent your server from hitting Discord API rate limits.' },
+            { name: 'Channel Positioning', type: 'Setup', description: 'You can drag and drop these voice channels anywhere in your server (usually at the very top).' }
           ]}
         />
       </>
@@ -402,26 +720,6 @@ export const docsData = {
       </>
     )
   },
-  'automations-roles': {
-    title: 'Auto Roles',
-    toc: [
-      { id: 'overview', label: 'Overview' }
-    ],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Automatically assign roles when users join, ensuring they get immediate access to community channels without manual intervention.
-        </p>
-        <PropertiesTable 
-          properties={[
-            { name: 'Roles to Assign', type: 'List<Role>', description: 'A list of roles that will be instantly granted to every new member upon joining.' },
-            { name: 'Bot Roles', type: 'List<Role>', description: '(Optional) Roles granted only to bot accounts when they are added to the server.' }
-          ]}
-        />
-      </>
-    )
-  },
   'automations-respond': {
     title: 'Honeypot System',
     toc: [
@@ -441,158 +739,6 @@ export const docsData = {
             { name: 'Honeypot Channel', type: 'Channel', description: 'A channel that regular users should NOT type in. If a bot scrapes and posts here, the trap triggers.' },
             { name: 'Punishment Action', type: 'Dropdown', description: 'The action taken (e.g., Softban, Ban, Timeout) when a message is caught.' },
             { name: 'Warning Style', type: 'Dropdown', description: 'Choose whether the bot displays a simple Text Message warning or a rich Embed.' }
-          ]}
-        />
-      </>
-    )
-  },
-  appeals: {
-    title: 'Ban Appeals',
-    icon: <ShieldCheckIcon />,
-    toc: [
-      { id: 'overview', label: 'Overview' },
-      { id: 'setup', label: 'Setup & Usage' }
-    ],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Sometimes mistakes happen, or users reform. The Ban Appeals module allows banned users to submit a formal appeal through a secure web portal linked to your server. Orbit manages the entire pipeline, routing appeals directly to your staff for review.
-        </p>
-
-        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Setup & Usage</h2>
-        
-        <SyntaxBlock 
-          title="Appeal Link Format"
-          syntax={[
-            { text: 'https://', type: 'punct' },
-            { text: (import.meta.env.VITE_BASE_URL || '').replace(/^https?:\/\//, ''), type: 'keyword' },
-            { text: '/appeal/', type: 'type' },
-            { text: '<your-server-id>', type: 'punct' }
-          ]}
-        />
-        
-        <PropertiesTable 
-          properties={[
-            { name: 'Appeals Channel', type: 'Channel', description: 'The private staff channel where new appeals will be posted as rich embeds.' },
-            { name: 'Accepting Appeals', type: 'Action', description: 'Staff can click the green "Accept" button on the appeal embed. Orbit will automatically unban the user and attempt to DM them an invite link.' },
-            { name: 'Denying Appeals', type: 'Action', description: 'Staff can click the red "Deny" button to reject the appeal, keeping the ban in place and preventing spam.' }
-          ]}
-        />
-      </>
-    )
-  },
-  security: {
-    title: 'Server Security',
-    icon: <ShieldIcon />,
-    toc: [
-      { id: 'overview', label: 'Overview' },
-      { id: 'anti-nuke', label: 'Anti-Nuke Protection' }
-    ],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Orbit's Security module acts as an impenetrable shield against server nukes, rogue administrators, and massive bot raids. It monitors API events in real-time and acts faster than humanly possible.
-        </p>
-        
-        <h2 id="anti-nuke" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Anti-Nuke Protection</h2>
-        <PropertiesTable 
-          properties={[
-            { name: 'Mass Bans', type: 'Threshold System', description: 'If an admin bans too many users within a few seconds, Orbit will strip their permissions and halt the nuke.' },
-            { name: 'Channel Deletions', type: 'Threshold System', description: 'Prevents rogue bots or hijacked staff accounts from wiping your server\'s channels.' },
-            { name: 'Anti-Raid (Join Surge)', type: 'Automated Lockdown', description: 'If an abnormal amount of accounts join simultaneously, Orbit temporarily pauses all invites to stop the raid.' },
-            { name: 'Whitelist', type: 'Configuration', description: 'You can explicitly whitelist trusted bots (like Dyno or Carl-bot) so their actions are ignored by the Anti-Nuke.' }
-          ]}
-        />
-      </>
-    )
-  },
-  boost: {
-    title: 'Boost Messages',
-    icon: <StarIcon />,
-    toc: [
-      { id: 'overview', label: 'Overview' },
-      { id: 'customization', label: 'Customization' }
-    ],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Boosting a server is a generous act. The Boost Messages module lets you automatically celebrate these members in a designated channel with custom fanfare.
-        </p>
-
-        <h2 id="customization" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Customization</h2>
-        <SyntaxBlock 
-          title="Example Configuration"
-          syntax={[
-            { text: 'Thank you ', type: 'text' },
-            { text: '{user}', type: 'keyword' },
-            { text: ' for boosting ', type: 'text' },
-            { text: '{server}', type: 'keyword' },
-            { text: '! We are now at ', type: 'text' },
-            { text: '{boostcount}', type: 'type' },
-            { text: ' boosts.', type: 'text' }
-          ]}
-        />
-        <PropertiesTable 
-          properties={[
-            { name: 'Boost Channel', type: 'Channel', description: 'The specific channel (e.g., #announcements) where the boost message is posted.' },
-            { name: '{boostcount}', type: 'Variable', description: 'Dynamically displays the new total number of server boosts.' },
-            { name: '{user} / {server}', type: 'Variable', description: 'Mentions the booster and displays the server name.' }
-          ]}
-        />
-      </>
-    )
-  },
-  economy: {
-    title: 'Economy System',
-    icon: <GiftIcon />,
-    toc: [
-      { id: 'overview', label: 'Overview' },
-      { id: 'commands', label: 'Commands & Mechanics' }
-    ],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Engage your community with a fully-fledged, globally persistent Economy System. Members can earn currency, gamble, buy items, and compete on the leaderboards.
-        </p>
-
-        <h2 id="commands" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Commands & Mechanics</h2>
-        <PropertiesTable 
-          properties={[
-            { name: '/work', type: 'Earning', description: 'Work a random job every few hours to earn a steady paycheck.' },
-            { name: '/daily', type: 'Earning', description: 'Claim a daily reward. Keep your streak alive for massive bonuses.' },
-            { name: '/slots & /coinflip', type: 'Gambling', description: 'Risk your hard-earned coins for a chance to double or triple your wealth.' },
-            { name: '/rob', type: 'Interaction', description: 'Attempt to steal coins from another user. Fails randomly, resulting in a fine!' },
-            { name: '/balance', type: 'Information', description: 'Check your current wallet balance and bank storage.' }
-          ]}
-        />
-      </>
-    )
-  },
-  serverstats: {
-    title: 'Server Stats',
-    icon: <ActivityIcon />,
-    toc: [
-      { id: 'overview', label: 'Overview' },
-      { id: 'setup', label: 'How it works' }
-    ],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Showcase your community's growth directly in your channel list. The Server Stats module creates locked voice channels that dynamically update their names to reflect live metrics.
-        </p>
-        
-        <h2 id="setup" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>How it works</h2>
-        <PropertiesTable 
-          properties={[
-            { name: 'Total Members', type: 'Metric', description: 'Creates a channel like "📊 Members: 1,402". Updates when users join or leave.' },
-            { name: 'Online Members', type: 'Metric', description: 'Creates a channel showing how many users are currently online or idle.' },
-            { name: 'Rate Limiting', type: 'Background System', description: 'Orbit intelligently batches updates every 10 minutes to prevent your server from hitting Discord API rate limits.' },
-            { name: 'Channel Positioning', type: 'Setup', description: 'You can drag and drop these voice channels anywhere in your server (usually at the very top).' }
           ]}
         />
       </>
@@ -629,8 +775,55 @@ export const docsData = {
         <PropertiesTable 
           properties={[
             { name: 'Trigger Word', type: 'Input', description: 'The exact phrase or word that triggers the response. It is case-insensitive.' },
-            { name: 'Response', type: 'Output', description: 'The bot\'s reply. You can include links and discord formatting (like bolding and italics).' },
+            { name: 'Response', type: 'Output', description: "The bot's reply. You can include links and discord formatting (like bolding and italics)." },
             { name: 'Spam Prevention', type: 'System', description: 'Orbit has a built-in cooldown to prevent the auto-responder from spamming the chat if multiple users type the trigger.' }
+          ]}
+        />
+      </>
+    )
+  },
+  'commands-reference': {
+    title: 'Commands Reference',
+    icon: <BookIcon />,
+    toc: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'general', label: 'General / Utility' },
+      { id: 'moderation', label: 'Moderation' },
+      { id: 'owner', label: 'Owner & Dev' }
+    ],
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          This page serves as a complete reference for every text and slash command available in Orbit. Most standard commands use the <code>-</code> prefix (configurable), while complex features use Discord's built-in slash commands <code>/</code>.
+        </p>
+
+        <h2 id="general" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>General / Utility Commands</h2>
+        <PropertiesTable 
+          properties={[
+            { name: '-help', type: 'Command', description: 'Displays a list of available commands and a link to the dashboard.' },
+            { name: '-ping', type: 'Command', description: 'Shows the bot\'s current API latency and response time.' },
+            { name: '-userinfo [@user]', type: 'Command', description: 'Fetches details about a specific user (Join date, roles, ID).' },
+            { name: '-serverinfo', type: 'Command', description: 'Displays statistics about the current server.' }
+          ]}
+        />
+
+        <h2 id="moderation" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Moderation Commands</h2>
+        <PropertiesTable 
+          properties={[
+            { name: '-ban [@user] [reason]', type: 'Command', description: 'Permanently bans a user from the server.' },
+            { name: '-kick [@user] [reason]', type: 'Command', description: 'Kicks a user from the server.' },
+            { name: '-mute [@user] [duration]', type: 'Command', description: 'Timeouts a user for the specified duration (e.g. 10m, 1h).' },
+            { name: '-warn [@user] [reason]', type: 'Command', description: 'Issues a formal warning and logs it in their moderation history.' },
+            { name: '-purge [amount]', type: 'Command', description: 'Deletes up to 100 recent messages in the current channel.' }
+          ]}
+        />
+
+        <h2 id="owner" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Owner & Developer Commands</h2>
+        <PropertiesTable 
+          properties={[
+            { name: '-message <all | server_id> <msg>', type: 'Command', description: 'Sends a global notification to the Dashboard. Accessible only by Bot Owners.' },
+            { name: '-dev', type: 'Command', description: 'Developer-only command for reloading cogs and managing backend tasks.' }
           ]}
         />
       </>
@@ -638,18 +831,48 @@ export const docsData = {
   }
 };
 
+const sidebarConfig = [
+  { type: 'group', label: 'Getting Started' },
+  { id: 'introduction', icon: <BookIcon /> },
+  { id: 'setup', icon: <SettingsIcon />, badge: 'NEW' },
+  
+  { type: 'group', label: 'Dashboard' },
+  { id: 'dashboard-overview', icon: <ActivityIcon /> },
+  { id: 'bot-profile', icon: <SettingsIcon /> },
+  { id: 'roles-reaction', icon: <ZapIcon /> },
+  { id: 'invites-tracker', icon: <GuideIcon /> },
+  { id: 'analytics', icon: <ActivityIcon /> },
+  { id: 'settings', icon: <SettingsIcon /> },
+  
+  { type: 'group', label: 'Features' },
+  { id: 'automod', icon: <ShieldIcon />, children: ['automod-punishments', 'automod-logs'] },
+  { id: 'security', icon: <ShieldIcon /> },
+  { id: 'appeals', icon: <ShieldCheckIcon /> },
+  { id: 'verification', icon: <ShieldCheckIcon /> },
+  { id: 'leveling', icon: <StarIcon /> },
+  { id: 'economy', icon: <GiftIcon /> },
+  { id: 'boost', icon: <StarIcon /> },
+  { id: 'serverstats', icon: <ActivityIcon /> },
+  { id: 'tickets', icon: <TicketIcon /> },
+  { id: 'temp-voice', icon: <MicIcon /> },
+  { id: 'giveaways', icon: <GiftIcon /> },
+  { id: 'logs', icon: <ActivityIcon /> },
+  { id: 'automations', icon: <ZapIcon />, children: ['automations-welcome', 'automations-goodbye', 'automations-respond', 'automations-autoresponder'] },
+  
+  { type: 'group', label: 'Reference' },
+  { id: 'commands-reference', icon: <BookIcon /> }
+];
+
 export default function Docs() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Initialize from URL search params
   const searchParams = new URLSearchParams(location.search);
   const initialTab = searchParams.get('tab') || 'introduction';
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [expanded, setExpanded] = useState({ automod: false, automations: false });
 
-  // Update state if URL changes
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && tab !== activeTab) {
@@ -657,9 +880,8 @@ export default function Docs() {
       if (tab.startsWith('automod-')) setExpanded(p => ({ ...p, automod: true }));
       if (tab.startsWith('automations-')) setExpanded(p => ({ ...p, automations: true }));
     }
-  }, [location.search]);
+  }, [location.search, activeTab]);
 
-  // Update URL when activeTab changes internally
   const handleTabChange = (key) => {
     setActiveTab(key);
     navigate(`/docs?tab=${key}`, { replace: true });
@@ -670,17 +892,23 @@ export default function Docs() {
   };
 
   useEffect(() => {
-    // Scroll to top when active tab changes
     window.scrollTo(0, 0);
   }, [activeTab]);
 
   const activeContent = docsData[activeTab];
 
-  // Pagination Logic
-  const keys = Object.keys(docsData);
-  const currentIndex = keys.indexOf(activeTab);
-  const prevKey = currentIndex > 0 ? keys[currentIndex - 1] : null;
-  const nextKey = currentIndex < keys.length - 1 ? keys[currentIndex + 1] : null;
+  // Flatten IDs for prev/next logic
+  const flatKeys = [];
+  sidebarConfig.forEach(item => {
+    if (item.id) {
+      flatKeys.push(item.id);
+      if (item.children) flatKeys.push(...item.children);
+    }
+  });
+  
+  const currentIndex = flatKeys.indexOf(activeTab);
+  const prevKey = currentIndex > 0 ? flatKeys[currentIndex - 1] : null;
+  const nextKey = currentIndex >= 0 && currentIndex < flatKeys.length - 1 ? flatKeys[currentIndex + 1] : null;
 
   return (
     <div className="docs-layout" style={{ display: 'flex', minHeight: 'calc(100vh - 56px)', backgroundColor: '#0a0a0b', color: '#ededed' }}>
@@ -709,287 +937,143 @@ export default function Docs() {
         </div>
 
         <div className="docs-nav-group" style={{ height: 'calc(100% - 60px)', overflowY: 'auto', paddingRight: '4px' }}>
-          <div 
-            id="btn-introduction"
-            className={`docs-nav-item ${activeTab === 'introduction' ? 'active' : ''}`}
-            onClick={() => handleTabChange('introduction')}
-          >
-            {docsData.introduction.icon} {docsData.introduction.title}
-          </div>
-          
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '24px', marginBottom: '8px', paddingLeft: '8px' }}>
-            Getting Started
-          </div>
-          
-          <div 
-            id="btn-setup"
-            className={`docs-nav-item ${activeTab === 'setup' ? 'active' : ''}`}
-            onClick={() => handleTabChange('setup')}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1 }}>
-              {docsData.setup.icon} {docsData.setup.title}
-            </div>
-            {docsData.setup.badge && <span className="docs-badge">{docsData.setup.badge}</span>}
-          </div>
+          {sidebarConfig.map((item, idx) => {
+            if (item.type === 'group') {
+              return (
+                <div key={idx} style={{ fontSize: '11px', fontWeight: 700, color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '24px', marginBottom: '8px', paddingLeft: '8px' }}>
+                  {item.label}
+                </div>
+              );
+            }
+            
+            if (item.children) {
+              const isExpanded = expanded[item.id];
+              return (
+                <React.Fragment key={item.id}>
+                  <div 
+                    className={`docs-nav-item ${isExpanded ? 'expanded' : ''}`}
+                    onClick={() => toggleExpand(item.id)}
+                    style={{ 
+                      background: isExpanded ? 'rgba(255,255,255,0.03)' : 'transparent',
+                      marginBottom: '4px', marginTop: '4px'
+                    }}
+                  >
+                    {item.icon} {docsData[item.id].title}
+                    <ChevronDownIcon style={{ marginLeft: 'auto', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', opacity: 0.8 }} />
+                  </div>
+                  {isExpanded && (
+                    <div style={{
+                      borderLeft: '1px solid rgba(255,255,255,0.08)', marginLeft: '18px', paddingTop: '4px', marginBottom: '16px', display: 'flex', flexDirection: 'column'
+                    }}>
+                      <div 
+                        className={`docs-sub-item ${activeTab === item.id ? 'active' : ''}`}
+                        onClick={() => handleTabChange(item.id)}
+                      >
+                        Main
+                      </div>
+                      {item.children.map(childId => (
+                        <div 
+                          key={childId}
+                          className={`docs-sub-item ${activeTab === childId ? 'active' : ''}`}
+                          onClick={() => handleTabChange(childId)}
+                        >
+                          {docsData[childId].title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            }
 
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '24px', marginBottom: '8px', paddingLeft: '8px' }}>
-            Features
-          </div>
-
-          <div 
-            id="btn-automod"
-            className={`docs-nav-item ${expanded.automod ? 'expanded' : ''}`}
-            onClick={() => toggleExpand('automod')}
-            style={{ 
-              background: expanded.automod ? 'rgba(255,255,255,0.03)' : 'transparent',
-              marginBottom: '4px'
-            }}
-          >
-            {docsData.automod.icon} {docsData.automod.title}
-            <ChevronDownIcon style={{ marginLeft: 'auto', transform: expanded.automod ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', opacity: 0.8 }} />
-          </div>
-
-          {expanded.automod && (
-            <div style={{
-              borderLeft: '1px solid rgba(255,255,255,0.08)',
-              marginLeft: '18px',
-              paddingTop: '4px',
-              marginBottom: '16px',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
+            return (
               <div 
-                className={`docs-sub-item ${activeTab === 'automod' ? 'active' : ''}`}
-                onClick={() => handleTabChange('automod')}
+                key={item.id}
+                className={`docs-nav-item ${activeTab === item.id ? 'active' : ''}`}
+                onClick={() => handleTabChange(item.id)}
               >
-                Filters
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1 }}>
+                  {item.icon} {docsData[item.id].title}
+                </div>
+                {item.badge && <span className="docs-badge">{item.badge}</span>}
               </div>
-              <div 
-                className={`docs-sub-item ${activeTab === 'automod-punishments' ? 'active' : ''}`}
-                onClick={() => handleTabChange('automod-punishments')}
-              >
-                Punishments
-              </div>
-              <div 
-                className={`docs-sub-item ${activeTab === 'automod-logs' ? 'active' : ''}`}
-                onClick={() => handleTabChange('automod-logs')}
-              >
-                Audit Logs
-              </div>
-            </div>
-          )}
-
-          <div 
-            id="btn-security"
-            className={`docs-nav-item ${activeTab === 'security' ? 'active' : ''}`}
-            onClick={() => handleTabChange('security')}
-          >
-            {docsData.security.icon} {docsData.security.title}
-          </div>
-
-          <div 
-            id="btn-appeals"
-            className={`docs-nav-item ${activeTab === 'appeals' ? 'active' : ''}`}
-            onClick={() => handleTabChange('appeals')}
-          >
-            {docsData.appeals.icon} {docsData.appeals.title}
-          </div>
-
-          <div 
-            id="btn-verification"
-            className={`docs-nav-item ${activeTab === 'verification' ? 'active' : ''}`}
-            onClick={() => handleTabChange('verification')}
-          >
-            {docsData.verification.icon} {docsData.verification.title}
-          </div>
-
-          <div 
-            id="btn-leveling"
-            className={`docs-nav-item ${activeTab === 'leveling' ? 'active' : ''}`}
-            onClick={() => handleTabChange('leveling')}
-          >
-            {docsData.leveling.icon} {docsData.leveling.title}
-          </div>
-
-          <div 
-            id="btn-economy"
-            className={`docs-nav-item ${activeTab === 'economy' ? 'active' : ''}`}
-            onClick={() => handleTabChange('economy')}
-          >
-            {docsData.economy.icon} {docsData.economy.title}
-          </div>
-
-          <div 
-            id="btn-boost"
-            className={`docs-nav-item ${activeTab === 'boost' ? 'active' : ''}`}
-            onClick={() => handleTabChange('boost')}
-          >
-            {docsData.boost.icon} {docsData.boost.title}
-          </div>
-
-          <div 
-            id="btn-serverstats"
-            className={`docs-nav-item ${activeTab === 'serverstats' ? 'active' : ''}`}
-            onClick={() => handleTabChange('serverstats')}
-          >
-            {docsData.serverstats.icon} {docsData.serverstats.title}
-          </div>
-
-          <div 
-            id="btn-tickets"
-            className={`docs-nav-item ${activeTab === 'tickets' ? 'active' : ''}`}
-            onClick={() => handleTabChange('tickets')}
-          >
-            {docsData.tickets.icon} {docsData.tickets.title}
-          </div>
-          
-          <div 
-            id="btn-temp-voice"
-            className={`docs-nav-item ${activeTab === 'temp-voice' ? 'active' : ''}`}
-            onClick={() => handleTabChange('temp-voice')}
-          >
-            {docsData['temp-voice'].icon} {docsData['temp-voice'].title}
-          </div>
-
-          <div 
-            id="btn-giveaways"
-            className={`docs-nav-item ${activeTab === 'giveaways' ? 'active' : ''}`}
-            onClick={() => handleTabChange('giveaways')}
-          >
-            {docsData.giveaways.icon} {docsData.giveaways.title}
-          </div>
-
-          <div 
-            id="btn-logs"
-            className={`docs-nav-item ${activeTab === 'logs' ? 'active' : ''}`}
-            onClick={() => handleTabChange('logs')}
-          >
-            {docsData.logs.icon} {docsData.logs.title}
-          </div>
-
-          <div 
-            id="btn-automations"
-            className={`docs-nav-item ${expanded.automations ? 'expanded' : ''}`}
-            onClick={() => toggleExpand('automations')}
-            style={{ 
-              background: expanded.automations ? 'rgba(255,255,255,0.03)' : 'transparent',
-              marginBottom: '4px',
-              marginTop: '4px'
-            }}
-          >
-            <ZapIcon /> Automations
-            <ChevronDownIcon style={{ marginLeft: 'auto', transform: expanded.automations ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', opacity: 0.8 }} />
-          </div>
-
-          {expanded.automations && (
-            <div style={{
-              borderLeft: '1px solid rgba(255,255,255,0.08)',
-              marginLeft: '18px',
-              paddingTop: '4px',
-              marginBottom: '32px',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <div 
-                className={`docs-sub-item ${activeTab === 'automations-welcome' ? 'active' : ''}`}
-                onClick={() => handleTabChange('automations-welcome')}
-              >
-                Welcome
-              </div>
-              <div 
-                className={`docs-sub-item ${activeTab === 'automations-goodbye' ? 'active' : ''}`}
-                onClick={() => handleTabChange('automations-goodbye')}
-              >
-                Goodbye
-              </div>
-              <div 
-                className={`docs-sub-item ${activeTab === 'automations-roles' ? 'active' : ''}`}
-                onClick={() => handleTabChange('automations-roles')}
-              >
-                Auto Roles
-              </div>
-              <div 
-                className={`docs-sub-item ${activeTab === 'automations-respond' ? 'active' : ''}`}
-                onClick={() => handleTabChange('automations-respond')}
-              >
-                Honeypot
-              </div>
-              <div 
-                className={`docs-sub-item ${activeTab === 'automations-autoresponder' ? 'active' : ''}`}
-                onClick={() => handleTabChange('automations-autoresponder')}
-              >
-                Auto Responder
-              </div>
-            </div>
-          )}
-
+            );
+          })}
         </div>
       </aside>
 
       {/* Main Content Area */}
       <main style={{ flexGrow: 1, padding: '48px 64px', maxWidth: '1000px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ animation: 'fadeIn 0.2s ease-out', flexGrow: 1 }} key={activeTab}>
-          <h1 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '32px', letterSpacing: '-0.5px' }}>{activeContent.title}</h1>
-          {activeContent.content}
-        </div>
+        {activeContent ? (
+          <>
+            <div style={{ animation: 'fadeIn 0.2s ease-out', flexGrow: 1 }} key={activeTab}>
+              <h1 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '32px', letterSpacing: '-0.5px' }}>{activeContent.title}</h1>
+              {activeContent.content}
+            </div>
 
-        {/* Page Navigation Component */}
-        <div className="docs-page-navigation">
-          {prevKey ? (
-            <div className="docs-nav-button" onClick={() => handleTabChange(prevKey)} style={{ alignItems: 'flex-start' }}>
-              <span className="nav-label">Previous Page</span>
-              <span className="nav-title">
-                <ChevronLeftIcon /> {docsData[prevKey].title}
-              </span>
+            {/* Page Navigation Component */}
+            <div className="docs-page-navigation">
+              {prevKey ? (
+                <div className="docs-nav-button" onClick={() => handleTabChange(prevKey)} style={{ alignItems: 'flex-start' }}>
+                  <span className="nav-label">Previous Page</span>
+                  <span className="nav-title">
+                    <ChevronLeftIcon /> {docsData[prevKey].title}
+                  </span>
+                </div>
+              ) : <div></div>}
+              
+              {nextKey ? (
+                <div className="docs-nav-button" onClick={() => handleTabChange(nextKey)} style={{ alignItems: 'flex-end' }}>
+                  <span className="nav-label">Next Page</span>
+                  <span className="nav-title">
+                    {docsData[nextKey].title} <ChevronRightIcon />
+                  </span>
+                </div>
+              ) : <div></div>}
             </div>
-          ) : <div></div>}
-          
-          {nextKey ? (
-            <div className="docs-nav-button" onClick={() => handleTabChange(nextKey)} style={{ alignItems: 'flex-end' }}>
-              <span className="nav-label">Next Page</span>
-              <span className="nav-title">
-                {docsData[nextKey].title} <ChevronRightIcon />
-              </span>
-            </div>
-          ) : <div></div>}
-        </div>
+          </>
+        ) : (
+          <div>Document not found.</div>
+        )}
       </main>
 
       {/* Optional Right Sidebar (On this page) */}
-      <aside style={{ width: '200px', flexShrink: 0, padding: '48px 24px', position: 'sticky', top: '56px', height: 'calc(100vh - 56px)' }}>
-        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <MenuIcon /> On this page
-        </div>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingLeft: '12px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-          {activeContent.toc && activeContent.toc.map((item, index) => (
-            <a 
-              key={index} 
-              href={`#${item.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                const el = document.getElementById(item.id);
-                if (el) {
-                  const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                  window.scrollTo({ top: y, behavior: 'smooth' });
-                }
-              }}
-              style={{ 
-                fontSize: '13px', 
-                color: index === 0 ? 'var(--text-primary)' : 'var(--text-muted)', 
-                fontWeight: index === 0 ? 600 : 400,
-                textDecoration: 'none',
-                transition: 'color 0.2s ease',
-                position: 'relative'
-              }}
-              onMouseEnter={e => e.target.style.color = 'var(--text-primary)'}
-              onMouseLeave={e => e.target.style.color = index === 0 ? 'var(--text-primary)' : 'var(--text-muted)'}
-            >
-              {item.label}
-            </a>
-          ))}
-        </div>
-      </aside>
+      {activeContent && (
+        <aside style={{ width: '200px', flexShrink: 0, padding: '48px 24px', position: 'sticky', top: '56px', height: 'calc(100vh - 56px)' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <MenuIcon /> On this page
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingLeft: '12px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+            {activeContent.toc && activeContent.toc.map((item, index) => (
+              <a 
+                key={index} 
+                href={`#${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById(item.id);
+                  if (el) {
+                    const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                  }
+                }}
+                style={{ 
+                  fontSize: '13px', 
+                  color: index === 0 ? 'var(--text-primary)' : 'var(--text-muted)', 
+                  fontWeight: index === 0 ? 600 : 400,
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  position: 'relative'
+                }}
+                onMouseEnter={e => e.target.style.color = 'var(--text-primary)'}
+                onMouseLeave={e => e.target.style.color = index === 0 ? 'var(--text-primary)' : 'var(--text-muted)'}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </aside>
+      )}
 
     </div>
   );
