@@ -2,20 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Users, MessageSquare, Activity, Mic, Ticket, Settings, ArrowUpRight, ArrowDownRight, ArrowRight, ShieldAlert, ShieldCheck, UserMinus, Vote, UserPlus, Gift, Layers, Bot, Gavel, Clock } from 'lucide-react';
+import { getCache, setCache } from '../../utils/cache';
+import LoadingScreen from '../ui/LoadingScreen';
 
 export default function Overview({ guildId }) {
   const { user } = useAuth();
-  const [guildInfo, setGuildInfo] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [config, setConfig] = useState(null);
-  const [modActivity, setModActivity] = useState([]);
+  const [guildInfo, setGuildInfo] = useState(() => getCache(`overview_guild_${guildId}`) || null);
+  const [stats, setStats] = useState(() => getCache(`overview_stats_${guildId}`) || null);
+  const [config, setConfig] = useState(() => getCache(`overview_config_${guildId}`) || null);
+  const [modActivity, setModActivity] = useState(() => getCache(`overview_modactivity_${guildId}`) || []);
 
   const [messagesRange, setMessagesRange] = useState('48h');
   const [channelsRange, setChannelsRange] = useState('7');
   const [activityRange, setActivityRange] = useState('7');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [liveStats, setLiveStats] = useState(null);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [liveStats, setLiveStats] = useState(() => getCache(`overview_livestats_${guildId}`) || null);
+  const [initialLoading, setInitialLoading] = useState(() => !getCache(`overview_stats_${guildId}`));
 
   const loadData = () => {
     if (!guildId) return Promise.resolve();
@@ -25,35 +27,50 @@ export default function Overview({ guildId }) {
       .then(data => {
         const guildsArray = Array.isArray(data) ? data : (data.guilds || []);
         const g = guildsArray.find(g => String(g.id) === String(guildId));
-        if (g) setGuildInfo(g);
+        if (g) {
+          setGuildInfo(g);
+          setCache(`overview_guild_${guildId}`, g);
+        }
       })
       .catch(console.error);
       
     const p2 = fetch(`/api/guild_stats/${guildId}?days=${channelsRange === 'all' ? 365 : channelsRange}`)
       .then(res => res.json())
-      .then(data => setStats(data))
+      .then(data => {
+        setStats(data);
+        if (channelsRange === '7') setCache(`overview_stats_${guildId}`, data);
+      })
       .catch(console.error);
       
     const p3 = fetch(`/api/guild_stats_live/${guildId}`)
       .then(res => res.json())
-      .then(data => setLiveStats(data))
+      .then(data => {
+        setLiveStats(data);
+        setCache(`overview_livestats_${guildId}`, data);
+      })
       .catch(console.error);
       
     const p4 = fetch(`/api/config/${guildId}`)
       .then(res => res.json())
-      .then(data => setConfig(data?.config || null))
+      .then(data => {
+        setConfig(data?.config || null);
+        setCache(`overview_config_${guildId}`, data?.config || null);
+      })
       .catch(console.error);
 
     const p5 = fetch(`/api/mod_activity/${guildId}`)
       .then(res => res.json())
-      .then(data => setModActivity(data || []))
+      .then(data => {
+        setModActivity(data || []);
+        setCache(`overview_modactivity_${guildId}`, data || []);
+      })
       .catch(console.error);
       
-    return Promise.all([p1, p2, p3, p4, p5]);
+    return Promise.all([p1, p2, p3, p4, p5]).then(() => setInitialLoading(false));
   };
 
   useEffect(() => {
-    loadData().finally(() => setIsInitialLoading(false));
+    loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, [guildId, channelsRange]);
@@ -154,16 +171,8 @@ export default function Overview({ guildId }) {
     'verification', 'giveaways', 'kick', 'embeds', 'botprofile'
   ].filter(isFeatureActive).length;
 
-  if (isInitialLoading) {
-    return (
-      <div className="w-full h-[70vh] flex flex-col items-center justify-center gap-5">
-        <div className="relative flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full blur-[20px] bg-white/10"></div>
-          <div className="relative w-10 h-10 rounded-full border-[3px] border-neutral-800 border-t-white animate-spin"></div>
-        </div>
-        <p className="text-sm font-medium text-neutral-400">Loading insights...</p>
-      </div>
-    );
+  if (initialLoading) {
+    return <LoadingScreen message="Loading overview..." />;
   }
 
   return (

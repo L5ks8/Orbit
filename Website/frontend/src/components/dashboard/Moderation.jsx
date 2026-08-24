@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
 import SaveBar from '../ui/SaveBar';
 import { useToast } from '../ui/Toast';
+import { getCache, setCache } from '../../utils/cache';
+import LoadingScreen from '../ui/LoadingScreen';
 
 const TailwindToggle = ({ checked, onChange }) => (
     <button 
@@ -183,8 +185,12 @@ const FilterLevelSelector = ({ value, onChange, levels }) => (
 export default function Moderation({ guildId }) {
   const toast = useToast();
   
-  const [serverData, setServerData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cachedServerData = getCache(`mod_serverData_${guildId}`);
+  const cachedRecentActions = getCache(`mod_recentActions_${guildId}`);
+  const amCfgInit = cachedServerData?.config?.automod || {};
+
+  const [serverData, setServerData] = useState(cachedServerData || null);
+  const [loading, setLoading] = useState(!cachedServerData);
   const [initialStateStr, setInitialStateStr] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'success' | 'error'
   const [saveMessage, setSaveMessage] = useState('');
@@ -192,19 +198,19 @@ export default function Moderation({ guildId }) {
 
   // States
   const [bannedWordsSearch, setBannedWordsSearch] = useState('');
-  const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, words: [], allowed_words: [], filter_level: 'relaxed' });
-  const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', timeout_duration_min: 5 });
-  const [antiLink, setAntiLink] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, blocked_domains: [], allowed_domains: [], allow_media: false, allow_gifs: false });
-  const [antiInvites, setAntiInvites] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5 });
-  const [mentionSpam, setMentionSpam] = useState({ enabled: false, max_mentions: 5, action: 'timeout', timeout_duration_min: 5 });
-  const [antiZalgo, setAntiZalgo] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5 });
-  const [antiCaps, setAntiCaps] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5 });
+  const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, words: [], allowed_words: [], filter_level: 'relaxed', ...amCfgInit.banned_words });
+  const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', timeout_duration_min: 5, ...amCfgInit.anti_spam });
+  const [antiLink, setAntiLink] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, blocked_domains: [], allowed_domains: [], allow_media: false, allow_gifs: false, ...amCfgInit.anti_link });
+  const [antiInvites, setAntiInvites] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, ...amCfgInit.anti_invites });
+  const [mentionSpam, setMentionSpam] = useState({ enabled: false, max_mentions: 5, action: 'timeout', timeout_duration_min: 5, ...amCfgInit.mention_spam });
+  const [antiZalgo, setAntiZalgo] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, ...amCfgInit.anti_zalgo });
+  const [antiCaps, setAntiCaps] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, ...amCfgInit.anti_caps });
   
   const [general, setGeneral] = useState({ log_channel: '' });
-  const [exemptions, setExemptions] = useState({ roles: [], channels: [] });
-
+  const [exemptions, setExemptions] = useState({ roles: (amCfgInit.exempt_roles || []).map(String), channels: (amCfgInit.exempt_channels || []).map(String) });
+  const [logs, setLogs] = useState(null);
   
-  const [recentActions, setRecentActions] = useState([]);
+  const [recentActions, setRecentActions] = useState(cachedRecentActions || []);
   const [warnSearchId, setWarnSearchId] = useState('');
   const [warnSearchData, setWarnSearchData] = useState(null);
   const [searchingWarns, setSearchingWarns] = useState(false);
@@ -259,6 +265,7 @@ export default function Moderation({ guildId }) {
       const data = await res.json();
       if (Array.isArray(data)) {
         setRecentActions(data);
+        setCache(`mod_recentActions_${guildId}`, data);
       }
     } catch (e) {
       console.error("Failed to load recent actions", e);
@@ -298,6 +305,7 @@ export default function Moderation({ guildId }) {
       .then(res => res.json())
       .then(data => {
         setServerData(data);
+        setCache(`mod_serverData_${guildId}`, data);
         const amCfg = data?.config?.automod || {};
         setBannedWords(prev => ({ ...prev, ...amCfg.banned_words }));
         setAntiSpam(prev => ({ ...prev, ...amCfg.anti_spam }));
@@ -378,7 +386,7 @@ export default function Moderation({ guildId }) {
     return () => clearTimeout(timeoutId);
   }, [currentPayloadStr, initialStateStr, isDirty]);
 
-  if (loading) return <div className="text-neutral-400 p-8">Loading moderation settings...</div>;
+  if (loading) return <LoadingScreen message="Loading moderation settings..." />;
 
   const channelOptions = serverData?.channels ? serverData.channels.map(c => ({ value: c.id, label: `# ${c.name}` })) : [];
   const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color })) : [];
