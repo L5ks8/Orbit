@@ -176,5 +176,5 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
     try:
         await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except Exception as e:
-        pass
+        print("LOG SEND ERROR:", e)
 

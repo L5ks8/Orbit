@@ -307,10 +307,15 @@ class OrbitBot(commands.Bot):
 
         try:
             await self.load_extension("Components.Dashboard.Automoderation.automodlistener")
-            await self.load_extension("Components.Dashboard.Automoderation.log_listener")
             print("Loaded AutoMod Listener")
         except Exception as e:
             print(f"Failed to load AutoMod Listener: {e}")
+
+        try:
+            await self.load_extension("Components.Dashboard.Automoderation.log_listener")
+            print("Loaded Log Listener")
+        except Exception as e:
+            print(f"Failed to load Log Listener: {e}")
 
         try:
             await self.load_extension("Components.Systems.JoinRole.joinrolelistener")
