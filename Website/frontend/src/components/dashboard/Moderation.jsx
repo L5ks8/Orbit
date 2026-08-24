@@ -393,7 +393,7 @@ export default function Moderation({ guildId }) {
 
   if (loading) {
     return (
-      <div className="pb-overview-container">
+      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
         <div data-tour="feature-header" className="scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -424,7 +424,7 @@ export default function Moderation({ guildId }) {
         <div className="mt-6" style={{ minHeight: '400px' }}>
           <LoadingScreen message="Loading moderation settings..." />
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -432,7 +432,7 @@ export default function Moderation({ guildId }) {
   const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color })) : [];
 
   return (
-    <div className="pb-overview-container">
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
       <div data-tour="feature-header" className="scroll-mt-24">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -461,7 +461,7 @@ export default function Moderation({ guildId }) {
         </div>
       </div>
       <div className="mt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1.1fr] gap-4 lg:items-stretch min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] gap-4 lg:items-stretch min-w-0">
           <div className="flex flex-col gap-4 min-w-0 scroll-mt-24 w-full">
 
                         {/* Content Filter */}
@@ -1388,12 +1388,6 @@ export default function Moderation({ guildId }) {
           </div>
         </div>
       </div>
-
-    </div>
+    </main>
   );
 }
-
-
-
-
-

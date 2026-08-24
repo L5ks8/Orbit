@@ -173,7 +173,7 @@ export default function Overview({ guildId }) {
 
   if (initialLoading) {
     return (
-      <div className="pb-overview-container">
+      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
         <div className="pb-card pb-server-header relative overflow-hidden">
           <div className="pb-header-glow-1"></div>
           <div className="pb-header-glow-2"></div>
@@ -192,12 +192,12 @@ export default function Overview({ guildId }) {
         <div className="mt-6" style={{ minHeight: '400px' }}>
           <LoadingScreen message="Loading overview..." />
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="pb-overview-container">
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
       {/* Server Header Card */}
       <div className="pb-card pb-server-header relative overflow-hidden">
         <div className="pb-header-glow-1"></div>
@@ -665,7 +665,7 @@ export default function Overview({ guildId }) {
         </div>
 
       </div>
-    </div>
+    </main>
   );
 }
 
