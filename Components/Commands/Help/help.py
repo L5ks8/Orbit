@@ -67,9 +67,7 @@ PAGES = [
             "• `/removerole <user> <role>` — Remove a role from a member (`-removerole @user @Member`).\n"
             "• `/roleinfo <role>` — Display detailed stats and permissions for a role (`-roleinfo @Member`).\n"
             "• `/role all <role>` & `/role rall <role>` — Give or take a role from ALL members (`-role all @Update`).\n"
-            "• `/allroles` — Display a complete card listing all server roles and member counts (`-allroles`).\n"
-            "• `/joinrole add <role>` — Add a role given automatically upon joining (`-joinrole add @Member`).\n"
-            "• `/joinrole remove <role>` & `/joinrole list` — Remove or list automatic join roles."
+            "• `/allroles` — Display a complete card listing all server roles and member counts (`-allroles`)."
         )
     },
     {
