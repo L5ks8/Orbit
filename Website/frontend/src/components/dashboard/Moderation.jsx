@@ -1258,6 +1258,112 @@ export default function Moderation({ guildId }) {
                   </label>
                 </div>
               </div>
+
+              {/* Role Logs */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield w-3.5 h-3.5 text-blue-400">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Role Logs</span>
+                </div>
+                <div className="w-full">
+                  <CustomSelect 
+                    options={channelOptions} 
+                    value={logs.channels?.role_updates} 
+                    onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, role_updates: val }, categories: { ...logs.categories, role_created: !!val, role_deleted: !!val, role_updated: !!val } })} 
+                    placeholder="Select log channel..." 
+                  />
+                </div>
+                <div className="flex gap-5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <TailwindToggle checked={logs.categories?.role_created || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, role_created: !logs.categories?.role_created }})} />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus-circle w-3.5 h-3.5 text-neutral-500">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                        <path d="M12 8v8" />
+                      </svg>
+                      Role Create
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <TailwindToggle checked={logs.categories?.role_deleted || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, role_deleted: !logs.categories?.role_deleted }})} />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash w-3.5 h-3.5 text-neutral-500">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                      Role Delete
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <TailwindToggle checked={logs.categories?.role_updated || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, role_updated: !logs.categories?.role_updated }})} />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit w-3.5 h-3.5 text-neutral-500">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" />
+                      </svg>
+                      Role Update
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Invite Logs */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-link w-3.5 h-3.5 text-teal-400">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                  <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Invite Logs</span>
+                </div>
+                <div className="w-full">
+                  <CustomSelect 
+                    options={channelOptions} 
+                    value={logs.channels?.invite_updates} 
+                    onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, invite_updates: val }, categories: { ...logs.categories, invite_created: !!val, invite_tracking: !!val } })} 
+                    placeholder="Select log channel..." 
+                  />
+                </div>
+                <div className="flex gap-5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <TailwindToggle checked={logs.categories?.invite_created || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, invite_created: !logs.categories?.invite_created }})} />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus-circle w-3.5 h-3.5 text-neutral-500">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                        <path d="M12 8v8" />
+                      </svg>
+                      Invite Create
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <TailwindToggle checked={logs.categories?.invite_tracking || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, invite_tracking: !logs.categories?.invite_tracking }})} />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users w-3.5 h-3.5 text-neutral-500">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                      Invite Tracking
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
 
             {/* Ignored Channels */}

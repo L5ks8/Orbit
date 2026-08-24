@@ -37,7 +37,9 @@ DEFAULT_CATEGORIES = {
     "mod_command_used": False,
     "invite_tracking": False,
     "invite_created": False,
-    "server_updates": False
+    "server_updates": False,
+    "role_updates": False,
+    "invite_updates": False
 }
 
 def _get_file_path(guild_id: int) -> pathlib.Path:
@@ -126,8 +128,12 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
     if executor and config.get("executor_in_logs"):
         description += f"\n**Executor:** {executor.mention} (`{executor.id}`)"
 
-    if category.lower() in ["channel_created", "channel_deleted", "channel_updated", "role_created", "role_deleted", "role_updated", "emoji_created", "emoji_deleted", "emoji_updated"]:
+    if category.lower() in ["channel_created", "channel_deleted", "channel_updated", "emoji_created", "emoji_deleted", "emoji_updated"]:
         target_ch_id = config.get("channels", {}).get("server_updates")
+    elif category.lower() in ["role_created", "role_deleted", "role_updated"]:
+        target_ch_id = config.get("channels", {}).get("role_updates")
+    elif category.lower() in ["invite_created", "invite_tracking"]:
+        target_ch_id = config.get("channels", {}).get("invite_updates")
     else:
         target_ch_id = config.get("channels", {}).get(category.lower())
         
