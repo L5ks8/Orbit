@@ -171,32 +171,21 @@ export default function WelcomeSettings({
                       className="w-36 sm:w-52 rounded-xl scroll-mt-24 transition-[box-shadow] "
                     >
                       <div className="jsx-556cf662b09b3c73 w-full">
-                        <div className="jsx-556cf662b09b3c73 relative">
-                          <button
-                            type="button"
-                            className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
-                          >
-                            <span className="jsx-556cf662b09b3c73 min-w-0 truncate text-sm text-neutral-500">
-                              # select channel
-                            </span>
-                            <div className="jsx-556cf662b09b3c73 flex items-center gap-1">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width={24}
-                                height={24}
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
-                              >
-                                <path d="m6 9 6 6 6-6" />
-                              </svg>
+                        <div className="relative">
+                            <select
+                              value={welcomeChannel}
+                              onChange={(e) => setWelcomeChannel(e.target.value)}
+                              className="w-full appearance-none flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer text-white focus:outline-none focus:border-neutral-500"
+                            >
+                              <option value="" disabled className="text-neutral-500"># select channel</option>
+                              {channels?.map(ch => (
+                                <option key={ch.id} value={ch.id}># {ch.name}</option>
+                              ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="m6 9 6 6 6-6" /></svg>
                             </div>
-                          </button>
-                        </div>
+                          </div>
                       </div>
                     </div>
                     <span
@@ -208,9 +197,9 @@ export default function WelcomeSettings({
                           type="button"
                           role="switch"
                           aria-checked={welcomeEnabled} onClick={() => setWelcomeEnabled(!welcomeEnabled)}
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
+                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ welcomeEnabled ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
                         >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
+                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ welcomeEnabled ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
                         </button>
                       </div>
                     </span>
@@ -227,27 +216,6 @@ export default function WelcomeSettings({
                           className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors "
                           style={{ minHeight: 42 }}
                         >
-                          <div
-                            aria-hidden="true"
-                            className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5"
-                            style={{
-                              fontFamily:
-                                '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
-                              padding: "10px 14px",
-                              letterSpacing: 0,
-                              wordBreak: "break-word",
-                              overflowWrap: "break-word",
-                              whiteSpace: "nowrap",
-                              boxSizing: "border-box",
-                              margin: 0,
-                              overflow: "hidden",
-                              zIndex: 1,
-                            }}
-                          >
-                            <span style={{ color: "rgba(115, 115, 115, 0.8)" }}>
-                              Welcome! (default)
-                            </span>
-                          </div>
                           <textarea
                             rows={1}
                             value={welcomeText} onChange={e => setWelcomeText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
@@ -264,8 +232,8 @@ export default function WelcomeSettings({
                               overflow: "hidden",
                               zIndex: 2,
                               boxShadow: "none",
-                              color: "transparent",
-                              WebkitTextFillColor: "transparent",
+                              color: "white",
+                              WebkitTextFillColor: "white",
                               caretColor: "white",
                             }}
                             defaultValue={""}
@@ -286,27 +254,6 @@ export default function WelcomeSettings({
                       className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors "
                       style={{ minHeight: 84 }}
                     >
-                      <div
-                        aria-hidden="true"
-                        className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5"
-                        style={{
-                          fontFamily:
-                            '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
-                          padding: "12px 16px",
-                          letterSpacing: 0,
-                          wordBreak: "break-word",
-                          overflowWrap: "break-word",
-                          whiteSpace: "pre-wrap",
-                          boxSizing: "border-box",
-                          margin: 0,
-                          zIndex: 1,
-                          height: 84,
-                        }}
-                      >
-                        <span style={{ color: "rgba(115, 115, 115, 0.8)" }}>
-                          Welcome {"{"}user{"}"} to {"{"}server{"}"}! (default)
-                        </span>
-                      </div>
                       <textarea
                         rows={3}
                         value={welcomeEmbedDesc} onChange={e => setWelcomeEmbedDesc(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
@@ -322,8 +269,8 @@ export default function WelcomeSettings({
                           margin: 0,
                           zIndex: 2,
                           boxShadow: "none",
-                          color: "transparent",
-                          WebkitTextFillColor: "transparent",
+                          color: "white",
+                          WebkitTextFillColor: "white",
                           caretColor: "white",
                           height: 84,
                         }}
@@ -383,9 +330,9 @@ export default function WelcomeSettings({
                           type="button"
                           role="switch"
                           aria-checked={welcomeMsgMode === "embed"} onClick={() => setWelcomeMsgMode(welcomeMsgMode === "embed" ? "image" : "embed")}
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
+                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ welcomeMsgMode === 'embed' ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
                         >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black" />
+                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ welcomeMsgMode === 'embed' ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
                         </button>
                       </div>
                     </label>
@@ -398,9 +345,9 @@ export default function WelcomeSettings({
                           type="button"
                           role="switch"
                           aria-checked={welcomeEmbedThumbnail === "{user.avatar}"} onClick={() => setWelcomeEmbedThumbnail(welcomeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")}
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
+                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ welcomeEmbedThumbnail === '{user.avatar}' ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
                         >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black" />
+                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ welcomeEmbedThumbnail === '{user.avatar}' ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
                         </button>
                       </div>
                     </label>
@@ -416,9 +363,9 @@ export default function WelcomeSettings({
                           type="button"
                           role="switch"
                           aria-checked={dmJoinEnabled} onClick={() => setDmJoinEnabled(!dmJoinEnabled)}
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
+                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ dmJoinEnabled ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
                         >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
+                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ dmJoinEnabled ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
                         </button>
                       </div>
                     </label>
@@ -720,13 +667,13 @@ export default function WelcomeSettings({
                         </div>
                         <div className="flex items-center gap-3">
                           <button
-                            type="button"
-                            role="switch"
-                            aria-checked={goodbyeEnabled} onClick={() => setGoodbyeEnabled(!goodbyeEnabled)}
-                            className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                          >
-                            <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                          </button>
+                          type="button"
+                          role="switch"
+                          aria-checked={goodbyeEnabled} onClick={() => setGoodbyeEnabled(!goodbyeEnabled)}
+                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ goodbyeEnabled ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
+                        >
+                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ goodbyeEnabled ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
+                        </button>
                         </div>
                       </div>
                       <div className="transition-all duration-200 flex-1 flex flex-col min-h-0">
@@ -735,28 +682,6 @@ export default function WelcomeSettings({
                             className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors h-full flex flex-col"
                             style={{ minHeight: 104 }}
                           >
-                            <div
-                              aria-hidden="true"
-                              className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5"
-                              style={{
-                                fontFamily:
-                                  '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
-                                padding: "12px 16px",
-                                letterSpacing: 0,
-                                wordBreak: "break-word",
-                                overflowWrap: "break-word",
-                                whiteSpace: "pre-wrap",
-                                boxSizing: "border-box",
-                                margin: 0,
-                                zIndex: 1,
-                              }}
-                            >
-                              <span
-                                style={{ color: "rgba(115, 115, 115, 0.8)" }}
-                              >
-                                ­ƒæï Welcome to {"{"}server{"}"} (default)
-                              </span>
-                            </div>
                             <textarea
                               rows={4}
                               value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
@@ -772,8 +697,8 @@ export default function WelcomeSettings({
                                 margin: 0,
                                 zIndex: 2,
                                 boxShadow: "none",
-                                color: "transparent",
-                                WebkitTextFillColor: "transparent",
+                                color: "white",
+                                WebkitTextFillColor: "white",
                                 caretColor: "white",
                               }}
                               defaultValue={""}
@@ -888,31 +813,20 @@ export default function WelcomeSettings({
                     <div className="flex items-center gap-2.5 flex-shrink-0">
                       <div className="w-36 sm:w-52 rounded-xl transition-all ">
                         <div className="jsx-556cf662b09b3c73 w-full">
-                          <div className="jsx-556cf662b09b3c73 relative">
-                            <button
-                              type="button"
-                              className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
+                          <div className="relative">
+                            <select
+                              value={goodbyeChannel}
+                              onChange={(e) => setGoodbyeChannel(e.target.value)}
+                              className="w-full appearance-none flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer text-white focus:outline-none focus:border-neutral-500"
                             >
-                              <span className="jsx-556cf662b09b3c73 min-w-0 truncate text-sm text-neutral-500">
-                                # select channel
-                              </span>
-                              <div className="jsx-556cf662b09b3c73 flex items-center gap-1">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width={24}
-                                  height={24}
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth={2}
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
-                                >
-                                  <path d="m6 9 6 6 6-6" />
-                                </svg>
-                              </div>
-                            </button>
+                              <option value="" disabled className="text-neutral-500"># select channel</option>
+                              {channels?.map(ch => (
+                                <option key={ch.id} value={ch.id}># {ch.name}</option>
+                              ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -921,9 +835,9 @@ export default function WelcomeSettings({
                           type="button"
                           role="switch"
                           aria-checked={goodbyeMsgMode === "embed"} onClick={() => setGoodbyeMsgMode(goodbyeMsgMode === "embed" ? "image" : "embed")}
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
+                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ goodbyeMsgMode === 'embed' ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
                         >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
+                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ goodbyeMsgMode === 'embed' ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
                         </button>
                       </div>
                     </div>
@@ -936,25 +850,6 @@ export default function WelcomeSettings({
                             className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors "
                             style={{ minHeight: 42 }}
                           >
-                            <div
-                              aria-hidden="true"
-                              className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5"
-                              style={{
-                                fontFamily:
-                                  '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
-                                padding: "10px 14px",
-                                letterSpacing: 0,
-                                wordBreak: "break-word",
-                                overflowWrap: "break-word",
-                                whiteSpace: "nowrap",
-                                boxSizing: "border-box",
-                                margin: 0,
-                                overflow: "hidden",
-                                zIndex: 1,
-                              }}
-                            >
-                              {"{"}user.name{"}"} has left
-                            </div>
                             <textarea
                               rows={1}
                               value={goodbyeText} onChange={e => setGoodbyeText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
@@ -971,8 +866,8 @@ export default function WelcomeSettings({
                                 overflow: "hidden",
                                 zIndex: 2,
                                 boxShadow: "none",
-                                color: "transparent",
-                                WebkitTextFillColor: "transparent",
+                                color: "white",
+                                WebkitTextFillColor: "white",
                                 caretColor: "white",
                               }}
                               defaultValue={"{user.name} has left"}
@@ -993,28 +888,6 @@ export default function WelcomeSettings({
                         className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors "
                         style={{ minHeight: 84 }}
                       >
-                        <div
-                          aria-hidden="true"
-                          className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5"
-                          style={{
-                            fontFamily:
-                              '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
-                            padding: "12px 16px",
-                            letterSpacing: 0,
-                            wordBreak: "break-word",
-                            overflowWrap: "break-word",
-                            whiteSpace: "pre-wrap",
-                            boxSizing: "border-box",
-                            margin: 0,
-                            zIndex: 1,
-                            height: 84,
-                          }}
-                        >
-                          <span style={{ color: "rgba(115, 115, 115, 0.8)" }}>
-                            {"{"}user{"}"} has left {"{"}server{"}"}. (empty =
-                            no text)
-                          </span>
-                        </div>
                         <textarea
                           rows={3}
                           value={goodbyeEmbedDesc} onChange={e => setGoodbyeEmbedDesc(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
@@ -1030,8 +903,8 @@ export default function WelcomeSettings({
                             margin: 0,
                             zIndex: 2,
                             boxShadow: "none",
-                            color: "transparent",
-                            WebkitTextFillColor: "transparent",
+                            color: "white",
+                            WebkitTextFillColor: "white",
                             caretColor: "white",
                             height: 84,
                           }}
@@ -1102,13 +975,13 @@ export default function WelcomeSettings({
                         </span>
                         <div className="flex items-center gap-3">
                           <button
-                            type="button"
-                            role="switch"
-                            aria-checked={goodbyeEmbedThumbnail === "{user.avatar}"} onClick={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")}
-                            className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
-                          >
-                            <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black" />
-                          </button>
+                          type="button"
+                          role="switch"
+                          aria-checked={goodbyeEmbedThumbnail === "{user.avatar}"} onClick={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")}
+                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ goodbyeEmbedThumbnail === '{user.avatar}' ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
+                        >
+                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ goodbyeEmbedThumbnail === '{user.avatar}' ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
+                        </button>
                         </div>
                       </label>
                     </div>
@@ -1399,13 +1272,13 @@ export default function WelcomeSettings({
                           </div>
                           <div className="flex items-center gap-3">
                             <button
-                              type="button"
-                              role="switch"
-                              aria-checked={dmLeaveEnabled} onClick={() => setDmLeaveEnabled(!dmLeaveEnabled)}
-                              className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                            >
-                              <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
-                            </button>
+                          type="button"
+                          role="switch"
+                          aria-checked={dmLeaveEnabled} onClick={() => setDmLeaveEnabled(!dmLeaveEnabled)}
+                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ dmLeaveEnabled ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
+                        >
+                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ dmLeaveEnabled ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
+                        </button>
                           </div>
                         </div>
                         <div className="transition-all duration-200 flex-1 flex flex-col min-h-0">
@@ -1414,28 +1287,6 @@ export default function WelcomeSettings({
                               className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors h-full flex flex-col"
                               style={{ minHeight: 84 }}
                             >
-                              <div
-                                aria-hidden="true"
-                                className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5"
-                                style={{
-                                  fontFamily:
-                                    '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
-                                  padding: "12px 16px",
-                                  letterSpacing: 0,
-                                  wordBreak: "break-word",
-                                  overflowWrap: "break-word",
-                                  whiteSpace: "pre-wrap",
-                                  boxSizing: "border-box",
-                                  margin: 0,
-                                  zIndex: 1,
-                                }}
-                              >
-                                <span
-                                  style={{ color: "rgba(115, 115, 115, 0.8)" }}
-                                >
-                                  ­ƒæï You left {"{"}server{"}"} (default)
-                                </span>
-                              </div>
                               <textarea
                                 rows={3}
                                 value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
@@ -1451,8 +1302,8 @@ export default function WelcomeSettings({
                                   margin: 0,
                                   zIndex: 2,
                                   boxShadow: "none",
-                                  color: "transparent",
-                                  WebkitTextFillColor: "transparent",
+                                  color: "white",
+                                  WebkitTextFillColor: "white",
                                   caretColor: "white",
                                 }}
                                 defaultValue={""}
