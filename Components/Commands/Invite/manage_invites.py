@@ -12,7 +12,7 @@ class ManageInvitesCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="addfakeinvites", description="Add fake invites to a specific user.")
+    @commands.hybrid_command(name="addfakeinvites", description="Add fake invites to a specific user.")
     @commands.has_permissions(manage_guild=True)
     async def addfakeinvites(self, ctx: commands.Context, user: discord.Member, amount: int):
         await ctx.defer()
@@ -35,7 +35,7 @@ class ManageInvitesCommand(commands.Cog):
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-    @commands.command(name="removefakeinvites", description="Remove fake invites from a specific user.")
+    @commands.hybrid_command(name="removefakeinvites", description="Remove fake invites from a specific user.")
     @commands.has_permissions(manage_guild=True)
     async def removefakeinvites(self, ctx: commands.Context, user: discord.Member, amount: int):
         await ctx.defer()
@@ -58,7 +58,7 @@ class ManageInvitesCommand(commands.Cog):
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-    @commands.command(name="addinvites", description="Add regular invites to a specific user.")
+    @commands.hybrid_command(name="addinvites", description="Add regular invites to a specific user.")
     @commands.has_permissions(manage_guild=True)
     async def addinvites(self, ctx: commands.Context, user: discord.Member, amount: int):
         await ctx.defer()
@@ -81,7 +81,7 @@ class ManageInvitesCommand(commands.Cog):
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-    @commands.command(name="removeinvites", description="Remove regular invites from a specific user.")
+    @commands.hybrid_command(name="removeinvites", description="Remove regular invites from a specific user.")
     @commands.has_permissions(manage_guild=True)
     async def removeinvites(self, ctx: commands.Context, user: discord.Member, amount: int):
         await ctx.defer()
@@ -104,7 +104,7 @@ class ManageInvitesCommand(commands.Cog):
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-    @commands.command(name="resetinvites", description="Reset the invites for a specific user or for the whole server.")
+    @commands.hybrid_command(name="resetinvites", description="Reset the invites for a specific user or for the whole server.")
     @commands.has_permissions(manage_guild=True)
     async def resetinvites(self, ctx: commands.Context, user: discord.Member = None):
         await ctx.defer()
@@ -132,3 +132,4 @@ class ManageInvitesCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ManageInvitesCommand(bot))
+

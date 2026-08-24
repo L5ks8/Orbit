@@ -19,7 +19,7 @@ class ImageFilters(commands.Cog):
         async with self.session.get(url) as resp:
             return await resp.read()
 
-    @commands.command(name="jail", description="Put a user behind bars.")
+    @commands.hybrid_command(name="jail", description="Put a user behind bars.")
     async def jail(self, ctx: commands.Context, user: discord.Member = None):
         user = user or ctx.author
         await ctx.defer()
@@ -57,7 +57,7 @@ class ImageFilters(commands.Cog):
         except Exception as e:
             await ctx.send(f"Error: {e}")
 
-    @commands.command(name="wasted", description="GTA Wasted effect.")
+    @commands.hybrid_command(name="wasted", description="GTA Wasted effect.")
     async def wasted(self, ctx: commands.Context, user: discord.Member = None):
         user = user or ctx.author
         await ctx.defer()
@@ -108,7 +108,7 @@ class ImageFilters(commands.Cog):
         except Exception as e:
             await ctx.send(f"Error: {e}")
 
-    @commands.command(name="triggered", description="Shaking red GIF.")
+    @commands.hybrid_command(name="triggered", description="Shaking red GIF.")
     async def triggered(self, ctx: commands.Context, user: discord.Member = None):
         user = user or ctx.author
         await ctx.defer()
@@ -141,7 +141,7 @@ class ImageFilters(commands.Cog):
         except Exception as e:
             await ctx.send(f"Error: {e}")
 
-    @commands.command(name="rip", description="Put a user on a tombstone.")
+    @commands.hybrid_command(name="rip", description="Put a user on a tombstone.")
     async def rip(self, ctx: commands.Context, user: discord.Member = None):
         user = user or ctx.author
         await ctx.defer()
@@ -183,4 +183,5 @@ class ImageFilters(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ImageFilters(bot))
+
 
