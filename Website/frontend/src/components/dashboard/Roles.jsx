@@ -425,7 +425,7 @@ export default function Roles({ guildId }) {
                   className="animate-fade-in-up relative z-50"
                   style={{ animationDelay: "70ms", animationFillMode: "both" }}
                 >
-                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col ">
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
                     <div className="px-4 py-3 border-b border-neutral-800 flex items-center gap-2 flex-shrink-0">
                       <div className="p-1.5 rounded-lg bg-sky-500/10">
                         <svg
