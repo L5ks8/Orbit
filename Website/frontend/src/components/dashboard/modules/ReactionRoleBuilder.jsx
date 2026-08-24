@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useToast } from "../../ui/Toast";
 import CustomSelect from "../../ui/CustomSelect";
+import EmojiPicker from "../../ui/EmojiPicker";
 
 
 const PREDEFINED_TEMPLATES = {
@@ -231,9 +232,11 @@ export default function ReactionRoleBuilder({
   const [embedDesc, setEmbedDesc] = useState("");
   const [channelId, setChannelId] = useState("");
   const [components, setComponents] = useState([]);
+  const [emojiPickerIndex, setEmojiPickerIndex] = useState(null);
 
-  // Behavior & Settings (Mock state for UI)
+  // Behavior & Settings
   const [behavior, setBehavior] = useState(initialData?.mode || "pick_one");
+  const [postToDiscord, setPostToDiscord] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
@@ -285,6 +288,7 @@ export default function ReactionRoleBuilder({
         channel_id: channelId,
         button_type: "toggle",
         mode: behavior,
+        post_to_discord: postToDiscord,
         embed: {
           title: embedTitle,
           description: embedDesc,
@@ -495,8 +499,11 @@ export default function ReactionRoleBuilder({
                     <p className="text-[12.5px] font-medium text-white">Post to Discord on save</p>
                     <p className="text-[11px] text-neutral-500 mt-0.5">Pick a channel above to post.</p>
                   </div>
-                  <button type="button" className={`w-10 h-5 rounded-full transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 relative flex-shrink-0 ${channelId ? 'bg-emerald-500' : 'bg-neutral-700'}`}>
-                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${channelId ? 'left-[22px]' : 'left-0.5'}`}></span>
+                  <button 
+                    onClick={() => setPostToDiscord(!postToDiscord)}
+                    type="button" 
+                    className={`w-10 h-5 rounded-full transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 relative flex-shrink-0 ${postToDiscord ? 'bg-emerald-500' : 'bg-neutral-700'}`}>
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${postToDiscord ? 'left-[22px]' : 'left-0.5'}`}></span>
                   </button>
                 </div>
               </div>
@@ -520,17 +527,23 @@ export default function ReactionRoleBuilder({
                       
                       <div className="flex-1 grid grid-cols-[44px_1fr] sm:grid-cols-[44px_1fr_140px] gap-2 min-w-0">
                         <div className="relative">
-                          <button 
-                            type="button" 
-                            className="w-full h-10 flex items-center justify-center bg-neutral-800 border rounded-xl text-lg transition-[transform,background-color,border-color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 border-neutral-700 hover:border-neutral-600" 
+                          <button
+                            type="button"
+                            onClick={() => setEmojiPickerIndex(emojiPickerIndex === idx ? null : idx)}
+                            className="flex items-center justify-center w-11 h-11 rounded-xl bg-neutral-800 border border-neutral-700/50 text-xl hover:bg-neutral-700 hover:border-neutral-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                             aria-label="Pick emoji"
-                            onClick={() => {
-                              const e = prompt("Enter an emoji:", comp.emoji);
-                              if (e) updateComponent(idx, "emoji", e);
-                            }}
                           >
                             {comp.emoji || "🤔"}
                           </button>
+                          {emojiPickerIndex === idx && (
+                            <EmojiPicker 
+                              onSelect={(emoji) => {
+                                updateComponent(idx, "emoji", emoji);
+                                setEmojiPickerIndex(null);
+                              }}
+                              onClose={() => setEmojiPickerIndex(null)}
+                            />
+                          )}
                         </div>
                         <div className="w-full">
                           <CustomSelect

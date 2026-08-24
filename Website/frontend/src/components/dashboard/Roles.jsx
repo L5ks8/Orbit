@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getCache, setCache } from "../../utils/cache";
 import { useToast } from "../ui/Toast";
+import LoadingScreen from "../ui/LoadingScreen";
 
 const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -253,6 +254,10 @@ export default function Roles({ guildId }) {
     return () => clearTimeout(timeoutId);
   }, [currentPayloadStr, initialStateStr, isDirty]);
 
+  if (loading) {
+    return <LoadingScreen message="Loading roles..." />;
+  }
+
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
       <div>
@@ -327,37 +332,7 @@ export default function Roles({ guildId }) {
                     <div
                       data-tour="reactionroles-list"
                       className="scroll-mt-24 p-4 sm:p-5 flex-1 min-h-0"
-                    >                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 auto-rows-[120px]">
-                        {reactionRoles.length < 9 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setRrBuilderData(null);
-                              setRrBuilderOpen(true);
-                            }}
-                            data-tour="reactionroles-create"
-                            className="scroll-mt-24 group rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-                          >
-                            <span className="grid place-items-center w-8 h-8 rounded-full bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width={24}
-                                height={24}
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="lucide lucide-plus w-4 h-4"
-                              >
-                                <path d="M5 12h14" />
-                                <path d="M12 5v14" />
-                              </svg>
-                            </span>
-                            <span className="text-xs font-medium">New panel</span>
-                          </button>
-                        )}
+                    >                                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 auto-rows-[120px]">
                         {reactionRoles.map((rr) => (
                           <button
                             key={rr.id}
@@ -379,7 +354,7 @@ export default function Roles({ guildId }) {
                                 strokeWidth={2}
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                className="text-neutral-400 group-hover:text-white transition-colors"
+                                className="text-neutral-400 group-hover:text-white transition-colors flex-shrink-0"
                               >
                                 <polyline points="15 18 9 12 15 6" />
                               </svg>
@@ -387,27 +362,49 @@ export default function Roles({ guildId }) {
                                 {rr.name || "Unnamed Panel"}
                               </span>
                             </div>
-                            <div className="text-xs text-neutral-500 flex items-center gap-1 mt-auto">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width={12}
-                                height={12}
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <line x1="4" x2="20" y1="9" y2="9" />
-                                <line x1="4" x2="20" y1="15" y2="15" />
-                                <line x1="10" x2="8" y1="3" y2="21" />
-                                <line x1="16" x2="14" y1="3" y2="21" />
-                              </svg>
-                              Channel: {rr.channel_id || "Unset"}
+                            <div className="text-xs text-neutral-500 flex items-center gap-1 mt-auto w-full">
+                              <svg xmlns="http://www.w3.org/2000/svg" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="9" y2="9" /><line x1="4" x2="20" y1="15" y2="15" /><line x1="10" x2="8" y1="3" y2="21" /><line x1="16" x2="14" y1="3" y2="21" /></svg>
+                              <span className="truncate">{rr.channel_id ? `Channel ID: ${rr.channel_id}` : "No channel selected"}</span>
                             </div>
                           </button>
                         ))}
+                        
+                        {Array.from({ length: Math.max(9 - reactionRoles.length, 1) }).map((_, idx) => {
+                          if (idx === 0) {
+                            return (
+                              <button
+                                key={`new-panel-${idx}`}
+                                type="button"
+                                onClick={() => {
+                                  setRrBuilderData(null);
+                                  setRrBuilderOpen(true);
+                                }}
+                                data-tour="reactionroles-create"
+                                className="scroll-mt-24 group rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                              >
+                                <span className="grid place-items-center w-8 h-8 rounded-full bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4">
+                                    <path d="M5 12h14" />
+                                    <path d="M12 5v14" />
+                                  </svg>
+                                </span>
+                                <span className="text-xs font-medium">New panel</span>
+                              </button>
+                            );
+                          }
+                          
+                          if (idx === 4 - reactionRoles.length) {
+                             return (
+                               <div key={`empty-${idx}`} className="rounded-xl border border-dashed border-neutral-800/60 bg-transparent flex items-center justify-center pointer-events-none">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4 text-neutral-700"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                               </div>
+                             );
+                          }
+
+                          return (
+                            <div key={`empty-${idx}`} className="rounded-xl border border-dashed border-neutral-800/60 bg-transparent pointer-events-none" />
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -776,6 +773,7 @@ export default function Roles({ guildId }) {
                                     xmlns="http://www.w3.org/2000/svg"
                                     width={24}
                                     height={24}
+                                  
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="currentColor"
@@ -934,6 +932,7 @@ export default function Roles({ guildId }) {
         guildId={guildId}
         serverData={serverData}
         onSaveSuccess={() => {
+          setRrBuilderOpen(false);
           fetch(`/api/reactionroles/${guildId}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           })

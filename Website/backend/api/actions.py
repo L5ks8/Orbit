@@ -672,8 +672,44 @@ class ActionsMixin:
             data["guild_id"] = str(guild_id)
             if not data.get("name"): data["name"] = "Untitled Reaction Role"
             from Components.Dashboard.Roles.reaction_panels import save_reaction_role
+            
+            post_to_discord = data.pop("post_to_discord", False)
+            channel_id_str = data.get("channel_id")
+            msg_sent_id = None
+            if post_to_discord and channel_id_str:
+                channel = self.bot.get_channel(int(channel_id_str))
+                if channel:
+                    import discord
+                    embed_data = data.get("embed", {})
+                    embed = discord.Embed(
+                        title=embed_data.get("title") or "Reaction Role",
+                        description=embed_data.get("description") or "",
+                        color=discord.Color.from_str(embed_data.get("color", "#5865F2") or "#5865F2")
+                    )
+                    view = discord.ui.View(timeout=None)
+                    for comp in data.get("components", []):
+                        role_id = comp.get("role_id")
+                        if not role_id: continue
+                        custom_id = f"rr_{role_id}_{data.get('mode', 'toggle')}"
+                        btn = discord.ui.Button(
+                            style=discord.ButtonStyle.secondary,
+                            label=comp.get("label") or "Role",
+                            emoji=comp.get("emoji") or "❓",
+                            custom_id=custom_id
+                        )
+                        view.add_item(btn)
+                    
+                    try:
+                        msg = await channel.send(embed=embed, view=view)
+                        msg_sent_id = str(msg.id)
+                        data["msg_id"] = msg_sent_id
+                    except discord.Forbidden:
+                        return web.json_response({"error": "Bot does not have permission to send messages in that channel."}, status=403)
+                    except Exception as e:
+                        return web.json_response({"error": f"Failed to send to Discord: {str(e)}"}, status=400)
+
             save_reaction_role(guild_id, data)
-            return web.json_response({"success": True, "id": msg_id})
+            return web.json_response({"success": True, "id": msg_id, "msg_id": msg_sent_id})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 
