@@ -51,7 +51,7 @@ class ModLogPaginationView(View):
                 inline=False
             )
             
-        embed.set_footer(text=f"Page {self.current_page + 1} of {self.max_pages} • Total records: {len(self.logs)}")
+        embed.set_footer(text=f"Page {self.current_page + 1} of {self.max_pages} - Total records: {len(self.logs)}")
         return embed
 
     @discord.ui.button(label="Previous", style=discord.ButtonStyle.primary, custom_id="modlog_prev")
