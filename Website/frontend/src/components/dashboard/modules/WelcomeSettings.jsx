@@ -98,7 +98,7 @@ export default function WelcomeSettings({
           </div>
         </div>
         <div className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr,300px] gap-5 min-w-0">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 min-w-0">
             <div className="flex flex-col gap-5 min-w-0">
               <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex-1 flex flex-col">
                 <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
@@ -816,7 +816,7 @@ export default function WelcomeSettings({
             </div>
           </div>
           <div className="mt-5 pt-5 border-t border-neutral-800">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr,300px] gap-5 min-w-0">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 min-w-0">
               <div className="space-y-5 min-w-0">
                 <div className="bg-neutral-900 rounded-2xl border border-neutral-800">
                   <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
