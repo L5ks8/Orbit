@@ -12,7 +12,7 @@ from Components.Dashboard.Automoderation._storage import load_automod_config, sa
 from Components.Commands.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
 from Components.Commands.AutoResponder._storage import load_responses, save_responses
 from Components.Commands.JoinRole._storage import load_join_roles, save_join_roles
-from Components.Commands.Log._storage import load_log_config, save_log_config
+from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Components.Commands.Boost._storage import load_boost_config, save_boost_config
 from Components.Commands.Level._storage import load_level_config, save_level_config
@@ -332,7 +332,7 @@ class GuildsMixin:
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
             
-        from Components.Commands.Log._modlog_storage import get_recent_modlogs
+        from Components.Commands.ModLog._modlog_storage import get_recent_modlogs
         logs = get_recent_modlogs(guild_id)
         
         results = []

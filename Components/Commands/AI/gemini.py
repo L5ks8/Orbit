@@ -247,7 +247,7 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_automod_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Logs":
-                                            from Components.Commands.Log._storage import load_log_config, save_log_config
+                                            from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
                                             cfg = load_log_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_log_config(message.guild.id, cfg)
@@ -320,3 +320,4 @@ class GeminiChatbot(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GeminiChatbot(bot))
+
