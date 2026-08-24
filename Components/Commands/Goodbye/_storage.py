@@ -18,6 +18,8 @@ def load_goodbye_config(guild_id: int) -> Dict[str, Any]:
     default_config = {
         "enabled": False, 
         "channel_id": None, 
+        "dm_enabled": False,
+        "dm_message": "", 
         "message": DEFAULT_MESSAGE, 
         "image_url": "",
         "msg_mode": "image",
@@ -33,6 +35,11 @@ def load_goodbye_config(guild_id: int) -> Dict[str, Any]:
     }
     try:
         data = get_config("Goodbye", guild_id)
+        
+        if "dm_enabled" not in data:
+            data["dm_enabled"] = False
+        if "dm_message" not in data:
+            data["dm_message"] = ""
         if "message" not in data or not data["message"]:
             data["message"] = DEFAULT_MESSAGE
         if "image_url" not in data:
@@ -85,6 +92,8 @@ def reset_goodbye(guild_id: int) -> Dict[str, Any]:
     config = {
         "enabled": False, 
         "channel_id": None, 
+        "dm_enabled": False,
+        "dm_message": "", 
         "message": DEFAULT_MESSAGE, 
         "image_url": "",
         "msg_mode": "image",

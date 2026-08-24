@@ -104,6 +104,8 @@ class ConfigMixin:
             "appeals": appeals_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
+                "dm_enabled": welcome_cfg.get("dm_enabled", False),
+                "dm_message": welcome_cfg.get("dm_message", ""),
                 "channel_id": str(welcome_cfg.get("channel_id")) if welcome_cfg.get("channel_id") else "",
                 "message": welcome_cfg.get("message", ""),
                 "image_url": welcome_cfg.get("image_url", ""),
@@ -121,6 +123,8 @@ class ConfigMixin:
             },
             "goodbye": {
                 "enabled": goodbye_cfg.get("enabled", False),
+                "dm_enabled": goodbye_cfg.get("dm_enabled", False),
+                "dm_message": goodbye_cfg.get("dm_message", ""),
                 "channel_id": str(goodbye_cfg.get("channel_id")) if goodbye_cfg.get("channel_id") else "",
                 "message": goodbye_cfg.get("message", ""),
                 "image_url": goodbye_cfg.get("image_url", ""),
@@ -432,6 +436,8 @@ class ConfigMixin:
                 _clean_cloudinary(welcome_cfg.get("embed_footer_icon", ""), w_data.get("embed_footer_icon", ""))
 
                 welcome_cfg["enabled"] = bool(w_data.get("enabled"))
+                welcome_cfg["dm_enabled"] = bool(w_data.get("dm_enabled"))
+                welcome_cfg["dm_message"] = w_data.get("dm_message", "")
                 cid = w_data.get("channel_id")
                 welcome_cfg["channel_id"] = int(cid) if cid else None
                 welcome_cfg["message"] = w_data.get("message", "")
@@ -461,6 +467,8 @@ class ConfigMixin:
                 _clean_cloudinary(goodbye_cfg.get("embed_footer_icon", ""), g_data.get("embed_footer_icon", ""))
 
                 goodbye_cfg["enabled"] = bool(g_data.get("enabled"))
+                goodbye_cfg["dm_enabled"] = bool(g_data.get("dm_enabled"))
+                goodbye_cfg["dm_message"] = g_data.get("dm_message", "")
                 cid = g_data.get("channel_id")
                 goodbye_cfg["channel_id"] = int(cid) if cid else None
                 goodbye_cfg["message"] = g_data.get("message", "")

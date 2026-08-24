@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import DiscordPreview, { parseDiscordMarkdown } from "../../ui/DiscordPreview";
 
 export default function WelcomeSettings({
   config,
@@ -26,6 +27,39 @@ export default function WelcomeSettings({
   );
   const [dmLeaveText, setDmLeaveText] = useState(gCfg.dm_message || "");
 
+  
+  const [welcomeMsgMode, setWelcomeMsgMode] = useState(wCfg.msg_mode || "image");
+  const [welcomeEmbedTitle, setWelcomeEmbedTitle] = useState(wCfg.embed_title || "");
+  const [welcomeEmbedDesc, setWelcomeEmbedDesc] = useState(wCfg.embed_description || "");
+  const [welcomeEmbedThumbnail, setWelcomeEmbedThumbnail] = useState(wCfg.embed_thumbnail || "");
+  const [welcomeImageUrl, setWelcomeImageUrl] = useState(wCfg.image_url || "");
+
+  const [goodbyeMsgMode, setGoodbyeMsgMode] = useState(gCfg.msg_mode || "image");
+  const [goodbyeEmbedTitle, setGoodbyeEmbedTitle] = useState(gCfg.embed_title || "");
+  const [goodbyeEmbedDesc, setGoodbyeEmbedDesc] = useState(gCfg.embed_description || "");
+  const [goodbyeEmbedThumbnail, setGoodbyeEmbedThumbnail] = useState(gCfg.embed_thumbnail || "");
+  const [goodbyeImageUrl, setGoodbyeImageUrl] = useState(gCfg.image_url || "");
+
+  const handleUpload = async (file, type) => {
+    // We will just use the toast logic passed down or handled here
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload/image", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (!data.error) {
+        if (type === "welcome") setWelcomeImageUrl(data.url);
+        if (type === "goodbye") setGoodbyeImageUrl(data.url);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+    
   const isFirstRender = useRef(true);
 
   const getPayload = () => ({
@@ -36,6 +70,11 @@ export default function WelcomeSettings({
       message: welcomeText,
       dm_enabled: dmJoinEnabled,
       dm_message: dmJoinText,
+      msg_mode: welcomeMsgMode,
+      embed_title: welcomeEmbedTitle,
+      embed_description: welcomeEmbedDesc,
+      embed_thumbnail: welcomeEmbedThumbnail,
+      image_url: welcomeImageUrl
     },
     goodbye: {
       ...gCfg,
@@ -44,6 +83,11 @@ export default function WelcomeSettings({
       message: goodbyeText,
       dm_enabled: dmLeaveEnabled,
       dm_message: dmLeaveText,
+      msg_mode: goodbyeMsgMode,
+      embed_title: goodbyeEmbedTitle,
+      embed_description: goodbyeEmbedDesc,
+      embed_thumbnail: goodbyeEmbedThumbnail,
+      image_url: goodbyeImageUrl
     },
   });
 
@@ -163,7 +207,7 @@ export default function WelcomeSettings({
                         <button
                           type="button"
                           role="switch"
-                          aria-checked="false"
+                          aria-checked={welcomeEnabled} onClick={() => setWelcomeEnabled(!welcomeEnabled)}
                           className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
                         >
                           <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
@@ -206,7 +250,7 @@ export default function WelcomeSettings({
                           </div>
                           <textarea
                             rows={1}
-                            className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                            value={welcomeText} onChange={e => setWelcomeText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                             style={{
                               fontFamily:
                                 '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -265,7 +309,7 @@ export default function WelcomeSettings({
                       </div>
                       <textarea
                         rows={3}
-                        className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                        value={welcomeEmbedDesc} onChange={e => setWelcomeEmbedDesc(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                         style={{
                           fontFamily:
                             '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -338,7 +382,7 @@ export default function WelcomeSettings({
                         <button
                           type="button"
                           role="switch"
-                          aria-checked="true"
+                          aria-checked={welcomeMsgMode === "embed"} onClick={() => setWelcomeMsgMode(welcomeMsgMode === "embed" ? "image" : "embed")}
                           className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
                         >
                           <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black" />
@@ -353,7 +397,7 @@ export default function WelcomeSettings({
                         <button
                           type="button"
                           role="switch"
-                          aria-checked="true"
+                          aria-checked={welcomeEmbedThumbnail === "{user.avatar}"} onClick={() => setWelcomeEmbedThumbnail(welcomeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")}
                           className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
                         >
                           <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black" />
@@ -371,7 +415,7 @@ export default function WelcomeSettings({
                         <button
                           type="button"
                           role="switch"
-                          aria-checked="false"
+                          aria-checked={dmJoinEnabled} onClick={() => setDmJoinEnabled(!dmJoinEnabled)}
                           className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
                         >
                           <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
@@ -547,7 +591,7 @@ export default function WelcomeSettings({
                         <div className="flex gap-2.5 opacity-40 transition-opacity">
                           <img
                             src="/logo.png"
-                            alt="Peak Bot"
+                            alt="Orbit"
                             className="w-8 h-8 rounded-full flex-shrink-0 object-cover mt-0.5"
                           />
                           <div
@@ -559,7 +603,7 @@ export default function WelcomeSettings({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
                               <span className="text-xs font-semibold text-indigo-400 whitespace-nowrap">
-                                Peak Bot
+                                Orbit
                               </span>
                               <span className="inline-flex flex-shrink-0 items-center gap-[0.15em] px-1 py-px text-[10px] font-bold bg-[#5865F2] text-white rounded leading-none">
                                 <svg
@@ -678,7 +722,7 @@ export default function WelcomeSettings({
                           <button
                             type="button"
                             role="switch"
-                            aria-checked="false"
+                            aria-checked={goodbyeEnabled} onClick={() => setGoodbyeEnabled(!goodbyeEnabled)}
                             className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
                           >
                             <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
@@ -715,7 +759,7 @@ export default function WelcomeSettings({
                             </div>
                             <textarea
                               rows={4}
-                              className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                              value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                               style={{
                                 fontFamily:
                                   '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -876,7 +920,7 @@ export default function WelcomeSettings({
                         <button
                           type="button"
                           role="switch"
-                          aria-checked="false"
+                          aria-checked={goodbyeMsgMode === "embed"} onClick={() => setGoodbyeMsgMode(goodbyeMsgMode === "embed" ? "image" : "embed")}
                           className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
                         >
                           <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
@@ -913,7 +957,7 @@ export default function WelcomeSettings({
                             </div>
                             <textarea
                               rows={1}
-                              className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                              value={goodbyeText} onChange={e => setGoodbyeText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                               style={{
                                 fontFamily:
                                   '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -973,7 +1017,7 @@ export default function WelcomeSettings({
                         </div>
                         <textarea
                           rows={3}
-                          className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                          value={goodbyeEmbedDesc} onChange={e => setGoodbyeEmbedDesc(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                           style={{
                             fontFamily:
                               '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -1060,7 +1104,7 @@ export default function WelcomeSettings({
                           <button
                             type="button"
                             role="switch"
-                            aria-checked="true"
+                            aria-checked={goodbyeEmbedThumbnail === "{user.avatar}"} onClick={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")}
                             className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
                           >
                             <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black" />
@@ -1236,7 +1280,7 @@ export default function WelcomeSettings({
                           <div className="flex gap-2.5  transition-opacity">
                             <img
                               src="/logo.png"
-                              alt="Peak Bot"
+                              alt="Orbit"
                               className="w-8 h-8 rounded-full flex-shrink-0 object-cover mt-0.5"
                             />
                             <div
@@ -1248,7 +1292,7 @@ export default function WelcomeSettings({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
                                 <span className="text-xs font-semibold text-indigo-400 whitespace-nowrap">
-                                  Peak Bot
+                                  Orbit
                                 </span>
                                 <span className="inline-flex flex-shrink-0 items-center gap-[0.15em] px-1 py-px text-[10px] font-bold bg-[#5865F2] text-white rounded leading-none">
                                   <svg
@@ -1287,7 +1331,7 @@ export default function WelcomeSettings({
                                       className="w-3 h-3 rounded-full"
                                     />
                                     <span className="text-[10px] text-neutral-500">
-                                      Peak Bot
+                                      Orbit
                                     </span>
                                   </div>
                                 </div>
@@ -1357,7 +1401,7 @@ export default function WelcomeSettings({
                             <button
                               type="button"
                               role="switch"
-                              aria-checked="false"
+                              aria-checked={dmLeaveEnabled} onClick={() => setDmLeaveEnabled(!dmLeaveEnabled)}
                               className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
                             >
                               <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]" />
@@ -1394,7 +1438,7 @@ export default function WelcomeSettings({
                               </div>
                               <textarea
                                 rows={3}
-                                className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                                value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                                 style={{
                                   fontFamily:
                                     '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
