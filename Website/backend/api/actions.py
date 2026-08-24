@@ -812,8 +812,15 @@ class ActionsMixin:
             if not msg_kwargs:
                 return web.json_response({"error": "Message cannot be empty"}, status=400)
                 
-            await channel.send(**msg_kwargs)
-            return web.json_response({"success": True})
+            msg = await channel.send(**msg_kwargs)
+            
+            # Update database with message_id
+            rr["message_id"] = str(msg.id)
+            rr["channel_id"] = str(channel_id)
+            from Components.Dashboard.Roles.reaction_panels import save_reaction_role
+            save_reaction_role(guild_id, rr)
+            
+            return web.json_response({"success": True, "message_id": str(msg.id)})
         except discord.Forbidden:
             return web.json_response({"error": "Bot missing permissions to send message in that channel"}, status=403)
         except Exception as e:

@@ -209,6 +209,17 @@ export default function Roles({ guildId }) {
       });
   }, [guildId]);
 
+  const fetchReactionRoles = () => {
+    fetch(`/api/reactionroles/${guildId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.error) setReactionRoles(d);
+      })
+      .catch(console.error);
+  };
+
   useEffect(() => {
     if (!loading) {
       setInitialStateStr(JSON.stringify(getPayload()));
