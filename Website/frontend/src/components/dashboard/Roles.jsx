@@ -327,7 +327,7 @@ export default function Roles({ guildId }) {
                     <div
                       data-tour="reactionroles-list"
                       className="scroll-mt-24 p-4 sm:p-5 flex-1 min-h-0"
-                    >                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 auto-rows-fr h-full">
+                    >                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 auto-rows-[120px]">
                         {reactionRoles.length < 9 && (
                           <button
                             type="button"
