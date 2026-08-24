@@ -7,7 +7,7 @@ import aiohttp
 import discord
 from typing import Dict, Any
 from Components.Dashboard.Welcome._storage import load_welcome_config, save_welcome_config
-from Components.Commands.Goodbye._storage import load_goodbye_config, save_goodbye_config
+from Components.Dashboard.Goodbye._storage import load_goodbye_config, save_goodbye_config
 from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
 from Components.Commands.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
 from Components.Commands.AutoResponder._storage import load_responses, save_responses
@@ -479,7 +479,7 @@ class ActionsMixin:
                 return web.json_response({"error": "Could not find you in the server to DM."}, status=400)
             
             from Components.Dashboard.Welcome._views import format_welcome_string
-            from Components.Commands.Goodbye._views import format_goodbye_string
+            from Components.Dashboard.Goodbye._views import format_goodbye_string
             import discord
             import re
             
@@ -521,7 +521,7 @@ class ActionsMixin:
                     return web.json_response({"error": "No DM message configured for Welcome."}, status=400)
                     
             elif dm_type == "goodbye":
-                from Components.Commands.Goodbye._storage import load_goodbye_config
+                from Components.Dashboard.Goodbye._storage import load_goodbye_config
                 config = load_goodbye_config(guild_id)
                 msg = config.get("dm_message", "")
                 if msg:

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Commands.Goodbye._storage import load_goodbye_config
-from Components.Commands.Goodbye._views import format_goodbye_string
+from Components.Dashboard.Goodbye._storage import load_goodbye_config
+from Components.Dashboard.Goodbye._views import format_goodbye_string
 import re
 
 class GoodbyeListener(commands.Cog):
@@ -148,7 +148,7 @@ class GoodbyeListener(commands.Cog):
         # Default Image mode
         formatted = fmt_text(config.get("message", ""))
 
-        from Components.Commands.Goodbye.image_gen import generate_goodbye_image
+        from Components.Dashboard.Goodbye.image_gen import generate_goodbye_image
         import aiohttp
         import pathlib
 

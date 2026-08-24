@@ -257,7 +257,7 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_welcome_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Goodbye":
-                                            from Components.Commands.Goodbye._storage import load_goodbye_config, save_goodbye_config
+                                            from Components.Dashboard.Goodbye._storage import load_goodbye_config, save_goodbye_config
                                             cfg = load_goodbye_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_goodbye_config(message.guild.id, cfg)
