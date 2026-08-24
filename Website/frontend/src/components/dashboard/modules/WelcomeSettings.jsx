@@ -221,7 +221,7 @@ export default function WelcomeSettings({
                       className="w-36 sm:w-52 rounded-xl scroll-mt-24 transition-[box-shadow] "
                     >
                       <div className="jsx-556cf662b09b3c73 w-full">
-                        <CustomSelect options={channels?.map(ch => ({ label: "# " + ch.name, value: ch.id }))} value={welcomeChannel} onChange={(val) => setWelcomeChannel(val)} placeholder="# select channel" />
+                        <CustomSelect options={(channels || []).map(ch => ({ label: "# " + ch.name, value: ch.id }))} value={welcomeChannel} onChange={(val) => setWelcomeChannel(val)} placeholder="# select channel" />
                       </div>
                     </div>
                     <span
@@ -715,7 +715,7 @@ export default function WelcomeSettings({
                     <div className="flex items-center gap-2.5 flex-shrink-0">
                       <div className="w-36 sm:w-52 rounded-xl transition-all ">
                         <div className="jsx-556cf662b09b3c73 w-full">
-                          <CustomSelect options={channels?.map(ch => ({ label: "# " + ch.name, value: ch.id }))} value={goodbyeChannel} onChange={(val) => setGoodbyeChannel(val)} placeholder="# select channel" />
+                          <CustomSelect options={(channels || []).map(ch => ({ label: "# " + ch.name, value: ch.id }))} value={goodbyeChannel} onChange={(val) => setGoodbyeChannel(val)} placeholder="# select channel" />
                         </div>
                       </div>
                       <div className="flex items-center gap-3">

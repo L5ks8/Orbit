@@ -25,7 +25,7 @@ export const modulesList = [
     { id: 'security', category: 'Moderation', name: 'Security', desc: 'Advanced server protection and verification.', iconColor: 'rgba(239, 68, 68, 0.2)', icon: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></> },
     { id: 'verify', category: 'Moderation', name: 'Verification', desc: 'Require users to verify before accessing the server.', iconColor: 'rgba(16, 185, 129, 0.2)', icon: <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3" /> },
 
-    { id: 'welcome', category: 'Engagement', name: 'Welcome & Goodbye Messages', desc: 'Greet new users with custom text and image cards.', iconColor: 'rgba(59, 130, 246, 0.2)', icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></> },
+    { id: 'welcomegoodbye', category: 'Engagement', name: 'Welcome & Goodbye Messages', desc: 'Greet new users with custom text and image cards.', iconColor: 'rgba(59, 130, 246, 0.2)', icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></> },
     { id: 'level', category: 'Engagement', name: 'Leveling System', desc: 'Reward active members with XP and roles.', iconColor: 'rgba(16, 185, 129, 0.2)', icon: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></> },
     { id: 'boost', category: 'Engagement', name: 'Boost Messages', desc: 'Announce when someone boosts your server.', iconColor: 'rgba(244, 63, 94, 0.2)', icon: <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z M7 7h.01" /> },
     { id: 'economy', category: 'Engagement', name: 'Economy', desc: 'Global server currency, shops, and gambling.', iconColor: 'rgba(234, 179, 8, 0.2)', icon: <><circle cx="12" cy="12" r="10" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8 M12 18V6" /></> },
@@ -204,7 +204,7 @@ export default function Modules({ guildId }) {
     if (moduleId === 'automod') Component = AutomodSettings;
     else if (moduleId === 'tickets') Component = TicketSettings;
     else if (moduleId === 'autoresponder') Component = AutoresponderSettings;
-    else if (moduleId === 'welcome') Component = WelcomeSettings;
+    else if (moduleId === 'welcomegoodbye') Component = WelcomeSettings;
     else if (moduleId === 'appeals') Component = BanAppealsSettings;
     else if (moduleId === 'automation') Component = AutomationSettings;
     else if (moduleId === 'boost') Component = BoostMessagesSettings;
@@ -218,8 +218,8 @@ export default function Modules({ guildId }) {
     else return <div style={{ padding: '50px', color: '#fff', textAlign: 'center' }}>Module not found.</div>;
 
     return (
-      <div style={{ padding: '40px', maxWidth: moduleId === 'welcome' ? '1200px' : '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
-        {moduleId !== 'welcome' && (
+      <div style={{ padding: '40px', maxWidth: moduleId === 'welcomegoodbye' ? '1200px' : '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+        {moduleId !== 'welcomegoodbye' && (
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ background: moduleInfo.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '16px' }}>
