@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Components.Systems.JoinRole._storage import load_join_roles
+from Components.Dashboard.Roles._storage import load_join_roles
 
 class JoinRoleListener(commands.Cog):
     def __init__(self, bot: commands.Bot):

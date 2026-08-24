@@ -1,6 +1,6 @@
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Components.Systems.JoinRole._storage import load_join_roles, clear_join_roles
+from Components.Dashboard.Roles._storage import load_join_roles, clear_join_roles
 from Components.Commands._utils import make_embed
 
 class JoinRoleLayout(discord.ui.View):
@@ -50,7 +50,7 @@ class JoinRoleLayout(discord.ui.View):
 
         buttons.append(btn_close)
 
-        roles_text = "\n".join(f"> • {rm}" for rm in role_mentions) if role_mentions else "`No automatic join roles currently configured.`"
+        roles_text = "\n".join(f"> ï¿½ {rm}" for rm in role_mentions) if role_mentions else "`No automatic join roles currently configured.`"
         embed = discord.Embed(title=f"Automatic Join Roles: {self.guild.name}", color=discord.Color.dark_theme())
         embed.add_field(name="Action", value=self.action_summary, inline=True)
         embed.add_field(name="Total Configured", value=f"`{len(role_ids)}`", inline=True)

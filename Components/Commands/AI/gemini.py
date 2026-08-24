@@ -282,7 +282,7 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_jtc_config(message.guild.id, cfg)
                                         elif raw_mod_name == "JoinRoles":
-                                            from Components.Systems.JoinRole._storage import load_join_roles, save_join_roles
+                                            from Components.Dashboard.Roles._storage import load_join_roles, save_join_roles
                                             cfg = load_join_roles(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_join_roles(message.guild.id, cfg)

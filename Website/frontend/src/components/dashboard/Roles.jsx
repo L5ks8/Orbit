@@ -1,6 +1,240 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { getCache, setCache } from "../../utils/cache";
+import { useToast } from "../ui/Toast";
+
+const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = availableRoles.filter(
+    (r) =>
+      r.name.toLowerCase().includes(search.toLowerCase()) &&
+      !selectedRoles.includes(r.id),
+  );
+
+  const removeRole = (roleId) => {
+    onChange(selectedRoles.filter((id) => id !== roleId));
+  };
+
+  return (
+    <div className="w-full" ref={ref}>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between gap-2 min-h-[40px] px-3 py-1.5 bg-neutral-800 border rounded-xl text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer"
+        >
+          <div className="flex-1 flex flex-wrap gap-1">
+            {selectedRoles.length === 0 ? (
+              <span className="text-neutral-500 text-sm py-0.5">
+                Select roles...
+              </span>
+            ) : (
+              selectedRoles.map((roleId) => {
+                const role = availableRoles.find((r) => r.id === roleId);
+                return (
+                  <span
+                    key={roleId}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-neutral-700 text-white"
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{
+                        backgroundColor: role?.color || "#b9bbbe",
+                      }}
+                    />
+                    {role?.name || `Unknown (${roleId})`}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeRole(roleId);
+                      }}
+                      className="ml-0.5 text-neutral-400 hover:text-white"
+                    >
+                      ×
+                    </button>
+                  </span>
+                );
+              })
+            )}
+          </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={24}
+            height={24}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+        {isOpen && (
+          <div className="absolute z-30 mt-1 left-0 right-0 p-1 rounded-xl bg-neutral-800 border border-neutral-700 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_18px_40px_-20px_rgba(0,0,0,0.9)] max-h-[220px] overflow-hidden flex flex-col">
+            <div className="px-2 py-1.5">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search roles..."
+                className="!w-full h-8 px-2.5 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500"
+              />
+            </div>
+            <div className="overflow-y-auto flex-1 scrollbar-thin">
+              {filtered.length === 0 ? (
+                <div className="px-3 py-2 text-sm text-neutral-500">
+                  No roles found
+                </div>
+              ) : (
+                filtered.map((role) => (
+                  <button
+                    key={role.id}
+                    type="button"
+                    onClick={() => {
+                      onChange([...selectedRoles, role.id]);
+                      setSearch("");
+                    }}
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-sm text-neutral-300 hover:bg-white/5 hover:text-white transition-colors flex items-center gap-2"
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: role.color || "#b9bbbe" }}
+                    />
+                    {role.name}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function Roles({ guildId }) {
+  const toast = useToast();
+
+  const cachedData = getCache(`roles_serverData_${guildId}`);
+  const [serverData, setServerData] = useState(cachedData || null);
+  const [loading, setLoading] = useState(!cachedData);
+  const [initialStateStr, setInitialStateStr] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Auto roles state
+  const jrInit = cachedData?.config?.joinroles || {};
+  const [autoRolesEnabled, setAutoRolesEnabled] = useState(
+    jrInit.enabled || false,
+  );
+  const [userRoles, setUserRoles] = useState(
+    (jrInit.user_roles || []).map(String),
+  );
+
+  const availableRoles = (serverData?.roles || []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    color: r.color,
+  }));
+
+  const getPayload = () => ({
+    joinroles: {
+      enabled: autoRolesEnabled,
+      user_roles_enabled: userRoles.length > 0,
+      user_roles: userRoles,
+      bot_roles_enabled:
+        serverData?.config?.joinroles?.bot_roles_enabled || false,
+      bot_roles: serverData?.config?.joinroles?.bot_roles || [],
+      tag_roles_enabled:
+        serverData?.config?.joinroles?.tag_roles_enabled || false,
+      tag_role: serverData?.config?.joinroles?.tag_role || "",
+    },
+  });
+
+  useEffect(() => {
+    if (!guildId) return;
+    if (!serverData) setLoading(true);
+
+    fetch(`/api/config/${guildId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setServerData(data);
+        setCache(`roles_serverData_${guildId}`, data);
+        const jr = data?.config?.joinroles || {};
+        setAutoRolesEnabled(jr.enabled || false);
+        setUserRoles((jr.user_roles || []).map(String));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load roles config", err);
+        setLoading(false);
+      });
+  }, [guildId]);
+
+  useEffect(() => {
+    if (!loading) {
+      setInitialStateStr(JSON.stringify(getPayload()));
+    }
+  }, [loading]);
+
+  const handleSave = async (payloadStr) => {
+    setIsSaving(true);
+    try {
+      const payloadString =
+        typeof payloadStr === "string"
+          ? payloadStr
+          : JSON.stringify(getPayload());
+      const res = await fetch(`/api/config/${guildId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: payloadString,
+      });
+      const data = await res.json();
+      if (data.error) {
+        toast.error("Failed to save: " + data.error);
+      } else {
+        toast.success("Auto roles saved");
+        setInitialStateStr(payloadString);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Error saving settings");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
+
+  useEffect(() => {
+    if (!initialStateStr || !isDirty) return;
+    const timeoutId = setTimeout(() => {
+      handleSave(currentPayloadStr);
+    }, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [currentPayloadStr, initialStateStr, isDirty]);
+
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
       <div>
@@ -308,7 +542,7 @@ export default function Roles({ guildId }) {
                       <div className="ml-auto flex items-center">
                         <div className="flex items-center gap-2.5">
                           <span className="text-[11px] tabular-nums text-neutral-500">
-                            0 assigned
+                            {userRoles.length} assigned
                           </span>
                         </div>
                       </div>
@@ -318,34 +552,11 @@ export default function Roles({ guildId }) {
                         Given to every member the moment they join, before they
                         do anything.
                       </p>
-                      <div className=" w-full">
-                        <div className=" relative">
-                          <button
-                            type="button"
-                            className=" w-full flex items-center justify-between gap-2 min-h-[40px] px-3 py-1.5 bg-neutral-800 border rounded-xl text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer"
-                          >
-                            <div className=" flex-1 flex flex-wrap gap-1">
-                              <span className=" text-neutral-500 text-sm py-0.5">
-                                Select roles...
-                              </span>
-                            </div>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width={24}
-                              height={24}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform "
-                            >
-                              <path d="m6 9 6 6 6-6" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
+                      <AutoRolesDropdown
+                        selectedRoles={userRoles}
+                        availableRoles={availableRoles}
+                        onChange={setUserRoles}
+                      />
                     </div>
                   </div>
                 </div>
