@@ -512,7 +512,7 @@ async def main():
         from Website.backend.main import setup_web_app
         import os
         app = setup_web_app(bot)
-        runner = web.AppRunner(app)
+        runner = web.AppRunner(app, access_log=None)
         await runner.setup()
         port = int(os.environ.get("PORT", 10000))
         site = web.TCPSite(runner, "0.0.0.0", port)
