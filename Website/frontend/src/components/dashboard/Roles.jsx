@@ -352,7 +352,7 @@ export default function Roles({ guildId }) {
                                 e.stopPropagation();
                                 setPanelToDelete(rr);
                               }}
-                              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white hover:bg-red-500 hover:border-red-600 transition-all duration-150"
+                              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 opacity-0 group-hover:opacity-100 hover:!bg-red-500 hover:!border-red-500 hover:!text-white transition-all duration-150"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                             </button>
@@ -375,57 +375,74 @@ export default function Roles({ guildId }) {
                                 {rr.embed?.title || rr.name || "Untitled Panel"}
                               </span>
                             </div>
-                            <div className="text-xs text-neutral-500 flex items-center gap-1 mt-auto w-full">
-                              <svg xmlns="http://www.w3.org/2000/svg" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="9" y2="9" /><line x1="4" x2="20" y1="15" y2="15" /><line x1="10" x2="8" y1="3" y2="21" /><line x1="16" x2="14" y1="3" y2="21" /></svg>
-                              <span className="truncate">{rr.channel_id ? `Channel ID: ${rr.channel_id}` : "No channel selected"}</span>
+                            <div className="text-xs text-neutral-500 flex items-center justify-between mt-auto w-full">
+                              <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                                <span className="truncate">
+                                  {rr.channel_id ? (
+                                    serverData?.channels?.find(c => c.id === rr.channel_id)
+                                      ? `# ${serverData.channels.find(c => c.id === rr.channel_id).name}`
+                                      : `# Channel ID: ${rr.channel_id}`
+                                  ) : "No channel selected"}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                disabled={rr.message_id || !rr.channel_id || isSaving}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (rr.message_id || !rr.channel_id || isSaving) return;
+                                  setIsSaving(true);
+                                  try {
+                                    const res = await fetch(`/api/action/${guildId}/send_reactionrole`, {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem("token")}` },
+                                      body: JSON.stringify({ id: rr.id, channel_id: rr.channel_id })
+                                    });
+                                    if (res.ok) {
+                                      toast.success("Panel posted successfully");
+                                      fetchReactionRoles();
+                                    } else {
+                                      const data = await res.json();
+                                      toast.error(data.error || "Failed to post");
+                                    }
+                                  } catch (err) { 
+                                    toast.error("Error posting panel"); 
+                                    console.error(err); 
+                                  } finally {
+                                    setIsSaving(false);
+                                  }
+                                }}
+                                className={`flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded border text-[11px] font-medium transition-colors ${
+                                  rr.message_id 
+                                    ? "bg-[#172e22] border-[#224734] text-[#4ade80]" 
+                                    : "bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:text-white"
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${rr.message_id ? "bg-[#4ade80]" : "bg-neutral-500"}`} />
+                                {rr.message_id ? "Posted" : "Post"}
+                              </button>
                             </div>
                           </div>
                         ))}
                         
-                        {Array.from({ length: Math.max(9 - reactionRoles.length, 1) }).map((_, idx) => {
-                          if (idx === 0) {
-                            return (
-                              <button
-                                key={`new-panel-${idx}`}
-                                type="button"
-                                onClick={() => {
-                                  setRrBuilderData(null);
-                                  setRrBuilderOpen(true);
-                                }}
-                                data-tour="reactionroles-create"
-                                style={{ borderStyle: 'dashed' }}
-                                className="scroll-mt-24 group rounded-xl border border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-                              >
-                                <span className="grid place-items-center w-8 h-8 rounded-full bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4">
-                                    <path d="M5 12h14" />
-                                    <path d="M12 5v14" />
-                                  </svg>
-                                </span>
-                                <span className="text-xs font-medium">New panel</span>
-                              </button>
-                            );
-                          }
-                          
-                          return (
-                            <button
-                              key={`empty-${idx}`}
-                              type="button"
-                              onClick={() => {
-                                setRrBuilderData(null);
-                                setRrBuilderOpen(true);
-                              }}
-                              aria-label="Add a reaction panel"
-                              style={{ borderStyle: 'dashed' }}
-                              className="group rounded-xl border border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                <path d="M5 12h14" />
-                                <path d="M12 5v14" />
-                              </svg>
-                            </button>
-                          );
-                        })}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRrBuilderData(null);
+                            setRrBuilderOpen(true);
+                          }}
+                          data-tour="reactionroles-create"
+                          style={{ borderStyle: 'dashed' }}
+                          className="scroll-mt-24 group rounded-xl border border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                        >
+                          <span className="grid place-items-center w-8 h-8 rounded-full bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4">
+                              <path d="M5 12h14" />
+                              <path d="M12 5v14" />
+                            </svg>
+                          </span>
+                          <span className="text-xs font-medium">New panel</span>
+                        </button>
                       </div>
                     </div>
                   </div>

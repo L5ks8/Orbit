@@ -644,29 +644,6 @@ export default function ReactionRoleBuilder({
                 Add at least one role
               </span>
             )}
-            {initialData && (
-              <button
-                onClick={async () => {
-                  if(!window.confirm("Delete this panel?")) return;
-                  setIsSaving(true);
-                  try {
-                    const res = await fetch(`/api/reactionroles/${guildId}/${initialData.id}`, { 
-                      method: 'DELETE',
-                      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-                    });
-                    if (res.ok) {
-                      toast.success("Panel deleted");
-                      if(onDeleteSuccess) onDeleteSuccess();
-                      onClose();
-                    }
-                  } finally { setIsSaving(false); }
-                }}
-                className="text-xs text-red-500 hover:text-red-400 font-semibold px-2"
-                disabled={isSaving}
-              >
-                Delete
-              </button>
-            )}
             <button 
               onClick={handleSave} 
               disabled={isSaving || components.length === 0 || !channelId} 
