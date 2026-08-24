@@ -34,7 +34,7 @@ def get_config(collection_name: str, guild_id: int, default_config: Dict[str, An
     if not doc:
         file_to_collection = {
             'ticket.json': 'Ticket', 'verify.json': 'Verify', 'automod.json': 'AutoMod',
-            'logs.json': 'Log', 'welcome.json': 'Welcome', 'goodbye.json': 'Goodbye',
+            'welcome.json': 'Welcome', 'goodbye.json': 'Goodbye',
             'boost.json': 'Boost', 'level_config.json': 'Level', 'jtc_config.json': 'JoinToCreate',
             'jtc_channels.json': 'JoinToCreate_Channels', 'blacklist.json': 'Blacklist',
             'whitelist.json': 'Whitelist', 'afk.json': 'Afk', 'autoresponder.json': 'AutoResponder',

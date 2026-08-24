@@ -58,7 +58,8 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
     }
     
     try:
-        data = get_config("Log", guild_id)
+        automod_data = get_config("AutoMod", guild_id)
+        data = automod_data.get("logs", {}) if automod_data else default.copy()
         if not data:
             data = default.copy()
     except Exception:
@@ -102,9 +103,9 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
     return data
 
 def save_log_config(guild_id: int, config: Dict[str, Any]) -> None:
-    path = _get_file_path(guild_id)
-    if True:
-        set_config("Log", guild_id, config)
+    automod_data = get_config("AutoMod", guild_id) or {}
+    automod_data["logs"] = config
+    set_config("AutoMod", guild_id, automod_data)
 
 async def log_event(guild: discord.Guild, category: str, title: str, description: str, target_channel_obj: discord.abc.GuildChannel = None, executor: discord.Member = None) -> None:
     if not guild:
