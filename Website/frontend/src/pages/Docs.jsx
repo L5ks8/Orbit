@@ -789,6 +789,7 @@ export const docsData = {
       { id: 'overview', label: 'Overview' },
       { id: 'general', label: 'General / Utility' },
       { id: 'moderation', label: 'Moderation' },
+      { id: 'features', label: 'Feature Commands' },
       { id: 'owner', label: 'Owner & Dev' }
     ],
     content: (
@@ -815,7 +816,19 @@ export const docsData = {
             { name: '-kick [@user] [reason]', type: 'Command', description: 'Kicks a user from the server.' },
             { name: '-mute [@user] [duration]', type: 'Command', description: 'Timeouts a user for the specified duration (e.g. 10m, 1h).' },
             { name: '-warn [@user] [reason]', type: 'Command', description: 'Issues a formal warning and logs it in their moderation history.' },
-            { name: '-purge [amount]', type: 'Command', description: 'Deletes up to 100 recent messages in the current channel.' }
+            { name: '-purge [amount]', type: 'Command', description: 'Deletes up to 100 recent messages in the current channel.' },
+            { name: '-slowmode [duration]', type: 'Command', description: 'Sets a slowmode delay for the current channel.' }
+          ]}
+        />
+
+        <h2 id="features" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Feature Commands</h2>
+        <PropertiesTable 
+          properties={[
+            { name: '-rank / -leaderboard', type: 'Leveling', description: "View your level card or the server's top chatters." },
+            { name: '/work / /daily', type: 'Economy', description: 'Earn daily/hourly currency in the server.' },
+            { name: '/ticket <add | remove | close>', type: 'Tickets', description: 'Manage a ticket channel (e.g. add a user or close the ticket).' },
+            { name: '-vc_mute / -vc_lock / -vc_move', type: 'Voice', description: 'Moderator voice controls to manage active voice channels.' },
+            { name: '-addrole / -removerole', type: 'Roles', description: 'Quickly grant or revoke a role from a user without opening their profile.' }
           ]}
         />
 
