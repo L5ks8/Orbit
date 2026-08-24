@@ -24,12 +24,8 @@ function DashboardInner() {
   const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
-    if (!guildId) return;
-    fetch('/api/guilds', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
+    if (!guildId || !user) return;
+    fetch('/api/guilds')
       .then(res => res.json())
       .then(data => {
         let guildsArray = [];

@@ -7,6 +7,30 @@ export default function TopNav({ guildName, setSidebarOpen }) {
   const { user } = useAuth();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [clearedTime, setClearedTime] = useState(() => {
+    return parseInt(localStorage.getItem('orbit_cleared_notifications') || '0', 10);
+  });
+
+  React.useEffect(() => {
+    if (user) {
+      fetch('/api/notifications')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            const active = data.filter(n => n.timestamp > clearedTime);
+            setNotifications(active);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [user, clearedTime, showNotifications]);
+
+  const clearAll = () => {
+    const now = Math.floor(Date.now() / 1000);
+    localStorage.setItem('orbit_cleared_notifications', now.toString());
+    setClearedTime(now);
+  };
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-neutral-900/90 backdrop-blur-sm border-b border-neutral-800">
@@ -45,23 +69,49 @@ export default function TopNav({ guildName, setSidebarOpen }) {
               onClick={() => { setShowNotifications(!showNotifications); setShowProfileDropdown(false); }}
             >
               <Bell size={20} />
+              {notifications.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-neutral-900"></span>
+              )}
             </button>
             {showNotifications && (
               <div className="absolute right-0 top-full mt-2 w-[320px] bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-50 overflow-hidden">
                 <div className="flex items-center justify-between p-4 border-b border-neutral-800">
                   <h3 className="text-[15px] font-semibold text-white m-0">Notifications</h3>
-                  <button className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 7 17l-5-5"></path><path d="m22 10-7.5 7.5L13 16"></path></svg>
-                    Clear all
-                  </button>
+                  {notifications.length > 0 && (
+                    <button onClick={clearAll} className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 7 17l-5-5"></path><path d="m22 10-7.5 7.5L13 16"></path></svg>
+                      Clear all
+                    </button>
+                  )}
                 </div>
-                <div className="flex flex-col items-center p-12 text-center">
-                  <div className="w-14 h-14 bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-500 mb-5">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                
+                {notifications.length > 0 ? (
+                  <div className="flex flex-col max-h-[300px] overflow-y-auto">
+                    {notifications.map((notif, idx) => (
+                      <div key={notif._id || idx} className="p-4 border-b border-neutral-800/50 hover:bg-neutral-800/30 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Bell size={14} />
+                          </div>
+                          <div>
+                            <p className="text-sm text-white m-0 leading-snug">{notif.message}</p>
+                            <p className="text-[11px] text-neutral-500 m-0 mt-1.5">
+                              {new Date(notif.timestamp * 1000).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <h4 className="text-[15px] font-semibold text-white m-0 mb-1.5">You're all caught up</h4>
-                  <p className="text-[13px] text-neutral-400 m-0">Milestones, recaps and alerts will show up here.</p>
-                </div>
+                ) : (
+                  <div className="flex flex-col items-center p-12 text-center">
+                    <div className="w-14 h-14 bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-500 mb-5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                    </div>
+                    <h4 className="text-[15px] font-semibold text-white m-0 mb-1.5">You're all caught up</h4>
+                    <p className="text-[13px] text-neutral-400 m-0">Milestones, recaps and alerts will show up here.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

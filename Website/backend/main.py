@@ -104,6 +104,7 @@ def setup_web_app(bot) -> web.Application:
     
     app.router.add_get("/api/user", dashboard.api_user)
     app.router.add_get("/api/user/{id}", dashboard.api_resolve_user)
+    app.router.add_get("/api/notifications", dashboard.api_notifications)
     app.router.add_get("/api/public_leaderboard/{id}", dashboard.api_public_leaderboard)
     app.router.add_get("/api/stats", dashboard.api_stats)
     app.router.add_get("/api/uptime", dashboard.api_uptime)

@@ -233,6 +233,28 @@ class AuthMixin:
             
         return web.json_response(session)
 
+    async def api_notifications(self, request: web.Request):
+        session = await self.get_user_session(request)
+        if not session:
+            return web.json_response({"error": "Not authenticated"}, status=401)
+            
+        try:
+            from Components.Database.mongodb import get_db
+            db = get_db()
+            user_id = str(session["id"])
+            
+            # Fetch notifications where target is "all" or the specific user_id
+            notifications = list(db["Notifications"].find(
+                {"target": {"$in": ["all", user_id]}}
+            ).sort("timestamp", -1).limit(20))
+            
+            for notif in notifications:
+                notif["_id"] = str(notif["_id"])
+                
+            return web.json_response(notifications)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_resolve_user(self, request: web.Request):
         user_id_str = request.match_info.get("id", "")
         if not user_id_str.isdigit():
