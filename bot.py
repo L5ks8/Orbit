@@ -324,6 +324,12 @@ class OrbitBot(commands.Bot):
         except Exception as e:
             print(f"Failed to load ReactionRole Listener: {e}")
 
+        try:
+            await self.load_extension("Components.Systems.JoinToCreate.jtclistener")
+            print("Loaded JTC Listener")
+        except Exception as e:
+            print(f"Failed to load JTC Listener: {e}")
+
         # Load root command group modules first (e.g. Commands/Role/role.py, Commands/Ticket/ticket.py)
         for file_path in commands_dir.rglob("*.py"):
             if file_path.name.startswith("_"):
