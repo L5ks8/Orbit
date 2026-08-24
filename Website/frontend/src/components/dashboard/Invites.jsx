@@ -19,7 +19,14 @@ export default function Invites() {
   };
 
   return (
-    <div className="pb-overview-container" style={{ maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+    <div
+      className="pb-overview-container"
+      style={{
+        maxWidth: "1000px",
+        margin: "0 auto",
+        animation: "fadeIn 0.2s ease-out",
+      }}
+    >
       <div>
         <div data-tour="feature-header" className="scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -863,7 +870,6 @@ export default function Invites() {
               </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </div>
