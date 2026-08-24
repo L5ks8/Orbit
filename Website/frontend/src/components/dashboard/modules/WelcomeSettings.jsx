@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import DiscordPreview, { parseDiscordMarkdown } from "../../ui/DiscordPreview";
+import Toggle from "../../ui/Toggle";
+import CustomSelect from "../../ui/CustomSelect";
 
 export default function WelcomeSettings({
   config,
@@ -61,6 +63,54 @@ export default function WelcomeSettings({
   };
     
   const isFirstRender = useRef(true);
+
+  const [activeRef, setActiveRef] = useState(null);
+  const welcomeTextRef = useRef(null);
+  const welcomeDescRef = useRef(null);
+  const dmJoinRef = useRef(null);
+  const goodbyeTextRef = useRef(null);
+  const goodbyeDescRef = useRef(null);
+  const dmLeaveRef = useRef(null);
+
+  
+  const handleTestDm = async (type) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/server/${config.id}/test-dm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ type }),
+      });
+      const data = await res.json();
+      if (data.error) alert('Error: ' + data.error);
+      else alert('Test DM sent!');
+    } catch (e) {
+      alert('Failed to send test DM');
+    }
+  };
+
+  const insertVar = (variable) => {
+    if (!activeRef || !activeRef.current) return;
+    const el = activeRef.current;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const val = el.value;
+    const newVal = val.substring(0, start) + variable + val.substring(end);
+    
+    const setterName = el.getAttribute("data-setter");
+    if (setterName === "welcomeText") setWelcomeText(newVal);
+    if (setterName === "welcomeEmbedDesc") setWelcomeEmbedDesc(newVal);
+    if (setterName === "dmJoinText") setDmJoinText(newVal);
+    if (setterName === "goodbyeText") setGoodbyeText(newVal);
+    if (setterName === "goodbyeEmbedDesc") setGoodbyeEmbedDesc(newVal);
+    if (setterName === "dmLeaveText") setDmLeaveText(newVal);
+
+    setTimeout(() => {
+      el.focus();
+      el.selectionStart = el.selectionEnd = start + variable.length;
+    }, 0);
+  };
+
 
   const getPayload = () => ({
     welcome: {
@@ -171,21 +221,7 @@ export default function WelcomeSettings({
                       className="w-36 sm:w-52 rounded-xl scroll-mt-24 transition-[box-shadow] "
                     >
                       <div className="jsx-556cf662b09b3c73 w-full">
-                        <div className="relative">
-                            <select
-                              value={welcomeChannel}
-                              onChange={(e) => setWelcomeChannel(e.target.value)}
-                              className="w-full appearance-none flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer text-white focus:outline-none focus:border-neutral-500"
-                            >
-                              <option value="" disabled className="text-neutral-500"># select channel</option>
-                              {channels?.map(ch => (
-                                <option key={ch.id} value={ch.id}># {ch.name}</option>
-                              ))}
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="m6 9 6 6 6-6" /></svg>
-                            </div>
-                          </div>
+                        <CustomSelect options={channels?.map(ch => ({ label: "# " + ch.name, value: ch.id }))} value={welcomeChannel} onChange={(val) => setWelcomeChannel(val)} placeholder="# select channel" />
                       </div>
                     </div>
                     <span
@@ -193,14 +229,7 @@ export default function WelcomeSettings({
                       className="inline-flex scroll-mt-24"
                     >
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={welcomeEnabled} onClick={() => setWelcomeEnabled(!welcomeEnabled)}
-                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ welcomeEnabled ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
-                        >
-                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ welcomeEnabled ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
-                        </button>
+                        <Toggle checked={welcomeEnabled} onChange={() => setWelcomeEnabled(!welcomeEnabled)} />
                       </div>
                     </span>
                   </div>
@@ -218,7 +247,7 @@ export default function WelcomeSettings({
                         >
                           <textarea
                             rows={1}
-                            value={welcomeText} onChange={e => setWelcomeText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                            ref={welcomeTextRef} data-setter="welcomeText" onFocus={() => setActiveRef(welcomeTextRef)} value={welcomeText} onChange={e => setWelcomeText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                             style={{
                               fontFamily:
                                 '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -256,7 +285,7 @@ export default function WelcomeSettings({
                     >
                       <textarea
                         rows={3}
-                        value={welcomeEmbedDesc} onChange={e => setWelcomeEmbedDesc(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                        ref={welcomeDescRef} data-setter="welcomeEmbedDesc" onFocus={() => setActiveRef(welcomeDescRef)} value={welcomeEmbedDesc} onChange={e => setWelcomeEmbedDesc(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                         style={{
                           fontFamily:
                             '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -281,35 +310,35 @@ export default function WelcomeSettings({
                   <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
                     <div className="flex items-center gap-1 flex-wrap">
                       <button
-                        type="button"
+                        type="button" onClick={() => insertVar("{user}")}
                         title="Insert {user}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                       >
                         @user
                       </button>
                       <button
-                        type="button"
+                        type="button" onClick={() => insertVar("{user.displayName}")}
                         title="Insert {user.displayName}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                       >
                         @display name
                       </button>
                       <button
-                        type="button"
+                        type="button" onClick={() => insertVar("{server}")}
                         title="Insert {server}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-green-500/20 text-green-300 hover:bg-green-500/25 border border-green-500/20"
                       >
                         @server
                       </button>
                       <button
-                        type="button"
+                        type="button" onClick={() => insertVar("{invite}")}
                         title="Insert {invite}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 border border-cyan-500/20"
                       >
                         @invite
                       </button>
                       <button
-                        type="button"
+                        type="button" onClick={() => insertVar("{memberCount}")}
                         title="Insert {memberCount}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20"
                       >
@@ -326,14 +355,7 @@ export default function WelcomeSettings({
                         Embed
                       </span>
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={welcomeMsgMode === "embed"} onClick={() => setWelcomeMsgMode(welcomeMsgMode === "embed" ? "image" : "embed")}
-                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ welcomeMsgMode === 'embed' ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
-                        >
-                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ welcomeMsgMode === 'embed' ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
-                        </button>
+                        <Toggle checked={welcomeMsgMode === "embed"} onChange={() => setWelcomeMsgMode(welcomeMsgMode === "embed" ? "image" : "embed")} />
                       </div>
                     </label>
                     <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -341,14 +363,7 @@ export default function WelcomeSettings({
                         User avatar
                       </span>
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={welcomeEmbedThumbnail === "{user.avatar}"} onClick={() => setWelcomeEmbedThumbnail(welcomeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")}
-                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ welcomeEmbedThumbnail === '{user.avatar}' ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
-                        >
-                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ welcomeEmbedThumbnail === '{user.avatar}' ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
-                        </button>
+                        <Toggle checked={welcomeEmbedThumbnail === "{user.avatar}"} onChange={() => setWelcomeEmbedThumbnail(welcomeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
                       </div>
                     </label>
                     <label
@@ -359,14 +374,7 @@ export default function WelcomeSettings({
                         Inviter variables
                       </span>
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={dmJoinEnabled} onClick={() => setDmJoinEnabled(!dmJoinEnabled)}
-                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ dmJoinEnabled ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
-                        >
-                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ dmJoinEnabled ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
-                        </button>
+                        <Toggle checked={dmJoinEnabled} onChange={() => setDmJoinEnabled(!dmJoinEnabled)} />
                       </div>
                     </label>
                   </div>
@@ -468,7 +476,7 @@ export default function WelcomeSettings({
                     <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-medium">
                       Preview
                     </span>
-                    <button
+                    <button onClick={() => handleTestDm("welcome")}
                       type="button"
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 focus-visible:ring-green-500/40 "
                       disabled
@@ -492,119 +500,20 @@ export default function WelcomeSettings({
                     </button>
                   </div>
                   <div className="mx-4 sm:mx-5 mb-4 sm:mb-5">
-                    <div className="rounded-xl overflow-hidden border border-neutral-700/30">
-                      <div className="bg-[#2f3136] px-4 py-2 flex items-center gap-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width={24}
-                          height={24}
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-hash w-3.5 h-3.5 text-neutral-400"
-                        >
-                          <line x1={4} x2={20} y1={9} y2={9} />
-                          <line x1={4} x2={20} y1={15} y2={15} />
-                          <line x1={10} x2={8} y1={3} y2={21} />
-                          <line x1={16} x2={14} y1={3} y2={21} />
-                        </svg>
-                        <span className="text-xs font-semibold text-white">
-                          welcome
-                        </span>
-                      </div>
-                      <div className="bg-[#313338] px-4 pt-3 pb-4 space-y-2.5">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            width={14}
-                            height={14}
-                            viewBox="0 0 16 16"
-                            className="text-green-500 flex-shrink-0"
-                          >
-                            <path
-                              fill="currentColor"
-                              d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3.5 7.5h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0v3h3a.5.5 0 0 1 0 1z"
-                            />
-                          </svg>
-                          <p className="text-xs text-neutral-500">
-                            <span className="font-medium text-white hover:underline cursor-pointer">
-                              @user
-                            </span>{" "}
-                            joined the server.
-                          </p>
-                        </div>
-                        <div className="flex gap-2.5 opacity-40 transition-opacity">
-                          <img
-                            src="/logo.png"
-                            alt="Orbit"
-                            className="w-8 h-8 rounded-full flex-shrink-0 object-cover mt-0.5"
-                          />
-                          <div
-                            className="w-8 h-8 rounded-full flex-shrink-0 bg-[#5865F2] items-center justify-center text-white text-xs font-bold hidden mt-0.5"
-                            aria-hidden="true"
-                          >
-                            P
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
-                              <span className="text-xs font-semibold text-indigo-400 whitespace-nowrap">
-                                Orbit
-                              </span>
-                              <span className="inline-flex flex-shrink-0 items-center gap-[0.15em] px-1 py-px text-[10px] font-bold bg-[#5865F2] text-white rounded leading-none">
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth={4}
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  className="h-[0.85em] w-[0.85em]"
-                                >
-                                  <path d="M20 6 9 17l-5-5" />
-                                </svg>
-                                APP
-                              </span>
-                              <span className="text-xs text-neutral-500 truncate">
-                                Today at 12:00 PM
-                              </span>
-                            </div>
-                            <div
-                              className="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[380px]"
-                              style={{ borderColor: "rgb(88, 101, 242)" }}
-                            >
-                              <div className="p-2.5 flex gap-2.5">
-                                <div className="flex-1 min-w-0 space-y-1">
-                                  <p className="text-xs font-semibold text-white leading-snug">
-                                    <span>Welcome to </span>
-                                    <span className="bg-green-500/30 text-green-300 rounded-[3px] px-[2px]">
-                                      My Server
-                                    </span>
-                                    <span>!</span>
-                                  </p>
-                                  <p className="text-xs text-neutral-300 leading-relaxed break-all">
-                                    <span>Welcome </span>
-                                    <span className="bg-[#5865f2]/30 text-[#c9cdfb] rounded-[3px] px-[2px]">
-                                      @user
-                                    </span>
-                                    <span>! We're glad to have you here.</span>
-                                  </p>
-                                  <p className="text-xs text-neutral-600 italic">
-                                    Start typing to customize...
-                                  </p>
-                                </div>
-                                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-neutral-700 grid place-items-center">
-                                  <span className="text-[9px] font-semibold text-neutral-400">
-                                    USER
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    
+<DiscordPreview
+  content={welcomeText}
+  embedColor={welcomeEmbedColor}
+  embedTitle={welcomeEmbedTitle}
+  embedDesc={welcomeEmbedDesc}
+  embedFooter={welcomeEmbedFooter}
+  embedThumbnail={welcomeEmbedThumbnail === "{user.avatar}" ? "https://cdn.discordapp.com/embed/avatars/0.png" : welcomeEmbedThumbnail}
+  imageUrl={welcomeImageUrl}
+  mode={welcomeMsgMode}
+  accentColor="#5865F2"
+  cardTitle="WELCOME"
+  channels={channels}
+/>
                   </div>
                 </div>
               </div>
@@ -666,14 +575,7 @@ export default function WelcomeSettings({
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <button
-                          type="button"
-                          role="switch"
-                          aria-checked={goodbyeEnabled} onClick={() => setGoodbyeEnabled(!goodbyeEnabled)}
-                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ goodbyeEnabled ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
-                        >
-                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ goodbyeEnabled ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
-                        </button>
+                          <Toggle checked={goodbyeEnabled} onChange={() => setGoodbyeEnabled(!goodbyeEnabled)} />
                         </div>
                       </div>
                       <div className="transition-all duration-200 flex-1 flex flex-col min-h-0">
@@ -684,7 +586,7 @@ export default function WelcomeSettings({
                           >
                             <textarea
                               rows={4}
-                              value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                              ref={dmJoinRef} data-setter="dmJoinText" onFocus={() => setActiveRef(dmJoinRef)} value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                               style={{
                                 fontFamily:
                                   '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -707,35 +609,35 @@ export default function WelcomeSettings({
                         </div>
                         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                           <button
-                            type="button"
+                            type="button" onClick={() => insertVar("{user}")}
                             title="Insert {user}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                           >
                             @user
                           </button>
                           <button
-                            type="button"
+                            type="button" onClick={() => insertVar("{user.displayName}")}
                             title="Insert {user.displayName}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                           >
                             @display name
                           </button>
                           <button
-                            type="button"
+                            type="button" onClick={() => insertVar("{server}")}
                             title="Insert {server}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-green-500/20 text-green-300 hover:bg-green-500/25 border border-green-500/20"
                           >
                             @server
                           </button>
                           <button
-                            type="button"
+                            type="button" onClick={() => insertVar("{invite}")}
                             title="Insert {invite}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 border border-cyan-500/20"
                           >
                             @invite
                           </button>
                           <button
-                            type="button"
+                            type="button" onClick={() => insertVar("{memberCount}")}
                             title="Insert {memberCount}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20"
                           >
@@ -813,32 +715,11 @@ export default function WelcomeSettings({
                     <div className="flex items-center gap-2.5 flex-shrink-0">
                       <div className="w-36 sm:w-52 rounded-xl transition-all ">
                         <div className="jsx-556cf662b09b3c73 w-full">
-                          <div className="relative">
-                            <select
-                              value={goodbyeChannel}
-                              onChange={(e) => setGoodbyeChannel(e.target.value)}
-                              className="w-full appearance-none flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer text-white focus:outline-none focus:border-neutral-500"
-                            >
-                              <option value="" disabled className="text-neutral-500"># select channel</option>
-                              {channels?.map(ch => (
-                                <option key={ch.id} value={ch.id}># {ch.name}</option>
-                              ))}
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="m6 9 6 6 6-6" /></svg>
-                            </div>
-                          </div>
+                          <CustomSelect options={channels?.map(ch => ({ label: "# " + ch.name, value: ch.id }))} value={goodbyeChannel} onChange={(val) => setGoodbyeChannel(val)} placeholder="# select channel" />
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={goodbyeMsgMode === "embed"} onClick={() => setGoodbyeMsgMode(goodbyeMsgMode === "embed" ? "image" : "embed")}
-                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ goodbyeMsgMode === 'embed' ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
-                        >
-                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ goodbyeMsgMode === 'embed' ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
-                        </button>
+                        <Toggle checked={goodbyeMsgMode === "embed"} onChange={() => setGoodbyeMsgMode(goodbyeMsgMode === "embed" ? "image" : "embed")} />
                       </div>
                     </div>
                   </div>
@@ -852,7 +733,7 @@ export default function WelcomeSettings({
                           >
                             <textarea
                               rows={1}
-                              value={goodbyeText} onChange={e => setGoodbyeText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                              ref={goodbyeTextRef} data-setter="goodbyeText" onFocus={() => setActiveRef(goodbyeTextRef)} value={goodbyeText} onChange={e => setGoodbyeText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                               style={{
                                 fontFamily:
                                   '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -890,7 +771,7 @@ export default function WelcomeSettings({
                       >
                         <textarea
                           rows={3}
-                          value={goodbyeEmbedDesc} onChange={e => setGoodbyeEmbedDesc(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                          ref={goodbyeDescRef} data-setter="goodbyeEmbedDesc" onFocus={() => setActiveRef(goodbyeDescRef)} value={goodbyeEmbedDesc} onChange={e => setGoodbyeEmbedDesc(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent  text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                           style={{
                             fontFamily:
                               '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -915,49 +796,49 @@ export default function WelcomeSettings({
                     <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
                       <div className="flex items-center gap-1 flex-wrap">
                         <button
-                          type="button"
+                          type="button" onClick={() => insertVar("{user}")}
                           title="Insert {user}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                         >
                           @user
                         </button>
                         <button
-                          type="button"
+                          type="button" onClick={() => insertVar("{user.displayName}")}
                           title="Insert {user.displayName}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                         >
                           @display name
                         </button>
                         <button
-                          type="button"
+                          type="button" onClick={() => insertVar("{server}")}
                           title="Insert {server}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-green-500/20 text-green-300 hover:bg-green-500/25 border border-green-500/20"
                         >
                           @server
                         </button>
                         <button
-                          type="button"
+                          type="button" onClick={() => insertVar("{memberCount}")}
                           title="Insert {memberCount}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20"
                         >
                           @members
                         </button>
                         <button
-                          type="button"
+                          type="button" onClick={() => insertVar("{inviter}")}
                           title="Insert {inviter}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20"
                         >
                           @inviter
                         </button>
                         <button
-                          type="button"
+                          type="button" onClick={() => insertVar("{inviter.name}")}
                           title="Insert {inviter.name}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20"
                         >
                           @inviter.name
                         </button>
                         <button
-                          type="button"
+                          type="button" onClick={() => insertVar("{time.in.server}")}
                           title="Insert {time.in.server}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-purple-500/20 text-purple-300 hover:bg-purple-500/25 border border-purple-500/20"
                         >
@@ -974,14 +855,7 @@ export default function WelcomeSettings({
                           Embed
                         </span>
                         <div className="flex items-center gap-3">
-                          <button
-                          type="button"
-                          role="switch"
-                          aria-checked={goodbyeEmbedThumbnail === "{user.avatar}"} onClick={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")}
-                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ goodbyeEmbedThumbnail === '{user.avatar}' ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
-                        >
-                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ goodbyeEmbedThumbnail === '{user.avatar}' ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
-                        </button>
+                          <Toggle checked={goodbyeEmbedThumbnail === "{user.avatar}"} onChange={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
                         </div>
                       </label>
                     </div>
@@ -1083,7 +957,7 @@ export default function WelcomeSettings({
                       <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-medium">
                         Preview
                       </span>
-                      <button
+                      <button onClick={() => handleTestDm("goodbye")}
                         type="button"
                         className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 focus-visible:ring-green-500/40 "
                         disabled
@@ -1107,112 +981,20 @@ export default function WelcomeSettings({
                       </button>
                     </div>
                     <div className="mx-4 sm:mx-5 mb-4 sm:mb-5">
-                      <div className="rounded-xl overflow-hidden border border-neutral-700/30">
-                        <div className="bg-[#2f3136] px-4 py-2 flex items-center gap-2">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-hash w-3.5 h-3.5 text-neutral-400"
-                          >
-                            <line x1={4} x2={20} y1={9} y2={9} />
-                            <line x1={4} x2={20} y1={15} y2={15} />
-                            <line x1={10} x2={8} y1={3} y2={21} />
-                            <line x1={16} x2={14} y1={3} y2={21} />
-                          </svg>
-                          <span className="text-xs font-semibold text-white">
-                            goodbye
-                          </span>
-                        </div>
-                        <div className="bg-[#313338] px-4 pt-3 pb-4 space-y-2.5">
-                          <div className="flex items-center gap-2">
-                            <svg
-                              width={14}
-                              height={14}
-                              viewBox="0 0 16 16"
-                              className="text-red-500 flex-shrink-0"
-                            >
-                              <path
-                                fill="currentColor"
-                                d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3.5 8h-7a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1z"
-                              />
-                            </svg>
-                            <p className="text-xs text-neutral-500">
-                              <span className="font-medium text-white hover:underline cursor-pointer">
-                                SomeUser
-                              </span>{" "}
-                              left the server.
-                            </p>
-                          </div>
-                          <div className="flex gap-2.5  transition-opacity">
-                            <img
-                              src="/logo.png"
-                              alt="Orbit"
-                              className="w-8 h-8 rounded-full flex-shrink-0 object-cover mt-0.5"
-                            />
-                            <div
-                              className="w-8 h-8 rounded-full flex-shrink-0 bg-[#5865F2] items-center justify-center text-white text-xs font-bold hidden mt-0.5"
-                              aria-hidden="true"
-                            >
-                              P
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
-                                <span className="text-xs font-semibold text-indigo-400 whitespace-nowrap">
-                                  Orbit
-                                </span>
-                                <span className="inline-flex flex-shrink-0 items-center gap-[0.15em] px-1 py-px text-[10px] font-bold bg-[#5865F2] text-white rounded leading-none">
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={4}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-[0.85em] w-[0.85em]"
-                                  >
-                                    <path d="M20 6 9 17l-5-5" />
-                                  </svg>
-                                  APP
-                                </span>
-                                <span className="text-xs text-neutral-500 truncate">
-                                  Today at 12:00 PM
-                                </span>
-                              </div>
-                              <div
-                                className="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[380px]"
-                                style={{ borderColor: "rgb(237, 66, 69)" }}
-                              >
-                                <div className="p-2.5 space-y-1">
-                                  <p className="text-xs font-semibold text-white leading-snug">
-                                    <span />
-                                    <span className="bg-[#5865f2]/30 text-[#c9cdfb] rounded-[3px] px-[2px]">
-                                      user
-                                    </span>
-                                    <span> has left</span>
-                                  </p>
-                                  <div className="flex items-center gap-1 pt-1 mt-1 border-t border-neutral-700/30">
-                                    <img
-                                      src="/logo.png"
-                                      alt
-                                      className="w-3 h-3 rounded-full"
-                                    />
-                                    <span className="text-[10px] text-neutral-500">
-                                      Orbit
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      
+<DiscordPreview
+  content={goodbyeText}
+  embedColor={goodbyeEmbedColor}
+  embedTitle={goodbyeEmbedTitle}
+  embedDesc={goodbyeEmbedDesc}
+  embedFooter={goodbyeEmbedFooter}
+  embedThumbnail={goodbyeEmbedThumbnail === "{user.avatar}" ? "https://cdn.discordapp.com/embed/avatars/0.png" : goodbyeEmbedThumbnail}
+  imageUrl={goodbyeImageUrl}
+  mode={goodbyeMsgMode}
+  accentColor="#ED4245"
+  cardTitle="GOODBYE"
+  channels={channels}
+/>
                     </div>
                   </div>
                 </div>
@@ -1271,14 +1053,7 @@ export default function WelcomeSettings({
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <button
-                          type="button"
-                          role="switch"
-                          aria-checked={dmLeaveEnabled} onClick={() => setDmLeaveEnabled(!dmLeaveEnabled)}
-                          className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${ dmLeaveEnabled ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700' }`}
-                        >
-                          <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${ dmLeaveEnabled ? 'translate-x-[21px] !bg-white dark:!bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900' }`} />
-                        </button>
+                            <Toggle checked={dmLeaveEnabled} onChange={() => setDmLeaveEnabled(!dmLeaveEnabled)} />
                           </div>
                         </div>
                         <div className="transition-all duration-200 flex-1 flex flex-col min-h-0">
@@ -1289,7 +1064,7 @@ export default function WelcomeSettings({
                             >
                               <textarea
                                 rows={3}
-                                value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                                ref={dmLeaveRef} data-setter="dmLeaveText" onFocus={() => setActiveRef(dmLeaveRef)} value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                                 style={{
                                   fontFamily:
                                     '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -1312,49 +1087,49 @@ export default function WelcomeSettings({
                           </div>
                           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                             <button
-                              type="button"
+                              type="button" onClick={() => insertVar("{user}")}
                               title="Insert {user}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                             >
                               @user
                             </button>
                             <button
-                              type="button"
+                              type="button" onClick={() => insertVar("{user.displayName}")}
                               title="Insert {user.displayName}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                             >
                               @display name
                             </button>
                             <button
-                              type="button"
+                              type="button" onClick={() => insertVar("{server}")}
                               title="Insert {server}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-green-500/20 text-green-300 hover:bg-green-500/25 border border-green-500/20"
                             >
                               @server
                             </button>
                             <button
-                              type="button"
+                              type="button" onClick={() => insertVar("{memberCount}")}
                               title="Insert {memberCount}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20"
                             >
                               @members
                             </button>
                             <button
-                              type="button"
+                              type="button" onClick={() => insertVar("{inviter}")}
                               title="Insert {inviter}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20"
                             >
                               @inviter
                             </button>
                             <button
-                              type="button"
+                              type="button" onClick={() => insertVar("{inviter.name}")}
                               title="Insert {inviter.name}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20"
                             >
                               @inviter.name
                             </button>
                             <button
-                              type="button"
+                              type="button" onClick={() => insertVar("{time.in.server}")}
                               title="Insert {time.in.server}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-purple-500/20 text-purple-300 hover:bg-purple-500/25 border border-purple-500/20"
                             >

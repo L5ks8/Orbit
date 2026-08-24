@@ -71,6 +71,14 @@ class WelcomeListener(commands.Cog):
             formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
             return formatted
 
+        # Handle DM on Join
+        if config.get("dm_enabled") and config.get("dm_message"):
+            dm_text = fmt_text(config.get("dm_message"))
+            try:
+                await member.send(dm_text)
+            except Exception:
+                pass
+
         msg_mode = config.get("msg_mode", "image")
 
         if msg_mode == "embed":

@@ -452,6 +452,91 @@ class ActionsMixin:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
+
+    async def api_action_test_dm(self, request: web.Request):
+        from aiohttp import web
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("can_channels"):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        try:
+            data = await request.json()
+            dm_type = data.get("type", "welcome")
+            
+            token_data = request.get("user")
+            user_id = token_data.get("id") if token_data else None
+            
+            member = None
+            if user_id:
+                member = guild.get_member(int(user_id))
+            
+            if not member:
+                return web.json_response({"error": "Could not find you in the server to DM."}, status=400)
+            
+            from Components.Dashboard.Welcome._views import format_welcome_string
+            from Components.Commands.Goodbye._views import format_goodbye_string
+            import discord
+            import re
+            
+            def replace_emoji(match):
+                token = match.group(0)
+                m_no_name = re.match(r'<(a?):(\d+)>', token)
+                if m_no_name:
+                    is_anim = m_no_name.group(1) == 'a'
+                    eid = int(m_no_name.group(2))
+                    em = discord.utils.get(guild.emojis, id=eid)
+                    if em:
+                        return str(em)
+                    prefix = "a" if is_anim else ""
+                    return f"<{prefix}:e:{eid}>"
+                
+                m_colon = re.match(r':([a-zA-Z0-9_-]+):', token)
+                if m_colon:
+                    key = m_colon.group(1)
+                    if key.isdigit():
+                        em = discord.utils.get(guild.emojis, id=int(key))
+                        if em:
+                            return str(em)
+                        return f"<:e:{key}>"
+                    else:
+                        em = discord.utils.get(guild.emojis, name=key)
+                        if em:
+                            return str(em)
+                return token
+
+            if dm_type == "welcome":
+                from Components.Dashboard.Welcome._storage import load_welcome_config
+                config = load_welcome_config(guild_id)
+                msg = config.get("dm_message", "")
+                if msg:
+                    formatted = format_welcome_string(msg, member)
+                    formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
+                    await member.send(formatted)
+                else:
+                    return web.json_response({"error": "No DM message configured for Welcome."}, status=400)
+                    
+            elif dm_type == "goodbye":
+                from Components.Commands.Goodbye._storage import load_goodbye_config
+                config = load_goodbye_config(guild_id)
+                msg = config.get("dm_message", "")
+                if msg:
+                    formatted = format_goodbye_string(msg, member)
+                    formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
+                    await member.send(formatted)
+                else:
+                    return web.json_response({"error": "No DM message configured for Goodbye."}, status=400)
+                    
+            return web.json_response({"success": True})
+        except discord.Forbidden:
+            return web.json_response({"error": "I cannot send DMs to you. Please enable DMs from server members."}, status=400)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_action_test_levelup(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
