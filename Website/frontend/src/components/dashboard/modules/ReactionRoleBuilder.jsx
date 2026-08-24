@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "../../ui/Toast";
+import CustomSelect from "../../ui/CustomSelect";
 
 export default function ReactionRoleBuilder({
   isOpen,
@@ -260,16 +261,12 @@ export default function ReactionRoleBuilder({
                 <div>
                   <label className="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">Channel<span className="ml-2 text-amber-400 normal-case tracking-normal font-normal">· required to post</span></label>
                   <div className="rounded-xl transition-shadow ring-1 ring-amber-500/40">
-                    <select 
-                      className="w-full h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-white transition-all duration-200 border-neutral-700 hover:border-neutral-600 focus:outline-none"
+                    <CustomSelect
+                      options={channels.map(c => ({ value: c.id, label: `#${c.name}` }))}
                       value={channelId}
-                      onChange={(e) => setChannelId(e.target.value)}
-                    >
-                      <option value="">Pick a channel…</option>
-                      {channels.map((c) => (
-                        <option key={c.id} value={c.id}>#{c.name}</option>
-                      ))}
-                    </select>
+                      onChange={setChannelId}
+                      placeholder="Pick a channel…"
+                    />
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-neutral-800/40 border border-neutral-800">
@@ -315,16 +312,15 @@ export default function ReactionRoleBuilder({
                           </button>
                         </div>
                         <div className="w-full">
-                          <select 
-                            className="w-full h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-neutral-300 transition-all duration-200 border-neutral-700 hover:border-neutral-600 focus:outline-none"
+                          <CustomSelect
+                            options={roles.map(r => {
+                              const hex = r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined;
+                              return { value: r.id, label: r.name, color: hex };
+                            })}
                             value={comp.role_id || ""}
-                            onChange={(e) => updateComponent(idx, "role_id", e.target.value)}
-                          >
-                            <option value="">Pick a role…</option>
-                            {roles.map(r => (
-                              <option key={r.id} value={r.id}>{r.name}</option>
-                            ))}
-                          </select>
+                            onChange={(val) => updateComponent(idx, "role_id", val)}
+                            placeholder="Pick a role…"
+                          />
                         </div>
                         <input 
                           placeholder="Button label (auto)" 
