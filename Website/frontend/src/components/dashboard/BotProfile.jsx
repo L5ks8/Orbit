@@ -45,6 +45,7 @@ export default function BotProfile({ guildId }) {
     
     const handler = setTimeout(() => {
       setIsSaving(true);
+      const toastId = toast.loading("Saving...");
       fetch(`/api/botprofile/${guildId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,12 +53,12 @@ export default function BotProfile({ guildId }) {
       })
       .then(res => res.json())
       .then(data => {
-        if (data.error) toast("Failed to save bot profile", "error");
-        else toast("Profile saved", "success");
+        if (data.error) toast.error("Failed to save bot profile", { id: toastId });
+        else toast.success("Profile saved", { id: toastId });
       })
       .catch(err => {
         console.error("Save error", err);
-        toast("Failed to save bot profile", "error");
+        toast.error("Failed to save bot profile", { id: toastId });
       })
       .finally(() => setIsSaving(false));
     }, 1500);
@@ -71,7 +72,7 @@ export default function BotProfile({ guildId }) {
     const formData = new FormData();
     formData.append('file', file);
     
-    toast("Uploading image...", "info", 2000);
+    const toastId = toast.loading("Uploading image...");
     try {
       const res = await fetch(`/api/upload/image`, {
         method: 'POST',
@@ -80,12 +81,12 @@ export default function BotProfile({ guildId }) {
       const data = await res.json();
       if (data.url) {
         setConfig(prev => ({ ...prev, [field]: data.url }));
-        toast("Image uploaded", "success");
+        toast.success("Image uploaded", { id: toastId });
       } else {
-        toast(data.error || "Failed to upload", "error");
+        toast.error(data.error || "Failed to upload", { id: toastId });
       }
     } catch (err) {
-      toast("Upload error", "error");
+      toast.error("Upload error", { id: toastId });
     }
   };
 

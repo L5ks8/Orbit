@@ -354,6 +354,7 @@ export default function Moderation({ guildId }) {
   }, [loading]);
   const handleSave = async (payloadStr) => {
     setIsSaving(true);
+    const toastId = toast.loading('Saving...');
     try {
       const payloadString = typeof payloadStr === 'string' ? payloadStr : JSON.stringify(getPayload());
       const res = await fetch(`/api/config/${guildId}`, {
@@ -366,14 +367,14 @@ export default function Moderation({ guildId }) {
       });
       const data = await res.json();
       if (data.error) {
-        toast("Failed to save: " + data.error, 'error');
+        toast.error("Failed to save: " + data.error, { id: toastId });
       } else {
-        toast("Settings saved", "success");
+        toast.success("Settings saved", { id: toastId });
         setInitialStateStr(payloadString);
       }
     } catch (e) {
       console.error(e);
-      toast("Error saving settings", "error");
+      toast.error("Error saving settings", { id: toastId });
     } finally {
       setIsSaving(false);
     }
