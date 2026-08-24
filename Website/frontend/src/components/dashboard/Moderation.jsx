@@ -202,15 +202,7 @@ export default function Moderation({ guildId }) {
   
   const [general, setGeneral] = useState({ log_channel: '' });
   const [exemptions, setExemptions] = useState({ roles: [], channels: [] });
-  const [logs, setLogs] = useState({
-    enabled: true,
-    executor_in_logs: false,
-    global_exempt_channels: [],
-    global_exempt_roles: [],
-    categories: {},
-    channels: {},
-    roles: {}
-  });
+
   
   const [recentActions, setRecentActions] = useState([]);
   const [warnSearchId, setWarnSearchId] = useState('');
@@ -253,9 +245,6 @@ export default function Moderation({ guildId }) {
         mention_spam: { ...mentionSpam },
         anti_zalgo: { ...antiZalgo },
         anti_caps: { ...antiCaps }
-      },
-      logs: {
-        ...logs
       }
     };
   };

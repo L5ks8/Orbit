@@ -15,6 +15,7 @@ export default function Overview({ guildId }) {
   const [activityRange, setActivityRange] = useState('7');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [liveStats, setLiveStats] = useState(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const loadData = () => {
     if (!guildId) return Promise.resolve();
@@ -52,7 +53,7 @@ export default function Overview({ guildId }) {
   };
 
   useEffect(() => {
-    loadData();
+    loadData().finally(() => setIsInitialLoading(false));
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, [guildId, channelsRange]);
@@ -152,6 +153,18 @@ export default function Overview({ guildId }) {
     'welcome', 'polls', 'tickets', 'automod', 'voice', 'invites', 
     'verification', 'giveaways', 'kick', 'embeds', 'botprofile'
   ].filter(isFeatureActive).length;
+
+  if (isInitialLoading) {
+    return (
+      <div className="w-full h-[70vh] flex flex-col items-center justify-center gap-5">
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full blur-[20px] bg-white/10"></div>
+          <div className="relative w-10 h-10 rounded-full border-[3px] border-neutral-800 border-t-white animate-spin"></div>
+        </div>
+        <p className="text-sm font-medium text-neutral-400">Loading insights...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-overview-container">
