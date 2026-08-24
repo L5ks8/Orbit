@@ -9,6 +9,7 @@ import Settings from '../components/dashboard/Settings';
 import ServerSelector from './ServerSelector';
 import EmbedBuilder from './dashboard/EmbedBuilder';
 import Moderation from '../components/dashboard/Moderation';
+import BotProfile from '../components/dashboard/BotProfile';
 import { useAuth } from '../context/AuthContext';
 
 function DashboardInner() {
@@ -120,6 +121,7 @@ function DashboardInner() {
               <Route path="/" element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<Overview guildId={guildId} />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="bot-profile" element={<BotProfile guildId={guildId} />} />
               <Route path="embed-builder" element={<EmbedBuilder setSidebarOpen={setSidebarOpen} />} />
               <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
               <Route path="settings" element={<Settings guildId={guildId} />} />
