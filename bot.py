@@ -324,7 +324,7 @@ class OrbitBot(commands.Bot):
             print(f"Failed to load JoinRole Listener: {e}")
 
         try:
-            await self.load_extension("Components.Dashboard.Welcome.welcomelistener")
+            await self.load_extension("Components.Dashboard.WelcomeGoodbye.listener")
             print("Loaded Welcome Listener")
         except Exception as e:
             print(f"Failed to load Welcome Listener: {e}")
