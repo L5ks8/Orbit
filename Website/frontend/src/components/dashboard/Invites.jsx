@@ -57,7 +57,7 @@ export default function Invites() {
           </div>
         </div>
         <div className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[340px,1fr] gap-4 lg:items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 lg:items-stretch">
             <div className="lg:order-2 lg:relative flex flex-col">
               <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col lg:absolute lg:inset-0">
                 <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-800">
