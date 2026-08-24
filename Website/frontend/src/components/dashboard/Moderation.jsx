@@ -386,7 +386,42 @@ export default function Moderation({ guildId }) {
     return () => clearTimeout(timeoutId);
   }, [currentPayloadStr, initialStateStr, isDirty]);
 
-  if (loading) return <LoadingScreen message="Loading moderation settings..." />;
+  if (loading) {
+    return (
+      <div className="pb-overview-container">
+        <div data-tour="feature-header" className="scroll-mt-24">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={24}
+                  height={24}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-shield-alert w-5 h-5"
+                >
+                  <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                  <path d="M12 8v4" />
+                  <path d="M12 16h.01" />
+                </svg>
+              </span>
+              <h1 className="text-base font-medium text-white truncate">
+                Auto Moderation
+              </h1>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6" style={{ minHeight: '400px' }}>
+          <LoadingScreen message="Loading moderation settings..." />
+        </div>
+      </div>
+    );
+  }
 
   const channelOptions = serverData?.channels ? serverData.channels.map(c => ({ value: c.id, label: `# ${c.name}` })) : [];
   const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color })) : [];
