@@ -732,37 +732,6 @@ export default function UserSettings() {
           </div>
         </section>
 
-        {/* Subscriptions */}
-        <section>
-          <h3 className="us-section-title">Subscriptions</h3>
-          
-          <div className="us-subs-alert">
-            <p className="us-subs-text">
-              No active subscription. <span>Buy a slot</span> to unlock Pro.
-            </p>
-            <button className="us-btn-primary">
-              <Plus size={12} /> Buy Slot
-            </button>
-          </div>
-          
-          <div className="us-subs-card">
-            <div className="us-subs-inner">
-              <div className="us-subs-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg>
-              </div>
-              <p className="us-subs-inner-text">Get your first Pro slot</p>
-              <button className="us-btn-primary">
-                <Plus size={12} /> Buy Slot
-              </button>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center' }}>
-            <a href="/pricing" className="us-pricing-link">
-              View Pricing <ExternalLink size={12} />
-            </a>
-          </div>
-        </section>
 
         {/* Language & Region */}
         <section>

@@ -26,7 +26,7 @@ export default function TopNav({ guildName, setSidebarOpen }) {
           </button>
           
           <Link to="/" className="p-1.5 rounded-xl hover:bg-neutral-800 transition-colors group" title="Back to Servers">
-            <img src="/logo.png" alt="Orbit" width="28" height="28" className="rounded-xl group-hover:shadow-lg transition-shadow sm:w-8 sm:h-8" />
+            <img src="/img/logo.png" alt="Orbit" width="28" height="28" className="rounded-xl group-hover:shadow-lg transition-shadow sm:w-8 sm:h-8" />
           </Link>
           
           <div className="w-px h-8 bg-neutral-700 hidden sm:block"></div>
