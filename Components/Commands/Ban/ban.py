@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Whitelist._storage import is_whitelisted
-from Components.Commands.Log._storage import log_event
-from Components.Commands.Log._modlog_storage import add_modlog
+from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
@@ -79,3 +79,6 @@ class BanCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BanCommand(bot))
+
+
+

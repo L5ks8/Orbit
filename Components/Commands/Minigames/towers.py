@@ -207,51 +207,49 @@ class TowersLayoutView(discord.ui.View):
         
         return {"embed": embed, "view": self}
 
-class TowersCommand(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
 
-    async def cog_check(self, ctx):
-        if not ctx.guild:
-            return True
-        from Components.Commands.Economy._storage import load_economy_config
-        from Components.Commands._utils import make_embed
-        config = load_economy_config(ctx.guild.id)
-        if not config.get("enabled", True):
-            await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
-            return False
+async def minigame_check(ctx):
+    if not ctx.guild:
         return True
+    from Components.Commands.Economy._storage import load_economy_config
+    from Components.Commands._utils import make_embed
+    config = load_economy_config(ctx.guild.id)
+    if not config.get("enabled", True):
+        await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
+        return False
+    return True
 
 
-    @minigames_group.command(name="towers", description="Play a game of Towers (`/towers <bet>`).")
-    @app_commands.describe(bet="Amount of money to bet (e.g. 50)")
-    async def towers_cmd(self, ctx: commands.Context, bet: int = 10):
-        await ctx.defer()
-        
-        if not ctx.guild:
-            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
+@commands.check(minigame_check)
+@minigames_group.command(name="towers", description="Play a game of Towers (`/towers <bet>`).")
+@app_commands.describe(bet="Amount of money to bet (e.g. 50)")
+async def towers_cmd(ctx: commands.Context, bet: int = 10):
+    await ctx.defer()
+    
+    if not ctx.guild:
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
 
-        if bet < 1:
-            return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
+    if bet < 1:
+        return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
 
-        cfg = load_economy_config(ctx.guild.id)
-        sym = cfg.get("currency_symbol", "")
+    cfg = load_economy_config(ctx.guild.id)
+    sym = cfg.get("currency_symbol", "")
 
-        if cfg.get("bet_limit_enabled", True):
-            max_bet = cfg.get("bet_limit_amount", 10000)
-            if bet > max_bet:
-                return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
+    if cfg.get("bet_limit_enabled", True):
+        max_bet = cfg.get("bet_limit_amount", 10000)
+        if bet > max_bet:
+            return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
 
-        bal = get_user_balance(ctx.guild.id, ctx.author.id)
-        if bal < bet:
-            return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
+    bal = get_user_balance(ctx.guild.id, ctx.author.id)
+    if bal < bet:
+        return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
 
-        remove_user_balance(ctx.guild.id, ctx.author.id, bet)
+    remove_user_balance(ctx.guild.id, ctx.author.id, bet)
 
-        session = TowersSession(ctx.author, bet, ctx.guild.id)
-        view = TowersLayoutView(session, guild_id=ctx.guild.id)
-        
-        await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
+    session = TowersSession(ctx.author, bet, ctx.guild.id)
+    view = TowersLayoutView(session, guild_id=ctx.guild.id)
+    
+    await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(TowersCommand(bot))
+    pass

@@ -1,9 +1,9 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 import re
 from Components.Commands.Cases._storage import create_case
-from Components.Commands.Log._modlog_storage import add_modlog
+from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands._utils import make_embed
 
 class MassBanCog(commands.Cog):

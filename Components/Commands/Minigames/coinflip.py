@@ -81,80 +81,78 @@ class CoinflipView(discord.ui.View):
         embed.add_field(name="Player", value=self.player.mention, inline=False)
         await interaction.edit_original_response(embed=embed, view=self)
 
-class CoinflipCommand(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
 
-    async def cog_check(self, ctx):
-        if not ctx.guild:
-            return True
-        from Components.Commands.Economy._storage import load_economy_config
-        config = load_economy_config(ctx.guild.id)
-        if not config.get("enabled", True):
-            await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
-            return False
+async def minigame_check(ctx):
+    if not ctx.guild:
         return True
+    from Components.Commands.Economy._storage import load_economy_config
+    config = load_economy_config(ctx.guild.id)
+    if not config.get("enabled", True):
+        await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
+        return False
+    return True
 
 
-    @minigames_group.command(name="coinflip", description="Bet money and flip a coin (`/coinflip <bet> <heads/tails>`).")
-    @app_commands.describe(
-        bet="Amount of money to bet",
-        choice="Heads or Tails"
-    )
-    @app_commands.choices(choice=[
-        app_commands.Choice(name="Heads", value="heads"),
-        app_commands.Choice(name="Tails", value="tails")
-    ])
-    async def coinflip_cmd(self, ctx: commands.Context, bet: int, choice: str):
-        await ctx.defer()
-        
-        # In hybrid commands, slash commands might pass the raw string if type hint is str
-        choice_val = getattr(choice, "value", choice).lower()
-        if choice_val not in ["heads", "tails"]:
-            return await ctx.send(embed=make_embed("Choice must be Heads or Tails.", discord.Color.red()))
+@commands.check(minigame_check)
+@minigames_group.command(name="coinflip", description="Bet money and flip a coin (`/coinflip <bet> <heads/tails>`).")
+@app_commands.describe(
+    bet="Amount of money to bet",
+    choice="Heads or Tails"
+)
+@app_commands.choices(choice=[
+    app_commands.Choice(name="Heads", value="heads"),
+    app_commands.Choice(name="Tails", value="tails")
+])
+async def coinflip_cmd(ctx: commands.Context, bet: int, choice: str):
+    await ctx.defer()
+    
+    # In hybrid commands, slash commands might pass the raw string if type hint is str
+    choice_val = getattr(choice, "value", choice).lower()
+    if choice_val not in ["heads", "tails"]:
+        return await ctx.send(embed=make_embed("Choice must be Heads or Tails.", discord.Color.red()))
 
-        
-        if not ctx.guild:
-            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
+    
+    if not ctx.guild:
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
 
-        if bet < 1:
-            return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
+    if bet < 1:
+        return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
 
-        cfg = load_economy_config(ctx.guild.id)
-        sym = cfg.get("currency_symbol", "")
+    cfg = load_economy_config(ctx.guild.id)
+    sym = cfg.get("currency_symbol", "")
 
-        if cfg.get("bet_limit_enabled", True):
-            max_bet = cfg.get("bet_limit_amount", 10000)
-            if bet > max_bet:
-                return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
+    if cfg.get("bet_limit_enabled", True):
+        max_bet = cfg.get("bet_limit_amount", 10000)
+        if bet > max_bet:
+            return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
 
-        bal = get_user_balance(ctx.guild.id, ctx.author.id)
-        if bal < bet:
-            return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
+    bal = get_user_balance(ctx.guild.id, ctx.author.id)
+    if bal < bet:
+        return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
 
-        # Create view and simulate first flip
-        view = CoinflipView(ctx.guild.id, ctx.author, bet, choice_val)
-        
-        embed = discord.Embed(title="Orbit Casino: Coinflip", description=f"Flipping the coin...\n**Bet:** {bet:,} | **Choice:** {choice_val.capitalize()}", color=discord.Color.gold())
-        embed.add_field(name="Player", value=ctx.author.mention, inline=False)
-        msg = await ctx.send(embed=embed)
+    # Create view and simulate first flip
+    view = CoinflipView(ctx.guild.id, ctx.author, bet, choice_val)
+    
+    embed = discord.Embed(title="Orbit Casino: Coinflip", description=f"Flipping the coin...\n**Bet:** {bet:,} | **Choice:** {choice_val.capitalize()}", color=discord.Color.gold())
+    embed.add_field(name="Player", value=ctx.author.mention, inline=False)
+    msg = await ctx.send(embed=embed)
 
-        class DummyInteraction:
-            def __init__(self, m, u, g, c):
-                self.message = m
-                self.user = u
-                self.guild = g
-                self.channel = c
-                self.guild_id = g.id
-            async def edit_original_response(self, **kwargs):
-                await self.message.edit(**kwargs)
+    class DummyInteraction:
+        def __init__(self, m, u, g, c):
+            self.message = m
+            self.user = u
+            self.guild = g
+            self.channel = c
+            self.guild_id = g.id
+        async def edit_original_response(self, **kwargs):
+            await self.message.edit(**kwargs)
 
-        dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
-        
-        import asyncio
-        from Components.Commands._utils import make_embed
-        await asyncio.sleep(1.5)
-        await view.flip(dummy_inter)
+    dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
+    
+    import asyncio
+    from Components.Commands._utils import make_embed
+    await asyncio.sleep(1.5)
+    await view.flip(dummy_inter)
 
 async def setup(bot):
-    await bot.add_cog(CoinflipCommand(bot))
+    pass

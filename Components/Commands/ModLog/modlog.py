@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord import app_commands
 from discord.ui import View, Button
-from Components.Commands.Log._modlog_storage import get_modlogs
+from Components.Commands.ModLog._modlog_storage import get_modlogs
 from Components.Commands.Warn._storage import load_warnings
 from Components.Commands.Ban._storage import load_ban_history
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
@@ -51,7 +51,7 @@ class ModLogPaginationView(View):
                 inline=False
             )
             
-        embed.set_footer(text=f"Page {self.current_page + 1} of {self.max_pages} • Total records: {len(self.logs)}")
+        embed.set_footer(text=f"Page {self.current_page + 1} of {self.max_pages} � Total records: {len(self.logs)}")
         return embed
 
     @discord.ui.button(label="Previous", style=discord.ButtonStyle.primary, custom_id="modlog_prev")
@@ -82,7 +82,7 @@ class ModLogCommand(commands.Cog):
         moderator_id = user_target.id
 
         # 1. Fetch unified ModLogs by moderator
-        from Components.Commands.Log._modlog_storage import get_modlogs_by_moderator
+        from Components.Commands.ModLog._modlog_storage import get_modlogs_by_moderator
         unified_logs = get_modlogs_by_moderator(guild_id, moderator_id)
 
         # 2. Fetch old warnings by this moderator

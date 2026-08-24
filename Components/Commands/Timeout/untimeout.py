@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
-from Components.Commands.Log._storage import log_event
-from Components.Commands.Log._modlog_storage import add_modlog
+from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands._utils import make_embed
 
 
@@ -52,3 +52,6 @@ class UntimeoutCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UntimeoutCommand(bot))
+
+
+

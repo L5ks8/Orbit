@@ -91,68 +91,66 @@ class DiceView(discord.ui.View):
         await interaction.edit_original_response(embed=embed, view=self)
 
 
-class DiceCommand(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
 
-    async def cog_check(self, ctx):
-        if not ctx.guild:
-            return True
-        from Components.Commands.Economy._storage import load_economy_config
-        config = load_economy_config(ctx.guild.id)
-        if not config.get("enabled", True):
-            await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
-            return False
+async def minigame_check(ctx):
+    if not ctx.guild:
         return True
+    from Components.Commands.Economy._storage import load_economy_config
+    config = load_economy_config(ctx.guild.id)
+    if not config.get("enabled", True):
+        await ctx.send(embed=make_embed("The Money system isn't Configured on this server"), ephemeral=True)
+        return False
+    return True
 
 
-    @minigames_group.command(name="dice", description="Bet money and roll two dice (`/dice <bet>`).")
-    @app_commands.describe(bet="Amount of money to bet")
-    async def dice_cmd(self, ctx: commands.Context, bet: int):
-        await ctx.defer()
-        
-        if not ctx.guild:
-            return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
+@commands.check(minigame_check)
+@minigames_group.command(name="dice", description="Bet money and roll two dice (`/dice <bet>`).")
+@app_commands.describe(bet="Amount of money to bet")
+async def dice_cmd(ctx: commands.Context, bet: int):
+    await ctx.defer()
+    
+    if not ctx.guild:
+        return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()))
 
-        if bet < 1:
-            return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
+    if bet < 1:
+        return await ctx.send(embed=make_embed("Bet amount must be at least 1.", discord.Color.red()))
 
-        cfg = load_economy_config(ctx.guild.id)
-        sym = cfg.get("currency_symbol", "")
+    cfg = load_economy_config(ctx.guild.id)
+    sym = cfg.get("currency_symbol", "")
 
-        if cfg.get("bet_limit_enabled", True):
-            max_bet = cfg.get("bet_limit_amount", 10000)
-            if bet > max_bet:
-                return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
+    if cfg.get("bet_limit_enabled", True):
+        max_bet = cfg.get("bet_limit_amount", 10000)
+        if bet > max_bet:
+            return await ctx.send(embed=make_embed(f"The maximum bet limit on this server is **{sym} {max_bet:,}**."))
 
-        bal = get_user_balance(ctx.guild.id, ctx.author.id)
-        if bal < bet:
-            return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
+    bal = get_user_balance(ctx.guild.id, ctx.author.id)
+    if bal < bet:
+        return await ctx.send(embed=make_embed(f"You don't have enough money! Your balance is **{sym} {bal:,}**."))
 
-        # Create view and simulate first roll
-        view = DiceView(ctx.guild.id, ctx.author, bet)
-        
-        embed = discord.Embed(title="Orbit Casino: Dice Roll", description=f"Rolling the dice... \n**Bet:** {bet:,}", color=discord.Color.blue())
-        embed.add_field(name="Player", value=ctx.author.mention, inline=False)
-        msg = await ctx.send(embed=embed)
+    # Create view and simulate first roll
+    view = DiceView(ctx.guild.id, ctx.author, bet)
+    
+    embed = discord.Embed(title="Orbit Casino: Dice Roll", description=f"Rolling the dice... \n**Bet:** {bet:,}", color=discord.Color.blue())
+    embed.add_field(name="Player", value=ctx.author.mention, inline=False)
+    msg = await ctx.send(embed=embed)
 
-        class DummyInteraction:
-            def __init__(self, m, u, g, c):
-                self.message = m
-                self.user = u
-                self.guild = g
-                self.channel = c
-                self.guild_id = g.id
-            async def edit_original_response(self, **kwargs):
-                await self.message.edit(**kwargs)
+    class DummyInteraction:
+        def __init__(self, m, u, g, c):
+            self.message = m
+            self.user = u
+            self.guild = g
+            self.channel = c
+            self.guild_id = g.id
+        async def edit_original_response(self, **kwargs):
+            await self.message.edit(**kwargs)
 
-        dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
-        
-        import asyncio
-        from Components.Commands._utils import make_embed
-        await asyncio.sleep(1.5)
-        await view.roll(dummy_inter)
+    dummy_inter = DummyInteraction(msg, ctx.author, ctx.guild, ctx.channel)
+    
+    import asyncio
+    from Components.Commands._utils import make_embed
+    await asyncio.sleep(1.5)
+    await view.roll(dummy_inter)
 
 
 async def setup(bot):
-    await bot.add_cog(DiceCommand(bot))
+    pass

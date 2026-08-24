@@ -3,8 +3,8 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Mute._storage import get_muted_role_id, set_muted_role_id
-from Components.Commands.Log._storage import log_event
-from Components.Commands.Log._modlog_storage import add_modlog
+from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
@@ -89,3 +89,6 @@ class MuteCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MuteCommand(bot))
+
+
+

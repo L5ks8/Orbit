@@ -1,6 +1,6 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from Components.Commands.Log._storage import log_event
+from Components.Dashboard.Automoderation.log_storage import log_event
 
 class LogListener(commands.Cog):
     def __init__(self, bot: commands.Bot):

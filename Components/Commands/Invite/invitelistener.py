@@ -6,7 +6,7 @@ from Components.Commands.Invite._storage import (
     get_invite_cache, set_invite_cache, refresh_invite_cache,
     record_invite
 )
-from Components.Commands.Log._storage import log_event
+from Components.Dashboard.Automoderation.log_storage import log_event
 
 
 class InviteTrackerListener(commands.Cog):
@@ -100,3 +100,5 @@ class InviteTrackerListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(InviteTrackerListener(bot))
+
+

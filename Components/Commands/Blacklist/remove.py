@@ -1,8 +1,8 @@
-﻿import re
+import re
 import discord
 from discord.ext import commands
 from Components.Commands.Blacklist._storage import remove_from_blacklist
-from Components.Commands.Log._storage import log_event
+from Components.Dashboard.Automoderation.log_storage import log_event
 from Components.Commands._utils import make_embed
 
 async def _do_bl_remove(ctx: commands.Context, target_id_str: str = None):
@@ -47,3 +47,5 @@ async def setup(bot: commands.Bot):
     if "unblacklist" not in bot.all_commands:
         bot.add_command(unblacklist_cmd)
     await bot.add_cog(BlacklistRemoveCog(bot))
+
+

@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import clear_user_warnings
-from Components.Commands.Log._storage import log_event
+from Components.Dashboard.Automoderation.log_storage import log_event
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 
@@ -32,7 +32,7 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     )
 
     embed = discord.Embed(
-        title="️ All Warnings Cleared",
+        title="? All Warnings Cleared",
         description=f"**Target Member:** {user.mention} (`{user.id}`)",
         color=discord.Color.green()
     )
@@ -60,3 +60,5 @@ class ClearWarnsCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ClearWarnsCog(bot))
+
+

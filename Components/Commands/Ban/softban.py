@@ -1,9 +1,9 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord import app_commands
 from Components.Commands.Whitelist._storage import is_whitelisted
-from Components.Commands.Log._storage import log_event
-from Components.Commands.Log._modlog_storage import add_modlog
+from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
 import typing
 
@@ -51,7 +51,7 @@ class SoftbanCommand(commands.Cog):
             )
             
             embed = discord.Embed(
-                title="🔨 User Softbanned",
+                title="?? User Softbanned",
                 description=f" **{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*",
                 color=discord.Color.orange()
             )
@@ -78,3 +78,5 @@ class SoftbanCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SoftbanCommand(bot))
+
+

@@ -1,10 +1,10 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 import re
 import time
 from Components.Commands.Cases._storage import create_case
-from Components.Commands.Log._modlog_storage import add_modlog
+from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Database.mongodb import get_db
 from Components.Commands._utils import make_embed
 

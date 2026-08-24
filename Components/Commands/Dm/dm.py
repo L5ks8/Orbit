@@ -1,9 +1,9 @@
-﻿import asyncio
+import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
-from Components.Commands.Log._storage import log_event
+from Components.Dashboard.Automoderation.log_storage import log_event
 
 class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
     message_input = discord.ui.TextInput(
@@ -53,7 +53,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
                 await asyncio.sleep(0.35)
 
             summary_embed = discord.Embed(
-                title="📬 Mass Role DM Delivered",
+                title="?? Mass Role DM Delivered",
                 color=discord.Color.green()
             )
             summary_embed.add_field(name="Target Role", value=matched_role.mention, inline=True)
@@ -101,7 +101,7 @@ class ComposeDMView(discord.ui.View):
         self.author = author
         self.original_message = original_message
 
-    @discord.ui.button(label="Compose DM", style=discord.ButtonStyle.primary, emoji="✍️")
+    @discord.ui.button(label="Compose DM", style=discord.ButtonStyle.primary, emoji="??")
     async def compose_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.author.id:
             return await interaction.response.send_message(embed=make_embed("Only the command executor can use this."), ephemeral=True)
@@ -183,7 +183,7 @@ class DMCommand(commands.Cog):
 
         target_display = target_obj.mention if hasattr(target_obj, 'mention') else str(target_obj)
         embed = discord.Embed(
-            title="✍️ Compose Anonymous DM",
+            title="?? Compose Anonymous DM",
             description=f"Target: {target_display}\n\nClick the button below to open the composition window where you can properly format your anonymous message.",
             color=discord.Color.blue()
         )
@@ -213,3 +213,4 @@ class DMCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DMCommand(bot))
+

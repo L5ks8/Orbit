@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import delete_warning, get_user_warnings
-from Components.Commands.Log._storage import log_event
+from Components.Dashboard.Automoderation.log_storage import log_event
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 
@@ -27,7 +27,7 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Removed Warn ID:** `{warn_id}`\n**Remaining Warnings:** `{remaining}`"
     )
     embed = discord.Embed(
-        title="️ Warning Deleted",
+        title="? Warning Deleted",
         description=f"**Target Member:** {user.mention} (`{user.id}`)",
         color=discord.Color.green()
     )
@@ -55,3 +55,5 @@ class DelWarnCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DelWarnCog(bot))
+
+

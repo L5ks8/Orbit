@@ -1207,6 +1207,67 @@ export default function Moderation({ guildId }) {
                 </div>
                 <p className="text-xs text-neutral-600 leading-relaxed text-pretty">Warns, bans, kicks, timeouts &amp; unbans</p>
               </div>
+
+              {/* Server Logs */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-server w-3.5 h-3.5 text-orange-400">
+                    <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/>
+                    <rect width="20" height="8" x="2" y="14" rx="2" ry="2"/>
+                    <line x1="6" x2="6.01" y1="6" y2="6"/>
+                    <line x1="6" x2="6.01" y1="18" y2="18"/>
+                  </svg>
+                  <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Server Logs</span>
+                </div>
+                <div className="w-full">
+                  <CustomSelect 
+                    options={channelOptions} 
+                    value={logs.channels?.server_updates} 
+                    onChange={(val) => setLogs({ ...logs, channels: { ...logs.channels, server_updates: val }, categories: { ...logs.categories, channel_created: !!val, channel_deleted: !!val, channel_updated: !!val } })} 
+                    placeholder="Select log channel..." 
+                  />
+                </div>
+                <div className="flex gap-5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <TailwindToggle checked={logs.categories?.channel_created || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, channel_created: !logs.categories?.channel_created }})} />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus-circle w-3.5 h-3.5 text-neutral-500">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                        <path d="M12 8v8" />
+                      </svg>
+                      Channel Create
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <TailwindToggle checked={logs.categories?.channel_deleted || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, channel_deleted: !logs.categories?.channel_deleted }})} />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash w-3.5 h-3.5 text-neutral-500">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                      Channel Delete
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <TailwindToggle checked={logs.categories?.channel_updated || false} onChange={() => setLogs({ ...logs, categories: { ...logs.categories, channel_updated: !logs.categories?.channel_updated }})} />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit w-3.5 h-3.5 text-neutral-500">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" />
+                      </svg>
+                      Channel Rename
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
 
             {/* Ignored Channels */}

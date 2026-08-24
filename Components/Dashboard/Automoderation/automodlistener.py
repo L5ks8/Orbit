@@ -5,7 +5,7 @@ from discord.ext import commands
 from Components.Dashboard.Automoderation._storage import load_automod_config
 from Components.Commands.Warn._storage import add_warning, get_user_warnings
 from Components.Commands.Whitelist._storage import is_whitelisted
-from Components.Commands.Log._storage import log_event
+from Components.Dashboard.Automoderation.log_storage import log_event
 
 
 class AutoModListener(commands.Cog):
@@ -152,7 +152,7 @@ class AutoModListener(commands.Cog):
             except Exception:
                 pass
             try:
-                from Components.Commands.Log._modlog_storage import add_modlog
+                from Components.Commands.ModLog._modlog_storage import add_modlog
                 add_modlog(message.guild.id, message.author.id, self.bot.user.id, f"AutoMod ({action.capitalize()})", reason)
             except Exception:
                 pass
@@ -395,4 +395,7 @@ class AutoModListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModListener(bot))
+
+
+
 

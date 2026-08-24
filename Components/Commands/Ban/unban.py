@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import ActionRow, Button
-from Components.Commands.Log._storage import log_event
-from Components.Commands.Log._modlog_storage import add_modlog
+from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands._utils import make_embed
 
 class UnbanConfirmView(discord.ui.View):
@@ -96,3 +96,6 @@ class UnbanCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UnbanCommand(bot))
+
+
+

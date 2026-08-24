@@ -1,8 +1,8 @@
-﻿import re
+import re
 import discord
 from discord.ext import commands
 from Components.Commands.Whitelist._storage import add_to_whitelist
-from Components.Commands.Log._storage import log_event
+from Components.Dashboard.Automoderation.log_storage import log_event
 from Components.Commands._utils import make_embed
 
 async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
@@ -50,3 +50,5 @@ async def setup(bot: commands.Bot):
     if "whitelist" not in bot.all_commands:
         bot.add_command(whitelist_cmd)
     await bot.add_cog(WhitelistCog(bot))
+
+

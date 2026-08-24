@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import add_warning, get_user_warnings
-from Components.Commands.Log._storage import log_event
-from Components.Commands.Log._modlog_storage import add_modlog
+from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
 from Components.Commands.Whitelist._storage import is_whitelisted
@@ -139,3 +139,6 @@ async def warn_cmd_error(ctx: commands.Context, error):
 async def setup(bot: commands.Bot):
     if "warn" not in bot.all_commands:
         bot.add_command(warn_cmd)
+
+
+
