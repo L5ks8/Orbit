@@ -102,13 +102,7 @@ export default function BotProfile({ guildId }) {
       return <img src={config.avatar_url} alt="Avatar" className="w-full h-full object-cover" />;
     }
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-image-plus w-5 h-5 text-neutral-500">
-        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
-        <line x1="16" x2="22" y1="5" y2="5"></line>
-        <line x1="19" x2="19" y1="2" y2="8"></line>
-        <circle cx="9" cy="9" r="2"></circle>
-        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-      </svg>
+      <img src="/img/logo.png" alt="Orbit Logo" className="w-full h-full object-cover" />
     );
   };
   
@@ -185,7 +179,7 @@ export default function BotProfile({ guildId }) {
             <div className="px-5 pb-4 -mt-9 flex items-end gap-3">
               <div className="relative w-[72px] h-[72px] flex-shrink-0">
                 <div className="w-full h-full rounded-full overflow-hidden ring-[5px] ring-[#1e1f22] bg-neutral-900">
-                  <img src={config.avatar_url || "/logo.png"} alt="" className="w-full h-full object-cover opacity-90" />
+                  <img src={config.avatar_url || "/img/logo.png"} alt="" className="w-full h-full object-cover opacity-90" />
                 </div>
                 <div className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-[2.5px] ring-[#1e1f22]"></div>
               </div>
