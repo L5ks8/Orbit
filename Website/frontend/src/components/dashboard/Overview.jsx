@@ -173,7 +173,7 @@ export default function Overview({ guildId }) {
 
   if (initialLoading) {
     return (
-      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
+      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
         <div className="pb-card pb-server-header relative overflow-hidden">
           <div className="pb-header-glow-1"></div>
           <div className="pb-header-glow-2"></div>
@@ -197,7 +197,7 @@ export default function Overview({ guildId }) {
   }
 
   return (
-    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
       {/* Server Header Card */}
       <div className="pb-card pb-server-header relative overflow-hidden">
         <div className="pb-header-glow-1"></div>

@@ -393,7 +393,7 @@ export default function Moderation({ guildId }) {
 
   if (loading) {
     return (
-      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
+      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
         <div data-tour="feature-header" className="scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -432,7 +432,7 @@ export default function Moderation({ guildId }) {
   const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color })) : [];
 
   return (
-    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
       <div data-tour="feature-header" className="scroll-mt-24">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="flex items-center gap-2.5 min-w-0">
