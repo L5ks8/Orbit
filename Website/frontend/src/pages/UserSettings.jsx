@@ -869,22 +869,43 @@ export default function UserSettings() {
         <section>
           <h3 className="us-section-title">Security</h3>
           <div className="us-sec-card">
-            <div className="us-sec-row">
-              <div className="us-sec-left">
-                <div className="us-sec-icon">
-                  <Monitor size={16} />
+            {(user.login_history && user.login_history.length > 0) ? (
+              [...user.login_history].reverse().slice(0, 10).map((login, idx) => (
+                <div className="us-sec-row" key={idx} style={{ borderBottom: idx < Math.min(user.login_history.length, 10) - 1 ? '1px solid #262626' : 'none', padding: '16px 24px' }}>
+                  <div className="us-sec-left">
+                    <div className="us-sec-icon">
+                      <Monitor size={16} />
+                    </div>
+                    <div>
+                      <p className="us-sec-title">
+                        {login.user_agent ? (login.user_agent.length > 40 ? login.user_agent.substring(0, 40) + '...' : login.user_agent) : 'Unknown Device'}
+                        {idx === 0 && <span className="us-sec-current">Current</span>}
+                      </p>
+                      <p className="us-sec-loc">
+                        <MapPin size={12} /> {login.ip || 'Unknown Location'} · {new Date(login.timestamp * 1000).toLocaleString(activeLang || 'en-US')}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="us-sec-title">
-                    {deviceInfo || 'Chrome on Windows'}
-                    <span className="us-sec-current">Current</span>
-                  </p>
-                  <p className="us-sec-loc">
-                    <MapPin size={12} /> Current Location · Now
-                  </p>
+              ))
+            ) : (
+              <div className="us-sec-row" style={{ padding: '16px 24px' }}>
+                <div className="us-sec-left">
+                  <div className="us-sec-icon">
+                    <Monitor size={16} />
+                  </div>
+                  <div>
+                    <p className="us-sec-title">
+                      {deviceInfo || 'Chrome on Windows'}
+                      <span className="us-sec-current">Current</span>
+                    </p>
+                    <p className="us-sec-loc">
+                      <MapPin size={12} /> Current Location · Now
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="us-logout-card">

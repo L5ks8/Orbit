@@ -80,6 +80,31 @@ class AuthMixin:
             "access_token": access_token
         }
         
+        # Record Login History
+        try:
+            import sys
+            import os
+            import time
+            sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+            from Components.Database.mongodb import get_db
+            db = get_db()
+            ip = request.headers.get("X-Forwarded-For", request.remote)
+            if ip and "," in ip:
+                ip = ip.split(",")[0].strip()
+            user_agent = request.headers.get("User-Agent", "Unknown")
+            login_entry = {
+                "timestamp": int(time.time()),
+                "ip": ip,
+                "user_agent": user_agent
+            }
+            db["Users"].update_one(
+                {"_id": str(user_info["id"])},
+                {"$push": {"login_history": {"$each": [login_entry], "$slice": -10}}},
+                upsert=True
+            )
+        except Exception as e:
+            print(f"Failed to save login history: {e}")
+        
         # Check if this was a popup login
         is_popup = "popup=1" in state or "&popup=1" in next_url
         if is_popup:
@@ -196,6 +221,16 @@ class AuthMixin:
         session = await self.get_user_session(request)
         if not session:
             return web.json_response({"error": "Not authenticated"}, status=401)
+            
+        try:
+            from Components.Database.mongodb import get_db
+            db = get_db()
+            user_doc = db["Users"].find_one({"_id": str(session["id"])})
+            if user_doc and "login_history" in user_doc:
+                session["login_history"] = user_doc["login_history"]
+        except Exception as e:
+            session["login_history"] = []
+            
         return web.json_response(session)
 
     async def api_resolve_user(self, request: web.Request):
