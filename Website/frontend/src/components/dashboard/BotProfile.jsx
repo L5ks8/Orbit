@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useToast } from '../../ui/Toast';
+import { useToast } from '../ui/Toast';
 
 export default function BotProfile({ guildId }) {
   const [config, setConfig] = useState({
