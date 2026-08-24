@@ -295,7 +295,7 @@ export default function Moderation({ guildId }) {
 
   useEffect(() => {
     if (!guildId) return;
-    setLoading(true);
+    if (!serverData) setLoading(true);
     
     fetchRecentActions();
     
