@@ -347,7 +347,7 @@ export default function Invites() {
                     min="1"
                     aria-label="Number of invites required"
                     placeholder="Invites"
-                    className="w-16 flex-shrink-0 px-2 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-xs text-center placeholder-neutral-600 focus:outline-none focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600/30 transition-colors duration-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="!w-16 flex-shrink-0 px-2 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-xs text-center placeholder-neutral-600 focus:outline-none focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600/30 transition-colors duration-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     type="number"
                     value=""
                   />
