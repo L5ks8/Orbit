@@ -20,7 +20,8 @@ class DashboardMessage(commands.Cog):
         """
         db = get_db()
         if db is None:
-            return await ctx.send("❌ Database connection failed.")
+            embed = discord.Embed(description="Database connection failed.", color=discord.Color.red())
+            return await ctx.send(embed=embed)
             
         notification = {
             "target": target, # "all" or user id
@@ -32,7 +33,12 @@ class DashboardMessage(commands.Cog):
         db["Notifications"].insert_one(notification)
         
         target_display = "all users" if target.lower() == "all" else f"user ID {target}"
-        await ctx.send(f"✅ Notification successfully sent to **{target_display}** on the dashboard:\n> {message}")
+        embed = discord.Embed(
+            title="Notification Sent",
+            description=f"Successfully sent to **{target_display}** on the dashboard:\n\n> {message}",
+            color=0x2B2D31
+        )
+        await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(DashboardMessage(bot))
