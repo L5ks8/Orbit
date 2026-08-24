@@ -13,7 +13,6 @@ import BoostMessagesSettings from './modules/BoostMessagesSettings';
 import EconomySettings from './modules/EconomySettings';
 import GoodbyeMessagesSettings from './modules/GoodbyeMessagesSettings';
 import JoinRolesSettings from './modules/JoinRolesSettings';
-import AuditLogsSettings from './modules/AuditLogsSettings';
 import MessageLogsSettings from './modules/MessageLogsSettings';
 import SecuritySettings from './modules/SecuritySettings';
 import ServerStatsSettings from './modules/ServerStatsSettings';
@@ -40,7 +39,6 @@ export const modulesList = [
     { id: 'joinroles', category: 'Utility', name: 'Auto Roles', desc: 'Automatically assign roles to new members or tag wearers.', iconColor: 'rgba(34, 197, 94, 0.2)', icon: <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75" /> },
     { id: 'tempvoice', category: 'Utility', name: 'Temp Voice', desc: 'Allow users to create their own voice channels.', iconColor: 'rgba(249, 115, 22, 0.2)', icon: <path d="M12 2c-1.7 0-3 1.2-3 2.6v6.8c0 1.4 1.3 2.6 3 2.6s3-1.2 3-2.6V4.6C15 3.2 13.7 2 12 2z M19 10v1.6c0 3.6-3.1 6.4-7 6.4s-7-2.8-7-6.4V10 M12 18v4 M8 22h8" /> },
 
-    { id: 'logs', category: 'Logging', name: 'Logs', desc: 'Track everything that happens in your server.', iconColor: 'rgba(99, 102, 241, 0.2)', icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M12 18v-6 M9 15h6" /> },
 ];
 
 export default function Modules({ guildId }) {
@@ -216,7 +214,6 @@ export default function Modules({ guildId }) {
     else if (moduleId === 'economy') Component = EconomySettings;
     else if (moduleId === 'goodbye') Component = GoodbyeMessagesSettings;
     else if (moduleId === 'joinroles') Component = JoinRolesSettings;
-    else if (moduleId === 'logs') Component = AuditLogsSettings;
     else if (moduleId === 'messages') Component = MessageLogsSettings;
     else if (moduleId === 'security') Component = SecuritySettings;
     else if (moduleId === 'serverstats') Component = ServerStatsSettings;

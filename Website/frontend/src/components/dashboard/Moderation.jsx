@@ -251,7 +251,16 @@ export default function Moderation({ guildId }) {
         mention_spam: { ...mentionSpam },
         anti_zalgo: { ...antiZalgo },
         anti_caps: { ...antiCaps }
-      }
+      },
+      logs: logs ? {
+        enabled: logs.enabled,
+        executor_in_logs: logs.executor_in_logs,
+        global_exempt_channels: logs.global_exempt_channels,
+        global_exempt_roles: logs.global_exempt_roles,
+        categories: { ...logs.categories },
+        channels: { ...logs.channels },
+        roles: { ...logs.roles }
+      } : undefined
     };
   };
 
