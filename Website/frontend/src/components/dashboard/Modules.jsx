@@ -221,7 +221,7 @@ export default function Modules({ guildId }) {
     else return <div style={{ padding: '50px', color: '#fff', textAlign: 'center' }}>Module not found.</div>;
 
     return (
-      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+      <div style={{ padding: '40px', maxWidth: moduleId === 'welcome' ? '1200px' : '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
         {moduleId !== 'welcome' && (
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
