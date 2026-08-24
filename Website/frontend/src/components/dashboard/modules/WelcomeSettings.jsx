@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import SaveBar from '../../ui/SaveBar';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 
@@ -71,12 +70,18 @@ export default function WelcomeSettings({ config, channels, onSave, saving, onRe
       }
     });
 
-  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
-  const isDirty = JSON.stringify(getPayload()) !== initialState;
+const [initialStateStr, setInitialStateStr] = useState(() => JSON.stringify(getPayload()));
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = currentPayloadStr !== initialStateStr;
 
-  const handleSave = () => {
-    onSave(getPayload());
-  };
+  useEffect(() => {
+    if (!initialStateStr || !isDirty) return;
+    const timeoutId = setTimeout(() => {
+      onSave(JSON.parse(currentPayloadStr));
+      setInitialStateStr(currentPayloadStr);
+    }, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [currentPayloadStr, initialStateStr, isDirty, onSave]);
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8 sm:py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -244,7 +249,7 @@ export default function WelcomeSettings({ config, channels, onSave, saving, onRe
 
       </div>
 
-      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
+      
     </div>
   );
 }
