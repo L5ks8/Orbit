@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useToast } from "../../ui/Toast";
 import CustomSelect from "../../ui/CustomSelect";
 import EmojiPicker from "../../ui/EmojiPicker";
+import Toggle from "../../ui/Toggle";
 
 
 const PREDEFINED_TEMPLATES = {
@@ -499,12 +500,9 @@ export default function ReactionRoleBuilder({
                     <p className="text-[12.5px] font-medium text-white">Post to Discord on save</p>
                     <p className="text-[11px] text-neutral-500 mt-0.5">Pick a channel above to post.</p>
                   </div>
-                  <button 
-                    onClick={() => setPostToDiscord(!postToDiscord)}
-                    type="button" 
-                    className={`w-10 h-5 rounded-full transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 relative flex-shrink-0 ${postToDiscord ? 'bg-emerald-500' : 'bg-neutral-700'}`}>
-                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${postToDiscord ? 'left-[22px]' : 'left-0.5'}`}></span>
-                  </button>
+                  <div className="flex-shrink-0">
+                    <Toggle checked={postToDiscord} onChange={(e) => setPostToDiscord(e.target.checked)} />
+                  </div>
                 </div>
               </div>
 
@@ -525,12 +523,12 @@ export default function ReactionRoleBuilder({
                         <button onClick={() => moveComponent(idx, 1)} disabled={idx === components.length - 1} type="button" aria-label="Move down" className="flex items-center justify-center min-w-[28px] min-h-[28px] sm:min-w-0 sm:min-h-0 text-xs sm:text-[10px] leading-none px-0.5 disabled:opacity-30 hover:text-white transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded">▼</button>
                       </div>
                       
-                      <div className="flex-1 grid grid-cols-[44px_1fr] sm:grid-cols-[44px_1fr_140px] gap-2 min-w-0">
+                      <div className="flex-1 grid grid-cols-[40px_1fr] sm:grid-cols-[40px_1fr_140px] gap-2 min-w-0">
                         <div className="relative">
                           <button
                             type="button"
                             onClick={() => setEmojiPickerIndex(emojiPickerIndex === idx ? null : idx)}
-                            className="flex items-center justify-center w-11 h-11 rounded-xl bg-neutral-800 border border-neutral-700/50 text-xl hover:bg-neutral-700 hover:border-neutral-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                            className="flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700/50 text-xl hover:bg-neutral-700 hover:border-neutral-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                             aria-label="Pick emoji"
                           >
                             {comp.emoji || "🤔"}

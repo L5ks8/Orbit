@@ -393,16 +393,24 @@ export default function Roles({ guildId }) {
                             );
                           }
                           
-                          if (idx === 4 - reactionRoles.length) {
-                             return (
-                               <div key={`empty-${idx}`} className="rounded-xl border border-dashed border-neutral-800/60 bg-transparent flex items-center justify-center pointer-events-none">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4 text-neutral-700"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                               </div>
-                             );
-                          }
-
+                          const isLastThree = idx >= 6 - Math.min(reactionRoles.length, 5); // Assuming max 9 panels, the last 3 are hidden on mobile
+                          
                           return (
-                            <div key={`empty-${idx}`} className="rounded-xl border border-dashed border-neutral-800/60 bg-transparent pointer-events-none" />
+                            <button
+                              key={`empty-${idx}`}
+                              type="button"
+                              onClick={() => {
+                                setRrBuilderData(null);
+                                setRrBuilderOpen(true);
+                              }}
+                              aria-label="Add a reaction panel"
+                              className={`group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${isLastThree ? 'hidden lg:grid' : ''}`}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                <path d="M5 12h14" />
+                                <path d="M12 5v14" />
+                              </svg>
+                            </button>
                           );
                         })}
                       </div>
