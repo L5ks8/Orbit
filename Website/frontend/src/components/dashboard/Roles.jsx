@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { getCache, setCache } from "../../utils/cache";
 import { useToast } from "../ui/Toast";
 import LoadingScreen from "../ui/LoadingScreen";
+import DeleteConfirmation from "../ui/DeleteConfirmation";
 
 const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -142,6 +143,7 @@ export default function Roles({ guildId }) {
   const [reactionRoles, setReactionRoles] = useState([]);
   const [rrBuilderOpen, setRrBuilderOpen] = useState(false);
   const [rrBuilderData, setRrBuilderData] = useState(null);
+  const [panelToDelete, setPanelToDelete] = useState(null);
 
   // Auto roles state
   const jrInit = cachedData?.config?.joinroles || {};
@@ -346,14 +348,9 @@ export default function Roles({ guildId }) {
                           >
                             <button
                               type="button"
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                if (window.confirm("Delete this panel?")) {
-                                  try {
-                                    const res = await fetch(`/api/reactionroles/${guildId}/${rr.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-                                    if (res.ok) fetchReactionRoles();
-                                  } catch (err) { console.error(err); }
-                                }
+                                setPanelToDelete(rr);
                               }}
                               className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white hover:bg-red-500 hover:border-red-600 transition-all duration-150"
                             >
@@ -948,7 +945,6 @@ export default function Roles({ guildId }) {
           </div>
         </div>
       </div>
-
       <ReactionRoleBuilder
         isOpen={rrBuilderOpen}
         onClose={() => setRrBuilderOpen(false)}
@@ -957,18 +953,31 @@ export default function Roles({ guildId }) {
         serverData={serverData}
         onSaveSuccess={() => {
           setRrBuilderOpen(false);
-          fetch(`/api/reactionroles/${guildId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          })
-            .then((r) => r.json())
-            .then((d) => !d.error && setReactionRoles(d));
+          fetchReactionRoles();
         }}
         onDeleteSuccess={() => {
-          fetch(`/api/reactionroles/${guildId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          })
-            .then((r) => r.json())
-            .then((d) => !d.error && setReactionRoles(d));
+          setRrBuilderOpen(false);
+          fetchReactionRoles();
+        }}
+      />
+      <DeleteConfirmation 
+        isOpen={!!panelToDelete}
+        onClose={() => setPanelToDelete(null)}
+        title="Delete this reaction role?"
+        description="It disappears from your dashboard. This can't be undone."
+        onConfirm={async () => {
+          if (!panelToDelete) return;
+          try {
+            const res = await fetch(`/api/reactionroles/${guildId}/${panelToDelete.id}`, { 
+              method: "DELETE", 
+              headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } 
+            });
+            if (res.ok) fetchReactionRoles();
+          } catch (err) {
+            console.error(err);
+          } finally {
+            setPanelToDelete(null);
+          }
         }}
       />
     </main>
