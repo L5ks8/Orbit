@@ -157,7 +157,7 @@ export default function ReactionRoleBuilder({
 
         {/* Content Grid */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr,360px] min-h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] min-h-full">
             
             {/* Left Column */}
             <div className="divide-y divide-neutral-800/60">
