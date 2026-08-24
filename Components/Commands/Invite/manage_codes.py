@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands._utils import format_usage, make_embed
 
@@ -9,7 +9,7 @@ class ManageCodesCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="deleteinvite", description="Delete an invite code in the server.")
+    @commands.command(name="deleteinvite", description="Delete an invite code in the server.")
     @commands.has_permissions(manage_guild=True)
     async def deleteinvite(self, ctx: commands.Context, code: str):
         await ctx.defer()
@@ -43,7 +43,7 @@ class ManageCodesCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
-    @commands.hybrid_command(name="purge-invite-codes", description="Purge invite codes from your server based on conditions.")
+    @commands.command(name="purge-invite-codes", description="Purge invite codes from your server based on conditions.")
     @commands.has_permissions(manage_guild=True)
     async def purge_invite_codes(self, ctx: commands.Context, condition: Literal["all", "0_uses", "expired", "temporary"]):
         await ctx.defer()
