@@ -145,13 +145,23 @@ class GuildsMixin:
         user = await self.get_user_session(request)
         if not user:
             return web.json_response({"error": "Unauthorized"}, status=401)
+        if not hasattr(self, "_manageable_guilds_cache"):
+            self._manageable_guilds_cache = {}
             
+        import time
+        now = time.time()
+        cached = self._manageable_guilds_cache.get(user["id"])
+        if cached and (now - cached['time'] < 60):
+            return web.json_response(cached['data'])
+
         headers = {"Authorization": f"Bearer {user['access_token']}"}
         async with aiohttp.ClientSession() as session:
             async with session.get("https://discord.com/api/users/@me/guilds", headers=headers) as resp:
                 if resp.status != 200:
                     err_text = await resp.text()
                     print(f"[api_guilds] Discord API error {resp.status}: {err_text}", flush=True)
+                    if cached:
+                        return web.json_response(cached['data'])
                     return web.json_response({"error": "Failed to fetch guilds"}, status=400)
                 user_guilds = await resp.json()
         
@@ -198,6 +208,7 @@ class GuildsMixin:
             })
         
         print(f"[api_guilds] Returning {len(manageable_guilds)} manageable guilds", flush=True)
+        self._manageable_guilds_cache[user["id"]] = {'time': now, 'data': manageable_guilds}
         return web.json_response(manageable_guilds)
 
     async def api_guild_stats(self, request: web.Request):
