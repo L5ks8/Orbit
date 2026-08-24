@@ -51,8 +51,8 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 def load_log_config(guild_id: int) -> Dict[str, Any]:
     path = _get_file_path(guild_id)
     default = {
-        "enabled": False,
-        "executor_in_logs": False,
+        "enabled": True,
+        "executor_in_logs": True,
         "global_exempt_channels": [],
         "global_exempt_roles": [],
         "categories": DEFAULT_CATEGORIES.copy(),

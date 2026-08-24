@@ -17,6 +17,7 @@ from Components.Commands.ChannelAutomation._storage import load_automation_confi
 from Components.Commands.Boost._storage import load_boost_config, save_boost_config
 from Components.Commands.Level._storage import load_level_config, save_level_config
 from Components.Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
+from Components.Dashboard.BotProfile._storage import load_botprofile_config, save_botprofile_config
 
 
 class ConfigMixin:
@@ -951,3 +952,81 @@ class ConfigMixin:
             traceback.print_exc()
             return web.json_response({"error": str(e)}, status=400)
 
+    async def api_get_botprofile(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        data = load_botprofile_config(guild_id)
+        return web.json_response(data)
+
+    async def api_post_botprofile(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        try:
+            data = await request.json()
+            old_config = load_botprofile_config(guild_id)
+            
+            def _clean_cloudinary(old_url: str, new_url: str):
+                if old_url and old_url != new_url and "res.cloudinary.com" in old_url:
+                    from Components.Database.cloudinary_storage import delete_image_by_url
+                    asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
+            
+            new_avatar = data.get("avatar_url", "")
+            new_banner = data.get("banner_url", "")
+            
+            _clean_cloudinary(old_config.get("avatar_url", ""), new_avatar)
+            _clean_cloudinary(old_config.get("banner_url", ""), new_banner)
+            
+            save_botprofile_config(guild_id, data)
+            
+            # Update discord bot member
+            nickname = data.get("nickname", "")
+            bio = data.get("bio", "")
+            
+            async def _fetch_bytes(url):
+                if not url:
+                    return None
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(url) as resp:
+                            if resp.status == 200:
+                                return await resp.read()
+                except Exception:
+                    pass
+                return None
+                
+            avatar_bytes = await _fetch_bytes(new_avatar)
+            banner_bytes = await _fetch_bytes(new_banner)
+            
+            # Apply to Discord
+            try:
+                edit_kwargs = {"nick": nickname if nickname else None}
+                if avatar_bytes is not None or not new_avatar:
+                    edit_kwargs["avatar"] = avatar_bytes if new_avatar else None
+                if banner_bytes is not None or not new_banner:
+                    edit_kwargs["banner"] = banner_bytes if new_banner else None
+                if bio is not None:
+                    edit_kwargs["bio"] = bio
+                
+                await guild.me.edit(**edit_kwargs)
+            except Exception as e:
+                print(f"Failed to edit bot profile on guild {guild_id}: {e}")
+                
+            return web.json_response({"success": True})
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return web.json_response({"error": str(e)}, status=500)
