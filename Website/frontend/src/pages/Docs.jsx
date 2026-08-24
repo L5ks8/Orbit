@@ -675,6 +675,18 @@ export const docsData = {
       </>
     )
   },
+  automations: {
+    title: 'Automations',
+    icon: <ZapIcon />,
+    content: (
+      <>
+        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
+        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+          Automations allow you to streamline your server by automatically responding to users, welcoming new members, and setting up honeypots. Select a sub-category on the left to learn more.
+        </p>
+      </>
+    )
+  },
   'automations-welcome': {
     title: 'Welcome Messages',
     toc: [
