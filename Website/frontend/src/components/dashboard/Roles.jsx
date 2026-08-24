@@ -126,6 +126,8 @@ const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
   );
 };
 
+import ReactionRoleBuilder from "./modules/ReactionRoleBuilder";
+
 export default function Roles({ guildId }) {
   const toast = useToast();
 
@@ -134,6 +136,11 @@ export default function Roles({ guildId }) {
   const [loading, setLoading] = useState(!cachedData);
   const [initialStateStr, setInitialStateStr] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Reaction Roles State
+  const [reactionRoles, setReactionRoles] = useState([]);
+  const [rrBuilderOpen, setRrBuilderOpen] = useState(false);
+  const [rrBuilderData, setRrBuilderData] = useState(null);
 
   // Auto roles state
   const jrInit = cachedData?.config?.joinroles || {};
@@ -168,18 +175,29 @@ export default function Roles({ guildId }) {
     if (!guildId) return;
     if (!serverData) setLoading(true);
 
-    fetch(`/api/config/${guildId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setServerData(data);
-        setCache(`roles_serverData_${guildId}`, data);
-        const jr = data?.config?.joinroles || {};
+    Promise.all([
+      fetch(`/api/config/${guildId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }).then((res) => res.json()),
+      fetch(`/api/reactionroles/${guildId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }).then((res) => res.json()),
+    ])
+      .then(([configData, rrData]) => {
+        setServerData(configData);
+        setCache(`roles_serverData_${guildId}`, configData);
+        const jr = configData?.config?.joinroles || {};
         setAutoRolesEnabled(jr.enabled || false);
         setUserRoles((jr.user_roles || []).map(String));
+        
+        if (!rrData.error) {
+          setReactionRoles(rrData);
+        }
+        
         setLoading(false);
       })
       .catch((err) => {
@@ -302,207 +320,94 @@ export default function Roles({ guildId }) {
                           Reaction panels
                         </span>
                         <span className="text-[11px] tabular-nums text-neutral-500 px-1.5 py-0.5 rounded-md bg-neutral-800/50 border border-neutral-800">
-                          0
+                          {reactionRoles.length}/9
                         </span>
                       </div>
                     </div>
                     <div
                       data-tour="reactionroles-list"
                       className="scroll-mt-24 p-4 sm:p-5 flex-1 min-h-0"
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 auto-rows-fr h-full">
-                        <button
-                          type="button"
-                          data-tour="reactionroles-create"
-                          className="scroll-mt-24 group rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-                        >
-                          <span className="grid place-items-center w-8 h-8 rounded-full bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width={24}
-                              height={24}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="lucide lucide-plus w-4 h-4"
-                            >
-                              <path d="M5 12h14" />
-                              <path d="M12 5v14" />
-                            </svg>
-                          </span>
-                          <span className="text-xs font-medium">New panel</span>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                    >                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 auto-rows-fr h-full">
+                        {reactionRoles.length < 9 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRrBuilderData(null);
+                              setRrBuilderOpen(true);
+                            }}
+                            data-tour="reactionroles-create"
+                            className="scroll-mt-24 group rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                           >
-                            <path d="M5 12h14" />
-                            <path d="M12 5v14" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                            <span className="grid place-items-center w-8 h-8 rounded-full bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="lucide lucide-plus w-4 h-4"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M12 5v14" />
+                              </svg>
+                            </span>
+                            <span className="text-xs font-medium">New panel</span>
+                          </button>
+                        )}
+                        {reactionRoles.map((rr) => (
+                          <button
+                            key={rr.id}
+                            type="button"
+                            onClick={() => {
+                              setRrBuilderData(rr);
+                              setRrBuilderOpen(true);
+                            }}
+                            className="group rounded-xl border border-neutral-800 bg-neutral-900/50 hover:bg-neutral-800 flex flex-col items-start p-4 text-left transition-[background-color,border-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                           >
-                            <path d="M5 12h14" />
-                            <path d="M12 5v14" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M12 5v14" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M12 5v14" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M12 5v14" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M12 5v14" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M12 5v14" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Add a reaction panel"
-                          className="group rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 grid place-items-center text-neutral-700 hover:text-neutral-300 transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-plus w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M12 5v14" />
-                          </svg>
-                        </button>
+                            <div className="flex items-center gap-2 mb-2 w-full">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={16}
+                                height={16}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-neutral-400 group-hover:text-white transition-colors"
+                              >
+                                <polyline points="15 18 9 12 15 6" />
+                              </svg>
+                              <span className="text-sm font-medium text-white truncate">
+                                {rr.name || "Unnamed Panel"}
+                              </span>
+                            </div>
+                            <div className="text-xs text-neutral-500 flex items-center gap-1 mt-auto">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={12}
+                                height={12}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <line x1="4" x2="20" y1="9" y2="9" />
+                                <line x1="4" x2="20" y1="15" y2="15" />
+                                <line x1="10" x2="8" y1="3" y2="21" />
+                                <line x1="16" x2="14" y1="3" y2="21" />
+                              </svg>
+                              Channel: {rr.channel_id || "Unset"}
+                            </div>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -564,7 +469,7 @@ export default function Roles({ guildId }) {
                   className="animate-fade-in-up "
                   style={{ animationDelay: "140ms", animationFillMode: "both" }}
                 >
-                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col min-h-[280px]">
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col min-h-[280px]">
                     <div className="px-4 py-3 border-b border-neutral-800 flex items-center gap-2 flex-shrink-0">
                       <div className="p-1.5 rounded-lg bg-violet-500/10">
                         <svg
@@ -1021,6 +926,28 @@ export default function Roles({ guildId }) {
           </div>
         </div>
       </div>
+
+      <ReactionRoleBuilder
+        isOpen={rrBuilderOpen}
+        onClose={() => setRrBuilderOpen(false)}
+        initialData={rrBuilderData}
+        guildId={guildId}
+        serverData={serverData}
+        onSaveSuccess={() => {
+          fetch(`/api/reactionroles/${guildId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          })
+            .then((r) => r.json())
+            .then((d) => !d.error && setReactionRoles(d));
+        }}
+        onDeleteSuccess={() => {
+          fetch(`/api/reactionroles/${guildId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          })
+            .then((r) => r.json())
+            .then((d) => !d.error && setReactionRoles(d));
+        }}
+      />
     </main>
   );
 }
