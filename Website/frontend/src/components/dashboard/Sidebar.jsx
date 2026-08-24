@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Bot, User, Activity,
@@ -8,10 +8,35 @@ import {
   Volume2, ChevronLeft, ExternalLink
 } from 'lucide-react';
 
+import { getCache, setCache } from '../../utils/cache';
+
 export default function Sidebar({ guildId, isOpen = true }) {
+  const [guildInfo, setGuildInfo] = useState(() => getCache(`sidebar_guild_${guildId}`) || null);
+
+  useEffect(() => {
+    if (!guildId) return;
+    if (!guildInfo) {
+      fetch('/api/guilds', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
+        .then(res => res.json())
+        .then(data => {
+          const guildsArray = Array.isArray(data) ? data : (data.guilds || []);
+          const g = guildsArray.find(g => String(g.id) === String(guildId));
+          if (g) {
+            setGuildInfo(g);
+            setCache(`sidebar_guild_${guildId}`, g);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [guildId]);
+
+  const serverName = guildInfo ? guildInfo.name : 'Loading...';
+  const serverIconUrl = guildInfo?.icon
+    ? `https://cdn.discordapp.com/icons/${guildInfo.id}/${guildInfo.icon}.png?size=128`
+    : '/img/logo.png';
   const sections = [
     {
-      title: 'MAIN AREA',
+      title: 'MAIN',
       links: [
         { name: 'Overview', path: `/dashboard/${guildId}/overview`, icon: <LayoutDashboard size={16} /> },
         { name: 'AI Builder', path: `/dashboard/${guildId}/ai-builder`, icon: <Bot size={16} /> },
@@ -195,9 +220,9 @@ export default function Sidebar({ guildId, isOpen = true }) {
           {/* Server Selector */}
           <div className="custom-sidebar-server">
             <Link to="/dashboard" className="custom-server-btn">
-              <img src="https://cdn.discordapp.com/icons/1525603130358759575/bd2ac62de0a19a35f4f19a24eb03a219.png?size=128" alt="Server" style={{ width: '40px', height: '40px', borderRadius: '12px', objectFit: 'cover' }} onError={(e) => { e.target.src = '/img/logo.png'; }} />
+              <img src={serverIconUrl} alt="Server" style={{ width: '40px', height: '40px', borderRadius: '12px', objectFit: 'cover' }} onError={(e) => { e.target.src = '/img/logo.png'; }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '14px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>Orbit Support</p>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>{serverName}</p>
                 <p style={{ fontSize: '12px', color: '#737373', margin: 0 }}>Click to switch</p>
               </div>
               <ChevronLeft size={16} color="#a3a3a3" />

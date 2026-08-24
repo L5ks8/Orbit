@@ -89,7 +89,7 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-0.5 p-0.5 rounded-xl bg-neutral-800">
         {actions.map(action => {
-          const isSelected = value.toLowerCase() === action.id;
+          const isSelected = (value || '').toLowerCase() === action.id;
           return (
             <button
               key={action.id}
@@ -103,7 +103,7 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
         })}
       </div>
       
-      {value.toLowerCase() === 'timeout' && (
+      {(value || '').toLowerCase() === 'timeout' && (
         <div className="flex items-center gap-2.5 mt-3">
           <span className="text-sm text-neutral-400">Timed out for</span>
           <div className="w-[140px]">
@@ -118,7 +118,7 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
         </div>
       )}
       
-      {value.toLowerCase() === 'ban' && (
+      {(value || '').toLowerCase() === 'ban' && (
         <div className="flex items-center gap-2.5 mt-3">
           <span className="text-sm text-neutral-400">Banned for</span>
           <div className="w-[140px]">
@@ -139,7 +139,7 @@ const ActionSelector = ({ value, onChange, durationValue, onDurationChange }) =>
 const FilterLevelSelector = ({ value, onChange, levels }) => (
   <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${levels.length}, minmax(0px, 1fr))` }}>
     {levels.map(level => {
-      const isSelected = value.toLowerCase() === level.id.toLowerCase();
+      const isSelected = (value || '').toLowerCase() === level.id.toLowerCase();
       
       let borderClass = 'border-neutral-800 hover:border-neutral-700';
       let bgOuterClass = 'bg-neutral-800/40';
