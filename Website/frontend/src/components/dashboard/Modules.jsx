@@ -222,6 +222,7 @@ export default function Modules({ guildId }) {
 
     return (
       <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+        {moduleId !== 'welcome' && (
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ background: moduleInfo.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '16px' }}>
@@ -238,6 +239,7 @@ export default function Modules({ guildId }) {
              <Toggle checked={getModuleState(moduleId)} onChange={() => toggleModule(moduleId)} />
           </div>
         </div>
+        )}
 
         <Component 
           key={formKey}
