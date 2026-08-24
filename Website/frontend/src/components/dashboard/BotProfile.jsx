@@ -129,33 +129,6 @@ export default function BotProfile({ guildId }) {
     );
   };
 
-  if (initialLoading) {
-    return (
-      <div className="pb-overview-container" style={{ maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
-        <div data-tour="feature-header" className="scroll-mt-24">
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bot w-5 h-5">
-                  <path d="M12 8V4H8"></path>
-                  <rect width="16" height="12" x="4" y="8" rx="2"></rect>
-                  <path d="M2 14h2"></path>
-                  <path d="M20 14h2"></path>
-                  <path d="M15 13v2"></path>
-                  <path d="M9 13v2"></path>
-                </svg>
-              </span>
-              <h1 className="text-base font-medium text-white truncate">Bot Profile</h1>
-            </div>
-          </div>
-        </div>
-        <div className="mt-6" style={{ minHeight: '400px' }}>
-          <LoadingScreen message="Loading profile..." />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="pb-overview-container" style={{ maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
       <div data-tour="feature-header" className="scroll-mt-24">
@@ -184,7 +157,12 @@ export default function BotProfile({ guildId }) {
       </div>
       
       <div className="mt-6">
-        <div className="space-y-4">
+        {initialLoading ? (
+          <div style={{ minHeight: '400px' }}>
+            <LoadingScreen message="Loading profile..." />
+          </div>
+        ) : (
+          <div className="space-y-4">
           {/* Peak Bot Card */}
           <div className="rounded-2xl overflow-hidden border border-neutral-800 bg-[#1e1f22] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
             <div className="relative h-[120px] w-full">
@@ -357,9 +335,9 @@ export default function BotProfile({ guildId }) {
                 </div>
               </div>
             </div>
+            </div>
           </div>
-          
-        </div>
+        )}
       </div>
     </div>
   );
