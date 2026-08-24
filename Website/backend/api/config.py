@@ -197,6 +197,7 @@ class ConfigMixin:
                 "anti_caps": {
                     "enabled": automod_cfg.get("anti_caps", {}).get("enabled", False),
                     "action": automod_cfg.get("anti_caps", {}).get("action", "warn"),
+                    "percent": automod_cfg.get("anti_caps", {}).get("percent", 70),
                     "timeout_duration_min": automod_cfg.get("anti_caps", {}).get("timeout_duration_min", 5),
                     "exempt_channels": automod_cfg.get("anti_caps", {}).get("exempt_channels", []),
                     "exempt_roles": automod_cfg.get("anti_caps", {}).get("exempt_roles", [])
@@ -569,7 +570,7 @@ class ConfigMixin:
                     {"name": "allow_media", "type": bool, "default": False},
                     {"name": "allow_gifs", "type": bool, "default": False}
                 ])
-                save_submodule("anti_caps", {}, [])
+                save_submodule("anti_caps", {}, [{"name": "percent", "type": int, "default": 70}])
                 save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
                 save_submodule("anti_bot", {"action": "kick"}, [])
                 save_submodule("anti_zalgo", {"action": "warn"}, [])
@@ -720,7 +721,7 @@ class ConfigMixin:
 
                 save_automation_config(guild_id, new_auto)
 
-            if user_perms.get("can_moderation") and "logs" in data:
+            if user_perms.get("can_messages") and "logs" in data:
                 l_cfg = load_log_config(guild_id)
                 l_data = data["logs"]
                 

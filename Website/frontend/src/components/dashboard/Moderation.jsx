@@ -977,12 +977,12 @@ export default function Moderation({ guildId }) {
                       <div className="flex items-center justify-between">
                         <label className="text-sm text-neutral-200">Caps filter</label>
                         <div className="flex items-center gap-3">
-                          <TailwindToggle checked={antiLink.block_invites} onChange={() => setAntiLink({ ...antiLink, block_invites: !antiLink.block_invites })} />
+                          <TailwindToggle checked={antiCaps.enabled} onChange={() => setAntiCaps({ ...antiCaps, enabled: !antiCaps.enabled })} />
                         </div>
                       </div>
                       <div className="mt-3">
                         <div className="flex items-center h-10 bg-neutral-700/50 border border-neutral-700 hover:border-neutral-600 hover:bg-neutral-700 rounded-xl transition-all duration-150 ease-out focus-within:border-neutral-600 focus-within:bg-neutral-700 focus-within:ring-2 focus-within:ring-white/10 ">
-                          <input min={50} max={100}  autoComplete="off" className="h-full w-full !bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" defaultValue={70} />
+                          <input min={50} max={100}  autoComplete="off" className="h-full w-full !bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={antiCaps.percent || 70} onChange={(e) => setAntiCaps({ ...antiCaps, percent: parseInt(e.target.value) || 70 })} />
                           <span className="pr-3 text-xs font-medium text-neutral-500 flex-shrink-0 select-none">% caps</span>
                         </div>
                       </div>
@@ -992,7 +992,7 @@ export default function Moderation({ guildId }) {
                 <div className="px-4 sm:px-5 py-3">
                   <label className="text-sm text-neutral-200 block mb-2">Max Mentions</label>
                   <div className="flex items-center h-10 bg-neutral-700/50 border border-neutral-700 hover:border-neutral-600 hover:bg-neutral-700 rounded-xl transition-all duration-150 ease-out focus-within:border-neutral-600 focus-within:bg-neutral-700 focus-within:ring-2 focus-within:ring-white/10">
-                    <input min={0} max={50} autoComplete="off" className="h-full w-full !bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={general.max_mentions} onChange={(e) => setGeneral({ ...general, max_mentions: parseInt(e.target.value) || 5 })} />
+                    <input min={0} max={50} autoComplete="off" className="h-full w-full !bg-transparent px-3 text-sm text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" value={mentionSpam.max_mentions} onChange={(e) => setMentionSpam({ ...mentionSpam, max_mentions: parseInt(e.target.value) || 5 })} />
                     <span className="pr-3 text-xs font-medium text-neutral-500 flex-shrink-0 select-none">per msg</span>
                   </div>
                 </div>
