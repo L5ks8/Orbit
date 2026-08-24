@@ -417,7 +417,7 @@ export default function Roles({ guildId }) {
             <div className="order-first lg:order-last flex flex-col">
               <div className="flex flex-col gap-5 flex-1">
                 <div
-                  className="animate-fade-in-up "
+                  className="animate-fade-in-up relative z-50"
                   style={{ animationDelay: "70ms", animationFillMode: "both" }}
                 >
                   <div className="rounded-2xl border border-neutral-800 bg-neutral-900 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col ">
