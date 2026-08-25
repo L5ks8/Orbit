@@ -112,32 +112,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
         </div>
       </div>
 
-      <div className="mt-1 flex flex-col gap-5">
-        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0 bg-emerald-500/10">
-                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-power w-6 h-6 text-emerald-400">
-                  <path d="M12 2v10" />
-                  <path d="M18.4 6.6a9 9 0 1 1-12.77.04" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white mb-1">
-                  Enable Support Tickets
-                </h1>
-                <p className="text-sm text-neutral-400">
-                  Allow users to open support tickets via a panel on this server.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3" data-tour="feature-toggle">
-              <Toggle checked={ticketEnabled} onChange={() => setTicketEnabled(!ticketEnabled)} />
-            </div>
-          </div>
-        </div>
-
-        <div className={`flex flex-col gap-6 transition-opacity duration-300 ${!ticketEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className="mt-1 flex flex-col gap-6">
         
         <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
           <div className="flex items-center justify-between gap-4 px-5 py-4">
@@ -385,7 +360,6 @@ export default function TicketSettings({ config, channels, roles, categories, on
           </div>
         </div>
       )}
-    </div>
     </main>
   );
 }
