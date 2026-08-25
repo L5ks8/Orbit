@@ -468,8 +468,8 @@ class ActionsMixin:
             data = await request.json()
             dm_type = data.get("type", "welcome")
             
-            token_data = request.get("user")
-            user_id = token_data.get("id") if token_data else None
+            user = await self.get_user_session(request)
+            user_id = user["id"] if user else None
             
             member = None
             if user_id:
@@ -552,17 +552,19 @@ class ActionsMixin:
             test_type = data.get("type", "welcome")
             
             member = guild.me
-            cog = self.bot.get_cog("WelcomeGoodbye")
-            if not cog:
-                return web.json_response({"error": "Welcome module is not loaded."}, status=500)
-                
             from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config, load_goodbye_config
             if test_type == "welcome":
+                cog = self.bot.get_cog("WelcomeListener")
+                if not cog:
+                    return web.json_response({"error": "Welcome module is not loaded."}, status=500)
                 config = load_welcome_config(guild_id)
                 if not config.get("channel_id"):
                     return web.json_response({"error": "No welcome channel is configured and saved."}, status=400)
                 await cog.on_member_join(member, override_config=config, force_test=True)
             else:
+                cog = self.bot.get_cog("GoodbyeListener")
+                if not cog:
+                    return web.json_response({"error": "Goodbye module is not loaded."}, status=500)
                 config = load_goodbye_config(guild_id)
                 if not config.get("channel_id"):
                     return web.json_response({"error": "No goodbye channel is configured and saved."}, status=400)

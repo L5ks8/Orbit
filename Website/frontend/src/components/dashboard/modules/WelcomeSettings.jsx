@@ -3,6 +3,7 @@ import DiscordPreview, { parseDiscordMarkdown } from "../../ui/DiscordPreview";
 import Toggle from "../../ui/Toggle";
 import CustomSelect from "../../ui/CustomSelect";
 import { SketchPicker } from "react-color";
+import { useToast } from '../../ui/Toast';
 
 export default function WelcomeSettings({
   guildId,
@@ -12,6 +13,7 @@ export default function WelcomeSettings({
   saving,
   onReset,
 }) {
+  const { addToast } = useToast();
   const wCfg = config?.welcome || {};
   const gCfg = config?.goodbye || {};
 
@@ -60,20 +62,24 @@ export default function WelcomeSettings({
     // We will just use the toast logic passed down or handled here
     const formData = new FormData();
     formData.append("file", file);
-    try {
-      const res = await fetch("/api/upload/image", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: formData
-      });
-      const data = await res.json();
-      if (!data.error) {
-        if (type === "welcome") setWelcomeImageUrl(data.url);
-        if (type === "goodbye") setGoodbyeImageUrl(data.url);
+      try {
+        const res = await fetch("/api/upload/image", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          body: formData
+        });
+        const data = await res.json();
+        if (!data.error) {
+          if (type === "welcome") setWelcomeImageUrl(data.url);
+          if (type === "goodbye") setGoodbyeImageUrl(data.url);
+          addToast("Image uploaded successfully!", "success");
+        } else {
+          addToast("Error: " + data.error, "error");
+        }
+      } catch (e) {
+        console.error(e);
+        addToast("Failed to upload image", "error");
       }
-    } catch (e) {
-      console.error(e);
-    }
   };
     
   const isFirstRender = useRef(true);
@@ -89,18 +95,18 @@ export default function WelcomeSettings({
   
   const handleTestDm = async (type) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/server/${guildId}/test-dm`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ type }),
-      });
-      const data = await res.json();
-      if (data.error) alert('Error: ' + data.error);
-      else alert('Test DM sent!');
-    } catch (e) {
-      alert('Failed to send test DM');
-    }
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/server/${guildId}/test-dm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ type }),
+        });
+        const data = await res.json();
+        if (data.error) addToast('Error: ' + data.error, 'error');
+        else addToast('Test DM sent!', 'success');
+      } catch (e) {
+        addToast('Failed to send test DM', 'error');
+      }
   };
 
   const handleTestWelcome = async (type) => {
@@ -112,10 +118,10 @@ export default function WelcomeSettings({
         body: JSON.stringify({ type }),
       });
       const data = await res.json();
-      if (data.error) alert('Error: ' + data.error);
-      else alert('Test message sent!');
+      if (data.error) addToast('Error: ' + data.error, 'error');
+      else addToast('Test message sent!', 'success');
     } catch (e) {
-      alert('Failed to send test message');
+      addToast('Failed to send test message', 'error');
     }
   };
 
@@ -547,7 +553,7 @@ export default function WelcomeSettings({
                         </div>
                         <div className="space-y-1.5">
                           <div className="relative rounded-xl border border-dashed transition-all overflow-hidden h-24 flex flex-col items-center justify-center border-neutral-700 hover:border-neutral-600 bg-neutral-800/40">
-                            <div className="flex flex-col items-center justify-center cursor-pointer">
+                            <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width={24}
@@ -570,7 +576,17 @@ export default function WelcomeSettings({
                               <span className="text-[10px] text-neutral-500 mt-0.5">
                                 PNG • JPG • WebP • GIF • up to 4 MB
                               </span>
-                            </div>
+                              <input
+                                accept="image/png,image/jpeg,image/webp,image/gif"
+                                className="hidden"
+                                type="file"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    handleUpload(e.target.files[0], "welcome");
+                                  }
+                                }}
+                              />
+                            </label>
                             <button
                               type="button"
                               className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-md bg-neutral-700/50 hover:bg-neutral-700 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors"
@@ -592,11 +608,6 @@ export default function WelcomeSettings({
                               </svg>
                               Use URL
                             </button>
-                            <input
-                              accept="image/png,image/jpeg,image/webp,image/gif"
-                              className="hidden"
-                              type="file"
-                            />
                           </div>
                         </div>
                       </div>
@@ -1144,7 +1155,7 @@ export default function WelcomeSettings({
                           </div>
                           <div className="space-y-1.5">
                             <div className="relative rounded-xl border border-dashed transition-all overflow-hidden h-24 flex flex-col items-center justify-center border-neutral-700 hover:border-neutral-600 bg-neutral-800/40">
-                              <div className="flex flex-col items-center justify-center cursor-pointer">
+                              <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   width={24}
@@ -1167,7 +1178,17 @@ export default function WelcomeSettings({
                                 <span className="text-[10px] text-neutral-500 mt-0.5">
                                   PNG &bull; JPG &bull; WebP &bull; GIF &bull; up to 4 MB
                                 </span>
-                              </div>
+                                <input
+                                  accept="image/png,image/jpeg,image/webp,image/gif"
+                                  className="hidden"
+                                  type="file"
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleUpload(e.target.files[0], "goodbye");
+                                    }
+                                  }}
+                                />
+                              </label>
                               <button
                                 type="button"
                                 className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-md bg-neutral-700/50 hover:bg-neutral-700 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors"
@@ -1189,11 +1210,6 @@ export default function WelcomeSettings({
                                 </svg>
                                 Use URL
                               </button>
-                              <input
-                                accept="image/png,image/jpeg,image/webp,image/gif"
-                                className="hidden"
-                                type="file"
-                              />
                             </div>
                           </div>
                         </div>
