@@ -27,6 +27,7 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         "options_slots": [],
         "ticket_counter": 0,
         "active_tickets": {},
+        "closed_tickets": [],
         "blacklist": {},
         "auto_close_time_enabled": False,
         "auto_close_time_hours": 24,
@@ -45,6 +46,14 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
 
     if "active_tickets" not in data:
         data["active_tickets"] = {}
+    if "closed_tickets" not in data or not isinstance(data["closed_tickets"], list):
+        data["closed_tickets"] = []
+        
+    # Prune closed tickets older than 30 days to prevent bloat
+    now = time.time()
+    thirty_days = 30 * 24 * 60 * 60
+    data["closed_tickets"] = [t for t in data["closed_tickets"] if now - t.get("closed_at", 0) < thirty_days]
+
     if "blacklist" not in data:
         data["blacklist"] = {}
     if "ticket_counter" not in data:
@@ -118,6 +127,10 @@ def close_active_ticket(guild_id: int, channel_id: int) -> Optional[Dict[str, An
     config = load_ticket_config(guild_id)
     ticket_data = config.get("active_tickets", {}).pop(str(channel_id), None)
     if ticket_data:
+        ticket_data["closed_at"] = time.time()
+        if "closed_tickets" not in config:
+            config["closed_tickets"] = []
+        config["closed_tickets"].append(ticket_data)
         save_ticket_config(guild_id, config)
     return ticket_data
 

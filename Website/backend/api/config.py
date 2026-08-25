@@ -47,6 +47,30 @@ class ConfigMixin:
         
         from Components.Systems.Tickets._storage import load_ticket_config
         ticket_cfg = load_ticket_config(guild_id)
+        
+        import time
+        now = time.time()
+        active_tickets = ticket_cfg.get("active_tickets", {})
+        open_count = len(active_tickets)
+        claimed_count = sum(1 for t in active_tickets.values() if t.get("claimed_by") is not None)
+        
+        closed_tickets = ticket_cfg.get("closed_tickets", [])
+        seven_days_ago = now - (7 * 24 * 60 * 60)
+        resolved_7d = sum(1 for t in closed_tickets if t.get("closed_at", 0) >= seven_days_ago)
+        
+        total_time = 0
+        resolved_count = len(closed_tickets)
+        for t in closed_tickets:
+            total_time += (t.get("closed_at", now) - t.get("created_at", now))
+            
+        if resolved_count > 0:
+            avg_seconds = total_time / resolved_count
+            if avg_seconds < 3600:
+                avg_res_str = "<1h"
+            else:
+                avg_res_str = f"{int(avg_seconds // 3600)}h"
+        else:
+            avg_res_str = "0h"
         logs_cfg = load_log_config(guild_id)
         automation_cfg = load_automation_config(guild_id)
         
@@ -280,6 +304,25 @@ class ConfigMixin:
                         "category_id": str(slot.get("category_id")) if slot.get("category_id") else ""
                     }
                     for slot in ticket_cfg.get("options_slots", []) if isinstance(slot, dict)
+                ],
+                "stats": {
+                    "open": open_count,
+                    "claimed": claimed_count,
+                    "resolved": resolved_7d,
+                    "avg_resolution": avg_res_str
+                },
+                "active_tickets_list": [
+                    {
+                        "channel_id": str(k),
+                        "creator_id": str(v.get("creator_id", "")),
+                        "claimed_by": str(v.get("claimed_by", "")) if v.get("claimed_by") else None,
+                        "created_at": v.get("created_at", 0),
+                        "subject": v.get("subject", ""),
+                        "description": v.get("description", ""),
+                        "category_option": v.get("category_option", ""),
+                        "number": v.get("number", 0)
+                    }
+                    for k, v in active_tickets.items()
                 ]
             },
             "logs": logs_cfg,

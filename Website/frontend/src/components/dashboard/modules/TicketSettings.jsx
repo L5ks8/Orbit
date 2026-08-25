@@ -4,6 +4,9 @@ import Toggle from '../../ui/Toggle';
 
 export default function TicketSettings({ config, channels, roles, categories, onSave, saving, onReset }) {
   const tCfg = config?.ticket || {};
+  const stats = tCfg.stats || { open: 0, claimed: 0, resolved: 0, avg_resolution: '0h' };
+
+  const activeTickets = tCfg.active_tickets_list || [];
 
   const [ticketEnabled, setTicketEnabled] = useState(tCfg.enabled || false);
   const [panelTitle, setPanelTitle] = useState(tCfg.panel_title || 'Support Tickets');
@@ -135,6 +138,23 @@ export default function TicketSettings({ config, channels, roles, categories, on
         
         {/* LEFT COLUMN */}
         <div className="flex flex-col gap-6">
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] p-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-[13px] text-neutral-400 font-medium whitespace-nowrap justify-center">
+                <span className="text-amber-500 font-bold">{stats.open}</span> Open
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-[13px] text-neutral-400 font-medium whitespace-nowrap justify-center">
+                <span className="text-blue-500 font-bold">{stats.claimed}</span> Claimed
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-[13px] text-neutral-400 font-medium whitespace-nowrap justify-center">
+                <span className="text-emerald-500 font-bold">{stats.resolved}</span> Resolved (7d)
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-[13px] text-neutral-400 font-medium whitespace-nowrap justify-center">
+                <span className="text-white font-bold">{stats.avg_resolution}</span> Avg Resolution
+              </div>
+            </div>
+          </div>
+
           <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
             <div className="flex items-center justify-between gap-4 px-5 py-4">
               <div className="flex items-center gap-3 min-w-0">
@@ -205,73 +225,8 @@ export default function TicketSettings({ config, channels, roles, categories, on
             </div>
           </div>
         </div>
-        </div>
 
-        {/* RIGHT COLUMN */}
-        <div className="flex flex-col gap-6 lg:sticky lg:top-24">
-          
-          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] p-4">
-            <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-[13px] text-neutral-400 font-medium whitespace-nowrap flex-1 justify-center min-w-[80px]">
-                <span className="text-amber-500 font-bold">0</span> Open
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-[13px] text-neutral-400 font-medium whitespace-nowrap flex-1 justify-center min-w-[80px]">
-                <span className="text-blue-500 font-bold">0</span> Claimed
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-[13px] text-neutral-400 font-medium whitespace-nowrap flex-1 justify-center min-w-[120px]">
-                <span className="text-emerald-500 font-bold">0</span> Resolved (7d)
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-[13px] text-neutral-400 font-medium whitespace-nowrap flex-1 justify-center min-w-[120px]">
-                <span className="text-white font-bold">&lt;1h</span> Avg Resolution
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800">
-              <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye text-neutral-400">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-              <span className="text-sm font-semibold text-white">Live Preview</span>
-            </div>
-            
-            <div className="p-5 bg-[#313338] flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#111214] flex items-center justify-center shrink-0 overflow-hidden">
-                <img src="/img/logo.png" alt="Orbit Logo" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex flex-col gap-1 w-full min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-[15px] text-white">Orbit</span>
-                  <span className="text-[10px] text-white bg-[#5865F2] px-1.5 py-0.5 rounded flex items-center gap-1 font-semibold">
-                    <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    APP
-                  </span>
-                  <span className="text-[12px] text-[#949ba4]">Today at 12:00 PM</span>
-                </div>
-                
-                <div className="mt-1 flex flex-col w-full max-w-[432px]">
-                  <div className="bg-[#2b2d31] border-l-4 border-[#5865F2] rounded p-4 flex flex-col">
-                    <span className="font-bold text-[15px] text-white mb-2 break-words">{panelTitle || 'Support Tickets'}</span>
-                    <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed">{panelDesc || 'Click the button below to open a direct support channel with our team.'}</span>
-                  </div>
-                  
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {ticketOptions.length > 0 ? ticketOptions.map(opt => (
-                      <button key={opt.id} type="button" className="flex items-center justify-center h-8 px-4 bg-[#4e5058] hover:bg-[#6d6f78] transition-colors rounded text-white text-[14px] font-medium cursor-default border-none">
-                        {opt.name}
-                      </button>
-                    )) : (
-                      <button type="button" className="flex items-center justify-center h-8 px-4 bg-[#4e5058] opacity-50 rounded text-white text-[14px] font-medium cursor-default border-none">
-                        Button
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
             <div className="flex items-center justify-between gap-4 px-5 py-4">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-blue-500/10">
@@ -340,6 +295,96 @@ export default function TicketSettings({ config, channels, roles, categories, on
                   onChange={e => setMaxOpenTickets(e.target.value)}
                 />
               </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800">
+              <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye text-neutral-400">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <span className="text-sm font-semibold text-white">Live Preview</span>
+            </div>
+            
+            <div className="p-5 bg-[#313338] flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-[#111214] flex items-center justify-center shrink-0 overflow-hidden">
+                <img src="/img/logo.png" alt="Orbit Logo" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex flex-col gap-1 w-full min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-[15px] text-white">Orbit</span>
+                  <span className="text-[10px] text-white bg-[#5865F2] px-1.5 py-0.5 rounded flex items-center gap-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    APP
+                  </span>
+                  <span className="text-[12px] text-[#949ba4]">Today at 12:00 PM</span>
+                </div>
+                
+                <div className="mt-1 flex flex-col w-full max-w-[432px]">
+                  <div className="bg-[#2b2d31] border-l-4 border-[#5865F2] rounded p-4 flex flex-col">
+                    <span className="font-bold text-[15px] text-white mb-2 break-words">{panelTitle || 'Support Tickets'}</span>
+                    <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed">{panelDesc || 'Click the button below to open a direct support channel with our team.'}</span>
+                  </div>
+                  
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {ticketOptions.length > 0 ? ticketOptions.map(opt => (
+                      <button key={opt.id} type="button" className="flex items-center justify-center h-8 px-4 bg-[#4e5058] hover:bg-[#6d6f78] transition-colors rounded text-white text-[14px] font-medium cursor-default border-none">
+                        {opt.name}
+                      </button>
+                    )) : (
+                      <button type="button" className="flex items-center justify-center h-8 px-4 bg-[#4e5058] opacity-50 rounded text-white text-[14px] font-medium cursor-default border-none">
+                        Button
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col flex-1 overflow-hidden min-h-[300px]">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800">
+              <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ticket text-neutral-400">
+                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+                <path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>
+              </svg>
+              <span className="text-sm font-semibold text-white">Active Tickets</span>
+              <span className="ml-auto text-xs font-medium bg-neutral-800 text-neutral-400 px-2 py-1 rounded-md">{activeTickets.length}</span>
+            </div>
+            
+            <div className="p-0 flex flex-col overflow-y-auto max-h-[500px]">
+              {activeTickets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center h-full gap-2 mt-8">
+                  <div className="w-12 h-12 rounded-full bg-neutral-800/50 flex items-center justify-center mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
+                      <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                    </svg>
+                  </div>
+                  <span className="text-[14px] font-medium text-white">No Active Tickets</span>
+                  <span className="text-[12px] text-neutral-500 max-w-[200px]">There are currently no open support tickets.</span>
+                </div>
+              ) : (
+                <div className="flex flex-col divide-y divide-neutral-800/50">
+                  {activeTickets.map(t => (
+                    <div key={t.channel_id} className="p-4 flex flex-col gap-2 hover:bg-neutral-800/30 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[14px] font-medium text-white truncate pr-2">Ticket #{t.number} - {t.subject || 'No Subject'}</span>
+                        <span className="text-[11px] text-neutral-500 whitespace-nowrap">{new Date(t.created_at * 1000).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">{t.category_option || 'General'}</span>
+                        {t.claimed_by && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">Claimed</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
