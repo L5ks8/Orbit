@@ -189,6 +189,8 @@ export default function Moderation({ guildId, serverData, setServerData }) {
   const amCfgInit = serverData?.config?.automod || {};
 
   const initialPayloadRef = useRef("");
+  const [loading, setLoading] = useState(false);
+  const [initialStateStr, setInitialStateStr] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
