@@ -6,6 +6,7 @@ import CustomSelect from '../../ui/CustomSelect';
 export default function LevelingSystemSettings({ config, channels, roles, onSave, saving, onReset }) {
   const lvlCfg = config?.level || {};
   
+  const [levelEnabled, setLevelEnabled] = useState(lvlCfg.enabled !== false);
   const [statTab, setStatTab] = useState('messages');
   const [levelUpMode, setLevelUpMode] = useState(lvlCfg.level_up_mode || 'blacklist');
   const [levelRoleMode, setLevelRoleMode] = useState(lvlCfg.level_role_mode || 'blacklist');
@@ -58,6 +59,7 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
 
   const getPayload = () => ({
       level: {
+        enabled: levelEnabled,
         level_up_mode: levelUpMode,
         level_role_mode: levelRoleMode,
         level_roles: levelRoles,
@@ -118,6 +120,10 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
               <h1 className="text-base font-medium text-white truncate">
                 Leveling System
               </h1>
+            </div>
+            </div>
+            <div className="flex items-center gap-3" data-tour="feature-toggle">
+              <Toggle checked={levelEnabled} onChange={() => setLevelEnabled(!levelEnabled)} />
             </div>
           </div>
         </div>
