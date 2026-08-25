@@ -33,7 +33,42 @@ export default function Verification({ guildId, serverData, setServerData }) {
   const [embedImage, setEmbedImage] = useState(vCfg.embed_image || '/img/default_verify.png');
   const [panelChannel, setPanelChannel] = useState(vCfg.channel_id || '');
 
-  const roleOptions = (serverData?.roles || []).map(r => ({ value: String(r.id), label: r.name || 'Unknown Role', color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined }));
+  useEffect(() => {
+    if (serverData?.config?.verify) {
+      const cfg = serverData.config.verify;
+      setVerType(cfg.verification_type || 'captcha');
+      setRoleId(cfg.role_id ? String(cfg.role_id) : '');
+      setRemoveRoleId(cfg.remove_role_id ? String(cfg.remove_role_id) : '');
+      setTimeoutAction(cfg.timeout_action || 'none');
+      setTimeoutMinutes(cfg.timeout_minutes || 0);
+      setEmbedTitle(cfg.embed_title || '');
+      setEmbedDesc(cfg.embed_description || '');
+      setEmbedColor(cfg.embed_color || '#5865F2');
+      setEmbedImage(cfg.embed_image || '/img/default_verify.png');
+      setPanelChannel(cfg.channel_id ? String(cfg.channel_id) : '');
+      
+      // Update the reference payload so it doesn't trigger an immediate auto-save
+      setTimeout(() => {
+        initialPayloadRef.current = JSON.stringify({
+          verify: {
+            enabled: cfg.enabled || false,
+            verification_type: cfg.verification_type || 'captcha',
+            channel_id: cfg.channel_id ? String(cfg.channel_id) : '',
+            role_id: cfg.role_id ? String(cfg.role_id) : '',
+            remove_role_id: cfg.remove_role_id ? String(cfg.remove_role_id) : '',
+            timeout_action: cfg.timeout_action || 'none',
+            timeout_minutes: cfg.timeout_minutes || 0,
+            embed_title: cfg.embed_title || '',
+            embed_description: cfg.embed_description || '',
+            embed_color: cfg.embed_color || '#5865F2',
+            embed_image: cfg.embed_image || '/img/default_verify.png'
+          }
+        });
+      }, 0);
+    }
+  }, [serverData?.config?.verify]);
+
+  const roleOptions = (serverData?.roles || []).map(r => ({ value: String(r.id), label: `@ ${r.name || 'Unknown'}`, color: r.color }));
   const channelOptions = (serverData?.channels || []).map(c => ({ value: String(c.id), label: `# ${c.name}` }));
 
   const verifyModes = [
