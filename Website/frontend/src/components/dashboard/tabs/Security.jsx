@@ -47,7 +47,7 @@ export default function Security({ guildId }) {
       }));
       setLoading(false);
     } else {
-      fetch(`/api/guilds/${guildId}`)
+      fetch(`/api/config/${guildId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
         .then(res => res.json())
         .then(data => {
           setCache(guildId, data);
@@ -62,7 +62,7 @@ export default function Security({ guildId }) {
           }));
           setLoading(false);
         })
-        .catch(console.error);
+        .catch(err => { console.error(err); setLoading(false); });
     }
   }, [guildId]);
 
@@ -71,9 +71,12 @@ export default function Security({ guildId }) {
     const toastId = toast.loading("Saving settings...");
     try {
       const dataToSave = payloadString ? JSON.parse(payloadString) : getPayload();
-      const res = await fetch(`/api/guilds/${guildId}/config`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch(`/api/config/${guildId}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify({ security: dataToSave })
       });
       const data = await res.json();
