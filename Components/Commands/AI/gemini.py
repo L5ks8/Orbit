@@ -277,7 +277,7 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_automation_config(message.guild.id, cfg)
                                         elif raw_mod_name == "TempVoice":
-                                            from Components.Systems.JoinToCreate._storage import load_jtc_config, save_jtc_config
+                                            from Components.Dashboard.JoinToCreate._storage import load_jtc_config, save_jtc_config
                                             cfg = load_jtc_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_jtc_config(message.guild.id, cfg)

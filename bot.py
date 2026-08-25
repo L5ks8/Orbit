@@ -330,13 +330,13 @@ class OrbitBot(commands.Bot):
             print(f"Failed to load Welcome Listener: {e}")
 
         try:
-            await self.load_extension("Components.Systems.ReactionRole.reactionrolelistener")
+            await self.load_extension("Components.Dashboard.ReactionRole.reactionrolelistener")
             print("Loaded ReactionRole Listener")
         except Exception as e:
             print(f"Failed to load ReactionRole Listener: {e}")
 
         try:
-            await self.load_extension("Components.Systems.JoinToCreate.jtclistener")
+            await self.load_extension("Components.Dashboard.JoinToCreate.jtclistener")
             print("Loaded JTC Listener")
         except Exception as e:
             print(f"Failed to load JTC Listener: {e}")

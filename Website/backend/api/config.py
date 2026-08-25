@@ -50,7 +50,7 @@ class ConfigMixin:
         logs_cfg = load_log_config(guild_id)
         automation_cfg = load_automation_config(guild_id)
         
-        from Components.Systems.JoinToCreate._storage import load_jtc_config
+        from Components.Dashboard.JoinToCreate._storage import load_jtc_config
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
         
@@ -760,7 +760,7 @@ class ConfigMixin:
                 save_log_config(guild_id, l_cfg)
 
             if user_perms.get("can_channels") and "tempvoice" in data:
-                from Components.Systems.JoinToCreate._storage import load_jtc_config, save_jtc_config
+                from Components.Dashboard.JoinToCreate._storage import load_jtc_config, save_jtc_config
                 jtc_cfg = load_jtc_config(guild_id)
                 jtc_data = data["tempvoice"]
                 
