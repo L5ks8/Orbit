@@ -23,8 +23,8 @@ export default function Security({ guildId, serverData, setServerData }) {
   const { toast } = useToast();
 
   const initialCfg = serverData?.config?.security || {};
-  const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: String(r.id), label: r.name, color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined })) : [];
-  const channelOptions = serverData?.channels ? serverData.channels.map(ch => ({ value: String(ch.id), label: ch.name })) : [];
+  const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: String(r.id), label: r.name || 'Unknown Role', color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined })) : [];
+  const channelOptions = serverData?.channels ? serverData.channels.map(ch => ({ value: String(ch.id), label: ch.name || 'Unknown Channel' })) : [];
   
   const permissionOptions = [
     { value: 'ADMINISTRATOR', label: 'Administrator' },
