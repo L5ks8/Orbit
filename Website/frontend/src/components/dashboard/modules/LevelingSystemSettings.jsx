@@ -608,7 +608,6 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
           </div>
 
         </div>
-      </div>
       <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </main>
   );

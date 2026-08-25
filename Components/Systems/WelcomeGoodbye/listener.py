@@ -17,10 +17,15 @@ class WelcomeListener(commands.Cog):
         if not force_test and (not config.get("enabled") or not config.get("channel_id")):
             return
 
-        channel = member.guild.get_channel(config.get("channel_id"))
+        try:
+            ch_id = int(config.get("channel_id"))
+        except (ValueError, TypeError):
+            return
+
+        channel = member.guild.get_channel(ch_id)
         if not channel:
             try:
-                channel = await member.guild.fetch_channel(config["channel_id"])
+                channel = await member.guild.fetch_channel(ch_id)
             except Exception:
                 return
 
@@ -208,10 +213,15 @@ class GoodbyeListener(commands.Cog):
         if not force_test and (not config.get("enabled") or not config.get("channel_id")):
             return
 
-        channel = member.guild.get_channel(config.get("channel_id"))
+        try:
+            ch_id = int(config.get("channel_id"))
+        except (ValueError, TypeError):
+            return
+
+        channel = member.guild.get_channel(ch_id)
         if not channel:
             try:
-                channel = await member.guild.fetch_channel(config["channel_id"])
+                channel = await member.guild.fetch_channel(ch_id)
             except Exception:
                 return
 

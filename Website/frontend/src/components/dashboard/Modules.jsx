@@ -265,7 +265,7 @@ export default function Modules({ guildId, serverData, setServerData }) {
 
 
 
-  if (!serverData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: '#ef4444' }}>Failed to load data.</div>;
+  if (!serverData || !serverData.config) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: '#ef4444' }}><LoadingScreen text="Loading settings..." /></div>;
 
   const content = renderModuleContent();
 
