@@ -16,6 +16,7 @@ import TopNav from '../components/dashboard/TopNav';
 import Security from '../components/dashboard/tabs/Security';
 import { useAuth } from '../context/AuthContext';
 import { getCache, setCache } from '../utils/cache';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 function DashboardInner() {
   const { guildId } = useParams();
@@ -25,6 +26,8 @@ function DashboardInner() {
   const [allGuilds, setAllGuilds] = useState([]);
   const [showServerDropdown, setShowServerDropdown] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [serverData, setServerData] = useState(null);
+  const [dataLoading, setDataLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
@@ -83,7 +86,7 @@ function DashboardInner() {
     }
   }, [guildId]);
 
-  if (loading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>;
+  if (loading || dataLoading) return <LoadingScreen />;
   if (!user) {
     const openLoginPopup = () => {
       const loginUrl = `/auth/login?next=${encodeURIComponent(location.pathname)}&popup=1`;

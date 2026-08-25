@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useToast } from '../../ui/Toast';
 import { useParams } from "react-router-dom";
 
-export default function Invites() {
+export default function ({ serverData, setServerData }) {
   const { guildId } = useParams();
   const toast = useToast();
 

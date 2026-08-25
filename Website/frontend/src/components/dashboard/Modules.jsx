@@ -39,14 +39,14 @@ export const modulesList = [
 
 ];
 
-export default function Modules({ guildId }) {
+export default function Modules({ guildId, serverData, setServerData }) {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
 
   const cacheKey = `modules_config_${guildId}`;
-  const [serverData, setServerData] = useState(() => getCache(cacheKey) || null);
-  const [loading, setLoading] = useState(() => !getCache(cacheKey));
+  
+  
   const [saving, setSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
@@ -67,25 +67,7 @@ export default function Modules({ guildId }) {
     setFormKey(prev => prev + 1);
   };
 
-  useEffect(() => {
-    if (!guildId) return;
-    if (!serverData) setLoading(true);
-    fetch(`/api/config/${guildId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        setServerData(data);
-        setCache(cacheKey, data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to load modules config", err);
-        setLoading(false);
-      });
-  }, [guildId]);
+  
 
   const handleSave = async (payload, preventRemount = false) => {
     setSaving(true);

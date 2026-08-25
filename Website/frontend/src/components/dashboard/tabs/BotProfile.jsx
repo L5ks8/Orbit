@@ -3,7 +3,7 @@ import { useToast } from '../../ui/Toast';
 import LoadingScreen from '../../ui/LoadingScreen';
 import { getCache, setCache } from '../../../utils/cache';
 
-export default function BotProfile({ guildId }) {
+export default function ({ guildId, serverData, setServerData }) {
   const cacheKey = `botprofile_${guildId}`;
   const cachedData = getCache(cacheKey);
 

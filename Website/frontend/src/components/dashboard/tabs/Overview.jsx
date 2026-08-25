@@ -5,12 +5,12 @@ import { Users, MessageSquare, Activity, Mic, Ticket, Settings, ArrowUpRight, Ar
 import { getCache, setCache } from '../../../utils/cache';
 import LoadingScreen from '../../ui/LoadingScreen';
 
-export default function Overview({ guildId }) {
+export default function Overview({ guildId, serverData }) {
   const { user } = useAuth();
   const [guildInfo, setGuildInfo] = useState(() => getCache(`overview_guild_${guildId}`) || null);
   const [stats, setStats] = useState(() => getCache(`overview_stats_${guildId}`) || null);
-  const [config, setConfig] = useState(() => getCache(`overview_config_${guildId}`) || null);
-  const [modActivity, setModActivity] = useState(() => getCache(`overview_modactivity_${guildId}`) || []);
+  const config = serverData?.config || {};
+  const modActivity = serverData?.modActivity || [];
 
   const [messagesRange, setMessagesRange] = useState('48h');
   const [channelsRange, setChannelsRange] = useState('7');
@@ -50,23 +50,11 @@ export default function Overview({ guildId }) {
       })
       .catch(console.error);
       
-    const p4 = fetch(`/api/config/${guildId}`)
-      .then(res => res.json())
-      .then(data => {
-        setConfig(data?.config || null);
-        setCache(`overview_config_${guildId}`, data?.config || null);
-      })
-      .catch(console.error);
+    
 
-    const p5 = fetch(`/api/mod_activity/${guildId}`)
-      .then(res => res.json())
-      .then(data => {
-        setModActivity(data || []);
-        setCache(`overview_modactivity_${guildId}`, data || []);
-      })
-      .catch(console.error);
+    
       
-    return Promise.all([p1, p2, p3, p4, p5]).then(() => setInitialLoading(false));
+    return Promise.all([p1, p2, p3]).then(() => setInitialLoading(false));
   };
 
   useEffect(() => {

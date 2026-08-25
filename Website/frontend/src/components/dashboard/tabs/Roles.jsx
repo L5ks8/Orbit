@@ -130,18 +130,14 @@ const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
 
 import ReactionRoleBuilder from '../modules/ReactionRoleBuilder';
 
-export default function Roles({ guildId }) {
+export default function ({ guildId, serverData, setServerData }) {
   const toast = useToast();
 
-  const cachedData = getCache(`roles_serverData_${guildId}`);
-  const cachedRrData = getCache(`roles_reactionRoles_${guildId}`);
-  const [serverData, setServerData] = useState(cachedData || null);
-  const [loading, setLoading] = useState(!cachedData || !cachedRrData);
   const [initialStateStr, setInitialStateStr] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   // Reaction Roles State
-  const [reactionRoles, setReactionRoles] = useState(cachedRrData || []);
+  const [reactionRoles, setReactionRoles] = useState([]);
   const [rrBuilderOpen, setRrBuilderOpen] = useState(false);
   const [rrBuilderData, setRrBuilderData] = useState(null);
   const [panelToDelete, setPanelToDelete] = useState(null);

@@ -18,13 +18,15 @@ const TailwindToggle = ({ checked, onChange }) => (
 );
 
 
-export default function Security({ guildId }) {
+import { useRef } from 'react';
+
+export default function Security({ guildId, serverData, setServerData }) {
   
   const { toast } = useToast();
-  const cachedServerData = getCache(guildId);
-  const initialCfg = cachedServerData?.config?.security || {};
-  const roleOptions = cachedServerData?.roles ? cachedServerData.roles.map(r => ({ value: String(r.id), label: r.name, color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined })) : [];
-  const channelOptions = cachedServerData?.channels ? cachedServerData.channels.map(ch => ({ value: String(ch.id), label: ch.name })) : [];
+
+  const initialCfg = serverData?.config?.security || {};
+  const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: String(r.id), label: r.name, color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined })) : [];
+  const channelOptions = serverData?.channels ? serverData.channels.map(ch => ({ value: String(ch.id), label: ch.name })) : [];
   
   const permissionOptions = [
     { value: 'ADMINISTRATOR', label: 'Administrator' },
@@ -58,14 +60,18 @@ export default function Security({ guildId }) {
     { value: '30d', label: '30 days' }
   ];
 
-  const [loading, setLoading] = useState(!cachedServerData);
-  const [initialStateStr, setInitialStateStr] = useState('');
+  
+  const initialPayloadRef = useRef('');
   const [isSaving, setIsSaving] = useState(false);
 
   // States
   const [antiNuke, setAntiNuke] = useState({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...initialCfg.anti_nuke });
   const [antiRaid, setAntiRaid] = useState({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, ...initialCfg.anti_raid });
   const [webhookProtection, setWebhookProtection] = useState({ enabled: false, block_everyone: false, block_invite_links: false, trusted_webhooks: '', ...initialCfg.webhook_protection });
+
+  if (!initialPayloadRef.current) {
+    initialPayloadRef.current = JSON.stringify(getPayload());
+  }
 
   const getPayload = () => ({
     anti_nuke: antiNuke,
@@ -130,15 +136,15 @@ export default function Security({ guildId }) {
   };
 
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
+  const isDirty = initialPayloadRef.current && currentPayloadStr !== initialPayloadRef.current;
 
   useEffect(() => {
-    if (!initialStateStr || !isDirty) return;
+    if (!initialPayloadRef.current || !isDirty) return;
     const timeoutId = setTimeout(() => {
       handleSave(currentPayloadStr);
     }, 1500);
     return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, initialStateStr, isDirty]);
+  }, [currentPayloadStr, isDirty]);
 
   if (loading) {
     return (

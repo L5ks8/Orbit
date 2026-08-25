@@ -5,7 +5,7 @@ import SaveBar from '../../ui/SaveBar';
 import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
 
-export default function Settings({ guildId }) {
+export default function ({ guildId, serverData, setServerData }) {
   const toast = useToast();
   const [settings, setSettings] = useState({
     manager_roles: [],

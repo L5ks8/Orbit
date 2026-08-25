@@ -182,16 +182,14 @@ const FilterLevelSelector = ({ value, onChange, levels }) => (
   </div>
 );
 
-export default function Moderation({ guildId }) {
+import { useRef } from 'react';
+
+export default function Moderation({ guildId, serverData, setServerData }) {
   const toast = useToast();
   
-  const cachedServerData = getCache(`mod_serverData_${guildId}`);
-  const cachedRecentActions = getCache(`mod_recentActions_${guildId}`);
-  const amCfgInit = cachedServerData?.config?.automod || {};
+  const amCfgInit = serverData?.config?.automod || {};
 
-  const [serverData, setServerData] = useState(cachedServerData || null);
-  const [loading, setLoading] = useState(!cachedServerData);
-  const [initialStateStr, setInitialStateStr] = useState('');
+  const initialPayloadRef = useRef("");
   const [isSaving, setIsSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
@@ -219,7 +217,11 @@ export default function Moderation({ guildId }) {
     roles: lCfgInit.roles || {}
   });
   
-  const [recentActions, setRecentActions] = useState(cachedRecentActions || []);
+  const [recentActions, setRecentActions] = useState([]);
+
+  if (!initialPayloadRef.current) {
+    initialPayloadRef.current = JSON.stringify(getPayload());
+  }
   const [warnSearchId, setWarnSearchId] = useState('');
   const [warnSearchData, setWarnSearchData] = useState(null);
   const [searchingWarns, setSearchingWarns] = useState(false);
@@ -391,15 +393,15 @@ export default function Moderation({ guildId }) {
   };
 
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
+  const isDirty = initialPayloadRef.current && currentPayloadStr !== initialPayloadRef.current;
 
   useEffect(() => {
-    if (!initialStateStr || !isDirty) return;
+    if (!initialPayloadRef.current || !isDirty) return;
     const timeoutId = setTimeout(() => {
       handleSave(currentPayloadStr);
     }, 1500);
     return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, initialStateStr, isDirty]);
+  }, [currentPayloadStr, isDirty]);
 
   if (loading) {
     return (
