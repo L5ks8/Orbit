@@ -553,7 +553,7 @@ export default function WelcomeSettings({
                         </div>
                         <div className="space-y-1.5">
                           <div className="relative rounded-xl border border-dashed transition-all overflow-hidden h-24 flex flex-col items-center justify-center border-neutral-700 hover:border-neutral-600 bg-neutral-800/40">
-                            <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                            <label htmlFor="welcome-upload" className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width={24}
@@ -577,6 +577,7 @@ export default function WelcomeSettings({
                                 PNG • JPG • WebP • GIF • up to 4 MB
                               </span>
                               <input
+                                id="welcome-upload"
                                 accept="image/png,image/jpeg,image/webp,image/gif"
                                 className="hidden"
                                 type="file"
@@ -589,7 +590,13 @@ export default function WelcomeSettings({
                             </label>
                             <button
                               type="button"
-                              className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-md bg-neutral-700/50 hover:bg-neutral-700 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const url = window.prompt("Enter image URL (must end in .png, .jpg, etc):");
+                                if (url) setWelcomeImageUrl(url);
+                              }}
+                              className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-md bg-neutral-700/50 hover:bg-neutral-700 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors z-10"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1155,7 +1162,7 @@ export default function WelcomeSettings({
                           </div>
                           <div className="space-y-1.5">
                             <div className="relative rounded-xl border border-dashed transition-all overflow-hidden h-24 flex flex-col items-center justify-center border-neutral-700 hover:border-neutral-600 bg-neutral-800/40">
-                              <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                              <label htmlFor="goodbye-upload" className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   width={24}
@@ -1179,6 +1186,7 @@ export default function WelcomeSettings({
                                   PNG &bull; JPG &bull; WebP &bull; GIF &bull; up to 4 MB
                                 </span>
                                 <input
+                                  id="goodbye-upload"
                                   accept="image/png,image/jpeg,image/webp,image/gif"
                                   className="hidden"
                                   type="file"
@@ -1191,7 +1199,13 @@ export default function WelcomeSettings({
                               </label>
                               <button
                                 type="button"
-                                className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-md bg-neutral-700/50 hover:bg-neutral-700 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const url = window.prompt("Enter image URL (must end in .png, .jpg, etc):");
+                                  if (url) setGoodbyeImageUrl(url);
+                                }}
+                                className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-md bg-neutral-700/50 hover:bg-neutral-700 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors z-10"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
