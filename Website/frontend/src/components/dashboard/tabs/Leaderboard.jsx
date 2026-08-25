@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import CustomSelect from '../ui/CustomSelect';
-import { getCache, setCache } from '../../utils/cache';
+import CustomSelect from '../../../../ui/CustomSelect';
+import { getCache, setCache } from '../../../../../utils/cache';
 
 export default function Leaderboard({ guildId }) {
   const [sortCategory, setSortCategory] = useState('total_xp');

@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
-import Overview from '../components/dashboard/Overview';
+import Overview from '../components/dashboard/tabs/Overview';
 import Modules from '../components/dashboard/Modules';
-import Analytics from '../components/dashboard/Analytics';
-import Leaderboard from '../components/dashboard/Leaderboard';
-import Settings from '../components/dashboard/Settings';
+import Analytics from '../components/dashboard/tabs/Analytics';
+import Leaderboard from '../components/dashboard/tabs/Leaderboard';
+import Settings from '../components/dashboard/tabs/Settings';
 import ServerSelector from './ServerSelector';
 import EmbedBuilder from './dashboard/EmbedBuilder';
-import Moderation from '../components/dashboard/Moderation';
-import BotProfile from '../components/dashboard/BotProfile';
-import Invites from '../components/dashboard/Invites';
-import Roles from '../components/dashboard/Roles';
+import Moderation from '../components/dashboard/tabs/Moderation';
+import BotProfile from '../components/dashboard/tabs/BotProfile';
+import Invites from '../components/dashboard/tabs/Invites';
+import Roles from '../components/dashboard/tabs/Roles';
 import TopNav from '../components/dashboard/TopNav';
-import Security from '../components/dashboard/Security';
+import Security from '../components/dashboard/tabs/Security';
 import { useAuth } from '../context/AuthContext';
 import { getCache, setCache } from '../utils/cache';
 

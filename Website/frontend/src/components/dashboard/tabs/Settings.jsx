@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import CustomSelect from '../ui/CustomSelect';
-import Toggle from '../ui/Toggle';
-import SaveBar from '../ui/SaveBar';
-import { useToast } from '../ui/Toast';
-import { getCache, setCache } from '../../utils/cache';
+import CustomSelect from '../../../../ui/CustomSelect';
+import Toggle from '../../../../ui/Toggle';
+import SaveBar from '../../../../ui/SaveBar';
+import { useToast } from '../../../../ui/Toast';
+import { getCache, setCache } from '../../../../../utils/cache';
 
 export default function Settings({ guildId }) {
   const toast = useToast();

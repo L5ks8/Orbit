@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../../../../context/AuthContext';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Users, MessageSquare, Activity, Mic, Ticket, Settings, ArrowUpRight, ArrowDownRight, ArrowRight, ShieldAlert, ShieldCheck, UserMinus, Vote, UserPlus, Gift, Layers, Bot, Gavel, Clock } from 'lucide-react';
-import { getCache, setCache } from '../../utils/cache';
-import LoadingScreen from '../ui/LoadingScreen';
+import { getCache, setCache } from '../../../../../utils/cache';
+import LoadingScreen from '../../../../ui/LoadingScreen';
 
 export default function Overview({ guildId }) {
   const { user } = useAuth();
