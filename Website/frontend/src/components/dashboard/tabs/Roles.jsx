@@ -136,8 +136,12 @@ export default function ({ guildId, serverData, setServerData }) {
   const [initialStateStr, setInitialStateStr] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  const cachedData = getCache(`roles_serverData_${guildId}`) || serverData;
+  const cachedRrData = getCache(`roles_reactionRoles_${guildId}`);
+  const [loading, setLoading] = useState(!cachedData || !cachedRrData);
+
   // Reaction Roles State
-  const [reactionRoles, setReactionRoles] = useState([]);
+  const [reactionRoles, setReactionRoles] = useState(cachedRrData || []);
   const [rrBuilderOpen, setRrBuilderOpen] = useState(false);
   const [rrBuilderData, setRrBuilderData] = useState(null);
   const [panelToDelete, setPanelToDelete] = useState(null);
