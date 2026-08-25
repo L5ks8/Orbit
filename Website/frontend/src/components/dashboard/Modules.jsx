@@ -264,12 +264,12 @@ export default function Modules({ guildId }) {
   const categories = ['Moderation', 'Engagement', 'Utility', 'Logging'];
 
   if (loading) return (
-    <div style={{ height: '100vh', width: '100vw', background: '#09090b' }}>
+    <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
       <LoadingScreen message="Loading modules..." />
     </div>
   );
 
-  if (!serverData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: '#09090b', color: '#ef4444' }}>Failed to load data.</div>;
+  if (!serverData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: '#ef4444' }}>Failed to load data.</div>;
 
   const content = renderModuleContent();
 
