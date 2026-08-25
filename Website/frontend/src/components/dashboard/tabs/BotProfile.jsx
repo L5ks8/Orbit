@@ -130,7 +130,7 @@ export default function ({ guildId, serverData, setServerData }) {
   };
 
   return (
-    <div className="pb-overview-container" style={{ maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+    <div className="pb-overview-container" style={{ maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
       <div data-tour="feature-header" className="scroll-mt-24">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="flex items-center gap-2.5 min-w-0">
