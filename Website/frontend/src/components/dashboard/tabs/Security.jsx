@@ -17,7 +17,7 @@ const TailwindToggle = ({ checked, onChange }) => (
 );
 
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef } from 'react';
 import LoadingScreen from '../../ui/LoadingScreen';
 export default function Security({ guildId, serverData, setServerData }) {
 
