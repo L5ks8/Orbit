@@ -5,6 +5,7 @@ import CustomSelect from "../../ui/CustomSelect";
 import { SketchPicker } from "react-color";
 
 export default function WelcomeSettings({
+  guildId,
   config,
   channels,
   onSave,
@@ -89,7 +90,7 @@ export default function WelcomeSettings({
   const handleTestDm = async (type) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/server/${config.id}/test-dm`, {
+      const res = await fetch(`/api/server/${guildId}/test-dm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ type }),
@@ -99,6 +100,22 @@ export default function WelcomeSettings({
       else alert('Test DM sent!');
     } catch (e) {
       alert('Failed to send test DM');
+    }
+  };
+
+  const handleTestWelcome = async (type) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/server/${guildId}/test-welcome`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ type }),
+      });
+      const data = await res.json();
+      if (data.error) alert('Error: ' + data.error);
+      else alert('Test message sent!');
+    } catch (e) {
+      alert('Failed to send test message');
     }
   };
 
@@ -134,9 +151,11 @@ export default function WelcomeSettings({
       dm_enabled: dmJoinEnabled,
       dm_message: dmJoinText,
       msg_mode: welcomeMsgMode,
+      embed_color: welcomeEmbedColor,
       embed_title: welcomeEmbedTitle,
       embed_description: welcomeEmbedDesc,
       embed_thumbnail: welcomeEmbedThumbnail,
+      embed_footer: welcomeEmbedFooter,
       embed_fields: welcomeEmbedFields,
       image_url: welcomeImageUrl
     },
@@ -148,9 +167,11 @@ export default function WelcomeSettings({
       dm_enabled: dmLeaveEnabled,
       dm_message: dmLeaveText,
       msg_mode: goodbyeMsgMode,
+      embed_color: goodbyeEmbedColor,
       embed_title: goodbyeEmbedTitle,
       embed_description: goodbyeEmbedDesc,
       embed_thumbnail: goodbyeEmbedThumbnail,
+      embed_footer: goodbyeEmbedFooter,
       embed_fields: goodbyeEmbedFields,
       image_url: goodbyeImageUrl
     },
@@ -163,19 +184,17 @@ export default function WelcomeSettings({
     }
     const handler = setTimeout(() => {
       onSave(getPayload());
-    }, 50); // fast autosave
+    }, 1500); 
     return () => clearTimeout(handler);
   }, [
     welcomeEnabled,
     welcomeChannel,
-    welcomeText,
+    welcomeMsgMode,
     dmJoinEnabled,
-    dmJoinText,
     goodbyeEnabled,
     goodbyeChannel,
-    goodbyeText,
+    goodbyeMsgMode,
     dmLeaveEnabled,
-    dmLeaveText,
   ]);
 
   return (
@@ -592,7 +611,6 @@ export default function WelcomeSettings({
                     <button onClick={() => handleTestDm("welcome")}
                       type="button"
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 focus-visible:ring-green-500/40 "
-                      disabled
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -621,6 +639,7 @@ export default function WelcomeSettings({
   embedDesc={welcomeEmbedDesc}
   embedFooter={welcomeEmbedFooter}
   embedThumbnail={welcomeEmbedThumbnail === "{user.avatar}" ? "https://cdn.discordapp.com/embed/avatars/0.png" : welcomeEmbedThumbnail}
+  embedImage={welcomeImageUrl}
   embedFields={welcomeEmbedFields}
   imageUrl={welcomeImageUrl}
   mode={welcomeMsgMode}
@@ -679,7 +698,7 @@ export default function WelcomeSettings({
                               className="lucide lucide-sparkles shrink-0 -ml-px opacity-90"
                               aria-hidden="true"
                             >
-                              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1 1.275-1.275L12 3Z" />
                               <path d="M5 3v4" />
                               <path d="M19 17v4" />
                             </svg>
@@ -698,7 +717,7 @@ export default function WelcomeSettings({
                           >
                             <textarea
                               rows={4}
-                              ref={dmJoinRef} data-setter="dmJoinText" onFocus={() => setActiveRef(dmJoinRef)} value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                              ref={dmJoinRef} data-setter="dmJoinText" onFocus={() => setActiveRef(dmJoinRef)} value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} onBlur={() => onSave(getPayload())} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                               style={{
                                 fontFamily:
                                   '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -767,10 +786,9 @@ export default function WelcomeSettings({
                             <span className="text-[11px] tabular-nums text-neutral-600">
                               0/2000
                             </span>
-                            <button
+                            <button onClick={() => handleTestWelcome("welcome")}
                               type="button"
                               className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 focus-visible:ring-purple-500/40 "
-                              disabled
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1115,7 +1133,7 @@ export default function WelcomeSettings({
                                 className="lucide lucide-sparkles shrink-0 -ml-px opacity-90"
                                 aria-hidden="true"
                               >
-                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1 1.275-1.275L12 3Z" />
                                 <path d="M5 3v4" />
                                 <path d="M19 17v4" />
                                 <path d="M3 5h4" />
@@ -1189,8 +1207,7 @@ export default function WelcomeSettings({
                       </span>
                       <button onClick={() => handleTestDm("goodbye")}
                         type="button"
-                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 focus-visible:ring-green-500/40 "
-                        disabled
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 focus-visible:ring-green-500/40 "
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1219,6 +1236,7 @@ export default function WelcomeSettings({
   embedDesc={goodbyeEmbedDesc}
   embedFooter={goodbyeEmbedFooter}
   embedThumbnail={goodbyeEmbedThumbnail === "{user.avatar}" ? "https://cdn.discordapp.com/embed/avatars/0.png" : goodbyeEmbedThumbnail}
+  embedImage={goodbyeImageUrl}
   embedFields={goodbyeEmbedFields}
   imageUrl={goodbyeImageUrl}
   mode={goodbyeMsgMode}
@@ -1295,7 +1313,7 @@ export default function WelcomeSettings({
                             >
                               <textarea
                                 rows={3}
-                                ref={dmLeaveRef} data-setter="dmLeaveText" onFocus={() => setActiveRef(dmLeaveRef)} value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                                ref={dmLeaveRef} data-setter="dmLeaveText" onFocus={() => setActiveRef(dmLeaveRef)} value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} onBlur={() => onSave(getPayload())} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                                 style={{
                                   fontFamily:
                                     '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -1378,10 +1396,9 @@ export default function WelcomeSettings({
                               <span className="text-[11px] tabular-nums text-neutral-600">
                                 0/2000
                               </span>
-                              <button
+                              <button onClick={() => handleTestWelcome("welcome")}
                                 type="button"
                                 className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 focus-visible:ring-purple-500/40 "
-                                disabled
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"

@@ -202,12 +202,21 @@ function formatInline(text, channels = [], roles = []) {
 function replaceVariables(text) {
   if (!text) return text;
   return text
-    .replace(/\{user\}/g, '@User')
-    .replace(/\{mention\}/g, '@User')
+    .replace(/\{user\}/g, '<@123456789>')
+    .replace(/\{user\.mention\}/g, '<@123456789>')
+    .replace(/\{user_mention\}/g, '<@123456789>')
+    .replace(/\{mention\}/g, '<@123456789>')
     .replace(/\{username\}/g, 'User')
+    .replace(/\{user\.name\}/g, 'User')
+    .replace(/\{user_globalname\}/g, 'User')
+    .replace(/\{user\.tag\}/g, 'User#1234')
+    .replace(/\{user\.id\}/g, '123456789012345678')
+    .replace(/\{id\}/g, '123456789012345678')
     .replace(/\{server\}/g, 'My Server')
+    .replace(/\{server\.name\}/g, 'My Server')
+    .replace(/\{server\.id\}/g, '987654321098765432')
     .replace(/\{count\}/g, '1,234')
-    .replace(/\{id\}/g, '123456789012345678');
+    .replace(/\{server\.members\}/g, '1,234');
 }
 
 export default function DiscordPreview({ content, embedColor, embedAuthor, embedTitle, embedDesc, embedFooter, embedImage, embedThumbnail, embedFields = [], imageUrl, mode, accentColor = '#5865F2', cardTitle = 'WELCOME', channels = [], roles = [] }) {

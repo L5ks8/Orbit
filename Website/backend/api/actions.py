@@ -537,6 +537,41 @@ class ActionsMixin:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
+    async def api_action_test_welcome(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("can_channels"):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        try:
+            data = await request.json()
+            test_type = data.get("type", "welcome")
+            
+            member = guild.me
+            cog = self.bot.get_cog("WelcomeGoodbye")
+            if not cog:
+                return web.json_response({"error": "Welcome module is not loaded."}, status=500)
+                
+            from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config, load_goodbye_config
+            if test_type == "welcome":
+                config = load_welcome_config(guild_id)
+                if not config.get("channel_id"):
+                    return web.json_response({"error": "No welcome channel is configured and saved."}, status=400)
+                await cog.on_member_join(member, override_config=config, force_test=True)
+            else:
+                config = load_goodbye_config(guild_id)
+                if not config.get("channel_id"):
+                    return web.json_response({"error": "No goodbye channel is configured and saved."}, status=400)
+                await cog.on_member_remove(member, override_config=config, force_test=True)
+                
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def api_action_test_levelup(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():

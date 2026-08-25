@@ -9,15 +9,15 @@ class WelcomeListener(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
-        if member.bot:
+    async def on_member_join(self, member: discord.Member, override_config=None, force_test=False):
+        if member.bot and not force_test:
             return
 
-        config = load_welcome_config(member.guild.id)
-        if not config.get("enabled") or not config.get("channel_id"):
+        config = override_config or load_welcome_config(member.guild.id)
+        if not force_test and (not config.get("enabled") or not config.get("channel_id")):
             return
 
-        channel = member.guild.get_channel(config["channel_id"])
+        channel = member.guild.get_channel(config.get("channel_id"))
         if not channel:
             try:
                 channel = await member.guild.fetch_channel(config["channel_id"])
@@ -200,15 +200,15 @@ class GoodbyeListener(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_member_remove(self, member: discord.Member):
-        if member.bot:
+    async def on_member_remove(self, member: discord.Member, override_config=None, force_test=False):
+        if member.bot and not force_test:
             return
 
-        config = load_goodbye_config(member.guild.id)
-        if not config.get("enabled") or not config.get("channel_id"):
+        config = override_config or load_goodbye_config(member.guild.id)
+        if not force_test and (not config.get("enabled") or not config.get("channel_id")):
             return
 
-        channel = member.guild.get_channel(config["channel_id"])
+        channel = member.guild.get_channel(config.get("channel_id"))
         if not channel:
             try:
                 channel = await member.guild.fetch_channel(config["channel_id"])
