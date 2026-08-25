@@ -207,7 +207,17 @@ export default function Moderation({ guildId }) {
   
   const [general, setGeneral] = useState({ log_channel: '' });
   const [exemptions, setExemptions] = useState({ roles: (amCfgInit.exempt_roles || []).map(String), channels: (amCfgInit.exempt_channels || []).map(String) });
-  const [logs, setLogs] = useState(null);
+  
+  const lCfgInit = cachedServerData?.config?.logs || {};
+  const [logs, setLogs] = useState({
+    enabled: lCfgInit.enabled ?? true,
+    executor_in_logs: lCfgInit.executor_in_logs || false,
+    global_exempt_channels: lCfgInit.global_exempt_channels || [],
+    global_exempt_roles: lCfgInit.global_exempt_roles || [],
+    categories: lCfgInit.categories || {},
+    channels: lCfgInit.channels || {},
+    roles: lCfgInit.roles || {}
+  });
   
   const [recentActions, setRecentActions] = useState(cachedRecentActions || []);
   const [warnSearchId, setWarnSearchId] = useState('');
