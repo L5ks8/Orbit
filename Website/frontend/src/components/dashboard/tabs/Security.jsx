@@ -69,15 +69,15 @@ export default function Security({ guildId, serverData, setServerData }) {
   const [antiRaid, setAntiRaid] = useState({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, ...initialCfg.anti_raid });
   const [webhookProtection, setWebhookProtection] = useState({ enabled: false, block_everyone: false, block_invite_links: false, trusted_webhooks: '', ...initialCfg.webhook_protection });
 
-  if (!initialPayloadRef.current) {
-    initialPayloadRef.current = JSON.stringify(getPayload());
-  }
-
   const getPayload = () => ({
     anti_nuke: antiNuke,
     anti_raid: antiRaid,
     webhook_protection: webhookProtection
   });
+
+  if (!initialPayloadRef.current) {
+    initialPayloadRef.current = JSON.stringify(getPayload());
+  }
 
   useEffect(() => {
     if (serverData) {

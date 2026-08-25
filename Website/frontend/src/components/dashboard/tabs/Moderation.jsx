@@ -219,36 +219,6 @@ export default function Moderation({ guildId, serverData, setServerData }) {
   
   const [recentActions, setRecentActions] = useState([]);
 
-  if (!initialPayloadRef.current) {
-    initialPayloadRef.current = JSON.stringify(getPayload());
-  }
-  const [warnSearchId, setWarnSearchId] = useState('');
-  const [warnSearchData, setWarnSearchData] = useState(null);
-  const [searchingWarns, setSearchingWarns] = useState(false);
-
-  const profanity_basic = ["fuck", "shit", "bitch", "asshole", "cunt", "nigger", "nigga", "faggot", "whore", "slut", "dick", "cock", "pussy"];
-  const profanity_strict = [...profanity_basic, "bastard", "motherfucker", "twat", "wanker", "prick", "retard", "dyke", "tranny", "kys", "kill yourself"];
-  const profanity_maximum = [...profanity_strict, "crap", "damn", "ass", "piss", "boobs", "tits", "vagina", "penis", "cum", "jizz", "wank"];
-  
-  const getPredefinedWords = (level) => {
-    if (level === 'maximum') return profanity_maximum;
-    if (level === 'strict') return profanity_strict;
-    if (level === 'moderate') return profanity_basic;
-    return [];
-  };
-
-  const predefinedWords = getPredefinedWords(bannedWords.filter_level);
-  const allBannedWords = Array.from(new Set([...(bannedWords.words || []), ...predefinedWords])).filter(w => !(bannedWords.allowed_words || []).includes(w));
-
-  const removeBannedWord = (w) => {
-    if (predefinedWords.includes(w)) {
-      setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words || []), w] });
-    }
-    if ((bannedWords.words || []).includes(w)) {
-      setBannedWords({ ...bannedWords, words: bannedWords.words.filter(word => word !== w) });
-    }
-  };
-
   const getPayload = () => {
     return {
       automod: {
@@ -275,7 +245,36 @@ export default function Moderation({ guildId, serverData, setServerData }) {
     };
   };
 
+  if (!initialPayloadRef.current) {
+    initialPayloadRef.current = JSON.stringify(getPayload());
+  }
 
+  const [warnSearchId, setWarnSearchId] = useState('');
+  const [warnSearchData, setWarnSearchData] = useState(null);
+  const [searchingWarns, setSearchingWarns] = useState(false);
+
+  const profanity_basic = ["fuck", "shit", "bitch", "asshole", "cunt", "nigger", "nigga", "faggot", "whore", "slut", "dick", "cock", "pussy"];
+  const profanity_strict = [...profanity_basic, "bastard", "motherfucker", "twat", "wanker", "prick", "retard", "dyke", "tranny", "kys", "kill yourself"];
+  const profanity_maximum = [...profanity_strict, "crap", "damn", "ass", "piss", "boobs", "tits", "vagina", "penis", "cum", "jizz", "wank"];
+  
+  const getPredefinedWords = (level) => {
+    if (level === 'maximum') return profanity_maximum;
+    if (level === 'strict') return profanity_strict;
+    if (level === 'moderate') return profanity_basic;
+    return [];
+  };
+
+  const predefinedWords = getPredefinedWords(bannedWords.filter_level);
+  const allBannedWords = Array.from(new Set([...(bannedWords.words || []), ...predefinedWords])).filter(w => !(bannedWords.allowed_words || []).includes(w));
+
+  const removeBannedWord = (w) => {
+    if (predefinedWords.includes(w)) {
+      setBannedWords({ ...bannedWords, allowed_words: [...(bannedWords.allowed_words || []), w] });
+    }
+    if ((bannedWords.words || []).includes(w)) {
+      setBannedWords({ ...bannedWords, words: bannedWords.words.filter(word => word !== w) });
+    }
+  };
 
   const fetchRecentActions = async () => {
     try {
