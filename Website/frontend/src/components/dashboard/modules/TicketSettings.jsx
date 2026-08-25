@@ -268,7 +268,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
                 type="number"
                 min="1"
                 max="10"
-                className="w-20 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-1.5 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors text-center"
+                className="w-12 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-2 py-1.5 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors text-center tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 value={maxOpenTickets}
                 onChange={e => setMaxOpenTickets(e.target.value)}
               />
