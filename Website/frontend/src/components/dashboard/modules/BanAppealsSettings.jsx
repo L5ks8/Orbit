@@ -86,6 +86,7 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
 
   const getPayload = () => ({
       appeals: {
+        enabled: true,
         channel_id: appealChannel,
         mod_roles: modRoles,
         allowed_punishments: allowedPunishments,
