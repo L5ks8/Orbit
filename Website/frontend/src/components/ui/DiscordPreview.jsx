@@ -267,7 +267,7 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
         <div className="bg-[#313338] px-4 pt-3 pb-4 space-y-2.5" style={{ fontFamily: '"gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
           
           {/* System Message */}
-          {mode !== 'image' && (
+          {mode !== 'image' && (cardTitle === 'WELCOME' || cardTitle === 'GOODBYE') && (
             <div className="flex items-center gap-2">
               {cardTitle === 'WELCOME' ? (
                 <svg width="14" height="14" viewBox="0 0 16 16" className="text-green-500 flex-shrink-0">

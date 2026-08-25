@@ -30,11 +30,11 @@ export default function Verification({ guildId, serverData, setServerData }) {
   const [embedTitle, setEmbedTitle] = useState(vCfg.embed_title || '');
   const [embedDesc, setEmbedDesc] = useState(vCfg.embed_description || '');
   const [embedColor, setEmbedColor] = useState(vCfg.embed_color || '#5865F2');
-  const [embedImage, setEmbedImage] = useState(vCfg.embed_image || 'https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png');
+  const [embedImage, setEmbedImage] = useState(vCfg.embed_image || '/img/default_verify.png');
   const [panelChannel, setPanelChannel] = useState(vCfg.channel_id || '');
 
   const roleOptions = (serverData?.roles || []).map(r => ({ value: r.id, label: r.name || 'Unknown Role', color: r.color }));
-  const channelOptions = (serverData?.channels || []).map(c => ({ value: c.id, label: `# ${c.name}` }));
+  const channelOptions = (serverData?.channels || []).map(c => ({ value: String(c.id), label: `# ${c.name}` }));
 
   const verifyModes = [
     { id: 'web_captcha', label: 'Web CAPTCHA', desc: 'Opens a browser challenge — most secure' },
@@ -326,9 +326,10 @@ export default function Verification({ guildId, serverData, setServerData }) {
                         embedColor={embedColor}
                         embedTitle={embedTitle || 'Server Verification'}
                         embedDesc={embedDesc || 'Please click the button below to verify your account and gain access to the server.'}
-                        embedImage={embedImage || 'https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png'}
+                        embedImage={embedImage || '/img/default_verify.png'}
                         mode="embed"
                         accentColor="#5865F2"
+                        cardTitle="VERIFY"
                         roles={serverData?.roles || []}
                       />
                     </div>
