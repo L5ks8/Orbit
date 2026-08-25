@@ -371,7 +371,7 @@ export default function Overview({ guildId, serverData }) {
               </div>
               <div className="divide-y divide-neutral-800/40">
                 {(stats?.top_channels || []).length > 0 ? (
-                  stats.top_channels.map((channel, i) => {
+                  (stats?.top_channels || []).map((channel, i) => {
                   const circumference = 2 * Math.PI * 15;
                   const strokeDasharray = `${(channel.percentage / 100) * circumference} ${circumference}`;
                   

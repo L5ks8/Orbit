@@ -266,11 +266,7 @@ export default function Modules({ guildId, serverData, setServerData }) {
 
   const categories = ['Moderation', 'Engagement', 'Utility', 'Logging'];
 
-  if (loading) return (
-    <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-      <LoadingScreen message="Loading modules..." />
-    </div>
-  );
+
 
   if (!serverData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: '#ef4444' }}>Failed to load data.</div>;
 
