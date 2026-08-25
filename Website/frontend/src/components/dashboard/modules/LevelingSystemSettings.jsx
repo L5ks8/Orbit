@@ -107,7 +107,7 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
   };
 
   return (
-    <main className="p-4 lg:p-6 xl:p-8 flex flex-col gap-5 w-full">
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
       <div data-tour="feature-header" className="scroll-mt-24">
         <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
           <div className="flex items-center justify-between gap-4 px-5 py-4">

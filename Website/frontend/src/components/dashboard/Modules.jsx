@@ -206,7 +206,7 @@ export default function Modules({ guildId, serverData, setServerData }) {
     else if (moduleId === 'level') Component = LevelingSystemSettings;
     else return <div style={{ padding: '50px', color: '#fff', textAlign: 'center' }}>Module not found.</div>;
 
-    const isFullScreenModule = ['welcomegoodbye', 'appeals', 'level'].includes(moduleId);
+    const isFullScreenModule = ['welcomegoodbye', 'appeals', 'level', 'tickets'].includes(moduleId);
     if (isFullScreenModule) {
       return (
         <div className="animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
