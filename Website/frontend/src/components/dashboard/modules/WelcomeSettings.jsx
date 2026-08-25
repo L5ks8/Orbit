@@ -198,12 +198,30 @@ export default function WelcomeSettings({
   }, [
     welcomeEnabled,
     welcomeChannel,
-    welcomeMsgMode,
+    welcomeText,
     dmJoinEnabled,
+    dmJoinText,
+    welcomeMsgMode,
+    welcomeEmbedTitle,
+    welcomeEmbedDesc,
+    welcomeEmbedThumbnail,
+    welcomeEmbedColor,
+    welcomeEmbedFooter,
+    welcomeImageUrl,
+    welcomeEmbedFields,
     goodbyeEnabled,
     goodbyeChannel,
-    goodbyeMsgMode,
+    goodbyeText,
     dmLeaveEnabled,
+    dmLeaveText,
+    goodbyeMsgMode,
+    goodbyeEmbedTitle,
+    goodbyeEmbedDesc,
+    goodbyeEmbedThumbnail,
+    goodbyeEmbedColor,
+    goodbyeEmbedFooter,
+    goodbyeImageUrl,
+    goodbyeEmbedFields
   ]);
 
   return (
