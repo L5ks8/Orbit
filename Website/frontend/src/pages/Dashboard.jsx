@@ -86,7 +86,7 @@ function DashboardInner() {
     }
   }, [guildId]);
 
-  if (loading || dataLoading) return <LoadingScreen />;
+  if (loading) return <LoadingScreen />;
   if (!user) {
     const openLoginPopup = () => {
       const loginUrl = `/auth/login?next=${encodeURIComponent(location.pathname)}&popup=1`;

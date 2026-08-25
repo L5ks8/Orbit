@@ -185,6 +185,7 @@ const FilterLevelSelector = ({ value, onChange, levels }) => (
 import { useRef } from 'react';
 
 export default function Moderation({ guildId, serverData, setServerData }) {
+  if (!serverData?.config || !serverData?.roles || !serverData?.channels) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><LoadingScreen /></div>;
   const toast = useToast();
   
   const amCfgInit = serverData?.config?.automod || {};

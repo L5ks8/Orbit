@@ -6,6 +6,8 @@ import { getCache, setCache } from '../../../utils/cache';
 import LoadingScreen from '../../ui/LoadingScreen';
 
 export default function Overview({ guildId, serverData }) {
+  if (!serverData?.config || !serverData?.modActivity) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><LoadingScreen /></div>;
+
   const { user } = useAuth();
   const [guildInfo, setGuildInfo] = useState(() => getCache(`overview_guild_${guildId}`) || null);
   const [stats, setStats] = useState(() => getCache(`overview_stats_${guildId}`) || null);
