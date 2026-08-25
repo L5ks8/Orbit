@@ -13,6 +13,7 @@ import BotProfile from '../components/dashboard/BotProfile';
 import Invites from '../components/dashboard/Invites';
 import Roles from '../components/dashboard/Roles';
 import TopNav from '../components/dashboard/TopNav';
+import Security from '../components/dashboard/Security/Security';
 import { useAuth } from '../context/AuthContext';
 import { getCache, setCache } from '../utils/cache';
 
@@ -140,6 +141,7 @@ function DashboardInner() {
               <Route path="leaderboard" element={<Leaderboard guildId={guildId} />} />
               <Route path="settings" element={<Settings guildId={guildId} />} />
               <Route path="automod" element={<Moderation guildId={guildId} />} />
+              <Route path="security" element={<Security guildId={guildId} />} />
               <Route path=":moduleId" element={<Modules guildId={guildId} />} />
             </Routes>
           </div>
