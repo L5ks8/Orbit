@@ -1,109 +1,129 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
+import SaveBar from '../../ui/SaveBar';
+import { useToast } from '../../ui/Toast';
+import { getCache, setCache } from '../../../utils/cache';
+import LoadingScreen from '../../ui/LoadingScreen';
 
-export default function Security() {
-  return (
-    <div className="lg:pl-64 relative">
-      <header className="sticky top-0 z-20 h-16 bg-neutral-900/90 backdrop-blur-sm border-b border-neutral-800">
-        <div className="flex items-center justify-between h-full px-4 lg:px-8">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 lg:hidden transition-colors"
-              aria-label="Toggle sidebar"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-menu w-5 h-5"
-              >
-                <line x1="4" x2="20" y1="12" y2="12"></line>
-                <line x1="4" x2="20" y1="6" y2="6"></line>
-                <line x1="4" x2="20" y1="18" y2="18"></line>
-              </svg>
-            </button>
-            <a
-              className="p-1.5 rounded-xl hover:bg-neutral-800 transition-colors group"
-              title="Back to Servers"
-              href="/dashboard"
-            >
-              <img
-                src="/logo.png"
-                alt="Peak"
-                width="28"
-                height="28"
-                className="rounded-xl group-hover:shadow-lg transition-shadow sm:w-8 sm:h-8"
-              />
-            </a>
-            <div className="w-px h-8 bg-neutral-700 hidden sm:block"></div>
-            <h1 className="text-sm sm:text-[15px] font-semibold text-white truncate max-w-[100px] sm:max-w-none">
-              Orbit Support
-            </h1>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            <div className="relative">
-              <button
-                className="relative p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-                aria-label="Notifications"
-                aria-expanded="false"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-bell w-5 h-5"
-                >
-                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
-                </svg>
-              </button>
-            </div>
-            <div className="relative">
-              <button
-                className="flex items-center gap-1.5 sm:gap-3 p-1 sm:p-1.5 pr-1.5 sm:pr-3 rounded-xl hover:bg-neutral-800 transition-colors"
-                aria-label="User menu"
-                aria-expanded="false"
-              >
-                <img
-                  src="https://cdn.discordapp.com/avatars/1195055294380781629/07be856d3472ba59bf51e3fa5a77a595.png?size=64"
-                  alt="l5ks8"
-                  className="w-8 h-8 rounded-xl ring-2 ring-neutral-700"
-                />
-                <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-white">Lukas</p>
-                  <p className="text-[10px] text-neutral-500">Member</p>
-                </div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform "
-                >
-                  <path d="m6 9 6 6 6-6"></path>
-                </svg>
-              </button>
+const TailwindToggle = ({ checked, onChange }) => (
+    <button 
+      type="button" 
+      role="switch" 
+      aria-checked={checked} 
+      onClick={onChange}
+      className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
+    >
+      <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-all duration-300 ease-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
+    </button>
+);
+
+
+export default function Security({ guildId }) {
+  
+  const { toast } = useToast();
+  const cachedServerData = getCache(guildId);
+  const initialCfg = cachedServerData?.config?.security || {};
+
+  const [loading, setLoading] = useState(!cachedServerData);
+  const [initialStateStr, setInitialStateStr] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // States
+  const [antiNuke, setAntiNuke] = useState({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, ...initialCfg.anti_nuke });
+  const [antiRaid, setAntiRaid] = useState({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, ...initialCfg.anti_raid });
+  const [webhookProtection, setWebhookProtection] = useState({ enabled: false, block_everyone: false, block_invite_links: false, ...initialCfg.webhook_protection });
+
+  const getPayload = () => ({
+    anti_nuke: antiNuke,
+    anti_raid: antiRaid,
+    webhook_protection: webhookProtection
+  });
+
+  useEffect(() => {
+    if (cachedServerData) {
+      setInitialStateStr(JSON.stringify({
+        anti_nuke: cachedServerData.config?.security?.anti_nuke || { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false },
+        anti_raid: cachedServerData.config?.security?.anti_raid || { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false },
+        webhook_protection: cachedServerData.config?.security?.webhook_protection || { enabled: false, block_everyone: false, block_invite_links: false }
+      }));
+      setLoading(false);
+    } else {
+      fetch(`/api/guilds/${guildId}`)
+        .then(res => res.json())
+        .then(data => {
+          setCache(guildId, data);
+          const cfg = data.config?.security || {};
+          setAntiNuke({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, ...cfg.anti_nuke });
+          setAntiRaid({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, ...cfg.anti_raid });
+          setWebhookProtection({ enabled: false, block_everyone: false, block_invite_links: false, ...cfg.webhook_protection });
+          setInitialStateStr(JSON.stringify({
+            anti_nuke: cfg.anti_nuke || { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false },
+            anti_raid: cfg.anti_raid || { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false },
+            webhook_protection: cfg.webhook_protection || { enabled: false, block_everyone: false, block_invite_links: false }
+          }));
+          setLoading(false);
+        })
+        .catch(console.error);
+    }
+  }, [guildId]);
+
+  const handleSave = async (payloadString) => {
+    setIsSaving(true);
+    const toastId = toast.loading("Saving settings...");
+    try {
+      const dataToSave = payloadString ? JSON.parse(payloadString) : getPayload();
+      const res = await fetch(`/api/guilds/${guildId}/config`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ security: dataToSave })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      const updatedData = { ...cachedServerData, config: { ...cachedServerData?.config, security: dataToSave } };
+      setCache(guildId, updatedData);
+      setInitialStateStr(JSON.stringify(dataToSave));
+      toast.success("Settings saved", { id: toastId });
+    } catch (e) {
+      console.error(e);
+      toast.error("Error saving settings", { id: toastId });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
+
+  useEffect(() => {
+    if (!initialStateStr || !isDirty) return;
+    const timeoutId = setTimeout(() => {
+      handleSave(currentPayloadStr);
+    }, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [currentPayloadStr, initialStateStr, isDirty]);
+
+  if (loading) {
+    return (
+      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
+        <div data-tour="feature-header" className="scroll-mt-24">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield-check w-5 h-5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+              </span>
+              <h1 className="text-base font-medium text-white truncate">Security</h1>
             </div>
           </div>
         </div>
-      </header>
-      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
+        <LoadingScreen text="Loading Security..." />
+      </main>
+    );
+  }
+
+  return (
+    <>
+      <SaveBar show={isDirty} onSave={() => handleSave()} onReset={() => window.location.reload()} isSaving={isSaving} />
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
         <div>
           <div data-tour="feature-header" className="scroll-mt-24">
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -159,14 +179,7 @@ export default function Security() {
                     </div>
                     <div className="shrink-0">
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked="true"
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
-                        >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black"></span>
-                        </button>
+                        <TailwindToggle checked={antiNuke.enabled} onChange={() => setAntiNuke({...antiNuke, enabled: !antiNuke.enabled})} />
                       </div>
                     </div>
                   </div>
@@ -236,14 +249,7 @@ export default function Security() {
                               Test mode
                             </p>
                             <div className="flex items-center gap-3">
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked="false"
-                                className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                              >
-                                <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]"></span>
-                              </button>
+                              <TailwindToggle checked={antiNuke.test_mode} onChange={() => setAntiNuke({...antiNuke, test_mode: !antiNuke.test_mode})} />
                             </div>
                           </div>
                           <div className="divide-y divide-neutral-800/70 border-y border-neutral-800/70">
@@ -252,14 +258,7 @@ export default function Security() {
                                 Privilege escalation
                               </p>
                               <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  role="switch"
-                                  aria-checked="true"
-                                  className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
-                                >
-                                  <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black"></span>
-                                </button>
+                                <TailwindToggle checked={antiNuke.privilege_escalation} onChange={() => setAntiNuke({...antiNuke, privilege_escalation: !antiNuke.privilege_escalation})} />
                               </div>
                             </div>
                             <div className="flex items-center justify-between gap-4 py-3.5">
@@ -267,14 +266,7 @@ export default function Security() {
                                 Webhook firewall
                               </p>
                               <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  role="switch"
-                                  aria-checked="false"
-                                  className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                                >
-                                  <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]"></span>
-                                </button>
+                                <TailwindToggle checked={antiNuke.webhook_firewall} onChange={() => setAntiNuke({...antiNuke, webhook_firewall: !antiNuke.webhook_firewall})} />
                               </div>
                             </div>
                             <div className="flex items-center justify-between gap-4 py-3.5">
@@ -282,14 +274,7 @@ export default function Security() {
                                 Server identity protection
                               </p>
                               <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  role="switch"
-                                  aria-checked="false"
-                                  className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                                >
-                                  <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]"></span>
-                                </button>
+                                <TailwindToggle checked={antiNuke.server_identity} onChange={() => setAntiNuke({...antiNuke, server_identity: !antiNuke.server_identity})} />
                               </div>
                             </div>
                             <div className="flex items-center justify-between gap-4 py-3.5">
@@ -297,14 +282,7 @@ export default function Security() {
                                 Block unknown bot joins
                               </p>
                               <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  role="switch"
-                                  aria-checked="false"
-                                  className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                                >
-                                  <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]"></span>
-                                </button>
+                                <TailwindToggle checked={antiNuke.block_unknown_bot} onChange={() => setAntiNuke({...antiNuke, block_unknown_bot: !antiNuke.block_unknown_bot})} />
                               </div>
                             </div>
                           </div>
@@ -511,14 +489,7 @@ export default function Security() {
                     </div>
                     <div className="shrink-0">
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked="true"
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
-                        >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black"></span>
-                        </button>
+                        <TailwindToggle checked={antiRaid.enabled} onChange={() => setAntiRaid({...antiRaid, enabled: !antiRaid.enabled})} />
                       </div>
                     </div>
                   </div>
@@ -780,14 +751,7 @@ export default function Security() {
                                   Verification Challenge
                                 </span>
                                 <div className="flex items-center gap-3">
-                                  <button
-                                    type="button"
-                                    role="switch"
-                                    aria-checked="false"
-                                    className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                                  >
-                                    <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]"></span>
-                                  </button>
+                                  <TailwindToggle checked={antiRaid.verification_challenge} onChange={() => setAntiRaid({...antiRaid, verification_challenge: !antiRaid.verification_challenge})} />
                                 </div>
                               </div>
                             </div>
@@ -860,14 +824,7 @@ export default function Security() {
                     </div>
                     <div className="shrink-0">
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked="true"
-                          className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
-                        >
-                          <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black"></span>
-                        </button>
+                        <TailwindToggle checked={antiRaid.suspicious_account} onChange={() => setAntiRaid({...antiRaid, suspicious_account: !antiRaid.suspicious_account})} />
                       </div>
                     </div>
                   </div>
@@ -904,14 +861,7 @@ export default function Security() {
                                 No Profile Picture
                               </label>
                               <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  role="switch"
-                                  aria-checked="false"
-                                  className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                                >
-                                  <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]"></span>
-                                </button>
+                                <TailwindToggle checked={antiRaid.no_profile_picture} onChange={() => setAntiRaid({...antiRaid, no_profile_picture: !antiRaid.no_profile_picture})} />
                               </div>
                             </div>
                             <div>
@@ -919,14 +869,7 @@ export default function Security() {
                                 Default Username
                               </label>
                               <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  role="switch"
-                                  aria-checked="false"
-                                  className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-200 dark:bg-neutral-700 "
-                                >
-                                  <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[3px]"></span>
-                                </button>
+                                <TailwindToggle checked={antiRaid.default_username} onChange={() => setAntiRaid({...antiRaid, default_username: !antiRaid.default_username})} />
                               </div>
                             </div>
                           </div>
@@ -1059,14 +1002,7 @@ export default function Security() {
                   </div>
                   <div className="shrink-0">
                     <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked="true"
-                        className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
-                      >
-                        <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black"></span>
-                      </button>
+                      <TailwindToggle checked={webhookProtection.enabled} onChange={() => setWebhookProtection({...webhookProtection, enabled: !webhookProtection.enabled})} />
                     </div>
                   </div>
                 </div>
@@ -1080,14 +1016,7 @@ export default function Security() {
                               Block @everyone from webhooks
                             </p>
                             <div className="flex items-center gap-3">
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked="true"
-                                className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
-                              >
-                                <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black"></span>
-                              </button>
+                              <TailwindToggle checked={webhookProtection.block_everyone} onChange={() => setWebhookProtection({...webhookProtection, block_everyone: !webhookProtection.block_everyone})} />
                             </div>
                           </div>
                           <div className="flex items-center justify-between gap-3 px-4 py-3 bg-neutral-800/50 rounded-xl">
@@ -1095,14 +1024,7 @@ export default function Security() {
                               Block invite links from webhooks
                             </p>
                             <div className="flex items-center gap-3">
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked="true"
-                                className="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 bg-neutral-800 dark:bg-white "
-                              >
-                                <span className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-neutral-900 shadow-sm transition-transform duration-200 ease-in-out will-change-transform translate-x-[21px] !bg-white dark:!bg-black"></span>
-                              </button>
+                              <TailwindToggle checked={webhookProtection.block_invite_links} onChange={() => setWebhookProtection({...webhookProtection, block_invite_links: !webhookProtection.block_invite_links})} />
                             </div>
                           </div>
                         </div>
@@ -1278,6 +1200,6 @@ export default function Security() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }
