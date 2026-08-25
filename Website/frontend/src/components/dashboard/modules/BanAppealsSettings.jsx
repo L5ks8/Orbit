@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import SaveBar from '../../ui/SaveBar';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
 const TailwindToggle = ({ checked, onChange }) => (
@@ -51,12 +50,23 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
       }
     });
 
-  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
-  const isDirty = JSON.stringify(getPayload()) !== initialState;
+  const [initialStateStr, setInitialStateStr] = useState('');
+  
+  useEffect(() => {
+    const payloadStr = JSON.stringify(getPayload());
+    setInitialStateStr(payloadStr);
+  }, [config]); 
+  
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
 
-  const handleSave = () => {
-    onSave(getPayload());
-  };
+  useEffect(() => {
+    if (!initialStateStr || !isDirty) return;
+    const timeoutId = setTimeout(() => {
+      onSave(getPayload());
+    }, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [currentPayloadStr, initialStateStr, isDirty, onSave]);
 
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
@@ -273,8 +283,6 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
           </div>
         </div>
       </div>
-      
-      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </main>
   );
 }
