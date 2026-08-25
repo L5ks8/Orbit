@@ -125,7 +125,7 @@ export default function Security({ guildId }) {
 
   return (
     <>
-      <SaveBar show={isDirty} onSave={() => handleSave()} onReset={() => window.location.reload()} isSaving={isSaving} />
+
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
         <div>
           <div data-tour="feature-header" className="scroll-mt-24">
@@ -186,8 +186,8 @@ export default function Security({ guildId }) {
                       </div>
                     </div>
                   </div>
-                  <div className="grid transition-all duration-200 ease-in-out grid-rows-[1fr] opacity-100">
-                    <div className="">
+                  <div className={`grid transition-all duration-300 ease-in-out ${antiNuke.enabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                    <div className="overflow-hidden">
                       <div className="px-5 pb-5 pt-4 border-t border-neutral-800">
                         <div className="relative">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -496,8 +496,8 @@ export default function Security({ guildId }) {
                       </div>
                     </div>
                   </div>
-                  <div className="grid transition-all duration-200 ease-in-out grid-rows-[1fr] opacity-100">
-                    <div className="">
+                  <div className={`grid transition-all duration-300 ease-in-out ${antiRaid.enabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                    <div className="overflow-hidden">
                       <div className="px-5 pb-5 pt-4 border-t border-neutral-800">
                         <div className="relative">
                           <div className="mb-4">
@@ -831,8 +831,8 @@ export default function Security({ guildId }) {
                       </div>
                     </div>
                   </div>
-                  <div className="grid transition-all duration-200 ease-in-out grid-rows-[1fr] opacity-100">
-                    <div className="">
+                  <div className={`grid transition-all duration-300 ease-in-out ${antiRaid.suspicious_account ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                    <div className="overflow-hidden">
                       <div className="px-5 pb-5 pt-4 border-t border-neutral-800">
                         <div className="relative">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1009,8 +1009,8 @@ export default function Security({ guildId }) {
                     </div>
                   </div>
                 </div>
-                <div className="grid transition-all duration-200 ease-in-out grid-rows-[1fr] opacity-100">
-                  <div className="">
+                <div className={`grid transition-all duration-300 ease-in-out ${webhookProtection.enabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                  <div className="overflow-hidden">
                     <div className="px-5 pb-5 pt-4 border-t border-neutral-800">
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
