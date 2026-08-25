@@ -3,7 +3,7 @@ import time
 import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, ChannelSelect, RoleSelect
-from Components.Commands.Ticket._storage import load_ticket_config, create_active_ticket, claim_ticket, close_active_ticket
+from Components.Systems.Tickets._storage import load_ticket_config, create_active_ticket, claim_ticket, close_active_ticket
 from Components.Commands._utils import make_embed
 
 _user_ticket_selections = {}
@@ -143,7 +143,7 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        from Components.Commands.Ticket._storage import is_blacklisted
+        from Components.Systems.Tickets._storage import is_blacklisted
         if is_blacklisted(interaction.guild.id, interaction.user.id):
             return await interaction.followup.send(embed=make_embed("You are blacklisted from opening support tickets on this server.", discord.Color.red()), ephemeral=True)
 
@@ -364,7 +364,7 @@ class PersistentTicketPanelLayout(discord.ui.View):
         btn_create = Button(label="Create Ticket", style=discord.ButtonStyle.primary, custom_id="orbit:ticket_create_btn")
         
         async def _btn_create_cb(interaction: discord.Interaction):
-            from Components.Commands.Ticket._storage import is_blacklisted
+            from Components.Systems.Tickets._storage import is_blacklisted
             from Components.Commands._utils import make_embed
             if interaction.guild and is_blacklisted(interaction.guild.id, interaction.user.id):
                 return await interaction.response.send_message(embed=make_embed("You are blacklisted from opening support tickets on this server.", discord.Color.red()), ephemeral=True)

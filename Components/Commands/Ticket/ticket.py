@@ -1,11 +1,11 @@
-﻿import io
+import io
 import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 
-from Components.Commands.Ticket._storage import (
+from Components.Systems.Tickets._storage import (
     load_ticket_config,
     setup_ticket_config,
     reset_ticket_config,
@@ -13,8 +13,8 @@ from Components.Commands.Ticket._storage import (
     add_to_blacklist,
     remove_from_blacklist
 )
-from Components.Commands.Ticket.transcript_render import parse_transcript, generate_transcript_image
-from Components.Commands.Ticket._views import (
+from Components.Systems.Tickets.transcript_render import parse_transcript, generate_transcript_image
+from Components.Systems.Tickets._views import (
     PersistentTicketPanelLayout,
     TicketControlLayout,
     close_ticket_flow

@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands, tasks
 import time
-from Components.Commands.Ticket._views import PersistentTicketPanelLayout, TicketControlLayout, close_ticket_flow
-from Components.Commands.Ticket._storage import load_ticket_config
+from Components.Systems.Tickets._views import PersistentTicketPanelLayout, TicketControlLayout, close_ticket_flow
+from Components.Systems.Tickets._storage import load_ticket_config
 
 class TicketListenerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -57,11 +57,11 @@ class TicketListenerCog(commands.Cog):
         custom_id = interaction.data.get("custom_id", "")
         if custom_id.startswith("orbit:ticket_opt:"):
             opt_name = custom_id.split("orbit:ticket_opt:", 1)[1]
-            from Components.Commands.Ticket._views import TicketOpenModal
+            from Components.Systems.Tickets._views import TicketOpenModal
             modal = TicketOpenModal(category_option=opt_name)
             await interaction.response.send_modal(modal)
         elif custom_id == "orbit:ticket_open":
-            from Components.Commands.Ticket._views import TicketOpenModal
+            from Components.Systems.Tickets._views import TicketOpenModal
             modal = TicketOpenModal(category_option="General Support")
             await interaction.response.send_modal(modal)
 
