@@ -450,14 +450,14 @@ export default function ReactionRoleBuilder({
               <div className="px-5 py-4 space-y-3">
                 <div>
                   <label className="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">Title</label>
-                  <input 
+                  <textarea rows="1" 
                     maxLength={256} 
                     placeholder="Pick your roles" 
                     className="w-full bg-neutral-800 border border-neutral-700 rounded-xl h-10 px-3 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-colors" 
-                    type="text" 
+                     
                     value={embedTitle}
                     onChange={(e) => setEmbedTitle(e.target.value)}
-                  />
+                  ></textarea>
                 </div>
                 <div>
                   <label className="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">Description</label>
@@ -468,7 +468,7 @@ export default function ReactionRoleBuilder({
                     className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 resize-none transition-colors"
                     value={embedDesc}
                     onChange={(e) => setEmbedDesc(e.target.value)}
-                  />
+                  ></textarea>
                 </div>
               </div>
 
@@ -556,14 +556,14 @@ export default function ReactionRoleBuilder({
                             placeholder="Pick a role…"
                           />
                         </div>
-                        <input 
+                        <textarea rows="1" 
                           placeholder="Button label (auto)" 
                           maxLength={80} 
                           className="col-span-2 sm:col-span-1 block bg-neutral-800 border border-neutral-700 rounded-xl h-10 px-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors" 
-                          type="text" 
+                           
                           value={comp.label}
                           onChange={(e) => updateComponent(idx, "label", e.target.value)}
-                        />
+                        ></textarea>
                       </div>
                       <button onClick={() => removeComponent(idx)} type="button" className="w-10 h-10 flex items-center justify-center rounded-xl text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0" aria-label="Remove this role">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash2 w-3.5 h-3.5"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>

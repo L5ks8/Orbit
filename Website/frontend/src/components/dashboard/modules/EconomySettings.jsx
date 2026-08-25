@@ -101,7 +101,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
           <div className="form-group">
             <label style={{ color: '#fff' }}>Currency Symbol</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Used in commands and responses.</span>
-            <input type="text" className="dash-input" value={currencySymbol} onChange={e => setCurrencySymbol(e.target.value)} />
+            <textarea rows="1"  className="dash-input" value={currencySymbol} onChange={e => setCurrencySymbol(e.target.value)} ></textarea>
           </div>
 
           <div className="form-group">
@@ -288,7 +288,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {workResponses.map((r, i) => (
                 <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <input type="text" className="dash-input" placeholder="e.g. You worked hard and earned {amount}!" style={{ flex: 1 }} />
+                  <textarea rows="1"  className="dash-input" placeholder="e.g. You worked hard and earned {amount}!" style={{ flex: 1 }} ></textarea>
                   <button onClick={() => setWorkResponses(workResponses.filter((_, idx) => idx !== i))} className="dash-btn danger" style={{ padding: '12px' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
@@ -342,7 +342,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
           <div className="form-group">
             <label style={{ color: '#fff' }}>Custom URL</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Custom vanity URL for public leaderboard view.</span>
-            <input type="text" className="dash-input" value={baltopCustomUrl} onChange={e => setBaltopCustomUrl(e.target.value)} placeholder="e.g. noctaly" />
+            <textarea rows="1"  className="dash-input" value={baltopCustomUrl} onChange={e => setBaltopCustomUrl(e.target.value)} placeholder="e.g. noctaly" ></textarea>
           </div>
           <div className="form-group">
             <label style={{ color: '#fff' }}>Automatic Channel</label>
@@ -354,7 +354,7 @@ export default function EconomySettings({ config, channels, roles, onSave, savin
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Color of the automatic leaderboard embed.</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
               <input type="color" value={baltopEmbedColor} onChange={e => setBaltopEmbedColor(e.target.value)} style={{ width: '44px', height: '38px', borderRadius: '4px', cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <input type="text" className="dash-input" value={baltopEmbedColor} onChange={e => setBaltopEmbedColor(e.target.value)} style={{ width: '100px' }} />
+              <textarea rows="1"  className="dash-input" value={baltopEmbedColor} onChange={e => setBaltopEmbedColor(e.target.value)} style={{ width: '100px' }} ></textarea>
             </div>
           </div>
         </div>

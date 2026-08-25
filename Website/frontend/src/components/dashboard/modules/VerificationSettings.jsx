@@ -111,11 +111,11 @@ export default function VerificationSettings({ config, channels, roles, onSave, 
           <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <input type="color" value={embedColor} onChange={e => setEmbedColor(e.target.value)} style={{ width: '44px', height: '38px', borderRadius: '4px', cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <input type="text" className="dash-input" value={embedColor} onChange={e => setEmbedColor(e.target.value)} style={{ width: '100px' }} />
+              <textarea rows="1"  className="dash-input" value={embedColor} onChange={e => setEmbedColor(e.target.value)} style={{ width: '100px' }} ></textarea>
             </div>
-            <input type="text" className="dash-input" value={embedTitle} onChange={e => setEmbedTitle(e.target.value)} placeholder="Embed Title" />
+            <textarea rows="1"  className="dash-input" value={embedTitle} onChange={e => setEmbedTitle(e.target.value)} placeholder="Embed Title" ></textarea>
             <textarea className="dash-input" rows="3" value={embedDesc} onChange={e => setEmbedDesc(e.target.value)} placeholder="Embed Description"></textarea>
-            <input type="text" className="dash-input" value={embedImage} onChange={e => setEmbedImage(e.target.value)} placeholder="Embed Image URL" />
+            <textarea rows="1"  className="dash-input" value={embedImage} onChange={e => setEmbedImage(e.target.value)} placeholder="Embed Image URL" ></textarea>
           </div>
 
           {/* Preview */}

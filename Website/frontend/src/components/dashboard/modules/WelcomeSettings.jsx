@@ -337,7 +337,7 @@ export default function WelcomeSettings({
                               caretColor: "white",
                             }}
                             defaultValue={""}
-                          />
+                          ></textarea>
                         </div>
                       </div>
                       <div className="flex items-center">
@@ -361,14 +361,14 @@ export default function WelcomeSettings({
                     </div>
 
                     <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors">
-                      <input
-                        type="text"
+                      <textarea rows="1"
+                        
                         value={welcomeEmbedTitle}
                         onChange={e => setWelcomeEmbedTitle(e.target.value)}
                         placeholder="Embed Title"
                         className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
                         style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
-                      />
+                      ></textarea>
                     </div>
                     <div
                       className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors "
@@ -395,7 +395,7 @@ export default function WelcomeSettings({
                           height: 84,
                         }}
                         defaultValue={""}
-                      />
+                      ></textarea>
                     </div>
                   </div>
                   
@@ -417,8 +417,8 @@ export default function WelcomeSettings({
                         {welcomeEmbedFields.map((field, idx) => (
                           <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-700/50 bg-neutral-800/30">
                             <div className="flex items-center gap-2">
-                              <input 
-                                type="text"
+                              <textarea rows="1" 
+                                
                                 value={field.name}
                                 onChange={(e) => {
                                   const nf = [...welcomeEmbedFields];
@@ -427,7 +427,7 @@ export default function WelcomeSettings({
                                 }}
                                 className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500"
                                 placeholder="Field Name"
-                              />
+                              ></textarea>
                               <label className="flex items-center gap-1.5 cursor-pointer">
                                 <span className="text-xs text-neutral-400">Inline</span>
                                 <input type="checkbox" checked={field.inline} onChange={(e) => {
@@ -458,7 +458,7 @@ export default function WelcomeSettings({
                               rows={2}
                               className="w-full bg-neutral-800/50 border border-neutral-700/50 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500 resize-none"
                               placeholder="Field Value"
-                            />
+                            ></textarea>
                           </div>
                         ))}
                       </div>
@@ -466,14 +466,14 @@ export default function WelcomeSettings({
                   )}
                   {welcomeMsgMode === "embed" && (
                     <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors mt-3 mb-4">
-                      <input
-                        type="text"
+                      <textarea rows="1"
+                        
                         value={welcomeEmbedFooter}
                         onChange={e => setWelcomeEmbedFooter(e.target.value)}
                         placeholder="Embed Footer"
                         className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
                         style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
-                      />
+                      ></textarea>
                     </div>
                   )}
 <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
@@ -756,7 +756,7 @@ export default function WelcomeSettings({
                                 caretColor: "white",
                               }}
                               defaultValue={""}
-                            />
+                            ></textarea>
                           </div>
                         </div>
                         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -907,7 +907,7 @@ export default function WelcomeSettings({
                                 caretColor: "white",
                               }}
                               defaultValue={"{user.name} has left"}
-                            />
+                            ></textarea>
                           </div>
                         </div>
                         <div className="flex items-center">
@@ -931,14 +931,14 @@ export default function WelcomeSettings({
                       </div>
                       
                           <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors">
-                            <input
-                              type="text"
+                            <textarea rows="1"
+                              
                               value={goodbyeEmbedTitle}
                               onChange={e => setGoodbyeEmbedTitle(e.target.value)}
                               placeholder="Embed Title"
                               className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
                               style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
-                            />
+                            ></textarea>
                           </div>
 <div
                         className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors "
@@ -965,7 +965,7 @@ export default function WelcomeSettings({
                             height: 84,
                           }}
                           defaultValue={""}
-                        />
+                        ></textarea>
                       </div>
                     </div>
                     
@@ -1012,8 +1012,8 @@ export default function WelcomeSettings({
                         {goodbyeEmbedFields.map((field, idx) => (
                           <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-700/50 bg-neutral-800/30">
                             <div className="flex items-center gap-2">
-                              <input 
-                                type="text"
+                              <textarea rows="1" 
+                                
                                 value={field.name}
                                 onChange={(e) => {
                                   const nf = [...goodbyeEmbedFields];
@@ -1022,7 +1022,7 @@ export default function WelcomeSettings({
                                 }}
                                 className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500"
                                 placeholder="Field Name"
-                              />
+                              ></textarea>
                               <label className="flex items-center gap-1.5 cursor-pointer">
                                 <span className="text-xs text-neutral-400">Inline</span>
                                 <input type="checkbox" checked={field.inline} onChange={(e) => {
@@ -1053,7 +1053,7 @@ export default function WelcomeSettings({
                               rows={2}
                               className="w-full bg-neutral-800/50 border border-neutral-700/50 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500 resize-none"
                               placeholder="Field Value"
-                            />
+                            ></textarea>
                           </div>
                         ))}
                       </div>
@@ -1061,14 +1061,14 @@ export default function WelcomeSettings({
                   )}
                   {goodbyeMsgMode === "embed" && (
                     <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors mt-3 mb-4">
-                      <input
-                        type="text"
+                      <textarea rows="1"
+                        
                         value={goodbyeEmbedFooter}
                         onChange={e => setGoodbyeEmbedFooter(e.target.value)}
                         placeholder="Embed Footer"
                         className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
                         style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
-                      />
+                      ></textarea>
                     </div>
                   )}
 <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
@@ -1364,7 +1364,7 @@ export default function WelcomeSettings({
                                   caretColor: "white",
                                 }}
                                 defaultValue={""}
-                              />
+                              ></textarea>
                             </div>
                           </div>
                           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">

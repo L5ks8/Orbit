@@ -118,7 +118,7 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
               <div className="settings-form">
                 <div className="form-group">
                   <label>Trigger Phrase</label>
-                  <input type="text" name="trigger" className="dash-input" defaultValue={editingTrigger.trigger} required placeholder="e.g. hi bot" />
+                  <textarea rows="1"  name="trigger" className="dash-input" defaultValue={editingTrigger.trigger} required placeholder="e.g. hi bot" ></textarea>
                 </div>
                 
                 <div className="form-group">

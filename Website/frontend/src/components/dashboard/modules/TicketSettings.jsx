@@ -80,7 +80,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
           <div className="form-group">
             <label>Ticket Panel Title</label>
             <span className="form-hint">The main title of the embed sent in the ticket panel channel.</span>
-            <input type="text" className="dash-input" value={panelTitle} onChange={e => setPanelTitle(e.target.value)} placeholder="e.g. Support Ticket Desk" />
+            <textarea rows="1"  className="dash-input" value={panelTitle} onChange={e => setPanelTitle(e.target.value)} placeholder="e.g. Support Ticket Desk" ></textarea>
           </div>
 
           <div className="form-group">
@@ -152,7 +152,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
               <div className="settings-form">
                 <div className="form-group">
                   <label>Option Name</label>
-                  <input type="text" name="label" className="dash-input" defaultValue={editingOption.name} required placeholder="e.g. General Support" />
+                  <textarea rows="1"  name="label" className="dash-input" defaultValue={editingOption.name} required placeholder="e.g. General Support" ></textarea>
                 </div>
                 <div className="form-group">
                   <label>Support Role</label>

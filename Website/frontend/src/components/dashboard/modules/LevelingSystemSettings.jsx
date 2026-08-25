@@ -273,7 +273,7 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
           <div className="form-group">
             <label style={{ color: '#fff' }}>Custom URL</label>
             <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>The custom URL for the leaderboard. Must be unique.</span>
-            <input type="text" className="dash-input" value={leaderboardUrl} onChange={e => setLeaderboardUrl(e.target.value)} placeholder="my-server" />
+            <textarea rows="1"  className="dash-input" value={leaderboardUrl} onChange={e => setLeaderboardUrl(e.target.value)} placeholder="my-server" ></textarea>
           </div>
           <div className="form-group">
             <label style={{ color: '#fff' }}>Auto Leaderboard Channel</label>
@@ -285,7 +285,7 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
           <label style={{ color: '#fff' }}>Embed Color</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
             <input type="color" value={leaderboardColor} onChange={e => setLeaderboardColor(e.target.value)} style={{ width: '44px', height: '38px', borderRadius: '4px', cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }} />
-            <input type="text" className="dash-input" value={leaderboardColor} onChange={e => setLeaderboardColor(e.target.value)} style={{ width: '100px' }} />
+            <textarea rows="1"  className="dash-input" value={leaderboardColor} onChange={e => setLeaderboardColor(e.target.value)} style={{ width: '100px' }} ></textarea>
           </div>
         </div>
       </div>
@@ -300,7 +300,7 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
         <div className="form-group" style={{ marginBottom: '20px' }}>
           <label style={{ color: '#fff' }}>Conditional Message</label>
           <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Conditional scripts: {'{earned: Text}'} (any role earned), {'{level[X]: Text}'} (only Level X).</span>
-          <input type="text" className="dash-input" value={levelupConditional} onChange={e => setLevelupConditional(e.target.value)} placeholder="{earned: You earned {roles}!} {level[10]: Milestone Level 10!}" />
+          <textarea rows="1"  className="dash-input" value={levelupConditional} onChange={e => setLevelupConditional(e.target.value)} placeholder="{earned: You earned {roles}!} {level[10]: Milestone Level 10!}" ></textarea>
         </div>
 
         <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -314,17 +314,17 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
         <div className="form-group" style={{ marginBottom: '20px' }}>
           <label style={{ color: '#fff' }}>Message Content</label>
           <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Text outside the embed (e.g. {'{user_mention}'}).</span>
-          <input type="text" className="dash-input" value={levelupMessageContent} onChange={e => setLevelupMessageContent(e.target.value)} />
+          <textarea rows="1"  className="dash-input" value={levelupMessageContent} onChange={e => setLevelupMessageContent(e.target.value)} ></textarea>
         </div>
 
         <div className="form-group" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
           <label style={{ color: '#fff' }}>Embed Builder</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
-            <input type="text" className="dash-input" placeholder="Author Name" />
-            <input type="text" className="dash-input" defaultValue="Level Up!" placeholder="Title" />
+            <textarea rows="1"  className="dash-input" placeholder="Author Name" ></textarea>
+            <textarea rows="1"  className="dash-input" defaultValue="Level Up!" placeholder="Title" ></textarea>
             <textarea className="dash-input" rows="3" defaultValue="Congratulations **{user_globalname}**!\nYou reached **Level {level}**." placeholder="Description"></textarea>
-            <input type="text" className="dash-input" value={levelupEmbedImage} onChange={e => setLevelupEmbedImage(e.target.value)} placeholder="Image URL" />
-            <input type="text" className="dash-input" placeholder="Footer Text" />
+            <textarea rows="1"  className="dash-input" value={levelupEmbedImage} onChange={e => setLevelupEmbedImage(e.target.value)} placeholder="Image URL" ></textarea>
+            <textarea rows="1"  className="dash-input" placeholder="Footer Text" ></textarea>
           </div>
         </div>
       </div>

@@ -176,7 +176,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
                 <div className="form-group">
                   <label>Banned Words</label>
                   <span className="form-hint">Words or phrases to block. Separate with commas.</span>
-                  <input type="text" className="dash-input" value={(editingForm.words || []).join(', ')} onChange={e => setEditingForm({...editingForm, words: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} placeholder="badword1, badword2" />
+                  <textarea rows="1"  className="dash-input" value={(editingForm.words || []).join(', ')} onChange={e => setEditingForm({...editingForm, words: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} placeholder="badword1, badword2" ></textarea>
                   <span className="form-hint" style={{ color: '#6366f1', marginTop: '4px' }}>Use * at the start, end, or both for partial matches.</span>
                 </div>
               )}
@@ -202,7 +202,7 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
                 <div className="form-group">
                   <label>Blocked Links</label>
                   <span className="form-hint">The domains to block. Separate with commas.</span>
-                  <input type="text" className="dash-input" value={(editingForm.blocked_domains || []).join(', ')} onChange={e => setEditingForm({...editingForm, blocked_domains: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
+                  <textarea rows="1"  className="dash-input" value={(editingForm.blocked_domains || []).join(', ')} onChange={e => setEditingForm({...editingForm, blocked_domains: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} ></textarea>
                 </div>
               )}
 

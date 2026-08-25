@@ -99,7 +99,7 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Message outside the embed..."
-              />
+              ></textarea>
             </div>
 
             {mode === 'embed' && (
@@ -113,34 +113,34 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
                       onChange={(e) => setEmbedColor(e.target.value)}
                       style={{ width: '40px', height: '40px', padding: 0, border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'transparent' }}
                     />
-                    <input 
-                      type="text" 
+                    <textarea rows="1" 
+                       
                       className="dash-input" 
                       value={embedColor}
                       onChange={(e) => setEmbedColor(e.target.value)}
                       style={{ width: '100px' }}
-                    />
+                    ></textarea>
                   </div>
                 </div>
 
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ color: '#fff' }}>Author Name</label>
-                  <input type="text" className="dash-input" placeholder="Author..." value={embedAuthor} onChange={(e) => setEmbedAuthor(e.target.value)} />
+                  <textarea rows="1"  className="dash-input" placeholder="Author..." value={embedAuthor} onChange={(e) => setEmbedAuthor(e.target.value)} ></textarea>
                 </div>
 
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ color: '#fff' }}>Title</label>
-                  <input type="text" className="dash-input" placeholder="Title..." value={embedTitle} onChange={(e) => setEmbedTitle(e.target.value)} />
+                  <textarea rows="1"  className="dash-input" placeholder="Title..." value={embedTitle} onChange={(e) => setEmbedTitle(e.target.value)} ></textarea>
                 </div>
 
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ color: '#fff' }}>Description</label>
-                  <textarea className="dash-input" style={{ width: '100%', height: '100px', resize: 'vertical' }} placeholder="Description..." value={embedDesc} onChange={(e) => setEmbedDesc(e.target.value)} />
+                  <textarea className="dash-input" style={{ width: '100%', height: '100px', resize: 'vertical' }} placeholder="Description..." value={embedDesc} onChange={(e) => setEmbedDesc(e.target.value)} ></textarea>
                 </div>
 
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ color: '#fff' }}>Footer Text</label>
-                  <input type="text" className="dash-input" placeholder="Footer..." value={embedFooter} onChange={(e) => setEmbedFooter(e.target.value)} />
+                  <textarea rows="1"  className="dash-input" placeholder="Footer..." value={embedFooter} onChange={(e) => setEmbedFooter(e.target.value)} ></textarea>
                 </div>
               </div>
             )}
@@ -150,13 +150,13 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
                 <div className="form-group" style={{ margin: 0 }}>
                   <label style={{ color: '#fff' }}>Background Image URL</label>
                   <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Provide a direct URL to an image (png/jpg/gif).</span>
-                  <input 
-                    type="text" 
+                  <textarea rows="1" 
+                     
                     className="dash-input" 
                     placeholder="https://example.com/image.png" 
                     value={bgImageUrl}
                     onChange={(e) => setBgImageUrl(e.target.value)}
-                  />
+                  ></textarea>
                 </div>
               </div>
             )}

@@ -63,7 +63,7 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
             </div>
             <Toggle checked={usersEnabled} onChange={() => setUsersEnabled(!usersEnabled)} />
           </div>
-          <input type="text" className="dash-input" value={usersName} onChange={e => setUsersName(e.target.value)} placeholder="Users: {count}" style={{ maxWidth: '400px' }} />
+          <textarea rows="1"  className="dash-input" value={usersName} onChange={e => setUsersName(e.target.value)} placeholder="Users: {count}" style={{ maxWidth: '400px' }} ></textarea>
         </div>
 
         {/* Boosts Toggle */}
@@ -75,7 +75,7 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
             </div>
             <Toggle checked={boostsEnabled} onChange={() => setBoostsEnabled(!boostsEnabled)} />
           </div>
-          <input type="text" className="dash-input" value={boostsName} onChange={e => setBoostsName(e.target.value)} placeholder="Boosts: {count}" style={{ maxWidth: '400px' }} />
+          <textarea rows="1"  className="dash-input" value={boostsName} onChange={e => setBoostsName(e.target.value)} placeholder="Boosts: {count}" style={{ maxWidth: '400px' }} ></textarea>
         </div>
 
         {/* Bots Toggle */}
@@ -87,7 +87,7 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
             </div>
             <Toggle checked={botsEnabled} onChange={() => setBotsEnabled(!botsEnabled)} />
           </div>
-          <input type="text" className="dash-input" value={botsName} onChange={e => setBotsName(e.target.value)} placeholder="Bots: {count}" style={{ maxWidth: '400px' }} />
+          <textarea rows="1"  className="dash-input" value={botsName} onChange={e => setBotsName(e.target.value)} placeholder="Bots: {count}" style={{ maxWidth: '400px' }} ></textarea>
         </div>
 
         {/* Roles Toggle */}
@@ -99,7 +99,7 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
             </div>
             <Toggle checked={rolesEnabled} onChange={() => setRolesEnabled(!rolesEnabled)} />
           </div>
-          <input type="text" className="dash-input" value={rolesName} onChange={e => setRolesName(e.target.value)} placeholder="Roles: {count}" style={{ maxWidth: '400px' }} />
+          <textarea rows="1"  className="dash-input" value={rolesName} onChange={e => setRolesName(e.target.value)} placeholder="Roles: {count}" style={{ maxWidth: '400px' }} ></textarea>
         </div>
 
         <div style={{ marginTop: '32px' }}>

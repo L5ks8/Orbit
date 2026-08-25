@@ -142,7 +142,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
           <div className="form-group" style={{ margin: 0 }}>
             <label style={{ color: '#fff' }}>Exempt User IDs</label>
             <span className="form-hint" style={{ display: 'block', fontSize: '12px', marginBottom: '8px' }}>Specific user IDs who will not be banned (comma-separated).</span>
-            <input type="text" className="dash-input" placeholder="e.g. 123456789, 987654321" />
+            <textarea rows="1"  className="dash-input" placeholder="e.g. 123456789, 987654321" ></textarea>
           </div>
         </div>
 
@@ -177,11 +177,11 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <label style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Embed Title</label>
-                <input type="text" className="dash-input" value={honeypotEmbedTitle} onChange={e => setHoneypotEmbedTitle(e.target.value)} />
+                <textarea rows="1"  className="dash-input" value={honeypotEmbedTitle} onChange={e => setHoneypotEmbedTitle(e.target.value)} ></textarea>
               </div>
               <div>
                 <label style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Embed Color (Hex)</label>
-                <input type="text" className="dash-input" value={honeypotEmbedColor} onChange={e => setHoneypotEmbedColor(e.target.value)} />
+                <textarea rows="1"  className="dash-input" value={honeypotEmbedColor} onChange={e => setHoneypotEmbedColor(e.target.value)} ></textarea>
               </div>
             </div>
             <div style={{ marginBottom: '16px' }}>
@@ -190,7 +190,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
             </div>
             <div>
               <label style={{ color: '#fff', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Thumbnail URL (Optional)</label>
-              <input type="text" className="dash-input" placeholder="https://..." value={honeypotEmbedThumb} onChange={e => setHoneypotEmbedThumb(e.target.value)} />
+              <textarea rows="1"  className="dash-input" placeholder="https://..." value={honeypotEmbedThumb} onChange={e => setHoneypotEmbedThumb(e.target.value)} ></textarea>
             </div>
           </div>
         )}
@@ -251,7 +251,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
               {fileChannels.map((c, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr auto', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', gap: '16px', alignItems: 'center' }}>
                   <CustomSelect options={channelOptions} placeholder="Select Channel..." value={c.channel_id} onChange={(v) => { const newArr = [...fileChannels]; newArr[i].channel_id = v; setFileChannels(newArr); }} />
-                  <input type="text" className="dash-input" placeholder="e.g. png, jpg, pdf" value={c.allowed_extensions || ''} onChange={(e) => { const newArr = [...fileChannels]; newArr[i].allowed_extensions = e.target.value; setFileChannels(newArr); }} />
+                  <textarea rows="1"  className="dash-input" placeholder="e.g. png, jpg, pdf" value={c.allowed_extensions || ''} onChange={(e) => { const newArr = [...fileChannels]; newArr[i].allowed_extensions = e.target.value; setFileChannels(newArr); }} ></textarea>
                   <Toggle checked={c.ignore_bots || false} onChange={() => { const newArr = [...fileChannels]; newArr[i].ignore_bots = !(c.ignore_bots || false); setFileChannels(newArr); }} />
                   <button onClick={() => setFileChannels(fileChannels.filter((_, idx) => idx !== i))} className="dash-btn danger" style={{ padding: '8px 12px' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
@@ -285,7 +285,7 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
               {reactionChannels.map((c, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr auto', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', gap: '16px', alignItems: 'center' }}>
                   <CustomSelect options={channelOptions} placeholder="Select Channel..." value={c.channel_id} onChange={(v) => { const newArr = [...reactionChannels]; newArr[i].channel_id = v; setReactionChannels(newArr); }} />
-                  <input type="text" className="dash-input" placeholder="e.g. 👍" value={c.emoji || ''} onChange={(e) => { const newArr = [...reactionChannels]; newArr[i].emoji = e.target.value; setReactionChannels(newArr); }} />
+                  <textarea rows="1"  className="dash-input" placeholder="e.g. 👍" value={c.emoji || ''} onChange={(e) => { const newArr = [...reactionChannels]; newArr[i].emoji = e.target.value; setReactionChannels(newArr); }} ></textarea>
                   <Toggle checked={c.ignore_bots || false} onChange={() => { const newArr = [...reactionChannels]; newArr[i].ignore_bots = !(c.ignore_bots || false); setReactionChannels(newArr); }} />
                   <button onClick={() => setReactionChannels(reactionChannels.filter((_, idx) => idx !== i))} className="dash-btn danger" style={{ padding: '8px 12px' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
