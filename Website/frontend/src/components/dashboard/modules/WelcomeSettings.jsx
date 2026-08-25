@@ -254,6 +254,34 @@ export default function WelcomeSettings({
                   className="scroll-mt-24 p-4 sm:p-5 space-y-3"
                 >
                   <div className="space-y-2.5">
+<div className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-4 mb-2 border-b border-neutral-800/60">
+                    <div className="inline-flex items-center gap-2 w-48">
+                      <CustomSelect
+                        options={[
+                          { label: "Welcome Card", value: "image" },
+                          { label: "Embed", value: "embed" },
+                          { label: "Text Message", value: "text" },
+                        ]}
+                        value={welcomeMsgMode}
+                        onChange={(val) => setWelcomeMsgMode(val)}
+                      />
+                    </div>
+                    {welcomeMsgMode === "embed" && (
+                      <div className="inline-flex items-center gap-2">
+                        <span className="text-[12px] text-neutral-300">
+                          User avatar
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <Toggle checked={welcomeEmbedThumbnail === "{user.avatar}"} onChange={() => setWelcomeEmbedThumbnail(welcomeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
+                        </div>
+                      </div>
+                    )}
+
+
+                  
+
+                  </div>
+
                     <div className="flex items-stretch gap-2">
                       <div className="flex-1 min-w-0">
                         <div
@@ -342,7 +370,85 @@ export default function WelcomeSettings({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
+                  
+                  
+                  {welcomeMsgMode === "embed" && (
+                    <div className="pt-4 border-t border-neutral-800/60  space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Embed Fields</span>
+                        <button
+                          type="button"
+                          onClick={() => setWelcomeEmbedFields([...welcomeEmbedFields, { name: "New Field", value: "Value", inline: false }])}
+                          className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                          Add Field
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {welcomeEmbedFields.map((field, idx) => (
+                          <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-700/50 bg-neutral-800/30">
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="text"
+                                value={field.name}
+                                onChange={(e) => {
+                                  const nf = [...welcomeEmbedFields];
+                                  nf[idx].name = e.target.value;
+                                  setWelcomeEmbedFields(nf);
+                                }}
+                                className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500"
+                                placeholder="Field Name"
+                              />
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <span className="text-xs text-neutral-400">Inline</span>
+                                <input type="checkbox" checked={field.inline} onChange={(e) => {
+                                  const nf = [...welcomeEmbedFields];
+                                  nf[idx].inline = e.target.checked;
+                                  setWelcomeEmbedFields(nf);
+                                }} className="rounded border-neutral-700 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/30 focus:ring-offset-0" />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nf = [...welcomeEmbedFields];
+                                  nf.splice(idx, 1);
+                                  setWelcomeEmbedFields(nf);
+                                }}
+                                className="text-neutral-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-neutral-800"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                              </button>
+                            </div>
+                            <textarea
+                              value={field.value}
+                              onChange={(e) => {
+                                const nf = [...welcomeEmbedFields];
+                                nf[idx].value = e.target.value;
+                                setWelcomeEmbedFields(nf);
+                              }}
+                              rows={2}
+                              className="w-full bg-neutral-800/50 border border-neutral-700/50 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500 resize-none"
+                              placeholder="Field Value"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {welcomeMsgMode === "embed" && (
+                    <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors mt-3 mb-4">
+                      <input
+                        type="text"
+                        value={welcomeEmbedFooter}
+                        onChange={e => setWelcomeEmbedFooter(e.target.value)}
+                        placeholder="Embed Footer"
+                        className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
+                        style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
+                      />
+                    </div>
+                  )}
+<div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
                     <div className="flex items-center gap-1 flex-wrap">
                       <button
                         type="button" onClick={() => insertVar("{user}")}
@@ -384,109 +490,7 @@ export default function WelcomeSettings({
                       0/2000
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 border-t border-neutral-800/60">
-                    <div className="inline-flex items-center gap-2 w-48">
-                      <CustomSelect
-                        options={[
-                          { label: "Welcome Card", value: "image" },
-                          { label: "Embed", value: "embed" },
-                          { label: "Text Message", value: "text" },
-                        ]}
-                        value={welcomeMsgMode}
-                        onChange={(val) => setWelcomeMsgMode(val)}
-                      />
-                    </div>
-                    {welcomeMsgMode === "embed" && (
-                      <div className="inline-flex items-center gap-2">
-                        <span className="text-[12px] text-neutral-300">
-                          User avatar
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <Toggle checked={welcomeEmbedThumbnail === "{user.avatar}"} onChange={() => setWelcomeEmbedThumbnail(welcomeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
-                        </div>
-                      </div>
-                    )}
 
-
-                  
-
-                  </div>
-                  {welcomeMsgMode === "embed" && (
-                    <div className="pt-4 border-t border-neutral-800/60  space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Embed Fields</span>
-                        <button
-                          type="button"
-                          onClick={() => setWelcomeEmbedFields([...welcomeEmbedFields, { name: "New Field", value: "Value", inline: false }])}
-                          className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                          Add Field
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {welcomeEmbedFields.map((field, idx) => (
-                          <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-700/50 bg-neutral-800/30">
-                            <div className="flex items-center gap-2">
-                              <input 
-                                type="text"
-                                value={field.name}
-                                onChange={(e) => {
-                                  const nf = [...welcomeEmbedFields];
-                                  nf[idx].name = e.target.value;
-                                  setWelcomeEmbedFields(nf);
-                                }}
-                                className="flex-1 bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500"
-                                placeholder="Field Name"
-                              />
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <span className="text-xs text-neutral-400">Inline</span>
-                                <input type="checkbox" checked={field.inline} onChange={(e) => {
-                                  const nf = [...welcomeEmbedFields];
-                                  nf[idx].inline = e.target.checked;
-                                  setWelcomeEmbedFields(nf);
-                                }} className="rounded border-neutral-700 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/30 focus:ring-offset-0" />
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nf = [...welcomeEmbedFields];
-                                  nf.splice(idx, 1);
-                                  setWelcomeEmbedFields(nf);
-                                }}
-                                className="text-neutral-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-neutral-800"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                              </button>
-                            </div>
-                            <textarea
-                              value={field.value}
-                              onChange={(e) => {
-                                const nf = [...welcomeEmbedFields];
-                                nf[idx].value = e.target.value;
-                                setWelcomeEmbedFields(nf);
-                              }}
-                              rows={2}
-                              className="w-full bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500 resize-none"
-                              placeholder="Field Value"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {welcomeMsgMode === "embed" && (
-                    <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors mt-3 mb-4">
-                      <input
-                        type="text"
-                        value={welcomeEmbedFooter}
-                        onChange={e => setWelcomeEmbedFooter(e.target.value)}
-                        placeholder="Embed Footer"
-                        className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
-                        style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
-                      />
-                    </div>
-                  )}
 <div
                     className="relative  "
                     role="button"
@@ -925,7 +929,110 @@ export default function WelcomeSettings({
                         />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
+                    
+                    <div className="flex items-center gap-2 pt-2 border-t border-neutral-800/60">
+                      <div className="inline-flex items-center gap-2 w-48">
+                        <CustomSelect
+                          options={[
+                            { label: "Goodbye Card", value: "image" },
+                            { label: "Embed", value: "embed" },
+                            { label: "Text Message", value: "text" },
+                          ]}
+                          value={goodbyeMsgMode}
+                          onChange={(val) => setGoodbyeMsgMode(val)}
+                        />
+                      </div>
+                      {goodbyeMsgMode === "embed" && (
+                        <div className="inline-flex items-center gap-2">
+                          <span className="text-[12px] text-neutral-300">
+                            User avatar
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <Toggle checked={goodbyeEmbedThumbnail === "{user.avatar}"} onChange={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
+                          </div>
+                        </div>
+                      )}
+
+                  
+
+                    </div>
+                    {goodbyeMsgMode === "embed" && (
+                    <div className="pt-4 border-t border-neutral-800/60  space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Embed Fields</span>
+                        <button
+                          type="button"
+                          onClick={() => setGoodbyeEmbedFields([...goodbyeEmbedFields, { name: "New Field", value: "Value", inline: false }])}
+                          className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                          Add Field
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {goodbyeEmbedFields.map((field, idx) => (
+                          <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-700/50 bg-neutral-800/30">
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="text"
+                                value={field.name}
+                                onChange={(e) => {
+                                  const nf = [...goodbyeEmbedFields];
+                                  nf[idx].name = e.target.value;
+                                  setGoodbyeEmbedFields(nf);
+                                }}
+                                className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500"
+                                placeholder="Field Name"
+                              />
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <span className="text-xs text-neutral-400">Inline</span>
+                                <input type="checkbox" checked={field.inline} onChange={(e) => {
+                                  const nf = [...goodbyeEmbedFields];
+                                  nf[idx].inline = e.target.checked;
+                                  setGoodbyeEmbedFields(nf);
+                                }} className="rounded border-neutral-700 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/30 focus:ring-offset-0" />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nf = [...goodbyeEmbedFields];
+                                  nf.splice(idx, 1);
+                                  setGoodbyeEmbedFields(nf);
+                                }}
+                                className="text-neutral-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-neutral-800"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                              </button>
+                            </div>
+                            <textarea
+                              value={field.value}
+                              onChange={(e) => {
+                                const nf = [...goodbyeEmbedFields];
+                                nf[idx].value = e.target.value;
+                                setGoodbyeEmbedFields(nf);
+                              }}
+                              rows={2}
+                              className="w-full bg-neutral-800/50 border border-neutral-700/50 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500 resize-none"
+                              placeholder="Field Value"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {goodbyeMsgMode === "embed" && (
+                    <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors mt-3 mb-4">
+                      <input
+                        type="text"
+                        value={goodbyeEmbedFooter}
+                        onChange={e => setGoodbyeEmbedFooter(e.target.value)}
+                        placeholder="Embed Footer"
+                        className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
+                        style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
+                      />
+                    </div>
+                  )}
+<div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
                       <div className="flex items-center gap-1 flex-wrap">
                         <button
                           type="button" onClick={() => insertVar("{user}")}
@@ -981,108 +1088,7 @@ export default function WelcomeSettings({
                         0/2000
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 pt-2 border-t border-neutral-800/60">
-                      <div className="inline-flex items-center gap-2 w-48">
-                        <CustomSelect
-                          options={[
-                            { label: "Goodbye Card", value: "image" },
-                            { label: "Embed", value: "embed" },
-                            { label: "Text Message", value: "text" },
-                          ]}
-                          value={goodbyeMsgMode}
-                          onChange={(val) => setGoodbyeMsgMode(val)}
-                        />
-                      </div>
-                      {goodbyeMsgMode === "embed" && (
-                        <div className="inline-flex items-center gap-2">
-                          <span className="text-[12px] text-neutral-300">
-                            User avatar
-                          </span>
-                          <div className="flex items-center gap-3">
-                            <Toggle checked={goodbyeEmbedThumbnail === "{user.avatar}"} onChange={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
-                          </div>
-                        </div>
-                      )}
 
-                  
-
-                    </div>
-                    {goodbyeMsgMode === "embed" && (
-                    <div className="pt-4 border-t border-neutral-800/60  space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Embed Fields</span>
-                        <button
-                          type="button"
-                          onClick={() => setGoodbyeEmbedFields([...goodbyeEmbedFields, { name: "New Field", value: "Value", inline: false }])}
-                          className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                          Add Field
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {goodbyeEmbedFields.map((field, idx) => (
-                          <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-700/50 bg-neutral-800/30">
-                            <div className="flex items-center gap-2">
-                              <input 
-                                type="text"
-                                value={field.name}
-                                onChange={(e) => {
-                                  const nf = [...goodbyeEmbedFields];
-                                  nf[idx].name = e.target.value;
-                                  setGoodbyeEmbedFields(nf);
-                                }}
-                                className="flex-1 bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500"
-                                placeholder="Field Name"
-                              />
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <span className="text-xs text-neutral-400">Inline</span>
-                                <input type="checkbox" checked={field.inline} onChange={(e) => {
-                                  const nf = [...goodbyeEmbedFields];
-                                  nf[idx].inline = e.target.checked;
-                                  setGoodbyeEmbedFields(nf);
-                                }} className="rounded border-neutral-700 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/30 focus:ring-offset-0" />
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nf = [...goodbyeEmbedFields];
-                                  nf.splice(idx, 1);
-                                  setGoodbyeEmbedFields(nf);
-                                }}
-                                className="text-neutral-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-neutral-800"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                              </button>
-                            </div>
-                            <textarea
-                              value={field.value}
-                              onChange={(e) => {
-                                const nf = [...goodbyeEmbedFields];
-                                nf[idx].value = e.target.value;
-                                setGoodbyeEmbedFields(nf);
-                              }}
-                              rows={2}
-                              className="w-full bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500 resize-none"
-                              placeholder="Field Value"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {goodbyeMsgMode === "embed" && (
-                    <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors mt-3 mb-4">
-                      <input
-                        type="text"
-                        value={goodbyeEmbedFooter}
-                        onChange={e => setGoodbyeEmbedFooter(e.target.value)}
-                        placeholder="Embed Footer"
-                        className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
-                        style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
-                      />
-                    </div>
-                  )}
 <div
                       className="relative  "
                       role="button"
