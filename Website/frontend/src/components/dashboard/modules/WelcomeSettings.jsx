@@ -192,7 +192,7 @@ export default function WelcomeSettings({
       return;
     }
     const handler = setTimeout(() => {
-      onSave(getPayload());
+      onSave(getPayload(), true);
     }, 1500); 
     return () => clearTimeout(handler);
   }, [
@@ -756,7 +756,7 @@ export default function WelcomeSettings({
                           >
                             <textarea
                               rows={4}
-                              ref={dmJoinRef} data-setter="dmJoinText" onFocus={() => setActiveRef(dmJoinRef)} value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} onBlur={() => onSave(getPayload())} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                              ref={dmJoinRef} data-setter="dmJoinText" onFocus={() => setActiveRef(dmJoinRef)} value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} onBlur={() => onSave(getPayload(), true)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                               style={{
                                 fontFamily:
                                   '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -1364,7 +1364,7 @@ export default function WelcomeSettings({
                             >
                               <textarea
                                 rows={3}
-                                ref={dmLeaveRef} data-setter="dmLeaveText" onFocus={() => setActiveRef(dmLeaveRef)} value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} onBlur={() => onSave(getPayload())} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                                ref={dmLeaveRef} data-setter="dmLeaveText" onFocus={() => setActiveRef(dmLeaveRef)} value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} onBlur={() => onSave(getPayload(), true)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                                 style={{
                                   fontFamily:
                                     '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',

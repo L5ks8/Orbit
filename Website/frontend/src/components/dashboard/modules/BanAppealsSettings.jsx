@@ -113,7 +113,7 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
   useEffect(() => {
     if (!initialStateStr || !isDirty) return;
     const timeoutId = setTimeout(() => {
-      onSave(getPayload());
+      onSave(getPayload(), true);
     }, 1500);
     return () => clearTimeout(timeoutId);
   }, [currentPayloadStr, initialStateStr, isDirty, onSave]);

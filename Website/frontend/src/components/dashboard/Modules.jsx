@@ -87,7 +87,7 @@ export default function Modules({ guildId }) {
       });
   }, [guildId]);
 
-  const handleSave = async (payload) => {
+  const handleSave = async (payload, preventRemount = false) => {
     setSaving(true);
     try {
       const res = await fetch(`/api/config/${guildId}`, {
@@ -115,7 +115,9 @@ export default function Modules({ guildId }) {
           return { ...prev, config: newConfig };
         });
         toast("Settings saved successfully!", 'success');
-        handleReset();
+        if (!preventRemount) {
+          handleReset();
+        }
       }
     } catch (e) {
       console.error(e);
