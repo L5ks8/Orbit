@@ -75,8 +75,20 @@ function DashboardInner() {
 
     fetch(`/api/config/${guildId}`, { headers })
       .then(res => res.json())
-      .then(data => setServerData(prev => ({ ...prev, config: data.config || data })))
-      .catch(() => setServerData(prev => ({ ...prev, config: {} })));
+      .then(data => setServerData(prev => ({ 
+          ...prev, 
+          config: data.config || data,
+          categories: data.categories || [],
+          voice_channels: data.voice_channels || [],
+          emojis: data.emojis || []
+      })))
+      .catch(() => setServerData(prev => ({ 
+          ...prev, 
+          config: {},
+          categories: [],
+          voice_channels: [],
+          emojis: []
+      })));
 
     fetch(`/api/roles/${guildId}`, { headers })
       .then(res => res.json())
