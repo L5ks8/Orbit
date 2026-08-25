@@ -68,7 +68,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
     }
   }, [serverData?.config?.verify]);
 
-  const roleOptions = (serverData?.roles || []).map(r => ({ value: String(r.id), label: `@ ${r.name || 'Unknown'}`, color: r.color }));
+  const roleOptions = (serverData?.roles || []).map(r => ({ value: String(r.id), label: `@ ${r.name || 'Unknown'}`, color: r.color || '#99aab5' }));
   const channelOptions = (serverData?.channels || []).map(c => ({ value: String(c.id), label: `# ${c.name}` }));
 
   const verifyModes = [
