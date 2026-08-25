@@ -34,12 +34,16 @@ export default function WelcomeSettings({
   const [welcomeEmbedTitle, setWelcomeEmbedTitle] = useState(wCfg.embed_title || "");
   const [welcomeEmbedDesc, setWelcomeEmbedDesc] = useState(wCfg.embed_description || "");
   const [welcomeEmbedThumbnail, setWelcomeEmbedThumbnail] = useState(wCfg.embed_thumbnail || "");
+  const [welcomeEmbedColor, setWelcomeEmbedColor] = useState(wCfg.embed_color || "#5865F2");
+  const [welcomeEmbedFooter, setWelcomeEmbedFooter] = useState(wCfg.embed_footer || "");
   const [welcomeImageUrl, setWelcomeImageUrl] = useState(wCfg.image_url || "");
 
   const [goodbyeMsgMode, setGoodbyeMsgMode] = useState(gCfg.msg_mode || "image");
   const [goodbyeEmbedTitle, setGoodbyeEmbedTitle] = useState(gCfg.embed_title || "");
   const [goodbyeEmbedDesc, setGoodbyeEmbedDesc] = useState(gCfg.embed_description || "");
   const [goodbyeEmbedThumbnail, setGoodbyeEmbedThumbnail] = useState(gCfg.embed_thumbnail || "");
+  const [goodbyeEmbedColor, setGoodbyeEmbedColor] = useState(gCfg.embed_color || "#ED4245");
+  const [goodbyeEmbedFooter, setGoodbyeEmbedFooter] = useState(gCfg.embed_footer || "");
   const [goodbyeImageUrl, setGoodbyeImageUrl] = useState(gCfg.image_url || "");
 
   const handleUpload = async (file, type) => {
