@@ -182,8 +182,6 @@ const FilterLevelSelector = ({ value, onChange, levels }) => (
   </div>
 );
 
-import { useRef } from 'react';
-
 export default function Moderation({ guildId, serverData, setServerData }) {
   const toast = useToast();
   
