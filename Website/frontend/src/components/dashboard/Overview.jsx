@@ -172,28 +172,7 @@ export default function Overview({ guildId }) {
   ].filter(isFeatureActive).length;
 
   if (initialLoading) {
-    return (
-      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
-        <div className="pb-card pb-server-header relative overflow-hidden">
-          <div className="pb-header-glow-1"></div>
-          <div className="pb-header-glow-2"></div>
-          <div className="pb-header-content relative z-10 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="pb-server-icon ring-2 ring-neutral-800">
-                <div className="pb-server-icon-placeholder">?</div>
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-white truncate">Loading...</h1>
-                <p className="text-xs text-neutral-500 mt-1 tabular-nums">0 members</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="mt-6" style={{ minHeight: '400px' }}>
-          <LoadingScreen message="Loading overview..." />
-        </div>
-      </main>
-    );
+    return <LoadingScreen message="Loading overview..." />;
   }
 
   return (
