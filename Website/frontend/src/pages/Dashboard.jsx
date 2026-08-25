@@ -24,6 +24,7 @@ import LoadingScreen from '../components/ui/LoadingScreen';
 function DashboardInner() {
   const { guildId } = useParams();
   const { user, loading } = useAuth();
+  console.log("Orbit Dashboard Init v3 - Cache Buster");
   const [guildName, setGuildName] = useState('Loading...');
   const [guildIcon, setGuildIcon] = useState(null);
   const [allGuilds, setAllGuilds] = useState([]);
