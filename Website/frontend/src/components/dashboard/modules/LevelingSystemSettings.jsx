@@ -109,17 +109,21 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
   return (
     <main className="p-4 lg:p-6 xl:p-8 flex flex-col gap-5 w-full">
       <div data-tour="feature-header" className="scroll-mt-24">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trending-up w-5 h-5">
-                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                <polyline points="16 7 22 7 22 13" />
-              </svg>
-            </span>
-            <h1 className="text-base font-medium text-white truncate">
-              Leveling System
-            </h1>
+        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+          <div className="flex items-center justify-between gap-4 px-5 py-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-900/30 text-blue-500 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trending-up">
+                  <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                  <polyline points="16 7 22 7 22 13" />
+                </svg>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-base font-semibold text-white truncate">Leveling System</span>
+                <span className="text-[13px] text-neutral-400 truncate">Reward active users with experience points and roles.</span>
+              </div>
+            </div>
+            <Toggle checked={levelEnabled} onChange={setLevelEnabled} />
           </div>
         </div>
       </div>

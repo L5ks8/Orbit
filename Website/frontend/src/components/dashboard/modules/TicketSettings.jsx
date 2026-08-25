@@ -97,17 +97,20 @@ export default function TicketSettings({ config, channels, roles, categories, on
   return (
     <main className="p-4 lg:p-6 xl:p-8 flex flex-col gap-5 w-full">
       <div data-tour="feature-header" className="scroll-mt-24">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ticket w-5 h-5">
-                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
-                <path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>
-              </svg>
-            </span>
-            <h1 className="text-base font-medium text-white truncate">
-              Support Tickets
-            </h1>
+        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+          <div className="flex items-center justify-between gap-4 px-5 py-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-900/30 text-amber-500 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-book">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                </svg>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-base font-semibold text-white truncate">Support Tickets</span>
+                <span className="text-[13px] text-neutral-400 truncate">Allow users to open private tickets for support.</span>
+              </div>
+            </div>
+            <Toggle checked={ticketEnabled} onChange={setTicketEnabled} />
           </div>
         </div>
       </div>
