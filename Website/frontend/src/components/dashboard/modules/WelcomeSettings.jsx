@@ -355,13 +355,14 @@ export default function WelcomeSettings({
                   </div>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 border-t border-neutral-800/60">
                     <div className="inline-flex items-center gap-2 w-48">
-                      <CustomSelect 
+                      <CustomSelect
                         options={[
                           { label: "Welcome Card", value: "image" },
-                          { label: "Message Embed", value: "embed" }
-                        ]} 
-                        value={welcomeMsgMode} 
-                        onChange={(val) => setWelcomeMsgMode(val)} 
+                          { label: "Embed", value: "embed" },
+                          { label: "Text Message", value: "text" },
+                        ]}
+                        value={welcomeMsgMode}
+                        onChange={(val) => setWelcomeMsgMode(val)}
                       />
                     </div>
                     {welcomeMsgMode === "embed" && (
@@ -566,8 +567,6 @@ export default function WelcomeSettings({
                               <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                               <path d="M5 3v4" />
                               <path d="M19 17v4" />
-                              <path d="M3 5h4" />
-                              <path d="M17 19h4" />
                             </svg>
                             Starter
                           </span>
@@ -853,13 +852,14 @@ export default function WelcomeSettings({
                     </div>
                     <div className="flex items-center gap-2 pt-2 border-t border-neutral-800/60">
                       <div className="inline-flex items-center gap-2 w-48">
-                        <CustomSelect 
+                        <CustomSelect
                           options={[
                             { label: "Goodbye Card", value: "image" },
-                            { label: "Message Embed", value: "embed" }
-                          ]} 
-                          value={goodbyeMsgMode} 
-                          onChange={(val) => setGoodbyeMsgMode(val)} 
+                            { label: "Embed", value: "embed" },
+                            { label: "Text Message", value: "text" },
+                          ]}
+                          value={goodbyeMsgMode}
+                          onChange={(val) => setGoodbyeMsgMode(val)}
                         />
                       </div>
                       {goodbyeMsgMode === "embed" && (
