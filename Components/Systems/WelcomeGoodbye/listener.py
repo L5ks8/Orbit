@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config
-from Components.Dashboard.WelcomeGoodbye._views import format_welcome_string
+from Components.Systems.WelcomeGoodbye._storage import load_welcome_config
+from Components.Systems.WelcomeGoodbye._views import format_welcome_string
 import re
 
 class WelcomeListener(commands.Cog):
@@ -148,7 +148,7 @@ class WelcomeListener(commands.Cog):
         # Default Image mode
         formatted = fmt_text(config.get("message", ""))
 
-        from Components.Dashboard.WelcomeGoodbye.image_gen import generate_welcome_image
+        from Components.Systems.WelcomeGoodbye.image_gen import generate_welcome_image
         import aiohttp
         import pathlib
 
@@ -191,8 +191,8 @@ class WelcomeListener(commands.Cog):
         except Exception:
             pass
 
-from Components.Dashboard.WelcomeGoodbye._storage import load_goodbye_config
-from Components.Dashboard.WelcomeGoodbye._views import format_goodbye_string
+from Components.Systems.WelcomeGoodbye._storage import load_goodbye_config
+from Components.Systems.WelcomeGoodbye._views import format_goodbye_string
 import re
 
 class GoodbyeListener(commands.Cog):
@@ -339,7 +339,7 @@ class GoodbyeListener(commands.Cog):
         # Default Image mode
         formatted = fmt_text(config.get("message", ""))
 
-        from Components.Dashboard.WelcomeGoodbye.image_gen import generate_goodbye_image
+        from Components.Systems.WelcomeGoodbye.image_gen import generate_goodbye_image
         import aiohttp
         import pathlib
 

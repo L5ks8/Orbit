@@ -1,5 +1,5 @@
 import discord
-from Components.Dashboard.WelcomeGoodbye._storage import set_welcome_status
+from Components.Systems.WelcomeGoodbye._storage import set_welcome_status
 
 def format_welcome_string(template: str, member: discord.Member) -> str:
     if not template:

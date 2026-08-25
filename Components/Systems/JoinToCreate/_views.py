@@ -1,7 +1,7 @@
 import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, UserSelect
-from Components.Dashboard.JoinToCreate._storage import get_active_channel, update_active_channel, remove_active_channel
+from Components.Systems.JoinToCreate._storage import get_active_channel, update_active_channel, remove_active_channel
 from Components.Commands._utils import make_embed
 
 

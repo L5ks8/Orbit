@@ -6,7 +6,7 @@ from Components.Commands.Invite._storage import (
     get_invite_cache, set_invite_cache, refresh_invite_cache,
     record_invite
 )
-from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Systems.Automoderation.log_storage import log_event
 
 
 class InviteTrackerListener(commands.Cog):

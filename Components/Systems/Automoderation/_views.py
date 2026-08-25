@@ -1,6 +1,6 @@
 ﻿import discord
 from discord.ui import ActionRow, Button, Modal, TextInput
-from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
+from Components.Systems.Automoderation._storage import load_automod_config, save_automod_config
 from Components.Commands._utils import make_embed
 
 class SpamThresholdsModal(Modal, title="Configure Anti-Spam Thresholds"):

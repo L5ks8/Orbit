@@ -2,10 +2,10 @@ import discord
 import time
 import datetime
 from discord.ext import commands
-from Components.Dashboard.Automoderation._storage import load_automod_config
+from Components.Systems.Automoderation._storage import load_automod_config
 from Components.Commands.Warn._storage import add_warning, get_user_warnings
 from Components.Commands.Whitelist._storage import is_whitelisted
-from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Systems.Automoderation.log_storage import log_event
 
 
 class AutoModListener(commands.Cog):
@@ -378,7 +378,7 @@ class AutoModListener(commands.Cog):
                     except Exception as e:
                         print(f"[AUTOMOD ERROR] Could not ban alt {member.id}: {e}")
                 elif action == "verify":
-                    from Components.Dashboard.Verify._storage import load_verify_config
+                    from Components.Systems.Verify._storage import load_verify_config
                     v_cfg = load_verify_config(member.guild.id)
                     unverified_role_id = v_cfg.get("remove_role_id") or v_cfg.get("unverified_role_id")
                     if unverified_role_id:

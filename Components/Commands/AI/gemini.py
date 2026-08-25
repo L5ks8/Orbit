@@ -227,7 +227,7 @@ class GeminiChatbot(commands.Cog):
                                         
                                         # Use the correct load/save methods to ensure caches are updated
                                         if raw_mod_name == "Leveling":
-                                            from Components.Dashboard.Level._storage import load_level_config, save_level_config
+                                            from Components.Systems.Level._storage import load_level_config, save_level_config
                                             cfg = load_level_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_level_config(message.guild.id, cfg)
@@ -242,32 +242,32 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_serverstats_config(message.guild.id, cfg)
                                         elif raw_mod_name == "AutoMod":
-                                            from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
+                                            from Components.Systems.Automoderation._storage import load_automod_config, save_automod_config
                                             cfg = load_automod_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_automod_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Logs":
-                                            from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
+                                            from Components.Systems.Automoderation.log_storage import load_log_config, save_log_config
                                             cfg = load_log_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_log_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Welcome":
-                                            from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
+                                            from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
                                             cfg = load_welcome_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_welcome_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Goodbye":
-                                            from Components.Dashboard.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
+                                            from Components.Systems.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
                                             cfg = load_goodbye_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_goodbye_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Appeals":
-                                            from Components.Dashboard.BanAppeals._storage import load_appeals_config, save_appeals_config
+                                            from Components.Systems.BanAppeals._storage import load_appeals_config, save_appeals_config
                                             cfg = load_appeals_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_appeals_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Verify":
-                                            from Components.Dashboard.Verify._storage import load_verify_config, save_verify_config
+                                            from Components.Systems.Verify._storage import load_verify_config, save_verify_config
                                             cfg = load_verify_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_verify_config(message.guild.id, cfg)
@@ -277,12 +277,12 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_automation_config(message.guild.id, cfg)
                                         elif raw_mod_name == "TempVoice":
-                                            from Components.Dashboard.JoinToCreate._storage import load_jtc_config, save_jtc_config
+                                            from Components.Systems.JoinToCreate._storage import load_jtc_config, save_jtc_config
                                             cfg = load_jtc_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_jtc_config(message.guild.id, cfg)
                                         elif raw_mod_name == "JoinRoles":
-                                            from Components.Dashboard.Roles._storage import load_join_roles, save_join_roles
+                                            from Components.Systems.Roles._storage import load_join_roles, save_join_roles
                                             cfg = load_join_roles(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_join_roles(message.guild.id, cfg)

@@ -4,8 +4,8 @@ from discord.ext import commands
 
 from Components.Commands._utils import make_embed
 from discord.ui import Container, TextDisplay, Separator, LayoutView
-from Components.Dashboard.Verify._storage import load_verify_config, remove_pending_kick
-from Components.Dashboard.Verify._views import CAPTCHA_SESSIONS
+from Components.Systems.Verify._storage import load_verify_config, remove_pending_kick
+from Components.Systems.Verify._views import CAPTCHA_SESSIONS
 
 async def _do_verify_user(ctx: commands.Context, member: discord.Member):
     await ctx.defer()

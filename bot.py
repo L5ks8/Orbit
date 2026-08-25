@@ -300,43 +300,43 @@ class OrbitBot(commands.Bot):
             commands_dir.mkdir(parents=True, exist_ok=True)
             
         try:
-            from Components.Dashboard.Verify._views import PersistentVerifyLayout
+            from Components.Systems.Verify._views import PersistentVerifyLayout
             self.add_view(PersistentVerifyLayout())
         except Exception as e:
             print(f"Failed to add PersistentVerifyLayout: {e}")
 
         try:
-            await self.load_extension("Components.Dashboard.Automoderation.automodlistener")
+            await self.load_extension("Components.Systems.Automoderation.automodlistener")
             print("Loaded AutoMod Listener")
         except Exception as e:
             print(f"Failed to load AutoMod Listener: {e}")
 
         try:
-            await self.load_extension("Components.Dashboard.Automoderation.log_listener")
+            await self.load_extension("Components.Systems.Automoderation.log_listener")
             print("Loaded Log Listener")
         except Exception as e:
             print(f"Failed to load Log Listener: {e}")
 
         try:
-            await self.load_extension("Components.Dashboard.Roles.joinrolelistener")
+            await self.load_extension("Components.Systems.Roles.joinrolelistener")
             print("Loaded JoinRole Listener")
         except Exception as e:
             print(f"Failed to load JoinRole Listener: {e}")
 
         try:
-            await self.load_extension("Components.Dashboard.WelcomeGoodbye.listener")
+            await self.load_extension("Components.Systems.WelcomeGoodbye.listener")
             print("Loaded Welcome Listener")
         except Exception as e:
             print(f"Failed to load Welcome Listener: {e}")
 
         try:
-            await self.load_extension("Components.Dashboard.ReactionRole.reactionrolelistener")
+            await self.load_extension("Components.Systems.ReactionRole.reactionrolelistener")
             print("Loaded ReactionRole Listener")
         except Exception as e:
             print(f"Failed to load ReactionRole Listener: {e}")
 
         try:
-            await self.load_extension("Components.Dashboard.JoinToCreate.jtclistener")
+            await self.load_extension("Components.Systems.JoinToCreate.jtclistener")
             print("Loaded JTC Listener")
         except Exception as e:
             print(f"Failed to load JTC Listener: {e}")

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from Components.Commands.Blacklist._storage import is_blacklisted
 from Components.Commands.Whitelist._storage import is_whitelisted
-from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Systems.Automoderation.log_storage import log_event
 
 class BlacklistListener(commands.Cog):
     def __init__(self, bot: commands.Bot):

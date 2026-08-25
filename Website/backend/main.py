@@ -72,7 +72,7 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         is_admin = perms.administrator or perms.manage_guild
         
         if not is_admin:
-            from Components.Dashboard.WebDashboard._storage import load_settings_config
+            from Components.Systems.WebDashboard._storage import load_settings_config
             settings_cfg = load_settings_config(guild_id)
             manager_roles = settings_cfg.get("manager_roles", [])
             if any(str(r.id) in manager_roles for r in member.roles):

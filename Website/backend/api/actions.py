@@ -6,19 +6,19 @@ from aiohttp import web
 import aiohttp
 import discord
 from typing import Dict, Any
-from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
-from Components.Dashboard.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
-from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
-from Components.Dashboard.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
+from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
+from Components.Systems.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
+from Components.Systems.Automoderation._storage import load_automod_config, save_automod_config
+from Components.Systems.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
 from Components.Commands.AutoResponder._storage import load_responses, save_responses
-from Components.Dashboard.Roles._storage import load_join_roles, save_join_roles
-from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
+from Components.Systems.Roles._storage import load_join_roles, save_join_roles
+from Components.Systems.Automoderation.log_storage import load_log_config, save_log_config
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Components.Commands.Boost._storage import load_boost_config, save_boost_config
-from Components.Dashboard.Level._storage import load_level_config, save_level_config
+from Components.Systems.Level._storage import load_level_config, save_level_config
 from Components.Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
 
-from Components.Dashboard.EmbedBuilder._storage import load_embeds_config, save_embeds_config
+from Components.Systems.EmbedBuilder._storage import load_embeds_config, save_embeds_config
 
 class ActionsMixin:
     async def api_action_get_saved_embeds(self, request: web.Request):
@@ -481,8 +481,8 @@ class ActionsMixin:
             if not member:
                 return web.json_response({"error": "Could not find you in the server to DM."}, status=400)
             
-            from Components.Dashboard.WelcomeGoodbye._views import format_welcome_string
-            from Components.Dashboard.WelcomeGoodbye._views import format_goodbye_string
+            from Components.Systems.WelcomeGoodbye._views import format_welcome_string
+            from Components.Systems.WelcomeGoodbye._views import format_goodbye_string
             import discord
             import re
             
@@ -513,7 +513,7 @@ class ActionsMixin:
                 return token
 
             if dm_type == "welcome":
-                from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config
+                from Components.Systems.WelcomeGoodbye._storage import load_welcome_config
                 config = load_welcome_config(guild_id)
                 msg = config.get("dm_message", "")
                 if msg:
@@ -524,7 +524,7 @@ class ActionsMixin:
                     return web.json_response({"error": "No DM message configured for Welcome."}, status=400)
                     
             elif dm_type == "goodbye":
-                from Components.Dashboard.WelcomeGoodbye._storage import load_goodbye_config
+                from Components.Systems.WelcomeGoodbye._storage import load_goodbye_config
                 config = load_goodbye_config(guild_id)
                 msg = config.get("dm_message", "")
                 if msg:
@@ -555,7 +555,7 @@ class ActionsMixin:
             test_type = data.get("type", "welcome")
             
             member = guild.me
-            from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config, load_goodbye_config
+            from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, load_goodbye_config
             import asyncio
             if test_type == "welcome":
                 cog = self.bot.get_cog("WelcomeListener")
@@ -650,7 +650,7 @@ class ActionsMixin:
         guild, perms = await self._check_guild_access(request, guild_id)
         if not guild: return web.json_response({"error": "Unauthorized"}, status=401)
         
-        from Components.Dashboard.BanAppeals._storage import get_open_appeals
+        from Components.Systems.BanAppeals._storage import get_open_appeals
         appeals = get_open_appeals(guild_id)
         return web.json_response(appeals)
 
@@ -668,7 +668,7 @@ class ActionsMixin:
         session = await self.get_user_session(request)
         user_discord_id = int(session["id"])
         
-        from Components.Dashboard.BanAppeals._storage import load_appeals_config
+        from Components.Systems.BanAppeals._storage import load_appeals_config
         cfg = load_appeals_config(guild_id)
         
         # Get the moderator's name (either the Discord user or 'a Moderator')
@@ -683,7 +683,7 @@ class ActionsMixin:
         if not cfg.get("anonymous_mods", False) and member:
             mod_name = member.name
             
-        from Components.Dashboard.BanAppeals.appeals import resolve_appeal_logic
+        from Components.Systems.BanAppeals.appeals import resolve_appeal_logic
         is_accept = (action == "accept")
         success, msg = await resolve_appeal_logic(
             self.bot, 
@@ -836,7 +836,7 @@ class ActionsMixin:
         guild_id = int(request.match_info['id'])
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild: return web.json_response({"error": "Forbidden"}, status=403)
-        from Components.Dashboard.Roles.reaction_panels import load_reaction_roles
+        from Components.Systems.Roles.reaction_panels import load_reaction_roles
         return web.json_response(load_reaction_roles(guild_id))
 
     async def api_save_reactionrole(self, request: web.Request):
@@ -854,7 +854,7 @@ class ActionsMixin:
                 data["id"] = msg_id
             data["guild_id"] = str(guild_id)
             if not data.get("name"): data["name"] = "Untitled Reaction Role"
-            from Components.Dashboard.Roles.reaction_panels import save_reaction_role
+            from Components.Systems.Roles.reaction_panels import save_reaction_role
 
             post_to_discord = data.get("post_to_discord", False)
             channel_id_str = data.get("channel_id")
@@ -903,7 +903,7 @@ class ActionsMixin:
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild: return web.json_response({"error": "Forbidden"}, status=403)
         msg_id = request.match_info['msg_id']
-        from Components.Dashboard.Roles.reaction_panels import delete_reaction_role
+        from Components.Systems.Roles.reaction_panels import delete_reaction_role
         delete_reaction_role(guild_id, msg_id)
         return web.json_response({"success": True})
         
@@ -922,7 +922,7 @@ class ActionsMixin:
             channel = guild.get_channel(int(channel_id))
             if not channel: return web.json_response({"error": "Channel not found"}, status=404)
             
-            from Components.Dashboard.Roles.reaction_panels import load_reaction_roles
+            from Components.Systems.Roles.reaction_panels import load_reaction_roles
             rrs = load_reaction_roles(guild_id)
             rr = next((r for r in rrs if r.get("id") == msg_id), None)
             if not rr: return web.json_response({"error": "Reaction Role not found in database"}, status=404)
@@ -1000,7 +1000,7 @@ class ActionsMixin:
             # Update database with message_id
             rr["message_id"] = str(msg.id)
             rr["channel_id"] = str(channel_id)
-            from Components.Dashboard.Roles.reaction_panels import save_reaction_role
+            from Components.Systems.Roles.reaction_panels import save_reaction_role
             save_reaction_role(guild_id, rr)
             
             return web.json_response({"success": True, "message_id": str(msg.id)})
@@ -1073,7 +1073,7 @@ class ActionsMixin:
 
     async def api_appeal_info(self, request: web.Request):
         custom_url = request.match_info.get("custom_url")
-        from Components.Dashboard.BanAppeals._storage import get_appeals_config_by_url
+        from Components.Systems.BanAppeals._storage import get_appeals_config_by_url
         cfg = get_appeals_config_by_url(custom_url)
         if not cfg:
             return web.json_response({"error": "Not found"}, status=404)
@@ -1095,7 +1095,7 @@ class ActionsMixin:
             return web.json_response({"error": "Unauthorized"}, status=401)
             
         custom_url = request.match_info.get("custom_url")
-        from Components.Dashboard.BanAppeals._storage import get_appeals_config_by_url
+        from Components.Systems.BanAppeals._storage import get_appeals_config_by_url
         cfg = get_appeals_config_by_url(custom_url)
         if not cfg:
             return web.json_response({"error": "Not found"}, status=404)
@@ -1104,7 +1104,7 @@ class ActionsMixin:
             data = await request.json()
             reason = data.get("reason", "")
             
-            from Components.Dashboard.BanAppeals.appeals import process_new_appeal
+            from Components.Systems.BanAppeals.appeals import process_new_appeal
             success, msg = await process_new_appeal(self.bot, int(cfg["_id"]), int(session["id"]), reason, cfg)
             
             if success:
@@ -1122,7 +1122,7 @@ class ActionsMixin:
             return web.Response(text="Invalid or expired token", status=400)
             
         try:
-            from Components.Dashboard.Verify._captcha import generate_captcha
+            from Components.Systems.Verify._captcha import generate_captcha
             code, img_bytes = generate_captcha()
             WEB_VERIFY_SESSIONS[token]["code"] = code
             return web.Response(body=img_bytes, content_type="image/png")
@@ -1212,7 +1212,7 @@ class ActionsMixin:
         guild, perms = await self._check_guild_access(request, guild_id)
         if not guild: return web.json_response({"error": "Unauthorized"}, status=401)
         
-        from Components.Dashboard.BanAppeals._storage import get_open_appeals
+        from Components.Systems.BanAppeals._storage import get_open_appeals
         appeals = get_open_appeals(guild_id)
         return web.json_response(appeals)
 
@@ -1230,7 +1230,7 @@ class ActionsMixin:
         session = await self.get_user_session(request)
         user_discord_id = int(session["id"])
         
-        from Components.Dashboard.BanAppeals._storage import load_appeals_config
+        from Components.Systems.BanAppeals._storage import load_appeals_config
         cfg = load_appeals_config(guild_id)
         
         member = guild.get_member(user_discord_id)
@@ -1244,7 +1244,7 @@ class ActionsMixin:
         if not cfg.get("anonymous_mods", False) and member:
             mod_name = member.name
             
-        from Components.Dashboard.BanAppeals.appeals import resolve_appeal_logic
+        from Components.Systems.BanAppeals.appeals import resolve_appeal_logic
         is_accept = (action == "accept")
         success, msg = await resolve_appeal_logic(
             self.bot, 

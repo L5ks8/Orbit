@@ -2,8 +2,8 @@ import time
 import io
 import discord
 from discord.ui import Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
-from Components.Dashboard.Verify._storage import load_verify_config, remove_pending_kick
-from Components.Dashboard.Verify._captcha import generate_captcha
+from Components.Systems.Verify._storage import load_verify_config, remove_pending_kick
+from Components.Systems.Verify._captcha import generate_captcha
 from Components.Commands._utils import make_embed
 
 CAPTCHA_SESSIONS = {}
@@ -147,7 +147,7 @@ class PersistentVerifyLayout(discord.ui.View):
             try:
                 import secrets
                 token = secrets.token_urlsafe(16)
-                from Components.Dashboard.Verify._storage import WEB_VERIFY_SESSIONS
+                from Components.Systems.Verify._storage import WEB_VERIFY_SESSIONS
                 WEB_VERIFY_SESSIONS[token] = {
                     "user_id": interaction.user.id,
                     "guild_id": interaction.guild.id,

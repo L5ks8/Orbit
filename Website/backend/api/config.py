@@ -6,18 +6,18 @@ from aiohttp import web
 import aiohttp
 import discord
 from typing import Dict, Any
-from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
-from Components.Dashboard.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
-from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
-from Components.Dashboard.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
+from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
+from Components.Systems.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
+from Components.Systems.Automoderation._storage import load_automod_config, save_automod_config
+from Components.Systems.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
 from Components.Commands.AutoResponder._storage import load_responses, save_responses
-from Components.Dashboard.Roles._storage import load_join_roles, save_join_roles
-from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
+from Components.Systems.Roles._storage import load_join_roles, save_join_roles
+from Components.Systems.Automoderation.log_storage import load_log_config, save_log_config
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Components.Commands.Boost._storage import load_boost_config, save_boost_config
-from Components.Dashboard.Level._storage import load_level_config, save_level_config
+from Components.Systems.Level._storage import load_level_config, save_level_config
 from Components.Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
-from Components.Dashboard.BotProfile._storage import load_botprofile_config, save_botprofile_config
+from Components.Systems.BotProfile._storage import load_botprofile_config, save_botprofile_config
 
 
 class ConfigMixin:
@@ -50,7 +50,7 @@ class ConfigMixin:
         logs_cfg = load_log_config(guild_id)
         automation_cfg = load_automation_config(guild_id)
         
-        from Components.Dashboard.JoinToCreate._storage import load_jtc_config
+        from Components.Systems.JoinToCreate._storage import load_jtc_config
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
         
@@ -61,7 +61,7 @@ class ConfigMixin:
         economy_cfg = load_economy_config(guild_id)
         serverstats_cfg = load_serverstats_config(guild_id)
 
-        from Components.Dashboard.WebDashboard._storage import load_settings_config
+        from Components.Systems.WebDashboard._storage import load_settings_config
         settings_cfg = load_settings_config(guild_id)
         
         # Resolve immune users for the frontend
@@ -83,7 +83,7 @@ class ConfigMixin:
                 pass
         settings_cfg["immune_users"] = resolved_immune_users
 
-        from Components.Dashboard.BanAppeals._storage import load_appeals_config
+        from Components.Systems.BanAppeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(guild_id)
 
         from Components.Database.mongodb import get_db, get_config
@@ -352,7 +352,7 @@ class ConfigMixin:
             data = await request.json()
 
             if user_perms.get("is_admin") and "settings" in data:
-                from Components.Dashboard.WebDashboard._storage import save_settings_config, load_settings_config
+                from Components.Systems.WebDashboard._storage import save_settings_config, load_settings_config
                 s_cfg = load_settings_config(guild_id)
                 new_s = data["settings"]
                 for k, v in new_s.items():
@@ -395,7 +395,7 @@ class ConfigMixin:
                 # Bot Roles removed from extra_settings (now handled in Auto Roles module)
 
             if user_perms.get("can_channels") and "appeals" in data:
-                from Components.Dashboard.BanAppeals._storage import save_appeals_config
+                from Components.Systems.BanAppeals._storage import save_appeals_config
                 save_appeals_config(guild_id, data["appeals"])
 
             if user_perms.get("can_channels") and "serverstats" in data:
@@ -635,7 +635,7 @@ class ConfigMixin:
                 save_responses(guild_id, data["autoresponder"])
 
             if user_perms.get("can_roles") and "joinroles" in data:
-                from Components.Dashboard.Roles._storage import save_join_roles
+                from Components.Systems.Roles._storage import save_join_roles
                 jr_data = data["joinroles"]
                 save_join_roles(guild_id, {
                     "enabled": bool(jr_data.get("enabled", False)),
@@ -742,7 +742,7 @@ class ConfigMixin:
                 l_cfg["global_exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
                 l_cfg["global_exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
                 
-                from Components.Dashboard.Automoderation.log_storage import DEFAULT_CATEGORIES
+                from Components.Systems.Automoderation.log_storage import DEFAULT_CATEGORIES
                 if "channels" in l_data and isinstance(l_data["channels"], dict):
                     for k in DEFAULT_CATEGORIES:
                         c = l_data["channels"].get(k)
@@ -760,7 +760,7 @@ class ConfigMixin:
                 save_log_config(guild_id, l_cfg)
 
             if user_perms.get("can_channels") and "tempvoice" in data:
-                from Components.Dashboard.JoinToCreate._storage import load_jtc_config, save_jtc_config
+                from Components.Systems.JoinToCreate._storage import load_jtc_config, save_jtc_config
                 jtc_cfg = load_jtc_config(guild_id)
                 jtc_data = data["tempvoice"]
                 
@@ -946,7 +946,7 @@ class ConfigMixin:
                 ar_storage.save_responses(guild_id, data["autoresponder"])
 
             if "autoresponder_enabled" in data or "messages_enabled" in data:
-                from Components.Dashboard.WebDashboard._storage import load_settings_config, save_settings_config
+                from Components.Systems.WebDashboard._storage import load_settings_config, save_settings_config
                 s_cfg = load_settings_config(guild_id)
                 if "autoresponder_enabled" in data:
                     s_cfg["autoresponder_enabled"] = bool(data["autoresponder_enabled"])

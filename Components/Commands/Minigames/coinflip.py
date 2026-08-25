@@ -9,7 +9,7 @@ from Components.Commands.Economy._storage import (
     add_user_balance,
     remove_user_balance
 )
-from Components.Dashboard.Level._storage import grant_minigame_xp
+from Components.Systems.Level._storage import grant_minigame_xp
 
 class CoinflipView(discord.ui.View):
     def __init__(self, guild_id: int, player: discord.abc.User, bet_amount: int, choice: str):

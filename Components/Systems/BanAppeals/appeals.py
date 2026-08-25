@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Cases._storage import get_user_cases, update_case_reason
-from Components.Dashboard.BanAppeals._storage import get_appeal_status, close_appeal, register_appeal_submission
+from Components.Systems.BanAppeals._storage import get_appeal_status, close_appeal, register_appeal_submission
 import time
 from Components.Commands._utils import make_embed
 
@@ -10,7 +10,7 @@ async def resolve_appeal_logic(bot, guild_id: int, target_user_id: int, moderato
     if not guild:
         return False, "Server not found."
         
-    from Components.Dashboard.BanAppeals._storage import load_appeals_config
+    from Components.Systems.BanAppeals._storage import load_appeals_config
     cfg = load_appeals_config(guild_id)
     
     if is_accept:
@@ -64,7 +64,7 @@ class AppealView(discord.ui.View):
         self.add_item(btn_deny)
 
     async def get_appeals_cfg(self):
-        from Components.Dashboard.BanAppeals._storage import load_appeals_config
+        from Components.Systems.BanAppeals._storage import load_appeals_config
         from Components.Commands._utils import make_embed
         return load_appeals_config(self.guild_id)
 

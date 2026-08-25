@@ -1,7 +1,7 @@
 ﻿import discord
 from discord.ext import commands
-from Components.Dashboard.Automoderation.automod import automod_group
-from Components.Dashboard.Automoderation._views import AutoModDashboardLayout
+from Components.Systems.Automoderation.automod import automod_group
+from Components.Systems.Automoderation._views import AutoModDashboardLayout
 from Components.Commands._utils import make_embed
 
 class AutoModCommand(commands.Cog):
@@ -36,7 +36,7 @@ class AutoModPrefixFallback(commands.Cog):
         await _do_automod_panel(ctx)
 
 async def setup(bot: commands.Bot):
-    from Components.Dashboard.Automoderation.automod import automod_group
+    from Components.Systems.Automoderation.automod import automod_group
     from Components.Commands._utils import make_embed
     if "automod" not in bot.all_commands:
         bot.add_command(automod_group)

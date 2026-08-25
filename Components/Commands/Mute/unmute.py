@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Mute._storage import get_muted_role_id
 from Components.Commands.Mute.mute import get_or_create_muted_role
-from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands._utils import make_embed
 

@@ -1,7 +1,7 @@
 import time
 import discord
 from discord.ext import commands, tasks
-from Components.Dashboard.Verify._storage import load_verify_config, add_pending_kick, remove_pending_kick
+from Components.Systems.Verify._storage import load_verify_config, add_pending_kick, remove_pending_kick
 
 class VerifyListenerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -100,7 +100,7 @@ class VerifyListenerCog(commands.Cog):
         await self.bot.wait_until_ready()
 
 async def setup(bot: commands.Bot):
-    from Components.Dashboard.Verify._views import PersistentVerifyLayout
+    from Components.Systems.Verify._views import PersistentVerifyLayout
     bot.add_view(PersistentVerifyLayout())
     await bot.add_cog(VerifyListenerCog(bot))
 

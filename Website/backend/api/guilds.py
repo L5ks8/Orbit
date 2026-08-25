@@ -6,16 +6,16 @@ from aiohttp import web
 import aiohttp
 import discord
 from typing import Dict, Any
-from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
-from Components.Dashboard.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
-from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
-from Components.Dashboard.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
+from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
+from Components.Systems.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
+from Components.Systems.Automoderation._storage import load_automod_config, save_automod_config
+from Components.Systems.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
 from Components.Commands.AutoResponder._storage import load_responses, save_responses
-from Components.Dashboard.Roles._storage import load_join_roles, save_join_roles
-from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
+from Components.Systems.Roles._storage import load_join_roles, save_join_roles
+from Components.Systems.Automoderation.log_storage import load_log_config, save_log_config
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Components.Commands.Boost._storage import load_boost_config, save_boost_config
-from Components.Dashboard.Level._storage import load_level_config, save_level_config
+from Components.Systems.Level._storage import load_level_config, save_level_config
 from Components.Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
 
 class GuildsMixin:
@@ -35,7 +35,7 @@ class GuildsMixin:
         if not guild:
             return web.json_response({"error": "Bot not in this server"}, status=404)
             
-        from Components.Dashboard.Level._storage import get_leaderboard_by, level_from_xp
+        from Components.Systems.Level._storage import get_leaderboard_by, level_from_xp
         from Components.Commands.Level.level import LB_CATEGORIES
         
         if sort_key == "invites":
@@ -167,7 +167,7 @@ class GuildsMixin:
         
         print(f"[api_guilds] User {user.get('username')} has {len(user_guilds)} total guilds, bot is in {len(self.bot.guilds)} guilds", flush=True)
                 
-        from Components.Dashboard.WebDashboard._storage import load_settings_config
+        from Components.Systems.WebDashboard._storage import load_settings_config
         manageable_guilds = []
         for g in user_guilds:
             perms = int(g["permissions"])

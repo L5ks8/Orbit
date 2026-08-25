@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.ui import View, Button
 import aiohttp
 from Components.Commands._utils import make_embed
-from Components.Dashboard.Level._storage import (
+from Components.Systems.Level._storage import (
     get_user_xp, set_user_xp, total_xp_for_level, level_from_xp, get_db
 )
 

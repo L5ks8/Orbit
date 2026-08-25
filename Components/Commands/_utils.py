@@ -82,7 +82,7 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
         desc = f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}"
         
         if guild_id:
-            from Components.Dashboard.BanAppeals._storage import load_appeals_config
+            from Components.Systems.BanAppeals._storage import load_appeals_config
             appeals_cfg = load_appeals_config(guild_id)
             if appeals_cfg.get("enabled"):
                 allowed = appeals_cfg.get("allowed_punishments", [])
@@ -103,7 +103,7 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
         pass
 
 def is_immune(guild_id: int, target: discord.User | discord.Member) -> bool:
-    from Components.Dashboard.WebDashboard._storage import load_settings_config
+    from Components.Systems.WebDashboard._storage import load_settings_config
     settings_cfg = load_settings_config(guild_id)
     
     immune_users = settings_cfg.get("immune_users", [])

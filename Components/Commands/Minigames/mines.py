@@ -193,7 +193,7 @@ class MinesLayoutView(discord.ui.View):
             self.session.outcome_text += f"\n **Returned:** {sym} {payout:,}"
 
         if self.session.base_xp > 0 and interaction.guild and interaction.user:
-            from Components.Dashboard.Level._storage import grant_minigame_xp
+            from Components.Systems.Level._storage import grant_minigame_xp
             xp_earned = await grant_minigame_xp(interaction.guild, interaction.user, interaction.channel, self.session.base_xp)
             if xp_earned > 0:
                 self.session.outcome_text += f" *( +{xp_earned} XP)*"

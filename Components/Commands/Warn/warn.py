@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import add_warning, get_user_warnings
-from Components.Dashboard.Automoderation.log_storage import log_event
+from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
@@ -82,7 +82,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
         dm_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=False)
         dm_embed.add_field(name="Reason", value=f"{reason}{punishment_text}", inline=False)
         
-        from Components.Dashboard.BanAppeals._storage import load_appeals_config
+        from Components.Systems.BanAppeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(ctx.guild.id)
         if appeals_cfg.get("enabled"):
             allowed = appeals_cfg.get("allowed_punishments", [])

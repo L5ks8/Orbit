@@ -2,7 +2,7 @@
 import re
 import discord
 from discord.ext import commands, tasks
-from Components.Dashboard.Level._storage import (
+from Components.Systems.Level._storage import (
     load_level_config, get_user_xp, set_user_xp, add_xp,
     increment_stat, level_from_xp, xp_progress,
     get_leaderboard, delete_user_xp
