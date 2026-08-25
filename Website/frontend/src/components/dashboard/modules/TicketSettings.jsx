@@ -224,9 +224,9 @@ export default function TicketSettings({ config, channels, roles, categories, on
               </div>
             </div>
           </div>
-        </div>
+          </div>
 
-        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
             <div className="flex items-center justify-between gap-4 px-5 py-4">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-blue-500/10">
@@ -297,7 +297,6 @@ export default function TicketSettings({ config, channels, roles, categories, on
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* RIGHT COLUMN */}
