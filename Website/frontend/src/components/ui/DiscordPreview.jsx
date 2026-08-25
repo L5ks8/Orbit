@@ -333,19 +333,19 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
                     <div className="p-2.5 flex gap-2.5">
                       <div className="flex-1 min-w-0 space-y-1">
                         {previewAuthor && (
-                          <p className="text-[11px] font-semibold text-white flex items-center gap-1.5">
-                            {previewAuthor}
-                          </p>
+                          <div className="text-[11px] font-semibold text-white flex items-center gap-1.5">
+                            {parseDiscordMarkdown(previewAuthor, channels, roles)}
+                          </div>
                         )}
                         {previewTitle && (
-                          <p className="text-xs font-semibold text-white leading-snug">
+                          <div className="text-xs font-semibold text-white leading-snug">
                             {parseDiscordMarkdown(previewTitle, channels, roles)}
-                          </p>
+                          </div>
                         )}
                         {previewDesc && (
-                          <p className="text-xs text-neutral-300 leading-relaxed break-all">
+                          <div className="text-xs text-neutral-300 leading-relaxed break-all">
                             {parseDiscordMarkdown(previewDesc, channels, roles)}
-                          </p>
+                          </div>
                         )}
                         {embedFields && embedFields.length > 0 && (
                           <div className="mt-2 text-xs flex flex-wrap gap-y-2">
@@ -366,9 +366,9 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
                           <img src={embedImage} className="w-full rounded-[3px] mt-2 max-h-[300px] object-cover" alt="" onError={(e) => e.target.style.display = 'none'} />
                         )}
                         {previewFooter && (
-                          <p className="text-[10px] text-neutral-400 font-medium">
-                            {previewFooter}
-                          </p>
+                          <div className="text-[10px] text-neutral-400 font-medium">
+                            {parseDiscordMarkdown(previewFooter, channels, roles)}
+                          </div>
                         )}
                       </div>
                       {embedThumbnail && (
