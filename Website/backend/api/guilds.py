@@ -15,7 +15,7 @@ from Components.Dashboard.Roles._storage import load_join_roles, save_join_roles
 from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Components.Commands.Boost._storage import load_boost_config, save_boost_config
-from Components.Commands.Level._storage import load_level_config, save_level_config
+from Components.Dashboard.Level._storage import load_level_config, save_level_config
 from Components.Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
 
 class GuildsMixin:
@@ -35,7 +35,7 @@ class GuildsMixin:
         if not guild:
             return web.json_response({"error": "Bot not in this server"}, status=404)
             
-        from Components.Commands.Level._storage import get_leaderboard_by, level_from_xp
+        from Components.Dashboard.Level._storage import get_leaderboard_by, level_from_xp
         from Components.Commands.Level.level import LB_CATEGORIES
         
         if sort_key == "invites":

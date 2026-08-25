@@ -227,7 +227,7 @@ class GeminiChatbot(commands.Cog):
                                         
                                         # Use the correct load/save methods to ensure caches are updated
                                         if raw_mod_name == "Leveling":
-                                            from Components.Commands.Level._storage import load_level_config, save_level_config
+                                            from Components.Dashboard.Level._storage import load_level_config, save_level_config
                                             cfg = load_level_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_level_config(message.guild.id, cfg)

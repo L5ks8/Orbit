@@ -1,1 +1,1 @@
-from Components.Commands.Level import level, levellistener
+from Components.Commands.Level import level, level_admin

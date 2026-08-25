@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from Components.Commands.Level._storage import (
+from Components.Dashboard.Level._storage import (
     load_level_config, get_user_xp, xp_progress,
     get_leaderboard, get_leaderboard_by, get_user_rank, level_from_xp
 )
@@ -111,7 +111,7 @@ class LevelCommandsCog(commands.Cog):
                 "rank": i
             })
 
-        from Components.Commands.Level.leaderboard_card import generate_leaderboard_card
+        from Components.Dashboard.Level.leaderboard_card import generate_leaderboard_card
         
         img_bytes = generate_leaderboard_card(
             entries=entries,
@@ -153,7 +153,7 @@ class LevelCommandsCog(commands.Cog):
 
         # Try to generate rank card image
         try:
-            from Components.Commands.Level.rank_card import generate_rank_card
+            from Components.Dashboard.Level.rank_card import generate_rank_card
             avatar_bytes = await target.display_avatar.read()
             # Dynamic bar color based on level
             colors = [
@@ -231,7 +231,7 @@ class LevelCommandsCog(commands.Cog):
         if amount <= 0:
             return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
-        from Components.Commands.Level._storage import add_xp
+        from Components.Dashboard.Level._storage import add_xp
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
         await ctx.send(embed=make_embed(f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).", discord.Color.green()))
 
@@ -242,7 +242,7 @@ class LevelCommandsCog(commands.Cog):
         if amount <= 0:
             return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
-        from Components.Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp
+        from Components.Dashboard.Level._storage import get_user_xp, set_user_xp, level_from_xp
         data = get_user_xp(ctx.guild.id, member.id)
         current_xp = data.get("total_xp", 0)
         new_xp = max(0, current_xp - amount)
@@ -258,7 +258,7 @@ class LevelCommandsCog(commands.Cog):
         if amount < 0:
             return await ctx.send(embed=make_embed("Amount cannot be negative.", discord.Color.red()), ephemeral=True)
             
-        from Components.Commands.Level._storage import get_user_xp, set_user_xp, level_from_xp
+        from Components.Dashboard.Level._storage import get_user_xp, set_user_xp, level_from_xp
         data = get_user_xp(ctx.guild.id, member.id)
         data["total_xp"] = amount
         set_user_xp(ctx.guild.id, member.id, data)
@@ -273,7 +273,7 @@ class LevelCommandsCog(commands.Cog):
         if member == ctx.author:
             return await ctx.send(embed=make_embed("You cannot transfer XP to yourself.", discord.Color.red()), ephemeral=True)
             
-        from Components.Commands.Level._storage import get_user_xp, set_user_xp, add_xp
+        from Components.Dashboard.Level._storage import get_user_xp, set_user_xp, add_xp
         data = get_user_xp(ctx.guild.id, ctx.author.id)
         current_xp = data.get("total_xp", 0)
         
@@ -313,7 +313,7 @@ class LevelCommandsCog(commands.Cog):
         react_count = data.get("reaction_count", 0)
 
         try:
-            from Components.Commands.Level.rank_card import generate_rank_card
+            from Components.Dashboard.Level.rank_card import generate_rank_card
             avatar_bytes = await target.display_avatar.read()
             
             colors = [

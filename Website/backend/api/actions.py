@@ -15,7 +15,7 @@ from Components.Dashboard.Roles._storage import load_join_roles, save_join_roles
 from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
 from Components.Commands.Boost._storage import load_boost_config, save_boost_config
-from Components.Commands.Level._storage import load_level_config, save_level_config
+from Components.Dashboard.Level._storage import load_level_config, save_level_config
 from Components.Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
 
 from Components.Dashboard.EmbedBuilder._storage import load_embeds_config, save_embeds_config

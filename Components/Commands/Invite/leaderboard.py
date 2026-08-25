@@ -57,7 +57,7 @@ class LeaderboardCommand(commands.Cog):
                 "rank": i
             })
             
-        from Components.Commands.Level.leaderboard_card import generate_leaderboard_card
+        from Components.Dashboard.Level.leaderboard_card import generate_leaderboard_card
         
         img_bytes = generate_leaderboard_card(
             entries=entries,

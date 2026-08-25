@@ -9,7 +9,7 @@ from Components.Commands.Economy._storage import (
     add_user_balance,
     remove_user_balance
 )
-from Components.Commands.Level._storage import grant_minigame_xp
+from Components.Dashboard.Level._storage import grant_minigame_xp
 
 # Unicode dice faces
 DICE_FACES = {
