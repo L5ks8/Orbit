@@ -134,7 +134,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
         </div>
       </div>
 
-      <div className="mt-1 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div className="mt-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* LEFT COLUMN */}
         <div className="flex flex-col gap-6">
@@ -300,7 +300,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+        <div className="flex flex-col gap-6">
           <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
             <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800">
               <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye text-neutral-400">
@@ -345,7 +345,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
             </div>
           </div>
 
-          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col flex-1 overflow-hidden min-h-[300px]">
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col flex-1 overflow-hidden">
             <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800">
               <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ticket text-neutral-400">
                 <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
@@ -355,7 +355,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
               <span className="ml-auto text-xs font-medium bg-neutral-800 text-neutral-400 px-2 py-1 rounded-md">{activeTickets.length}</span>
             </div>
             
-            <div className="p-0 flex flex-col overflow-y-auto max-h-[500px]">
+            <div className="p-0 flex flex-col flex-1 overflow-y-auto">
               {activeTickets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center h-full gap-2 mt-8">
                   <div className="w-12 h-12 rounded-full bg-neutral-800/50 flex items-center justify-center mb-2">
