@@ -223,7 +223,10 @@ class ActionsMixin:
                 color=emb_color
             )
             
-            emb_image = verify_cfg.get("embed_image", "") or "https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png"
+            emb_image = verify_cfg.get("embed_image", "")
+            if not emb_image or emb_image.startswith("/"):
+                emb_image = "https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png"
+                
             if emb_image:
                 embed.set_image(url=emb_image)
                 

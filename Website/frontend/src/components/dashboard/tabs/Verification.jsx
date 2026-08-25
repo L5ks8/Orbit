@@ -26,7 +26,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
   const [roleId, setRoleId] = useState(vCfg.role_id || '');
   const [removeRoleId, setRemoveRoleId] = useState(vCfg.remove_role_id || '');
   const [timeoutAction, setTimeoutAction] = useState(vCfg.timeout_action || 'none');
-  const [timeoutMinutes, setTimeoutMinutes] = useState(vCfg.timeout_minutes || 0);
+  const [timeoutHours, setTimeoutHours] = useState(vCfg.timeout_minutes ? vCfg.timeout_minutes / 60 : 0);
   const [embedTitle, setEmbedTitle] = useState(vCfg.embed_title || '');
   const [embedDesc, setEmbedDesc] = useState(vCfg.embed_description || '');
   const [embedColor, setEmbedColor] = useState(vCfg.embed_color || '#5865F2');
@@ -40,7 +40,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
       setRoleId(cfg.role_id ? String(cfg.role_id) : '');
       setRemoveRoleId(cfg.remove_role_id ? String(cfg.remove_role_id) : '');
       setTimeoutAction(cfg.timeout_action || 'none');
-      setTimeoutMinutes(cfg.timeout_minutes || 0);
+      setTimeoutHours(cfg.timeout_minutes ? cfg.timeout_minutes / 60 : 0);
       setEmbedTitle(cfg.embed_title || '');
       setEmbedDesc(cfg.embed_description || '');
       setEmbedColor(cfg.embed_color || '#5865F2');
@@ -91,7 +91,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
       role_id: roleId,
       remove_role_id: removeRoleId,
       timeout_action: timeoutAction,
-      timeout_minutes: timeoutMinutes,
+      timeout_minutes: timeoutHours * 60,
       embed_title: embedTitle,
       embed_description: embedDesc,
       embed_color: embedColor,
@@ -269,7 +269,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
                   </div>
                   {timeoutAction !== 'none' && (
                     <div>
-                      <label className="text-[11px] text-neutral-500 block mb-1.5">Time limit (minutes)</label>
+                      <label className="text-[11px] text-neutral-500 block mb-1.5">Time limit (hours)</label>
                       <div className="flex items-center gap-2">
                         <div className="w-full">
                           <div className="relative">
@@ -278,14 +278,14 @@ export default function Verification({ guildId, serverData, setServerData }) {
                               title=""
                               className="w-full px-4 py-3 sm:py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600"
                               min="1"
-                              max="10080"
+                              max="168"
                               type="number"
-                              value={timeoutMinutes}
-                              onChange={e => setTimeoutMinutes(parseInt(e.target.value) || 0)}
+                              value={timeoutHours}
+                              onChange={e => setTimeoutHours(parseFloat(e.target.value) || 0)}
                             />
                           </div>
                         </div>
-                        <span className="text-xs text-neutral-500 flex-shrink-0">min</span>
+                        <span className="text-xs text-neutral-500 flex-shrink-0">hrs</span>
                       </div>
                     </div>
                   )}
