@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import SaveBar from '../../ui/SaveBar';
 import CustomSelect from '../../ui/CustomSelect';
 import Toggle from '../../ui/Toggle';
 
@@ -386,7 +385,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
           </div>
         </div>
       )}
-    
+    </div>
     </main>
   );
 }
