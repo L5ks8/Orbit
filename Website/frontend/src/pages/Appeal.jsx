@@ -134,9 +134,10 @@ export default function Appeal() {
                 <textarea 
                   value={answers[i] || ''}
                   onChange={e => setAnswers({...answers, [i]: e.target.value})}
+                  onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
                   required
                   placeholder="Your answer..."
-                  rows={4}
+                  rows={2}
                   style={{ 
                     width: '100%', 
                     padding: '12px', 
@@ -145,7 +146,8 @@ export default function Appeal() {
                     borderRadius: '6px', 
                     color: '#fff',
                     outline: 'none',
-                    resize: 'vertical',
+                    resize: 'none',
+                    overflow: 'hidden',
                     fontFamily: 'inherit'
                   }}
                 />
@@ -157,10 +159,11 @@ export default function Appeal() {
               <textarea 
                 value={answers[0] || ''}
                 onChange={e => setAnswers({0: e.target.value})}
+                onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
                 required
                 placeholder="Explain what happened..."
-                rows={6}
-                style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none', resize: 'vertical' }}
+                rows={3}
+                style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none', resize: 'none', overflow: 'hidden' }}
               />
             </div>
           )}

@@ -1,5 +1,11 @@
 /* Dashboard Layout & Utilities */
 
+/* Auto-growing textareas: no resize handle, grows with content */
+textarea {
+  resize: none !important;
+  overflow: hidden !important;
+}
+
 .pb-overview-container {
   display: flex;
   flex-direction: column;

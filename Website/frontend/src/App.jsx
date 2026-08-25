@@ -51,6 +51,18 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
     };
   }, []);
 
+  // Global auto-grow for all textareas
+  useEffect(() => {
+    const handleInput = (e) => {
+      if (e.target.tagName === 'TEXTAREA') {
+        e.target.style.height = 'auto';
+        e.target.style.height = e.target.scrollHeight + 'px';
+      }
+    };
+    document.addEventListener('input', handleInput);
+    return () => document.removeEventListener('input', handleInput);
+  }, []);
+
   const isDashboard = location.pathname.startsWith('/dashboard');
 
   return (
