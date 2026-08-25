@@ -3,6 +3,7 @@ import SaveBar from '../../ui/SaveBar';
 import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
 import LoadingScreen from '../../ui/LoadingScreen';
+import CustomSelect from '../../ui/CustomSelect';
 
 const TailwindToggle = ({ checked, onChange }) => (
     <button 
@@ -22,15 +23,49 @@ export default function Security({ guildId }) {
   const { toast } = useToast();
   const cachedServerData = getCache(guildId);
   const initialCfg = cachedServerData?.config?.security || {};
+  const roleOptions = cachedServerData?.roles ? cachedServerData.roles.map(r => ({ value: String(r.id), label: r.name, color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined })) : [];
+  const channelOptions = cachedServerData?.channels ? cachedServerData.channels.map(ch => ({ value: String(ch.id), label: ch.name })) : [];
+  
+  const permissionOptions = [
+    { value: 'ADMINISTRATOR', label: 'Administrator' },
+    { value: 'KICK_MEMBERS', label: 'Kick Members' },
+    { value: 'BAN_MEMBERS', label: 'Ban Members' },
+    { value: 'MANAGE_CHANNELS', label: 'Manage Channels' },
+    { value: 'MANAGE_GUILD', label: 'Manage Server' },
+    { value: 'MANAGE_ROLES', label: 'Manage Roles' }
+  ];
+  
+  const actionOptions = [
+    { value: 'kick', label: 'Kick' },
+    { value: 'ban', label: 'Ban' },
+    { value: 'timeout', label: 'Timeout' },
+    { value: 'quarantine', label: 'Quarantine' },
+    { value: 'log', label: 'Log Only' }
+  ];
+  const timeWindowOptions = [
+    { value: '10s', label: '10 seconds' },
+    { value: '30s', label: '30 seconds' },
+    { value: '1m', label: '1 minute' },
+    { value: '5m', label: '5 minutes' },
+    { value: '10m', label: '10 minutes' }
+  ];
+  const youngAccountOptions = [
+    { value: '1h', label: '1 hour' },
+    { value: '1d', label: '1 day' },
+    { value: '3d', label: '3 days' },
+    { value: '7d', label: '7 days' },
+    { value: '14d', label: '14 days' },
+    { value: '30d', label: '30 days' }
+  ];
 
   const [loading, setLoading] = useState(!cachedServerData);
   const [initialStateStr, setInitialStateStr] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   // States
-  const [antiNuke, setAntiNuke] = useState({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, ...initialCfg.anti_nuke });
-  const [antiRaid, setAntiRaid] = useState({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, ...initialCfg.anti_raid });
-  const [webhookProtection, setWebhookProtection] = useState({ enabled: false, block_everyone: false, block_invite_links: false, ...initialCfg.webhook_protection });
+  const [antiNuke, setAntiNuke] = useState({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...initialCfg.anti_nuke });
+  const [antiRaid, setAntiRaid] = useState({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, ...initialCfg.anti_raid });
+  const [webhookProtection, setWebhookProtection] = useState({ enabled: false, block_everyone: false, block_invite_links: false, trusted_webhooks: '', ...initialCfg.webhook_protection });
 
   const getPayload = () => ({
     anti_nuke: antiNuke,
@@ -52,9 +87,9 @@ export default function Security({ guildId }) {
         .then(data => {
           setCache(guildId, data);
           const cfg = data.config?.security || {};
-          setAntiNuke({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, ...cfg.anti_nuke });
-          setAntiRaid({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, ...cfg.anti_raid });
-          setWebhookProtection({ enabled: false, block_everyone: false, block_invite_links: false, ...cfg.webhook_protection });
+          setAntiNuke({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...cfg.anti_nuke });
+          setAntiRaid({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, ...cfg.anti_raid });
+          setWebhookProtection({ enabled: false, block_everyone: false, block_invite_links: false, trusted_webhooks: '', ...cfg.webhook_protection });
           setInitialStateStr(JSON.stringify({
             anti_nuke: cfg.anti_nuke || { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false },
             anti_raid: cfg.anti_raid || { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false },
