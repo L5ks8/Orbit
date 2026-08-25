@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import DiscordPreview, { parseDiscordMarkdown } from "../../ui/DiscordPreview";
 import Toggle from "../../ui/Toggle";
 import CustomSelect from "../../ui/CustomSelect";
+import { SketchPicker } from "react-color";
 
 export default function WelcomeSettings({
   config,
@@ -37,6 +38,10 @@ export default function WelcomeSettings({
   const [welcomeEmbedColor, setWelcomeEmbedColor] = useState(wCfg.embed_color || "#5865F2");
   const [welcomeEmbedFooter, setWelcomeEmbedFooter] = useState(wCfg.embed_footer || "");
   const [welcomeImageUrl, setWelcomeImageUrl] = useState(wCfg.image_url || "");
+
+  const [showWelcomeColor, setShowWelcomeColor] = useState(false);
+  const [showGoodbyeColor, setShowGoodbyeColor] = useState(false);
+
 
   const [welcomeEmbedFields, setWelcomeEmbedFields] = useState(wCfg.embed_fields || []);
   const [goodbyeEmbedFields, setGoodbyeEmbedFields] = useState(gCfg.embed_fields || []);
@@ -281,12 +286,20 @@ export default function WelcomeSettings({
                       </div>
                       <div className="flex items-center">
                         <div className="relative flex flex-col group">
-                          <input type="color" value={welcomeEmbedColor} onChange={e => setWelcomeEmbedColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
                           <button
                             type="button"
-                            className="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 group-hover:border-neutral-500 transition-colors flex-shrink-0"
+                            onClick={() => setShowWelcomeColor(!showWelcomeColor)}
+                            className="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 hover:border-neutral-500 transition-colors flex-shrink-0"
                             style={{ backgroundColor: welcomeEmbedColor }}
                           />
+                          {showWelcomeColor && (
+                            <div className="absolute top-[48px] right-0 z-50">
+                              <div className="fixed inset-0" onClick={() => setShowWelcomeColor(false)} />
+                              <div className="relative z-50">
+                                <SketchPicker color={welcomeEmbedColor} onChange={(c) => setWelcomeEmbedColor(c.hex)} disableAlpha />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -832,12 +845,20 @@ export default function WelcomeSettings({
                         </div>
                         <div className="flex items-center">
                           <div className="relative flex flex-col group">
-                            <input type="color" value={goodbyeEmbedColor} onChange={e => setGoodbyeEmbedColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
                             <button
                               type="button"
-                              className="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 group-hover:border-neutral-500 transition-colors flex-shrink-0"
+                              onClick={() => setShowGoodbyeColor(!showGoodbyeColor)}
+                              className="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 hover:border-neutral-500 transition-colors flex-shrink-0"
                               style={{ backgroundColor: goodbyeEmbedColor }}
                             />
+                            {showGoodbyeColor && (
+                              <div className="absolute top-[48px] right-0 z-50">
+                                <div className="fixed inset-0" onClick={() => setShowGoodbyeColor(false)} />
+                                <div className="relative z-50">
+                                  <SketchPicker color={goodbyeEmbedColor} onChange={(c) => setGoodbyeEmbedColor(c.hex)} disableAlpha />
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
