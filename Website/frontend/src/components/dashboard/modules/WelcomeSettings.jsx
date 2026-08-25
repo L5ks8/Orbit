@@ -4,6 +4,7 @@ import Toggle from "../../ui/Toggle";
 import CustomSelect from "../../ui/CustomSelect";
 import { SketchPicker } from "react-color";
 import { useToast } from '../../ui/Toast';
+import ImageURLPopup from "../../ui/ImageURLPopup";
 
 export default function WelcomeSettings({
   guildId,
@@ -41,6 +42,8 @@ export default function WelcomeSettings({
   const [welcomeEmbedColor, setWelcomeEmbedColor] = useState(wCfg.embed_color || "#5865F2");
   const [welcomeEmbedFooter, setWelcomeEmbedFooter] = useState(wCfg.embed_footer || "");
   const [welcomeImageUrl, setWelcomeImageUrl] = useState(wCfg.image_url || "");
+  const [showUrlPopup, setShowUrlPopup] = useState(false);
+  const [urlPopupTarget, setUrlPopupTarget] = useState("");
 
   const [showWelcomeColor, setShowWelcomeColor] = useState(false);
   const [showGoodbyeColor, setShowGoodbyeColor] = useState(false);
@@ -522,7 +525,7 @@ export default function WelcomeSettings({
                     tabIndex={0}
                     style={{ cursor: "default" }}
                   >
-                    <div className="pointer-events-none select-none flex flex-col flex-1">
+                    <div className="flex flex-col flex-1">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-1.5">
                           <label className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">
@@ -593,8 +596,8 @@ export default function WelcomeSettings({
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                const url = window.prompt("Enter image URL (must end in .png, .jpg, etc):");
-                                if (url) setWelcomeImageUrl(url);
+                                setUrlPopupTarget("welcome");
+                                setShowUrlPopup(true);
                               }}
                               className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-md bg-neutral-700/50 hover:bg-neutral-700 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors z-10"
                             >
@@ -626,7 +629,7 @@ export default function WelcomeSettings({
                     <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-medium">
                       Preview
                     </span>
-                    <button onClick={() => handleTestDm("welcome")}
+                    <button onClick={() => handleTestWelcome("welcome")}
                       type="button"
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 focus-visible:ring-green-500/40 "
                     >
@@ -804,7 +807,7 @@ export default function WelcomeSettings({
                             <span className="text-[11px] tabular-nums text-neutral-600">
                               0/2000
                             </span>
-                            <button onClick={() => handleTestWelcome("welcome")}
+                            <button onClick={() => handleTestDm("welcome")}
                               type="button"
                               className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 focus-visible:ring-purple-500/40 "
                             >
@@ -1202,8 +1205,8 @@ export default function WelcomeSettings({
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  const url = window.prompt("Enter image URL (must end in .png, .jpg, etc):");
-                                  if (url) setGoodbyeImageUrl(url);
+                                  setUrlPopupTarget("goodbye");
+                                  setShowUrlPopup(true);
                                 }}
                                 className="absolute bottom-2 right-2.5 inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-md bg-neutral-700/50 hover:bg-neutral-700 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors z-10"
                               >
@@ -1235,7 +1238,7 @@ export default function WelcomeSettings({
                       <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-medium">
                         Preview
                       </span>
-                      <button onClick={() => handleTestDm("goodbye")}
+                      <button onClick={() => handleTestWelcome("goodbye")}
                         type="button"
                         className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 focus-visible:ring-green-500/40 "
                       >
@@ -1426,7 +1429,7 @@ export default function WelcomeSettings({
                               <span className="text-[11px] tabular-nums text-neutral-600">
                                 0/2000
                               </span>
-                              <button onClick={() => handleTestWelcome("welcome")}
+                              <button onClick={() => handleTestDm("goodbye")}
                                 type="button"
                                 className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-medium whitespace-nowrap transition-[transform,background-color,color,border-color] duration-150 ease-out enabled:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 focus-visible:ring-purple-500/40 "
                               >
@@ -1459,6 +1462,17 @@ export default function WelcomeSettings({
           </div>
         </div>
       </div>
+      <ImageURLPopup
+        isOpen={showUrlPopup}
+        onClose={() => {
+          setShowUrlPopup(false);
+          setUrlPopupTarget("");
+        }}
+        onConfirm={(url) => {
+          if (urlPopupTarget === "welcome") setWelcomeImageUrl(url);
+          if (urlPopupTarget === "goodbye") setGoodbyeImageUrl(url);
+        }}
+      />
     </main>
   );
 }
