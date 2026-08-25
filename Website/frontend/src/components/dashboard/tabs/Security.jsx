@@ -20,7 +20,6 @@ const TailwindToggle = ({ checked, onChange }) => (
 import { useRef } from 'react';
 
 export default function Security({ guildId, serverData, setServerData }) {
-  if (!serverData?.config || !serverData?.roles || !serverData?.channels) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><LoadingScreen /></div>;
 
   
   const { toast } = useToast();
@@ -81,11 +80,11 @@ export default function Security({ guildId, serverData, setServerData }) {
   });
 
   useEffect(() => {
-    if (cachedServerData) {
+    if (serverData) {
       setInitialStateStr(JSON.stringify({
-        anti_nuke: cachedServerData.config?.security?.anti_nuke || { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false },
-        anti_raid: cachedServerData.config?.security?.anti_raid || { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false },
-        webhook_protection: cachedServerData.config?.security?.webhook_protection || { enabled: false, block_everyone: false, block_invite_links: false }
+        anti_nuke: serverData.config?.security?.anti_nuke || { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false },
+        anti_raid: serverData.config?.security?.anti_raid || { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false },
+        webhook_protection: serverData.config?.security?.webhook_protection || { enabled: false, block_everyone: false, block_invite_links: false }
       }));
       setLoading(false);
     } else {
@@ -124,7 +123,7 @@ export default function Security({ guildId, serverData, setServerData }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       
-      const updatedData = { ...cachedServerData, config: { ...cachedServerData?.config, security: dataToSave } };
+      const updatedData = { ...serverData, config: { ...serverData?.config, security: dataToSave } };
       setCache(guildId, updatedData);
       setInitialStateStr(JSON.stringify(dataToSave));
       toast.success("Settings saved", { id: toastId });

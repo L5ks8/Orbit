@@ -5,7 +5,6 @@ import { Users, MessageSquare, Activity, Mic, Ticket, Settings, ArrowUpRight, Ar
 import { getCache, setCache } from '../../../utils/cache';
 
 export default function Overview({ guildId, serverData }) {
-  if (!serverData?.config || !serverData?.modActivity) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><LoadingScreen /></div>;
 
   const { user } = useAuth();
   const [guildInfo, setGuildInfo] = useState(() => getCache(`overview_guild_${guildId}`) || null);

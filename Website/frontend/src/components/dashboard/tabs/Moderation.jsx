@@ -184,7 +184,6 @@ const FilterLevelSelector = ({ value, onChange, levels }) => (
 import { useRef } from 'react';
 
 export default function Moderation({ guildId, serverData, setServerData }) {
-  if (!serverData?.config || !serverData?.roles || !serverData?.channels) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><LoadingScreen /></div>;
   const toast = useToast();
   
   const amCfgInit = serverData?.config?.automod || {};
@@ -206,7 +205,7 @@ export default function Moderation({ guildId, serverData, setServerData }) {
   const [general, setGeneral] = useState({ log_channel: '' });
   const [exemptions, setExemptions] = useState({ roles: (amCfgInit.exempt_roles || []).map(String), channels: (amCfgInit.exempt_channels || []).map(String) });
   
-  const lCfgInit = cachedServerData?.config?.logs || {};
+  const lCfgInit = serverData?.config?.logs || {};
   const [logs, setLogs] = useState({
     enabled: lCfgInit.enabled ?? true,
     executor_in_logs: lCfgInit.executor_in_logs || false,

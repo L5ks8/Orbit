@@ -40,7 +40,6 @@ export const modulesList = [
 ];
 
 export default function Modules({ guildId, serverData, setServerData }) {
-  if (!serverData?.config || !serverData?.roles || !serverData?.channels) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><LoadingScreen /></div>;
 
   const { moduleId } = useParams();
   const navigate = useNavigate();
