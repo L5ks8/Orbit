@@ -131,15 +131,17 @@ export default function TicketSettings({ config, channels, roles, categories, on
         </div>
       </div>
 
-      <div className="mt-1 flex flex-col gap-6">
+      <div className="mt-1 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         
-        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
-          <div className="flex items-center justify-between gap-4 px-5 py-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-blue-500/10">
-                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings w-4 h-4 text-blue-400">
-                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-                  <circle cx="12" cy="12" r="3"/>
+        {/* LEFT COLUMN */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+            <div className="flex items-center justify-between gap-4 px-5 py-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-blue-500/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings w-4 h-4 text-blue-400">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                    <circle cx="12" cy="12" r="3"/>
                 </svg>
               </div>
               <div className="flex flex-col min-w-0">
@@ -204,128 +206,176 @@ export default function TicketSettings({ config, channels, roles, categories, on
           </div>
         </div>
 
-        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
-          <div className="flex items-center justify-between gap-4 px-5 py-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-blue-500/10">
-                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal w-4 h-4 text-blue-400">
-                  <line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>
-                </svg>
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-semibold text-white truncate">Ticket Behavior</span>
-                <span className="text-[11px] text-neutral-500 truncate">Configure limits and automatic actions for tickets.</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="px-5 pb-5 pt-5 border-t border-neutral-800 flex flex-col gap-6">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between bg-neutral-800/20 border border-neutral-800/50 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-amber-500/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-timer w-4 h-4 text-amber-400">
-                      <line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>
-                    </svg>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-medium text-white">Auto-close time</span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                      STARTER
-                    </span>
-                  </div>
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+            <div className="flex items-center justify-between gap-4 px-5 py-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-purple-500/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list-plus w-4 h-4 text-purple-400">
+                    <path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/>
+                  </svg>
                 </div>
-                <Toggle checked={autoCloseEnabled} onChange={() => setAutoCloseEnabled(!autoCloseEnabled)} />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-white truncate">Ticket Categories</span>
+                  <span className="text-[11px] text-neutral-500 truncate">Configure options users can select when opening a ticket.</span>
+                </div>
               </div>
-              
-              {autoCloseEnabled && (
-                <div className="pl-14 flex items-center gap-3">
-                  <span className="text-[13px] text-neutral-400">Close inactive tickets after</span>
-                  <input 
-                    type="number"
-                    min="1"
-                    max="720"
-                    className="w-20 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-1.5 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors"
-                    value={autoCloseHours}
-                    onChange={e => setAutoCloseHours(e.target.value)}
-                  />
-                  <span className="text-[13px] text-neutral-400">hours</span>
+              <button 
+                onClick={() => setEditingOption({})} 
+                className="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-[13px] font-medium text-white transition-colors shrink-0"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"/><path d="M12 5v14"/>
+                </svg>
+                Add Option
+              </button>
+            </div>
+
+            <div className="px-5 pb-5 pt-5 border-t border-neutral-800 flex flex-col gap-4">
+              {ticketOptions.length === 0 ? (
+                <div className="flex items-center justify-center h-24 border border-dashed border-neutral-700/50 rounded-xl bg-neutral-800/20">
+                  <span className="text-[13px] text-neutral-500">No ticket options. Add one to let users choose a category.</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {ticketOptions.map(opt => (
+                    <div key={opt.id} className="flex items-center justify-between p-4 rounded-xl border border-neutral-700/50 bg-neutral-800/20">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium text-white">{opt.name}</span>
+                        <span className="text-[11px] text-neutral-500">Role: {opt.role_id ? `@${roles.find(r => r.id === opt.role_id)?.name || opt.role_id}` : 'None'}</span>
+                      </div>
+                      <button 
+                        onClick={() => setEditingOption(opt)}
+                        className="h-8 px-4 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-[13px] font-medium text-white transition-colors"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
+          </div>
+        </div>
 
-            <div className="flex items-center justify-between bg-neutral-800/20 border border-neutral-800/50 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-blue-500/10">
-                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users w-4 h-4 text-blue-400">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        {/* RIGHT COLUMN */}
+        <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+          
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800">
+              <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye text-neutral-400">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <span className="text-sm font-semibold text-white">Live Preview</span>
+            </div>
+            
+            <div className="p-5 bg-[#313338] flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 overflow-hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="white" className="w-6 h-6"><path d="M14.82 4.26a10.14 10.14 0 0 0-3.37-.87 1.48 1.48 0 0 0-1.42.75c-.27.47-.56 1.05-.82 1.54A13.2 13.2 0 0 0 4.14 8a1.27 1.27 0 0 0-.82 1.25c-.21 1.76-.08 3.51.35 5.23 1.13 4.54 4.5 7.07 4.5 7.07a1.43 1.43 0 0 0 1.51-.23c.48-.37.99-.78 1.45-1.22l-1.32-2.18c-1.38.38-2.79.52-4.18.2 0 0 .15-.22.42-.58.11-.14.22-.29.35-.45 2.87 1.22 5.95 1.55 8.95.83.11.16.23.31.33.45.29.38.45.61.45.61-1.37.33-2.78.18-4.15-.2l-1.32 2.19c.46.43.95.84 1.43 1.21a1.45 1.45 0 0 0 1.52.23s3.38-2.52 4.51-7.06c.43-1.72.56-3.48.35-5.24a1.28 1.28 0 0 0-.82-1.25 13.3 13.3 0 0 0-5.07-2.31c-.26-.5-.55-1.09-.82-1.57a1.47 1.47 0 0 0-1.42-.74M10.28 15c-1.21 0-2.2-.95-2.2-2.12 0-1.18.98-2.13 2.2-2.13s2.2.96 2.2 2.13c0 1.17-.98 2.12-2.2 2.12zm5.4 0c-1.21 0-2.2-.95-2.2-2.12 0-1.18.98-2.13 2.2-2.13s2.2.96 2.2 2.13c0 1.17-.98 2.12-2.2 2.12z"/></svg>
+              </div>
+              <div className="flex flex-col gap-1 w-full min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-[15px] text-white">Orbit</span>
+                  <span className="text-[10px] text-white bg-indigo-500 px-1.5 py-0.5 rounded leading-none flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    BOT
+                  </span>
+                  <span className="text-[12px] text-[#949ba4]">Today at 12:00 PM</span>
+                </div>
+                
+                <div className="mt-1 flex flex-col w-full max-w-[432px]">
+                  <div className="bg-[#2b2d31] border-l-4 border-indigo-500 rounded p-4 flex flex-col">
+                    <span className="font-bold text-[15px] text-white mb-2 break-words">{panelTitle || 'Support Tickets'}</span>
+                    <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed">{panelDesc || 'Click the button below to open a direct support channel with our team.'}</span>
+                  </div>
+                  
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {ticketOptions.length > 0 ? ticketOptions.map(opt => (
+                      <button key={opt.id} type="button" className="flex items-center justify-center h-8 px-4 bg-[#4e5058] hover:bg-[#6d6f78] transition-colors rounded text-white text-[14px] font-medium cursor-default border-none">
+                        {opt.name}
+                      </button>
+                    )) : (
+                      <button type="button" className="flex items-center justify-center h-8 px-4 bg-[#4e5058] opacity-50 rounded text-white text-[14px] font-medium cursor-default border-none">
+                        Button
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+            <div className="flex items-center justify-between gap-4 px-5 py-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-blue-500/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal w-4 h-4 text-blue-400">
+                    <line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>
                   </svg>
                 </div>
-                <span className="text-[13px] font-medium text-white">Maximum open tickets per user</span>
-              </div>
-              <input 
-                type="number"
-                min="1"
-                max="10"
-                className="w-12 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-2 py-1.5 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors text-center tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                value={maxOpenTickets}
-                onChange={e => setMaxOpenTickets(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
-          <div className="flex items-center justify-between gap-4 px-5 py-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-purple-500/10">
-                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list-plus w-4 h-4 text-purple-400">
-                  <path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/>
-                </svg>
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-semibold text-white truncate">Ticket Categories</span>
-                <span className="text-[11px] text-neutral-500 truncate">Configure options users can select when opening a ticket.</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-white truncate">Ticket Behavior</span>
+                  <span className="text-[11px] text-neutral-500 truncate">Configure limits and automatic actions for tickets.</span>
+                </div>
               </div>
             </div>
-            <button 
-              onClick={() => setEditingOption({})} 
-              className="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-[13px] font-medium text-white transition-colors shrink-0"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14"/><path d="M12 5v14"/>
-              </svg>
-              Add Option
-            </button>
-          </div>
-
-          <div className="px-5 pb-5 pt-5 border-t border-neutral-800 flex flex-col gap-4">
-            {ticketOptions.length === 0 ? (
-              <div className="flex items-center justify-center h-24 border border-dashed border-neutral-700/50 rounded-xl bg-neutral-800/20">
-                <span className="text-[13px] text-neutral-500">No ticket options. Add one to let users choose a category.</span>
-              </div>
-            ) : (
+            
+            <div className="px-5 pb-5 pt-5 border-t border-neutral-800 flex flex-col gap-6">
               <div className="flex flex-col gap-3">
-                {ticketOptions.map(opt => (
-                  <div key={opt.id} className="flex items-center justify-between p-4 rounded-xl border border-neutral-700/50 bg-neutral-800/20">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-medium text-white">{opt.name}</span>
-                      <span className="text-[11px] text-neutral-500">Role: {opt.role_id ? `@${roles.find(r => r.id === opt.role_id)?.name || opt.role_id}` : 'None'}</span>
+                <div className="flex items-center justify-between bg-neutral-800/20 border border-neutral-800/50 rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-amber-500/10">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-timer w-4 h-4 text-amber-400">
+                        <line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>
+                      </svg>
                     </div>
-                    <button 
-                      onClick={() => setEditingOption(opt)}
-                      className="h-8 px-4 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-[13px] font-medium text-white transition-colors"
-                    >
-                      Edit
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-medium text-white">Auto-close time</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                        STARTER
+                      </span>
+                    </div>
                   </div>
-                ))}
+                  <Toggle checked={autoCloseEnabled} onChange={() => setAutoCloseEnabled(!autoCloseEnabled)} />
+                </div>
+                
+                {autoCloseEnabled && (
+                  <div className="pl-14 flex items-center gap-3">
+                    <span className="text-[13px] text-neutral-400">Close inactive tickets after</span>
+                    <input 
+                      type="number"
+                      min="1"
+                      max="720"
+                      className="w-20 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-1.5 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors"
+                      value={autoCloseHours}
+                      onChange={e => setAutoCloseHours(e.target.value)}
+                    />
+                    <span className="text-[13px] text-neutral-400">hours</span>
+                  </div>
+                )}
               </div>
-            )}
+  
+              <div className="flex items-center justify-between bg-neutral-800/20 border border-neutral-800/50 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-blue-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users w-4 h-4 text-blue-400">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </div>
+                  <span className="text-[13px] font-medium text-white">Maximum open tickets per user</span>
+                </div>
+                <input 
+                  type="number"
+                  min="1"
+                  max="10"
+                  className="w-12 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-2 py-1.5 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors text-center tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  value={maxOpenTickets}
+                  onChange={e => setMaxOpenTickets(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </div>
-
       </div>
 
       {editingOption && (
