@@ -354,33 +354,27 @@ export default function WelcomeSettings({
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 border-t border-neutral-800/60">
-                    <label className="inline-flex items-center gap-2 cursor-pointer">
-                      <span className="text-[12px] text-neutral-300">
-                        Embed
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <Toggle checked={welcomeMsgMode === "embed"} onChange={() => setWelcomeMsgMode(welcomeMsgMode === "embed" ? "image" : "embed")} />
+                    <div className="inline-flex items-center gap-2 w-48">
+                      <CustomSelect 
+                        options={[
+                          { label: "Welcome Card", value: "image" },
+                          { label: "Message Embed", value: "embed" }
+                        ]} 
+                        value={welcomeMsgMode} 
+                        onChange={(val) => setWelcomeMsgMode(val)} 
+                      />
+                    </div>
+                    {welcomeMsgMode === "embed" && (
+                      <div className="inline-flex items-center gap-2">
+                        <span className="text-[12px] text-neutral-300">
+                          User avatar
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <Toggle checked={welcomeEmbedThumbnail === "{user.avatar}"} onChange={() => setWelcomeEmbedThumbnail(welcomeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
+                        </div>
                       </div>
-                    </label>
-                    <label className="inline-flex items-center gap-2 cursor-pointer">
-                      <span className="text-[12px] text-neutral-300">
-                        User avatar
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <Toggle checked={welcomeEmbedThumbnail === "{user.avatar}"} onChange={() => setWelcomeEmbedThumbnail(welcomeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
-                      </div>
-                    </label>
-                    <label
-                      className="inline-flex items-center gap-2 cursor-pointer"
-                      title="Unlocks {inviter}, {inviter.name}, {inviter.count}, {invite.code} and {account.age}. Needs Invite Tracking on."
-                    >
-                      <span className="text-[12px] text-neutral-300">
-                        Inviter variables
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <Toggle checked={dmJoinEnabled} onChange={() => setDmJoinEnabled(!dmJoinEnabled)} />
-                      </div>
-                    </label>
+                    )}
+
                   </div>
                   <div
                     className="relative  "
@@ -440,7 +434,7 @@ export default function WelcomeSettings({
                                 Click or drop an image
                               </span>
                               <span className="text-[10px] text-neutral-500 mt-0.5">
-                                PNG ┬À JPG ┬À WebP ┬À GIF ┬À up to 4 MB
+                                PNG • JPG • WebP • GIF • up to 4 MB
                               </span>
                             </div>
                             <button
@@ -579,7 +573,7 @@ export default function WelcomeSettings({
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Toggle checked={goodbyeEnabled} onChange={() => setGoodbyeEnabled(!goodbyeEnabled)} />
+                          <Toggle checked={dmJoinEnabled} onChange={() => setDmJoinEnabled(!dmJoinEnabled)} />
                         </div>
                       </div>
                       <div className="transition-all duration-200 flex-1 flex flex-col min-h-0">
@@ -717,15 +711,19 @@ export default function WelcomeSettings({
                       </span>
                     </div>
                     <div className="flex items-center gap-2.5 flex-shrink-0">
-                      <div className="w-36 sm:w-52 rounded-xl transition-all ">
-                        <div className="jsx-556cf662b09b3c73 w-full">
-                          <CustomSelect options={(channels || []).map(ch => ({ label: "# " + ch.name, value: ch.id }))} value={goodbyeChannel} onChange={(val) => setGoodbyeChannel(val)} placeholder="# select channel" />
+                        <div className="w-36 sm:w-52 rounded-xl transition-all ">
+                          <div className="jsx-556cf662b09b3c73 w-full">
+                            <CustomSelect options={(channels || []).map(ch => ({ label: "# " + ch.name, value: ch.id }))} value={goodbyeChannel} onChange={(val) => setGoodbyeChannel(val)} placeholder="# select channel" />
+                          </div>
                         </div>
+                        <span
+                          className="inline-flex scroll-mt-24"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Toggle checked={goodbyeEnabled} onChange={() => setGoodbyeEnabled(!goodbyeEnabled)} />
+                          </div>
+                        </span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Toggle checked={goodbyeMsgMode === "embed"} onChange={() => setGoodbyeMsgMode(goodbyeMsgMode === "embed" ? "image" : "embed")} />
-                      </div>
-                    </div>
                   </div>
                   <div className="p-4 sm:p-5 space-y-3">
                     <div className="space-y-2.5">
@@ -854,14 +852,26 @@ export default function WelcomeSettings({
                       </span>
                     </div>
                     <div className="flex items-center gap-2 pt-2 border-t border-neutral-800/60">
-                      <label className="inline-flex items-center gap-2 cursor-pointer">
-                        <span className="text-[12px] text-neutral-300">
-                          Embed
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <Toggle checked={goodbyeEmbedThumbnail === "{user.avatar}"} onChange={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
+                      <div className="inline-flex items-center gap-2 w-48">
+                        <CustomSelect 
+                          options={[
+                            { label: "Goodbye Card", value: "image" },
+                            { label: "Message Embed", value: "embed" }
+                          ]} 
+                          value={goodbyeMsgMode} 
+                          onChange={(val) => setGoodbyeMsgMode(val)} 
+                        />
+                      </div>
+                      {goodbyeMsgMode === "embed" && (
+                        <div className="inline-flex items-center gap-2">
+                          <span className="text-[12px] text-neutral-300">
+                            User avatar
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <Toggle checked={goodbyeEmbedThumbnail === "{user.avatar}"} onChange={() => setGoodbyeEmbedThumbnail(goodbyeEmbedThumbnail === "{user.avatar}" ? "" : "{user.avatar}")} />
+                          </div>
                         </div>
-                      </label>
+                      )}
                     </div>
                     <div
                       className="relative  "
@@ -921,7 +931,7 @@ export default function WelcomeSettings({
                                   Click or drop an image
                                 </span>
                                 <span className="text-[10px] text-neutral-500 mt-0.5">
-                                  PNG ┬À JPG ┬À WebP ┬À GIF ┬À up to 4 MB
+                                  PNG &bull; JPG &bull; WebP &bull; GIF &bull; up to 4 MB
                                 </span>
                               </div>
                               <button
