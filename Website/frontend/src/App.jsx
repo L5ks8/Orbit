@@ -53,14 +53,59 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
 
   // Global auto-grow for all textareas
   useEffect(() => {
+    const resizeTextarea = (t) => {
+      // Small timeout to ensure styles/layout are fully applied
+      setTimeout(() => {
+        if (!t) return;
+        t.style.height = 'auto';
+        t.style.height = t.scrollHeight + 'px';
+      }, 0);
+    };
+
     const handleInput = (e) => {
       if (e.target.tagName === 'TEXTAREA') {
-        e.target.style.height = 'auto';
-        e.target.style.height = e.target.scrollHeight + 'px';
+        resizeTextarea(e.target);
       }
     };
+    
     document.addEventListener('input', handleInput);
-    return () => document.removeEventListener('input', handleInput);
+
+    // Override value setter to detect programmatic changes (e.g. React state updates)
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+    const originalSet = descriptor.set;
+    
+    Object.defineProperty(HTMLTextAreaElement.prototype, 'value', {
+      set: function(val) {
+        originalSet.call(this, val);
+        resizeTextarea(this);
+      },
+      get: descriptor.get
+    });
+
+    // Resize existing textareas immediately
+    document.querySelectorAll('textarea').forEach(resizeTextarea);
+
+    // Observer for newly added textareas
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === 1) { // Element node
+            if (node.tagName === 'TEXTAREA') resizeTextarea(node);
+            if (node.querySelectorAll) {
+              node.querySelectorAll('textarea').forEach(resizeTextarea);
+            }
+          }
+        });
+      });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      document.removeEventListener('input', handleInput);
+      observer.disconnect();
+      Object.defineProperty(HTMLTextAreaElement.prototype, 'value', descriptor);
+    };
   }, []);
 
   const isDashboard = location.pathname.startsWith('/dashboard');

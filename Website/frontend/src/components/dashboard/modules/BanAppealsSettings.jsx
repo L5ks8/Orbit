@@ -185,13 +185,13 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
                     <span className="bg-neutral-800 text-neutral-400 px-3 py-2 border border-r-0 border-neutral-700/50 rounded-l-lg text-[13px]">
                       orbit-bot.com/appeal/
                     </span>
-                    <textarea rows="1" 
-                       
+                    <input 
+                      type="text"
                       className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-r-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors" 
                       placeholder="my-server" 
                       value={customUrl} 
                       onChange={(e) => setCustomUrl(e.target.value)} 
-                    ></textarea>
+                    />
                   </div>
                 </div>
 
