@@ -476,35 +476,35 @@ export default function WelcomeSettings({
 <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
                     <div className="flex items-center gap-1 flex-wrap">
                       <button
-                        type="button" onClick={() => insertVar("{user}")}
+                        type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{user}")}
                         title="Insert {user}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                       >
                         @user
                       </button>
                       <button
-                        type="button" onClick={() => insertVar("{user.displayName}")}
+                        type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{user.displayName}")}
                         title="Insert {user.displayName}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                       >
                         @display name
                       </button>
                       <button
-                        type="button" onClick={() => insertVar("{server}")}
+                        type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{server}")}
                         title="Insert {server}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-green-500/20 text-green-300 hover:bg-green-500/25 border border-green-500/20"
                       >
                         @server
                       </button>
                       <button
-                        type="button" onClick={() => insertVar("{invite}")}
+                        type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{invite}")}
                         title="Insert {invite}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 border border-cyan-500/20"
                       >
                         @invite
                       </button>
                       <button
-                        type="button" onClick={() => insertVar("{memberCount}")}
+                        type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{memberCount}")}
                         title="Insert {memberCount}"
                         className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20"
                       >
@@ -758,35 +758,35 @@ export default function WelcomeSettings({
                         </div>
                         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                           <button
-                            type="button" onClick={() => insertVar("{user}")}
+                            type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{user}")}
                             title="Insert {user}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                           >
                             @user
                           </button>
                           <button
-                            type="button" onClick={() => insertVar("{user.displayName}")}
+                            type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{user.displayName}")}
                             title="Insert {user.displayName}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                           >
                             @display name
                           </button>
                           <button
-                            type="button" onClick={() => insertVar("{server}")}
+                            type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{server}")}
                             title="Insert {server}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-green-500/20 text-green-300 hover:bg-green-500/25 border border-green-500/20"
                           >
                             @server
                           </button>
                           <button
-                            type="button" onClick={() => insertVar("{invite}")}
+                            type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{invite}")}
                             title="Insert {invite}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 border border-cyan-500/20"
                           >
                             @invite
                           </button>
                           <button
-                            type="button" onClick={() => insertVar("{memberCount}")}
+                            type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{memberCount}")}
                             title="Insert {memberCount}"
                             className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20"
                           >
@@ -1071,49 +1071,49 @@ export default function WelcomeSettings({
 <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
                       <div className="flex items-center gap-1 flex-wrap">
                         <button
-                          type="button" onClick={() => insertVar("{user}")}
+                          type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{user}")}
                           title="Insert {user}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                         >
                           @user
                         </button>
                         <button
-                          type="button" onClick={() => insertVar("{user.displayName}")}
+                          type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{user.displayName}")}
                           title="Insert {user.displayName}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                         >
                           @display name
                         </button>
                         <button
-                          type="button" onClick={() => insertVar("{server}")}
+                          type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{server}")}
                           title="Insert {server}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-green-500/20 text-green-300 hover:bg-green-500/25 border border-green-500/20"
                         >
                           @server
                         </button>
                         <button
-                          type="button" onClick={() => insertVar("{memberCount}")}
+                          type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{memberCount}")}
                           title="Insert {memberCount}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20"
                         >
                           @members
                         </button>
                         <button
-                          type="button" onClick={() => insertVar("{inviter}")}
+                          type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{inviter}")}
                           title="Insert {inviter}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20"
                         >
                           @inviter
                         </button>
                         <button
-                          type="button" onClick={() => insertVar("{inviter.name}")}
+                          type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{inviter.name}")}
                           title="Insert {inviter.name}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20"
                         >
                           @inviter.name
                         </button>
                         <button
-                          type="button" onClick={() => insertVar("{time.in.server}")}
+                          type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{time.in.server}")}
                           title="Insert {time.in.server}"
                           className="px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-purple-500/20 text-purple-300 hover:bg-purple-500/25 border border-purple-500/20"
                         >
@@ -1366,49 +1366,49 @@ export default function WelcomeSettings({
                           </div>
                           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                             <button
-                              type="button" onClick={() => insertVar("{user}")}
+                              type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{user}")}
                               title="Insert {user}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                             >
                               @user
                             </button>
                             <button
-                              type="button" onClick={() => insertVar("{user.displayName}")}
+                              type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{user.displayName}")}
                               title="Insert {user.displayName}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/20"
                             >
                               @display name
                             </button>
                             <button
-                              type="button" onClick={() => insertVar("{server}")}
+                              type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{server}")}
                               title="Insert {server}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-green-500/20 text-green-300 hover:bg-green-500/25 border border-green-500/20"
                             >
                               @server
                             </button>
                             <button
-                              type="button" onClick={() => insertVar("{memberCount}")}
+                              type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{memberCount}")}
                               title="Insert {memberCount}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20"
                             >
                               @members
                             </button>
                             <button
-                              type="button" onClick={() => insertVar("{inviter}")}
+                              type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{inviter}")}
                               title="Insert {inviter}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20"
                             >
                               @inviter
                             </button>
                             <button
-                              type="button" onClick={() => insertVar("{inviter.name}")}
+                              type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{inviter.name}")}
                               title="Insert {inviter.name}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20"
                             >
                               @inviter.name
                             </button>
                             <button
-                              type="button" onClick={() => insertVar("{time.in.server}")}
+                              type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => insertVar("{time.in.server}")}
                               title="Insert {time.in.server}"
                               className="px-2 py-1 text-xs font-medium rounded-md transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-purple-500/20 text-purple-300 hover:bg-purple-500/25 border border-purple-500/20"
                             >
