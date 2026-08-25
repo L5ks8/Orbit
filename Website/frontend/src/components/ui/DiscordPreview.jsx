@@ -306,11 +306,11 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
           {/* Text and Embed modes */}
           {mode !== 'image' && (
             <div className="flex gap-2.5 transition-opacity">
-              <img src="/logo.png" alt="Orbit Bot" className="w-10 h-10 rounded-full flex-shrink-0 object-cover mt-0.5 bg-black" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; e.target.nextSibling.classList.remove('hidden'); }} />
+              <img src="/img/logo.png" alt="Orbit" className="w-10 h-10 rounded-full flex-shrink-0 object-cover mt-0.5 bg-black" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; e.target.nextSibling.classList.remove('hidden'); }} />
               <div className="w-10 h-10 rounded-full flex-shrink-0 bg-[#5865F2] items-center justify-center text-white text-xs font-bold hidden mt-0.5" aria-hidden="true">O</div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
-                  <span className="text-xs font-semibold text-indigo-400 whitespace-nowrap">Orbit Bot</span>
+                  <span className="text-xs font-semibold text-indigo-400 whitespace-nowrap">Orbit</span>
                   <span className="inline-flex flex-shrink-0 items-center gap-[0.15em] px-1 py-px text-[10px] font-bold bg-[#5865F2] text-white rounded leading-none">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="h-[0.85em] w-[0.85em]">
                       <path d="M20 6 9 17l-5-5" />
