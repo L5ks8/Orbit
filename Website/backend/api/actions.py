@@ -9,7 +9,7 @@ from typing import Dict, Any
 from Components.Dashboard.WelcomeGoodbye._storage import load_welcome_config, save_welcome_config
 from Components.Dashboard.WelcomeGoodbye._storage import load_goodbye_config, save_goodbye_config
 from Components.Dashboard.Automoderation._storage import load_automod_config, save_automod_config
-from Components.Commands.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
+from Components.Dashboard.Verify._storage import load_verify_config, save_verify_config, WEB_VERIFY_SESSIONS, remove_pending_kick
 from Components.Commands.AutoResponder._storage import load_responses, save_responses
 from Components.Dashboard.Roles._storage import load_join_roles, save_join_roles
 from Components.Dashboard.Automoderation.log_storage import load_log_config, save_log_config
@@ -1119,7 +1119,7 @@ class ActionsMixin:
             return web.Response(text="Invalid or expired token", status=400)
             
         try:
-            from Components.Commands.Verify._captcha import generate_captcha
+            from Components.Dashboard.Verify._captcha import generate_captcha
             code, img_bytes = generate_captcha()
             WEB_VERIFY_SESSIONS[token]["code"] = code
             return web.Response(body=img_bytes, content_type="image/png")

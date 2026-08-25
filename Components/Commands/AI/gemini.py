@@ -267,7 +267,7 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_appeals_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Verify":
-                                            from Components.Commands.Verify._storage import load_verify_config, save_verify_config
+                                            from Components.Dashboard.Verify._storage import load_verify_config, save_verify_config
                                             cfg = load_verify_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_verify_config(message.guild.id, cfg)

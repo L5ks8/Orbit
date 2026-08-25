@@ -378,7 +378,7 @@ class AutoModListener(commands.Cog):
                     except Exception as e:
                         print(f"[AUTOMOD ERROR] Could not ban alt {member.id}: {e}")
                 elif action == "verify":
-                    from Components.Commands.Verify._storage import load_verify_config
+                    from Components.Dashboard.Verify._storage import load_verify_config
                     v_cfg = load_verify_config(member.guild.id)
                     unverified_role_id = v_cfg.get("remove_role_id") or v_cfg.get("unverified_role_id")
                     if unverified_role_id:

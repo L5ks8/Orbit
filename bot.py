@@ -300,7 +300,7 @@ class OrbitBot(commands.Bot):
             commands_dir.mkdir(parents=True, exist_ok=True)
             
         try:
-            from Components.Commands.Verify._views import PersistentVerifyLayout
+            from Components.Dashboard.Verify._views import PersistentVerifyLayout
             self.add_view(PersistentVerifyLayout())
         except Exception as e:
             print(f"Failed to add PersistentVerifyLayout: {e}")
