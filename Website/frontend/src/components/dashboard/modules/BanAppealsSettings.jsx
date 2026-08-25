@@ -122,6 +122,25 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
       <div data-tour="feature-header" className="scroll-mt-24">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gavel w-5 h-5">
+                <path d="m14 13-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10"/>
+                <path d="m16 16 6-6"/>
+                <path d="m8 8 6-6"/>
+                <path d="m9 7 8 8"/>
+                <path d="m21 11-8-8"/>
+              </svg>
+            </span>
+            <h1 className="text-base font-medium text-white truncate">
+              Ban Appeals
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-1 flex flex-col gap-6">
         <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
           <div className="flex items-center justify-between gap-4 px-5 py-4">
             <div className="flex items-center gap-4 min-w-0">
