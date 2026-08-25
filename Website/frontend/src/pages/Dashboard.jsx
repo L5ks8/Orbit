@@ -56,34 +56,42 @@ function DashboardInner() {
         setGuildName('Error');
       });
 
-    // Preload critical dashboard data in background
+    // Preload critical dashboard data incrementally
     const token = localStorage.getItem('token');
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     
-    if (!getCache(`modules_config_${guildId}`)) {
-      fetch(`/api/config/${guildId}`, { headers })
-        .then(res => res.json())
-        .then(data => setCache(`modules_config_${guildId}`, data))
-        .catch(() => {});
-    }
-    if (!getCache(`roles_${guildId}`)) {
-      fetch(`/api/roles/${guildId}`, { headers })
-        .then(res => res.json())
-        .then(data => setCache(`roles_${guildId}`, data))
-        .catch(() => {});
-    }
-    if (!getCache(`botprofile_${guildId}`)) {
-      fetch(`/api/botprofile/${guildId}`)
-        .then(res => res.json())
-        .then(data => setCache(`botprofile_${guildId}`, data))
-        .catch(() => {});
-    }
-    if (!getCache(`mod_activity_${guildId}`)) {
-      fetch(`/api/mod_activity/${guildId}`, { headers })
-        .then(res => res.json())
-        .then(data => setCache(`mod_activity_${guildId}`, data))
-        .catch(() => {});
-    }
+    setServerData({
+      config: null,
+      roles: null,
+      channels: null,
+      botProfile: null,
+      modActivity: null
+    });
+
+    fetch(`/api/config/${guildId}`, { headers })
+      .then(res => res.json())
+      .then(data => setServerData(prev => ({ ...prev, config: data.config || data })))
+      .catch(() => setServerData(prev => ({ ...prev, config: {} })));
+
+    fetch(`/api/roles/${guildId}`, { headers })
+      .then(res => res.json())
+      .then(data => setServerData(prev => ({ ...prev, roles: Array.isArray(data) ? data : (data.roles || []) })))
+      .catch(() => setServerData(prev => ({ ...prev, roles: [] })));
+
+    fetch(`/api/channels/${guildId}`, { headers })
+      .then(res => res.json())
+      .then(data => setServerData(prev => ({ ...prev, channels: Array.isArray(data) ? data : (data.channels || []) })))
+      .catch(() => setServerData(prev => ({ ...prev, channels: [] })));
+
+    fetch(`/api/botprofile/${guildId}`)
+      .then(res => res.json())
+      .then(data => setServerData(prev => ({ ...prev, botProfile: data })))
+      .catch(() => setServerData(prev => ({ ...prev, botProfile: {} })));
+
+    fetch(`/api/mod_activity/${guildId}`, { headers })
+      .then(res => res.json())
+      .then(data => setServerData(prev => ({ ...prev, modActivity: data })))
+      .catch(() => setServerData(prev => ({ ...prev, modActivity: [] })));
   }, [guildId]);
 
   if (loading) return <LoadingScreen />;
