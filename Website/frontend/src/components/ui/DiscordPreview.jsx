@@ -95,6 +95,25 @@ function formatInline(text, channels = [], roles = []) {
 
   // Process the text character by character with regex patterns
   const patterns = [
+    // Custom Variable Pills {{pill:color:text}}
+    { regex: /\{\{pill:([^:]+):([^}]+)\}\}/, render: (match) => {
+      const color = match[1];
+      const text = match[2];
+      let bg, textColor;
+      switch (color) {
+        case 'green': bg = 'rgba(34, 197, 94, 0.2)'; textColor = '#86efac'; break;
+        case 'indigo': case 'purple': bg = 'rgba(99, 102, 241, 0.2)'; textColor = '#a5b4fc'; break;
+        case 'amber': case 'yellow': bg = 'rgba(245, 158, 11, 0.2)'; textColor = '#fcd34d'; break;
+        case 'cyan': bg = 'rgba(6, 182, 212, 0.2)'; textColor = '#67e8f9'; break;
+        case 'orange': bg = 'rgba(249, 115, 22, 0.2)'; textColor = '#fdba74'; break;
+        default: bg = 'rgba(88,101,242,0.15)'; textColor = '#c9cdfb';
+      }
+      return (
+        <span key={keyCounter++} style={{ background: bg, color: textColor, padding: '0 4px', borderRadius: '3px', fontWeight: '500' }}>
+          {text}
+        </span>
+      );
+    }},
     // Code blocks (inline)
     { regex: /`([^`]+)`/, render: (match) => (
       <code key={keyCounter++} style={{ background: '#1e1f22', padding: '2px 6px', borderRadius: '3px', fontSize: '85%', fontFamily: '"Consolas", "Monaco", monospace', color: '#d4d4d4' }}>
@@ -202,21 +221,27 @@ function formatInline(text, channels = [], roles = []) {
 function replaceVariables(text) {
   if (!text) return text;
   return text
-    .replace(/\{user\}/g, '<@123456789>')
-    .replace(/\{user\.mention\}/g, '<@123456789>')
-    .replace(/\{user_mention\}/g, '<@123456789>')
-    .replace(/\{mention\}/g, '<@123456789>')
-    .replace(/\{username\}/g, 'User')
-    .replace(/\{user\.name\}/g, 'User')
-    .replace(/\{user_globalname\}/g, 'User')
-    .replace(/\{user\.tag\}/g, 'User#1234')
-    .replace(/\{user\.id\}/g, '123456789012345678')
-    .replace(/\{id\}/g, '123456789012345678')
-    .replace(/\{server\}/g, 'My Server')
-    .replace(/\{server\.name\}/g, 'My Server')
-    .replace(/\{server\.id\}/g, '987654321098765432')
-    .replace(/\{count\}/g, '1,234')
-    .replace(/\{server\.members\}/g, '1,234');
+    .replace(/\{user\}/gi, '{{pill:indigo:@user}}')
+    .replace(/\{user\.mention\}/gi, '{{pill:indigo:@user}}')
+    .replace(/\{user_mention\}/gi, '{{pill:indigo:@user}}')
+    .replace(/\{mention\}/gi, '{{pill:indigo:@user}}')
+    .replace(/\{username\}/gi, '{{pill:indigo:User}}')
+    .replace(/\{user\.name\}/gi, '{{pill:indigo:User}}')
+    .replace(/\{user_globalname\}/gi, '{{pill:indigo:User}}')
+    .replace(/\{user\.displayName\}/gi, '{{pill:indigo:CoolUser}}')
+    .replace(/\{user\.tag\}/gi, '{{pill:indigo:User#1234}}')
+    .replace(/\{user\.id\}/gi, '{{pill:indigo:123456789012345678}}')
+    .replace(/\{id\}/gi, '{{pill:indigo:123456789012345678}}')
+    .replace(/\{server\}/gi, '{{pill:green:My Server}}')
+    .replace(/\{server\.name\}/gi, '{{pill:green:My Server}}')
+    .replace(/\{server\.id\}/gi, '{{pill:green:987654321098765432}}')
+    .replace(/\{count\}/gi, '{{pill:amber:1,542}}')
+    .replace(/\{server\.members\}/gi, '{{pill:amber:1,542}}')
+    .replace(/\{memberCount\}/gi, '{{pill:amber:1,542}}')
+    .replace(/\{invite\}/gi, '{{pill:cyan:https://discord.gg/abc123}}')
+    .replace(/\{inviter\}/gi, '{{pill:orange:@inviter}}')
+    .replace(/\{inviter\.name\}/gi, '{{pill:orange:InviterUser}}')
+    .replace(/\{time\.in\.server\}/gi, '{{pill:purple:2 years, 3 months}}');
 }
 
 export default function DiscordPreview({ content, embedColor, embedAuthor, embedTitle, embedDesc, embedFooter, embedImage, embedThumbnail, embedFields = [], imageUrl, mode, accentColor = '#5865F2', cardTitle = 'WELCOME', channels = [], roles = [] }) {
