@@ -269,21 +269,21 @@ export default function TicketSettings({ config, channels, roles, categories, on
             </div>
             
             <div className="p-5 bg-[#313338] flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 overflow-hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="white" className="w-6 h-6"><path d="M14.82 4.26a10.14 10.14 0 0 0-3.37-.87 1.48 1.48 0 0 0-1.42.75c-.27.47-.56 1.05-.82 1.54A13.2 13.2 0 0 0 4.14 8a1.27 1.27 0 0 0-.82 1.25c-.21 1.76-.08 3.51.35 5.23 1.13 4.54 4.5 7.07 4.5 7.07a1.43 1.43 0 0 0 1.51-.23c.48-.37.99-.78 1.45-1.22l-1.32-2.18c-1.38.38-2.79.52-4.18.2 0 0 .15-.22.42-.58.11-.14.22-.29.35-.45 2.87 1.22 5.95 1.55 8.95.83.11.16.23.31.33.45.29.38.45.61.45.61-1.37.33-2.78.18-4.15-.2l-1.32 2.19c.46.43.95.84 1.43 1.21a1.45 1.45 0 0 0 1.52.23s3.38-2.52 4.51-7.06c.43-1.72.56-3.48.35-5.24a1.28 1.28 0 0 0-.82-1.25 13.3 13.3 0 0 0-5.07-2.31c-.26-.5-.55-1.09-.82-1.57a1.47 1.47 0 0 0-1.42-.74M10.28 15c-1.21 0-2.2-.95-2.2-2.12 0-1.18.98-2.13 2.2-2.13s2.2.96 2.2 2.13c0 1.17-.98 2.12-2.2 2.12zm5.4 0c-1.21 0-2.2-.95-2.2-2.12 0-1.18.98-2.13 2.2-2.13s2.2.96 2.2 2.13c0 1.17-.98 2.12-2.2 2.12z"/></svg>
+              <div className="w-10 h-10 rounded-full bg-[#111214] flex items-center justify-center shrink-0 overflow-hidden">
+                <img src="/img/logo.png" alt="Orbit Logo" className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-col gap-1 w-full min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-[15px] text-white">Orbit</span>
-                  <span className="text-[10px] text-white bg-indigo-500 px-1.5 py-0.5 rounded leading-none flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                    BOT
+                  <span className="text-[10px] text-white bg-[#5865F2] px-1.5 py-0.5 rounded flex items-center gap-1 font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    APP
                   </span>
                   <span className="text-[12px] text-[#949ba4]">Today at 12:00 PM</span>
                 </div>
                 
                 <div className="mt-1 flex flex-col w-full max-w-[432px]">
-                  <div className="bg-[#2b2d31] border-l-4 border-indigo-500 rounded p-4 flex flex-col">
+                  <div className="bg-[#2b2d31] border-l-4 border-[#5865F2] rounded p-4 flex flex-col">
                     <span className="font-bold text-[15px] text-white mb-2 break-words">{panelTitle || 'Support Tickets'}</span>
                     <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed">{panelDesc || 'Click the button below to open a direct support channel with our team.'}</span>
                   </div>
