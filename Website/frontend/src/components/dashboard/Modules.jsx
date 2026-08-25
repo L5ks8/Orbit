@@ -224,9 +224,10 @@ export default function Modules({ guildId }) {
     else if (moduleId === 'level') Component = LevelingSystemSettings;
     else return <div style={{ padding: '50px', color: '#fff', textAlign: 'center' }}>Module not found.</div>;
 
+    const isFullScreenModule = ['welcomegoodbye', 'appeals'].includes(moduleId);
     return (
-      <div style={{ padding: '40px', maxWidth: moduleId === 'welcomegoodbye' ? '1200px' : '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
-        {moduleId !== 'welcomegoodbye' && (
+      <div style={{ padding: '40px', maxWidth: isFullScreenModule ? '1200px' : '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+        {!isFullScreenModule && (
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ background: moduleInfo.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '16px' }}>

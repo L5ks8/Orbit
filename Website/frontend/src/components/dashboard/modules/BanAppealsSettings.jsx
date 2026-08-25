@@ -1,7 +1,18 @@
-import Toggle from '../../ui/Toggle';
-import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
+import SaveBar from '../../ui/SaveBar';
 import CustomSelect from '../../ui/CustomSelect';
+
+const TailwindToggle = ({ checked, onChange }) => (
+    <button 
+      type="button" 
+      role="switch" 
+      aria-checked={checked} 
+      onClick={onChange}
+      className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
+    >
+      <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-all duration-300 ease-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
+    </button>
+);
 
 export default function BanAppealsSettings({ config, channels, roles, onSave, saving, onReset }) {
   const aCfg = config?.appeals || {};
@@ -48,133 +59,222 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
   };
 
   return (
-    <div className="dash-settings-module">
-
-
-      <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>General</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          
-          <div className="form-group">
-            <label style={{ color: '#fff' }}>Appeal Channel <span style={{ color: 'var(--status-danger)' }}>*</span></label>
-            <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>The channel where new appeals will be sent with Accept/Deny buttons.</span>
-            <CustomSelect options={channelOptions} value={appealChannel} onChange={setAppealChannel} placeholder="Select channel..." />
-          </div>
-
-          <div className="form-group">
-            <label style={{ color: '#fff' }}>Moderator Roles</label>
-            <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Roles allowed to decide on appeals.</span>
-            <CustomSelect options={roleOptions} value={modRoles} onChange={setModRoles} isMulti placeholder="Select roles..." />
-          </div>
-
-          <div className="form-group">
-            <label style={{ color: '#fff' }}>Allowed Punishments</label>
-            <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Which types of punishments can be appealed?</span>
-            <CustomSelect options={punishmentOptions} isMulti placeholder="Select punishments..." value={allowedPunishments} onChange={setAllowedPunishments} />
-          </div>
-
-          <div className="form-group">
-            <label style={{ color: '#fff' }}>Custom URL</label>
-            <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>The URL where the appeal form for this server is accessible.</span>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: 'var(--text-muted)', background: 'var(--bg-elevated)', padding: '9px 12px', border: '1px solid rgba(255,255,255,0.1)', borderRight: 'none', borderRadius: '4px 0 0 4px', fontSize: '13px' }}>orbit-bot.com/appeal/</span>
-              <input type="text" className="dash-input" placeholder="orbit" style={{ borderRadius: '0 4px 4px 0' }} value={customUrl} onChange={(e) => setCustomUrl(e.target.value)} />
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
+      <div>
+        <div data-tour="feature-header" className="scroll-mt-24">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gavel w-5 h-5">
+                  <path d="m14 13-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10"/>
+                  <path d="m16 16 6-6"/>
+                  <path d="m8 8 6-6"/>
+                  <path d="m9 7 8 8"/>
+                  <path d="m21 11-8-8"/>
+                </svg>
+              </span>
+              <h1 className="text-base font-medium text-white truncate">
+                Ban Appeals
+              </h1>
             </div>
-          </div>
-          
-        </div>
-      </div>
-
-      <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>Options</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Mention Moderators</label>
-              <span className="form-hint" style={{ fontSize: '12px' }}>Should moderators be mentioned when a new appeal is submitted?</span>
-            </div>
-            <Toggle checked={mentionMods} onChange={() => setMentionMods(!mentionMods)} />
-          </div>
-
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Anonymous Moderators</label>
-              <span className="form-hint" style={{ fontSize: '12px' }}>Should moderators remain anonymous when processing appeals?</span>
-            </div>
-            <Toggle checked={anonymousMods} onChange={() => setAnonymousMods(!anonymousMods)} />
-          </div>
-
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Multiple Submissions</label>
-              <span className="form-hint" style={{ fontSize: '12px' }}>Should users be able to submit multiple appeals?</span>
-            </div>
-            <Toggle checked={multipleSubmissions} onChange={() => setMultipleSubmissions(!multipleSubmissions)} />
-          </div>
-
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <label style={{ margin: 0, color: '#fff', display: 'block', marginBottom: '4px' }}>Invite Unbanned Members</label>
-              <span className="form-hint" style={{ fontSize: '12px' }}>Send invite when ban appeal is accepted?</span>
-            </div>
-            <Toggle checked={inviteUnbanned} onChange={() => setInviteUnbanned(!inviteUnbanned)} />
-          </div>
-
-          <div className="form-group">
-            <label style={{ color: '#fff' }}>Submission Cooldown (Days)</label>
-            <span className="form-hint" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>Wait time before submitting another appeal.</span>
-            <input type="number" className="dash-input" value={cooldownDays} onChange={e => setCooldownDays(parseInt(e.target.value) || 3)} />
-          </div>
-
-        </div>
-      </div>
-
-      <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', margin: 0 }}>Form <span style={{ color: 'var(--status-danger)' }}>*</span></h3>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="dash-btn secondary" onClick={() => window.open(`${window.location.origin}/appeal/${customUrl || 'my-server'}`, '_blank')}>Show Appeal Page</button>
-            <button className="dash-btn secondary" onClick={() => window.open(`${window.location.origin}/appeal/${customUrl || 'my-server'}`, '_blank')}>View Appeal</button>
           </div>
         </div>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
-          {questions.length === 0 ? (
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>No questions configured.</p>
-            </div>
-          ) : (
-            questions.map((q, i) => (
-              <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <input 
-                  type="text" 
-                  className="dash-input" 
-                  placeholder="Enter question..." 
-                  style={{ flex: 1 }} 
-                  value={typeof q === 'string' ? q : ''} 
-                  onChange={(e) => {
-                    const newQs = [...questions];
-                    newQs[i] = e.target.value;
-                    setQuestions(newQs);
-                  }}
-                />
-                <button onClick={() => setQuestions(questions.filter((_, idx) => idx !== i))} className="dash-btn danger" style={{ padding: '12px' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                </button>
+
+        <div className="mt-6">
+          <div className="flex flex-col gap-6">
+
+            {/* General Settings */}
+            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+              <div className="border-b border-neutral-800 p-5">
+                <h2 className="text-[15px] font-semibold text-white">General</h2>
+                <p className="text-[13px] text-neutral-400 mt-1">Configure where appeals go and who can manage them.</p>
               </div>
-            ))
-          )}
-        </div>
-        
-        <button onClick={() => setQuestions([...questions, ''])} className="dash-btn primary">+ Add Question</button>
-      </div>
+              <div className="p-5 flex flex-col gap-6">
+                
+                <div className="flex flex-col gap-2 relative">
+                  <label className="text-[13px] font-medium text-neutral-300">
+                    Appeal Channel <span className="text-red-400">*</span>
+                  </label>
+                  <span className="text-xs text-neutral-500">The channel where new appeals will be sent with Accept/Deny buttons.</span>
+                  <div className="z-40">
+                    <CustomSelect options={channelOptions} value={appealChannel} onChange={setAppealChannel} placeholder="Select channel..." />
+                  </div>
+                </div>
 
-      <div style={{ marginTop: '32px' }}>
-        
+                <div className="flex flex-col gap-2 relative">
+                  <label className="text-[13px] font-medium text-neutral-300">Moderator Roles</label>
+                  <span className="text-xs text-neutral-500">Roles allowed to decide on appeals.</span>
+                  <div className="z-30">
+                    <CustomSelect options={roleOptions} value={modRoles} onChange={setModRoles} isMulti placeholder="Select roles..." />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 relative">
+                  <label className="text-[13px] font-medium text-neutral-300">Allowed Punishments</label>
+                  <span className="text-xs text-neutral-500">Which types of punishments can be appealed?</span>
+                  <div className="z-20">
+                    <CustomSelect options={punishmentOptions} isMulti placeholder="Select punishments..." value={allowedPunishments} onChange={setAllowedPunishments} />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-medium text-neutral-300">Custom URL</label>
+                  <span className="text-xs text-neutral-500">The URL where the appeal form for this server is accessible.</span>
+                  <div className="flex items-center">
+                    <span className="bg-neutral-800 text-neutral-400 px-3 py-2 border border-r-0 border-neutral-700/50 rounded-l-lg text-[13px]">
+                      orbit-bot.com/appeal/
+                    </span>
+                    <input 
+                      type="text" 
+                      className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-r-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors" 
+                      placeholder="my-server" 
+                      value={customUrl} 
+                      onChange={(e) => setCustomUrl(e.target.value)} 
+                    />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+              <div className="border-b border-neutral-800 p-5">
+                <h2 className="text-[15px] font-semibold text-white">Options</h2>
+                <p className="text-[13px] text-neutral-400 mt-1">Configure appeal behavior and cooldowns.</p>
+              </div>
+              <div className="p-5 flex flex-col gap-6">
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[13px] font-medium text-neutral-200">Mention Moderators</div>
+                    <div className="text-[13px] text-neutral-500 mt-0.5">Should moderators be mentioned when a new appeal is submitted?</div>
+                  </div>
+                  <TailwindToggle checked={mentionMods} onChange={() => setMentionMods(!mentionMods)} />
+                </div>
+
+                <div className="h-px bg-neutral-800 w-full" />
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[13px] font-medium text-neutral-200">Anonymous Moderators</div>
+                    <div className="text-[13px] text-neutral-500 mt-0.5">Should moderators remain anonymous when processing appeals?</div>
+                  </div>
+                  <TailwindToggle checked={anonymousMods} onChange={() => setAnonymousMods(!anonymousMods)} />
+                </div>
+
+                <div className="h-px bg-neutral-800 w-full" />
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[13px] font-medium text-neutral-200">Multiple Submissions</div>
+                    <div className="text-[13px] text-neutral-500 mt-0.5">Should users be able to submit multiple appeals?</div>
+                  </div>
+                  <TailwindToggle checked={multipleSubmissions} onChange={() => setMultipleSubmissions(!multipleSubmissions)} />
+                </div>
+
+                <div className="h-px bg-neutral-800 w-full" />
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[13px] font-medium text-neutral-200">Invite Unbanned Members</div>
+                    <div className="text-[13px] text-neutral-500 mt-0.5">Send an invite link via DM when an appeal is accepted?</div>
+                  </div>
+                  <TailwindToggle checked={inviteUnbanned} onChange={() => setInviteUnbanned(!inviteUnbanned)} />
+                </div>
+
+                <div className="h-px bg-neutral-800 w-full" />
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-medium text-neutral-300">Submission Cooldown (Days)</label>
+                  <span className="text-xs text-neutral-500">Wait time before submitting another appeal.</span>
+                  <input 
+                    type="number" 
+                    className="w-full bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors" 
+                    value={cooldownDays} 
+                    onChange={e => setCooldownDays(parseInt(e.target.value) || 3)} 
+                  />
+                </div>
+
+              </div>
+            </div>
+
+            {/* Questions Form */}
+            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+              <div className="border-b border-neutral-800 p-5 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-[15px] font-semibold text-white">Form <span className="text-red-400">*</span></h2>
+                  <p className="text-[13px] text-neutral-400 mt-1">Configure the questions users must answer.</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => window.open(`${window.location.origin}/appeal/${customUrl || 'my-server'}`, '_blank')}
+                    className="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-[13px] font-medium text-white transition-colors"
+                  >
+                    View Form
+                  </button>
+                </div>
+              </div>
+              <div className="p-5 flex flex-col gap-4">
+                
+                {questions.length === 0 ? (
+                  <div className="flex items-center justify-center h-24 border border-dashed border-neutral-700/50 rounded-xl bg-neutral-800/20">
+                    <span className="text-[13px] text-neutral-500">No questions configured.</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {questions.map((q, i) => (
+                      <div key={i} className="flex gap-2 items-center group">
+                        <div className="w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 text-neutral-500 text-xs font-medium border border-neutral-700/50 shrink-0">
+                          {i + 1}
+                        </div>
+                        <input 
+                          type="text" 
+                          className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors"
+                          placeholder="Enter question..." 
+                          value={typeof q === 'string' ? q : ''} 
+                          onChange={(e) => {
+                            const newQs = [...questions];
+                            newQs[i] = e.target.value;
+                            setQuestions(newQs);
+                          }}
+                        />
+                        <button 
+                          onClick={() => setQuestions(questions.filter((_, idx) => idx !== i))} 
+                          className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors focus:outline-none"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="mt-2">
+                  <button 
+                    onClick={() => setQuestions([...questions, ''])} 
+                    className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-white hover:bg-neutral-200 text-[13px] font-medium text-black transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14"></path>
+                      <path d="M5 12h14"></path>
+                    </svg>
+                    Add Question
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
-    
+      
       <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
-    </div>
+    </main>
   );
 }
