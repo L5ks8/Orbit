@@ -264,8 +264,8 @@ class ActionsMixin:
             if not channel:
                 return web.json_response({"error": "Channel not found"}, status=400)
                 
-            from Components.Commands.Ticket._views import PersistentTicketPanelLayout
-            from Components.Commands.Ticket._storage import load_ticket_config, save_ticket_config
+            from Components.Systems.Tickets._views import PersistentTicketPanelLayout
+            from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
             
             ticket_cfg = load_ticket_config(guild_id)
             view = PersistentTicketPanelLayout(

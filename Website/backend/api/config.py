@@ -45,7 +45,7 @@ class ConfigMixin:
         autoresponder_cfg = load_responses(guild_id)
         joinroles_cfg = load_join_roles(guild_id)
         
-        from Components.Commands.Ticket._storage import load_ticket_config
+        from Components.Systems.Tickets._storage import load_ticket_config
         ticket_cfg = load_ticket_config(guild_id)
         logs_cfg = load_log_config(guild_id)
         automation_cfg = load_automation_config(guild_id)
@@ -648,7 +648,7 @@ class ConfigMixin:
                 })
 
             if user_perms.get("can_channels") and "ticket" in data:
-                from Components.Commands.Ticket._storage import load_ticket_config, save_ticket_config
+                from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
                 ticket_cfg = load_ticket_config(guild_id)
                 ticket_cfg["enabled"] = bool(data["ticket"].get("enabled"))
                 
@@ -905,7 +905,7 @@ class ConfigMixin:
 
 
             if user_perms.get("can_channels") and "ticket" in data:
-                from Components.Commands.Ticket._storage import load_ticket_config
+                from Components.Systems.Tickets._storage import load_ticket_config
                 ticket_cfg = load_ticket_config(guild_id)
                 pid = ticket_cfg.get("panel_channel_id")
                 mid = ticket_cfg.get("panel_message_id")
@@ -914,7 +914,7 @@ class ConfigMixin:
                     if ch:
                         try:
                             msg = await ch.fetch_message(mid)
-                            from Components.Commands.Ticket._views import PersistentTicketPanelLayout
+                            from Components.Systems.Tickets._views import PersistentTicketPanelLayout
                             view = PersistentTicketPanelLayout(
                                 title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
                                 description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),

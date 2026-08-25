@@ -269,7 +269,7 @@ class GuildsMixin:
             today_str = today.strftime("%Y-%m-%d")
             today_doc = doc_map.get(f"{guild_id}_{today_str}")
         
-        from Components.Commands.Ticket._storage import load_ticket_config
+        from Components.Systems.Tickets._storage import load_ticket_config
         ticket_cfg = load_ticket_config(guild_id)
         open_tickets = len(ticket_cfg.get("active_tickets", {}))
         
