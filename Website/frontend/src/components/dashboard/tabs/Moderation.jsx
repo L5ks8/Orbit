@@ -471,7 +471,7 @@ export default function Moderation({ guildId, serverData, setServerData }) {
           </div>
         </div>
       </div>
-      <div className="mt-6">
+      <div className="mt-1">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] gap-4 lg:items-stretch min-w-0">
           <div className="flex flex-col gap-4 min-w-0 scroll-mt-24 w-full">
 
