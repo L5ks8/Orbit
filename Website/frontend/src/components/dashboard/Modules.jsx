@@ -17,14 +17,12 @@ import MessageLogsSettings from './modules/MessageLogsSettings';
 
 import ServerStatsSettings from './modules/ServerStatsSettings';
 import TempVoiceSettings from './modules/TempVoiceSettings';
-import VerificationSettings from './modules/VerificationSettings';
 import LevelingSystemSettings from './modules/LevelingSystemSettings';
 
 export const modulesList = [
     { id: 'automod', category: 'Moderation', name: 'Auto-Moderation', desc: 'Automatically filter spam, bad words, and malicious links.', iconColor: 'rgba(239, 68, 68, 0.2)', icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /> },
     { id: 'appeals', category: 'Moderation', name: 'Ban Appeals', desc: 'Allow banned users to appeal their punishments.', iconColor: 'rgba(139, 92, 246, 0.2)', icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" /> },
 
-    { id: 'verify', category: 'Moderation', name: 'Verification', desc: 'Require users to verify before accessing the server.', iconColor: 'rgba(16, 185, 129, 0.2)', icon: <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3" /> },
 
     { id: 'welcomegoodbye', category: 'Engagement', name: 'Welcome & Goodbye Messages', desc: 'Greet new users with custom text and image cards.', iconColor: 'rgba(59, 130, 246, 0.2)', icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></> },
     { id: 'level', category: 'Engagement', name: 'Leveling System', desc: 'Reward active members with XP and roles.', iconColor: 'rgba(16, 185, 129, 0.2)', icon: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></> },
@@ -205,11 +203,10 @@ export default function Modules({ guildId, serverData, setServerData }) {
 
     else if (moduleId === 'serverstats') Component = ServerStatsSettings;
     else if (moduleId === 'tempvoice') Component = TempVoiceSettings;
-    else if (moduleId === 'verify') Component = VerificationSettings;
     else if (moduleId === 'level') Component = LevelingSystemSettings;
     else return <div style={{ padding: '50px', color: '#fff', textAlign: 'center' }}>Module not found.</div>;
 
-    const isFullScreenModule = ['welcomegoodbye', 'appeals', 'verify'].includes(moduleId);
+    const isFullScreenModule = ['welcomegoodbye', 'appeals'].includes(moduleId);
     if (isFullScreenModule) {
       return (
         <div className="animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
