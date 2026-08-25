@@ -3,7 +3,6 @@ import { useAuth } from '../../../context/AuthContext';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Users, MessageSquare, Activity, Mic, Ticket, Settings, ArrowUpRight, ArrowDownRight, ArrowRight, ShieldAlert, ShieldCheck, UserMinus, Vote, UserPlus, Gift, Layers, Bot, Gavel, Clock } from 'lucide-react';
 import { getCache, setCache } from '../../../utils/cache';
-import LoadingScreen from '../../ui/LoadingScreen';
 
 export default function Overview({ guildId, serverData }) {
   if (!serverData?.config || !serverData?.modActivity) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><LoadingScreen /></div>;

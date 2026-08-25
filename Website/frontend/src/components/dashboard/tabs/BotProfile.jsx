@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '../../ui/Toast';
-import LoadingScreen from '../../ui/LoadingScreen';
 import { getCache, setCache } from '../../../utils/cache';
 
 export default function ({ guildId, serverData, setServerData }) {
