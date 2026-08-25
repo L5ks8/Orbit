@@ -393,3 +393,40 @@ class GuildsMixin:
             
         return web.json_response(results)
 
+    async def api_channels(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        channels = [
+            {"id": str(c.id), "name": c.name, "type": str(c.type)}
+            for c in guild.text_channels
+        ]
+        return web.json_response(channels)
+
+    async def api_roles(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid ID"}, status=400)
+        guild_id = int(guild_id_str)
+        
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized or not found"}, status=403)
+            
+        roles = [
+            {
+                "id": str(r.id), 
+                "name": r.name, 
+                "color": f"#{r.color.value:06x}" if r.color.value else None,
+                "position": r.position
+            }
+            for r in guild.roles if not r.is_default()
+        ]
+        roles.sort(key=lambda x: x["position"], reverse=True)
+        return web.json_response(roles)

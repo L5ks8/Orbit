@@ -68,7 +68,11 @@ export default function Verification({ guildId, serverData, setServerData }) {
     initialPayloadRef.current = JSON.stringify(getPayload());
   }
 
+  const isSavingRef = useRef(false);
+
   const handleSave = async (payloadStr) => {
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
     setIsSaving(true);
     const toastId = toast.loading('Saving...');
     try {
@@ -92,6 +96,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
       console.error(e);
       toast.error('Error saving settings', { id: toastId });
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   };
@@ -100,7 +105,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
   const isDirty = initialPayloadRef.current && currentPayloadStr !== initialPayloadRef.current;
 
   useEffect(() => {
-    if (!initialPayloadRef.current || !isDirty) return;
+    if (!initialPayloadRef.current || !isDirty || isSavingRef.current) return;
     const timeoutId = setTimeout(() => {
       handleSave(currentPayloadStr);
     }, 1500);
