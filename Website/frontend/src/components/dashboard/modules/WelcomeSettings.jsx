@@ -549,28 +549,7 @@ export default function WelcomeSettings({
                           <label className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">
                             Embed Image
                           </label>
-                          <span className="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-emerald-400 border-emerald-500/20 bg-gradient-to-b from-emerald-400/25 to-emerald-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width={10}
-                              height={10}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.25"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="lucide lucide-sparkles shrink-0 -ml-px opacity-90"
-                              aria-hidden="true"
-                            >
-                              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                              <path d="M5 3v4" />
-                              <path d="M19 17v4" />
-                              <path d="M3 5h4" />
-                              <path d="M17 19h4" />
-                            </svg>
-                            Starter
-                          </span>
+
                         </div>
                         <div className="space-y-1.5">
                           <div className="relative rounded-xl border border-dashed transition-all overflow-hidden h-24 flex flex-col items-center justify-center border-neutral-700 hover:border-neutral-600 bg-neutral-800/40">
@@ -723,26 +702,7 @@ export default function WelcomeSettings({
                           <span className="text-sm font-medium text-white">
                             DM on Join
                           </span>
-                          <span className="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-emerald-400 border-emerald-500/20 bg-gradient-to-b from-emerald-400/25 to-emerald-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width={10}
-                              height={10}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.25"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="lucide lucide-sparkles shrink-0 -ml-px opacity-90"
-                              aria-hidden="true"
-                            >
-                              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1 1.275-1.275L12 3Z" />
-                              <path d="M5 3v4" />
-                              <path d="M19 17v4" />
-                            </svg>
-                            Starter
-                          </span>
+
                         </div>
                         <div className="flex items-center gap-3">
                           <Toggle checked={dmJoinEnabled} onChange={() => setDmJoinEnabled(!dmJoinEnabled)} />
@@ -1158,28 +1118,7 @@ export default function WelcomeSettings({
                             <label className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">
                               Embed Image
                             </label>
-                            <span className="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-emerald-400 border-emerald-500/20 bg-gradient-to-b from-emerald-400/25 to-emerald-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width={10}
-                                height={10}
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.25"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="lucide lucide-sparkles shrink-0 -ml-px opacity-90"
-                                aria-hidden="true"
-                              >
-                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1 1.275-1.275L12 3Z" />
-                                <path d="M5 3v4" />
-                                <path d="M19 17v4" />
-                                <path d="M3 5h4" />
-                                <path d="M17 19h4" />
-                              </svg>
-                              Starter
-                            </span>
+
                           </div>
                           <div className="space-y-1.5">
                             <div className="relative rounded-xl border border-dashed transition-all overflow-hidden h-24 flex flex-col items-center justify-center border-neutral-700 hover:border-neutral-600 bg-neutral-800/40">
@@ -1329,28 +1268,7 @@ export default function WelcomeSettings({
                             <span className="text-sm font-medium text-white">
                               DM on Leave
                             </span>
-                            <span className="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-emerald-400 border-emerald-500/20 bg-gradient-to-b from-emerald-400/25 to-emerald-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width={10}
-                                height={10}
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.25"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="lucide lucide-sparkles shrink-0 -ml-px opacity-90"
-                                aria-hidden="true"
-                              >
-                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                                <path d="M5 3v4" />
-                                <path d="M19 17v4" />
-                                <path d="M3 5h4" />
-                                <path d="M17 19h4" />
-                              </svg>
-                              Starter
-                            </span>
+
                           </div>
                           <div className="flex items-center gap-3">
                             <Toggle checked={dmLeaveEnabled} onChange={() => setDmLeaveEnabled(!dmLeaveEnabled)} />
