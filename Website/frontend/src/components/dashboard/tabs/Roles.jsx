@@ -3,6 +3,7 @@ import LoadingScreen from '../../ui/LoadingScreen';
 import { getCache, setCache } from '../../../utils/cache';
 import { useToast } from '../../ui/Toast';
 import DeleteConfirmation from '../../ui/DeleteConfirmation';
+import ReactionRoleBuilder from '../modules/ReactionRoleBuilder';
 
 const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -128,7 +129,6 @@ const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
   );
 };
 
-import ReactionRoleBuilder from '../modules/ReactionRoleBuilder';
 
 export default function ({ guildId, serverData, setServerData }) {
   const toast = useToast();

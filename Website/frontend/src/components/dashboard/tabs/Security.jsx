@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import LoadingScreen from '../../ui/LoadingScreen';
 import SaveBar from '../../ui/SaveBar';
 import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
@@ -16,9 +17,6 @@ const TailwindToggle = ({ checked, onChange }) => (
     </button>
 );
 
-
-import { useRef } from 'react';
-import LoadingScreen from '../../ui/LoadingScreen';
 export default function Security({ guildId, serverData, setServerData }) {
 
   
