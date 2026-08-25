@@ -178,9 +178,10 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
         description = self.description_input.value.strip()
 
         active_tickets = config.get("active_tickets", {})
+        max_open_tickets = config.get("max_open_tickets", 3)
         user_open_count = sum(1 for t in active_tickets.values() if t.get("creator_id") == interaction.user.id)
-        if user_open_count >= 3:
-            return await interaction.followup.send(embed=make_embed("You already have 3 open tickets! Please close an existing ticket before opening a new one.", discord.Color.red()), ephemeral=True)
+        if user_open_count >= max_open_tickets:
+            return await interaction.followup.send(embed=make_embed(f"You already have {max_open_tickets} open tickets! Please close an existing ticket before opening a new one.", discord.Color.red()), ephemeral=True)
 
         counter = config.get("ticket_counter", 0) + 1
         clean_name = "".join(c for c in interaction.user.name.lower().replace(" ", "-") if c.isalnum() or c in "-_")[:15]

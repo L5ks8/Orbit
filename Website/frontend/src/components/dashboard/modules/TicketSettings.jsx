@@ -13,6 +13,10 @@ export default function TicketSettings({ config, channels, roles, categories, on
   const [panelChannel, setPanelChannel] = useState(tCfg.panel_channel_id || '');
   const [logChannel, setLogChannel] = useState(tCfg.log_channel_id || '');
 
+  const [autoCloseEnabled, setAutoCloseEnabled] = useState(tCfg.auto_close_time_enabled || false);
+  const [autoCloseHours, setAutoCloseHours] = useState(tCfg.auto_close_time_hours || 24);
+  const [maxOpenTickets, setMaxOpenTickets] = useState(tCfg.max_open_tickets || 3);
+
   const [ticketOptions, setTicketOptions] = useState(
     (tCfg.options_slots || []).map((s, i) => ({
       id: i + 1,
@@ -58,6 +62,9 @@ export default function TicketSettings({ config, channels, roles, categories, on
       panel_instructions: panelInstructions,
       panel_channel_id: panelChannel,
       log_channel_id: logChannel,
+      auto_close_time_enabled: autoCloseEnabled,
+      auto_close_time_hours: parseInt(autoCloseHours) || 24,
+      max_open_tickets: parseInt(maxOpenTickets) || 3,
       options_slots: ticketOptions.map(o => ({
         name: o.name,
         role_id: o.role_id,
@@ -207,6 +214,78 @@ export default function TicketSettings({ config, channels, roles, categories, on
         <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
           <div className="flex items-center justify-between gap-4 px-5 py-4">
             <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-blue-500/10">
+                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal w-4 h-4 text-blue-400">
+                  <line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>
+                </svg>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold text-white truncate">Ticket Behavior</span>
+                <span className="text-[11px] text-neutral-500 truncate">Configure limits and automatic actions for tickets.</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="px-5 pb-5 pt-5 border-t border-neutral-800 flex flex-col gap-6">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between bg-neutral-800/20 border border-neutral-800/50 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-amber-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-timer w-4 h-4 text-amber-400">
+                      <line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>
+                    </svg>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-medium text-white">Auto-close time</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                      STARTER
+                    </span>
+                  </div>
+                </div>
+                <Toggle checked={autoCloseEnabled} onChange={() => setAutoCloseEnabled(!autoCloseEnabled)} />
+              </div>
+              
+              {autoCloseEnabled && (
+                <div className="pl-14 flex items-center gap-3">
+                  <span className="text-[13px] text-neutral-400">Close inactive tickets after</span>
+                  <input 
+                    type="number"
+                    min="1"
+                    max="720"
+                    className="w-20 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-1.5 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors"
+                    value={autoCloseHours}
+                    onChange={e => setAutoCloseHours(e.target.value)}
+                  />
+                  <span className="text-[13px] text-neutral-400">hours</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between bg-neutral-800/20 border border-neutral-800/50 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-blue-500/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users w-4 h-4 text-blue-400">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+                <span className="text-[13px] font-medium text-white">Maximum open tickets per user</span>
+              </div>
+              <input 
+                type="number"
+                min="1"
+                max="10"
+                className="w-20 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-1.5 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors text-center"
+                value={maxOpenTickets}
+                onChange={e => setMaxOpenTickets(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+          <div className="flex items-center justify-between gap-4 px-5 py-4">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-purple-500/10">
                 <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list-plus w-4 h-4 text-purple-400">
                   <path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/>
@@ -258,8 +337,8 @@ export default function TicketSettings({ config, channels, roles, categories, on
 
       {editingOption && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setEditingOption(null)}>
-          <div className="w-full max-w-[440px] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b border-neutral-800">
+          <div className="w-full max-w-[440px] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-neutral-800 rounded-t-2xl">
               <h3 className="text-lg font-semibold text-white">{editingOption.id ? 'Edit Option' : 'New Option'}</h3>
               <button className="text-neutral-500 hover:text-white transition-colors" onClick={() => setEditingOption(null)}>
                 <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -280,17 +359,21 @@ export default function TicketSettings({ config, channels, roles, categories, on
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-medium text-neutral-300">Support Role</label>
-                <select name="role" className="bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors w-full" defaultValue={editingOption.role_id}>
-                  <option value="">None</option>
-                  {roles.map(r => <option key={r.id} value={r.id}>@ {r.name}</option>)}
-                </select>
+                <CustomSelect 
+                  options={[{ value: '', label: 'None' }, ...roleOptions]}
+                  value={editingOption.role_id || ''}
+                  onChange={(val) => setEditingOption({ ...editingOption, role_id: val })}
+                  name="role"
+                />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-medium text-neutral-300">Category</label>
-                <select name="category" className="bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors w-full" defaultValue={editingOption.category_id}>
-                  <option value="">None</option>
-                  {(categories || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <CustomSelect 
+                  options={[{ value: '', label: 'None' }, ...categoryOptions]}
+                  value={editingOption.category_id || ''}
+                  onChange={(val) => setEditingOption({ ...editingOption, category_id: val })}
+                  name="category"
+                />
               </div>
 
               <div className="flex items-center justify-between gap-4 mt-2">

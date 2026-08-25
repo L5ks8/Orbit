@@ -27,7 +27,10 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         "options_slots": [],
         "ticket_counter": 0,
         "active_tickets": {},
-        "blacklist": {}
+        "blacklist": {},
+        "auto_close_time_enabled": False,
+        "auto_close_time_hours": 24,
+        "max_open_tickets": 3
     }
     
     try:
@@ -129,7 +132,10 @@ def reset_ticket_config(guild_id: int) -> Dict[str, Any]:
         "panel_description": "Click the button below to open a direct support channel with our team.",
         "options": ["General Support", "Billing & Payments", "Bug Report"],
         "ticket_counter": 0,
-        "active_tickets": {}
+        "active_tickets": {},
+        "auto_close_time_enabled": False,
+        "auto_close_time_hours": 24,
+        "max_open_tickets": 3
     }
     save_ticket_config(guild_id, default_config)
     return default_config
