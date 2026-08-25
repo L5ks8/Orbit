@@ -13,7 +13,7 @@ import BotProfile from '../components/dashboard/BotProfile';
 import Invites from '../components/dashboard/Invites';
 import Roles from '../components/dashboard/Roles';
 import TopNav from '../components/dashboard/TopNav';
-import Security from '../components/dashboard/Security/Security';
+import Security from '../components/dashboard/Security';
 import { useAuth } from '../context/AuthContext';
 import { getCache, setCache } from '../utils/cache';
 
