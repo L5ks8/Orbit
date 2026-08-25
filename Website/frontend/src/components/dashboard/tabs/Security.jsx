@@ -1162,7 +1162,7 @@ export default function Security({ guildId }) {
                   <button className="relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 text-black">
                     <span
                       className="absolute inset-0 bg-white rounded-lg"
-                      style="opacity: 1;"
+                      style={{ opacity: 1 }}
                     ></span>
                     <span className="relative z-10">All</span>
                   </button>
