@@ -134,13 +134,14 @@ export default function Roles({ guildId }) {
   const toast = useToast();
 
   const cachedData = getCache(`roles_serverData_${guildId}`);
+  const cachedRrData = getCache(`roles_reactionRoles_${guildId}`);
   const [serverData, setServerData] = useState(cachedData || null);
-  const [loading, setLoading] = useState(!cachedData);
+  const [loading, setLoading] = useState(!cachedData || !cachedRrData);
   const [initialStateStr, setInitialStateStr] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   // Reaction Roles State
-  const [reactionRoles, setReactionRoles] = useState([]);
+  const [reactionRoles, setReactionRoles] = useState(cachedRrData || []);
   const [rrBuilderOpen, setRrBuilderOpen] = useState(false);
   const [rrBuilderData, setRrBuilderData] = useState(null);
   const [panelToDelete, setPanelToDelete] = useState(null);
@@ -176,7 +177,7 @@ export default function Roles({ guildId }) {
 
   useEffect(() => {
     if (!guildId) return;
-    if (!serverData) setLoading(true);
+    if (!serverData || !cachedRrData) setLoading(true);
 
     Promise.all([
       fetch(`/api/config/${guildId}`, {
@@ -199,6 +200,7 @@ export default function Roles({ guildId }) {
         
         if (!rrData.error) {
           setReactionRoles(rrData);
+          setCache(`roles_reactionRoles_${guildId}`, rrData);
         }
         
         setLoading(false);
@@ -215,7 +217,10 @@ export default function Roles({ guildId }) {
     })
       .then((r) => r.json())
       .then((d) => {
-        if (!d.error) setReactionRoles(d);
+        if (!d.error) {
+          setReactionRoles(d);
+          setCache(`roles_reactionRoles_${guildId}`, d);
+        }
       })
       .catch(console.error);
   };

@@ -3,6 +3,7 @@ import CustomSelect from '../ui/CustomSelect';
 import Toggle from '../ui/Toggle';
 import SaveBar from '../ui/SaveBar';
 import { useToast } from '../ui/Toast';
+import { getCache, setCache } from '../../utils/cache';
 
 export default function Settings({ guildId }) {
   const toast = useToast();
@@ -22,11 +23,43 @@ export default function Settings({ guildId }) {
   });
   const [roles, setRoles] = useState([]);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `modules_config_${guildId}`;
+  
+  // We can't synchronously populate all this complex state easily in useState, 
+  // so we'll just set loading to false if we have cache, and parse it in useEffect.
+  const [loading, setLoading] = useState(() => !getCache(cacheKey));
 
   useEffect(() => {
     if (!guildId) return;
-    setLoading(true);
+    
+    const cachedData = getCache(cacheKey);
+    if (cachedData) {
+      const s = cachedData.config?.settings || {};
+      const ext = cachedData.config?.extra_settings || {};
+      
+      setSettings({
+        manager_roles: s.manager_roles || [],
+        immune_roles: s.immune_roles || [],
+        autoresponder_enabled: s.autoresponder_enabled || false,
+        messages_enabled: s.messages_enabled || false
+      });
+      setImmuneUsers(s.immune_users || []);
+      
+      setExtraSettings({
+        ai_enabled: ext.ai_enabled ?? true,
+        prefix: ext.prefix || '-'
+      });
+
+      setInitialState(JSON.stringify(getPayload(
+        { ...s, manager_roles: s.manager_roles || [], immune_roles: s.immune_roles || [] }, 
+        s.immune_users || [], 
+        { ...ext, prefix: ext.prefix || '-' }
+      )));
+      setRoles(cachedData.roles || []);
+    } else {
+      setLoading(true);
+    }
+
     fetch(`/api/config/${guildId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -56,6 +89,7 @@ export default function Settings({ guildId }) {
           { ...ext, prefix: ext.prefix || '-' }
         )));
         setRoles(data.roles || []);
+        setCache(cacheKey, data);
       })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));

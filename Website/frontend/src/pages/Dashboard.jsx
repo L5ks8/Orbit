@@ -14,6 +14,7 @@ import Invites from '../components/dashboard/Invites';
 import Roles from '../components/dashboard/Roles';
 import TopNav from '../components/dashboard/TopNav';
 import { useAuth } from '../context/AuthContext';
+import { getCache, setCache } from '../utils/cache';
 
 function DashboardInner() {
   const { guildId } = useParams();
@@ -50,6 +51,35 @@ function DashboardInner() {
         console.error("Error loading guild info:", err);
         setGuildName('Error');
       });
+
+    // Preload critical dashboard data in background
+    const token = localStorage.getItem('token');
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    
+    if (!getCache(`modules_config_${guildId}`)) {
+      fetch(`/api/config/${guildId}`, { headers })
+        .then(res => res.json())
+        .then(data => setCache(`modules_config_${guildId}`, data))
+        .catch(() => {});
+    }
+    if (!getCache(`roles_${guildId}`)) {
+      fetch(`/api/roles/${guildId}`, { headers })
+        .then(res => res.json())
+        .then(data => setCache(`roles_${guildId}`, data))
+        .catch(() => {});
+    }
+    if (!getCache(`botprofile_${guildId}`)) {
+      fetch(`/api/botprofile/${guildId}`)
+        .then(res => res.json())
+        .then(data => setCache(`botprofile_${guildId}`, data))
+        .catch(() => {});
+    }
+    if (!getCache(`mod_activity_${guildId}`)) {
+      fetch(`/api/mod_activity/${guildId}`, { headers })
+        .then(res => res.json())
+        .then(data => setCache(`mod_activity_${guildId}`, data))
+        .catch(() => {});
+    }
   }, [guildId]);
 
   if (loading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>;

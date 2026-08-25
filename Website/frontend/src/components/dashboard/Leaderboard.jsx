@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
+import { getCache, setCache } from '../../utils/cache';
 
 export default function Leaderboard({ guildId }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [sortCategory, setSortCategory] = useState('total_xp');
+  const cacheKey = `leaderboard_${guildId}_${sortCategory}`;
+  const cachedData = getCache(cacheKey);
+
+  const [data, setData] = useState(cachedData || null);
+  const [loading, setLoading] = useState(!cachedData);
 
   useEffect(() => {
     if (!guildId) return;
-    setLoading(true);
+    if (!getCache(cacheKey)) setLoading(true);
     fetch(`/api/public_leaderboard/${guildId}?sort=${sortCategory}`)
       .then(res => res.json())
-      .then(d => setData(d))
+      .then(d => {
+        setData(d);
+        setCache(cacheKey, d);
+      })
       .catch(err => console.error("Error fetching leaderboard:", err))
       .finally(() => setLoading(false));
   }, [guildId, sortCategory]);

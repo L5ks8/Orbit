@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '../ui/Toast';
 import LoadingScreen from '../ui/LoadingScreen';
+import { getCache, setCache } from '../../utils/cache';
 
 export default function BotProfile({ guildId }) {
-  const [config, setConfig] = useState({
+  const cacheKey = `botprofile_${guildId}`;
+  const cachedData = getCache(cacheKey);
+
+  const [config, setConfig] = useState(cachedData || {
     nickname: '',
     avatar_url: '',
     banner_url: '',
@@ -13,8 +17,8 @@ export default function BotProfile({ guildId }) {
   const toast = useToast();
   
   const [isSaving, setIsSaving] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(!!cachedData);
+  const [initialLoading, setInitialLoading] = useState(!cachedData);
   const avatarInputRef = useRef(null);
   const bannerInputRef = useRef(null);
   
@@ -29,6 +33,7 @@ export default function BotProfile({ guildId }) {
             banner_url: data.banner_url || '',
             bio: data.bio || ''
           });
+          setCache(cacheKey, data);
         }
         setHasLoaded(true);
         setInitialLoading(false);

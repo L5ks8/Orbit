@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import Toggle from '../ui/Toggle';
 import { useToast } from '../ui/Toast';
 import LoadingScreen from '../ui/LoadingScreen';
+import { getCache, setCache } from '../../utils/cache';
 
 import AutomodSettings from './modules/AutomodSettings';
 import TicketSettings from './modules/TicketSettings';
@@ -43,8 +44,9 @@ export default function Modules({ guildId }) {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [serverData, setServerData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `modules_config_${guildId}`;
+  const [serverData, setServerData] = useState(() => getCache(cacheKey) || null);
+  const [loading, setLoading] = useState(() => !getCache(cacheKey));
   const [saving, setSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
@@ -67,7 +69,7 @@ export default function Modules({ guildId }) {
 
   useEffect(() => {
     if (!guildId) return;
-    setLoading(true);
+    if (!serverData) setLoading(true);
     fetch(`/api/config/${guildId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -76,6 +78,7 @@ export default function Modules({ guildId }) {
       .then(res => res.json())
       .then(data => {
         setServerData(data);
+        setCache(cacheKey, data);
         setLoading(false);
       })
       .catch(err => {
