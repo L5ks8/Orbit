@@ -146,11 +146,21 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
 
             {/* General Settings */}
             <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
-              <div className="border-b border-neutral-800 p-5">
-                <h2 className="text-[15px] font-semibold text-white">General</h2>
-                <p className="text-[13px] text-neutral-400 mt-1">Configure where appeals go and who can manage them.</p>
+              <div className="flex items-center justify-between gap-4 px-5 py-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-neutral-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings w-4 h-4 text-neutral-400">
+                      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-white truncate">General</span>
+                    <span className="text-[11px] text-neutral-500 truncate">Configure where appeals go and who can manage them.</span>
+                  </div>
+                </div>
               </div>
-              <div className="p-5 flex flex-col gap-6">
+              <div className="px-5 pb-5 pt-5 border-t border-neutral-800 flex flex-col gap-6">
                 
                 <div className="flex flex-col gap-2 relative">
                   <label className="text-[13px] font-medium text-neutral-300">
@@ -200,11 +210,20 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
 
             {/* Options */}
             <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
-              <div className="border-b border-neutral-800 p-5">
-                <h2 className="text-[15px] font-semibold text-white">Options</h2>
-                <p className="text-[13px] text-neutral-400 mt-1">Configure appeal behavior and cooldowns.</p>
+              <div className="flex items-center justify-between gap-4 px-5 py-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-blue-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sliders-horizontal w-4 h-4 text-blue-400">
+                      <line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-white truncate">Options</span>
+                    <span className="text-[11px] text-neutral-500 truncate">Configure appeal behavior and cooldowns.</span>
+                  </div>
+                </div>
               </div>
-              <div className="p-5 flex flex-col gap-6">
+              <div className="px-5 pb-5 pt-5 border-t border-neutral-800 flex flex-col gap-6">
 
                 <div className="flex items-center justify-between gap-4">
                   <div>
@@ -265,13 +284,20 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
           {/* Right Column: Recent Appeals */}
           <div className="flex flex-col gap-6 w-full min-w-0">
             <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col h-full min-h-[400px]">
-              <div className="border-b border-neutral-800 p-5 flex items-center justify-between">
-                <div>
-                  <h2 className="text-[15px] font-semibold text-white">Recent Appeals</h2>
-                  <p className="text-[13px] text-neutral-400 mt-1">Pending ban appeals waiting for review.</p>
+              <div className="flex items-center justify-between gap-4 px-5 py-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-purple-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-inbox w-4 h-4 text-purple-400">
+                      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-white truncate">Recent Appeals</span>
+                    <span className="text-[11px] text-neutral-500 truncate">Pending ban appeals waiting for review.</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col flex-1 min-h-0 divide-y divide-neutral-800/60 overflow-y-auto scrollbar-thin">
+              <div className="flex flex-col flex-1 min-h-0 divide-y divide-neutral-800/60 overflow-y-auto scrollbar-thin border-t border-neutral-800">
                 
                 {fetchingAppeals ? (
                   <div className="flex-1 flex flex-col items-center justify-center gap-3 opacity-60">
@@ -358,10 +384,17 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
 
         {/* Questions Form */}
             <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
-              <div className="border-b border-neutral-800 p-5 flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-[15px] font-semibold text-white">Form <span className="text-red-400">*</span></h2>
-                  <p className="text-[13px] text-neutral-400 mt-1">Configure the questions users must answer.</p>
+              <div className="flex items-center justify-between gap-4 px-5 py-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-emerald-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-file-text w-4 h-4 text-emerald-400">
+                      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-white truncate">Form <span className="text-red-400">*</span></span>
+                    <span className="text-[11px] text-neutral-500 truncate">Configure the questions users must answer.</span>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button 
@@ -372,7 +405,7 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
                   </button>
                 </div>
               </div>
-              <div className="p-5 flex flex-col gap-4">
+              <div className="px-5 pb-5 pt-5 border-t border-neutral-800 flex flex-col gap-4">
                 
                 {questions.length === 0 ? (
                   <div className="flex items-center justify-center h-24 border border-dashed border-neutral-700/50 rounded-xl bg-neutral-800/20">
