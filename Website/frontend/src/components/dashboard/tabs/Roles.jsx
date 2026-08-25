@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { getCache, setCache } from '../../../../../utils/cache';
-import { useToast } from '../../../../ui/Toast';
-import LoadingScreen from '../../../../ui/LoadingScreen';
-import DeleteConfirmation from '../../../../ui/DeleteConfirmation';
+import { getCache, setCache } from '../../../utils/cache';
+import { useToast } from '../../ui/Toast';
+import LoadingScreen from '../../ui/LoadingScreen';
+import DeleteConfirmation from '../../ui/DeleteConfirmation';
 
 const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
