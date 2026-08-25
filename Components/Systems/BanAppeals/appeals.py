@@ -123,9 +123,17 @@ async def process_new_appeal(bot: commands.Bot, guild_id: int, user_id: int, rea
     if not channel_id_str:
         return False, "Appeal channel not configured."
         
-    channel = guild.get_channel(int(channel_id_str))
+    try:
+        ch_id = int(channel_id_str)
+    except (ValueError, TypeError):
+        return False, "Invalid appeal channel configured."
+
+    channel = guild.get_channel(ch_id)
     if not channel:
-        return False, "Appeal channel not found."
+        try:
+            channel = await guild.fetch_channel(ch_id)
+        except Exception:
+            return False, "Appeal channel not found."
         
     user = await bot.fetch_user(user_id)
     if not user:
