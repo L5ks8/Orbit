@@ -225,9 +225,27 @@ export default function Modules({ guildId }) {
     else return <div style={{ padding: '50px', color: '#fff', textAlign: 'center' }}>Module not found.</div>;
 
     const isFullScreenModule = ['welcomegoodbye', 'appeals'].includes(moduleId);
+    if (isFullScreenModule) {
+      return (
+        <div className="animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
+          <Component 
+            key={formKey}
+            guildId={guildId}
+            config={serverData.config}
+            channels={serverData.channels || []}
+            voiceChannels={serverData.voice_channels || []}
+            roles={serverData.roles || []}
+            categories={serverData.categories || []}
+            onSave={handleSave}
+            saving={saving}
+            onReset={handleReset}
+          />
+        </div>
+      );
+    }
+
     return (
-      <div style={{ padding: '40px', maxWidth: isFullScreenModule ? '1200px' : '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
-        {!isFullScreenModule && (
+      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ background: moduleInfo.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '16px' }}>
@@ -244,7 +262,6 @@ export default function Modules({ guildId }) {
              <Toggle checked={getModuleState(moduleId)} onChange={() => toggleModule(moduleId)} />
           </div>
         </div>
-        )}
 
         <Component 
           key={formKey}

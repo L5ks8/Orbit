@@ -207,7 +207,7 @@ export default function WelcomeSettings({
   ]);
 
   return (
-    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
       <div>
         <div data-tour="feature-header" className="scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">

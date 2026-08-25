@@ -69,9 +69,8 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
   }, [currentPayloadStr, initialStateStr, isDirty, onSave]);
 
   return (
-    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
-      <div>
-        <div data-tour="feature-header" className="scroll-mt-24">
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
+      <div data-tour="feature-header" className="scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
@@ -90,8 +89,10 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
           </div>
         </div>
 
-        <div className="mt-6">
-          <div className="flex flex-col gap-6">
+      <div className="mt-1">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 min-w-0 items-stretch">
+          
+          <div className="flex flex-col gap-6 min-w-0">
 
             {/* General Settings */}
             <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
@@ -281,6 +282,68 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
             </div>
 
           </div>
+
+          {/* Right Column: Recent Appeals */}
+          <div className="flex flex-col gap-6 w-full min-w-0">
+            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col h-full min-h-[400px]">
+              <div className="border-b border-neutral-800 p-5 flex items-center justify-between">
+                <div>
+                  <h2 className="text-[15px] font-semibold text-white">Recent Appeals</h2>
+                  <p className="text-[13px] text-neutral-400 mt-1">Pending ban appeals waiting for review.</p>
+                </div>
+              </div>
+              <div className="flex flex-col flex-1 min-h-0 divide-y divide-neutral-800/60 overflow-y-auto scrollbar-thin">
+                
+                {/* Mock Appeal 1 */}
+                <div className="p-4 hover:bg-neutral-800/30 transition-colors flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium text-neutral-300">U1</span>
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-medium text-white truncate">GamerTag123</span>
+                        <span className="text-[11px] text-neutral-500 truncate">Banned 3 days ago</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 whitespace-nowrap">Pending</span>
+                  </div>
+                  <div className="text-xs text-neutral-400 line-clamp-3">
+                    "I was just joking around, I didn't mean to break the rules. I promise I won't do it again if you let me back in."
+                  </div>
+                  <div className="flex gap-2 mt-1">
+                    <button type="button" onClick={() => {}} className="flex-1 h-7 rounded-md bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-[11px] font-medium transition-colors">Accept</button>
+                    <button type="button" onClick={() => {}} className="flex-1 h-7 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-medium transition-colors">Decline</button>
+                  </div>
+                </div>
+
+                {/* Mock Appeal 2 */}
+                <div className="p-4 hover:bg-neutral-800/30 transition-colors flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium text-neutral-300">U2</span>
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-medium text-white truncate">ToxicPlayer99</span>
+                        <span className="text-[11px] text-neutral-500 truncate">Banned 1 week ago</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 whitespace-nowrap">Pending</span>
+                  </div>
+                  <div className="text-xs text-neutral-400 line-clamp-3">
+                    "Unban me now, your mods are abusive and I did nothing wrong!"
+                  </div>
+                  <div className="flex gap-2 mt-1">
+                    <button type="button" onClick={() => {}} className="flex-1 h-7 rounded-md bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-[11px] font-medium transition-colors">Accept</button>
+                    <button type="button" onClick={() => {}} className="flex-1 h-7 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-medium transition-colors">Decline</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </main>
