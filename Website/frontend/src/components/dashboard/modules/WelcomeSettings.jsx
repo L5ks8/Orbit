@@ -303,6 +303,17 @@ export default function WelcomeSettings({
                         </div>
                       </div>
                     </div>
+
+                    <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors">
+                      <input
+                        type="text"
+                        value={welcomeEmbedTitle}
+                        onChange={e => setWelcomeEmbedTitle(e.target.value)}
+                        placeholder="Embed Title"
+                        className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
+                        style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
+                      />
+                    </div>
                     <div
                       className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors "
                       style={{ minHeight: 84 }}
@@ -397,8 +408,11 @@ export default function WelcomeSettings({
                     )}
 
 
+                  
+
+                  </div>
                   {welcomeMsgMode === "embed" && (
-                    <div className="pt-4 border-t border-neutral-800/60 mt-4 space-y-3">
+                    <div className="pt-4 border-t border-neutral-800/60  space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Embed Fields</span>
                         <button
@@ -461,9 +475,19 @@ export default function WelcomeSettings({
                       </div>
                     </div>
                   )}
-
-                  </div>
-                  <div
+                  {welcomeMsgMode === "embed" && (
+                    <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors mt-3 mb-4">
+                      <input
+                        type="text"
+                        value={welcomeEmbedFooter}
+                        onChange={e => setWelcomeEmbedFooter(e.target.value)}
+                        placeholder="Embed Footer"
+                        className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
+                        style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
+                      />
+                    </div>
+                  )}
+<div
                     className="relative  "
                     role="button"
                     tabIndex={0}
@@ -612,7 +636,7 @@ export default function WelcomeSettings({
                   tabIndex={0}
                   style={{ cursor: "default" }}
                 >
-                  <div className="pointer-events-none select-none flex flex-col flex-1">
+                  <div className="flex flex-col flex-1">
                     <div
                       data-tour="welcome-dm"
                       className="rounded-2xl bg-neutral-900 border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] p-4 scroll-mt-24 flex-1 flex flex-col"
@@ -862,7 +886,18 @@ export default function WelcomeSettings({
                           </div>
                         </div>
                       </div>
-                      <div
+                      
+                          <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors">
+                            <input
+                              type="text"
+                              value={goodbyeEmbedTitle}
+                              onChange={e => setGoodbyeEmbedTitle(e.target.value)}
+                              placeholder="Embed Title"
+                              className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
+                              style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
+                            />
+                          </div>
+<div
                         className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors "
                         style={{ minHeight: 84 }}
                       >
@@ -969,8 +1004,11 @@ export default function WelcomeSettings({
                         </div>
                       )}
 
-                  {goodbyeMsgMode === "embed" && (
-                    <div className="pt-4 border-t border-neutral-800/60 mt-4 space-y-3">
+                  
+
+                    </div>
+                    {goodbyeMsgMode === "embed" && (
+                    <div className="pt-4 border-t border-neutral-800/60  space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Embed Fields</span>
                         <button
@@ -1033,15 +1071,25 @@ export default function WelcomeSettings({
                       </div>
                     </div>
                   )}
-
+                  {goodbyeMsgMode === "embed" && (
+                    <div className="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors mt-3 mb-4">
+                      <input
+                        type="text"
+                        value={goodbyeEmbedFooter}
+                        onChange={e => setGoodbyeEmbedFooter(e.target.value)}
+                        placeholder="Embed Footer"
+                        className="relative block w-full focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 text-white placeholder-neutral-500 px-4 py-2"
+                        style={{ fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace' }}
+                      />
                     </div>
-                    <div
+                  )}
+<div
                       className="relative  "
                       role="button"
                       tabIndex={0}
                       style={{ cursor: "default" }}
                     >
-                      <div className="pointer-events-none select-none flex flex-col flex-1">
+                      <div className="flex flex-col flex-1">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
                             <label className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">
