@@ -139,10 +139,10 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
           </div>
         </div>
 
-      <div className="mt-1">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 min-w-0 items-stretch">
+      <div className="mt-1 flex flex-col gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] gap-4 lg:items-stretch min-w-0">
           
-          <div className="flex flex-col gap-6 min-w-0">
+          <div className="flex flex-col gap-6 min-w-0 w-full">
 
             {/* General Settings */}
             <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
@@ -260,78 +260,6 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
               </div>
             </div>
 
-            {/* Questions Form */}
-            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
-              <div className="border-b border-neutral-800 p-5 flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-[15px] font-semibold text-white">Form <span className="text-red-400">*</span></h2>
-                  <p className="text-[13px] text-neutral-400 mt-1">Configure the questions users must answer.</p>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => window.open(`${window.location.origin}/appeal/${customUrl || 'my-server'}`, '_blank')}
-                    className="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-[13px] font-medium text-white transition-colors"
-                  >
-                    View Form
-                  </button>
-                </div>
-              </div>
-              <div className="p-5 flex flex-col gap-4">
-                
-                {questions.length === 0 ? (
-                  <div className="flex items-center justify-center h-24 border border-dashed border-neutral-700/50 rounded-xl bg-neutral-800/20">
-                    <span className="text-[13px] text-neutral-500">No questions configured.</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {questions.map((q, i) => (
-                      <div key={i} className="flex gap-2 items-center group">
-                        <div className="w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 text-neutral-500 text-xs font-medium border border-neutral-700/50 shrink-0">
-                          {i + 1}
-                        </div>
-                        <input 
-                          type="text" 
-                          className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors"
-                          placeholder="Enter question..." 
-                          value={typeof q === 'string' ? q : ''} 
-                          onChange={(e) => {
-                            const newQs = [...questions];
-                            newQs[i] = e.target.value;
-                            setQuestions(newQs);
-                          }}
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => setQuestions(questions.filter((_, idx) => idx !== i))} 
-                          className="shrink-0 flex items-center justify-center w-8 h-8 rounded-md bg-neutral-800 text-neutral-500 hover:bg-red-500 hover:text-white transition-colors focus:outline-none border border-neutral-700/50 hover:border-red-500"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                <div className="mt-2">
-                  <button 
-                    onClick={() => setQuestions([...questions, ''])} 
-                    className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-white hover:bg-neutral-200 text-[13px] font-medium text-black transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M5 12h14"></path>
-                    </svg>
-                    Add Question
-                  </button>
-                </div>
-
-              </div>
-            </div>
-
           </div>
 
           {/* Right Column: Recent Appeals */}
@@ -427,7 +355,81 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
           </div>
 
         </div>
+
+        {/* Questions Form */}
+            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
+              <div className="border-b border-neutral-800 p-5 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-[15px] font-semibold text-white">Form <span className="text-red-400">*</span></h2>
+                  <p className="text-[13px] text-neutral-400 mt-1">Configure the questions users must answer.</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => window.open(`${window.location.origin}/appeal/${customUrl || 'my-server'}`, '_blank')}
+                    className="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-[13px] font-medium text-white transition-colors"
+                  >
+                    View Form
+                  </button>
+                </div>
+              </div>
+              <div className="p-5 flex flex-col gap-4">
+                
+                {questions.length === 0 ? (
+                  <div className="flex items-center justify-center h-24 border border-dashed border-neutral-700/50 rounded-xl bg-neutral-800/20">
+                    <span className="text-[13px] text-neutral-500">No questions configured.</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {questions.map((q, i) => (
+                      <div key={i} className="flex gap-2 items-center group">
+                        <div className="w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 text-neutral-500 text-xs font-medium border border-neutral-700/50 shrink-0">
+                          {i + 1}
+                        </div>
+                        <input 
+                          type="text" 
+                          className="flex-1 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors"
+                          placeholder="Enter question..." 
+                          value={typeof q === 'string' ? q : ''} 
+                          onChange={(e) => {
+                            const newQs = [...questions];
+                            newQs[i] = e.target.value;
+                            setQuestions(newQs);
+                          }}
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => setQuestions(questions.filter((_, idx) => idx !== i))} 
+                          className="shrink-0 flex items-center justify-center w-8 h-8 rounded-md bg-neutral-800 text-neutral-500 hover:bg-red-500 hover:text-white transition-colors focus:outline-none border border-neutral-700/50 hover:border-red-500"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="mt-2">
+                  <button 
+                    onClick={() => setQuestions([...questions, ''])} 
+                    className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-white hover:bg-neutral-200 text-[13px] font-medium text-black transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14"></path>
+                      <path d="M5 12h14"></path>
+                    </svg>
+                    Add Question
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
       </div>
+
     </main>
   );
 }
