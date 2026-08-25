@@ -82,7 +82,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
         dm_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=False)
         dm_embed.add_field(name="Reason", value=f"{reason}{punishment_text}", inline=False)
         
-        from Components.Commands.Appeals._storage import load_appeals_config
+        from Components.Dashboard.BanAppeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(ctx.guild.id)
         if appeals_cfg.get("enabled"):
             allowed = appeals_cfg.get("allowed_punishments", [])

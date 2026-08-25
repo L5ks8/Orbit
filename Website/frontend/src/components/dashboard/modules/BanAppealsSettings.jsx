@@ -13,7 +13,7 @@ const TailwindToggle = ({ checked, onChange }) => (
     </button>
 );
 
-export default function BanAppealsSettings({ config, channels, roles, onSave, saving, onReset }) {
+export default function BanAppealsSettings({ guildId, config, channels, roles, onSave, saving, onReset }) {
   const aCfg = config?.appeals || {};
   const [questions, setQuestions] = useState(aCfg.questions || []);
   const [appealChannel, setAppealChannel] = useState(aCfg.channel_id || '');
@@ -25,6 +25,55 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
   const [inviteUnbanned, setInviteUnbanned] = useState(aCfg.invite_unbanned || false);
   const [cooldownDays, setCooldownDays] = useState(aCfg.cooldown_days || 3);
   const [customUrl, setCustomUrl] = useState(aCfg.custom_url || '');
+
+  const [pendingAppeals, setPendingAppeals] = useState([]);
+  const [fetchingAppeals, setFetchingAppeals] = useState(true);
+  const [processingAction, setProcessingAction] = useState(null);
+
+  useEffect(() => {
+    if (!guildId) return;
+    const fetchAppeals = async () => {
+      try {
+        const res = await fetch(`/api/server/${guildId}/appeals`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPendingAppeals(data || []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch appeals", e);
+      } finally {
+        setFetchingAppeals(false);
+      }
+    };
+    fetchAppeals();
+  }, [guildId]);
+
+  const handleResolve = async (userId, action) => {
+    setProcessingAction(userId);
+    try {
+      const res = await fetch(`/api/server/${guildId}/appeals/resolve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ user_id: userId, action })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPendingAppeals(prev => prev.filter(a => a.user_id !== userId));
+      } else {
+        alert(data.error || 'Failed to process appeal.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error while processing appeal.');
+    } finally {
+      setProcessingAction(null);
+    }
+  };
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));
@@ -294,51 +343,82 @@ export default function BanAppealsSettings({ config, channels, roles, onSave, sa
               </div>
               <div className="flex flex-col flex-1 min-h-0 divide-y divide-neutral-800/60 overflow-y-auto scrollbar-thin">
                 
-                {/* Mock Appeal 1 */}
-                <div className="p-4 hover:bg-neutral-800/30 transition-colors flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-medium text-neutral-300">U1</span>
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium text-white truncate">GamerTag123</span>
-                        <span className="text-[11px] text-neutral-500 truncate">Banned 3 days ago</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 whitespace-nowrap">Pending</span>
+                {fetchingAppeals ? (
+                  <div className="flex-1 flex flex-col items-center justify-center gap-3 opacity-60">
+                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    <span className="text-[11px] text-neutral-400 font-medium">Loading appeals...</span>
                   </div>
-                  <div className="text-xs text-neutral-400 line-clamp-3">
-                    "I was just joking around, I didn't mean to break the rules. I promise I won't do it again if you let me back in."
+                ) : pendingAppeals.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center opacity-60">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-inbox w-10 h-10 text-neutral-600 mb-3">
+                      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                    </svg>
+                    <span className="text-[13px] font-medium text-neutral-400">All Caught Up!</span>
+                    <p className="text-[11px] text-neutral-500 mt-1 max-w-[200px]">There are no pending appeals at the moment.</p>
                   </div>
-                  <div className="flex gap-2 mt-1">
-                    <button type="button" onClick={() => {}} className="flex-1 h-7 rounded-md bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-[11px] font-medium transition-colors">Accept</button>
-                    <button type="button" onClick={() => {}} className="flex-1 h-7 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-medium transition-colors">Decline</button>
-                  </div>
-                </div>
+                ) : (
+                  pendingAppeals.map((appeal) => {
+                    
+                    let timeStr = "just now";
+                    if (appeal.last_submitted) {
+                      const diff = Math.floor(Date.now()/1000 - appeal.last_submitted);
+                      if (diff < 60) timeStr = diff + "s ago";
+                      else if (diff < 3600) timeStr = Math.floor(diff/60) + "m ago";
+                      else if (diff < 86400) timeStr = Math.floor(diff/3600) + "h ago";
+                      else timeStr = Math.floor(diff/86400) + "d ago";
+                    }
 
-                {/* Mock Appeal 2 */}
-                <div className="p-4 hover:bg-neutral-800/30 transition-colors flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-medium text-neutral-300">U2</span>
+                    const isProcessing = processingAction === appeal.user_id;
+
+                    return (
+                      <div key={appeal._id || appeal.user_id} className="p-4 hover:bg-neutral-800/30 transition-colors flex flex-col gap-3 relative">
+                        {isProcessing && (
+                          <div className="absolute inset-0 bg-neutral-900/60 z-10 flex items-center justify-center backdrop-blur-[1px]">
+                             <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          </div>
+                        )}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {appeal.user_avatar ? (
+                              <img src={appeal.user_avatar} alt="" className="w-8 h-8 rounded-full bg-neutral-800 flex-shrink-0 object-cover" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                                <span className="text-xs font-medium text-neutral-300">{(appeal.user_name || '?').charAt(0).toUpperCase()}</span>
+                              </div>
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium text-white truncate">{appeal.user_name || 'Unknown User'}</span>
+                              <span className="text-[11px] text-neutral-500 truncate">{appeal.action || 'Punishment'} • {timeStr}</span>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 whitespace-nowrap flex-shrink-0">Pending</span>
+                        </div>
+                        <div className="text-[13px] text-neutral-300 bg-neutral-800/50 p-3 rounded-lg border border-neutral-700/50 line-clamp-4">
+                          {appeal.reason || 'No reason provided.'}
+                        </div>
+                        <div className="flex gap-2 mt-1">
+                          <button 
+                            type="button" 
+                            disabled={isProcessing}
+                            onClick={() => handleResolve(appeal.user_id, 'accept')} 
+                            className="flex-1 h-8 rounded-md bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-[11px] font-medium transition-colors disabled:opacity-50"
+                          >
+                            Accept
+                          </button>
+                          <button 
+                            type="button" 
+                            disabled={isProcessing}
+                            onClick={() => handleResolve(appeal.user_id, 'decline')} 
+                            className="flex-1 h-8 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-medium transition-colors disabled:opacity-50"
+                          >
+                            Decline
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium text-white truncate">ToxicPlayer99</span>
-                        <span className="text-[11px] text-neutral-500 truncate">Banned 1 week ago</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 whitespace-nowrap">Pending</span>
-                  </div>
-                  <div className="text-xs text-neutral-400 line-clamp-3">
-                    "Unban me now, your mods are abusive and I did nothing wrong!"
-                  </div>
-                  <div className="flex gap-2 mt-1">
-                    <button type="button" onClick={() => {}} className="flex-1 h-7 rounded-md bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-[11px] font-medium transition-colors">Accept</button>
-                    <button type="button" onClick={() => {}} className="flex-1 h-7 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-medium transition-colors">Decline</button>
-                  </div>
-                </div>
+                    );
+                  })
+                )}
 
               </div>
             </div>

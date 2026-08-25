@@ -262,7 +262,7 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_goodbye_config(message.guild.id, cfg)
                                         elif raw_mod_name == "Appeals":
-                                            from Components.Commands.Appeals._storage import load_appeals_config, save_appeals_config
+                                            from Components.Dashboard.BanAppeals._storage import load_appeals_config, save_appeals_config
                                             cfg = load_appeals_config(message.guild.id)
                                             cfg["enabled"] = is_enabled
                                             save_appeals_config(message.guild.id, cfg)

@@ -82,7 +82,7 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
         desc = f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}"
         
         if guild_id:
-            from Components.Commands.Appeals._storage import load_appeals_config
+            from Components.Dashboard.BanAppeals._storage import load_appeals_config
             appeals_cfg = load_appeals_config(guild_id)
             if appeals_cfg.get("enabled"):
                 allowed = appeals_cfg.get("allowed_punishments", [])

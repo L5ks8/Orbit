@@ -83,7 +83,7 @@ class ConfigMixin:
                 pass
         settings_cfg["immune_users"] = resolved_immune_users
 
-        from Components.Commands.Appeals._storage import load_appeals_config
+        from Components.Dashboard.BanAppeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(guild_id)
 
         from Components.Database.mongodb import get_db, get_config
@@ -395,7 +395,7 @@ class ConfigMixin:
                 # Bot Roles removed from extra_settings (now handled in Auto Roles module)
 
             if user_perms.get("can_channels") and "appeals" in data:
-                from Components.Commands.Appeals._storage import save_appeals_config
+                from Components.Dashboard.BanAppeals._storage import save_appeals_config
                 save_appeals_config(guild_id, data["appeals"])
 
             if user_perms.get("can_channels") and "serverstats" in data:

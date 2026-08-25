@@ -31,13 +31,20 @@ def get_appeals_config_by_url(custom_url: str) -> Dict[str, Any]:
         return None
     return db["Appeals"].find_one({"custom_url": custom_url, "enabled": True})
 
-def register_appeal_submission(guild_id: int, user_id: int) -> None:
+def register_appeal_submission(guild_id: int, user_id: int, user_name: str = "", user_avatar: str = "", action: str = "", reason: str = "") -> None:
     db = get_db()
     if db is not None:
         import time
         db["AppealHistory"].update_one(
             {"guild_id": str(guild_id), "user_id": str(user_id)},
-            {"$set": {"last_submitted": time.time(), "is_open": True}},
+            {"$set": {
+                "last_submitted": time.time(), 
+                "is_open": True,
+                "user_name": user_name,
+                "user_avatar": user_avatar,
+                "action": action,
+                "reason": reason
+            }},
             upsert=True
         )
 
@@ -54,3 +61,14 @@ def close_appeal(guild_id: int, user_id: int) -> None:
             {"guild_id": str(guild_id), "user_id": str(user_id)},
             {"$set": {"is_open": False}}
         )
+
+def get_open_appeals(guild_id: int):
+    db = get_db()
+    if db is None:
+        return []
+    cursor = db["AppealHistory"].find({"guild_id": str(guild_id), "is_open": True})
+    results = []
+    for doc in cursor:
+        doc["_id"] = str(doc["_id"])
+        results.append(doc)
+    return results

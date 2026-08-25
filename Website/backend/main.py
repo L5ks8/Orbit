@@ -139,6 +139,9 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/action/{id}/send_reactionrole", dashboard.api_action_send_reactionrole)
     app.router.add_get("/api/appeal_info/{custom_url}", dashboard.api_appeal_info)
     app.router.add_post("/api/submit_appeal/{custom_url}", dashboard.api_submit_appeal)
+    
+    app.router.add_get("/api/server/{id}/appeals", dashboard.api_get_recent_appeals)
+    app.router.add_post("/api/server/{id}/appeals/resolve", dashboard.api_resolve_appeal)
 
     # SPA Catch-all Route must be added LAST
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)

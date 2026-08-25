@@ -1,9 +1,44 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Cases._storage import get_user_cases, update_case_reason
-from Components.Commands.Appeals._storage import get_appeal_status, close_appeal, register_appeal_submission
+from Components.Dashboard.BanAppeals._storage import get_appeal_status, close_appeal, register_appeal_submission
 import time
 from Components.Commands._utils import make_embed
+
+async def resolve_appeal_logic(bot, guild_id: int, target_user_id: int, moderator_id: int, is_accept: bool, moderator_name: str = "a Moderator"):
+    guild = bot.get_guild(guild_id)
+    if not guild:
+        return False, "Server not found."
+        
+    from Components.Dashboard.BanAppeals._storage import load_appeals_config
+    cfg = load_appeals_config(guild_id)
+    
+    if is_accept:
+        try:
+            member = guild.get_member(target_user_id)
+            if member:
+                if member.is_timed_out():
+                    await member.timeout(None, reason=f"Appeal accepted by {moderator_name}")
+            else:
+                user = await bot.fetch_user(target_user_id)
+                await guild.unban(user, reason=f"Appeal accepted by {moderator_name}")
+                
+                if cfg.get("invite_unbanned", True):
+                    invite_channel = guild.system_channel
+                    if not invite_channel and guild.text_channels:
+                        invite_channel = guild.text_channels[0]
+                    if invite_channel:
+                        invite = await invite_channel.create_invite(max_uses=1, max_age=86400, reason="Appeal accepted")
+                        try:
+                            await user.send(f"Your appeal in **{guild.name}** was accepted! You can rejoin using this invite: {invite.url}")
+                        except:
+                            pass
+        except Exception as e:
+            return False, f"Could not revoke punishment: {e}"
+            
+    close_appeal(guild_id, target_user_id)
+    return True, "Appeal accepted." if is_accept else "Appeal denied."
+
 
 class AppealView(discord.ui.View):
     def __init__(self, bot: commands.Bot, guild_id: int, user_id: int):
@@ -29,7 +64,7 @@ class AppealView(discord.ui.View):
         self.add_item(btn_deny)
 
     async def get_appeals_cfg(self):
-        from Components.Commands.Appeals._storage import load_appeals_config
+        from Components.Dashboard.BanAppeals._storage import load_appeals_config
         from Components.Commands._utils import make_embed
         return load_appeals_config(self.guild_id)
 
@@ -43,49 +78,35 @@ class AppealView(discord.ui.View):
             return await interaction.followup.send(embed=make_embed("You lack permissions to decide on appeals."), ephemeral=True)
             
         cfg = await self.get_appeals_cfg()
+        mod_name = "a Moderator" if cfg.get("anonymous_mods", False) else interaction.user.name
         
-        if is_accept:
-            try:
-                member = guild.get_member(self.user_id)
-                if member:
-                    if member.is_timed_out():
-                        await member.timeout(None, reason=f"Appeal accepted by {interaction.user}")
-                else:
-                    user = await self.bot.fetch_user(self.user_id)
-                    await guild.unban(user, reason=f"Appeal accepted by {interaction.user}")
-                    
-                    if cfg.get("invite_unbanned", True):
-                        invite_channel = guild.system_channel
-                        if not invite_channel and guild.text_channels:
-                            invite_channel = guild.text_channels[0]
-                        if invite_channel:
-                            invite = await invite_channel.create_invite(max_uses=1, max_age=86400, reason="Appeal accepted")
-                            try:
-                                await user.send(f"Your appeal in **{guild.name}** was accepted! You can rejoin using this invite: {invite.url}")
-                            except:
-                                pass
-            except Exception as e:
-                return await interaction.followup.send(embed=make_embed(f"Could not revoke punishment: {e}", discord.Color.red()), ephemeral=True)
+        success, msg = await resolve_appeal_logic(
+            self.bot, 
+            self.guild_id, 
+            self.user_id, 
+            interaction.user.id, 
+            is_accept, 
+            mod_name
+        )
         
-        close_appeal(self.guild_id, self.user_id)
-        
+        if not success:
+            return await interaction.followup.send(embed=make_embed(msg, discord.Color.red()), ephemeral=True)
+            
         for child in self.children:
             child.disabled = True
-        
+            
         embed = interaction.message.embeds[0]
-        mod_name = "a Moderator" if cfg.get("anonymous_mods", False) else interaction.user.mention
+        display_mod = "a Moderator" if cfg.get("anonymous_mods", False) else interaction.user.mention
         
         if is_accept:
             embed.color = discord.Color.green()
-            embed.add_field(name="Status", value=f" Accepted by {mod_name}")
-            msg = "Appeal accepted and punishment revoked."
+            embed.add_field(name="Status", value=f" Accepted by {display_mod}")
         else:
             embed.color = discord.Color.red()
-            embed.add_field(name="Status", value=f" Denied by {mod_name}")
-            msg = "Appeal denied."
-        
+            embed.add_field(name="Status", value=f" Denied by {display_mod}")
+            
         await interaction.message.edit(embed=embed, view=self)
-        await interaction.followup.send(embed=make_embed(msg, discord.Color.green() if accepted else discord.Color.red()), ephemeral=True)
+        await interaction.followup.send(embed=make_embed(msg, discord.Color.green() if is_accept else discord.Color.red()), ephemeral=True)
 
     async def btn_accept(self, interaction: discord.Interaction):
         await self.handle_decision(interaction, True)
@@ -155,7 +176,14 @@ async def process_new_appeal(bot: commands.Bot, guild_id: int, user_id: int, rea
             content = mentions
     
     await channel.send(content=content, embed=embed, view=view)
-    register_appeal_submission(guild_id, user_id)
+    register_appeal_submission(
+        guild_id=guild_id, 
+        user_id=user_id,
+        user_name=str(user),
+        user_avatar=user.avatar.url if user.avatar else user.default_avatar.url,
+        action=latest_case.get("action", "").capitalize(),
+        reason=reason[:4096]
+    )
     return True, "Appeal submitted successfully."
 
 class AppealsCog(commands.Cog):
