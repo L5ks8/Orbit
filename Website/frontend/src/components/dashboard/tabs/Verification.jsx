@@ -33,7 +33,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
   const [embedImage, setEmbedImage] = useState(vCfg.embed_image || '/img/default_verify.png');
   const [panelChannel, setPanelChannel] = useState(vCfg.channel_id || '');
 
-  const roleOptions = (serverData?.roles || []).map(r => ({ value: r.id, label: r.name || 'Unknown Role', color: r.color }));
+  const roleOptions = (serverData?.roles || []).map(r => ({ value: String(r.id), label: r.name || 'Unknown Role', color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined }));
   const channelOptions = (serverData?.channels || []).map(c => ({ value: String(c.id), label: `# ${c.name}` }));
 
   const verifyModes = [

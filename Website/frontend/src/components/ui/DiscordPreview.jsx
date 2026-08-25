@@ -379,6 +379,18 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
                     </div>
                   </div>
                 )}
+                {/* Verify Button Preview */}
+                {mode === 'embed' && cardTitle === 'VERIFY' && (
+                  <div className="mt-2 flex">
+                    <div className="bg-[#2b2d31] hover:bg-[#32353a] border border-[#1e1f22] text-[#dbdee1] px-4 py-1.5 rounded text-sm font-medium transition-colors cursor-default inline-flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                      </svg>
+                      Verify
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
