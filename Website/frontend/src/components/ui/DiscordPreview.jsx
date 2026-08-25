@@ -210,7 +210,7 @@ function replaceVariables(text) {
     .replace(/\{id\}/g, '123456789012345678');
 }
 
-export default function DiscordPreview({ content, embedColor, embedAuthor, embedTitle, embedDesc, embedFooter, embedImage, embedThumbnail, imageUrl, mode, accentColor = '#5865F2', cardTitle = 'WELCOME', channels = [], roles = [] }) {
+export default function DiscordPreview({ content, embedColor, embedAuthor, embedTitle, embedDesc, embedFooter, embedImage, embedThumbnail, embedFields = [], imageUrl, mode, accentColor = '#5865F2', cardTitle = 'WELCOME', channels = [], roles = [] }) {
   const previewContent = replaceVariables(content);
   const previewTitle = replaceVariables(embedTitle);
   const previewDesc = replaceVariables(embedDesc);
@@ -272,7 +272,7 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
           {/* Text and Embed modes */}
           {mode !== 'image' && (
             <div className={`flex gap-2.5 transition-opacity ${mode === 'embed' ? 'opacity-40' : ''}`}>
-              <img src="/logo.png" alt="Orbit Bot" className="w-8 h-8 rounded-full flex-shrink-0 object-cover mt-0.5" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+              <img src="/logo.png" alt="Orbit Bot" className="w-8 h-8 rounded-full flex-shrink-0 object-cover mt-0.5 bg-black" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
               <div className="w-8 h-8 rounded-full flex-shrink-0 bg-[#5865F2] items-center justify-center text-white text-xs font-bold hidden mt-0.5" aria-hidden="true">O</div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
@@ -313,6 +313,21 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
                             {parseDiscordMarkdown(previewDesc, channels, roles)}
                           </p>
                         )}
+                        {embedFields && embedFields.length > 0 && (
+                          <div className="mt-2 text-xs flex flex-wrap gap-y-2">
+                            {embedFields.map((field, i) => (
+                              <div key={i} className={field.inline ? "w-1/3 min-w-[120px] pr-2" : "w-full"}>
+                                <div className="font-semibold text-white mb-0.5">
+                                  {parseDiscordMarkdown(replaceVariables(field.name || "​"), channels, roles)}
+                                </div>
+                                <div className="text-neutral-300 break-all leading-snug">
+                                  {parseDiscordMarkdown(replaceVariables(field.value || "​"), channels, roles)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                         {embedImage && (
                           <img src={embedImage} className="w-full rounded-[3px] mt-2 max-h-[300px] object-cover" alt="" onError={(e) => e.target.style.display = 'none'} />
                         )}

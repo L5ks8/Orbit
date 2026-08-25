@@ -38,6 +38,10 @@ export default function WelcomeSettings({
   const [welcomeEmbedFooter, setWelcomeEmbedFooter] = useState(wCfg.embed_footer || "");
   const [welcomeImageUrl, setWelcomeImageUrl] = useState(wCfg.image_url || "");
 
+  const [welcomeEmbedFields, setWelcomeEmbedFields] = useState(wCfg.embed_fields || []);
+  const [goodbyeEmbedFields, setGoodbyeEmbedFields] = useState(gCfg.embed_fields || []);
+
+
   const [goodbyeMsgMode, setGoodbyeMsgMode] = useState(gCfg.msg_mode || "image");
   const [goodbyeEmbedTitle, setGoodbyeEmbedTitle] = useState(gCfg.embed_title || "");
   const [goodbyeEmbedDesc, setGoodbyeEmbedDesc] = useState(gCfg.embed_description || "");
@@ -128,6 +132,7 @@ export default function WelcomeSettings({
       embed_title: welcomeEmbedTitle,
       embed_description: welcomeEmbedDesc,
       embed_thumbnail: welcomeEmbedThumbnail,
+      embed_fields: welcomeEmbedFields,
       image_url: welcomeImageUrl
     },
     goodbye: {
@@ -141,6 +146,7 @@ export default function WelcomeSettings({
       embed_title: goodbyeEmbedTitle,
       embed_description: goodbyeEmbedDesc,
       embed_thumbnail: goodbyeEmbedThumbnail,
+      embed_fields: goodbyeEmbedFields,
       image_url: goodbyeImageUrl
     },
   });
@@ -274,11 +280,12 @@ export default function WelcomeSettings({
                         </div>
                       </div>
                       <div className="flex items-center">
-                        <div className="relative flex flex-col">
+                        <div className="relative flex flex-col group">
+                          <input type="color" value={welcomeEmbedColor} onChange={e => setWelcomeEmbedColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
                           <button
                             type="button"
-                            className="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 hover:border-neutral-500 transition-colors cursor-pointer flex-shrink-0"
-                            style={{ backgroundColor: "rgb(88, 101, 242)" }}
+                            className="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 group-hover:border-neutral-500 transition-colors flex-shrink-0"
+                            style={{ backgroundColor: welcomeEmbedColor }}
                           />
                         </div>
                       </div>
@@ -375,6 +382,72 @@ export default function WelcomeSettings({
                         </div>
                       </div>
                     )}
+
+
+                  {welcomeMsgMode === "embed" && (
+                    <div className="pt-4 border-t border-neutral-800/60 mt-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Embed Fields</span>
+                        <button
+                          type="button"
+                          onClick={() => setWelcomeEmbedFields([...welcomeEmbedFields, { name: "New Field", value: "Value", inline: false }])}
+                          className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                          Add Field
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {welcomeEmbedFields.map((field, idx) => (
+                          <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-700/50 bg-neutral-800/30">
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="text"
+                                value={field.name}
+                                onChange={(e) => {
+                                  const nf = [...welcomeEmbedFields];
+                                  nf[idx].name = e.target.value;
+                                  setWelcomeEmbedFields(nf);
+                                }}
+                                className="flex-1 bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500"
+                                placeholder="Field Name"
+                              />
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <span className="text-xs text-neutral-400">Inline</span>
+                                <input type="checkbox" checked={field.inline} onChange={(e) => {
+                                  const nf = [...welcomeEmbedFields];
+                                  nf[idx].inline = e.target.checked;
+                                  setWelcomeEmbedFields(nf);
+                                }} className="rounded border-neutral-700 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/30 focus:ring-offset-0" />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nf = [...welcomeEmbedFields];
+                                  nf.splice(idx, 1);
+                                  setWelcomeEmbedFields(nf);
+                                }}
+                                className="text-neutral-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-neutral-800"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                              </button>
+                            </div>
+                            <textarea
+                              value={field.value}
+                              onChange={(e) => {
+                                const nf = [...welcomeEmbedFields];
+                                nf[idx].value = e.target.value;
+                                setWelcomeEmbedFields(nf);
+                              }}
+                              rows={2}
+                              className="w-full bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500 resize-none"
+                              placeholder="Field Value"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   </div>
                   <div
@@ -507,6 +580,7 @@ export default function WelcomeSettings({
   embedDesc={welcomeEmbedDesc}
   embedFooter={welcomeEmbedFooter}
   embedThumbnail={welcomeEmbedThumbnail === "{user.avatar}" ? "https://cdn.discordapp.com/embed/avatars/0.png" : welcomeEmbedThumbnail}
+  embedFields={welcomeEmbedFields}
   imageUrl={welcomeImageUrl}
   mode={welcomeMsgMode}
   accentColor="#5865F2"
@@ -757,11 +831,12 @@ export default function WelcomeSettings({
                           </div>
                         </div>
                         <div className="flex items-center">
-                          <div className="relative flex flex-col">
+                          <div className="relative flex flex-col group">
+                            <input type="color" value={goodbyeEmbedColor} onChange={e => setGoodbyeEmbedColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
                             <button
                               type="button"
-                              className="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 hover:border-neutral-500 transition-colors cursor-pointer flex-shrink-0"
-                              style={{ backgroundColor: "rgb(237, 66, 69)" }}
+                              className="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 group-hover:border-neutral-500 transition-colors flex-shrink-0"
+                              style={{ backgroundColor: goodbyeEmbedColor }}
                             />
                           </div>
                         </div>
@@ -872,6 +947,72 @@ export default function WelcomeSettings({
                           </div>
                         </div>
                       )}
+
+                  {goodbyeMsgMode === "embed" && (
+                    <div className="pt-4 border-t border-neutral-800/60 mt-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Embed Fields</span>
+                        <button
+                          type="button"
+                          onClick={() => setGoodbyeEmbedFields([...goodbyeEmbedFields, { name: "New Field", value: "Value", inline: false }])}
+                          className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                          Add Field
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {goodbyeEmbedFields.map((field, idx) => (
+                          <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-700/50 bg-neutral-800/30">
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="text"
+                                value={field.name}
+                                onChange={(e) => {
+                                  const nf = [...goodbyeEmbedFields];
+                                  nf[idx].name = e.target.value;
+                                  setGoodbyeEmbedFields(nf);
+                                }}
+                                className="flex-1 bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500"
+                                placeholder="Field Name"
+                              />
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <span className="text-xs text-neutral-400">Inline</span>
+                                <input type="checkbox" checked={field.inline} onChange={(e) => {
+                                  const nf = [...goodbyeEmbedFields];
+                                  nf[idx].inline = e.target.checked;
+                                  setGoodbyeEmbedFields(nf);
+                                }} className="rounded border-neutral-700 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/30 focus:ring-offset-0" />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nf = [...goodbyeEmbedFields];
+                                  nf.splice(idx, 1);
+                                  setGoodbyeEmbedFields(nf);
+                                }}
+                                className="text-neutral-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-neutral-800"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                              </button>
+                            </div>
+                            <textarea
+                              value={field.value}
+                              onChange={(e) => {
+                                const nf = [...goodbyeEmbedFields];
+                                nf[idx].value = e.target.value;
+                                setGoodbyeEmbedFields(nf);
+                              }}
+                              rows={2}
+                              className="w-full bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-neutral-500 resize-none"
+                              placeholder="Field Value"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                     </div>
                     <div
                       className="relative  "
@@ -1003,6 +1144,7 @@ export default function WelcomeSettings({
   embedDesc={goodbyeEmbedDesc}
   embedFooter={goodbyeEmbedFooter}
   embedThumbnail={goodbyeEmbedThumbnail === "{user.avatar}" ? "https://cdn.discordapp.com/embed/avatars/0.png" : goodbyeEmbedThumbnail}
+  embedFields={goodbyeEmbedFields}
   imageUrl={goodbyeImageUrl}
   mode={goodbyeMsgMode}
   accentColor="#ED4245"
