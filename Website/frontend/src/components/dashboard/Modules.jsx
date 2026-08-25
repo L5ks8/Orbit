@@ -50,10 +50,14 @@ export default function Modules({ guildId }) {
 
 
 
-  // Redirect to first module if no module is selected
+  // Redirect to first module if no module is selected or redirect old paths
   useEffect(() => {
     if (!moduleId && guildId) {
       navigate(`/dashboard/${guildId}/automod`, { replace: true });
+    } else if (moduleId === 'welcome' && guildId) {
+      navigate(`/dashboard/${guildId}/welcomegoodbye`, { replace: true });
+    } else if (moduleId === 'goodbye' && guildId) {
+      navigate(`/dashboard/${guildId}/welcomegoodbye`, { replace: true });
     }
   }, [moduleId, navigate, guildId]);
 

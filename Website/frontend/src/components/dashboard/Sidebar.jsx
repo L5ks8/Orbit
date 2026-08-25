@@ -47,7 +47,7 @@ export default function Sidebar({ guildId, isOpen = true }) {
     {
       title: 'WELCOME & ONBOARDING',
       links: [
-        { name: 'Welcome', path: `/dashboard/${guildId}/welcome`, icon: <MessageSquare size={16} /> },
+        { name: 'Welcome & Goodbye', path: `/dashboard/${guildId}/welcomegoodbye`, icon: <MessageSquare size={16} /> },
         { name: 'Roles', path: `/dashboard/${guildId}/roles`, icon: <Users size={16} /> },
         { name: 'Invite Tracker', path: `/dashboard/${guildId}/invites`, icon: <UserPlus size={16} /> },
       ]
