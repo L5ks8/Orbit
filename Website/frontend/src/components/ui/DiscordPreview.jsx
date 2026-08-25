@@ -271,7 +271,7 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
 
           {/* Text and Embed modes */}
           {mode !== 'image' && (
-            <div className={`flex gap-2.5 transition-opacity ${mode === 'embed' ? 'opacity-40' : ''}`}>
+            <div className="flex gap-2.5 transition-opacity">
               <img src="/logo.png" alt="Orbit Bot" className="w-10 h-10 rounded-full flex-shrink-0 object-cover mt-0.5 bg-black" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; e.target.nextSibling.classList.remove('hidden'); }} />
               <div className="w-10 h-10 rounded-full flex-shrink-0 bg-[#5865F2] items-center justify-center text-white text-xs font-bold hidden mt-0.5" aria-hidden="true">O</div>
               <div className="flex-1 min-w-0">
@@ -286,7 +286,7 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
                 </div>
                 
                 {/* Text Content */}
-                {mode === 'text' && previewContent && (
+                {(mode === 'text' || mode === 'embed') && previewContent && (
                   <div>
                     <p className="text-sm text-neutral-200 leading-relaxed break-all">
                       {parseDiscordMarkdown(previewContent, channels, roles)}
@@ -294,8 +294,8 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
                   </div>
                 )}
                 {/* Embed Content */}
-                {mode === 'embed' && (previewAuthor || previewTitle || previewDesc || previewFooter || embedImage) && (
-                  <div style={{ borderColor: embedColor || accentColor }} className="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[380px]">
+                {mode === 'embed' && (previewAuthor || previewTitle || previewDesc || previewFooter || embedImage || (embedFields && embedFields.length > 0)) && (
+                  <div style={{ borderColor: embedColor || accentColor }} className="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[380px] mt-1">
                     <div className="p-2.5 flex gap-2.5">
                       <div className="flex-1 min-w-0 space-y-1">
                         {previewAuthor && (
