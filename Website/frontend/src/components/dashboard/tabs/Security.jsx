@@ -76,10 +76,6 @@ export default function Security({ guildId, serverData, setServerData }) {
     webhook_protection: webhookProtection
   });
 
-  if (!initialPayloadRef.current) {
-    initialPayloadRef.current = JSON.stringify(getPayload());
-  }
-
   useEffect(() => {
     if (serverData) {
       setInitialStateStr(JSON.stringify({
@@ -137,15 +133,15 @@ export default function Security({ guildId, serverData, setServerData }) {
   };
 
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialPayloadRef.current && currentPayloadStr !== initialPayloadRef.current;
+  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
 
   useEffect(() => {
-    if (!initialPayloadRef.current || !isDirty) return;
+    if (!initialStateStr || !isDirty) return;
     const timeoutId = setTimeout(() => {
       handleSave(currentPayloadStr);
     }, 1500);
     return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, isDirty]);
+  }, [currentPayloadStr, isDirty, initialStateStr]);
 
   if (loading) {
     return (

@@ -636,16 +636,15 @@ class ConfigMixin:
             if user_perms.get("can_channels") and "security" in data:
                 from Components.Commands.Security._storage import load_security_config, save_security_config
                 sec_cfg = load_security_config(guild_id)
-                sec_cfg["anti_nuke_enabled"] = bool(data["security"].get("anti_nuke_enabled", True))
-                sec_cfg["anti_scam_enabled"] = bool(data["security"].get("anti_scam_enabled", True))
-                try:
-                    sec_cfg["anti_nuke_threshold"] = int(data["security"].get("anti_nuke_threshold", 3))
-                except (ValueError, TypeError):
-                    sec_cfg["anti_nuke_threshold"] = 3
-                try:
-                    sec_cfg["anti_nuke_time_window"] = int(data["security"].get("anti_nuke_time_window", 10))
-                except (ValueError, TypeError):
-                    sec_cfg["anti_nuke_time_window"] = 10
+                new_sec = data["security"]
+                
+                if "anti_nuke" in new_sec:
+                    sec_cfg["anti_nuke"] = new_sec["anti_nuke"]
+                if "anti_raid" in new_sec:
+                    sec_cfg["anti_raid"] = new_sec["anti_raid"]
+                if "webhook_protection" in new_sec:
+                    sec_cfg["webhook_protection"] = new_sec["webhook_protection"]
+                
                 save_security_config(guild_id, sec_cfg)
 
             if user_perms.get("can_roles") and "verify" in data:
