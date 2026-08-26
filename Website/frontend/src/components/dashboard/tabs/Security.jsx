@@ -79,7 +79,7 @@ export default function Security({ guildId, serverData, setServerData }) {
   });
 
   useEffect(() => {
-    if (serverData) {
+    if (serverData && serverData.config) {
       const cfg = serverData.config?.security || {};
       setInitialStateStr(JSON.stringify({
         anti_nuke: { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...cfg.anti_nuke },
@@ -87,7 +87,7 @@ export default function Security({ guildId, serverData, setServerData }) {
         webhook_protection: { enabled: false, block_everyone: false, block_invite_links: false, rate_limit: 5, action: 'delete', trusted_webhooks: '', ...cfg.webhook_protection }
       }));
       setLoading(false);
-    } else {
+    } else if (!serverData) {
       fetch(`/api/config/${guildId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
         .then(res => res.json())
         .then(data => {
