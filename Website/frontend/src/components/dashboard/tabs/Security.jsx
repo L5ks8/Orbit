@@ -61,7 +61,7 @@ export default function Security({ guildId, serverData, setServerData }) {
 
   
   const initialPayloadRef = useRef('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [initialStateStr, setInitialStateStr] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
