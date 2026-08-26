@@ -503,7 +503,7 @@ export default function ReactionRoleBuilder({
                     <p className="text-[11px] text-neutral-500 mt-0.5">Pick a channel above to post.</p>
                   </div>
                   <div className="flex-shrink-0">
-                    <Toggle checked={postToDiscord} onChange={(e) => setPostToDiscord(e.target.checked)} />
+                    <Toggle checked={postToDiscord} onChange={setPostToDiscord} />
                   </div>
                 </div>
               </div>
