@@ -198,7 +198,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
 
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-medium text-neutral-300">Panel Instructions</label>
-              <span className="text-xs text-neutral-500">Instructions shown to the user after opening a ticket.</span>
+              <span className="text-xs text-neutral-500">Additional instructions shown on the ticket panel embed.</span>
               <textarea 
                 rows="3" 
                 className="bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-neutral-500 transition-colors w-full"
@@ -323,6 +323,9 @@ export default function TicketSettings({ config, channels, roles, categories, on
                   <div className="bg-[#2b2d31] border-l-4 border-[#5865F2] rounded p-4 flex flex-col">
                     <span className="font-bold text-[15px] text-white mb-2 break-words">{panelTitle || 'Support Tickets'}</span>
                     <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed">{panelDesc || 'Click the button below to open a direct support channel with our team.'}</span>
+                    {panelInstructions && (
+                      <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed mt-4">{panelInstructions}</span>
+                    )}
                   </div>
                   
                   <div className="mt-2 flex flex-wrap gap-2">
