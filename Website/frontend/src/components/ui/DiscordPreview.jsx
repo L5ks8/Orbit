@@ -89,12 +89,35 @@ function parseDiscordMarkdown(text, channels = [], roles = []) {
 function formatInline(text, channels = [], roles = []) {
   if (!text) return null;
   
+  // Emoji map for common shortcodes
+  const emojiMap = {
+    'smile': '😄', 'joy': '😂', 'rofl': '🤣', 'sweat_smile': '😅', 'laughing': '😆', 'wink': '😉', 'blush': '😊', 'yum': '😋', 'heart_eyes': '😍', 'kissing_heart': '😘',
+    'kissing': '😗', 'kissing_smiling_eyes': '😙', 'kissing_closed_eyes': '😚', 'stuck_out_tongue': '😛', 'stuck_out_tongue_winking_eye': '😜', 'stuck_out_tongue_closed_eyes': '😝',
+    'money_mouth_face': '🤑', 'nerd': '🤓', 'sunglasses': '😎', 'clown': '🤡', 'cowboy': '🤠', 'hugs': '🤗', 'smirk': '😏', 'no_mouth': '😶', 'neutral_face': '😐',
+    'expressionless': '😑', 'unamused': '😒', 'roll_eyes': '🙄', 'thinking': '🤔', 'flushed': '😳', 'disappointed': '😞', 'worried': '😟', 'angry': '😠', 'rage': '😡',
+    'pensive': '😔', 'confused': '😕', 'slightly_frowning_face': '🙁', 'frowning_face': '☹️', 'persevere': '😣', 'confounded': '😖', 'tired_face': '😫', 'weary': '😩',
+    'triumph': '😤', 'open_mouth': '😮', 'scream': '😱', 'fearful': '😨', 'cold_sweat': '😰', 'hushed': '😯', 'frowning': '😦', 'anguished': '😧', 'cry': '😢',
+    'disappointed_relieved': '😥', 'sleepy': '😪', 'sweat': '😓', 'sob': '😭', 'dizzy_face': '😵', 'astonished': '😲', 'zipper_mouth': '🤐', 'mask': '😷', 'face_with_thermometer': '🤒',
+    'face_with_head_bandage': '🤕', 'sleeping': '😴', 'zzz': '💤', 'poop': '💩', 'smiling_imp': '😈', 'imp': '👿', 'skull': '💀', 'ghost': '👻', 'alien': '👽',
+    'tada': '🎉', 'sparkles': '✨', 'star': '⭐', 'heart': '❤️', 'broken_heart': '💔', 'fire': '🔥', 'rocket': '🚀', 'boost': '🚀', 'emoji': '😀', 'thumbsup': '👍',
+    'thumbsdown': '👎', 'wave': '👋', 'clap': '👏', 'pray': '🙏', 'gem': '💎', 'crown': '👑', 'bell': '🔔', 'warning': '⚠️', 'checkered_flag': '🏁', 'trophy': '🏆',
+    'medal': '🏅', 'gift': '🎁', 'balloon': '🎈', 'confetti_ball': '🎊', 'partying_face': '🥳', 'tada': '🎉', 'eyes': '👀', 'brain': '🧠', 'muscle': '💪'
+  };
+
   const parts = [];
   let remaining = text;
   let keyCounter = 0;
 
   // Process the text character by character with regex patterns
   const patterns = [
+    // Standard Emoji shortcodes :name:
+    { regex: /:([a-zA-Z0-9_]+):/, render: (match) => {
+      const emojiChar = emojiMap[match[1].toLowerCase()];
+      if (emojiChar) {
+        return <span key={keyCounter++} style={{ margin: '0 2px' }}>{emojiChar}</span>;
+      }
+      return <span key={keyCounter++}>{match[0]}</span>;
+    }},
     // Custom Variable Pills {{pill:color:text}}
     { regex: /\{\{pill:([^:]+):([^}]+)\}\}/, render: (match) => {
       const color = match[1];
@@ -244,7 +267,25 @@ function replaceVariables(text) {
     .replace(/\{time\.in\.server\}/gi, '{{pill:purple:2 years, 3 months}}');
 }
 
-export default function DiscordPreview({ content, embedColor, embedAuthor, embedTitle, embedDesc, embedFooter, embedImage, embedThumbnail, embedFields = [], imageUrl, mode, accentColor = '#5865F2', cardTitle = 'WELCOME', channels = [], roles = [] }) {
+export default function DiscordPreview({ 
+  content, 
+  embedColor, 
+  embedAuthor, 
+  embedTitle, 
+  embedDesc, 
+  embedFooter,
+  embedImage,
+  embedThumbnail,
+  embedFields = [],
+  imageUrl, 
+  mode = 'embed',
+  accentColor = '#5865F2',
+  cardTitle = 'CARD',
+  channels = [],
+  roles = [],
+  customReplace = null,
+  hideHeader = false
+}) {
   const previewContent = replaceVariables(content);
   const previewTitle = replaceVariables(embedTitle);
   const previewDesc = replaceVariables(embedDesc) || (mode === 'embed' && !embedTitle && !embedAuthor && !embedImage && !embedFooter && (!embedFields || embedFields.length === 0) ? 'Start typing to customize...' : replaceVariables(embedDesc));
@@ -253,7 +294,7 @@ export default function DiscordPreview({ content, embedColor, embedAuthor, embed
 
   return (
     <div>
-      <label style={{ color: '#fff', display: 'block', marginBottom: '12px', fontWeight: '600' }}>Live Discord Preview</label>
+      {!hideHeader && <label style={{ color: '#fff', display: 'block', marginBottom: '12px', fontWeight: '600' }}>Live Discord Preview</label>}
       <div className="rounded-xl overflow-hidden border border-neutral-700/30">
         <div className="bg-[#2f3136] px-4 py-2 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hash w-3.5 h-3.5 text-neutral-400">

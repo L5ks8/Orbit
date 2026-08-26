@@ -199,19 +199,19 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Live Preview & Variables as a single Tile */}
-        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col h-full overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800 shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye w-5 h-5 text-neutral-400">
-              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            <span className="text-sm font-semibold text-white">Live Preview</span>
-          </div>
-          
-          <div className="p-5 bg-[#313338] flex flex-col gap-6 flex-1">
-            <div className="flex-1">
-              {/* Note: DiscordPreview wraps itself in a block, we keep it as is, or remove its internal header since we have our own now */}
+        {/* RIGHT COLUMN: Live Preview & Variables as separate Tiles */}
+        <div className="flex flex-col gap-5 h-full">
+          {/* Live Preview Tile */}
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye w-5 h-5 text-neutral-400">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span className="text-sm font-semibold text-white">Live Preview</span>
+            </div>
+            
+            <div className="p-5 bg-[#313338] flex-1 flex flex-col">
               <DiscordPreview
                 content={content}
                 embedColor={embedColor}
@@ -225,23 +225,24 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
                 cardTitle="SERVER BOOST"
                 channels={channels}
                 roles={roles}
+                hideHeader={true}
               />
             </div>
+          </div>
 
-            {/* Helper Variables Box */}
-            <div className="bg-neutral-900/50 border border-neutral-800/50 rounded-xl p-4 mt-auto">
-              <h4 className="text-[13px] text-white font-semibold mb-3 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#EB459E" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
-                </svg>
-                Variables You Can Use
-              </h4>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-neutral-800/50 border border-neutral-700/50 px-3 py-2 rounded-lg text-xs flex justify-between items-center"><code className="text-pink-400 font-semibold">{'{user}'}</code> <span className="text-neutral-500">@User</span></div>
-                <div className="bg-neutral-800/50 border border-neutral-700/50 px-3 py-2 rounded-lg text-xs flex justify-between items-center"><code className="text-pink-400 font-semibold">{'{server}'}</code> <span className="text-neutral-500">Server Name</span></div>
-                <div className="bg-neutral-800/50 border border-neutral-700/50 px-3 py-2 rounded-lg text-xs flex justify-between items-center"><code className="text-pink-400 font-semibold">{'{count}'}</code> <span className="text-neutral-500">Boost Count</span></div>
-                <div className="bg-neutral-800/50 border border-neutral-700/50 px-3 py-2 rounded-lg text-xs flex justify-between items-center"><code className="text-pink-400 font-semibold">{'{id}'}</code> <span className="text-neutral-500">User ID</span></div>
-              </div>
+          {/* Variables Tile */}
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] p-5">
+            <h4 className="text-[13px] text-white font-semibold mb-4 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#EB459E" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+              </svg>
+              Variables You Can Use
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-neutral-800/50 border border-neutral-700/50 px-3 py-2.5 rounded-lg text-xs flex justify-between items-center"><code className="text-pink-400 font-semibold">{'{user}'}</code> <span className="text-neutral-500">@User</span></div>
+              <div className="bg-neutral-800/50 border border-neutral-700/50 px-3 py-2.5 rounded-lg text-xs flex justify-between items-center"><code className="text-pink-400 font-semibold">{'{server}'}</code> <span className="text-neutral-500">Server Name</span></div>
+              <div className="bg-neutral-800/50 border border-neutral-700/50 px-3 py-2.5 rounded-lg text-xs flex justify-between items-center"><code className="text-pink-400 font-semibold">{'{count}'}</code> <span className="text-neutral-500">Boost Count</span></div>
+              <div className="bg-neutral-800/50 border border-neutral-700/50 px-3 py-2.5 rounded-lg text-xs flex justify-between items-center"><code className="text-pink-400 font-semibold">{'{id}'}</code> <span className="text-neutral-500">User ID</span></div>
             </div>
           </div>
         </div>
