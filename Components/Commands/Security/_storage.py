@@ -65,3 +65,19 @@ def load_security_config(guild_id: int) -> Dict[str, Any]:
 
 def save_security_config(guild_id: int, config: Dict[str, Any]) -> None:
     set_config("Security", guild_id, config)
+
+def log_threat(guild_id: int, threat_type: str, message: str) -> None:
+    import time
+    config = load_security_config(guild_id)
+    if "threat_logs" not in config:
+        config["threat_logs"] = []
+    
+    config["threat_logs"].insert(0, {
+        "timestamp": time.time(),
+        "type": threat_type,
+        "message": message
+    })
+    
+    # Keep only last 50 logs
+    config["threat_logs"] = config["threat_logs"][:50]
+    save_security_config(guild_id, config)

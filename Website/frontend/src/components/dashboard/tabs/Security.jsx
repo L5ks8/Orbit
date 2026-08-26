@@ -64,6 +64,7 @@ export default function Security({ guildId, serverData, setServerData }) {
   const [initialStateStr, setInitialStateStr] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
+  const [activeThreatTab, setActiveThreatTab] = useState('All');
 
   // States
   const [antiNuke, setAntiNuke] = useState({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...initialCfg.anti_nuke });
@@ -357,8 +358,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <CustomSelect 
                                   isMulti 
                                   options={roleOptions} 
-                                  value={roleOptions.filter(o => antiNuke.exempt_roles.includes(o.value))} 
-                                  onChange={(selected) => setAntiNuke({...antiNuke, exempt_roles: selected ? selected.map(s => s.value) : []})} 
+                                  value={roleOptions.filter(o => (antiNuke.exempt_roles || []).map(String).includes(String(o.value)))} 
+                                  onChange={(selected) => setAntiNuke({...antiNuke, exempt_roles: selected ? selected.map(s => String(s.value)) : []})} 
                                   placeholder="Add a trusted role..." 
                                 />
                               </div>
@@ -399,8 +400,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                   <CustomSelect 
                                     isMulti 
                                     options={permissionOptions} 
-                                    value={permissionOptions.filter(o => antiNuke.permissions_granted_watch.includes(o.value))} 
-                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_granted_watch: selected ? selected.map(s => s.value) : []})} 
+                                    value={permissionOptions.filter(o => (antiNuke.permissions_granted_watch || []).map(String).includes(String(o.value)))} 
+                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_granted_watch: selected ? selected.map(s => String(s.value)) : []})} 
                                     placeholder="Default — all dangerous permissions" 
                                   />
                                 </div>
@@ -411,8 +412,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                   <CustomSelect 
                                     isMulti 
                                     options={permissionOptions} 
-                                    value={permissionOptions.filter(o => antiNuke.permissions_removed_watch.includes(o.value))} 
-                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_removed_watch: selected ? selected.map(s => s.value) : []})} 
+                                    value={permissionOptions.filter(o => (antiNuke.permissions_removed_watch || []).map(String).includes(String(o.value)))} 
+                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_removed_watch: selected ? selected.map(s => String(s.value)) : []})} 
                                     placeholder="Default — all dangerous permissions" 
                                   />
                                 </div>
@@ -666,8 +667,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <CustomSelect 
                                   isMulti 
                                   options={roleOptions} 
-                                  value={roleOptions.filter(o => antiRaid.immune_roles.includes(o.value))} 
-                                  onChange={(selected) => setAntiRaid({...antiRaid, immune_roles: selected ? selected.map(s => s.value) : []})} 
+                                  value={roleOptions.filter(o => (antiRaid.immune_roles || []).map(String).includes(String(o.value)))} 
+                                  onChange={(selected) => setAntiRaid({...antiRaid, immune_roles: selected ? selected.map(s => String(s.value)) : []})} 
                                   placeholder="Add a trusted role..." 
                                 />
                               </div>

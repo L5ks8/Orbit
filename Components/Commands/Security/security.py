@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import time
 from collections import defaultdict
-from Components.Commands.Security._storage import load_security_config
+from Components.Commands.Security._storage import load_security_config, log_threat
 import datetime
 import asyncio
 
@@ -83,6 +83,8 @@ class SecurityModule(commands.Cog):
             elif level == "aggressive":
                 # Instant Ban
                 await member.ban(reason="Orbit Anti-Nuke: Aggressive")
+            
+            log_threat(guild.id, "nuke", f"{member.name} ({member.id}) was punished for triggering Anti-Nuke.")
         except discord.Forbidden:
             pass 
 
@@ -240,6 +242,7 @@ class SecurityModule(commands.Cog):
                             if inviter and not self.is_exempt(inviter, config, "anti_nuke"):
                                 await self._punish_nuker(guild, inviter, config)
                                 await member.kick(reason="Orbit Anti-Nuke: Block Unknown Bot")
+                                log_threat(guild.id, "nuke", f"Unknown bot {member.name} added by {inviter.name} was kicked.")
                         break
                 except (discord.Forbidden, discord.HTTPException):
                     pass
@@ -267,6 +270,8 @@ class SecurityModule(commands.Cog):
                         await member.kick(reason="Orbit Anti-Raid: Suspicious Account")
                     elif action == "ban":
                         await member.ban(reason="Orbit Anti-Raid: Suspicious Account")
+                        
+                    log_threat(guild.id, "raid", f"Suspicious account {member.name} ({member.id}) joined and was {action}ed.")
                 except discord.Forbidden:
                     pass
                     
@@ -298,6 +303,7 @@ class SecurityModule(commands.Cog):
                     await member.kick(reason="Orbit Anti-Raid: Mass Join Raid")
                 elif action == "ban":
                     await member.ban(reason="Orbit Anti-Raid: Mass Join Raid")
+                log_threat(guild.id, "raid", f"Mass join raid detected. Action '{action}' taken on {member.name}.")
             except discord.Forbidden:
                 pass
                 
@@ -359,6 +365,8 @@ class SecurityModule(commands.Cog):
                                     await creator.ban(reason="Orbit Webhook Protection")
                             except discord.Forbidden:
                                 pass
+                        
+                        log_threat(guild.id, "webhook", f"Unauthorized webhook '{webhook.name if 'webhook' in locals() else 'unknown'}' created by {creator.name if creator else 'unknown'} was deleted.")
         except (discord.Forbidden, discord.HTTPException):
             pass
 
