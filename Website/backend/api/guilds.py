@@ -41,9 +41,6 @@ class GuildsMixin:
         if sort_key == "invites":
             from Components.Commands.Invite._storage import get_leaderboard
             top = get_leaderboard(guild_id, limit=100)
-        elif sort_key == "balance":
-            from Components.Commands.Economy._storage import get_economy_leaderboard
-            top = get_economy_leaderboard(guild_id, limit=100)
         else:
             top = get_leaderboard_by(guild_id, sort_key, 100)
         
@@ -150,8 +147,11 @@ class GuildsMixin:
             
         import time
         now = time.time()
+        
+        force_refresh = request.query.get("force") == "true"
+        
         cached = self._manageable_guilds_cache.get(user["id"])
-        if cached and (now - cached['time'] < 60):
+        if cached and (now - cached['time'] < 60) and not force_refresh:
             return web.json_response(cached['data'])
 
         headers = {"Authorization": f"Bearer {user['access_token']}"}
