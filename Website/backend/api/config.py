@@ -902,17 +902,6 @@ class ConfigMixin:
                         except Exception:
                             pass
             
-            if user_perms.get("can_channels") and "security" in data:
-                from Components.Systems.Security._storage import load_security_config, save_security_config
-                sec_cfg = load_security_config(guild_id)
-                sec_data = data["security"]
-                sec_cfg["enabled"] = bool(sec_data.get("enabled", sec_cfg.get("enabled", False)))
-                sec_cfg["anti_nuke_enabled"] = bool(sec_data.get("anti_nuke_enabled", True))
-                sec_cfg["anti_scam_enabled"] = bool(sec_data.get("anti_scam_enabled", True))
-                sec_cfg["anti_nuke_threshold"] = int(sec_data.get("anti_nuke_threshold", 3))
-                sec_cfg["anti_nuke_time_window"] = int(sec_data.get("anti_nuke_time_window", 10))
-                save_security_config(guild_id, sec_cfg)
-
             if user_perms.get("can_channels") and "autoresponder" in data:
                 import Components.Commands.AutoResponder._storage as ar_storage
                 ar_storage.save_responses(guild_id, data["autoresponder"])

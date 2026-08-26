@@ -4,6 +4,7 @@ import SaveBar from '../../ui/SaveBar';
 import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
 import CustomSelect from '../../ui/CustomSelect';
+import TrustedUserInput from '../../ui/TrustedUserInput';
 
 const TailwindToggle = ({ checked, onChange }) => (
     <button 
@@ -79,10 +80,11 @@ export default function Security({ guildId, serverData, setServerData }) {
 
   useEffect(() => {
     if (serverData) {
+      const cfg = serverData.config?.security || {};
       setInitialStateStr(JSON.stringify({
-        anti_nuke: serverData.config?.security?.anti_nuke || { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false },
-        anti_raid: serverData.config?.security?.anti_raid || { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false },
-        webhook_protection: serverData.config?.security?.webhook_protection || { enabled: false, block_everyone: false, block_invite_links: false }
+        anti_nuke: { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...cfg.anti_nuke },
+        anti_raid: { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, suspicious_account_age: '14d', suspicious_action: 'flag', suspicious_alert_channel: null, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, level: 'balanced', ...cfg.anti_raid },
+        webhook_protection: { enabled: false, block_everyone: false, block_invite_links: false, rate_limit: 5, action: 'delete', trusted_webhooks: '', ...cfg.webhook_protection }
       }));
       setLoading(false);
     } else {
@@ -92,18 +94,18 @@ export default function Security({ guildId, serverData, setServerData }) {
           setCache(guildId, data);
           const cfg = data.config?.security || {};
           setAntiNuke({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...cfg.anti_nuke });
-          setAntiRaid({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, ...cfg.anti_raid });
+          setAntiRaid({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, suspicious_account_age: '14d', suspicious_action: 'flag', suspicious_alert_channel: null, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, level: 'balanced', ...cfg.anti_raid });
           setWebhookProtection({ enabled: false, block_everyone: false, block_invite_links: false, rate_limit: 5, action: 'delete', trusted_webhooks: '', ...cfg.webhook_protection });
           setInitialStateStr(JSON.stringify({
-            anti_nuke: cfg.anti_nuke || { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false },
-            anti_raid: cfg.anti_raid || { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false },
-            webhook_protection: cfg.webhook_protection || { enabled: false, block_everyone: false, block_invite_links: false }
+            anti_nuke: { enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...cfg.anti_nuke },
+            anti_raid: { enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, suspicious_account_age: '14d', suspicious_action: 'flag', suspicious_alert_channel: null, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, level: 'balanced', ...cfg.anti_raid },
+            webhook_protection: { enabled: false, block_everyone: false, block_invite_links: false, rate_limit: 5, action: 'delete', trusted_webhooks: '', ...cfg.webhook_protection }
           }));
           setLoading(false);
         })
         .catch(err => { console.error(err); setLoading(false); });
     }
-  }, [guildId]);
+  }, [guildId, serverData]);
 
   const handleSave = async (payloadString) => {
     setIsSaving(true);
@@ -196,7 +198,7 @@ export default function Security({ guildId, serverData, setServerData }) {
           <div className="mt-6">
             <div className="space-y-3">
               <div className="">
-                <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+                <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] relative z-30">
                   <div className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer select-none">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-red-500/10">
@@ -340,16 +342,10 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
                                   User IDs
                                 </label>
-                                <div className="flex flex-wrap items-center gap-1.5 min-h-[42px] px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl cursor-text transition-colors">
-                                  <input
-                                    placeholder="Add user IDs to exempt..."
-                                    title=""
-                                    autoComplete="off"
-                                    className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5"
-                                    value={antiNuke.exempt_users}
-                                    onChange={(e) => setAntiNuke({...antiNuke, exempt_users: e.target.value})}
-                                  />
-                                </div>
+                                <TrustedUserInput 
+                                  value={antiNuke.exempt_users}
+                                  onChange={(val) => setAntiNuke({...antiNuke, exempt_users: val})}
+                                />
                               </div>
                               <div>
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
@@ -649,16 +645,10 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
                                   Trusted Users (immune)
                                 </label>
-                                <div className="flex flex-wrap items-center gap-1.5 min-h-[42px] px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl cursor-text transition-colors">
-                                  <input
-                                    placeholder="Add user IDs..."
-                                    title=""
-                                    autoComplete="off"
-                                    className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5"
-                                    value={antiRaid.immune_users}
-                                    onChange={(e) => setAntiRaid({...antiRaid, immune_users: e.target.value})}
-                                  />
-                                </div>
+                                <TrustedUserInput 
+                                  value={antiRaid.immune_users}
+                                  onChange={(val) => setAntiRaid({...antiRaid, immune_users: val})}
+                                />
                               </div>
                               <div>
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
@@ -813,8 +803,9 @@ export default function Security({ guildId, serverData, setServerData }) {
                 </div>
               </div>
             </div>
+            {/* Anti-Nuke Protection */}
             <div className="mt-3">
-              <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+              <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] relative z-10">
                 <div className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer select-none">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-cyan-500/10">
