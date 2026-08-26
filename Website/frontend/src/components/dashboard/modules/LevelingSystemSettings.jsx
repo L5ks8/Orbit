@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import Toggle from '../../ui/Toggle';
-import SaveBar from '../../ui/SaveBar';
 import CustomSelect from '../../ui/CustomSelect';
 
 export default function LevelingSystemSettings({ config, channels, roles, onSave, saving, onReset }) {
@@ -120,8 +119,17 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
   const isDirty = JSON.stringify(getPayload()) !== initialState;
 
   const handleSave = () => {
-    onSave(getPayload());
+    onSave(getPayload(), true);
   };
+
+  React.useEffect(() => {
+    if (isDirty) {
+      const timeout = setTimeout(() => {
+        handleSave();
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isDirty]);
 
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">

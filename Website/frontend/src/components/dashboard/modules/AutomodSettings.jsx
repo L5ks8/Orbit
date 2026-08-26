@@ -1,5 +1,4 @@
 import Toggle from '../../ui/Toggle';
-import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 
@@ -88,8 +87,17 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
   }, [config]);
 
   const handleSave = () => {
-    onSave(getPayload());
+    onSave(getPayload(), true);
   };
+
+  React.useEffect(() => {
+    if (isDirty) {
+      const timeout = setTimeout(() => {
+        handleSave();
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isDirty]);
 
   return (
     <div className="dash-settings-module">
@@ -295,7 +303,6 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
           </div>
         </div>
       )}
-      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </div>
   );
 }
