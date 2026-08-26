@@ -75,7 +75,7 @@ class ImageFilters(commands.Cog):
             width, height = avatar.size
             
             import os
-            wasted_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "Assets", "fun", "wasted_text.png")
+            wasted_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "Website", "frontend", "public", "img", "fun", "wasted_text.png")
             if os.path.exists(wasted_img_path):
                 overlay = Image.open(wasted_img_path).convert("RGBA")
                 # Resize the overlay to fit the avatar width
@@ -154,7 +154,7 @@ class ImageFilters(commands.Cog):
             avatar = ImageOps.grayscale(avatar).convert("RGBA")
             
             import os
-            rip_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "Assets", "fun", "rip_tombstone.png")
+            rip_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "Website", "frontend", "public", "img", "fun", "rip_tombstone.png")
             if os.path.exists(rip_img_path):
                 tombstone = Image.open(rip_img_path).convert("RGBA")
                 # Resize avatar to fit under RIP
