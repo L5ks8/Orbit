@@ -67,7 +67,7 @@ export default function Sidebar({ guildId, isOpen = true }) {
         { name: 'Leveling System', path: `/dashboard/${guildId}/level`, icon: <Activity size={16} /> },
         { name: 'Leaderboard', path: `/dashboard/${guildId}/leaderboard`, icon: <BarChart3 size={16} /> },
         { name: 'Boost Messages', path: `/dashboard/${guildId}/boost`, icon: <Zap size={16} /> },
-        { name: 'Server Stats', path: `/dashboard/${guildId}/serverstats`, icon: <BarChart2 size={16} /> },
+        { name: 'Server Stats', path: `/dashboard/${guildId}/serverstats`, icon: <BarChart3 size={16} /> },
       ]
     },
     {
