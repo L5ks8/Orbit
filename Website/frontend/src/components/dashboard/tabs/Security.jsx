@@ -228,8 +228,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                       </div>
                     </div>
                   </div>
-                  <div className={`grid transition-all duration-300 ease-in-out ${antiNuke.enabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                    <div className="overflow-hidden">
+                  <div className={`grid transition-all duration-300 ease-in-out ${antiNuke.enabled ? 'grid-rows-[1fr] opacity-100 overflow-visible' : 'grid-rows-[0fr] opacity-0 overflow-hidden'}`}>
+                    <div className={antiNuke.enabled ? 'overflow-visible' : 'overflow-hidden'}>
                       <div className="px-5 pb-5 pt-4 border-t border-neutral-800">
                         <div className="relative">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -392,8 +392,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <path d="m6 9 6 6 6-6"></path>
                               </svg>
                             </button>
-                            <div className={`grid transition-all duration-300 ease-in-out ${advancedSettingsOpen ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0'}`}>
-                              <div className="overflow-hidden">
+                            <div className={`grid transition-all duration-300 ease-in-out ${advancedSettingsOpen ? 'grid-rows-[1fr] opacity-100 mt-4 overflow-visible' : 'grid-rows-[0fr] opacity-0 overflow-hidden'}`}>
+                              <div className={advancedSettingsOpen ? 'overflow-visible' : 'overflow-hidden'}>
                                 <div className="space-y-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
@@ -485,8 +485,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                       </div>
                     </div>
                   </div>
-                  <div className={`grid transition-all duration-300 ease-in-out ${antiRaid.enabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                    <div className="overflow-hidden">
+                  <div className={`grid transition-all duration-300 ease-in-out ${antiRaid.enabled ? 'grid-rows-[1fr] opacity-100 overflow-visible' : 'grid-rows-[0fr] opacity-0 overflow-hidden'}`}>
+                    <div className={antiRaid.enabled ? 'overflow-visible' : 'overflow-hidden'}>
                       <div className="px-5 pb-5 pt-4 border-t border-neutral-800">
                         <div className="relative">
                           <div className="mb-4">
@@ -848,8 +848,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                     </div>
                   </div>
                 </div>
-                <div className={`grid transition-all duration-300 ease-in-out ${webhookProtection.enabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                  <div className="overflow-hidden">
+                <div className={`grid transition-all duration-300 ease-in-out ${webhookProtection.enabled ? 'grid-rows-[1fr] opacity-100 overflow-visible' : 'grid-rows-[0fr] opacity-0 overflow-hidden'}`}>
+                  <div className={webhookProtection.enabled ? 'overflow-visible' : 'overflow-hidden'}>
                     <div className="px-5 pb-5 pt-4 border-t border-neutral-800">
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
