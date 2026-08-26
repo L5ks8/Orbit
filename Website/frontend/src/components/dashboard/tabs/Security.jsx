@@ -63,6 +63,7 @@ export default function Security({ guildId, serverData, setServerData }) {
   const [loading, setLoading] = useState(false);
   const [initialStateStr, setInitialStateStr] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
 
   // States
   const [antiNuke, setAntiNuke] = useState({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...initialCfg.anti_nuke });
@@ -370,6 +371,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                           <div className="mt-5 border-t border-neutral-800/70 pt-4">
                             <button
                               type="button"
+                              onClick={() => setAdvancedSettingsOpen(!advancedSettingsOpen)}
                               className="flex items-center justify-between gap-3 w-full text-left group transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-lg"
                             >
                               <p className="text-sm font-medium text-white">
@@ -385,12 +387,14 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                className="lucide lucide-chevron-down w-4 h-4 text-neutral-500 shrink-0 transition-transform rotate-180"
+                                className={`lucide lucide-chevron-down w-4 h-4 text-neutral-500 shrink-0 transition-transform ${advancedSettingsOpen ? 'rotate-180' : ''}`}
                               >
                                 <path d="m6 9 6 6 6-6"></path>
                               </svg>
                             </button>
-                            <div className="mt-4 space-y-4">
+                            <div className={`grid transition-all duration-300 ease-in-out ${advancedSettingsOpen ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0'}`}>
+                              <div className="overflow-hidden">
+                                <div className="space-y-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                   <label className="text-[11px] text-neutral-500 block mb-1.5">
@@ -439,6 +443,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                   <span className="text-xs text-neutral-500 flex-shrink-0">
                                     emojis / 30s
                                   </span>
+                                </div>
+                              </div>
                                 </div>
                               </div>
                             </div>
