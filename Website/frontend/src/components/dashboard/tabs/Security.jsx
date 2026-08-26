@@ -20,7 +20,7 @@ const TailwindToggle = ({ checked, onChange }) => (
 export default function Security({ guildId, serverData, setServerData }) {
 
   
-  const { toast } = useToast();
+  const toast = useToast();
 
   const initialCfg = serverData?.config?.security || {};
   const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: String(r.id), label: r.name || 'Unknown Role', color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined })) : [];
