@@ -66,7 +66,7 @@ export default function Security({ guildId, serverData, setServerData }) {
 
   // States
   const [antiNuke, setAntiNuke] = useState({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...initialCfg.anti_nuke });
-  const [antiRaid, setAntiRaid] = useState({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, ...initialCfg.anti_raid });
+  const [antiRaid, setAntiRaid] = useState({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, level: 'balanced', ...initialCfg.anti_raid });
   const [webhookProtection, setWebhookProtection] = useState({ enabled: false, block_everyone: false, block_invite_links: false, trusted_webhooks: '', ...initialCfg.webhook_protection });
 
   const getPayload = () => ({
@@ -490,7 +490,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <button
                                 type="button"
-                                className="px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                                onClick={() => setAntiRaid({...antiRaid, level: 'lenient'})}
+                                className={`px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiRaid.level === 'lenient' ? 'bg-neutral-800 border-neutral-600 text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'}`}
                               >
                                 <div className="text-[13px] font-semibold">
                                   Lenient
@@ -501,7 +502,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                               </button>
                               <button
                                 type="button"
-                                className="px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                                onClick={() => setAntiRaid({...antiRaid, level: 'balanced'})}
+                                className={`px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiRaid.level === 'balanced' ? 'bg-neutral-800 border-neutral-600 text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'}`}
                               >
                                 <div className="text-[13px] font-semibold">
                                   Balanced
@@ -512,7 +514,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                               </button>
                               <button
                                 type="button"
-                                className="px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-800 border-neutral-600 text-white"
+                                onClick={() => setAntiRaid({...antiRaid, level: 'strict'})}
+                                className={`px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiRaid.level === 'strict' ? 'bg-neutral-800 border-neutral-600 text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'}`}
                               >
                                 <div className="text-[13px] font-semibold">
                                   Strict
@@ -532,13 +535,14 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <div className="w-full">
                                   <div className="relative">
                                     <input
-                                      autocomplete="off"
+                                      autoComplete="off"
                                       title=""
                                       className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600    "
                                       min="3"
                                       max="50"
                                       type="number"
-                                      value="10"
+                                      value={antiRaid.join_threshold}
+                                      onChange={(e) => setAntiRaid({...antiRaid, join_threshold: parseInt(e.target.value) || 3})}
                                     />
                                   </div>
                                 </div>
@@ -555,13 +559,14 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <div className="w-full">
                                   <div className="relative">
                                     <input
-                                      autocomplete="off"
+                                      autoComplete="off"
                                       title=""
                                       className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600    "
                                       min="10"
                                       max="300"
                                       type="number"
-                                      value="30"
+                                      value={parseInt(antiRaid.join_time_window) || 10}
+                                      onChange={(e) => setAntiRaid({...antiRaid, join_time_window: `${e.target.value}s`})}
                                     />
                                   </div>
                                 </div>
@@ -578,13 +583,14 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <div className="w-full">
                                   <div className="relative">
                                     <input
-                                      autocomplete="off"
+                                      autoComplete="off"
                                       title=""
                                       className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600    "
                                       min="0"
                                       max="365"
                                       type="number"
-                                      value="7"
+                                      value={parseInt(antiRaid.young_account_cutoff) || 0}
+                                      onChange={(e) => setAntiRaid({...antiRaid, young_account_cutoff: `${e.target.value}d`})}
                                     />
                                   </div>
                                 </div>
@@ -599,60 +605,12 @@ export default function Security({ guildId, serverData, setServerData }) {
                               <label className="text-[11px] text-neutral-500 block mb-1.5">
                                 Max Action (ceiling)
                               </label>
-                              <div className="jsx-556cf662b09b3c73 w-full">
-                                <div className="jsx-556cf662b09b3c73 relative">
-                                  <button
-                                    type="button"
-                                    className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
-                                  >
-                                    <span className="jsx-556cf662b09b3c73 min-w-0 truncate text-sm text-white">
-                                      <span className="jsx-556cf662b09b3c73 flex items-center gap-2 min-w-0">
-                                        <span className="jsx-556cf662b09b3c73 truncate">
-                                          Lockdown
-                                        </span>
-                                      </span>
-                                    </span>
-                                    <div className="jsx-556cf662b09b3c73 flex items-center gap-1">
-                                      <span
-                                        role="button"
-                                        tabIndex="0"
-                                        aria-label="Clear selection"
-                                        className="jsx-556cf662b09b3c73 p-2 -m-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-                                      >
-                                        <svg
-                                          xmlns="http://www.w3.org/2000/svg"
-                                          width="24"
-                                          height="24"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          className="lucide lucide-x w-4 h-4"
-                                        >
-                                          <path d="M18 6 6 18"></path>
-                                          <path d="m6 6 12 12"></path>
-                                        </svg>
-                                      </span>
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
-                                      >
-                                        <path d="m6 9 6 6 6-6"></path>
-                                      </svg>
-                                    </div>
-                                  </button>
-                                </div>
-                              </div>
+                              <CustomSelect 
+                                options={actionOptions} 
+                                value={actionOptions.find(o => o.value === antiRaid.action)} 
+                                onChange={(selected) => setAntiRaid({...antiRaid, action: selected ? selected.value : 'timeout'})} 
+                                placeholder="Lockdown" 
+                              />
                             </div>
                             <div>
                               <label className="text-[11px] text-neutral-500 block mb-1.5">
@@ -662,13 +620,14 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <div className="w-full">
                                   <div className="relative">
                                     <input
-                                      autocomplete="off"
+                                      autoComplete="off"
                                       title=""
                                       className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600    "
                                       min="1"
                                       max="1440"
                                       type="number"
-                                      value="60"
+                                      value={antiRaid.auto_unlock_after?.endsWith('h') ? parseInt(antiRaid.auto_unlock_after) * 60 : parseInt(antiRaid.auto_unlock_after) || 60}
+                                      onChange={(e) => setAntiRaid({...antiRaid, auto_unlock_after: `${e.target.value}m`})}
                                     />
                                   </div>
                                 </div>
@@ -691,9 +650,10 @@ export default function Security({ guildId, serverData, setServerData }) {
                                   <input
                                     placeholder="Add user IDs..."
                                     title=""
-                                    autocomplete="off"
+                                    autoComplete="off"
                                     className="flex-1 min-w-[80px] bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5"
-                                    value=""
+                                    value={antiRaid.immune_users}
+                                    onChange={(e) => setAntiRaid({...antiRaid, immune_users: e.target.value})}
                                   />
                                 </div>
                               </div>
@@ -701,34 +661,13 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
                                   Trusted Roles (immune)
                                 </label>
-                                <div className="jsx-556cf662b09b3c73 w-full">
-                                  <div className="jsx-556cf662b09b3c73 relative">
-                                    <button
-                                      type="button"
-                                      className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
-                                    >
-                                      <span className="jsx-556cf662b09b3c73 min-w-0 truncate text-sm text-neutral-500">
-                                        Add a trusted role...
-                                      </span>
-                                      <div className="jsx-556cf662b09b3c73 flex items-center gap-1">
-                                        <svg
-                                          xmlns="http://www.w3.org/2000/svg"
-                                          width="24"
-                                          height="24"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
-                                        >
-                                          <path d="m6 9 6 6 6-6"></path>
-                                        </svg>
-                                      </div>
-                                    </button>
-                                  </div>
-                                </div>
+                                <CustomSelect 
+                                  isMulti 
+                                  options={roleOptions} 
+                                  value={roleOptions.filter(o => antiRaid.immune_roles.includes(o.value))} 
+                                  onChange={(selected) => setAntiRaid({...antiRaid, immune_roles: selected ? selected.map(s => s.value) : []})} 
+                                  placeholder="Add a trusted role..." 
+                                />
                               </div>
                             </div>
                             <div className="mt-4">
@@ -745,34 +684,13 @@ export default function Security({ guildId, serverData, setServerData }) {
                               <label className="text-[11px] text-neutral-500 block mb-1.5">
                                 Raid Alert Channel (optional)
                               </label>
-                              <div className="jsx-556cf662b09b3c73 w-full">
-                                <div className="jsx-556cf662b09b3c73 relative">
-                                  <button
-                                    type="button"
-                                    className="jsx-556cf662b09b3c73 w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer "
-                                  >
-                                    <span className="jsx-556cf662b09b3c73 min-w-0 truncate text-sm text-neutral-500">
-                                      Defaults to log channel
-                                    </span>
-                                    <div className="jsx-556cf662b09b3c73 flex items-center gap-1">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 "
-                                      >
-                                        <path d="m6 9 6 6 6-6"></path>
-                                      </svg>
-                                    </div>
-                                  </button>
-                                </div>
-                              </div>
+                                <CustomSelect 
+                                  options={channelOptions} 
+                                  value={channelOptions.find(o => o.value === antiRaid.alert_channel)} 
+                                  onChange={(selected) => setAntiRaid({...antiRaid, alert_channel: selected ? selected.value : null})} 
+                                  placeholder="Defaults to log channel" 
+                                  isClearable
+                                />
                             </div>
                           </div>
                         </div>
