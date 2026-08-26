@@ -358,8 +358,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <CustomSelect 
                                   isMulti 
                                   options={roleOptions} 
-                                  value={roleOptions.filter(o => (antiNuke.exempt_roles || []).map(String).includes(String(o.value)))} 
-                                  onChange={(selected) => setAntiNuke({...antiNuke, exempt_roles: selected ? selected.map(s => String(s.value)) : []})} 
+                                  value={antiNuke.exempt_roles || []} 
+                                  onChange={(selected) => setAntiNuke({...antiNuke, exempt_roles: selected || []})} 
                                   placeholder="Add a trusted role..." 
                                 />
                               </div>
@@ -400,8 +400,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                   <CustomSelect 
                                     isMulti 
                                     options={permissionOptions} 
-                                    value={permissionOptions.filter(o => (antiNuke.permissions_granted_watch || []).map(String).includes(String(o.value)))} 
-                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_granted_watch: selected ? selected.map(s => String(s.value)) : []})} 
+                                    value={antiNuke.permissions_granted_watch || []} 
+                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_granted_watch: selected || []})} 
                                     placeholder="Default — all dangerous permissions" 
                                   />
                                 </div>
@@ -412,8 +412,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                   <CustomSelect 
                                     isMulti 
                                     options={permissionOptions} 
-                                    value={permissionOptions.filter(o => (antiNuke.permissions_removed_watch || []).map(String).includes(String(o.value)))} 
-                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_removed_watch: selected ? selected.map(s => String(s.value)) : []})} 
+                                    value={antiNuke.permissions_removed_watch || []} 
+                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_removed_watch: selected || []})} 
                                     placeholder="Default — all dangerous permissions" 
                                   />
                                 </div>
@@ -610,8 +610,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                               </label>
                               <CustomSelect 
                                 options={actionOptions} 
-                                value={actionOptions.find(o => o.value === antiRaid.action)} 
-                                onChange={(selected) => setAntiRaid({...antiRaid, action: selected ? selected.value : 'timeout'})} 
+                                value={antiRaid.action} 
+                                onChange={(selected) => setAntiRaid({...antiRaid, action: selected || 'timeout'})} 
                                 placeholder="Lockdown" 
                               />
                             </div>
@@ -667,8 +667,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <CustomSelect 
                                   isMulti 
                                   options={roleOptions} 
-                                  value={roleOptions.filter(o => (antiRaid.immune_roles || []).map(String).includes(String(o.value)))} 
-                                  onChange={(selected) => setAntiRaid({...antiRaid, immune_roles: selected ? selected.map(s => String(s.value)) : []})} 
+                                  value={antiRaid.immune_roles || []} 
+                                  onChange={(selected) => setAntiRaid({...antiRaid, immune_roles: selected || []})} 
                                   placeholder="Add a trusted role..." 
                                 />
                               </div>
@@ -689,8 +689,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                               </label>
                                 <CustomSelect 
                                   options={channelOptions} 
-                                  value={channelOptions.find(o => o.value === antiRaid.alert_channel)} 
-                                  onChange={(selected) => setAntiRaid({...antiRaid, alert_channel: selected ? selected.value : null})} 
+                                  value={antiRaid.alert_channel} 
+                                  onChange={(selected) => setAntiRaid({...antiRaid, alert_channel: selected || null})} 
                                   placeholder="Defaults to log channel" 
                                   isClearable
                                 />
@@ -788,8 +788,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                               </label>
                               <CustomSelect 
                                 options={[{value: 'flag', label: 'Flag Only'}, {value: 'kick', label: 'Kick'}, {value: 'ban', label: 'Ban'}]} 
-                                value={[{value: 'flag', label: 'Flag Only'}, {value: 'kick', label: 'Kick'}, {value: 'ban', label: 'Ban'}].find(o => o.value === antiRaid.suspicious_action) || {value: 'flag', label: 'Flag Only'}} 
-                                onChange={(selected) => setAntiRaid({...antiRaid, suspicious_action: selected ? selected.value : 'flag'})} 
+                                value={antiRaid.suspicious_action} 
+                                onChange={(selected) => setAntiRaid({...antiRaid, suspicious_action: selected || 'flag'})} 
                                 placeholder="Flag Only" 
                               />
                             </div>
@@ -799,8 +799,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                               </label>
                               <CustomSelect 
                                 options={channelOptions} 
-                                value={channelOptions.find(o => o.value === antiRaid.suspicious_alert_channel)} 
-                                onChange={(selected) => setAntiRaid({...antiRaid, suspicious_alert_channel: selected ? selected.value : null})} 
+                                value={antiRaid.suspicious_alert_channel} 
+                                onChange={(selected) => setAntiRaid({...antiRaid, suspicious_alert_channel: selected || null})} 
                                 placeholder="Select channel..." 
                                 isClearable
                               />
@@ -898,8 +898,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                             </label>
                             <CustomSelect 
                               options={[{value: 'delete', label: 'Delete messages'}, {value: 'timeout', label: 'Timeout Author'}, {value: 'ban', label: 'Ban Author'}]} 
-                              value={[{value: 'delete', label: 'Delete messages'}, {value: 'timeout', label: 'Timeout Author'}, {value: 'ban', label: 'Ban Author'}].find(o => o.value === webhookProtection.action) || {value: 'delete', label: 'Delete messages'}} 
-                              onChange={(selected) => setWebhookProtection({...webhookProtection, action: selected ? selected.value : 'delete'})} 
+                              value={webhookProtection.action} 
+                              onChange={(selected) => setWebhookProtection({...webhookProtection, action: selected || 'delete'})} 
                               placeholder="Delete messages" 
                             />
                           </div>
