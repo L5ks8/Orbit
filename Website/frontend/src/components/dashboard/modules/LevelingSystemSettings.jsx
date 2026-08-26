@@ -14,6 +14,15 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
   const [levelRoles, setLevelRoles] = useState(lvlCfg.level_roles || []);
   const [statRoles, setStatRoles] = useState(lvlCfg.stat_roles || []);
 
+  const [levelRolesStack, setLevelRolesStack] = useState(lvlCfg.level_roles_stack || false);
+  const [levelRolesRejoin, setLevelRolesRejoin] = useState(lvlCfg.level_roles_rejoin || false);
+  const [statRolesMsgStack, setStatRolesMsgStack] = useState(lvlCfg.stat_roles_msg_stack || false);
+  const [statRolesVoiceStack, setStatRolesVoiceStack] = useState(lvlCfg.stat_roles_voice_stack || false);
+  const [statRolesReactStack, setStatRolesReactStack] = useState(lvlCfg.stat_roles_react_stack || false);
+  const [statRolesMsgCooldown, setStatRolesMsgCooldown] = useState(lvlCfg.stat_roles_msg_cooldown || 5);
+  const [statRolesVoiceCooldown, setStatRolesVoiceCooldown] = useState(lvlCfg.stat_roles_voice_cooldown || 5);
+  const [statRolesReactCooldown, setStatRolesReactCooldown] = useState(lvlCfg.stat_roles_react_cooldown || 5);
+
   const [msgXpEnabled, setMsgXpEnabled] = useState(lvlCfg.msg_xp_enabled !== false);
   const [voiceXpEnabled, setVoiceXpEnabled] = useState(lvlCfg.voice_xp_enabled || false);
   const [reactionXpEnabled, setReactionXpEnabled] = useState(lvlCfg.reaction_xp_enabled || false);
@@ -65,6 +74,14 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
       level_role_mode: levelRoleMode,
       level_roles: levelRoles,
       stat_roles: statRoles,
+      level_roles_stack: levelRolesStack,
+      level_roles_rejoin: levelRolesRejoin,
+      stat_roles_msg_stack: statRolesMsgStack,
+      stat_roles_voice_stack: statRolesVoiceStack,
+      stat_roles_react_stack: statRolesReactStack,
+      stat_roles_msg_cooldown: parseInt(statRolesMsgCooldown) || 0,
+      stat_roles_voice_cooldown: parseInt(statRolesVoiceCooldown) || 0,
+      stat_roles_react_cooldown: parseInt(statRolesReactCooldown) || 0,
       msg_xp_enabled: msgXpEnabled,
       voice_xp_enabled: voiceXpEnabled,
       reaction_xp_enabled: reactionXpEnabled,
@@ -496,14 +513,14 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
                   <label className="text-[13px] font-medium text-white block mb-0.5">Stack Roles</label>
                   <span className="text-[11px] text-neutral-500 leading-relaxed block">Keep roles from lower levels.</span>
                 </div>
-                <Toggle defaultChecked={false} />
+                <Toggle checked={levelRolesStack} onChange={() => setLevelRolesStack(!levelRolesStack)} />
               </div>
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <label className="text-[13px] font-medium text-white block mb-0.5">Re-add on Rejoin</label>
                   <span className="text-[11px] text-neutral-500 leading-relaxed block">Users regain roles upon rejoining.</span>
                 </div>
-                <Toggle defaultChecked={false} />
+                <Toggle checked={levelRolesRejoin} onChange={() => setLevelRolesRejoin(!levelRolesRejoin)} />
               </div>
             </div>
 
@@ -557,11 +574,28 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
                   <label className="text-[13px] font-medium text-white block mb-0.5">Stack Stat Roles</label>
                   <span className="text-[11px] text-neutral-500 leading-relaxed block">Keep roles from lower requirements.</span>
                 </div>
-                <Toggle defaultChecked={false} />
+                <Toggle 
+                  checked={statTab === 'messages' ? statRolesMsgStack : statTab === 'voice' ? statRolesVoiceStack : statRolesReactStack} 
+                  onChange={() => {
+                    if (statTab === 'messages') setStatRolesMsgStack(!statRolesMsgStack);
+                    if (statTab === 'voice') setStatRolesVoiceStack(!statRolesVoiceStack);
+                    if (statTab === 'reactions') setStatRolesReactStack(!statRolesReactStack);
+                  }} 
+                />
               </div>
               <div>
                 <label className="text-[11px] text-neutral-500 block mb-1.5">Stat Cooldown</label>
-                <input type="number" className="w-full px-4 py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600" defaultValue={5} />
+                <input 
+                  type="number" 
+                  className="w-full px-4 py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600" 
+                  value={statTab === 'messages' ? statRolesMsgCooldown : statTab === 'voice' ? statRolesVoiceCooldown : statRolesReactCooldown}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (statTab === 'messages') setStatRolesMsgCooldown(val);
+                    if (statTab === 'voice') setStatRolesVoiceCooldown(val);
+                    if (statTab === 'reactions') setStatRolesReactCooldown(val);
+                  }}
+                />
               </div>
             </div>
 
