@@ -452,48 +452,120 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
           </div>
         </div>
 
-        {/* Level Up Message */}
-        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-          <div className="flex items-center justify-between gap-4 px-5 py-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-pink-500/10">
-                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles w-4 h-4 text-pink-400">
-                  <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" />
-                </svg>
+        {/* Level Up Message Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* LEFT COLUMN: Settings */}
+          <div className="flex flex-col gap-6">
+            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+              <div className="flex items-center justify-between gap-4 px-5 py-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-pink-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles w-4 h-4 text-pink-400">
+                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-semibold text-white truncate">Level Up Message</span>
+                </div>
               </div>
-              <span className="text-sm font-semibold text-white truncate">Level Up Message</span>
+              <div className="px-5 pb-5 pt-1 border-t border-neutral-800">
+                <div className="space-y-6 mt-4">
+                  <div>
+                    <label className="text-[11px] text-neutral-500 block mb-1.5">Conditional Script</label>
+                    <p className="text-[11px] text-neutral-500 mb-2">Use {'{earned: Text}'} for any role earned, or {'{level[X]: Text}'} for specific levels.</p>
+                    <textarea className="w-full px-4 py-3 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 resize-y" rows="2" value={levelupConditional} onChange={e => setLevelupConditional(e.target.value)} placeholder="{earned: You earned {roles}!} {level[10]: Milestone Level 10!}"></textarea>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <label className="text-[13px] font-medium text-white block mb-0.5">Show User Avatar</label>
+                      <span className="text-[11px] text-neutral-500 leading-relaxed block">Display avatar in the embed thumbnail.</span>
+                    </div>
+                    <Toggle checked={levelupShowAvatar} onChange={() => setLevelupShowAvatar(!levelupShowAvatar)} />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] text-neutral-500 block mb-1.5">Message Content</label>
+                    <p className="text-[11px] text-neutral-500 mb-2">Text outside the embed (e.g. {'{user_mention}'}).</p>
+                    <textarea className="w-full px-4 py-3 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 resize-y" rows="2" value={levelupMessageContent} onChange={e => setLevelupMessageContent(e.target.value)} placeholder="{user_mention}"></textarea>
+                  </div>
+
+                  <div className="bg-neutral-800/50 border border-neutral-800/50 rounded-xl p-4">
+                    <label className="text-[11px] text-neutral-500 block mb-4">Embed Builder</label>
+                    <div className="space-y-3">
+                      <input type="text" className="w-full px-4 py-2 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50" placeholder="Author Name" value={levelupEmbedAuthor} onChange={e => setLevelupEmbedAuthor(e.target.value)} />
+                      <input type="text" className="w-full px-4 py-2 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50 font-semibold" placeholder="Title" value={levelupEmbedTitle} onChange={e => setLevelupEmbedTitle(e.target.value)} />
+                      <textarea className="w-full px-4 py-3 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50 resize-y" rows="3" placeholder="Description" value={levelupEmbedDescription} onChange={e => setLevelupEmbedDescription(e.target.value)}></textarea>
+                      <input type="text" className="w-full px-4 py-2 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50" placeholder="Image URL" value={levelupEmbedImage} onChange={e => setLevelupEmbedImage(e.target.value)} />
+                      <input type="text" className="w-full px-4 py-2 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50 text-xs" placeholder="Footer Text" value={levelupEmbedFooter} onChange={e => setLevelupEmbedFooter(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="px-5 pb-5 pt-1 border-t border-neutral-800">
-            <div className="space-y-6 mt-4">
-              <div>
-                <label className="text-[11px] text-neutral-500 block mb-1.5">Conditional Script</label>
-                <p className="text-[11px] text-neutral-500 mb-2">Use {'{earned: Text}'} for any role earned, or {'{level[X]: Text}'} for specific levels.</p>
-                <textarea className="w-full px-4 py-3 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 resize-y" rows="2" value={levelupConditional} onChange={e => setLevelupConditional(e.target.value)} placeholder="{earned: You earned {roles}!} {level[10]: Milestone Level 10!}"></textarea>
+          
+          {/* RIGHT COLUMN: Live Preview */}
+          <div className="flex flex-col gap-6 h-full">
+            <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden h-full">
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800">
+                <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye text-neutral-400">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span className="text-sm font-semibold text-white">Live Preview</span>
               </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <label className="text-[13px] font-medium text-white block mb-0.5">Show User Avatar</label>
-                  <span className="text-[11px] text-neutral-500 leading-relaxed block">Display avatar in the embed thumbnail.</span>
-                </div>
-                <Toggle checked={levelupShowAvatar} onChange={() => setLevelupShowAvatar(!levelupShowAvatar)} />
-              </div>
-
-              <div>
-                <label className="text-[11px] text-neutral-500 block mb-1.5">Message Content</label>
-                <p className="text-[11px] text-neutral-500 mb-2">Text outside the embed (e.g. {'{user_mention}'}).</p>
-                <textarea className="w-full px-4 py-3 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 resize-y" rows="2" value={levelupMessageContent} onChange={e => setLevelupMessageContent(e.target.value)} placeholder="{user_mention}"></textarea>
-              </div>
-
-              <div className="bg-neutral-800/50 border border-neutral-800/50 rounded-xl p-4">
-                <label className="text-[11px] text-neutral-500 block mb-4">Embed Builder</label>
-                <div className="space-y-3">
-                  <input type="text" className="w-full px-4 py-2 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50" placeholder="Author Name" value={levelupEmbedAuthor} onChange={e => setLevelupEmbedAuthor(e.target.value)} />
-                  <input type="text" className="w-full px-4 py-2 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50 font-semibold" placeholder="Title" value={levelupEmbedTitle} onChange={e => setLevelupEmbedTitle(e.target.value)} />
-                  <textarea className="w-full px-4 py-3 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50 resize-y" rows="3" placeholder="Description" value={levelupEmbedDescription} onChange={e => setLevelupEmbedDescription(e.target.value)}></textarea>
-                  <input type="text" className="w-full px-4 py-2 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50" placeholder="Image URL" value={levelupEmbedImage} onChange={e => setLevelupEmbedImage(e.target.value)} />
-                  <input type="text" className="w-full px-4 py-2 bg-neutral-900 border rounded-lg text-white placeholder-neutral-500 focus:outline-none border-neutral-700/50 text-xs" placeholder="Footer Text" value={levelupEmbedFooter} onChange={e => setLevelupEmbedFooter(e.target.value)} />
+              
+              <div className="p-5 bg-[#313338] flex flex-col items-start gap-4 flex-1 overflow-y-auto">
+                <div className="flex items-start gap-4 w-full">
+                  <div className="w-10 h-10 rounded-full bg-[#111214] flex items-center justify-center shrink-0 overflow-hidden">
+                    <img src="/img/logo.png" alt="Orbit Logo" className="w-full h-full object-cover" />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1 w-full min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-[15px] text-white">Orbit</span>
+                      <span className="text-[10px] text-white bg-[#5865F2] px-1.5 py-0.5 rounded flex items-center gap-1 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width={10} height={10} viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        APP
+                      </span>
+                      <span className="text-[12px] text-[#949ba4]">Today at 12:00 PM</span>
+                    </div>
+                    
+                    {levelupMessageContent && (
+                      <div className="mt-1 text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed">
+                        {levelupMessageContent}
+                      </div>
+                    )}
+                    
+                    {(levelupEmbedAuthor || levelupEmbedTitle || levelupEmbedDescription || levelupEmbedImage || levelupEmbedFooter) && (
+                      <div className="mt-2 bg-[#2b2d31] border-l-4 border-pink-500 rounded p-4 flex flex-col w-full max-w-[432px]">
+                        {levelupEmbedAuthor && <span className="font-semibold text-[13px] text-white mb-1">{levelupEmbedAuthor}</span>}
+                        {levelupEmbedTitle && <span className="font-bold text-[15px] text-[#00a8fc] mb-2 break-words">{levelupEmbedTitle}</span>}
+                        {levelupEmbedDescription && (
+                          <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed mb-3">
+                            {levelupEmbedDescription}
+                          </span>
+                        )}
+                        
+                        <div className="flex items-start gap-4 w-full">
+                          {levelupEmbedImage && (
+                            <img src={levelupEmbedImage} alt="Embed" className="rounded max-w-full max-h-[300px] object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                          )}
+                        </div>
+                        
+                        {levelupShowAvatar && (
+                          <div className="mt-4 flex items-center">
+                            <div className="w-16 h-16 rounded-full bg-[#111214] border border-neutral-700/50 flex items-center justify-center text-xs text-neutral-500">Avatar</div>
+                          </div>
+                        )}
+                        
+                        {levelupEmbedFooter && (
+                          <div className="mt-3 flex items-center gap-2 text-[11px] font-medium text-[#949ba4]">
+                            <span>{levelupEmbedFooter}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
