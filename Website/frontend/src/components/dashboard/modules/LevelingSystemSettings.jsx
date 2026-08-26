@@ -1,9 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
+import { parseDiscordMarkdown, replaceVariables } from '../../ui/DiscordPreview';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function LevelingSystemSettings({ config, channels, roles, onSave, saving, onReset }) {
+  const { user } = useAuth();
   const lvlCfg = config?.level || {};
 
   const [levelEnabled, setLevelEnabled] = useState(lvlCfg.enabled !== false);
@@ -115,21 +118,30 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
     }
   });
 
-  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
-  const isDirty = JSON.stringify(getPayload()) !== initialState;
+  const [initialStateStr] = React.useState(() => JSON.stringify(getPayload()));
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
+
+  useEffect(() => {
+    if (!initialStateStr || !isDirty) return;
+    const timeoutId = setTimeout(() => {
+      onSave(getPayload(), true);
+    }, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [currentPayloadStr, initialStateStr, isDirty, onSave]);
 
   const handleSave = () => {
-    onSave(getPayload(), true);
+    onSave(getPayload());
   };
 
-  React.useEffect(() => {
-    if (isDirty) {
-      const timeout = setTimeout(() => {
-        handleSave();
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [isDirty]);
+  const replaceLevelVars = (text) => {
+    if (!text) return text;
+    return text
+      .replace(/\{level\}/gi, '{{pill:purple:10}}')
+      .replace(/\{level\[\d+\]\}/gi, '{{pill:purple:10}}')
+      .replace(/\{roles\}/gi, '{{pill:cyan:@Level 10 Role}}')
+      .replace(/\{earned\}/gi, '{{pill:cyan:You earned @Level 10 Role!}}');
+  };
 
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
@@ -531,36 +543,40 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
                     </div>
                     
                     {levelupMessageContent && (
-                      <div className="mt-1 text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed">
-                        {levelupMessageContent}
+                      <div className="mt-1 text-[14px] text-[#dbdee1] break-words leading-relaxed">
+                        {parseDiscordMarkdown(replaceVariables(replaceLevelVars(levelupMessageContent)))}
                       </div>
                     )}
                     
                     {(levelupEmbedAuthor || levelupEmbedTitle || levelupEmbedDescription || levelupEmbedImage || levelupEmbedFooter) && (
                       <div className="mt-2 bg-[#2b2d31] border-l-4 border-pink-500 rounded p-4 flex flex-col w-full max-w-[432px]">
-                        {levelupEmbedAuthor && <span className="font-semibold text-[13px] text-white mb-1">{levelupEmbedAuthor}</span>}
-                        {levelupEmbedTitle && <span className="font-bold text-[15px] text-[#00a8fc] mb-2 break-words">{levelupEmbedTitle}</span>}
-                        {levelupEmbedDescription && (
-                          <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed mb-3">
-                            {levelupEmbedDescription}
-                          </span>
-                        )}
-                        
-                        <div className="flex items-start gap-4 w-full">
-                          {levelupEmbedImage && (
-                            <img src={levelupEmbedImage} alt="Embed" className="rounded max-w-full max-h-[300px] object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <div className="flex gap-4">
+                          <div className="flex flex-col flex-1 min-w-0">
+                            {levelupEmbedAuthor && <span className="font-semibold text-[13px] text-white mb-1">{parseDiscordMarkdown(replaceVariables(replaceLevelVars(levelupEmbedAuthor)))}</span>}
+                            {levelupEmbedTitle && <span className="font-bold text-[15px] text-[#00a8fc] mb-2 break-words">{parseDiscordMarkdown(replaceVariables(replaceLevelVars(levelupEmbedTitle)))}</span>}
+                            {levelupEmbedDescription && (
+                              <div className="text-[14px] text-[#dbdee1] break-words leading-relaxed mb-3">
+                                {parseDiscordMarkdown(replaceVariables(replaceLevelVars(levelupEmbedDescription)))}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {levelupShowAvatar && (
+                            <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-[#111214] overflow-hidden ml-2 shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
+                              <img src={user?.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'} className="w-full h-full object-cover" alt="User Avatar" />
+                            </div>
                           )}
                         </div>
                         
-                        {levelupShowAvatar && (
-                          <div className="mt-4 flex items-center">
-                            <div className="w-16 h-16 rounded-full bg-[#111214] border border-neutral-700/50 flex items-center justify-center text-xs text-neutral-500">Avatar</div>
+                        {levelupEmbedImage && (
+                          <div className="flex items-start gap-4 w-full mt-1">
+                            <img src={levelupEmbedImage} alt="Embed" className="rounded max-w-full max-h-[300px] object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                           </div>
                         )}
                         
                         {levelupEmbedFooter && (
                           <div className="mt-3 flex items-center gap-2 text-[11px] font-medium text-[#949ba4]">
-                            <span>{levelupEmbedFooter}</span>
+                            <span>{parseDiscordMarkdown(replaceVariables(replaceLevelVars(levelupEmbedFooter)))}</span>
                           </div>
                         )}
                       </div>
