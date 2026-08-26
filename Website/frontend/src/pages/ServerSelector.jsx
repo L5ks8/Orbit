@@ -11,9 +11,9 @@ export default function ServerSelector() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const loadGuilds = () => {
+  const loadGuilds = (force = false) => {
     setFetching(true);
-    fetch('/api/guilds')
+    fetch(`/api/guilds${force ? '?force=true' : ''}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -693,7 +693,7 @@ export default function ServerSelector() {
             <h1 className="page-title">Your Servers</h1>
             <p style={{ fontSize: '14px', color: '#737373', margin: '4px 0 0' }}>{activeGuilds.length} active server{activeGuilds.length !== 1 ? 's' : ''}</p>
           </div>
-          <button className="refresh-btn" onClick={loadGuilds}>
+          <button className="refresh-btn" onClick={() => loadGuilds(true)}>
             <RefreshCw size={16} className={fetching ? 'animate-spin' : ''} />
             Refresh
           </button>
