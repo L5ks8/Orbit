@@ -3,13 +3,27 @@ import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview, { parseDiscordMarkdown, replaceVariables } from '../../ui/DiscordPreview';
 
-export default function BoostMessagesSettings({ config, channels, roles, onSave, saving, onReset }) {
+export default function BoostMessagesSettings({ guildId, config, channels, roles, onSave, saving, onReset }) {
   const bCfg = config?.boost || {};
   
   const [boostEnabled, setBoostEnabled] = useState(bCfg.enabled || false);
   const [mode, setMode] = useState(bCfg.msg_mode || 'embed');
   const [channel, setChannel] = useState(bCfg.channel_id || '');
   const [rewardRole, setRewardRole] = useState(bCfg.reward_role_id || '');
+  const [boostCount, setBoostCount] = useState(0);
+
+  useEffect(() => {
+    if (!guildId) return;
+    fetch('/api/guilds', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const g = data.find(x => x.id === guildId);
+      if (g) setBoostCount(g.premiumSubscriptionCount || g.premium_subscription_count || 0);
+    })
+    .catch(console.error);
+  }, [guildId]);
   
   // Message State
   const [content, setContent] = useState(bCfg.message || 'Thank you for boosting the server, {user}!');
@@ -201,6 +215,26 @@ export default function BoostMessagesSettings({ config, channels, roles, onSave,
 
         {/* RIGHT COLUMN: Live Preview & Variables as separate Tiles */}
         <div className="flex flex-col gap-5 h-full">
+          {/* Boost Count Tile */}
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-pink-500/10 text-pink-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gem">
+                  <polygon points="6 3 18 3 22 9 12 22 2 9" />
+                  <path d="M11.7 22 8 9" />
+                  <path d="M12.3 22 16 9" />
+                  <path d="M2 9h20" />
+                  <path d="M6 3v6" />
+                  <path d="M18 3v6" />
+                </svg>
+              </div>
+              <span className="text-sm font-semibold text-white">Current Boost Count</span>
+            </div>
+            <div className="bg-neutral-800/80 border border-neutral-700/50 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">
+              <span className="text-pink-400 mr-1">{boostCount}</span> Boosts
+            </div>
+          </div>
+
           {/* Live Preview Tile */}
           <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
             <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800 shrink-0">
