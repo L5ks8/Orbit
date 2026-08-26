@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 import time
 from collections import defaultdict
@@ -72,7 +72,7 @@ class SecurityModule(commands.Cog):
                         if member:
                             await self._punish_nuker(guild, member)
                     break
-        except discord.Forbidden:
+        except (discord.Forbidden, discord.HTTPException):
             pass
 
     @commands.Cog.listener()
@@ -88,7 +88,7 @@ class SecurityModule(commands.Cog):
                         if member:
                             await self._punish_nuker(guild, member)
                     break
-        except discord.Forbidden:
+        except (discord.Forbidden, discord.HTTPException):
             pass
 
     @commands.Cog.listener()
@@ -103,7 +103,7 @@ class SecurityModule(commands.Cog):
                         if member:
                             await self._punish_nuker(guild, member)
                     break
-        except discord.Forbidden:
+        except (discord.Forbidden, discord.HTTPException):
             pass
 
     @commands.Cog.listener()
