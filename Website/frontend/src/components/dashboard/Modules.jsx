@@ -68,6 +68,7 @@ export default function Modules({ guildId, serverData, setServerData }) {
 
   const handleSave = async (payload, preventRemount = false) => {
     setSaving(true);
+    const toastId = toast.loading('Saving...');
     try {
       const res = await fetch(`/api/config/${guildId}`, {
         method: 'POST',
@@ -79,7 +80,7 @@ export default function Modules({ guildId, serverData, setServerData }) {
       });
       const data = await res.json();
       if (data.error) {
-        toast("Failed to save: " + data.error, 'error');
+        toast.error("Failed to save: " + data.error, { id: toastId });
       } else {
         // Optimistically update local config state
         setServerData(prev => {
@@ -93,14 +94,14 @@ export default function Modules({ guildId, serverData, setServerData }) {
           });
           return { ...prev, config: newConfig };
         });
-        toast("Settings saved successfully!", 'success');
+        toast.success("Settings saved successfully!", { id: toastId });
         if (!preventRemount) {
           handleReset();
         }
       }
     } catch (e) {
       console.error(e);
-      toast("Error saving settings.", 'error');
+      toast.error("Error saving settings.", { id: toastId });
     } finally {
       setSaving(false);
     }

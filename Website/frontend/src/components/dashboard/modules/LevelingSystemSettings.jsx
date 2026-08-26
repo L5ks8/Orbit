@@ -118,17 +118,18 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
     }
   });
 
-  const [initialStateStr] = React.useState(() => JSON.stringify(getPayload()));
+  const [savedStateStr, setSavedStateStr] = React.useState(() => JSON.stringify(getPayload()));
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
+  const isDirty = savedStateStr && currentPayloadStr !== savedStateStr;
 
-  useEffect(() => {
-    if (!initialStateStr || !isDirty) return;
+  React.useEffect(() => {
+    if (!savedStateStr || !isDirty) return;
     const timeoutId = setTimeout(() => {
       onSave(getPayload(), true);
+      setSavedStateStr(currentPayloadStr);
     }, 1000);
     return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, initialStateStr, isDirty, onSave]);
+  }, [currentPayloadStr, savedStateStr, isDirty, onSave]);
 
   const handleSave = () => {
     onSave(getPayload());

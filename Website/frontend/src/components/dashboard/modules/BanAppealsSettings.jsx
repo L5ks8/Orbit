@@ -101,23 +101,19 @@ export default function BanAppealsSettings({ guildId, config, channels, roles, o
       }
     });
 
-  const [initialStateStr, setInitialStateStr] = useState('');
-  
-  useEffect(() => {
-    const payloadStr = JSON.stringify(getPayload());
-    setInitialStateStr(payloadStr);
-  }, [config]); 
+  const [savedStateStr, setSavedStateStr] = useState(() => JSON.stringify(getPayload()));
   
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
+  const isDirty = savedStateStr && currentPayloadStr !== savedStateStr;
 
   useEffect(() => {
-    if (!initialStateStr || !isDirty) return;
+    if (!savedStateStr || !isDirty) return;
     const timeoutId = setTimeout(() => {
       onSave(getPayload(), true);
-    }, 1500);
+      setSavedStateStr(currentPayloadStr);
+    }, 1000);
     return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, initialStateStr, isDirty, onSave]);
+  }, [currentPayloadStr, savedStateStr, isDirty, onSave]);
 
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
