@@ -949,42 +949,56 @@ export default function Security({ guildId, serverData, setServerData }) {
               </div>
               <div className="space-y-4">
                 <div className="flex gap-0.5 p-1 rounded-xl bg-neutral-800/50 border border-neutral-800 w-fit">
-                  <button className="relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 text-black">
-                    <span
-                      className="absolute inset-0 bg-white rounded-lg"
-                      style={{ opacity: 1 }}
-                    ></span>
-                    <span className="relative z-10">All</span>
-                  </button>
-                  <button className="relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 text-neutral-400 hover:text-white">
-                    <span className="relative z-10">Raids</span>
-                  </button>
-                  <button className="relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 text-neutral-400 hover:text-white">
-                    <span className="relative z-10">Nuke Events</span>
-                  </button>
+                  <button onClick={() => setActiveThreatTab('All')} className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${activeThreatTab === 'All' ? 'text-black' : 'text-neutral-400 hover:text-white'}`}>
+                      {activeThreatTab === 'All' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
+                      <span className="relative z-10">All</span>
+                    </button>
+                    <button onClick={() => setActiveThreatTab('Raids')} className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${activeThreatTab === 'Raids' ? 'text-black' : 'text-neutral-400 hover:text-white'}`}>
+                      {activeThreatTab === 'Raids' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
+                      <span className="relative z-10">Raids</span>
+                    </button>
+                    <button onClick={() => setActiveThreatTab('Nuke Events')} className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${activeThreatTab === 'Nuke Events' ? 'text-black' : 'text-neutral-400 hover:text-white'}`}>
+                      {activeThreatTab === 'Nuke Events' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
+                      <span className="relative z-10">Nuke Events</span>
+                    </button>
                 </div>
                 <div className="relative bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 ">
                   <div className="relative ">
-                    <div className="text-center py-12">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-alert-triangle w-10 h-10 text-neutral-700 mx-auto mb-3"
-                      >
-                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-                        <path d="M12 9v4"></path>
-                        <path d="M12 17h.01"></path>
-                      </svg>
-                      <p className="text-neutral-400 text-sm font-medium text-pretty">
-                        No threats detected
-                      </p>
+                    <div className="max-h-[400px] overflow-y-auto w-full">
+                      {(() => {
+                        const threatLogs = serverData?.config?.security?.threat_logs || [];
+                        const filteredLogs = activeThreatTab === 'All' ? threatLogs : threatLogs.filter(l => l.type === (activeThreatTab === 'Raids' ? 'raid' : 'nuke'));
+                        
+                        if (filteredLogs.length === 0) {
+                          return (
+                            <div className="text-center py-12">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-triangle-alert mx-auto h-12 w-12 text-neutral-400 mb-4 opacity-50"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No threats detected</h3>
+                              <p className="mt-1 text-sm text-neutral-500">Your server is currently secure.</p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-3 p-4">
+                            {filteredLogs.map((log, i) => (
+                              <div key={i} className="p-3 bg-neutral-800/30 rounded-xl border border-neutral-800 flex items-start gap-3">
+                                <div className={`p-2 rounded-lg shrink-0 ${log.type === 'nuke' ? 'bg-red-500/20 text-red-400' : (log.type === 'raid' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400')}`}>
+                                  {log.type === 'nuke' ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                  ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm text-neutral-200">{log.message}</p>
+                                  <p className="text-xs text-neutral-500 mt-1">{new Date(log.timestamp * 1000).toLocaleString()}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
