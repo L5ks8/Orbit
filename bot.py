@@ -347,6 +347,14 @@ class OrbitBot(commands.Bot):
         except Exception as e:
             print(f"Failed to load Ticket Listener: {e}")
 
+        try:
+            await self.load_extension("Components.Systems.Security.security")
+            print("Loaded Security System")
+        except Exception as e:
+            print(f"Failed to load Security System: {e}")
+
+
+
         # Load root command group modules first (e.g. Commands/Role/role.py, Commands/Ticket/ticket.py)
         for file_path in commands_dir.rglob("*.py"):
             if file_path.name.startswith("_"):

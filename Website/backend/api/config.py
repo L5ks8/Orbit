@@ -78,7 +78,7 @@ class ConfigMixin:
         tempvoice_cfg = load_jtc_config(guild_id)
         level_cfg = load_level_config(guild_id)
         
-        from Components.Commands.Security._storage import load_security_config
+        from Components.Systems.Security._storage import load_security_config
         security_cfg = load_security_config(guild_id)
         
         serverstats_cfg = load_serverstats_config(guild_id)
@@ -634,7 +634,7 @@ class ConfigMixin:
                 save_automod_config(guild_id, automod_cfg)
 
             if user_perms.get("can_channels") and "security" in data:
-                from Components.Commands.Security._storage import load_security_config, save_security_config
+                from Components.Systems.Security._storage import load_security_config, save_security_config
                 sec_cfg = load_security_config(guild_id)
                 new_sec = data["security"]
                 
@@ -903,7 +903,7 @@ class ConfigMixin:
                             pass
             
             if user_perms.get("can_channels") and "security" in data:
-                from Components.Commands.Security._storage import load_security_config, save_security_config
+                from Components.Systems.Security._storage import load_security_config, save_security_config
                 sec_cfg = load_security_config(guild_id)
                 sec_data = data["security"]
                 sec_cfg["enabled"] = bool(sec_data.get("enabled", sec_cfg.get("enabled", False)))
