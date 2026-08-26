@@ -234,7 +234,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <button
                               type="button"
-                              className="relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:bg-neutral-900/80"
+                              onClick={() => setAntiNuke({...antiNuke, level: 'conservative'})}
+                              className={`relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiNuke.level === 'conservative' ? 'bg-neutral-800 border-neutral-500 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:bg-neutral-900/80'}`}
                             >
                               <div className="flex items-center justify-between gap-2 mb-1.5">
                                 <span className="text-[13px] font-semibold">
@@ -251,7 +252,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                             </button>
                             <button
                               type="button"
-                              className="relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:bg-neutral-900/80"
+                              onClick={() => setAntiNuke({...antiNuke, level: 'recommended'})}
+                              className={`relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiNuke.level === 'recommended' ? 'bg-neutral-800 border-neutral-500 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:bg-neutral-900/80'}`}
                             >
                               <div className="flex items-center justify-between gap-2 mb-1.5">
                                 <span className="text-[13px] font-semibold">
@@ -271,7 +273,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                             </button>
                             <button
                               type="button"
-                              className="relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-neutral-800 border-neutral-500 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]"
+                              onClick={() => setAntiNuke({...antiNuke, level: 'aggressive'})}
+                              className={`relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiNuke.level === 'aggressive' ? 'bg-neutral-800 border-neutral-500 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:bg-neutral-900/80'}`}
                             >
                               <div className="flex items-center justify-between gap-2 mb-1.5">
                                 <span className="text-[13px] font-semibold">
