@@ -36,7 +36,6 @@ export default function Roadmap() {
           <div className="lp-pricing-features">
             <ul>
               <li><SpinnerIcon /> Leveling & XP System</li>
-              <li><SpinnerIcon /> Economy & Store</li>
               <li><SpinnerIcon /> Advanced Giveaways</li>
               <li className="disabled"><CrossIcon /> Custom Bot Persona</li>
             </ul>

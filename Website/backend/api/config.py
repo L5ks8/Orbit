@@ -81,8 +81,6 @@ class ConfigMixin:
         from Components.Commands.Security._storage import load_security_config
         security_cfg = load_security_config(guild_id)
         
-        from Components.Commands.Economy._storage import load_economy_config
-        economy_cfg = load_economy_config(guild_id)
         serverstats_cfg = load_serverstats_config(guild_id)
 
         from Components.Systems.WebDashboard._storage import load_settings_config
@@ -351,7 +349,6 @@ class ConfigMixin:
             },
             "tempvoice": tempvoice_cfg,
             "level": level_cfg,
-            "economy": economy_cfg,
             "serverstats": serverstats_cfg,
             "security": security_cfg,
             "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
@@ -878,73 +875,6 @@ class ConfigMixin:
                 level_cfg["role_boosters"] = ld.get("role_boosters", [])
                 level_cfg["channel_boosters"] = ld.get("channel_boosters", [])
                 save_level_config(guild_id, level_cfg)
-
-            if "economy" in data:
-                from Components.Commands.Economy._storage import load_economy_config, save_economy_config
-                e_cfg = load_economy_config(guild_id)
-                ed = data["economy"]
-                e_cfg["enabled"] = bool(ed.get("enabled", True))
-                e_cfg["currency_symbol"] = str(ed.get("currency_symbol", "") or "")
-                try:
-                    e_cfg["money_multiplier"] = float(ed.get("money_multiplier", 1.0))
-                except (ValueError, TypeError):
-                    e_cfg["money_multiplier"] = 1.0
-                e_cfg["bet_limit_enabled"] = bool(ed.get("bet_limit_enabled", True))
-                e_cfg["bet_limit_amount"] = int(ed.get("bet_limit_amount", 10000))
-                e_cfg["reset_on_leave"] = bool(ed.get("reset_on_leave", False))
-
-                e_cfg["msg_money_enabled"] = bool(ed.get("msg_money_enabled", True))
-                e_cfg["msg_money_amount"] = int(ed.get("msg_money_amount", 8))
-                e_cfg["msg_money_cooldown"] = int(ed.get("msg_money_cooldown", 60))
-
-                e_cfg["voice_money_enabled"] = bool(ed.get("voice_money_enabled", False))
-                e_cfg["voice_money_ignore_muted"] = bool(ed.get("voice_money_ignore_muted", True))
-                e_cfg["voice_money_ignore_solo"] = bool(ed.get("voice_money_ignore_solo", False))
-                e_cfg["voice_money_amount"] = int(ed.get("voice_money_amount", 4))
-
-                e_cfg["cmd_money_enabled"] = bool(ed.get("cmd_money_enabled", True))
-                e_cfg["cmd_money_amount"] = int(ed.get("cmd_money_amount", 8))
-                e_cfg["cmd_money_cooldown"] = int(ed.get("cmd_money_cooldown", 60))
-
-                e_cfg["react_money_enabled"] = bool(ed.get("react_money_enabled", True))
-                e_cfg["react_money_amount"] = int(ed.get("react_money_amount", 20))
-                e_cfg["react_money_cooldown"] = int(ed.get("react_money_cooldown", 300))
-
-                e_cfg["daily_base_reward_enabled"] = bool(ed.get("daily_base_reward_enabled", True))
-                e_cfg["daily_base_reward"] = int(ed.get("daily_base_reward", 250))
-                e_cfg["daily_tier_reward_enabled"] = bool(ed.get("daily_tier_reward_enabled", True))
-                e_cfg["daily_streak_limit"] = int(ed.get("daily_streak_limit", 5))
-                e_cfg["daily_streak_bonus"] = int(ed.get("daily_streak_bonus", 10))
-
-                e_cfg["work_enabled"] = bool(ed.get("work_enabled", True))
-                e_cfg["work_min_amount"] = int(ed.get("work_min_amount", 300))
-                e_cfg["work_max_amount"] = int(ed.get("work_max_amount", 500))
-                e_cfg["work_cooldown_min"] = int(ed.get("work_cooldown_min", 240))
-                e_cfg["work_use_default_responses"] = bool(ed.get("work_use_default_responses", True))
-                if "work_custom_responses" in ed:
-                    e_cfg["work_custom_responses"] = ed["work_custom_responses"]
-
-                e_cfg["baltop_custom_url"] = str(ed.get("baltop_custom_url", "") or "")
-                baltop_ch = ed.get("baltop_auto_channel_id")
-                e_cfg["baltop_auto_channel_id"] = int(baltop_ch) if baltop_ch else None
-                e_cfg["baltop_embed_color"] = str(ed.get("baltop_embed_color", "#5865F2") or "#5865F2")
-
-                e_cfg["role_boosters_stack"] = bool(ed.get("role_boosters_stack", True))
-                if "role_boosters" in ed:
-                    e_cfg["role_boosters"] = ed["role_boosters"]
-                if "channel_boosters" in ed:
-                    e_cfg["channel_boosters"] = ed["channel_boosters"]
-                if "items" in ed:
-                    e_cfg["items"] = ed["items"]
-                if "chests" in ed:
-                    e_cfg["chests"] = ed["chests"]
-                if "rarities" in ed:
-                    e_cfg["rarities"] = ed["rarities"]
-                if "recipes" in ed:
-                    e_cfg["recipes"] = ed["recipes"]
-
-                save_economy_config(guild_id, e_cfg)
-
 
 
             if user_perms.get("can_channels") and "ticket" in data:

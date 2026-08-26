@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Trophy, Coins, UserPlus, ArrowLeft } from 'lucide-react';
+import { Trophy, UserPlus, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Leaderboard() {
@@ -14,7 +14,6 @@ export default function Leaderboard() {
   
   // Normalize the sort to one of our three tabs
   let activeTab = 'level';
-  if (currentSort === 'balance') activeTab = 'economy';
   if (currentSort === 'invites') activeTab = 'invites';
 
   const fetchLeaderboard = (sortType) => {
@@ -42,7 +41,6 @@ export default function Leaderboard() {
 
   const handleTabClick = (tab) => {
     let newSort = 'total_xp';
-    if (tab === 'economy') newSort = 'balance';
     if (tab === 'invites') newSort = 'invites';
     setSearchParams({ sort: newSort });
   };
@@ -89,13 +87,6 @@ export default function Leaderboard() {
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', border: 'none' }}
         >
           <Trophy size={18} /> Level
-        </button>
-        <button 
-          onClick={() => handleTabClick('economy')}
-          className={`dash-btn ${activeTab === 'economy' ? 'primary' : 'secondary'}`}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', border: 'none' }}
-        >
-          <Coins size={18} /> Economy
         </button>
         <button 
           onClick={() => handleTabClick('invites')}
@@ -169,10 +160,10 @@ export default function Leaderboard() {
                 {/* Value */}
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent)' }}>
-                    {activeTab === 'economy' ? `$${entry.value.toLocaleString()}` : entry.value.toLocaleString()}
+                    {entry.value.toLocaleString()}
                   </div>
                   <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                    {activeTab === 'level' ? 'XP' : activeTab === 'economy' ? 'Balance' : 'Invites'}
+                    {activeTab === 'level' ? 'XP' : 'Invites'}
                   </div>
                 </div>
               </motion.div>

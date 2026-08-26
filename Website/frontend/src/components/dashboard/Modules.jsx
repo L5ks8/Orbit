@@ -12,7 +12,6 @@ import WelcomeSettings from './modules/WelcomeSettings';
 import BanAppealsSettings from './modules/BanAppealsSettings';
 import AutomationSettings from './modules/AutomationSettings';
 import BoostMessagesSettings from './modules/BoostMessagesSettings';
-import EconomySettings from './modules/EconomySettings';
 import MessageLogsSettings from './modules/MessageLogsSettings';
 
 import ServerStatsSettings from './modules/ServerStatsSettings';
@@ -27,7 +26,6 @@ export const modulesList = [
     { id: 'welcomegoodbye', category: 'Engagement', name: 'Welcome & Goodbye Messages', desc: 'Greet new users with custom text and image cards.', iconColor: 'rgba(59, 130, 246, 0.2)', icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></> },
     { id: 'level', category: 'Engagement', name: 'Leveling System', desc: 'Reward active members with XP and roles.', iconColor: 'rgba(16, 185, 129, 0.2)', icon: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></> },
     { id: 'boost', category: 'Engagement', name: 'Boost Messages', desc: 'Announce when someone boosts your server.', iconColor: 'rgba(244, 63, 94, 0.2)', icon: <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z M7 7h.01" /> },
-    { id: 'economy', category: 'Engagement', name: 'Economy', desc: 'Global server currency, shops, and gambling.', iconColor: 'rgba(234, 179, 8, 0.2)', icon: <><circle cx="12" cy="12" r="10" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8 M12 18V6" /></> },
         { id: 'serverstats', category: 'Engagement', name: 'Server Stats', desc: 'Display member counts in voice channels.', iconColor: 'rgba(6, 182, 212, 0.2)', icon: <path d="M18 20V10 M12 20V4 M6 20v-6" /> },
 
     { id: 'tickets', category: 'Utility', name: 'Support Tickets', desc: 'Allow users to open private tickets for support.', iconColor: 'rgba(245, 158, 11, 0.2)', icon: <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /> },
@@ -198,7 +196,6 @@ export default function Modules({ guildId, serverData, setServerData }) {
     else if (moduleId === 'appeals') Component = BanAppealsSettings;
     else if (moduleId === 'automation') Component = AutomationSettings;
     else if (moduleId === 'boost') Component = BoostMessagesSettings;
-    else if (moduleId === 'economy') Component = EconomySettings;
     else if (moduleId === 'messages') Component = MessageLogsSettings;
 
     else if (moduleId === 'serverstats') Component = ServerStatsSettings;

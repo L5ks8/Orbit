@@ -247,9 +247,8 @@ export const docsData = {
         <PropertiesTable 
           properties={[
             { name: 'Message Leaderboard', type: 'Ranking', description: 'See who the most active chatters are in your server.' },
-            { name: 'Voice Leaderboard', type: 'Ranking', description: 'Track which users spend the most time in voice channels.' },
-            { name: 'Economy Leaderboard', type: 'Ranking', description: 'View the richest members based on their wallet and bank balances.' }
-          ]}
+            { name: 'Level Leaderboard', type: 'Ranking', description: 'View the highest-ranked members in your server.' }
+          ]} 
         />
       </>
     )
@@ -473,33 +472,9 @@ export const docsData = {
             { name: 'Role Rewards', type: 'Map<Level, Role>', description: 'Automatically assign specific Discord roles when users reach milestones (e.g., Level 10 gets "Active Member").' }
           ]}
         />
-      </>
-    )
-  },
-  economy: {
-    title: 'Economy System',
-    icon: <GiftIcon />,
-    toc: [
-      { id: 'overview', label: 'Overview' },
-      { id: 'commands', label: 'Commands & Mechanics' }
-    ],
-    content: (
-      <>
-        <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
-        <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          Engage your community with a fully-fledged, globally persistent Economy System. Members can earn currency, gamble, buy items, and compete on the leaderboards.
-        </p>
-
-        <h2 id="commands" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Commands & Mechanics</h2>
-        <PropertiesTable 
-          properties={[
-            { name: '/work', type: 'Earning', description: 'Work a random job every few hours to earn a steady paycheck.' },
-            { name: '/daily', type: 'Earning', description: 'Claim a daily reward. Keep your streak alive for massive bonuses.' },
-            { name: '/slots & /coinflip', type: 'Gambling', description: 'Risk your hard-earned coins for a chance to double or triple your wealth.' },
-            { name: '/rob', type: 'Interaction', description: 'Attempt to steal coins from another user. Fails randomly, resulting in a fine!' },
-            { name: '/balance', type: 'Information', description: 'Check your current wallet balance and bank storage.' }
-          ]}
-        />
+        <ul>
+          <li><strong>Stack Roles:</strong> Choose whether members keep previous roles or only have their highest level role.</li>
+        </ul>
       </>
     )
   },
@@ -835,8 +810,7 @@ export const docsData = {
         <h2 id="features" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Feature Commands</h2>
         <PropertiesTable 
           properties={[
-            { name: '-rank / -leaderboard', type: 'Leveling', description: "View your level card or the server's top chatters." },
-            { name: '/work / /daily', type: 'Economy', description: 'Earn daily/hourly currency in the server.' },
+            { name: '/level', type: 'Engagement', description: 'Check your current level and XP progress.' },
             { name: '/ticket <add | remove | close>', type: 'Tickets', description: 'Manage a ticket channel (e.g. add a user or close the ticket).' },
             { name: '-vc_mute / -vc_lock / -vc_move', type: 'Voice', description: 'Moderator voice controls to manage active voice channels.' },
             { name: '-addrole / -removerole', type: 'Roles', description: 'Quickly grant or revoke a role from a user without opening their profile.' }
@@ -867,7 +841,6 @@ const sidebarConfig = [
   { id: 'appeals', icon: <ShieldCheckIcon /> },
   { id: 'verification', icon: <ShieldCheckIcon /> },
   { id: 'leveling', icon: <StarIcon /> },
-  { id: 'economy', icon: <GiftIcon /> },
   { id: 'boost', icon: <StarIcon /> },
   { id: 'serverstats', icon: <ActivityIcon /> },
   { id: 'tickets', icon: <TicketIcon /> },
