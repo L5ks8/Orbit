@@ -97,6 +97,18 @@ export default function TicketSettings({ config, channels, roles, categories, on
     onSave(getPayload());
   };
 
+  const parseDiscordMarkdown = (text) => {
+    if (!text) return '';
+    let escaped = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    escaped = escaped.replace(/^&gt;\s+(.*)$/gm, '<div class="pl-2.5 border-l-4 border-[#4e5058] rounded-[3px] my-1">$1</div>');
+    return escaped
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/__(.*?)__/g, '<u>$1</u>')
+      .replace(/~~(.*?)~~/g, '<s>$1</s>')
+      .replace(/\n/g, '<br />');
+  };
+
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
       <div data-tour="feature-header" className="scroll-mt-24">
@@ -322,9 +334,15 @@ export default function TicketSettings({ config, channels, roles, categories, on
                 <div className="mt-1 flex flex-col w-full max-w-[432px]">
                   <div className="bg-[#2b2d31] border-l-4 border-[#5865F2] rounded p-4 flex flex-col">
                     <span className="font-bold text-[15px] text-white mb-2 break-words">{panelTitle || 'Support Tickets'}</span>
-                    <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed">{panelDesc || 'Click the button below to open a direct support channel with our team.'}</span>
+                    <div 
+                      className="text-[14px] text-[#dbdee1] break-words leading-relaxed" 
+                      dangerouslySetInnerHTML={{ __html: parseDiscordMarkdown(panelDesc || 'Click the button below to open a direct support channel with our team.') }} 
+                    />
                     {panelInstructions && (
-                      <span className="text-[14px] text-[#dbdee1] whitespace-pre-wrap break-words leading-relaxed mt-4">{panelInstructions}</span>
+                      <div 
+                        className="text-[14px] text-[#dbdee1] break-words leading-relaxed mt-4" 
+                        dangerouslySetInnerHTML={{ __html: parseDiscordMarkdown(panelInstructions) }} 
+                      />
                     )}
                   </div>
                   
