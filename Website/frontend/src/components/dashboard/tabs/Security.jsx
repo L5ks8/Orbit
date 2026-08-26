@@ -735,8 +735,8 @@ export default function Security({ guildId, serverData, setServerData }) {
                       </div>
                     </div>
                   </div>
-                  <div className={`grid transition-all duration-300 ease-in-out ${antiRaid.suspicious_account ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                    <div className="overflow-hidden">
+                  <div className={`grid transition-all duration-300 ease-in-out ${antiRaid.suspicious_account ? 'grid-rows-[1fr] opacity-100 overflow-visible' : 'grid-rows-[0fr] opacity-0 overflow-hidden'}`}>
+                    <div className={antiRaid.suspicious_account ? 'overflow-visible' : 'overflow-hidden'}>
                       <div className="px-5 pb-5 pt-4 border-t border-neutral-800">
                         <div className="relative">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
