@@ -12,10 +12,10 @@ export default function AIBuilder({ guildId }) {
           overflow: hidden;
         }
       `}</style>
-      <div className="p-4 lg:p-6 xl:p-8 flex-1 min-w-0 flex flex-col w-full h-full">
+      <div className="p-8 flex-1 min-w-0 flex flex-col w-full h-full">
         <div className="relative w-full flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"></div>
-        <div className="fixed left-0 top-0 h-full w-[90vw] sm:w-[85vw] max-w-80 z-50 lg:hidden transition-transform duration-300 ease-out border-r border-neutral-800 -translate-x-full">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+        <div className="fixed left-0 top-0 h-full w-[90vw] sm:w-[85vw] max-w-80 z-50 hidden transition-transform duration-300 ease-out border-r border-neutral-800 -translate-x-full">
           <div className="flex flex-col h-full bg-neutral-900">
             <div className="px-2 pt-2 pb-1.5 flex-shrink-0">
               <div className="flex items-center gap-1.5">
@@ -1194,7 +1194,7 @@ export default function AIBuilder({ guildId }) {
         <div className="w-full flex-1 flex gap-2 sm:gap-4 min-h-0">
           <div
             data-tour="builder-chats"
-            className="scroll-mt-24 hidden lg:flex shrink-0 overflow-hidden transition-[width] duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
+            className="scroll-mt-24 flex shrink-0 overflow-hidden transition-[width] duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
             style={{ width: "296px" }}
           >
             <div className="w-full flex flex-col flex-shrink-0 overflow-hidden bg-neutral-900 border border-neutral-800 rounded-2xl">
@@ -1328,8 +1328,8 @@ export default function AIBuilder({ guildId }) {
               </div>
             </div>
           </div>
-          <div className="flex-1 min-w-0 flex flex-col lg:flex-row gap-0 lg:gap-4 min-h-0">
-            <div className="flex lg:hidden gap-1.5 p-1.5 bg-neutral-900 border border-neutral-800 border-b-0 rounded-t-2xl flex-shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+          <div className="flex-1 min-w-0 flex flex-row gap-0 gap-4 min-h-0">
+            <div className="hidden gap-1.5 p-1.5 bg-neutral-900 border border-neutral-800 border-b-0 rounded-t-2xl flex-shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
               <button
                 className="px-3 py-2.5 text-sm font-medium rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-700 transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                 title="Chat history"
@@ -1365,8 +1365,8 @@ export default function AIBuilder({ guildId }) {
                 <span className="relative z-10">Preview</span>
               </button>
             </div>
-            <div className="lg:flex-[12] flex flex-col min-h-0 min-w-0 flex-1">
-              <div className="relative h-full flex flex-col min-h-0 bg-neutral-900 border border-white/[0.06] ring-1 ring-white/[0.02] rounded-2xl max-lg:rounded-t-none overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+            <div className="flex-[12] flex flex-col min-h-0 min-w-0 flex-1">
+              <div className="relative h-full flex flex-col min-h-0 bg-neutral-900 border border-white/[0.06] ring-1 ring-white/[0.02] rounded-2xl  overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
                 <input
                   accept="image/png,image/jpeg,image/webp"
                   className="hidden"
@@ -1927,9 +1927,9 @@ export default function AIBuilder({ guildId }) {
             </div>
             <div
               data-tour="builder-plan"
-              className="scroll-mt-24 min-h-0 min-w-0 lg:flex-[5] lg:min-w-[300px] hidden lg:flex"
+              className="scroll-mt-24 min-h-0 min-w-0 flex-[5] min-w-[300px] flex"
             >
-              <div className="relative w-full flex flex-col h-full bg-neutral-900 border border-neutral-800 ring-1 ring-white/[0.02] rounded-2xl max-lg:rounded-t-none overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]">
+              <div className="relative w-full flex flex-col h-full bg-neutral-900 border border-neutral-800 ring-1 ring-white/[0.02] rounded-2xl  overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]">
                 <div className="flex-shrink-0 flex flex-col gap-y-2 px-3 sm:px-5 py-3 border-b border-neutral-800/80">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
