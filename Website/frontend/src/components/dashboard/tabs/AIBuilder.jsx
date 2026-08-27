@@ -5,13 +5,15 @@ export default function AIBuilder({ guildId }) {
   return (
     <div className="relative w-full flex flex-col h-[calc(100dvh-4rem)] overflow-hidden">
       <div className="relative w-full flex flex-col h-[calc(100dvh-4rem-2rem)] lg:h-[calc(100dvh-4rem-3rem)] xl:h-[calc(100dvh-4rem-4rem)] overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-neutral-900/0 to-neutral-900/0 pointer-events-none"></div>
+        <div className="relative w-full flex flex-col h-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 py-2 sm:py-4 lg:py-6 xl:py-8">
           <div className="w-full flex-1 flex gap-2 sm:gap-4 min-h-0">
             <div
               data-tour="builder-chats"
               className="scroll-mt-24 flex shrink-0 overflow-hidden transition-[width] duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
               style={{ width: "296px" }}
             >
-              <div className="w-full flex flex-col flex-shrink-0 overflow-hidden bg-neutral-900 border border-neutral-800 rounded-2xl">
+              <div className="w-full flex flex-col flex-shrink-0 overflow-hidden bg-neutral-900 border border-neutral-800 rounded-lg">
                 <div className="px-2 pt-2 pb-1.5 flex-shrink-0">
                   <div className="flex items-center gap-1.5">
                     <button className="flex-1 flex items-center gap-2 px-3 h-9 rounded-lg text-[13.5px] font-medium text-neutral-100 bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.06] transition-[background-color,transform] duration-150 ease-out active:scale-[0.99]">
@@ -179,7 +181,7 @@ export default function AIBuilder({ guildId }) {
                   </button>
                 </div>
                 <div className="lg:flex-[12] flex flex-col min-h-0 min-w-0 flex-1">
-                  <div className="relative h-full flex flex-col min-h-0 bg-neutral-900 border border-white/[0.06] ring-1 ring-white/[0.02] rounded-2xl max-lg:rounded-t-none overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+                  <div className="relative h-full flex flex-col min-h-0 bg-neutral-900 border border-white/[0.06] ring-1 ring-white/[0.02] rounded-lg max-lg:rounded-t-none overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
                     <input
                       accept="image/png,image/jpeg,image/webp"
                       className="hidden"
@@ -292,7 +294,7 @@ export default function AIBuilder({ guildId }) {
                                 className="w-full h-full object-cover"
                               />
                               <div className="flex-1 min-w-0 flex flex-col items-end">
-                                <div className="inline-block max-w-[80%] px-4 py-2.5 rounded-2xl bg-neutral-800/70 ring-1 ring-white/[0.06] text-[15px] font-medium leading-[1.55] text-neutral-100 text-pretty break-words">
+                                <div className="inline-block max-w-[80%] px-4 py-2.5 rounded-lg bg-neutral-800/70 ring-1 ring-white/[0.06] text-[15px] font-medium leading-[1.55] text-neutral-100 text-pretty break-words">
                                   <div className="">
                                     <p className="my-1">yo</p>
                                   </div>
@@ -650,7 +652,7 @@ export default function AIBuilder({ guildId }) {
                           <div className="w-full">
                             <div className="flex items-stretch gap-2">
                               <div className="min-w-0 flex-1">
-                                <div className="rounded-2xl bg-neutral-900/80 border ring-1 transition-[border-color,box-shadow] duration-200 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)] border-white/[0.06] ring-white/[0.02] focus-within:border-white/[0.12] focus-within:ring-white/[0.04]">
+                                <div className="rounded-lg bg-neutral-900/80 border ring-1 transition-[border-color,box-shadow] duration-200 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)] border-white/[0.06] ring-white/[0.02] focus-within:border-white/[0.12] focus-within:ring-white/[0.04]">
                                   <textarea
                                     placeholder="Describe your server..."
                                     rows="1"
@@ -745,7 +747,7 @@ export default function AIBuilder({ guildId }) {
                       data-tour="builder-plan"
                       className="scroll-mt-24 min-h-0 min-w-0 lg:flex-[5] lg:min-w-[300px] flex"
                     >
-                      <div className="relative w-full flex flex-col h-full bg-neutral-900 border border-neutral-800 ring-1 ring-white/[0.02] rounded-2xl max-lg:rounded-t-none overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]">
+                      <div className="relative w-full flex flex-col h-full bg-neutral-900 border border-neutral-800 ring-1 ring-white/[0.02] rounded-lg max-lg:rounded-t-none overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]">
                         <div className="flex-shrink-0 flex flex-col gap-y-2 px-3 sm:px-5 py-3 border-b border-neutral-800/80">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -956,6 +958,7 @@ export default function AIBuilder({ guildId }) {
               </div>
             </div>
           </div>
+        </div>
       </div>
     </div>
   );
