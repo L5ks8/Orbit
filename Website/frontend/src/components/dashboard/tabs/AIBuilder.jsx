@@ -1191,7 +1191,7 @@ export default function AIBuilder({ guildId }) {
             </div>
           </div>
         </div>
-        <div className="w-full flex-1 flex gap-2 sm:gap-4 min-h-0">
+        <div className="w-full flex-1 flex gap-6 min-h-0">
           <div
             data-tour="builder-chats"
             className="scroll-mt-24 flex shrink-0 overflow-hidden transition-[width] duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
@@ -1328,7 +1328,7 @@ export default function AIBuilder({ guildId }) {
               </div>
             </div>
           </div>
-          <div className="flex-1 min-w-0 flex flex-row gap-0 gap-4 min-h-0">
+          <div className="flex-1 min-w-0 flex flex-row gap-6 min-h-0">
             <div className="hidden gap-1.5 p-1.5 bg-neutral-900 border border-neutral-800 border-b-0 rounded-t-2xl flex-shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
               <button
                 className="px-3 py-2.5 text-sm font-medium rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-700 transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
@@ -1366,7 +1366,18 @@ export default function AIBuilder({ guildId }) {
               </button>
             </div>
             <div className="flex-[12] flex flex-col min-h-0 min-w-0">
-              <div className="relative h-full flex flex-col min-h-0 bg-neutral-900 border border-white/[0.06] ring-1 ring-white/[0.02] rounded-2xl  overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+              <div className="flex justify-center mb-6">
+                <div className="flex items-center gap-1.5 p-1.5 bg-[#171717] border border-[#262626] rounded-xl shadow-lg">
+                  <button className="relative px-8 py-2 text-sm font-medium rounded-lg transition-all duration-150 ease-out text-white">
+                    <span className="absolute inset-0 bg-[#404040] rounded-lg"></span>
+                    <span className="relative z-10">Chat</span>
+                  </button>
+                  <button className="relative px-8 py-2 text-sm font-medium rounded-lg transition-all duration-150 ease-out text-neutral-400 hover:text-white">
+                    <span className="relative z-10">Preview</span>
+                  </button>
+                </div>
+              </div>
+              <div className="relative h-full flex flex-col min-h-0">
                 <input
                   accept="image/png,image/jpeg,image/webp"
                   className="hidden"
