@@ -2,8 +2,18 @@ import React from "react";
 
 export default function AIBuilder({ guildId }) {
   return (
-    <div className="p-4 lg:p-6 xl:p-8 flex-1 min-w-0 flex flex-col w-full h-full">
-      <div className="relative w-full flex flex-col h-[calc(100dvh-4rem-2rem)] lg:h-[calc(100dvh-4rem-3rem)] xl:h-[calc(100dvh-4rem-4rem)] overflow-hidden">
+    <>
+      <style>{`
+        .dash-content-area {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+        }
+      `}</style>
+      <div className="p-4 lg:p-6 xl:p-8 flex-1 min-w-0 flex flex-col w-full h-full">
+        <div className="relative w-full flex flex-col flex-1 min-h-0 overflow-hidden">
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"></div>
         <div className="fixed left-0 top-0 h-full w-[90vw] sm:w-[85vw] max-w-80 z-50 lg:hidden transition-transform duration-300 ease-out border-r border-neutral-800 -translate-x-full">
           <div className="flex flex-col h-full bg-neutral-900">
@@ -4731,7 +4741,8 @@ export default function AIBuilder({ guildId }) {
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
