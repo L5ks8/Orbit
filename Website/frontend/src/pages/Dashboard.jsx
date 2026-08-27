@@ -15,6 +15,7 @@ import Roles from '../components/dashboard/tabs/Roles';
 import TopNav from '../components/dashboard/TopNav';
 import Security from '../components/dashboard/tabs/Security';
 import Verification from '../components/dashboard/tabs/Verification';
+import AIBuilder from '../components/dashboard/tabs/AIBuilder';
 import { useAuth } from '../context/AuthContext';
 import { getCache, setCache } from '../utils/cache';
 import LoadingScreen from '../components/ui/LoadingScreen';
@@ -171,6 +172,7 @@ function DashboardInner() {
               <Route path="automod" element={<Moderation guildId={guildId} serverData={serverData} setServerData={setServerData} />} />
               <Route path="security" element={<Security guildId={guildId} serverData={serverData} setServerData={setServerData} />} />
               <Route path="verify" element={<Verification guildId={guildId} serverData={serverData} setServerData={setServerData} />} />
+              <Route path="ai-builder" element={<AIBuilder guildId={guildId} />} />
               <Route path=":moduleId" element={<Modules guildId={guildId} serverData={serverData} setServerData={setServerData} />} />
             </Routes>
           </div>
