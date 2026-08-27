@@ -3,10 +3,10 @@ import { useParams } from "react-router-dom";
 
 export default function AIBuilder({ guildId }) {
   return (
-    <div className="relative w-full flex flex-col h-[calc(100dvh-4rem)] overflow-hidden" style={{border: "5px solid red", backgroundColor: "blue", zIndex: 9999}}><h1 style={{color:"white", fontSize:"3rem", zIndex: 10000, position:"absolute"}}>AI BUILDER IS MOUNTED</h1>
+    <div className="relative w-full flex flex-col h-[calc(100dvh-4rem)] overflow-hidden">
       <div className="relative w-full flex flex-col h-[calc(100dvh-4rem-2rem)] lg:h-[calc(100dvh-4rem-3rem)] xl:h-[calc(100dvh-4rem-4rem)] overflow-hidden">
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"></div>
-        <div className="fixed left-0 top-0 h-full w-[90vw] sm:w-[85vw] max-w-80 z-50 lg:hidden transition-transform duration-300 ease-out border-r border-neutral-800 -translate-x-full">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 "></div>
+        <div className="fixed left-0 top-0 h-full w-[90vw] sm:w-[85vw] max-w-80 z-50 transition-transform duration-300 ease-out border-r border-neutral-800 ">
           <div className="flex flex-col h-full bg-neutral-900">
             <div className="px-2 pt-2 pb-1.5 flex-shrink-0">
               <div className="flex items-center gap-1.5">
@@ -135,8 +135,8 @@ export default function AIBuilder({ guildId }) {
               </div>
             </div>
           </div>
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 2xl:hidden transition-opacity duration-300 opacity-0 pointer-events-none"></div>
-          <div className="fixed inset-x-0 bottom-0 top-16 z-50 2xl:hidden transition-transform duration-300 ease-out translate-y-full">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 "></div>
+          <div className="fixed inset-x-0 bottom-0 top-16 z-50 transition-transform duration-300 ease-out translate-y-full">
             <div
               data-tour="builder-features-panel"
               className="h-full overflow-hidden rounded-t-2xl border-t border-white/[0.08] bg-neutral-900 shadow-[0_-16px_40px_-12px_rgba(0,0,0,0.6)]"
@@ -1184,7 +1184,7 @@ export default function AIBuilder({ guildId }) {
           <div className="w-full flex-1 flex gap-2 sm:gap-4 min-h-0">
             <div
               data-tour="builder-chats"
-              className="scroll-mt-24 hidden lg:flex shrink-0 overflow-hidden transition-[width] duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
+              className="scroll-mt-24 flex shrink-0 overflow-hidden transition-[width] duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
               style={{ width: "296px" }}
             >
               <div className="w-full flex flex-col flex-shrink-0 overflow-hidden bg-neutral-900 border border-neutral-800 rounded-2xl">
@@ -1267,7 +1267,7 @@ export default function AIBuilder({ guildId }) {
                             yo
                           </span>
                           <button
-                            className="relative grid place-items-center h-7 w-7 flex-shrink-0 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.1] transition-[opacity,color,background-color,transform] duration-150 active:scale-[0.94] before:absolute before:inset-[-6px] before:content-[''] opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+                            className="relative grid place-items-center h-7 w-7 flex-shrink-0 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.1] transition-[opacity,color,background-color,transform] duration-150 active:scale-[0.94] before:absolute before:inset-[-6px] before:content-[''] group-hover/row:opacity-100 focus-visible:opacity-100"
                             title="Options"
                             aria-label="Chat options"
                           >
@@ -1318,7 +1318,7 @@ export default function AIBuilder({ guildId }) {
                 </div>
               </div>
               <div className="flex-1 min-w-0 flex flex-col lg:flex-row gap-0 lg:gap-4 min-h-0">
-                <div className="flex lg:hidden gap-1.5 p-1.5 bg-neutral-900 border border-neutral-800 border-b-0 rounded-t-2xl flex-shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+                <div className="flex gap-1.5 p-1.5 bg-neutral-900 border border-neutral-800 border-b-0 rounded-t-2xl flex-shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <button
                     className="px-3 py-2.5 text-sm font-medium rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-700 transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                     title="Chat history"
@@ -1801,7 +1801,7 @@ export default function AIBuilder({ guildId }) {
                           <button
                             aria-hidden="true"
                             tabIndex="-1"
-                            className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-800/90 ring-1 ring-white/[0.08] text-[11.5px] font-medium text-neutral-200 backdrop-blur-sm shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] hover:bg-neutral-700/90 transition-[transform,opacity] duration-300 ease-out will-change-transform translate-y-[180%] opacity-0 pointer-events-none"
+                            className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-800/90 ring-1 ring-white/[0.08] text-[11.5px] font-medium text-neutral-200 backdrop-blur-sm shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] hover:bg-neutral-700/90 transition-[transform,opacity] duration-300 ease-out will-change-transform translate-y-[180%] "
                             title="Scroll to latest message"
                             aria-label="Scroll to latest message"
                           >
@@ -1919,7 +1919,7 @@ export default function AIBuilder({ guildId }) {
                     </div>
                     <div
                       data-tour="builder-plan"
-                      className="scroll-mt-24 min-h-0 min-w-0 lg:flex-[5] lg:min-w-[300px] hidden lg:flex"
+                      className="scroll-mt-24 min-h-0 min-w-0 lg:flex-[5] lg:min-w-[300px] flex"
                     >
                       <div className="relative w-full flex flex-col h-full bg-neutral-900 border border-neutral-800 ring-1 ring-white/[0.02] rounded-2xl max-lg:rounded-t-none overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]">
                         <div className="flex-shrink-0 flex flex-col gap-y-2 px-3 sm:px-5 py-3 border-b border-neutral-800/80">
