@@ -1,32 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import LoadingScreen from '../../ui/LoadingScreen';
-import SaveBar from '../../ui/SaveBar';
 import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
 import CustomSelect from '../../ui/CustomSelect';
 import TrustedUserInput from '../../ui/TrustedUserInput';
 
 const TailwindToggle = ({ checked, onChange }) => (
-    <button 
-      type="button" 
-      role="switch" 
-      aria-checked={checked} 
-      onClick={onChange}
-      className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
-    >
-      <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-all duration-300 ease-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
-    </button>
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    onClick={onChange}
+    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${checked ? 'bg-white' : 'bg-neutral-800'}`}
+  >
+    <span className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-all duration-300 ease-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-400'}`} />
+  </button>
 );
 
 export default function Security({ guildId, serverData, setServerData }) {
 
-  
+
   const toast = useToast();
 
   const initialCfg = serverData?.config?.security || {};
   const roleOptions = serverData?.roles ? serverData.roles.map(r => ({ value: String(r.id), label: r.name || 'Unknown Role', color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : undefined })) : [];
   const channelOptions = serverData?.channels ? serverData.channels.map(ch => ({ value: String(ch.id), label: ch.name || 'Unknown Channel' })) : [];
-  
+
   const permissionOptions = [
     { value: 'ADMINISTRATOR', label: 'Administrator' },
     { value: 'KICK_MEMBERS', label: 'Kick Members' },
@@ -35,7 +34,7 @@ export default function Security({ guildId, serverData, setServerData }) {
     { value: 'MANAGE_GUILD', label: 'Manage Server' },
     { value: 'MANAGE_ROLES', label: 'Manage Roles' }
   ];
-  
+
   const actionOptions = [
     { value: 'kick', label: 'Kick' },
     { value: 'ban', label: 'Ban' },
@@ -59,7 +58,7 @@ export default function Security({ guildId, serverData, setServerData }) {
     { value: '30d', label: '30 days' }
   ];
 
-  
+
   const initialPayloadRef = useRef('');
   const [loading, setLoading] = useState(true);
   const [initialStateStr, setInitialStateStr] = useState('');
@@ -114,7 +113,7 @@ export default function Security({ guildId, serverData, setServerData }) {
       const dataToSave = payloadString ? JSON.parse(payloadString) : getPayload();
       const res = await fetch(`/api/config/${guildId}`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
@@ -122,7 +121,7 @@ export default function Security({ guildId, serverData, setServerData }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      
+
       const updatedData = { ...serverData, config: { ...serverData?.config, security: dataToSave } };
       setCache(guildId, updatedData);
       setInitialStateStr(JSON.stringify(dataToSave));
@@ -167,7 +166,7 @@ export default function Security({ guildId, serverData, setServerData }) {
   return (
     <>
 
-    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
+      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
         <div>
           <div data-tour="feature-header" className="scroll-mt-24">
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -223,7 +222,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                     </div>
                     <div className="shrink-0">
                       <div className="flex items-center gap-3">
-                        <TailwindToggle checked={antiNuke.enabled} onChange={() => setAntiNuke({...antiNuke, enabled: !antiNuke.enabled})} />
+                        <TailwindToggle checked={antiNuke.enabled} onChange={() => setAntiNuke({ ...antiNuke, enabled: !antiNuke.enabled })} />
                       </div>
                     </div>
                   </div>
@@ -234,7 +233,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <button
                               type="button"
-                              onClick={() => setAntiNuke({...antiNuke, level: 'conservative'})}
+                              onClick={() => setAntiNuke({ ...antiNuke, level: 'conservative' })}
                               className={`relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiNuke.level === 'conservative' ? 'bg-neutral-800 border-neutral-500 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:bg-neutral-900/80'}`}
                             >
                               <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -252,7 +251,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setAntiNuke({...antiNuke, level: 'recommended'})}
+                              onClick={() => setAntiNuke({ ...antiNuke, level: 'recommended' })}
                               className={`relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiNuke.level === 'recommended' ? 'bg-neutral-800 border-neutral-500 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:bg-neutral-900/80'}`}
                             >
                               <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -273,7 +272,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setAntiNuke({...antiNuke, level: 'aggressive'})}
+                              onClick={() => setAntiNuke({ ...antiNuke, level: 'aggressive' })}
                               className={`relative px-4 py-3.5 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiNuke.level === 'aggressive' ? 'bg-neutral-800 border-neutral-500 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:bg-neutral-900/80'}`}
                             >
                               <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -296,7 +295,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                               Test mode
                             </p>
                             <div className="flex items-center gap-3">
-                              <TailwindToggle checked={antiNuke.test_mode} onChange={() => setAntiNuke({...antiNuke, test_mode: !antiNuke.test_mode})} />
+                              <TailwindToggle checked={antiNuke.test_mode} onChange={() => setAntiNuke({ ...antiNuke, test_mode: !antiNuke.test_mode })} />
                             </div>
                           </div>
                           <div className="divide-y divide-neutral-800/70 border-y border-neutral-800/70">
@@ -305,7 +304,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 Privilege escalation
                               </p>
                               <div className="flex items-center gap-3">
-                                <TailwindToggle checked={antiNuke.privilege_escalation} onChange={() => setAntiNuke({...antiNuke, privilege_escalation: !antiNuke.privilege_escalation})} />
+                                <TailwindToggle checked={antiNuke.privilege_escalation} onChange={() => setAntiNuke({ ...antiNuke, privilege_escalation: !antiNuke.privilege_escalation })} />
                               </div>
                             </div>
                             <div className="flex items-center justify-between gap-4 py-3.5">
@@ -313,7 +312,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 Webhook firewall
                               </p>
                               <div className="flex items-center gap-3">
-                                <TailwindToggle checked={antiNuke.webhook_firewall} onChange={() => setAntiNuke({...antiNuke, webhook_firewall: !antiNuke.webhook_firewall})} />
+                                <TailwindToggle checked={antiNuke.webhook_firewall} onChange={() => setAntiNuke({ ...antiNuke, webhook_firewall: !antiNuke.webhook_firewall })} />
                               </div>
                             </div>
                             <div className="flex items-center justify-between gap-4 py-3.5">
@@ -321,7 +320,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 Server identity protection
                               </p>
                               <div className="flex items-center gap-3">
-                                <TailwindToggle checked={antiNuke.server_identity} onChange={() => setAntiNuke({...antiNuke, server_identity: !antiNuke.server_identity})} />
+                                <TailwindToggle checked={antiNuke.server_identity} onChange={() => setAntiNuke({ ...antiNuke, server_identity: !antiNuke.server_identity })} />
                               </div>
                             </div>
                             <div className="flex items-center justify-between gap-4 py-3.5">
@@ -329,7 +328,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 Block unknown bot joins
                               </p>
                               <div className="flex items-center gap-3">
-                                <TailwindToggle checked={antiNuke.block_unknown_bot} onChange={() => setAntiNuke({...antiNuke, block_unknown_bot: !antiNuke.block_unknown_bot})} />
+                                <TailwindToggle checked={antiNuke.block_unknown_bot} onChange={() => setAntiNuke({ ...antiNuke, block_unknown_bot: !antiNuke.block_unknown_bot })} />
                               </div>
                             </div>
                           </div>
@@ -342,21 +341,21 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
                                   User IDs
                                 </label>
-                                <TrustedUserInput 
+                                <TrustedUserInput
                                   value={antiNuke.exempt_users}
-                                  onChange={(val) => setAntiNuke({...antiNuke, exempt_users: val})}
+                                  onChange={(val) => setAntiNuke({ ...antiNuke, exempt_users: val })}
                                 />
                               </div>
                               <div>
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
                                   Roles
                                 </label>
-                                <CustomSelect 
-                                  isMulti 
-                                  options={roleOptions} 
-                                  value={antiNuke.exempt_roles || []} 
-                                  onChange={(selected) => setAntiNuke({...antiNuke, exempt_roles: selected || []})} 
-                                  placeholder="Add a trusted role..." 
+                                <CustomSelect
+                                  isMulti
+                                  options={roleOptions}
+                                  value={antiNuke.exempt_roles || []}
+                                  onChange={(selected) => setAntiNuke({ ...antiNuke, exempt_roles: selected || [] })}
+                                  placeholder="Add a trusted role..."
                                 />
                               </div>
                             </div>
@@ -388,56 +387,56 @@ export default function Security({ guildId, serverData, setServerData }) {
                             <div className={`grid transition-all duration-300 ease-in-out ${advancedSettingsOpen ? 'grid-rows-[1fr] opacity-100 mt-4 overflow-visible' : 'grid-rows-[0fr] opacity-0 overflow-hidden'}`}>
                               <div className={advancedSettingsOpen ? 'overflow-visible' : 'overflow-hidden'}>
                                 <div className="space-y-4">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                  <label className="text-[11px] text-neutral-500 block mb-1.5">
-                                    Permissions to watch when granted
-                                  </label>
-                                  <CustomSelect 
-                                    isMulti 
-                                    options={permissionOptions} 
-                                    value={antiNuke.permissions_granted_watch || []} 
-                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_granted_watch: selected || []})} 
-                                    placeholder="Default — all dangerous permissions" 
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-[11px] text-neutral-500 block mb-1.5">
-                                    Permissions to watch when removed
-                                  </label>
-                                  <CustomSelect 
-                                    isMulti 
-                                    options={permissionOptions} 
-                                    value={antiNuke.permissions_removed_watch || []} 
-                                    onChange={(selected) => setAntiNuke({...antiNuke, permissions_removed_watch: selected || []})} 
-                                    placeholder="Default — all dangerous permissions" 
-                                  />
-                                </div>
-                              </div>
-                              <div className="max-w-xs">
-                                <label className="text-[11px] text-neutral-500 block mb-1.5">
-                                  Mass-emoji-delete threshold
-                                </label>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-full">
-                                    <div className="relative">
-                                      <input
-                                        autoComplete="off"
-                                        title=""
-                                        className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600    "
-                                        min="2"
-                                        max="50"
-                                        type="number"
-                                        value={antiNuke.mass_emoji_threshold}
-                                        onChange={(e) => setAntiNuke({...antiNuke, mass_emoji_threshold: parseInt(e.target.value) || 2})}
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="text-[11px] text-neutral-500 block mb-1.5">
+                                        Permissions to watch when granted
+                                      </label>
+                                      <CustomSelect
+                                        isMulti
+                                        options={permissionOptions}
+                                        value={antiNuke.permissions_granted_watch || []}
+                                        onChange={(selected) => setAntiNuke({ ...antiNuke, permissions_granted_watch: selected || [] })}
+                                        placeholder="Default — all dangerous permissions"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[11px] text-neutral-500 block mb-1.5">
+                                        Permissions to watch when removed
+                                      </label>
+                                      <CustomSelect
+                                        isMulti
+                                        options={permissionOptions}
+                                        value={antiNuke.permissions_removed_watch || []}
+                                        onChange={(selected) => setAntiNuke({ ...antiNuke, permissions_removed_watch: selected || [] })}
+                                        placeholder="Default — all dangerous permissions"
                                       />
                                     </div>
                                   </div>
-                                  <span className="text-xs text-neutral-500 flex-shrink-0">
-                                    emojis / 30s
-                                  </span>
-                                </div>
-                              </div>
+                                  <div className="max-w-xs">
+                                    <label className="text-[11px] text-neutral-500 block mb-1.5">
+                                      Mass-emoji-delete threshold
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-full">
+                                        <div className="relative">
+                                          <input
+                                            autoComplete="off"
+                                            title=""
+                                            className="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600    "
+                                            min="2"
+                                            max="50"
+                                            type="number"
+                                            value={antiNuke.mass_emoji_threshold}
+                                            onChange={(e) => setAntiNuke({ ...antiNuke, mass_emoji_threshold: parseInt(e.target.value) || 2 })}
+                                          />
+                                        </div>
+                                      </div>
+                                      <span className="text-xs text-neutral-500 flex-shrink-0">
+                                        emojis / 30s
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -474,7 +473,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                     </div>
                     <div className="shrink-0">
                       <div className="flex items-center gap-3">
-                        <TailwindToggle checked={antiRaid.enabled} onChange={() => setAntiRaid({...antiRaid, enabled: !antiRaid.enabled})} />
+                        <TailwindToggle checked={antiRaid.enabled} onChange={() => setAntiRaid({ ...antiRaid, enabled: !antiRaid.enabled })} />
                       </div>
                     </div>
                   </div>
@@ -489,7 +488,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <button
                                 type="button"
-                                onClick={() => setAntiRaid({...antiRaid, level: 'lenient'})}
+                                onClick={() => setAntiRaid({ ...antiRaid, level: 'lenient' })}
                                 className={`px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiRaid.level === 'lenient' ? 'bg-neutral-800 border-neutral-600 text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'}`}
                               >
                                 <div className="text-[13px] font-semibold">
@@ -501,7 +500,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setAntiRaid({...antiRaid, level: 'balanced'})}
+                                onClick={() => setAntiRaid({ ...antiRaid, level: 'balanced' })}
                                 className={`px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiRaid.level === 'balanced' ? 'bg-neutral-800 border-neutral-600 text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'}`}
                               >
                                 <div className="text-[13px] font-semibold">
@@ -513,7 +512,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setAntiRaid({...antiRaid, level: 'strict'})}
+                                onClick={() => setAntiRaid({ ...antiRaid, level: 'strict' })}
                                 className={`px-4 py-3 rounded-xl border text-left transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${antiRaid.level === 'strict' ? 'bg-neutral-800 border-neutral-600 text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'}`}
                               >
                                 <div className="text-[13px] font-semibold">
@@ -541,7 +540,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                       max="50"
                                       type="number"
                                       value={antiRaid.join_threshold}
-                                      onChange={(e) => setAntiRaid({...antiRaid, join_threshold: parseInt(e.target.value) || 3})}
+                                      onChange={(e) => setAntiRaid({ ...antiRaid, join_threshold: parseInt(e.target.value) || 3 })}
                                     />
                                   </div>
                                 </div>
@@ -565,7 +564,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                       max="300"
                                       type="number"
                                       value={parseInt(antiRaid.join_time_window) || 10}
-                                      onChange={(e) => setAntiRaid({...antiRaid, join_time_window: `${e.target.value}s`})}
+                                      onChange={(e) => setAntiRaid({ ...antiRaid, join_time_window: `${e.target.value}s` })}
                                     />
                                   </div>
                                 </div>
@@ -589,7 +588,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                       max="365"
                                       type="number"
                                       value={parseInt(antiRaid.young_account_cutoff) || 0}
-                                      onChange={(e) => setAntiRaid({...antiRaid, young_account_cutoff: `${e.target.value}d`})}
+                                      onChange={(e) => setAntiRaid({ ...antiRaid, young_account_cutoff: `${e.target.value}d` })}
                                     />
                                   </div>
                                 </div>
@@ -604,11 +603,11 @@ export default function Security({ guildId, serverData, setServerData }) {
                               <label className="text-[11px] text-neutral-500 block mb-1.5">
                                 Max Action (ceiling)
                               </label>
-                              <CustomSelect 
-                                options={actionOptions} 
-                                value={antiRaid.action} 
-                                onChange={(selected) => setAntiRaid({...antiRaid, action: selected || 'timeout'})} 
-                                placeholder="Lockdown" 
+                              <CustomSelect
+                                options={actionOptions}
+                                value={antiRaid.action}
+                                onChange={(selected) => setAntiRaid({ ...antiRaid, action: selected || 'timeout' })}
+                                placeholder="Lockdown"
                               />
                             </div>
                             <div>
@@ -626,7 +625,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                       max="1440"
                                       type="number"
                                       value={antiRaid.auto_unlock_after?.endsWith('h') ? parseInt(antiRaid.auto_unlock_after) * 60 : parseInt(antiRaid.auto_unlock_after) || 60}
-                                      onChange={(e) => setAntiRaid({...antiRaid, auto_unlock_after: `${e.target.value}m`})}
+                                      onChange={(e) => setAntiRaid({ ...antiRaid, auto_unlock_after: `${e.target.value}m` })}
                                     />
                                   </div>
                                 </div>
@@ -645,21 +644,21 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
                                   Trusted Users (immune)
                                 </label>
-                                <TrustedUserInput 
+                                <TrustedUserInput
                                   value={antiRaid.immune_users}
-                                  onChange={(val) => setAntiRaid({...antiRaid, immune_users: val})}
+                                  onChange={(val) => setAntiRaid({ ...antiRaid, immune_users: val })}
                                 />
                               </div>
                               <div>
                                 <label className="text-[11px] text-neutral-500 block mb-1.5">
                                   Trusted Roles (immune)
                                 </label>
-                                <CustomSelect 
-                                  isMulti 
-                                  options={roleOptions} 
-                                  value={antiRaid.immune_roles || []} 
-                                  onChange={(selected) => setAntiRaid({...antiRaid, immune_roles: selected || []})} 
-                                  placeholder="Add a trusted role..." 
+                                <CustomSelect
+                                  isMulti
+                                  options={roleOptions}
+                                  value={antiRaid.immune_roles || []}
+                                  onChange={(selected) => setAntiRaid({ ...antiRaid, immune_roles: selected || [] })}
+                                  placeholder="Add a trusted role..."
                                 />
                               </div>
                             </div>
@@ -669,7 +668,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                   Verification Challenge
                                 </span>
                                 <div className="flex items-center gap-3">
-                                  <TailwindToggle checked={antiRaid.verification_challenge} onChange={() => setAntiRaid({...antiRaid, verification_challenge: !antiRaid.verification_challenge})} />
+                                  <TailwindToggle checked={antiRaid.verification_challenge} onChange={() => setAntiRaid({ ...antiRaid, verification_challenge: !antiRaid.verification_challenge })} />
                                 </div>
                               </div>
                             </div>
@@ -677,13 +676,13 @@ export default function Security({ guildId, serverData, setServerData }) {
                               <label className="text-[11px] text-neutral-500 block mb-1.5">
                                 Raid Alert Channel (optional)
                               </label>
-                                <CustomSelect 
-                                  options={channelOptions} 
-                                  value={antiRaid.alert_channel} 
-                                  onChange={(selected) => setAntiRaid({...antiRaid, alert_channel: selected || null})} 
-                                  placeholder="Defaults to log channel" 
-                                  isClearable
-                                />
+                              <CustomSelect
+                                options={channelOptions}
+                                value={antiRaid.alert_channel}
+                                onChange={(selected) => setAntiRaid({ ...antiRaid, alert_channel: selected || null })}
+                                placeholder="Defaults to log channel"
+                                isClearable
+                              />
                             </div>
                           </div>
                         </div>
@@ -721,7 +720,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                     </div>
                     <div className="shrink-0">
                       <div className="flex items-center gap-3">
-                        <TailwindToggle checked={antiRaid.suspicious_account} onChange={() => setAntiRaid({...antiRaid, suspicious_account: !antiRaid.suspicious_account})} />
+                        <TailwindToggle checked={antiRaid.suspicious_account} onChange={() => setAntiRaid({ ...antiRaid, suspicious_account: !antiRaid.suspicious_account })} />
                       </div>
                     </div>
                   </div>
@@ -745,7 +744,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                       max="365"
                                       type="number"
                                       value={parseInt(antiRaid.suspicious_account_age) || 14}
-                                      onChange={(e) => setAntiRaid({...antiRaid, suspicious_account_age: `${e.target.value}d`})}
+                                      onChange={(e) => setAntiRaid({ ...antiRaid, suspicious_account_age: `${e.target.value}d` })}
                                     />
                                   </div>
                                 </div>
@@ -759,7 +758,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 No Profile Picture
                               </label>
                               <div className="flex items-center gap-3">
-                                <TailwindToggle checked={antiRaid.no_profile_picture} onChange={() => setAntiRaid({...antiRaid, no_profile_picture: !antiRaid.no_profile_picture})} />
+                                <TailwindToggle checked={antiRaid.no_profile_picture} onChange={() => setAntiRaid({ ...antiRaid, no_profile_picture: !antiRaid.no_profile_picture })} />
                               </div>
                             </div>
                             <div>
@@ -767,7 +766,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                 Default Username
                               </label>
                               <div className="flex items-center gap-3">
-                                <TailwindToggle checked={antiRaid.default_username} onChange={() => setAntiRaid({...antiRaid, default_username: !antiRaid.default_username})} />
+                                <TailwindToggle checked={antiRaid.default_username} onChange={() => setAntiRaid({ ...antiRaid, default_username: !antiRaid.default_username })} />
                               </div>
                             </div>
                           </div>
@@ -776,22 +775,22 @@ export default function Security({ guildId, serverData, setServerData }) {
                               <label className="text-[11px] text-neutral-500 block mb-1.5">
                                 Action
                               </label>
-                              <CustomSelect 
-                                options={[{value: 'flag', label: 'Flag Only'}, {value: 'kick', label: 'Kick'}, {value: 'ban', label: 'Ban'}]} 
-                                value={antiRaid.suspicious_action} 
-                                onChange={(selected) => setAntiRaid({...antiRaid, suspicious_action: selected || 'flag'})} 
-                                placeholder="Flag Only" 
+                              <CustomSelect
+                                options={[{ value: 'flag', label: 'Flag Only' }, { value: 'kick', label: 'Kick' }, { value: 'ban', label: 'Ban' }]}
+                                value={antiRaid.suspicious_action}
+                                onChange={(selected) => setAntiRaid({ ...antiRaid, suspicious_action: selected || 'flag' })}
+                                placeholder="Flag Only"
                               />
                             </div>
                             <div>
                               <label className="text-[11px] text-neutral-500 block mb-1.5">
                                 Alert Channel
                               </label>
-                              <CustomSelect 
-                                options={channelOptions} 
-                                value={antiRaid.suspicious_alert_channel} 
-                                onChange={(selected) => setAntiRaid({...antiRaid, suspicious_alert_channel: selected || null})} 
-                                placeholder="Select channel..." 
+                              <CustomSelect
+                                options={channelOptions}
+                                value={antiRaid.suspicious_alert_channel}
+                                onChange={(selected) => setAntiRaid({ ...antiRaid, suspicious_alert_channel: selected || null })}
+                                placeholder="Select channel..."
                                 isClearable
                               />
                             </div>
@@ -832,7 +831,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                   </div>
                   <div className="shrink-0">
                     <div className="flex items-center gap-3">
-                      <TailwindToggle checked={webhookProtection.enabled} onChange={() => setWebhookProtection({...webhookProtection, enabled: !webhookProtection.enabled})} />
+                      <TailwindToggle checked={webhookProtection.enabled} onChange={() => setWebhookProtection({ ...webhookProtection, enabled: !webhookProtection.enabled })} />
                     </div>
                   </div>
                 </div>
@@ -846,7 +845,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                               Block @everyone from webhooks
                             </p>
                             <div className="flex items-center gap-3">
-                              <TailwindToggle checked={webhookProtection.block_everyone} onChange={() => setWebhookProtection({...webhookProtection, block_everyone: !webhookProtection.block_everyone})} />
+                              <TailwindToggle checked={webhookProtection.block_everyone} onChange={() => setWebhookProtection({ ...webhookProtection, block_everyone: !webhookProtection.block_everyone })} />
                             </div>
                           </div>
                           <div className="flex items-center justify-between gap-3 px-4 py-3 bg-neutral-800/50 rounded-xl">
@@ -854,7 +853,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                               Block invite links from webhooks
                             </p>
                             <div className="flex items-center gap-3">
-                              <TailwindToggle checked={webhookProtection.block_invite_links} onChange={() => setWebhookProtection({...webhookProtection, block_invite_links: !webhookProtection.block_invite_links})} />
+                              <TailwindToggle checked={webhookProtection.block_invite_links} onChange={() => setWebhookProtection({ ...webhookProtection, block_invite_links: !webhookProtection.block_invite_links })} />
                             </div>
                           </div>
                         </div>
@@ -874,7 +873,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                                     max="30"
                                     type="number"
                                     value={webhookProtection.rate_limit || 5}
-                                    onChange={(e) => setWebhookProtection({...webhookProtection, rate_limit: parseInt(e.target.value) || 1})}
+                                    onChange={(e) => setWebhookProtection({ ...webhookProtection, rate_limit: parseInt(e.target.value) || 1 })}
                                   />
                                 </div>
                               </div>
@@ -887,11 +886,11 @@ export default function Security({ guildId, serverData, setServerData }) {
                             <label className="text-[11px] text-neutral-500 block mb-1.5">
                               Action when triggered
                             </label>
-                            <CustomSelect 
-                              options={[{value: 'delete', label: 'Delete messages'}, {value: 'timeout', label: 'Timeout Author'}, {value: 'ban', label: 'Ban Author'}]} 
-                              value={webhookProtection.action} 
-                              onChange={(selected) => setWebhookProtection({...webhookProtection, action: selected || 'delete'})} 
-                              placeholder="Delete messages" 
+                            <CustomSelect
+                              options={[{ value: 'delete', label: 'Delete messages' }, { value: 'timeout', label: 'Timeout Author' }, { value: 'ban', label: 'Ban Author' }]}
+                              value={webhookProtection.action}
+                              onChange={(selected) => setWebhookProtection({ ...webhookProtection, action: selected || 'delete' })}
+                              placeholder="Delete messages"
                             />
                           </div>
                         </div>
@@ -906,7 +905,7 @@ export default function Security({ guildId, serverData, setServerData }) {
                               autoComplete="off"
                               className="flex-1 w-full bg-transparent text-sm text-white placeholder-neutral-500 outline-none border-none shadow-none py-0.5"
                               value={webhookProtection.trusted_webhooks}
-                              onChange={(e) => setWebhookProtection({...webhookProtection, trusted_webhooks: e.target.value})}
+                              onChange={(e) => setWebhookProtection({ ...webhookProtection, trusted_webhooks: e.target.value })}
                             />
                           </div>
                         </div>
@@ -941,17 +940,17 @@ export default function Security({ guildId, serverData, setServerData }) {
               <div className="space-y-4">
                 <div className="flex gap-0.5 p-1 rounded-xl bg-neutral-800/50 border border-neutral-800 w-fit">
                   <button onClick={() => setActiveThreatTab('All')} className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${activeThreatTab === 'All' ? 'text-black' : 'text-neutral-400 hover:text-white'}`}>
-                      {activeThreatTab === 'All' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
-                      <span className="relative z-10">All</span>
-                    </button>
-                    <button onClick={() => setActiveThreatTab('Raids')} className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${activeThreatTab === 'Raids' ? 'text-black' : 'text-neutral-400 hover:text-white'}`}>
-                      {activeThreatTab === 'Raids' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
-                      <span className="relative z-10">Raids</span>
-                    </button>
-                    <button onClick={() => setActiveThreatTab('Nuke Events')} className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${activeThreatTab === 'Nuke Events' ? 'text-black' : 'text-neutral-400 hover:text-white'}`}>
-                      {activeThreatTab === 'Nuke Events' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
-                      <span className="relative z-10">Nuke Events</span>
-                    </button>
+                    {activeThreatTab === 'All' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
+                    <span className="relative z-10">All</span>
+                  </button>
+                  <button onClick={() => setActiveThreatTab('Raids')} className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${activeThreatTab === 'Raids' ? 'text-black' : 'text-neutral-400 hover:text-white'}`}>
+                    {activeThreatTab === 'Raids' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
+                    <span className="relative z-10">Raids</span>
+                  </button>
+                  <button onClick={() => setActiveThreatTab('Nuke Events')} className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${activeThreatTab === 'Nuke Events' ? 'text-black' : 'text-neutral-400 hover:text-white'}`}>
+                    {activeThreatTab === 'Nuke Events' && <span className="absolute inset-0 bg-white rounded-lg" style={{ opacity: 1 }}></span>}
+                    <span className="relative z-10">Nuke Events</span>
+                  </button>
                 </div>
                 <div className="relative bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 ">
                   <div className="relative ">
@@ -959,11 +958,11 @@ export default function Security({ guildId, serverData, setServerData }) {
                       {(() => {
                         const threatLogs = serverData?.config?.security?.threat_logs || [];
                         const filteredLogs = activeThreatTab === 'All' ? threatLogs : threatLogs.filter(l => l.type === (activeThreatTab === 'Raids' ? 'raid' : 'nuke'));
-                        
+
                         if (filteredLogs.length === 0) {
                           return (
                             <div className="text-center py-12">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-triangle-alert mx-auto h-12 w-12 text-neutral-400 mb-4 opacity-50"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-triangle-alert mx-auto h-12 w-12 text-neutral-400 mb-4 opacity-50"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
                               <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No threats detected</h3>
                               <p className="mt-1 text-sm text-neutral-500">Your server is currently secure.</p>
                             </div>
@@ -976,9 +975,9 @@ export default function Security({ guildId, serverData, setServerData }) {
                               <div key={i} className="p-3 bg-neutral-800/30 rounded-xl border border-neutral-800 flex items-start gap-3">
                                 <div className={`p-2 rounded-lg shrink-0 ${log.type === 'nuke' ? 'bg-red-500/20 text-red-400' : (log.type === 'raid' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400')}`}>
                                   {log.type === 'nuke' ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
                                   ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
                                   )}
                                 </div>
                                 <div className="min-w-0 flex-1">

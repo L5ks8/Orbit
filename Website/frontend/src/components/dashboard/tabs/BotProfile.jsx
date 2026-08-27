@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import LoadingScreen from '../../ui/LoadingScreen';
 import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
+import ImageURLPopup from '../../ui/ImageURLPopup';
 
 export default function ({ guildId, serverData, setServerData }) {
   const cacheKey = `botprofile_${guildId}`;
@@ -14,6 +15,8 @@ export default function ({ guildId, serverData, setServerData }) {
     bio: ''
   });
   
+  const [urlPopupOpen, setUrlPopupOpen] = useState(false);
+  const [urlPopupField, setUrlPopupField] = useState(null);
   const toast = useToast();
   
   const [isSaving, setIsSaving] = useState(false);
@@ -96,10 +99,8 @@ export default function ({ guildId, serverData, setServerData }) {
   };
 
   const handlePromptUrl = (field) => {
-    const url = window.prompt("Enter image URL:");
-    if (url) {
-      setConfig(prev => ({ ...prev, [field]: url }));
-    }
+    setUrlPopupField(field);
+    setUrlPopupOpen(true);
   };
   
   const renderAvatarPreview = () => {
@@ -339,6 +340,15 @@ export default function ({ guildId, serverData, setServerData }) {
           </div>
         )}
       </div>
+
+      <ImageURLPopup
+        isOpen={urlPopupOpen}
+        onClose={() => setUrlPopupOpen(false)}
+        title={urlPopupField === 'avatar_url' ? "Use Image URL for Avatar" : "Use Image URL for Banner"}
+        onConfirm={(url) => {
+          setConfig(prev => ({ ...prev, [urlPopupField]: url }));
+        }}
+      />
     </div>
   );
 }
