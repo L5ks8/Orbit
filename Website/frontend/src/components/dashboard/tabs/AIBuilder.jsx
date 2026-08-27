@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 export default function AIBuilder({ guildId }) {
   return (
-    <div className="relative w-full flex flex-col h-[calc(100dvh-4rem)] overflow-hidden">
+    <div className="relative w-full flex flex-col h-[calc(100dvh-4rem)] overflow-hidden" style={{border: "5px solid red", backgroundColor: "blue", zIndex: 9999}}><h1 style={{color:"white", fontSize:"3rem", zIndex: 10000, position:"absolute"}}>AI BUILDER IS MOUNTED</h1>
       <div className="relative w-full flex flex-col h-[calc(100dvh-4rem-2rem)] lg:h-[calc(100dvh-4rem-3rem)] xl:h-[calc(100dvh-4rem-4rem)] overflow-hidden">
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"></div>
         <div className="fixed left-0 top-0 h-full w-[90vw] sm:w-[85vw] max-w-80 z-50 lg:hidden transition-transform duration-300 ease-out border-r border-neutral-800 -translate-x-full">
