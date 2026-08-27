@@ -1365,7 +1365,7 @@ export default function AIBuilder({ guildId }) {
                 <span className="relative z-10">Preview</span>
               </button>
             </div>
-            <div className="flex-[12] flex flex-col min-h-0 min-w-0 flex-1">
+            <div className="flex-[12] flex flex-col min-h-0 min-w-0">
               <div className="relative h-full flex flex-col min-h-0 bg-neutral-900 border border-white/[0.06] ring-1 ring-white/[0.02] rounded-2xl  overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
                 <input
                   accept="image/png,image/jpeg,image/webp"
