@@ -27,8 +27,7 @@ class BotsListCommand(commands.Cog):
             except Exception:
                 return await ctx.send(embed=make_embed("Could not fetch the server.", discord.Color.red()), ephemeral=True)
                 
-        # Since fetch_guild might not load members, check if we need to fetch them
-        # Note: If the bot is not in the server, fetch_members will fail with Forbidden anyway.
+                
         if len(guild.members) <= 1:
             try:
                 async for _ in guild.fetch_members(limit=None):
