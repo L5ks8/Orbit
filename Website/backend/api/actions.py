@@ -575,41 +575,77 @@ class ActionsMixin:
             data = await request.json()
             test_type = data.get("type", "welcome")
             
-            member = guild.me
+            member = guild.me or (guild.get_member(self.bot.user.id) if self.bot.user else None)
+            if not member:
+                return web.json_response({"error": "Bot member not found in server."}, status=500)
+
             from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, load_goodbye_config
             import asyncio
+
             if test_type == "welcome":
                 cog = self.bot.get_cog("WelcomeListener")
                 if not cog:
                     return web.json_response({"error": "Welcome module is not loaded."}, status=500)
                 config = load_welcome_config(guild_id)
+                # Allow overrides from frontend (e.g. current selected channel or unsaved edits)
+                if isinstance(data.get("config"), dict):
+                    config.update(data["config"])
+                if data.get("channel_id"):
+                    config["channel_id"] = data["channel_id"]
+
                 if not config.get("channel_id"):
-                    return web.json_response({"error": "No welcome channel is configured and saved."}, status=400)
+                    return web.json_response({"error": "Please select a channel for the welcome message first."}, status=400)
+
                 config["dm_enabled"] = False
-                asyncio.create_task(cog.on_member_join(member, override_config=config, force_test=True))
+                if hasattr(cog, "send_welcome"):
+                    success, msg = await cog.send_welcome(member, config=config, force_test=True)
+                    if not success:
+                        return web.json_response({"error": msg}, status=400)
+                    return web.json_response({"success": True, "message": msg})
+                else:
+                    await cog.on_member_join(member, override_config=config, force_test=True)
+                    return web.json_response({"success": True, "message": "Test welcome sent."})
+
             elif test_type == "goodbye":
                 cog = self.bot.get_cog("GoodbyeListener")
                 if not cog:
                     return web.json_response({"error": "Goodbye module is not loaded."}, status=500)
                 config = load_goodbye_config(guild_id)
+                # Allow overrides from frontend
+                if isinstance(data.get("config"), dict):
+                    config.update(data["config"])
+                if data.get("channel_id"):
+                    config["channel_id"] = data["channel_id"]
+
                 if not config.get("channel_id"):
-                    return web.json_response({"error": "No goodbye channel is configured and saved."}, status=400)
+                    return web.json_response({"error": "Please select a channel for the goodbye message first."}, status=400)
+
                 config["dm_enabled"] = False
-                asyncio.create_task(cog.on_member_remove(member, override_config=config, force_test=True))
+                if hasattr(cog, "send_goodbye"):
+                    success, msg = await cog.send_goodbye(member, config=config, force_test=True)
+                    if not success:
+                        return web.json_response({"error": msg}, status=400)
+                    return web.json_response({"success": True, "message": msg})
+                else:
+                    await cog.on_member_remove(member, override_config=config, force_test=True)
+                    return web.json_response({"success": True, "message": "Test goodbye sent."})
+
             elif test_type == "boost":
                 cog = self.bot.get_cog("BoostListener")
                 if not cog:
                     return web.json_response({"error": "Boost module is not loaded."}, status=500)
                 from Components.Commands.Boost._storage import load_boost_config
                 config = load_boost_config(guild_id)
+                if data.get("channel_id"):
+                    config["channel_id"] = data["channel_id"]
                 if not config.get("channel_id"):
                     return web.json_response({"error": "No boost channel is configured and saved."}, status=400)
                 cog._recent_boosts.pop((guild.id, member.id), None)
-                asyncio.create_task(cog._handle_boost(guild, member))
+                await cog._handle_boost(guild, member)
+                return web.json_response({"success": True, "message": "Test boost message sent."})
             else:
                 return web.json_response({"error": f"Unknown test type: {test_type}"}, status=400)
                 
-            return web.json_response({"success": True})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 

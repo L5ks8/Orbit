@@ -449,11 +449,11 @@ class ConfigMixin:
                 _clean_cloudinary(welcome_cfg.get("embed_author_icon", ""), w_data.get("embed_author_icon", ""))
                 _clean_cloudinary(welcome_cfg.get("embed_footer_icon", ""), w_data.get("embed_footer_icon", ""))
 
-                welcome_cfg["enabled"] = bool(w_data.get("enabled"))
+                welcome_cfg["enabled"] = str(w_data.get("enabled")).lower() in ("true", "1") if isinstance(w_data.get("enabled"), str) else bool(w_data.get("enabled"))
                 welcome_cfg["dm_enabled"] = bool(w_data.get("dm_enabled"))
                 welcome_cfg["dm_message"] = w_data.get("dm_message", "")
                 cid = w_data.get("channel_id")
-                welcome_cfg["channel_id"] = int(cid) if cid else None
+                welcome_cfg["channel_id"] = int(cid) if (cid and str(cid).isdigit()) else None
                 welcome_cfg["message"] = w_data.get("message", "")
                 welcome_cfg["msg_mode"] = w_data.get("msg_mode", "image")
                 welcome_cfg["image_url"] = w_data.get("image_url", "")
@@ -480,11 +480,11 @@ class ConfigMixin:
                 _clean_cloudinary(goodbye_cfg.get("embed_author_icon", ""), g_data.get("embed_author_icon", ""))
                 _clean_cloudinary(goodbye_cfg.get("embed_footer_icon", ""), g_data.get("embed_footer_icon", ""))
 
-                goodbye_cfg["enabled"] = bool(g_data.get("enabled"))
+                goodbye_cfg["enabled"] = str(g_data.get("enabled")).lower() in ("true", "1") if isinstance(g_data.get("enabled"), str) else bool(g_data.get("enabled"))
                 goodbye_cfg["dm_enabled"] = bool(g_data.get("dm_enabled"))
                 goodbye_cfg["dm_message"] = g_data.get("dm_message", "")
                 cid = g_data.get("channel_id")
-                goodbye_cfg["channel_id"] = int(cid) if cid else None
+                goodbye_cfg["channel_id"] = int(cid) if (cid and str(cid).isdigit()) else None
                 goodbye_cfg["message"] = g_data.get("message", "")
                 goodbye_cfg["msg_mode"] = g_data.get("msg_mode", "image")
                 goodbye_cfg["image_url"] = g_data.get("image_url", "")

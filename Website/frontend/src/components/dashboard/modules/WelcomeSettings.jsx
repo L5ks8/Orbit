@@ -86,6 +86,7 @@ export default function WelcomeSettings({
   };
     
   const isFirstRender = useRef(true);
+  const isSyncingFromConfig = useRef(false);
 
   const [activeRef, setActiveRef] = useState(null);
   const welcomeTextRef = useRef(null);
@@ -114,17 +115,29 @@ export default function WelcomeSettings({
 
   const handleTestWelcome = async (type) => {
     try {
+      const channelId = type === 'welcome' ? welcomeChannel : goodbyeChannel;
+      if (!channelId) {
+        addToast(`Please select a ${type === 'welcome' ? 'welcome' : 'goodbye'} channel first!`, 'error');
+        return;
+      }
       const token = localStorage.getItem('token');
+      const payload = getPayload();
+      const currentConfig = type === 'welcome' ? payload.welcome : payload.goodbye;
+
       const res = await fetch(`/api/server/${guildId}/test-welcome`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ type }),
+        body: JSON.stringify({ 
+          type,
+          channel_id: channelId,
+          config: currentConfig
+        }),
       });
       const data = await res.json();
       if (data.error) addToast('Error: ' + data.error, 'error');
-      else addToast('Test message sent!', 'success');
+      else addToast(data.message || 'Test message sent!', 'success');
     } catch (e) {
-      addToast('Failed to send test message', 'error');
+      addToast('Failed to send test message: ' + e.message, 'error');
     }
   };
 
@@ -187,8 +200,46 @@ export default function WelcomeSettings({
   });
 
   useEffect(() => {
+    if (!config) return;
+    const w = config.welcome || {};
+    const g = config.goodbye || {};
+    isSyncingFromConfig.current = true;
+    if (w.enabled !== undefined) setWelcomeEnabled(!!w.enabled);
+    if (w.channel_id !== undefined) setWelcomeChannel(w.channel_id ? String(w.channel_id) : "");
+    if (w.message !== undefined) setWelcomeText(w.message || "");
+    if (w.dm_enabled !== undefined) setDmJoinEnabled(!!w.dm_enabled);
+    if (w.dm_message !== undefined) setDmJoinText(w.dm_message || "");
+    if (w.msg_mode !== undefined) setWelcomeMsgMode(w.msg_mode || "image");
+    if (w.embed_color !== undefined) setWelcomeEmbedColor(w.embed_color || "#5865F2");
+    if (w.embed_title !== undefined) setWelcomeEmbedTitle(w.embed_title || "");
+    if (w.embed_description !== undefined) setWelcomeEmbedDesc(w.embed_description || "");
+    if (w.embed_thumbnail !== undefined) setWelcomeEmbedThumbnail(w.embed_thumbnail || "");
+    if (w.embed_footer !== undefined) setWelcomeEmbedFooter(w.embed_footer || "");
+    if (w.embed_fields !== undefined) setWelcomeEmbedFields(Array.isArray(w.embed_fields) ? w.embed_fields : []);
+    if (w.image_url !== undefined) setWelcomeImageUrl(w.image_url || "");
+
+    if (g.enabled !== undefined) setGoodbyeEnabled(!!g.enabled);
+    if (g.channel_id !== undefined) setGoodbyeChannel(g.channel_id ? String(g.channel_id) : "");
+    if (g.message !== undefined) setGoodbyeText(g.message || "");
+    if (g.dm_enabled !== undefined) setDmLeaveEnabled(!!g.dm_enabled);
+    if (g.dm_message !== undefined) setDmLeaveText(g.dm_message || "");
+    if (g.msg_mode !== undefined) setGoodbyeMsgMode(g.msg_mode || "image");
+    if (g.embed_color !== undefined) setGoodbyeEmbedColor(g.embed_color || "#ED4245");
+    if (g.embed_title !== undefined) setGoodbyeEmbedTitle(g.embed_title || "");
+    if (g.embed_description !== undefined) setGoodbyeEmbedDesc(g.embed_description || "");
+    if (g.embed_thumbnail !== undefined) setGoodbyeEmbedThumbnail(g.embed_thumbnail || "");
+    if (g.embed_footer !== undefined) setGoodbyeEmbedFooter(g.embed_footer || "");
+    if (g.embed_fields !== undefined) setGoodbyeEmbedFields(Array.isArray(g.embed_fields) ? g.embed_fields : []);
+    if (g.image_url !== undefined) setGoodbyeImageUrl(g.image_url || "");
+  }, [config]);
+
+  useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      return;
+    }
+    if (isSyncingFromConfig.current) {
+      isSyncingFromConfig.current = false;
       return;
     }
     const handler = setTimeout(() => {

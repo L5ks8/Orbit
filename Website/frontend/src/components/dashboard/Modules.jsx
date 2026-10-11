@@ -117,6 +117,7 @@ export default function Modules({ guildId, serverData, setServerData }) {
     let currentState = false;
     if (id === 'autoresponder') currentState = cfg.autoresponder_enabled;
     else if (id === 'messages') currentState = cfg.messages_enabled;
+    else if (id === 'welcomegoodbye') currentState = cfg.welcome?.enabled;
     else currentState = cfg[backendKey]?.enabled;
     
     const newState = !currentState;
@@ -128,6 +129,11 @@ export default function Modules({ guildId, serverData, setServerData }) {
           autoresponder_enabled: id === 'autoresponder' ? newState : (cfg.autoresponder_enabled || false),
           messages_enabled: id === 'messages' ? newState : (cfg.messages_enabled || false)
         }
+      };
+    } else if (id === 'welcomegoodbye') {
+      payload = {
+        welcome: { ...(cfg.welcome || {}), enabled: newState },
+        goodbye: { ...(cfg.goodbye || {}), enabled: newState }
       };
     } else {
       const currentModConfig = cfg[backendKey] || {};
@@ -142,6 +148,10 @@ export default function Modules({ guildId, serverData, setServerData }) {
       const newConfig = { ...prev.config };
       if (id === 'autoresponder') newConfig.autoresponder_enabled = newState;
       else if (id === 'messages') newConfig.messages_enabled = newState;
+      else if (id === 'welcomegoodbye') {
+        newConfig.welcome = { ...(newConfig.welcome || {}), enabled: newState };
+        newConfig.goodbye = { ...(newConfig.goodbye || {}), enabled: newState };
+      }
       else newConfig[backendKey] = { ...newConfig[backendKey], enabled: newState };
       return { ...prev, config: newConfig };
     });
@@ -164,6 +174,10 @@ export default function Modules({ guildId, serverData, setServerData }) {
             const newConfig = { ...prev.config };
             if (id === 'autoresponder') newConfig.autoresponder_enabled = currentState;
             else if (id === 'messages') newConfig.messages_enabled = currentState;
+            else if (id === 'welcomegoodbye') {
+              newConfig.welcome = { ...(newConfig.welcome || {}), enabled: currentState };
+              newConfig.goodbye = { ...(newConfig.goodbye || {}), enabled: currentState };
+            }
             else newConfig[backendKey] = { ...newConfig[backendKey], enabled: currentState };
             return { ...prev, config: newConfig };
           });
@@ -180,12 +194,13 @@ export default function Modules({ guildId, serverData, setServerData }) {
     const cfg = serverData.config || {};
     if (id === 'autoresponder') return cfg.autoresponder_enabled || false;
     if (id === 'messages') return cfg.messages_enabled || false;
+    if (id === 'welcomegoodbye') return cfg.welcome?.enabled || false;
     const backendKey = id === 'tickets' ? 'ticket' : id;
     return cfg[backendKey]?.enabled || false;
   };
 
   const renderModuleContent = () => {
-    if (!serverData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#ef4444' }}>Failed to load data.</div>;
+    if (!serverData || !serverData.config) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px', color: '#a3a3a3' }}>Loading module settings...</div>;
 
     const moduleInfo = modulesList.find(m => m.id === moduleId);
     
