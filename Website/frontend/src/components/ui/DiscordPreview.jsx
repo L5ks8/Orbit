@@ -434,8 +434,7 @@ export default function DiscordPreview({
                 {/* Verify Button Preview */}
                 {mode === 'embed' && cardTitle === 'VERIFY' && (
                   <div className="mt-2.5 flex">
-                    <div className="bg-[#248046] hover:bg-[#1a6334] text-white px-4 py-1.5 rounded-[4px] text-sm font-medium transition-colors cursor-default inline-flex items-center gap-1.5 shadow-sm select-none">
-                      <span className="text-base leading-none">🛡️</span>
+                    <div className="bg-[#248046] hover:bg-[#1a6334] text-white px-4 py-1.5 rounded-[4px] text-sm font-medium transition-colors cursor-default inline-flex items-center shadow-sm select-none">
                       <span>Verify</span>
                     </div>
                   </div>

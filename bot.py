@@ -354,6 +354,8 @@ class OrbitBot(commands.Bot):
                 continue
             if file_path.stem.lower() == file_path.parent.name.lower():
                 extension = ".".join(file_path.with_suffix("").parts)
+                if extension in self.extensions:
+                    continue
                 try:
                     await self.load_extension(extension)
                     print(f"Loaded Root Group: {extension}")
@@ -368,6 +370,8 @@ class OrbitBot(commands.Bot):
             if file_path.stem.lower() == file_path.parent.name.lower():
                 continue
             extension = ".".join(file_path.with_suffix("").parts)
+            if extension in self.extensions:
+                continue
             try:
                 await self.load_extension(extension)
                 print(f"Loaded: {extension}")

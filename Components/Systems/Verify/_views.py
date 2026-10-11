@@ -248,6 +248,6 @@ class PersistentVerifyLayout(View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Verify", style=discord.ButtonStyle.success, emoji="🛡️", custom_id="orbit:verify_start")
+    @discord.ui.button(label="Verify", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
     async def verify_button(self, interaction: discord.Interaction, button: Button):
         await handle_verify_interaction(interaction)
