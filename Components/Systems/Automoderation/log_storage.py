@@ -149,10 +149,19 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
     if not channel:
         try:
             channel = await guild.fetch_channel(ch_int)
+        except (discord.Forbidden, discord.NotFound):
+            return
         except Exception:
-            pass
+            return
 
     if not channel or not isinstance(channel, (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel, discord.Thread)):
+        return
+
+    me = guild.me
+    if not me:
+        return
+    perms = channel.permissions_for(me)
+    if not perms.view_channel or not perms.send_messages or not perms.embed_links:
         return
 
     role_ping = None
@@ -175,6 +184,8 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
 
     try:
         await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+    except (discord.Forbidden, discord.NotFound):
+        pass
     except Exception as e:
-        print("LOG SEND ERROR:", e)
+        print(f"[AutoMod Log] Send error in guild {guild.id} channel {channel.id}: {e}")
 

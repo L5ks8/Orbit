@@ -148,15 +148,8 @@ class GeminiChatbot(commands.Cog):
 
                 messages_payload.append({"role": "user", "content": f"{message.author.display_name}: {message.clean_content}"})
 
-                response = await asyncio.wait_for(
-                    self.client.chat.completions.create(
-                        model='gpt-3.5-turbo',
-                        messages=messages_payload
-                    ),
-                    timeout=20.0
-                )
-                
-                text_response = response.choices[0].message.content
+                from Components.Commands.AI._client import generate_ai_response
+                text_response = await generate_ai_response(messages_payload)
                             
                 if text_response:
                     # Parse tool calls
@@ -302,8 +295,8 @@ class GeminiChatbot(commands.Cog):
                 else:
                     pass
             except Exception as e:
-                print(f"AI Error: {e}")
-                await message.reply(f"I am currently experiencing technical difficulties connecting to my AI providers. Please try again later.\n*(Error: {e})*")
+                print(f"[Orbit AI] Generation error: {e}")
+                await message.reply("I am currently experiencing technical difficulties connecting to my AI providers. Please try again in a moment!")
 
     async def _send_chunked(self, message: discord.Message, text: str):
         chunks = [text[i:i+1950] for i in range(0, len(text), 1950)]

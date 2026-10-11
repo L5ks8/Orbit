@@ -56,19 +56,12 @@ class AskVoice(commands.Cog):
         )
 
     async def _generate_response(self, question: str, guild: discord.Guild | None) -> str:
-
         messages_payload = [
             {"role": "system", "content": self._build_system_prompt(guild)},
             {"role": "user", "content": question},
         ]
-        response = await asyncio.wait_for(
-            self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages_payload,
-            ),
-            timeout=20.0,
-        )
-        return response.choices[0].message.content or "I could not generate a response."
+        from Components.Commands.AI._client import generate_ai_response
+        return await generate_ai_response(messages_payload)
 
     async def _text_to_speech(self, text: str) -> bytes | None:
 

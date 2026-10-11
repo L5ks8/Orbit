@@ -157,6 +157,11 @@ class OrbitBot(commands.Bot):
         import collections
         self.stats_history = collections.deque(maxlen=30)
         try:
+            import psutil, os
+            self._proc = psutil.Process(os.getpid())
+        except Exception:
+            self._proc = None
+        try:
             from Components.Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
             data = _load_status()
             if data and isinstance(data, dict):
@@ -206,12 +211,16 @@ class OrbitBot(commands.Bot):
             pass
         return False
 
-    @tasks.loop(seconds=2)
+    @tasks.loop(seconds=5)
     async def live_stats_loop(self):
         try:
-            import psutil, os, math
-            process = psutil.Process(os.getpid())
-            ram_mb = process.memory_info().rss / 1024 ** 2
+            import math
+            ram_mb = 0.0
+            if getattr(self, "_proc", None):
+                try:
+                    ram_mb = self._proc.memory_info().rss / (1024 ** 2)
+                except Exception:
+                    pass
             
             lat = self.latency
             if math.isinf(lat) or math.isnan(lat):
