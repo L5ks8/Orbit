@@ -335,6 +335,12 @@ class OrbitBot(commands.Bot):
             print(f"Failed to load Verify Listener: {e}")
 
         try:
+            await self.load_extension("Components.Systems.Verify.verify")
+            print("Loaded Verify Commands")
+        except Exception as e:
+            print(f"Failed to load Verify Commands: {e}")
+
+        try:
             await self.load_extension("Components.Commands.Boost.boostlistener")
             print("Loaded Boost Listener")
         except Exception as e:

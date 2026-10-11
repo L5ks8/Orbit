@@ -209,12 +209,12 @@ class ActionsMixin:
                 
             verify_cfg = load_verify_config(guild_id)
             
-            emb_title = verify_cfg.get("embed_title") if verify_cfg.get("embed_title") is not None else ""
-            emb_desc = verify_cfg.get("embed_description") if verify_cfg.get("embed_description") is not None else "This server requires you to verify yourself to get access to other channels, you can simply verify by clicking on the verify button."
+            emb_title = verify_cfg.get("embed_title") or "Server Verification"
+            emb_desc = verify_cfg.get("embed_description") or "Please click the button below to verify your account and gain access to the server."
             
             try:
-                emb_color = discord.Color(int(verify_cfg.get("embed_color", "").lstrip('#'), 16)) if verify_cfg.get("embed_color") else discord.Color.blue()
-            except:
+                emb_color = discord.Color(int(str(verify_cfg.get("embed_color", "#5865F2")).lstrip('#'), 16))
+            except Exception:
                 emb_color = discord.Color.blue()
                 
             embed = discord.Embed(
@@ -224,20 +224,41 @@ class ActionsMixin:
             )
             
             emb_image = verify_cfg.get("embed_image", "")
-            if not emb_image or emb_image.startswith("/"):
-                emb_image = "https://raw.githubusercontent.com/L5ks8/Orbit/main/Web/static/default_verify.png"
-                
-            if emb_image:
+            file_to_send = None
+            import pathlib
+            file_candidates = [
+                pathlib.Path("Website/frontend/public/img/default_verify.png"),
+                pathlib.Path("Website/frontend/dist/img/default_verify.png"),
+                pathlib.Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "img" / "default_verify.png",
+                pathlib.Path(__file__).resolve().parent.parent.parent / "frontend" / "dist" / "img" / "default_verify.png",
+            ]
+            local_default_img = next((p for p in file_candidates if p.exists()), None)
+            
+            if (not emb_image or emb_image == "/img/default_verify.png" or emb_image.startswith("/") or "default_verify" in emb_image) and local_default_img:
+                file_to_send = discord.File(fp=str(local_default_img), filename="verify_banner.png")
+                embed.set_image(url="attachment://verify_banner.png")
+            elif emb_image and emb_image.startswith("http") and "Web/static/default_verify.png" not in emb_image:
                 embed.set_image(url=emb_image)
+            elif local_default_img:
+                file_to_send = discord.File(fp=str(local_default_img), filename="verify_banner.png")
+                embed.set_image(url="attachment://verify_banner.png")
                 
-            from discord.ui import Button, View
-            btn_verify = Button(label="Verify", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
-            view = View(timeout=None)
-            view.add_item(btn_verify)
-            await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
+            from Components.Systems.Verify._views import PersistentVerifyLayout
+            view = PersistentVerifyLayout()
+            
+            send_kwargs = {
+                "embed": embed,
+                "view": view,
+                "allowed_mentions": discord.AllowedMentions.none()
+            }
+            if file_to_send:
+                send_kwargs["file"] = file_to_send
+                
+            await channel.send(**send_kwargs)
 
             verify_cfg = load_verify_config(guild_id)
             verify_cfg["channel_id"] = channel.id
+            verify_cfg["enabled"] = True
             save_verify_config(guild_id, verify_cfg)
             
             return web.json_response({"success": True})

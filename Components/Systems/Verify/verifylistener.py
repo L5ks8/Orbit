@@ -20,7 +20,15 @@ class VerifyListenerCog(commands.Cog):
         if not config.get("enabled", True):
             return
 
-        role_id = config.get("role_id")
+        raw_role_id = config.get("role_id")
+        if not raw_role_id:
+            return
+            
+        try:
+            role_id = int(raw_role_id)
+        except (ValueError, TypeError):
+            return
+
         timeout_action = config.get("timeout_action", "none")
         timeout_minutes = config.get("timeout_minutes", 0)
         # fallback to old auto_kick_minutes if timeout_minutes is 0
@@ -29,7 +37,7 @@ class VerifyListenerCog(commands.Cog):
             if timeout_minutes > 0 and timeout_action == "none":
                 timeout_action = "kick"
 
-        if role_id and timeout_minutes > 0 and timeout_action in ["kick", "ban"]:
+        if timeout_minutes > 0 and timeout_action in ["kick", "ban"]:
             kick_time = time.time() + (timeout_minutes * 60)
             add_pending_kick(member.guild.id, member.id, kick_time)
 
@@ -44,8 +52,13 @@ class VerifyListenerCog(commands.Cog):
             if not pending:
                 continue
 
-            role_id = config.get("role_id")
-            if not role_id:
+            raw_role_id = config.get("role_id")
+            if not raw_role_id:
+                continue
+                
+            try:
+                role_id = int(raw_role_id)
+            except (ValueError, TypeError):
                 continue
                 
             timeout_action = config.get("timeout_action", "none")
@@ -93,7 +106,9 @@ class VerifyListenerCog(commands.Cog):
             return
         if interaction.response.is_done():
             return
-        pass
+        if interaction.data and interaction.data.get("custom_id") == "orbit:verify_start":
+            from Components.Systems.Verify._views import handle_verify_interaction
+            await handle_verify_interaction(interaction)
 
     @auto_kick_checker.before_loop
     async def before_auto_kick(self):

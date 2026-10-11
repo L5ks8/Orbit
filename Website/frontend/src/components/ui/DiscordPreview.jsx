@@ -403,8 +403,19 @@ export default function DiscordPreview({
                           </div>
                         )}
 
-                        {embedImage && (
-                          <img src={embedImage} className="w-full rounded-[3px] mt-2 max-h-[300px] object-cover" alt="" onError={(e) => e.target.style.display = 'none'} />
+                        {(embedImage || (cardTitle === 'VERIFY' ? '/img/default_verify.png' : null)) && (
+                          <img 
+                            src={embedImage || (cardTitle === 'VERIFY' ? '/img/default_verify.png' : '')} 
+                            className="w-full rounded-[3px] mt-2 max-h-[300px] object-cover" 
+                            alt="Embed Banner" 
+                            onError={(e) => {
+                              if (cardTitle === 'VERIFY' && e.target.src && !e.target.src.endsWith('/img/default_verify.png')) {
+                                e.target.src = '/img/default_verify.png';
+                              } else {
+                                e.target.style.display = 'none';
+                              }
+                            }} 
+                          />
                         )}
                         {previewFooter && (
                           <div className="text-[10px] text-neutral-400 font-medium">
@@ -422,13 +433,10 @@ export default function DiscordPreview({
                 )}
                 {/* Verify Button Preview */}
                 {mode === 'embed' && cardTitle === 'VERIFY' && (
-                  <div className="mt-2 flex">
-                    <div className="bg-[#2b2d31] hover:bg-[#32353a] border border-[#1e1f22] text-[#dbdee1] px-4 py-1.5 rounded text-sm font-medium transition-colors cursor-default inline-flex items-center gap-2">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="m9 12 2 2 4-4"/>
-                      </svg>
-                      Verify
+                  <div className="mt-2.5 flex">
+                    <div className="bg-[#248046] hover:bg-[#1a6334] text-white px-4 py-1.5 rounded-[4px] text-sm font-medium transition-colors cursor-default inline-flex items-center gap-1.5 shadow-sm select-none">
+                      <span className="text-base leading-none">🛡️</span>
+                      <span>Verify</span>
                     </div>
                   </div>
                 )}

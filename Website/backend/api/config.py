@@ -269,10 +269,10 @@ class ConfigMixin:
                 "verification_type": verify_cfg.get("verification_type", "captcha"),
                 "timeout_action": verify_cfg.get("timeout_action", "none"),
                 "timeout_minutes": verify_cfg.get("timeout_minutes", None),
-                "embed_title": verify_cfg.get("embed_title", ""),
-                "embed_description": verify_cfg.get("embed_description", ""),
-                "embed_color": verify_cfg.get("embed_color", ""),
-                "embed_image": verify_cfg.get("embed_image", "")
+                "embed_title": verify_cfg.get("embed_title") or "Server Verification",
+                "embed_description": verify_cfg.get("embed_description") or "Please click the button below to verify your account and gain access to the server.",
+                "embed_color": verify_cfg.get("embed_color") or "#5865F2",
+                "embed_image": verify_cfg.get("embed_image") or "/img/default_verify.png"
             },
             "autoresponder": autoresponder_cfg,
             "joinroles": {
@@ -635,10 +635,13 @@ class ConfigMixin:
                 except (ValueError, TypeError):
                     verify_cfg["timeout_minutes"] = 0
                 
-                verify_cfg["embed_title"] = data.get("verify", {}).get("embed_title", "")
-                verify_cfg["embed_description"] = data.get("verify", {}).get("embed_description", "")
-                verify_cfg["embed_color"] = data.get("verify", {}).get("embed_color", "")
-                verify_cfg["embed_image"] = data.get("verify", {}).get("embed_image", "")
+                verify_cfg["embed_title"] = data.get("verify", {}).get("embed_title") or "Server Verification"
+                verify_cfg["embed_description"] = data.get("verify", {}).get("embed_description") or "Please click the button below to verify your account and gain access to the server."
+                verify_cfg["embed_color"] = data.get("verify", {}).get("embed_color") or "#5865F2"
+                img_val = data.get("verify", {}).get("embed_image", "")
+                if not img_val or "Web/static/default_verify.png" in img_val:
+                    img_val = "/img/default_verify.png"
+                verify_cfg["embed_image"] = img_val
                 verify_cfg["embed_fields"] = data.get("verify", {}).get("embed_fields", [])
                 
                 save_verify_config(guild_id, verify_cfg)

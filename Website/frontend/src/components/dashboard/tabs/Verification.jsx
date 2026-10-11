@@ -15,6 +15,11 @@ const TailwindToggle = ({ checked, onChange }) => (
     </button>
 );
 
+const DEFAULT_TITLE = 'Server Verification';
+const DEFAULT_DESC = 'Please click the button below to verify your account and gain access to the server.';
+const DEFAULT_IMAGE = '/img/default_verify.png';
+const DEFAULT_COLOR = '#5865F2';
+
 export default function Verification({ guildId, serverData, setServerData }) {
   const toast = useToast();
   const vCfg = serverData?.config?.verify || {};
@@ -27,10 +32,10 @@ export default function Verification({ guildId, serverData, setServerData }) {
   const [removeRoleId, setRemoveRoleId] = useState(vCfg.remove_role_id || '');
   const [timeoutAction, setTimeoutAction] = useState(vCfg.timeout_action || 'none');
   const [timeoutHours, setTimeoutHours] = useState(vCfg.timeout_minutes ? vCfg.timeout_minutes / 60 : 0);
-  const [embedTitle, setEmbedTitle] = useState(vCfg.embed_title || '');
-  const [embedDesc, setEmbedDesc] = useState(vCfg.embed_description || '');
-  const [embedColor, setEmbedColor] = useState(vCfg.embed_color || '#5865F2');
-  const [embedImage, setEmbedImage] = useState(vCfg.embed_image || '/img/default_verify.png');
+  const [embedTitle, setEmbedTitle] = useState(vCfg.embed_title || DEFAULT_TITLE);
+  const [embedDesc, setEmbedDesc] = useState(vCfg.embed_description || DEFAULT_DESC);
+  const [embedColor, setEmbedColor] = useState(vCfg.embed_color || DEFAULT_COLOR);
+  const [embedImage, setEmbedImage] = useState(vCfg.embed_image || DEFAULT_IMAGE);
   const [panelChannel, setPanelChannel] = useState(vCfg.channel_id || '');
 
   useEffect(() => {
@@ -41,10 +46,10 @@ export default function Verification({ guildId, serverData, setServerData }) {
       setRemoveRoleId(cfg.remove_role_id ? String(cfg.remove_role_id) : '');
       setTimeoutAction(cfg.timeout_action || 'none');
       setTimeoutHours(cfg.timeout_minutes ? cfg.timeout_minutes / 60 : 0);
-      setEmbedTitle(cfg.embed_title || '');
-      setEmbedDesc(cfg.embed_description || '');
-      setEmbedColor(cfg.embed_color || '#5865F2');
-      setEmbedImage(cfg.embed_image || '/img/default_verify.png');
+      setEmbedTitle(cfg.embed_title || DEFAULT_TITLE);
+      setEmbedDesc(cfg.embed_description || DEFAULT_DESC);
+      setEmbedColor(cfg.embed_color || DEFAULT_COLOR);
+      setEmbedImage(cfg.embed_image || DEFAULT_IMAGE);
       setPanelChannel(cfg.channel_id ? String(cfg.channel_id) : '');
       
       // Update the reference payload so it doesn't trigger an immediate auto-save
@@ -58,10 +63,10 @@ export default function Verification({ guildId, serverData, setServerData }) {
             remove_role_id: cfg.remove_role_id ? String(cfg.remove_role_id) : '',
             timeout_action: cfg.timeout_action || 'none',
             timeout_minutes: cfg.timeout_minutes || 0,
-            embed_title: cfg.embed_title || '',
-            embed_description: cfg.embed_description || '',
-            embed_color: cfg.embed_color || '#5865F2',
-            embed_image: cfg.embed_image || '/img/default_verify.png'
+            embed_title: cfg.embed_title || DEFAULT_TITLE,
+            embed_description: cfg.embed_description || DEFAULT_DESC,
+            embed_color: cfg.embed_color || DEFAULT_COLOR,
+            embed_image: cfg.embed_image || DEFAULT_IMAGE
           }
         });
       }, 0);
@@ -92,10 +97,10 @@ export default function Verification({ guildId, serverData, setServerData }) {
       remove_role_id: removeRoleId,
       timeout_action: timeoutAction,
       timeout_minutes: timeoutHours * 60,
-      embed_title: embedTitle,
-      embed_description: embedDesc,
-      embed_color: embedColor,
-      embed_image: embedImage
+      embed_title: embedTitle || DEFAULT_TITLE,
+      embed_description: embedDesc || DEFAULT_DESC,
+      embed_color: embedColor || DEFAULT_COLOR,
+      embed_image: embedImage || DEFAULT_IMAGE
     }
   });
 
@@ -307,6 +312,24 @@ export default function Verification({ guildId, serverData, setServerData }) {
                     Panel Design
                   </span>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmbedTitle(DEFAULT_TITLE);
+                    setEmbedDesc(DEFAULT_DESC);
+                    setEmbedImage(DEFAULT_IMAGE);
+                    setEmbedColor(DEFAULT_COLOR);
+                  }}
+                  className="px-2.5 py-1 text-xs font-medium rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                    <path d="M8 16H3v5"/>
+                  </svg>
+                  Reset Defaults
+                </button>
               </div>
               <div className="px-5 pb-5 pt-1 border-t border-neutral-800">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4">
@@ -334,7 +357,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
                         className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none hover:border-neutral-600 transition-all duration-200"
                         value={embedTitle}
                         onChange={e => setEmbedTitle(e.target.value)}
-                        placeholder="Server Verification"
+                        placeholder={DEFAULT_TITLE}
                       />
                     </div>
                     <div>
@@ -344,16 +367,27 @@ export default function Verification({ guildId, serverData, setServerData }) {
                         rows={3}
                         value={embedDesc}
                         onChange={e => setEmbedDesc(e.target.value)}
-                        placeholder="Click the button below to verify your account."
+                        placeholder={DEFAULT_DESC}
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] text-neutral-500 block mb-1.5">Image URL</label>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] text-neutral-500 block">Banner Image URL</label>
+                        {embedImage !== DEFAULT_IMAGE && (
+                          <button
+                            type="button"
+                            onClick={() => setEmbedImage(DEFAULT_IMAGE)}
+                            className="text-[11px] text-indigo-400 hover:text-indigo-300 underline"
+                          >
+                            Use Default Banner
+                          </button>
+                        )}
+                      </div>
                       <input
                         className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none hover:border-neutral-600 transition-all duration-200"
                         value={embedImage}
                         onChange={e => setEmbedImage(e.target.value)}
-                        placeholder="https://example.com/image.png"
+                        placeholder={DEFAULT_IMAGE}
                       />
                     </div>
                   </div>
