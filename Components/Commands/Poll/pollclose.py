@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Poll._storage import get_poll_entry, close_poll_entry
@@ -57,7 +57,7 @@ class PollCloseCommand(commands.Cog):
     @pollclose.error
     async def pollclose_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -pollclose <P-123456>", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: /pollclose <poll_id>", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

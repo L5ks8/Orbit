@@ -80,7 +80,7 @@ PAGES = [
             "**`-wipeuser <User-ID>`**\n"
             "> Permanently deletes all database records for a specific user.\n\n"
             "**`-clearcache`**\n"
-            "> Flushes internal caches (like the prefix cache) to sync with the database."
+            "> Flushes internal caches to sync with the database."
         )
     },
     {
@@ -196,9 +196,8 @@ class DevCommand(commands.Cog):
     @commands.is_owner()
     async def dev_cmd(self, ctx: commands.Context):
         from Components.Commands.OwnerOnly._monitor import record_command
-        from Components.Commands._utils import make_embed
         record_command("dev", str(ctx.author))
-        if ctx.guild is not None:
+        if ctx.message and ctx.guild is not None:
             try:
                 await ctx.message.delete()
             except Exception:

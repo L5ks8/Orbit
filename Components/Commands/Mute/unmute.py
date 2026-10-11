@@ -34,7 +34,7 @@ class UnmuteCommand(commands.Cog):
         await log_event(
             ctx.guild,
             "moderation_action",
-            "User Unmuted (`-unmute`)",
+            "User Unmuted (`/unmute`)",
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Removed Role:** {role.mention}"
         )
         embed = discord.Embed(title="User Unmuted", color=discord.Color.green())
@@ -49,8 +49,8 @@ class UnmuteCommand(commands.Cog):
     async def unmute_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Roles permission to unmute users.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -unmute <@user/ID> [reason]", discord.Color.red()), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed("Usage: /unmute <target> [reason]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

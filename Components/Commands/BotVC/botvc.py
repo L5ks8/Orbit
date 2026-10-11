@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands._utils import make_embed
 
@@ -17,7 +17,7 @@ class BotVCCommand(commands.Cog):
             if ctx.author.voice and ctx.author.voice.channel:
                 target_channel = ctx.author.voice.channel
             else:
-                return await ctx.send(embed=make_embed("Please specify a voice channel or join one yourself (`-connect #channel`).", discord.Color.red()), ephemeral=True)
+                return await ctx.send(embed=make_embed("Please specify a voice channel or join one yourself (`/connect #channel`).", discord.Color.red()), ephemeral=True)
 
         try:
             # If the bot is already connected somewhere in this server

@@ -5,6 +5,7 @@ import aiohttp
 from io import BytesIO
 from PIL import Image, ImageOps, ImageEnhance, ImageDraw, ImageFilter
 import random
+from Components.Commands._utils import make_embed
 
 class ImageFilters(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -55,7 +56,7 @@ class ImageFilters(commands.Cog):
             
             await ctx.send(file=discord.File(fp=buffer, filename="jail.png"))
         except Exception as e:
-            await ctx.send(f"Error: {e}")
+            await ctx.send(embed=make_embed(f"Error: {e}", discord.Color.red()))
 
     @commands.hybrid_command(name="wasted", description="GTA Wasted effect.")
     async def wasted(self, ctx: commands.Context, user: discord.Member = None):
@@ -106,7 +107,7 @@ class ImageFilters(commands.Cog):
             
             await ctx.send(file=discord.File(fp=buffer, filename="wasted.png"))
         except Exception as e:
-            await ctx.send(f"Error: {e}")
+            await ctx.send(embed=make_embed(f"Error: {e}", discord.Color.red()))
 
     @commands.hybrid_command(name="triggered", description="Shaking red GIF.")
     async def triggered(self, ctx: commands.Context, user: discord.Member = None):
@@ -139,7 +140,7 @@ class ImageFilters(commands.Cog):
             
             await ctx.send(file=discord.File(fp=buffer, filename="triggered.gif"))
         except Exception as e:
-            await ctx.send(f"Error: {e}")
+            await ctx.send(embed=make_embed(f"Error: {e}", discord.Color.red()))
 
     @commands.hybrid_command(name="rip", description="Put a user on a tombstone.")
     async def rip(self, ctx: commands.Context, user: discord.Member = None):
@@ -179,7 +180,7 @@ class ImageFilters(commands.Cog):
             
             await ctx.send(file=discord.File(fp=buffer, filename="rip.png"))
         except Exception as e:
-            await ctx.send(f"Error: {e}")
+            await ctx.send(embed=make_embed(f"Error generating image: {e}", discord.Color.red()))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ImageFilters(bot))

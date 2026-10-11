@@ -270,7 +270,6 @@ export const docsData = {
         <h2 id="configuration" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Configuration</h2>
         <PropertiesTable 
           properties={[
-            { name: 'Command Prefix', type: 'Setting', description: 'Change the prefix used for text commands (default is usually `-`). Note: Slash commands `/` are always available.' },
             { name: 'Language', type: 'Setting', description: 'Set the primary language Orbit uses when responding to commands and errors.' },
             { name: 'Data Reset', type: 'Action', description: 'Danger Zone: Allows server owners to permanently delete all Orbit data associated with the server.' }
           ]}
@@ -782,38 +781,39 @@ export const docsData = {
       <>
         <div id="overview" style={{ position: 'relative', top: '-100px' }}></div>
         <p style={{ color: 'var(--text-primary)', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
-          This page serves as a complete reference for every text and slash command available in Orbit. Most standard commands use the <code>-</code> prefix (configurable), while complex features use Discord's built-in slash commands <code>/</code>.
+          This page serves as a complete reference for all commands available in Orbit. All Orbit commands are modern Discord Slash Commands (<code>/</code>) featuring rich auto-completion, built-in validation, and native Discord permission controls.
         </p>
 
         <h2 id="general" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>General / Utility Commands</h2>
         <PropertiesTable 
           properties={[
-            { name: '-help', type: 'Command', description: 'Displays a list of available commands and a link to the dashboard.' },
-            { name: '-ping', type: 'Command', description: 'Shows the bot\'s current API latency and response time.' },
-            { name: '-userinfo [@user]', type: 'Command', description: 'Fetches details about a specific user (Join date, roles, ID).' },
-            { name: '-serverinfo', type: 'Command', description: 'Displays statistics about the current server.' }
+            { name: '/help', type: 'Command', description: 'Displays an interactive command guide and a link to the dashboard.' },
+            { name: '/ping', type: 'Command', description: 'Shows the bot\'s current API latency and response time.' },
+            { name: '/userinfo [user]', type: 'Command', description: 'Fetches details about a specific user (Join date, roles, ID).' },
+            { name: '/serverinfo', type: 'Command', description: 'Displays statistics and overview of the current server.' }
           ]}
         />
 
         <h2 id="moderation" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Moderation Commands</h2>
         <PropertiesTable 
           properties={[
-            { name: '-ban [@user] [reason]', type: 'Command', description: 'Permanently bans a user from the server.' },
-            { name: '-kick [@user] [reason]', type: 'Command', description: 'Kicks a user from the server.' },
-            { name: '-mute [@user] [duration]', type: 'Command', description: 'Timeouts a user for the specified duration (e.g. 10m, 1h).' },
-            { name: '-warn [@user] [reason]', type: 'Command', description: 'Issues a formal warning and logs it in their moderation history.' },
-            { name: '-purge [amount]', type: 'Command', description: 'Deletes up to 100 recent messages in the current channel.' },
-            { name: '-slowmode [duration]', type: 'Command', description: 'Sets a slowmode delay for the current channel.' }
+            { name: '/ban <user> [reason]', type: 'Command', description: 'Permanently bans a user from the server.' },
+            { name: '/kick <user> [reason]', type: 'Command', description: 'Kicks a user from the server.' },
+            { name: '/timeout <user> <duration> [reason]', type: 'Command', description: 'Times out a user for the specified duration (e.g. 10m, 1h).' },
+            { name: '/warn <user> <reason>', type: 'Command', description: 'Issues a formal warning and logs it in their moderation history.' },
+            { name: '/purge <amount> [user]', type: 'Command', description: 'Deletes up to 100 recent messages in the current channel.' },
+            { name: '/slowmode <duration>', type: 'Command', description: 'Sets a slowmode delay for the current channel.' }
           ]}
         />
 
         <h2 id="features" style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Feature Commands</h2>
         <PropertiesTable 
           properties={[
-            { name: '/level', type: 'Engagement', description: 'Check your current level and XP progress.' },
+            { name: '/level [user]', type: 'Engagement', description: 'Check your current level and XP progress.' },
+            { name: '/leaderboard', type: 'Engagement', description: 'Displays the server XP and activity leaderboard.' },
             { name: '/ticket <add | remove | close>', type: 'Tickets', description: 'Manage a ticket channel (e.g. add a user or close the ticket).' },
-            { name: '-vc_mute / -vc_lock / -vc_move', type: 'Voice', description: 'Moderator voice controls to manage active voice channels.' },
-            { name: '-addrole / -removerole', type: 'Roles', description: 'Quickly grant or revoke a role from a user without opening their profile.' }
+            { name: '/voice <lock | unlock | limit | move>', type: 'Voice', description: 'Voice channel controls to manage active voice channels.' },
+            { name: '/role <add | remove | all | info>', type: 'Roles', description: 'Server role management commands.' }
           ]}
         />
 

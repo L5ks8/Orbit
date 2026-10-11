@@ -1,4 +1,4 @@
-﻿import math
+import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
@@ -104,7 +104,7 @@ class CheckWarnsCog(commands.Cog):
     @checkwarn_cmd.error
     async def checkwarns_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(f"{format_usage('-checkwarns','<@member>')}"), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("/checkwarns", "[member]")), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CheckWarnsCog(bot))

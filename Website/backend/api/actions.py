@@ -566,7 +566,7 @@ class ActionsMixin:
                     return web.json_response({"error": "No welcome channel is configured and saved."}, status=400)
                 config["dm_enabled"] = False
                 asyncio.create_task(cog.on_member_join(member, override_config=config, force_test=True))
-            else:
+            elif test_type == "goodbye":
                 cog = self.bot.get_cog("GoodbyeListener")
                 if not cog:
                     return web.json_response({"error": "Goodbye module is not loaded."}, status=500)
@@ -575,6 +575,18 @@ class ActionsMixin:
                     return web.json_response({"error": "No goodbye channel is configured and saved."}, status=400)
                 config["dm_enabled"] = False
                 asyncio.create_task(cog.on_member_remove(member, override_config=config, force_test=True))
+            elif test_type == "boost":
+                cog = self.bot.get_cog("BoostListener")
+                if not cog:
+                    return web.json_response({"error": "Boost module is not loaded."}, status=500)
+                from Components.Commands.Boost._storage import load_boost_config
+                config = load_boost_config(guild_id)
+                if not config.get("channel_id"):
+                    return web.json_response({"error": "No boost channel is configured and saved."}, status=400)
+                cog._recent_boosts.pop((guild.id, member.id), None)
+                asyncio.create_task(cog._handle_boost(guild, member))
+            else:
+                return web.json_response({"error": f"Unknown test type: {test_type}"}, status=400)
                 
             return web.json_response({"success": True})
         except Exception as e:

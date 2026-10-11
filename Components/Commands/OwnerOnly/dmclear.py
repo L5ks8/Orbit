@@ -29,7 +29,7 @@ class DmClearCommand(commands.Cog):
                 except Exception:
                     pass
 
-        if ctx.guild is not None:
+        if ctx.guild is not None and ctx.message is not None:
             try:
                 await ctx.message.delete()
             except Exception:

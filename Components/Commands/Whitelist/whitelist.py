@@ -10,7 +10,7 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command can only be used inside a server.", discord.Color.red()), ephemeral=True)
     if not target_id_str:
-        return await ctx.send(embed=make_embed("Please provide a user ID to whitelist (e.g. `/whitelist 123456789` or `-whitelist 123456789`).", discord.Color.red()), ephemeral=True)
+        return await ctx.send(embed=make_embed("Please provide a user ID to whitelist (e.g. `/whitelist 123456789`).", discord.Color.red()), ephemeral=True)
 
     clean_id_str = re.sub(r"\D", "", str(target_id_str))
     if not clean_id_str:
@@ -24,7 +24,7 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     await log_event(
         ctx.guild,
         "moderation_action",
-        "User Whitelisted (`-whitelist add`)",
+        "User Whitelisted (`/whitelist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
     )
     await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the server moderation whitelist.", discord.Color.green()), ephemeral=True)
@@ -37,18 +37,8 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
 async def whitelist_cmd(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
     await _do_wl_add(ctx, target_id, reason)
 
-class WhitelistCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="wl_add", hidden=True)
-    @commands.has_permissions(administrator=True)
-    async def wl_add_prefix(self, ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
-        await _do_wl_add(ctx, target_id, reason)
-
 async def setup(bot: commands.Bot):
     if "whitelist" not in bot.all_commands:
         bot.add_command(whitelist_cmd)
-    await bot.add_cog(WhitelistCog(bot))
 
 

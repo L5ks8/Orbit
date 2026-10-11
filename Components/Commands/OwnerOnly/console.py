@@ -1,4 +1,4 @@
-﻿import os
+import os
 import io
 import json
 import asyncio
@@ -135,7 +135,7 @@ class ConsoleCommand(commands.Cog):
     @commands.is_owner()
     async def console_cmd(self, ctx: commands.Context):
         record_command("console", str(ctx.author))
-        if ctx.guild is not None:
+        if ctx.message and ctx.guild is not None:
             try:
                 await ctx.message.delete()
             except Exception:

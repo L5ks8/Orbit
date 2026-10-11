@@ -53,9 +53,6 @@ except ImportError:
                     os.environ[key.strip()] = value.strip()
 
 TOKEN = os.getenv("TOKEN", "")
-PREFIX = os.getenv("PREFIX", "-").replace("=", "").strip()
-if not PREFIX:
-    PREFIX = "-"
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -145,35 +142,7 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
         except Exception:
             pass
 
-PREFIX_CACHE = {}
 
-async def get_prefix(bot, message: discord.Message):
-    if not message.guild:
-        return commands.when_mentioned_or(PREFIX)(bot, message)
-        
-    guild_id = message.guild.id
-    if guild_id in PREFIX_CACHE:
-        pfx = PREFIX_CACHE[guild_id]
-        if not pfx:
-            pfx = PREFIX
-        return commands.when_mentioned_or(pfx)(bot, message)
-        
-    # Fetch from DB
-    try:
-        from Components.Database.mongodb import get_db
-        db = get_db()
-        if db is not None:
-            doc = db["GuildSettings"].find_one({"_id": guild_id}, {"prefix": 1})
-            if doc and "prefix" in doc and doc["prefix"].strip():
-                pfx = doc["prefix"].strip()
-                PREFIX_CACHE[guild_id] = pfx
-                return commands.when_mentioned_or(pfx)(bot, message)
-    except Exception:
-        pass
-        
-    # Cache the default so we don't spam DB queries
-    PREFIX_CACHE[guild_id] = PREFIX
-    return commands.when_mentioned_or(PREFIX)(bot, message)
 
 # Patch commands.Context.send to handle ephemeral kwarg safely for prefix commands
 _old_send = commands.Context.send
@@ -210,7 +179,7 @@ class OrbitBot(commands.Bot):
                 pass
             
         super().__init__(
-            command_prefix=get_prefix,
+            command_prefix="-",
             intents=intents,
             help_command=None,
             tree_cls=OrbitCommandTree,
@@ -353,6 +322,24 @@ class OrbitBot(commands.Bot):
         except Exception as e:
             print(f"Failed to load Security System: {e}")
 
+        try:
+            await self.load_extension("Components.Systems.Level.levellistener")
+            print("Loaded Level Listener")
+        except Exception as e:
+            print(f"Failed to load Level Listener: {e}")
+
+        try:
+            await self.load_extension("Components.Systems.Verify.verifylistener")
+            print("Loaded Verify Listener")
+        except Exception as e:
+            print(f"Failed to load Verify Listener: {e}")
+
+        try:
+            await self.load_extension("Components.Commands.Boost.boostlistener")
+            print("Loaded Boost Listener")
+        except Exception as e:
+            print(f"Failed to load Boost Listener: {e}")
+
 
 
         # Load root command group modules first (e.g. Commands/Role/role.py, Commands/Ticket/ticket.py)
@@ -436,7 +423,6 @@ class OrbitBot(commands.Bot):
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
-        print(f"Prefix: '{PREFIX}'")
         print(f"Loaded cogs: {len(self.cogs)}")
 
     async def on_message(self, message: discord.Message):
@@ -467,34 +453,6 @@ class OrbitBot(commands.Bot):
         raise error
 
 bot = OrbitBot()
-
-@bot.check
-async def global_blacklist_prefix_check(ctx: commands.Context):
-    if not ctx.guild:
-        return True
-    from Components.Commands.Blacklist._storage import is_blacklisted
-    if is_blacklisted(ctx.guild.id, ctx.author.id):
-        try:
-            await ctx.send(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), delete_after=5.0)
-        except Exception:
-            pass
-        return False
-    return True
-
-@bot.check
-async def global_devmode_prefix_check(ctx: commands.Context):
-    from Components.Commands.OwnerOnly._storage import is_devmode_enabled
-    enabled, reason = is_devmode_enabled()
-    if not enabled:
-        return True
-    if await ctx.bot.is_owner(ctx.author):
-        return True
-    view = DevmodeNoticeLayout(reason)
-    try:
-        await ctx.send(view=view, delete_after=15.0, allowed_mentions=discord.AllowedMentions.none())
-    except Exception:
-        pass
-    return False
 
 async def start_bot_loop():
     import sys

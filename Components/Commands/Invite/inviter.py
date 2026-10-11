@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_invite_info
 from Components.Commands._utils import format_usage, make_embed
@@ -50,10 +50,8 @@ class InviterCommand(commands.Cog):
 
     @inviter.error
     async def inviter_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-inviter", "<member>"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(format_usage("-inviter", "<member>"), discord.Color.red()), ephemeral=True)
+        if isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed(format_usage("/inviter", "<member>"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

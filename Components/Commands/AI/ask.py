@@ -177,19 +177,6 @@ class AskVoice(commands.Cog):
             send_ephemeral=lambda msg: interaction.followup.send(embed=make_embed(msg, discord.Color.red()), ephemeral=True),
         )
 
-    @commands.command(name="ask", aliases=["frag"])
-    async def ask_prefix(self, ctx: commands.Context, *, question: str):
-        async with ctx.typing():
-            voice_client = ctx.guild.voice_client if ctx.guild else None
-            await self._handle_ask(
-                question=question,
-                guild=ctx.guild,
-                user=ctx.author,
-                voice_client=voice_client,
-                send=ctx.send,
-                send_ephemeral=ctx.send,
-            )
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AskVoice(bot))

@@ -66,7 +66,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
             await log_event(
                 self.guild,
                 "moderation_action",
-                "Mass Role DM Sent (`-dm`)",
+                "Mass Role DM Sent (`/dm`)",
                 f"**Role:** {matched_role.mention} (`{matched_role.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Delivered:** `{success_count}` | **Failed:** `{failed_count}`\n**Message:** {message[:500]}"
             )
 
@@ -88,7 +88,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
             await log_event(
                 self.guild,
                 "moderation_action",
-                "Direct Message Sent (`-dm`)",
+                "Direct Message Sent (`/dm`)",
                 f"**Target:** {user_target.mention} (`{user_target.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Message:** {message[:500]}"
             )
 
@@ -135,7 +135,7 @@ class DMCommand(commands.Cog):
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
         if not target:
-            return await ctx.send(embed=make_embed(format_usage("-dm", "<@member/ID/@role>", "[optional message]"), discord.Color.red()), ephemeral=True)
+            return await ctx.send(embed=make_embed(format_usage("/dm", "<@member/ID/@role>", "[optional message]"), discord.Color.red()), ephemeral=True)
 
         target_str = target.strip()
         full_input = f"{target_str} {message}" if message else target_str
@@ -205,9 +205,9 @@ class DMCommand(commands.Cog):
     @dm_cmd.error
     async def dm_cmd_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send(embed=make_embed("You need `Manage Messages` permission to use the `-dm` command.", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("You need `Manage Messages` permission to use the `/dm` command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-dm", "<@member/ID/@role>", "[optional message]"), discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("/dm", "<@member/ID/@role>", "[optional message]"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
             await ctx.send(embed=make_embed(f"Error: {error}", discord.Color.red()), ephemeral=True)
 

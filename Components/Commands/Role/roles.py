@@ -1,4 +1,4 @@
-﻿import math
+import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
@@ -98,19 +98,16 @@ async def _do_allroles(ctx: commands.Context):
     kwargs = view.get_kwargs(ctx.guild.id)
     await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
-@all_group.command(name="roles", aliases=["allroles"], description="Display all roles on the server.")
-async def all_roles_cmd(ctx: commands.Context):
+@commands.hybrid_command(name="allroles", description="Display all roles on the server.")
+async def allroles_cmd(ctx: commands.Context):
     await _do_allroles(ctx)
 
-class AllRolesFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="allroles", aliases=["all roles"], hidden=True)
-    async def allroles_prefix(self, ctx: commands.Context):
-        await _do_allroles(ctx)
+@all_group.command(name="roles", description="Display all roles on the server.")
+async def all_roles_cmd(ctx: commands.Context):
+    await _do_allroles(ctx)
 
 async def setup(bot: commands.Bot):
     if "all" not in bot.all_commands:
         bot.add_command(all_group)
-    await bot.add_cog(AllRolesFallback(bot))
+    if "allroles" not in bot.all_commands:
+        bot.add_command(allroles_cmd)

@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Voice.voice import voice_group
@@ -37,7 +37,7 @@ async def vcunmute_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(embed=make_embed("You need Mute Members permission to voice unmute users.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: `-voice unmute <@member> [reason]`", discord.Color.red()), ephemeral=True)
+        await ctx.send(embed=make_embed("Usage: /voice unmute <target> [reason]", discord.Color.red()), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
@@ -45,19 +45,8 @@ class VcUnmuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-class VcUnmutePrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="vc_unmute", aliases=["vcunmute"], hidden=True)
-    @commands.has_permissions(mute_members=True)
-    async def vc_unmute_prefix(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
-        await _do_vc_unmute(ctx, target, reason)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Voice.voice import voice_group
-    from Components.Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(VcUnmuteCommand(bot))
-    await bot.add_cog(VcUnmutePrefixFallback(bot))

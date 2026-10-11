@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.OwnerOnly._storage import load_devmode_config, save_devmode_config
 from Components.Commands._utils import make_embed

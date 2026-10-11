@@ -46,7 +46,7 @@ class SoftbanCommand(commands.Cog):
             await log_event(
                 ctx.guild,
                 "moderation_action",
-                "User Softbanned (`-softban`)",
+                "User Softbanned (`/softban`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             
@@ -70,9 +70,9 @@ class SoftbanCommand(commands.Cog):
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send(embed=make_embed("I am missing the Ban Members permission.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-softban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("/softban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(format_usage("-softban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("/softban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

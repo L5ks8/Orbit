@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Slowmode.slowmode import slowmode_group
@@ -43,19 +43,8 @@ class SlowmodeSetCommand(commands.Cog):
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-class SlowmodeSetPrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="sm_set", aliases=["slowmodeset"], hidden=True)
-    @commands.has_permissions(manage_channels=True)
-    async def slowmode_set_prefix(self, ctx: commands.Context, seconds: int, channel: discord.TextChannel = None):
-        await _do_slowmode_set(ctx, seconds, channel)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Slowmode.slowmode import slowmode_group
-    from Components.Commands._utils import make_embed
     if "slowmode" not in bot.all_commands:
         bot.add_command(slowmode_group)
     await bot.add_cog(SlowmodeSetCommand(bot))
-    await bot.add_cog(SlowmodeSetPrefixFallback(bot))

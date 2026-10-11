@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import View, Button
 from Components.Commands.OwnerOnly._monitor import get_error_log, clear_errors, record_command
@@ -74,7 +74,7 @@ class ErrorsCommand(commands.Cog):
     @commands.is_owner()
     async def errors_cmd(self, ctx: commands.Context):
         record_command("errors", str(ctx.author))
-        if ctx.guild is not None:
+        if ctx.message and ctx.guild is not None:
             try:
                 await ctx.message.delete()
             except Exception:

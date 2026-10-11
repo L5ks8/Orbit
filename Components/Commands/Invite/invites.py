@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_inviter_stats
 from Components.Commands._utils import format_usage, make_embed
@@ -29,7 +29,7 @@ class InvitesCommand(commands.Cog):
     @invites.error
     async def invites_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(format_usage("-invites", "[member]"), discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("/invites", "[member]"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

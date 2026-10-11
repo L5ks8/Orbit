@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Voice.voice import voice_group
 
@@ -43,19 +43,8 @@ class VcUnlockCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-class VcUnlockPrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="vc_unlock", aliases=["vcunlock"], hidden=True)
-    @commands.has_permissions(manage_channels=True)
-    async def vc_unlock_prefix(self, ctx: commands.Context, channel: discord.VoiceChannel = None, *, reason: str = "No reason provided"):
-        await _do_vc_unlock(ctx, channel, reason)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Voice.voice import voice_group
-    from Components.Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(VcUnlockCommand(bot))
-    await bot.add_cog(VcUnlockPrefixFallback(bot))

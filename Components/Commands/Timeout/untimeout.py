@@ -25,8 +25,8 @@ class UntimeoutCommand(commands.Cog):
             
             await log_event(
                 ctx.guild,
-        "moderation_action",
-                "User Timeout Removed (`-untimeout`)",
+                "moderation_action",
+                "User Timeout Removed (`/untimeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             embed = discord.Embed(title="User Timeout Removed", color=discord.Color.green())
@@ -45,8 +45,8 @@ class UntimeoutCommand(commands.Cog):
     async def untimeout_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Moderate Members permission to remove timeouts.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -untimeout <@user/ID> [reason]", discord.Color.red()), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed("Usage: /untimeout <target> [reason]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

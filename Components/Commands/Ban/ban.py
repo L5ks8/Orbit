@@ -50,7 +50,7 @@ class BanCommand(commands.Cog):
             await log_event(
                 ctx.guild,
                 "moderation_action",
-                "User Banned (`-ban`)",
+                "User Banned (`/ban`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             
@@ -71,9 +71,9 @@ class BanCommand(commands.Cog):
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send(embed=make_embed("I am missing the Ban Members permission.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-ban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("/ban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(f"{format_usage('-ban','<@member>','[reason]')}"), ephemeral=True)
+            await ctx.send(embed=make_embed(f"{format_usage('/ban','<@member>','[reason]')}"), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

@@ -41,7 +41,7 @@ class KickCommand(commands.Cog):
             await log_event(
                 ctx.guild,
                 "moderation_action",
-                "User Kicked (`-kick`)",
+                "User Kicked (`/kick`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             embed = discord.Embed(title="User Kicked", color=discord.Color.red())
@@ -60,10 +60,8 @@ class KickCommand(commands.Cog):
             await ctx.send(embed=make_embed("You do not have permission to kick members.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send(embed=make_embed("I am missing the Kick Members permission.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-kick", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(f"{format_usage('-kick','<@member>','[reason]')}"), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed(format_usage("/kick", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

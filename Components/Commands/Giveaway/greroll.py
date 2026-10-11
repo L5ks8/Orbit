@@ -1,4 +1,4 @@
-﻿import random
+import random
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -22,7 +22,7 @@ class GiveawayRerollCommand(commands.Cog):
             return await ctx.send(embed=make_embed(f"Could not find giveaway with ID `{giveaway_id}` on this server.", discord.Color.red()), ephemeral=True)
 
         if not entry.get("ended"):
-            return await ctx.send(embed=make_embed(f"Giveaway `{entry['giveaway_id']}` is currently active. Use `-gend {giveaway_id}` to end it first."), ephemeral=True)
+            return await ctx.send(embed=make_embed(f"Giveaway `{entry['giveaway_id']}` is currently active. Use `/gend {giveaway_id}` to end it first."), ephemeral=True)
 
         valid_entrants = []
         for uid in entry.get("entries", []):
@@ -62,7 +62,7 @@ class GiveawayRerollCommand(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Server permission to reroll giveaways.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -greroll <G-849201>", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/greroll <giveaway_id>`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

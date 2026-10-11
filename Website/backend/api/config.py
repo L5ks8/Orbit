@@ -108,18 +108,14 @@ class ConfigMixin:
         from Components.Systems.BanAppeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(guild_id)
 
-        from Components.Database.mongodb import get_db, get_config
-        db = get_db()
-        guild_settings = db["GuildSettings"].find_one({"_id": guild_id}) if db is not None else {}
-        prefix = guild_settings.get("prefix", "-") if guild_settings else "-"
+        from Components.Database.mongodb import get_config
         global_settings = get_config("Settings", guild_id)
         ai_enabled = global_settings.get("ai_enabled", True) if global_settings else True
 
         config_data = {
             "settings": settings_cfg,
             "extra_settings": {
-                "ai_enabled": ai_enabled,
-                "prefix": prefix
+                "ai_enabled": ai_enabled
             },
             "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
             "messages_enabled": settings_cfg.get("messages_enabled", False),
@@ -407,32 +403,10 @@ class ConfigMixin:
                 ext = data["extra_settings"]
                 
                 # AI Enabled
-                from Components.Database.mongodb import get_config, set_config, get_db
+                from Components.Database.mongodb import get_config, set_config
                 g_cfg = get_config("Settings", guild_id) or {}
                 g_cfg["ai_enabled"] = bool(ext.get("ai_enabled", True))
                 set_config("Settings", guild_id, g_cfg)
-                
-                # Prefix
-                db = get_db()
-                if db is not None:
-                    new_prefix = ext.get("prefix", "-").strip()
-                    if not new_prefix: new_prefix = "-"
-                    db["GuildSettings"].update_one({"_id": guild_id}, {"$set": {"prefix": new_prefix}}, upsert=True)
-                    try:
-                        import bot
-                        bot.PREFIX_CACHE[guild_id] = new_prefix
-                    except Exception:
-                        pass
-                    
-                    # Try to clear bot's memory cache
-                    try:
-                        import bot
-                        if hasattr(bot, 'PREFIX_CACHE') and guild_id in bot.PREFIX_CACHE:
-                            bot.PREFIX_CACHE[guild_id] = new_prefix
-                    except Exception:
-                        pass
-                
-                # Bot Roles removed from extra_settings (now handled in Auto Roles module)
 
             if user_perms.get("can_channels") and "appeals" in data:
                 from Components.Systems.BanAppeals._storage import save_appeals_config

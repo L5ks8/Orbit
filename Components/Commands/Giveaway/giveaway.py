@@ -257,7 +257,7 @@ class GiveawayCommand(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Server permission to host giveaways.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -giveaway \"<prize>\"<winners_count> <duration_minutes> [required_role]", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/giveaway <prize> [winners_count] [duration_minutes] [required_role]`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

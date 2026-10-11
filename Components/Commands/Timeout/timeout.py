@@ -38,8 +38,8 @@ class TimeoutCommand(commands.Cog):
             add_modlog(ctx.guild.id, target.id, ctx.author.id, "Timeout", f"{minutes}m - {reason}")
             await log_event(
                 ctx.guild,
-        "moderation_action",
-                "User Timed Out (`-timeout`)",
+                "moderation_action",
+                "User Timed Out (`/timeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Duration:** `{minutes} minutes`\n**Reason:** {reason}"
             )
             embed = discord.Embed(title="User Timed Out", color=discord.Color.orange())
@@ -59,8 +59,8 @@ class TimeoutCommand(commands.Cog):
     async def timeout_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Moderate Members permission to use timeout.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -timeout <@user/ID> <minutes> [reason]", discord.Color.red()), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed("Usage: /timeout <target> <minutes> [reason]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Voice._storage import remove_from_vcban
 from Components.Commands.Voice.voice import voice_group
@@ -32,7 +32,7 @@ async def vcunban_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(embed=make_embed("You need Move Members permission to voice unban users.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: `-voice unban <@user> [reason]`", discord.Color.red()), ephemeral=True)
+        await ctx.send(embed=make_embed("Usage: `/voice unban <target> [reason]`", discord.Color.red()), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
@@ -40,19 +40,8 @@ class VcUnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-class VcUnbanPrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="vc_unban", aliases=["vcunban"], hidden=True)
-    @commands.has_permissions(move_members=True)
-    async def vc_unban_prefix(self, ctx: commands.Context, user: discord.User, *, reason: str = "No reason provided"):
-        await _do_vc_unban(ctx, user, reason)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Voice.voice import voice_group
-    from Components.Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(VcUnbanCommand(bot))
-    await bot.add_cog(VcUnbanPrefixFallback(bot))

@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import View, Button
 from Components.Commands._utils import make_embed

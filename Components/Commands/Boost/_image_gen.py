@@ -14,7 +14,7 @@ def _get_default_bg() -> Image.Image:
     if not bg_path.exists():
         try:
             req = urllib.request.Request(DEFAULT_BG_URL, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req) as response, open(bg_path, 'wb') as out_file:
+            with urllib.request.urlopen(req, timeout=5.0) as response, open(bg_path, 'wb') as out_file:
                 out_file.write(response.read())
         except Exception:
             return Image.new("RGBA", (800, 300), (43, 45, 49, 255))
@@ -29,7 +29,7 @@ def _get_font(url: str, filename: str, size: int) -> ImageFont.FreeTypeFont:
     if not font_path.exists():
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req) as response, open(font_path, 'wb') as out_file:
+            with urllib.request.urlopen(req, timeout=5.0) as response, open(font_path, 'wb') as out_file:
                 out_file.write(response.read())
         except Exception:
             pass

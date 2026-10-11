@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
@@ -47,7 +47,7 @@ class RoleCreateCog(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Roles permission to create roles.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: `-role create <name> [color_hex] [hoist] [mentionable]`", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/role create <name> [color_hex] [hoist] [mentionable]`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

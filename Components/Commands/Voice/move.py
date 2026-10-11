@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from typing import Union, Optional
 
@@ -138,7 +138,7 @@ async def move_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(embed=make_embed("You need `Move Members` permission to move voice users.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: `-voice move <@member|all> <#channel|channel_id> [reason]`", discord.Color.red()), ephemeral=True)
+        await ctx.send(embed=make_embed("Usage: `/voice move <target> <channel> [reason]`", discord.Color.red()), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
@@ -146,24 +146,8 @@ class MoveCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-class MovePrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="vc_move", aliases=["vcmove", "voicemove"], hidden=True)
-    @commands.has_permissions(move_members=True)
-    async def vc_move_prefix(self, ctx: commands.Context, target: str, channel: str, *, reason: str = "No reason provided"):
-        await _do_vc_move(ctx, target, channel, reason)
-
-    @commands.command(name="moveall", aliases=["vc_moveall", "vcmoveall"], hidden=True)
-    @commands.has_permissions(move_members=True)
-    async def vc_moveall_prefix(self, ctx: commands.Context, channel: str, *, reason: str = "No reason provided"):
-        await _do_vc_move(ctx, "all", channel, reason)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Voice.voice import voice_group
-    from Components.Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(MoveCommand(bot))
-    await bot.add_cog(MovePrefixFallback(bot))

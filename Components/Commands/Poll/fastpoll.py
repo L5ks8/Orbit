@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -46,7 +46,7 @@ class FastPollCommand(commands.Cog):
     @fastpoll.error
     async def fastpoll_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -fastpoll \"<question>\"[duration_in_minutes]", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: /fastpoll <question> [duration_in_minutes]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

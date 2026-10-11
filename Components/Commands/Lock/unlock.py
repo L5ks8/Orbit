@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands._utils import make_embed
@@ -44,7 +44,7 @@ class UnlockCommand(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Channels permission to unlock channels.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -unlock [#channel] [reason]", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: /unlock [#channel] [reason]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

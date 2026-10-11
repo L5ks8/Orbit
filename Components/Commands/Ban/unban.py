@@ -25,7 +25,7 @@ class UnbanConfirmView(discord.ui.View):
                 await log_event(
                     interaction.guild,
                     "moderation_action",
-                    "User Unbanned (`-unban`)",
+                    "User Unbanned (`/unban`)",
                     f"**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Reason:** {self.reason}"
                 )
 
@@ -90,7 +90,7 @@ class UnbanCommand(commands.Cog):
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send(embed=make_embed("I am missing the Ban Members permission.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -unban <ID> [reason]", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/unban <ID> [reason]`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

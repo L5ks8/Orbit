@@ -101,7 +101,7 @@ function formatInline(text, channels = [], roles = []) {
     'face_with_head_bandage': '🤕', 'sleeping': '😴', 'zzz': '💤', 'poop': '💩', 'smiling_imp': '😈', 'imp': '👿', 'skull': '💀', 'ghost': '👻', 'alien': '👽',
     'tada': '🎉', 'sparkles': '✨', 'star': '⭐', 'heart': '❤️', 'broken_heart': '💔', 'fire': '🔥', 'rocket': '🚀', 'boost': '🚀', 'emoji': '😀', 'thumbsup': '👍',
     'thumbsdown': '👎', 'wave': '👋', 'clap': '👏', 'pray': '🙏', 'gem': '💎', 'crown': '👑', 'bell': '🔔', 'warning': '⚠️', 'checkered_flag': '🏁', 'trophy': '🏆',
-    'medal': '🏅', 'gift': '🎁', 'balloon': '🎈', 'confetti_ball': '🎊', 'partying_face': '🥳', 'tada': '🎉', 'eyes': '👀', 'brain': '🧠', 'muscle': '💪'
+    'medal': '🏅', 'gift': '🎁', 'balloon': '🎈', 'confetti_ball': '🎊', 'partying_face': '🥳', 'eyes': '👀', 'brain': '🧠', 'muscle': '💪'
   };
 
   const parts = [];

@@ -112,7 +112,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
     await log_event(
         ctx.guild,
         "moderation_action",
-        "User Warned (`-warn`)",
+        "User Warned (`/warn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}{punishment_text}"
     )
     
@@ -120,7 +120,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
 
 @commands.hybrid_command(
     name="warn",
-    description="Issue a formal warning to a member or user ID (`-warn <@member|ID> [reason]`)."
+    description="Issue a formal warning to a member or user ID."
 )
 @commands.has_permissions(moderate_members=True)
 async def warn_cmd(ctx: commands.Context, user: str, *, reason: str = "No reason provided."):
@@ -132,7 +132,7 @@ async def warn_cmd_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(embed=make_embed("You need Moderate Members permission to issue warnings.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed(format_usage("-warn", "<@member/ID>", "[reason]"), discord.Color.red()), ephemeral=True)
+        await ctx.send(embed=make_embed(format_usage("/warn", "<target>", "[reason]"), discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.BadArgument):
         await ctx.send(embed=make_embed(f"Error: {error}", discord.Color.red()), ephemeral=True)
 

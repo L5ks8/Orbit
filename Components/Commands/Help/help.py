@@ -11,9 +11,8 @@ PAGES = [
         "title": "Overview & Navigation",
         "description": (
             "**Welcome to Orbit Help!** Orbit is your all-in-one Discord moderation, voice, and engagement bot.\n\n"
-            "**Command Prefixes:**\n"
-            "> • **Slash Commands:** Type `/` to see all available slash commands with auto-completion.\n"
-            "> • **Prefix Commands:** Use `-command` (or `@Orbit command`).\n\n"
+            "**Command System:**\n"
+            "> • **Slash Commands:** Orbit uses 100% Discord Slash Commands. Type `/` in your chat bar to browse, search, and run commands with real-time autocompletion.\n\n"
             "**Navigation:**\n"
             "Use the `Previous` and `Next` buttons below, or pick a specific command category from the dropdown selector to jump directly to that page!"
         )
@@ -22,24 +21,24 @@ PAGES = [
         "title": "Moderation & Punishments",
         "description": (
             "**Server Moderation & Enforcement Commands:**\n\n"
-            "• `/ban <user> [reason]` — Permanently ban a member (`-ban @user Spam`).\n"
-            "• `/unban <user_id> [reason]` — Unban a user by their Discord user ID (`-unban 123456789`).\n"
-            "• `/kick <user> [reason]` — Kick a member from the server (`-kick @user`).\n"
-            "• `/timeout <user> <duration> [reason]` — Mute/restrict a member (`-timeout @user 10m`).\n"
-            "• `/untimeout <user> [reason]` — Remove an active timeout (`-untimeout @user`).\n"
-            "• `/mute <user> <duration> [reason]` — Assign the server Muted role (`-mute @user 1h`).\n"
-            "• `/unmute <user> [reason]` — Remove the Muted role (`-unmute @user`).\n"
-            "• `/purge <amount> [user]` — Bulk delete up to 100 messages (`-purge 50 @user`)."
+            "• `/ban <user> [reason]` — Permanently ban a member.\n"
+            "• `/unban <user_id> [reason]` — Unban a user by their Discord user ID.\n"
+            "• `/kick <user> [reason]` — Kick a member from the server.\n"
+            "• `/timeout <user> <duration> [reason]` — Mute/restrict a member for a set duration.\n"
+            "• `/untimeout <user> [reason]` — Remove an active timeout.\n"
+            "• `/mute <user> <duration> [reason]` — Assign the server Muted role.\n"
+            "• `/unmute <user> [reason]` — Remove the Muted role.\n"
+            "• `/purge <amount> [user]` — Bulk delete up to 100 messages."
         )
     },
     {
         "title": "Warning & Infraction System",
         "description": (
             "**Persistent Warning & Blacklist Management:**\n\n"
-            "• `/warn <user> <reason>` — Issue a permanent warning (`-warn @user Rule 3 violation`).\n"
-            "• `/warnings <user>` — View a paginated card of all warnings for a member (`-warnings @user`).\n"
-            "• `/delwarn <user> <warn_id>` — Delete a specific warning ID (`-delwarn @user W-1234`).\n"
-            "• `/clearwarnings <user>` — Remove all warnings from a member (`-clearwarnings @user`).\n"
+            "• `/warn <user> <reason>` — Issue a permanent warning to a member.\n"
+            "• `/warnings <user>` — View a paginated card of all warnings for a member.\n"
+            "• `/delwarn <user> <warn_id>` — Delete a specific warning ID.\n"
+            "• `/clearwarnings <user>` — Remove all warnings from a member.\n"
             "• `/blacklist add <target>` — Block a user, channel, or role from using bot commands.\n"
             "• `/blacklist remove/list/check` — Manage and check server command blacklists."
         )
@@ -48,39 +47,39 @@ PAGES = [
         "title": "Channel & Voice Management",
         "description": (
             "**Text & Voice Channel Controls:**\n\n"
-            "• `/lock [channel] [reason]` — Lock a text channel (`-lock #general`).\n"
-            "• `/unlock [channel]` — Unlock a text channel (`-unlock #general`).\n"
-            "• `/slowmodeset <seconds> [channel]` — Set channel slowmode (`-slowmodeset 10 #general`).\n"
-            "• `/slowmoderemove [channel]` — Remove channel slowmode (`-slowmoderemove #general`).\n"
-            "• `/vclock [channel]` & `/vcunlock [channel]` — Lock or unlock a voice channel (`-vclock`).\n"
-            "• `/vclimit <limit> [channel]` — Set voice user limit (`-vclimit 5`).\n"
-            "• `/vcban <user>` & `/vcunban <user>` — Ban or unban a member from voice (`-vcban @user`).\n"
-            "• `/vcmute <user>` & `/vcunmute <user>` — Server-mute or unmute a member in voice.\n"
-            "• `/move <user> <channel>` — Move a voice member (`-move @user #voice-2`)."
+            "• `/lock [channel] [reason]` — Lock a text channel.\n"
+            "• `/unlock [channel]` — Unlock a text channel.\n"
+            "• `/slowmode set <seconds> [channel]` — Set channel slowmode.\n"
+            "• `/slowmode reset [channel]` — Remove channel slowmode.\n"
+            "• `/voice lock [channel]` & `/voice unlock [channel]` — Lock or unlock a voice channel.\n"
+            "• `/voice limit <limit> [channel]` — Set voice user limit.\n"
+            "• `/voice ban <user>` & `/voice unban <user>` — Ban or unban a member from voice.\n"
+            "• `/voice mute <user>` & `/voice unmute <user>` — Server-mute or unmute a member in voice.\n"
+            "• `/voice move <user> <channel>` — Move a voice member."
         )
     },
     {
         "title": "Role & Auto-Join Systems",
         "description": (
             "**Server Role & AutoRole Configuration:**\n\n"
-            "• `/addrole <user> <role>` — Grant a role to a member (`-addrole @user @Member`).\n"
-            "• `/removerole <user> <role>` — Remove a role from a member (`-removerole @user @Member`).\n"
-            "• `/roleinfo <role>` — Display detailed stats and permissions for a role (`-roleinfo @Member`).\n"
-            "• `/role all <role>` & `/role rall <role>` — Give or take a role from ALL members (`-role all @Update`).\n"
-            "• `/allroles` — Display a complete card listing all server roles and member counts (`-allroles`)."
+            "• `/role add <user> <role>` — Grant a role to a member.\n"
+            "• `/role remove <user> <role>` — Remove a role from a member.\n"
+            "• `/role info <role>` — Display detailed stats and permissions for a role.\n"
+            "• `/role all <role>` & `/role rall <role>` — Give or take a role from ALL members.\n"
+            "• `/role list` — Display a complete card listing all server roles and member counts."
         )
     },
     {
         "title": "Giveaways, Polls & Welcome",
         "description": (
             "**Community Engagement & Greetings:**\n\n"
-            "• `/giveaway <duration> <winners> <prize>` — Start an interactive giveaway (`-giveaway 1d 1 Nitro`).\n"
-            "• `/gend <giveaway_id>` — End a giveaway early and announce winners (`-gend G-849201`).\n"
-            "• `/greroll <giveaway_id> [winners]` — Reroll new winners (`-greroll G-849201 1`).\n"
-            "• `/poll <question> <options> <duration>` — Create a multi-option poll (`-poll 'Color?' 'Red,Blue' 1h`).\n"
-            "• `/fastpoll <question> [duration]` — Create a Yes/No poll (`-fastpoll 'Good bot?' 24h`).\n"
-            "• `/pollclose <poll_id>` — Close a poll early (`-pollclose P-849201`).\n"
-            "• `/welcome setup <#channel> [message]` — Enable custom welcome notifications (`-welcome setup #welcome`).\n"
+            "• `/giveaway <duration> <winners> <prize>` — Start an interactive giveaway.\n"
+            "• `/gend <giveaway_id>` — End a giveaway early and announce winners.\n"
+            "• `/greroll <giveaway_id> [winners]` — Reroll new winners.\n"
+            "• `/poll <question> <options> <duration>` — Create a multi-option poll.\n"
+            "• `/fastpoll <question> [duration]` — Create a Yes/No poll.\n"
+            "• `/pollclose <poll_id>` — Close a poll early.\n"
+            "• `/welcome setup <#channel> [message]` — Enable custom welcome notifications.\n"
             "• `/welcome toggle/reset/status` — Toggle, reset, or view welcome system status."
         )
     },
@@ -88,29 +87,29 @@ PAGES = [
         "title": "Utility, Info & Media",
         "description": (
             "**Server Stats, User Info & Tools:**\n\n"
-            "• `/serverinfo` — Display complete server statistics and creation details (`-serverinfo`).\n"
-            "• `/userinfo [user]` — Display member join dates and account history (`-userinfo @user`).\n"
-            "• `/avatar [user]` & `/banner [user]` — Fetch high-res profile avatars and banners (`-avatar @user`).\n"
-            "• `/ping` — Check bot latency and WebSocket connection speed (`-ping`).\n"
-            "• `/say <message>` — Repeat a message (`-say Hello world`).\n"
-            "• `/dm <user> <message>` — Direct message a member (`-dm @user Check this out`).\n"
-            "• `/afk [reason]` & `/afkremove` — Set or clear your AFK status (`-afk Sleeping`)."
+            "• `/serverinfo` — Display complete server statistics and creation details.\n"
+            "• `/userinfo [user]` — Display member join dates and account history.\n"
+            "• `/avatar [user]` & `/banner [user]` — Fetch high-res profile avatars and banners.\n"
+            "• `/ping` — Check bot latency and WebSocket connection speed.\n"
+            "• `/say <message>` — Repeat a message via the bot.\n"
+            "• `/dm <user> <message>` — Direct message a member.\n"
+            "• `/afk [reason]` & `/afkremove` — Set or clear your AFK status."
         )
     },
     {
         "title": "Invite Tracking & Management",
         "description": (
             "**Invite Stats & Code Management:**\n\n"
-            "• `/invites [user]` — View a member's invite stats (`-invites @user`).\n"
-            "• `/invitecodes [user]` — View all invite codes and their uses (`-invitecodes @user`).\n"
-            "• `/invitedlist [user]` — Display a paginated list of members invited by a user (`-invitedlist @user`).\n"
-            "• `/inviter [user]` — Find out who invited a specific member (`-inviter @user`).\n"
+            "• `/invites [user]` — View a member's invite stats.\n"
+            "• `/invitecodes [user]` — View all invite codes and their uses.\n"
+            "• `/invitedlist [user]` — Display a paginated list of members invited by a user.\n"
+            "• `/inviter [user]` — Find out who invited a specific member.\n"
             "• `/leaderboard invites` — View the top inviters in the server.\n"
-            "• `/addinvites` & `/removeinvites` — Add or remove bonus invites for a user.\n"
-            "• `/addfakeinvites` & `/removefakeinvites` — Manage fake invites.\n"
-            "• `/resetinvites [user]` — Reset invites for a user or the whole server.\n"
-            "• `/deleteinvite <code>` — Delete a specific invite code.\n"
-            "• `/purge-invite-codes <condition>` — Bulk delete invite codes.\n"
+            "• `/manage-invites add/remove` — Add or remove bonus invites for a user.\n"
+            "• `/manage-invites addfake/removefake` — Manage fake invites.\n"
+            "• `/manage-invites reset` — Reset invites for a user or the whole server.\n"
+            "• `/manage-codes delete` — Delete a specific invite code.\n"
+            "• `/manage-codes purge` — Bulk delete invite codes.\n"
             "• `/exportinvitedlist [user]` — Export an invite list to a CSV file."
         )
     },

@@ -18,8 +18,7 @@ export default function ({ guildId, serverData, setServerData }) {
   const [fetchingUser, setFetchingUser] = useState(false);
   
   const [extraSettings, setExtraSettings] = useState({
-    ai_enabled: true,
-    prefix: '-'
+    ai_enabled: true
   });
   const [roles, setRoles] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -46,14 +45,13 @@ export default function ({ guildId, serverData, setServerData }) {
       setImmuneUsers(s.immune_users || []);
       
       setExtraSettings({
-        ai_enabled: ext.ai_enabled ?? true,
-        prefix: ext.prefix || '-'
+        ai_enabled: ext.ai_enabled ?? true
       });
 
       setInitialState(JSON.stringify(getPayload(
         { ...s, manager_roles: s.manager_roles || [], immune_roles: s.immune_roles || [] }, 
         s.immune_users || [], 
-        { ...ext, prefix: ext.prefix || '-' }
+        { ...ext }
       )));
       setRoles(cachedData.roles || []);
     } else {
@@ -79,14 +77,13 @@ export default function ({ guildId, serverData, setServerData }) {
         setImmuneUsers(s.immune_users || []);
         
         setExtraSettings({
-          ai_enabled: ext.ai_enabled ?? true,
-          prefix: ext.prefix || '-'
+          ai_enabled: ext.ai_enabled ?? true
         });
 
         setInitialState(JSON.stringify(getPayload(
           { ...s, manager_roles: s.manager_roles || [], immune_roles: s.immune_roles || [] }, 
           s.immune_users || [], 
-          { ...ext, prefix: ext.prefix || '-' }
+          { ...ext }
         )));
         setRoles(data.roles || []);
         setCache(cacheKey, data);
@@ -160,32 +157,6 @@ export default function ({ guildId, serverData, setServerData }) {
       <h1 className="dash-title">Server Settings</h1>
       <p className="dash-subtitle">Configure basic Orbit behavior for this server.</p>
 
-      <div style={{ 
-        background: 'rgba(255,255,255,0.02)', 
-        border: '1px solid rgba(255,255,255,0.05)', 
-        borderRadius: '8px', 
-        padding: '24px', 
-        marginBottom: '24px' 
-      }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '24px' }}>Server Configuration</h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#fff', marginBottom: '8px' }}>Command Prefix</h3>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', marginBottom: '12px' }}>
-              The symbol used to trigger bot commands.
-            </p>
-            <input 
-              type="text" 
-              className="dash-input" 
-              style={{ width: '100px' }}
-              value={extraSettings.prefix}
-              onChange={(e) => setExtraSettings({...extraSettings, prefix: e.target.value.slice(0, 3)})}
-            />
-          </div>
-
-        </div>
-      </div>
       
       <div style={{ 
         background: 'rgba(255,255,255,0.02)', 

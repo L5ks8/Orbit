@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Voice._storage import add_to_vcban, is_vcbanned
 from Components.Commands.Whitelist._storage import is_whitelisted
@@ -63,22 +63,12 @@ async def vc_ban_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(embed=make_embed("You need Move Members permission to voice ban users.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Use: `-voice ban <member> [reason]`", discord.Color.red()), ephemeral=True)
+        await ctx.send(embed=make_embed("Usage: /voice ban <member> [reason]", discord.Color.red()), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"Voice ban failed: {error}", discord.Color.red()), ephemeral=True)
-
-class VcBanPrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="vc_ban", aliases=["vcban"], hidden=True)
-    @commands.has_permissions(move_members=True)
-    async def vc_ban_prefix(self, ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided"):
-        await _do_vc_ban(ctx, user, reason)
 
 async def setup(bot: commands.Bot):
     from Components.Commands.Voice.voice import voice_group
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(VcBanCommand(bot))
-    await bot.add_cog(VcBanPrefixFallback(bot))

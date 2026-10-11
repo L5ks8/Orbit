@@ -129,11 +129,12 @@ class UpdateCommand(commands.Cog):
 
     @commands.command(name="update", aliases=["changelog", "postupdate"], hidden=True)
     @commands.is_owner()
-    async def update_prefix_cmd(self, ctx: commands.Context):
-        try:
-            await ctx.message.delete()
-        except Exception:
-            pass
+    async def update_cmd(self, ctx: commands.Context):
+        if ctx.message is not None:
+            try:
+                await ctx.message.delete()
+            except Exception:
+                pass
         
         embed = discord.Embed(
             title="Orbit Update Studio",
@@ -144,7 +145,7 @@ class UpdateCommand(commands.Cog):
         view = UpdateLaunchView(ctx.author.id)
         await ctx.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
-    @update_prefix_cmd.error
+    @update_cmd.error
     async def update_error(self, ctx: commands.Context, error):
         if not isinstance(error, commands.NotOwner):
             pass

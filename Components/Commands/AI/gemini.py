@@ -5,6 +5,9 @@ from g4f.client import AsyncClient
 import g4f
 import asyncio
 
+from discord import app_commands
+from Components.Commands._utils import make_embed
+
 class GeminiChatbot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -22,22 +25,17 @@ class GeminiChatbot(commands.Cog):
             self.client = AsyncClient()
         self.memory_resets = {}
 
-    @commands.group(invoke_without_command=True)
-    async def memory(self, ctx):
-        await ctx.reply("Use `-memory reset` to delete the bot's memory in this channel.", mention_author=False)
-
-    @memory.command(name="reset")
-    async def memory_reset(self, ctx):
-        self.memory_resets[ctx.channel.id] = ctx.message.created_at
-        await ctx.reply("Memory reset.", mention_author=False)
+    @app_commands.command(name="ai_reset_memory", description="Reset Orbit AI conversation memory in this channel.")
+    async def memory_reset(self, interaction: discord.Interaction):
+        self.memory_resets[interaction.channel_id] = discord.utils.utcnow()
+        await interaction.response.send_message(
+            embed=make_embed("AI conversation memory for this channel has been reset.", discord.Color.green()),
+            ephemeral=True
+        )
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
-            return
-
-        ctx = await self.bot.get_context(message)
-        if ctx.valid and ctx.command is not None:
             return
         is_mentioned = self.bot.user in message.mentions
         is_reply_to_bot = False
@@ -79,9 +77,6 @@ class GeminiChatbot(commands.Cog):
                         rank = next((i + 1 for i, (uid, data) in enumerate(sorted_users) if uid == user_id_str), "Unranked")
                         server_info += f"\n\nUser Speaking ({message.author.display_name}) Stats:\nRank on Leaderboard: #{rank}\nLevel: {level}\nXP: {xp}\nMessages Sent: {messages_count}\nVoice Hours: {round(voice_minutes/60, 2)}"
                 
-                prefix_cmds_details = [cmd.name for cmd in self.bot.commands if not cmd.hidden]
-                prefix_cmds_str = ", ".join(prefix_cmds_details)
-
                 slash_cmds_details = []
                 for cmd in self.bot.tree.walk_commands():
                     if isinstance(cmd, discord.app_commands.Group):
@@ -101,8 +96,6 @@ class GeminiChatbot(commands.Cog):
                     f"{server_info}\n\n"
                     "Here are all your available SLASH COMMANDS:\n"
                     f"{slash_cmds_str}\n\n"
-                    "Here are all your available PREFIX COMMANDS:\n"
-                    f"{prefix_cmds_str}\n\n"
                     "Answer user questions accurately based on this information, and be as helpful and polite as possible.\n\n"
                     "CRITICAL: Do NOT prefix your response with 'Orbit:' or any username. Just write the message directly. "
                     "You have internet access enabled, so you can look up current trading values or search the web if needed! "

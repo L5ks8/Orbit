@@ -152,8 +152,8 @@ class ModLogCommand(commands.Cog):
     async def modlog_cmd_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need `Moderate Members` permission to view modlogs.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(format_usage("-modlog", "<@user/ID>"), discord.Color.red()), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed(format_usage("/modlog", "<user>"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

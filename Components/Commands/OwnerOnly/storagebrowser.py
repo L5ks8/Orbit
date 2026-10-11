@@ -101,7 +101,7 @@ class StorageBrowserCommand(commands.Cog):
     @commands.is_owner()
     async def storagebrowser_cmd(self, ctx: commands.Context):
         record_command("storagebrowser", str(ctx.author))
-        if ctx.guild is not None:
+        if ctx.guild is not None and ctx.message is not None:
             try:
                 await ctx.message.delete()
             except Exception:

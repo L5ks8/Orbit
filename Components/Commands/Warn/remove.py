@@ -23,7 +23,7 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
     await log_event(
         ctx.guild,
         "moderation_action",
-        "Warning Deleted (`-delwarn`)",
+        "Warning Deleted (`/delwarn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Removed Warn ID:** `{warn_id}`\n**Remaining Warnings:** `{remaining}`"
     )
     embed = discord.Embed(
@@ -48,10 +48,8 @@ class DelWarnCog(commands.Cog):
     async def delwarn_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Moderate Members permission to manage warnings.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-delwarn", "<@member>", "<warn_id>"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(f"{format_usage('-delwarn','<@member>','<warn_id>')}"), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed(format_usage("/delwarn", "<@member>", "<warn_id>"), discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DelWarnCog(bot))

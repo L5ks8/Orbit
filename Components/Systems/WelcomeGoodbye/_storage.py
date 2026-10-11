@@ -1,26 +1,33 @@
 from Components.Database.mongodb import get_config, set_config
-import json
 import pathlib
 from typing import Dict, Any
 
 STORAGE_ROOT = pathlib.Path("Storage")
 
-DEFAULT_MESSAGE = "Welcome {user} to **{server}**! We are happy to have you as member #{count}."
+DEFAULT_WELCOME_MESSAGE = "Welcome {user} to **{server}**! We are happy to have you as member #{count}."
+DEFAULT_GOODBYE_MESSAGE = "We're sad to see you go, {user}! We hope you enjoyed your time in **{server}**."
+# Backward compatibility alias
+DEFAULT_MESSAGE = DEFAULT_WELCOME_MESSAGE
 
-def _get_file_path(guild_id: int) -> pathlib.Path:
+def _get_welcome_file_path(guild_id: int) -> pathlib.Path:
     folder = STORAGE_ROOT / str(guild_id)
     if not folder.exists():
         folder.mkdir(parents=True, exist_ok=True)
     return folder / "welcome.json"
 
+def _get_goodbye_file_path(guild_id: int) -> pathlib.Path:
+    folder = STORAGE_ROOT / str(guild_id)
+    if not folder.exists():
+        folder.mkdir(parents=True, exist_ok=True)
+    return folder / "goodbye.json"
+
 def load_welcome_config(guild_id: int) -> Dict[str, Any]:
-    path = _get_file_path(guild_id)
     default_config = {
         "enabled": False, 
         "channel_id": None, 
         "dm_enabled": False,
         "dm_message": "", 
-        "message": DEFAULT_MESSAGE, 
+        "message": DEFAULT_WELCOME_MESSAGE, 
         "image_url": "",
         "msg_mode": "image",
         "embed_color": "#5865F2",
@@ -34,37 +41,13 @@ def load_welcome_config(guild_id: int) -> Dict[str, Any]:
         "embed_fields": []
     }
     try:
-        data = get_config("Welcome", guild_id)
-        
-        if "dm_enabled" not in data:
-            data["dm_enabled"] = False
-        if "dm_message" not in data:
-            data["dm_message"] = ""
-        if "message" not in data or not data["message"]:
-            data["message"] = DEFAULT_MESSAGE
-        if "image_url" not in data:
-            data["image_url"] = ""
-        if "msg_mode" not in data:
-            data["msg_mode"] = "image"
-        if "embed_color" not in data:
-            data["embed_color"] = "#5865F2"
-        if "embed_title" not in data:
-            data["embed_title"] = ""
-        if "embed_description" not in data:
-            data["embed_description"] = ""
-        if "embed_thumbnail" not in data:
-            data["embed_thumbnail"] = ""
-        if "embed_footer" not in data:
-            data["embed_footer"] = ""
-        if "embed_author" not in data:
-            data["embed_author"] = ""
-        if "embed_author_icon" not in data:
-            data["embed_author_icon"] = ""
-        if "embed_footer_icon" not in data:
-            data["embed_footer_icon"] = ""
-        if "embed_fields" not in data or not isinstance(data["embed_fields"], list):
-            data["embed_fields"] = []
-        return data
+        data = get_config("Welcome", guild_id, default_config)
+        merged = {**default_config, **(data or {})}
+        if not merged.get("message"):
+            merged["message"] = DEFAULT_WELCOME_MESSAGE
+        if not isinstance(merged.get("embed_fields"), list):
+            merged["embed_fields"] = []
+        return merged
     except Exception:
         return default_config
 
@@ -94,7 +77,7 @@ def reset_welcome(guild_id: int) -> Dict[str, Any]:
         "channel_id": None, 
         "dm_enabled": False,
         "dm_message": "", 
-        "message": DEFAULT_MESSAGE, 
+        "message": DEFAULT_WELCOME_MESSAGE, 
         "image_url": "",
         "msg_mode": "image",
         "embed_color": "#5865F2",
@@ -104,30 +87,19 @@ def reset_welcome(guild_id: int) -> Dict[str, Any]:
         "embed_footer": "",
         "embed_author": "",
         "embed_author_icon": "",
-        "embed_footer_icon": ""
+        "embed_footer_icon": "",
+        "embed_fields": []
     }
     save_welcome_config(guild_id, config)
     return config
 
-from typing import Dict, Any
-
-
-DEFAULT_MESSAGE = "We're sad to see you go, {user}! We hope you enjoyed your time in **{server}**."
-
-def _get_file_path(guild_id: int) -> pathlib.Path:
-    folder = STORAGE_ROOT / str(guild_id)
-    if not folder.exists():
-        folder.mkdir(parents=True, exist_ok=True)
-    return folder / "goodbye.json"
-
 def load_goodbye_config(guild_id: int) -> Dict[str, Any]:
-    path = _get_file_path(guild_id)
     default_config = {
         "enabled": False, 
         "channel_id": None, 
         "dm_enabled": False,
         "dm_message": "", 
-        "message": DEFAULT_MESSAGE, 
+        "message": DEFAULT_GOODBYE_MESSAGE, 
         "image_url": "",
         "msg_mode": "image",
         "embed_color": "#ED4245",
@@ -141,37 +113,13 @@ def load_goodbye_config(guild_id: int) -> Dict[str, Any]:
         "embed_fields": []
     }
     try:
-        data = get_config("Goodbye", guild_id)
-        
-        if "dm_enabled" not in data:
-            data["dm_enabled"] = False
-        if "dm_message" not in data:
-            data["dm_message"] = ""
-        if "message" not in data or not data["message"]:
-            data["message"] = DEFAULT_MESSAGE
-        if "image_url" not in data:
-            data["image_url"] = ""
-        if "msg_mode" not in data:
-            data["msg_mode"] = "image"
-        if "embed_color" not in data:
-            data["embed_color"] = "#ED4245"
-        if "embed_title" not in data:
-            data["embed_title"] = ""
-        if "embed_description" not in data:
-            data["embed_description"] = ""
-        if "embed_thumbnail" not in data:
-            data["embed_thumbnail"] = ""
-        if "embed_footer" not in data:
-            data["embed_footer"] = ""
-        if "embed_author" not in data:
-            data["embed_author"] = ""
-        if "embed_author_icon" not in data:
-            data["embed_author_icon"] = ""
-        if "embed_footer_icon" not in data:
-            data["embed_footer_icon"] = ""
-        if "embed_fields" not in data or not isinstance(data["embed_fields"], list):
-            data["embed_fields"] = []
-        return data
+        data = get_config("Goodbye", guild_id, default_config)
+        merged = {**default_config, **(data or {})}
+        if not merged.get("message"):
+            merged["message"] = DEFAULT_GOODBYE_MESSAGE
+        if not isinstance(merged.get("embed_fields"), list):
+            merged["embed_fields"] = []
+        return merged
     except Exception:
         return default_config
 
@@ -201,7 +149,7 @@ def reset_goodbye(guild_id: int) -> Dict[str, Any]:
         "channel_id": None, 
         "dm_enabled": False,
         "dm_message": "", 
-        "message": DEFAULT_MESSAGE, 
+        "message": DEFAULT_GOODBYE_MESSAGE, 
         "image_url": "",
         "msg_mode": "image",
         "embed_color": "#ED4245",
@@ -211,7 +159,8 @@ def reset_goodbye(guild_id: int) -> Dict[str, Any]:
         "embed_footer": "",
         "embed_author": "",
         "embed_author_icon": "",
-        "embed_footer_icon": ""
+        "embed_footer_icon": "",
+        "embed_fields": []
     }
     save_goodbye_config(guild_id, config)
     return config

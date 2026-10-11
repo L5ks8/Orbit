@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands._utils import make_embed
 
@@ -16,41 +16,41 @@ class SyncCommand(commands.Cog):
             color=0x2B2D31
         )
 
-    @commands.command(name="sync", description="Owner Only: Synchronizes slash commands globally or to a specific server.")
+    @commands.command(name="sync", hidden=True)
     @commands.is_owner()
     async def sync_cmd(self, ctx: commands.Context, *, option: str = None):
-        async with ctx.typing():
-            if option and option.lower() in ["here", "local"]:
-                if not ctx.guild:
-                    return await ctx.send(embed=make_embed("You must be inside a server to sync locally.", discord.Color.red()))
-                self.bot.tree.copy_global_to(guild=ctx.guild)
-                synced = await self.bot.tree.sync(guild=ctx.guild)
-                await ctx.send(embed=self._get_embed(f"Local Server ({ctx.guild.name})", len(synced)))
-                return
+        await ctx.defer(ephemeral=True)
+        if option and option.lower() in ["here", "local"]:
+            if not ctx.guild:
+                return await ctx.send(embed=make_embed("You must be inside a server to sync locally.", discord.Color.red()))
+            self.bot.tree.copy_global_to(guild=ctx.guild)
+            synced = await self.bot.tree.sync(guild=ctx.guild)
+            await ctx.send(embed=self._get_embed(f"Local Server ({ctx.guild.name})", len(synced)))
+            return
 
-            if option and option.lower().startswith("clear"):
-                parts = option.split()
-                if len(parts) > 1 and parts[1].isdigit():
-                    guild_obj = discord.Object(id=int(parts[1]))
-                    self.bot.tree.clear_commands(guild=guild_obj)
-                    await self.bot.tree.sync(guild=guild_obj)
-                    await ctx.send(embed=self._get_embed(f"Cleared Guild ID {parts[1]}", 0, "Cleared all local guild commands."))
-                else:
-                    if ctx.guild:
-                        self.bot.tree.clear_commands(guild=ctx.guild)
-                        await self.bot.tree.sync(guild=ctx.guild)
-                        await ctx.send(embed=self._get_embed(f"Cleared Local Server ({ctx.guild.name})", 0, "Cleared local overrides."))
-                return
+        if option and option.lower().startswith("clear"):
+            parts = option.split()
+            if len(parts) > 1 and parts[1].isdigit():
+                guild_obj = discord.Object(id=int(parts[1]))
+                self.bot.tree.clear_commands(guild=guild_obj)
+                await self.bot.tree.sync(guild=guild_obj)
+                await ctx.send(embed=self._get_embed(f"Cleared Guild ID {parts[1]}", 0, "Cleared all local guild commands."))
+            else:
+                if ctx.guild:
+                    self.bot.tree.clear_commands(guild=ctx.guild)
+                    await self.bot.tree.sync(guild=ctx.guild)
+                    await ctx.send(embed=self._get_embed(f"Cleared Local Server ({ctx.guild.name})", 0, "Cleared local overrides."))
+            return
 
-            if option and option.isdigit():
-                guild_obj = discord.Object(id=int(option))
-                self.bot.tree.copy_global_to(guild=guild_obj)
-                synced = await self.bot.tree.sync(guild=guild_obj)
-                await ctx.send(embed=self._get_embed(f"Specific Guild ID ({option})", len(synced)))
-                return
+        if option and option.isdigit():
+            guild_obj = discord.Object(id=int(option))
+            self.bot.tree.copy_global_to(guild=guild_obj)
+            synced = await self.bot.tree.sync(guild=guild_obj)
+            await ctx.send(embed=self._get_embed(f"Specific Guild ID ({option})", len(synced)))
+            return
 
-            synced = await self.bot.tree.sync()
-            await ctx.send(embed=self._get_embed("Global Discord Tree", len(synced), "Updated across all servers."))
+        synced = await self.bot.tree.sync()
+        await ctx.send(embed=self._get_embed("Global Discord Tree", len(synced), "Updated across all servers."))
 
     @sync_cmd.error
     async def sync_error(self, ctx: commands.Context, error):

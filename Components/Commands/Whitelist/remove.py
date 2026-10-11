@@ -10,7 +10,7 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command can only be used inside a server.", discord.Color.red()), ephemeral=True)
     if not target_id_str:
-        return await ctx.send(embed=make_embed("Please provide a user ID to remove (`/whitelist remove <id>` or `-whitelist remove <id>`).", discord.Color.red()), ephemeral=True)
+        return await ctx.send(embed=make_embed("Please provide a user ID to remove (`/whitelist remove <id>`).", discord.Color.red()), ephemeral=True)
 
     clean_id_str = re.sub(r"\D", "", str(target_id_str))
     if not clean_id_str:
@@ -24,7 +24,7 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
     await log_event(
         ctx.guild,
         "moderation_action",
-        "User Removed from Whitelist (`-unwhitelist`)",
+        "User Removed from Whitelist (`/unwhitelist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)"
     )
     await ctx.send(embed=make_embed(f"Removed ID `{user_id}` from the server moderation whitelist.", discord.Color.green()), ephemeral=True)
@@ -34,18 +34,8 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
 async def unwhitelist_cmd(ctx: commands.Context, target_id: str):
     await _do_wl_remove(ctx, target_id)
 
-class WhitelistRemoveCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="wl_remove", hidden=True)
-    @commands.has_permissions(administrator=True)
-    async def wl_remove_prefix(self, ctx: commands.Context, target_id: str = None):
-        await _do_wl_remove(ctx, target_id)
-
 async def setup(bot: commands.Bot):
     if "unwhitelist" not in bot.all_commands:
         bot.add_command(unwhitelist_cmd)
-    await bot.add_cog(WhitelistRemoveCog(bot))
 
 

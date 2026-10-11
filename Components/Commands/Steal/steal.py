@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 import re
@@ -136,43 +136,6 @@ class StealCog(commands.GroupCog, group_name="steal", group_description="Steal e
             return await interaction.response.send_message(**kwargs)
             
         await _do_steal_emojiurl(interaction.guild, interaction.user, _send, url, name)
-
-    @commands.group(name="steal", invoke_without_command=True)
-    @commands.has_permissions(manage_expressions=True)
-    async def steal_prefix(self, ctx: commands.Context):
-        if ctx.invoked_subcommand is None:
-            await ctx.send(embed=make_embed("Use `-steal emoji <emoji> <name>` or `-steal emojiurl <url> <name>`"))
-
-    @steal_prefix.command(name="emoji")
-    @commands.has_permissions(manage_expressions=True)
-    async def steal_emoji_cmd(self, ctx: commands.Context, emoji: str, name: str):
-        async def _send(**kwargs):
-            # ephemeral=True doesn't work well with normal ctx.send in discord.py, but we can pass it
-            kwargs.pop("ephemeral", None)
-            return await ctx.send(**kwargs)
-        
-        async with ctx.typing():
-            await _do_steal_emoji(ctx.guild, ctx.author, _send, emoji, name)
-
-    @steal_prefix.command(name="emojiurl")
-    @commands.has_permissions(manage_expressions=True)
-    async def steal_emojiurl_cmd(self, ctx: commands.Context, url: str, name: str):
-        async def _send(**kwargs):
-            kwargs.pop("ephemeral", None)
-            return await ctx.send(**kwargs)
-            
-        async with ctx.typing():
-            await _do_steal_emojiurl(ctx.guild, ctx.author, _send, url, name)
-
-    @steal_prefix.error
-    @steal_emoji_cmd.error
-    @steal_emojiurl_cmd.error
-    async def steal_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(embed=make_embed("You do not have permission to manage expressions.", discord.Color.red()), delete_after=10)
-        else:
-            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), delete_after=10)
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(StealCog(bot))

@@ -4,24 +4,35 @@ from Components.Systems.WelcomeGoodbye._storage import set_welcome_status
 def format_welcome_string(template: str, member: discord.Member) -> str:
     if not template:
         return ""
-    count = member.guild.member_count or len(member.guild.members)
+    guild = getattr(member, "guild", None)
+    count = (guild.member_count or len(guild.members)) if guild else 0
+    server_name = guild.name if guild else "Server"
+    server_id = str(guild.id) if guild else "0"
+    server_icon = (guild.icon.url if guild.icon else "") if guild else ""
+    user_mention = getattr(member, "mention", f"@{getattr(member, 'name', 'User')}")
+    username = getattr(member, "name", "User")
+    user_id = str(getattr(member, "id", "0"))
+    user_avatar = member.display_avatar.url if getattr(member, "display_avatar", None) else ""
+    user_tag = str(member)
+    global_name = getattr(member, "global_name", None) or getattr(member, "display_name", username)
+    
     replacements = {
-        "{user}": member.mention,
-        "{user.mention}": member.mention,
-        "{user.name}": member.name,
-        "{user.id}": str(member.id),
-        "{user.avatar}": member.display_avatar.url if getattr(member, "display_avatar", None) else "",
-        "{user.tag}": str(member),
-        "{mention}": member.mention,
-        "{username}": member.name,
-        "{user_globalname}": getattr(member, "global_name", None) or member.display_name,
-        "{server}": member.guild.name,
-        "{server.name}": member.guild.name,
-        "{server.id}": str(member.guild.id),
+        "{user}": user_mention,
+        "{user.mention}": user_mention,
+        "{user.name}": username,
+        "{user.id}": user_id,
+        "{user.avatar}": user_avatar,
+        "{user.tag}": user_tag,
+        "{mention}": user_mention,
+        "{username}": username,
+        "{user_globalname}": global_name,
+        "{server}": server_name,
+        "{server.name}": server_name,
+        "{server.id}": server_id,
         "{server.members}": str(count),
-        "{server.icon}": member.guild.icon.url if member.guild.icon else "",
+        "{server.icon}": server_icon,
         "{count}": str(count),
-        "{id}": str(member.id)
+        "{id}": user_id
     }
     res = str(template)
     for key, val in replacements.items():
@@ -32,14 +43,35 @@ def format_welcome_string(template: str, member: discord.Member) -> str:
 def format_goodbye_string(template: str, member: discord.Member) -> str:
     if not template:
         return ""
-    count = member.guild.member_count or len(member.guild.members)
+    guild = getattr(member, "guild", None)
+    count = (guild.member_count or len(guild.members)) if guild else 0
+    server_name = guild.name if guild else "Server"
+    server_id = str(guild.id) if guild else "0"
+    server_icon = (guild.icon.url if guild.icon else "") if guild else ""
+    user_mention = getattr(member, "mention", f"@{getattr(member, 'name', 'User')}")
+    username = getattr(member, "name", "User")
+    user_id = str(getattr(member, "id", "0"))
+    user_avatar = member.display_avatar.url if getattr(member, "display_avatar", None) else ""
+    user_tag = str(member)
+    global_name = getattr(member, "global_name", None) or getattr(member, "display_name", username)
+    
     replacements = {
-        "{user}": member.mention,
-        "{mention}": member.mention,
-        "{username}": member.name,
-        "{server}": member.guild.name,
+        "{user}": user_mention,
+        "{user.mention}": user_mention,
+        "{user.name}": username,
+        "{user.id}": user_id,
+        "{user.avatar}": user_avatar,
+        "{user.tag}": user_tag,
+        "{mention}": user_mention,
+        "{username}": username,
+        "{user_globalname}": global_name,
+        "{server}": server_name,
+        "{server.name}": server_name,
+        "{server.id}": server_id,
+        "{server.members}": str(count),
+        "{server.icon}": server_icon,
         "{count}": str(count),
-        "{id}": str(member.id)
+        "{id}": user_id
     }
     res = str(template)
     for key, val in replacements.items():

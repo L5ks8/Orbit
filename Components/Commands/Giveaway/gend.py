@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Giveaway._storage import get_giveaway
@@ -35,7 +35,7 @@ class GiveawayEndCommand(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Server permission to end giveaways.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -gend <G-849201>", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/gend <giveaway_id>`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

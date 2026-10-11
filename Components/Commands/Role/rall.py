@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
@@ -41,24 +41,12 @@ class RoleRallCog(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Administrator permissions to run this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: `-role rall <@role/name> [reason]`", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: /role rall <role> [reason]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-class RoleRallFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="rl_rall", aliases=["rolerall"], hidden=True)
-    @commands.has_permissions(administrator=True)
-    @commands.bot_has_permissions(manage_roles=True)
-    async def rolerall_prefix(self, ctx: commands.Context, role: discord.Role, *, reason: str = "No reason provided"):
-        await _do_rolerall(ctx, role, reason)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Role.role import role_group
-    from Components.Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleRallCog(bot))
-    await bot.add_cog(RoleRallFallback(bot))

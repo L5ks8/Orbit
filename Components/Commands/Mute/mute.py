@@ -65,7 +65,7 @@ class MuteCommand(commands.Cog):
         await log_event(
             ctx.guild,
             "moderation_action",
-            "User Muted (`-mute`)",
+            "User Muted (`/mute`)",
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Muted Role:** {role.mention}"
         )
         embed = discord.Embed(title="User Muted", color=discord.Color.red())
@@ -80,10 +80,8 @@ class MuteCommand(commands.Cog):
     async def mute_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Roles permission to mute users.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-mute", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(f"{format_usage('-mute','<@member>','[reason]')}"), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed(format_usage("/mute", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Voice.voice import voice_group
 
@@ -43,19 +43,8 @@ class VcLimitCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-class VcLimitPrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="vc_limit", aliases=["vclimit"], hidden=True)
-    @commands.has_permissions(manage_channels=True)
-    async def vc_limit_prefix(self, ctx: commands.Context, limit: int, channel: discord.VoiceChannel = None):
-        await _do_vc_limit(ctx, limit, channel)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Voice.voice import voice_group
-    from Components.Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(VcLimitCommand(bot))
-    await bot.add_cog(VcLimitPrefixFallback(bot))

@@ -27,17 +27,8 @@ async def _do_remind_list(ctx: commands.Context):
 async def remind_list_cmd(ctx: commands.Context):
     await _do_remind_list(ctx)
 
-class ReminderListCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="rm_list", aliases=["remindlist"], hidden=True)
-    async def rm_list_prefix(self, ctx: commands.Context):
-        await _do_remind_list(ctx)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Reminder.remind import remind_group
     if "remind" not in bot.all_commands:
         bot.add_command(remind_group)
-    await bot.add_cog(ReminderListCog(bot))
 

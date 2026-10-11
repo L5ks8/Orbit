@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Reminder.reminder import reminder_group
 from Components.Commands.Reminder.remind import remind_group
@@ -33,19 +33,7 @@ async def _do_remind_set(ctx: commands.Context, duration_str: str, text: str):
 async def remind_set_cmd(ctx: commands.Context, duration: str, *, text: str):
     await _do_remind_set(ctx, duration, text)
 
-class ReminderSetCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="rm_set", aliases=["remindset"], hidden=True)
-    async def rm_set_prefix(self, ctx: commands.Context, duration: str = None, *, text: str = None):
-        if not duration or not text:
-            return await ctx.send(embed=make_embed("Usage: `-remind set <time> <text>`", discord.Color.red()), ephemeral=True)
-        await _do_remind_set(ctx, duration, text)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Reminder.remind import remind_group
-    from Components.Commands._utils import make_embed
     if "remind" not in bot.all_commands:
         bot.add_command(remind_group)
-    await bot.add_cog(ReminderSetCog(bot))

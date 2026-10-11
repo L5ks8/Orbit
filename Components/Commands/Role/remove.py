@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
@@ -39,24 +39,12 @@ class RoleRemoveCog(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Roles permission to remove roles.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: `-role remove <@user> <@role> [reason]`", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: /role remove <target> <role> [reason]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-class RemoveRoleFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="rl_remove", aliases=["removerole"], hidden=True)
-    @commands.has_permissions(manage_roles=True)
-    @commands.bot_has_permissions(manage_roles=True)
-    async def removerole_prefix(self, ctx: commands.Context, target: discord.Member, role: discord.Role, *, reason: str = "No reason provided"):
-        await _do_removerole(ctx, target, role, reason)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Role.role import role_group
-    from Components.Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleRemoveCog(bot))
-    await bot.add_cog(RemoveRoleFallback(bot))

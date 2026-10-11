@@ -11,7 +11,7 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command can only be used inside a server.", discord.Color.red()), ephemeral=True)
     if not target_id_str:
-        return await ctx.send(embed=make_embed("Please provide a user ID to blacklist (e.g. `/blacklist 123456789` or `-blacklist 123456789`).", discord.Color.red()), ephemeral=True)
+        return await ctx.send(embed=make_embed("Please provide a user ID to blacklist (e.g. `/blacklist 123456789`).", discord.Color.red()), ephemeral=True)
 
     clean_id_str = re.sub(r"\D", "", str(target_id_str))
     if not clean_id_str:
@@ -37,7 +37,7 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     await log_event(
         ctx.guild,
         "moderation_action",
-        "User Blacklisted (`-blacklist add`)",
+        "User Blacklisted (`/blacklist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}{ban_msg}"
     )
     await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the blacklist.{ban_msg}", discord.Color.green()), ephemeral=True)
@@ -50,18 +50,8 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
 async def blacklist_cmd(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
     await _do_bl_add(ctx, target_id, reason)
 
-class BlacklistCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="bl_add", hidden=True)
-    @commands.has_permissions(administrator=True)
-    async def bl_add_prefix(self, ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
-        await _do_bl_add(ctx, target_id, reason)
-
 async def setup(bot: commands.Bot):
     if "blacklist" not in bot.all_commands:
         bot.add_command(blacklist_cmd)
-    await bot.add_cog(BlacklistCog(bot))
 
 

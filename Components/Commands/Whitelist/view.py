@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Whitelist._views import WhitelistListLayout
 from Components.Commands._utils import make_embed
@@ -15,16 +15,6 @@ async def _do_wl_list(ctx: commands.Context):
 async def checkwhitelist_cmd(ctx: commands.Context):
     await _do_wl_list(ctx)
 
-class WhitelistListCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="wl_list_prefix", hidden=True)
-    @commands.has_permissions(administrator=True)
-    async def wl_list_prefix(self, ctx: commands.Context):
-        await _do_wl_list(ctx)
-
 async def setup(bot: commands.Bot):
     if "checkwhitelist" not in bot.all_commands:
         bot.add_command(checkwhitelist_cmd)
-    await bot.add_cog(WhitelistListCog(bot))

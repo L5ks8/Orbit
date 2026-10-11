@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
@@ -109,26 +109,14 @@ class RoleSettingsCog(commands.Cog):
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send(embed=make_embed("I need Manage Roles permission to modify channel overwrites."), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: `-role settings <@role> <permission> <on/off/reset>`", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: /role settings <role> <permission> <state>", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.RoleNotFound, commands.BadArgument)):
             await ctx.send(embed=make_embed("Role not found.", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
-class RoleSettingsFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="rl_settings", aliases=["rolesettings"], hidden=True)
-    @commands.has_permissions(administrator=True)
-    @commands.bot_has_permissions(manage_roles=True)
-    async def rolesettings_prefix(self, ctx: commands.Context, role: discord.Role, permission: str, state: str):
-        await _do_rolesettings(ctx, role, permission, state)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Role.role import role_group
-    from Components.Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleSettingsCog(bot))
-    await bot.add_cog(RoleSettingsFallback(bot))

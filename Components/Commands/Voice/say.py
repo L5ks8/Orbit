@@ -1,4 +1,4 @@
-﻿import os
+import os
 import io
 import asyncio
 import tempfile
@@ -93,7 +93,7 @@ async def vc_say_cmd(ctx: commands.Context, *, text: str):
 @vc_say_cmd.error
 async def vc_say_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Use: `-voice say <text>` or `-vc say <text>`", discord.Color.red()), ephemeral=True)
+        await ctx.send(embed=make_embed("Usage: /voice say <text>", discord.Color.red()), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"Error: {error}", discord.Color.red()), ephemeral=True)
 

@@ -206,7 +206,7 @@ class StatusCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="status", description="Owner Only: Interactive V2 panel or direct shortcut to set activity and presence.")
+    @commands.command(name="status", hidden=True)
     @is_true_owner_check()
     async def status_cmd(self, ctx: commands.Context, type_arg: str = None, *, text_arg: str = None):
         if type_arg:

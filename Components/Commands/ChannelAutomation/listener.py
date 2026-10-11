@@ -43,19 +43,15 @@ class ChannelAutomationListener(commands.Cog):
         cmd_cfg = config.get("command_only", {})
         cmd_channels = cmd_cfg.get("channels", [])
         if str(message.channel.id) in cmd_channels:
-            # We want to delete normal user messages. 
-            # Bots and slash command responses don't get deleted.
-            # Also allow prefix commands.
+            # Normal user text messages get deleted; only bots and slash command replies remain.
             if not message.author.bot:
-                ctx = await self.bot.get_context(message)
-                if not ctx.valid:
-                    try:
-                        await message.delete()
-                    except discord.Forbidden:
-                        pass
-                    except discord.NotFound:
-                        pass
-                    return # Message deleted
+                try:
+                    await message.delete()
+                except discord.Forbidden:
+                    pass
+                except discord.NotFound:
+                    pass
+                return # Message deleted
         # 3. File-Only Channels
         file_only_list = config.get("file_only", [])
         for f_cfg in file_only_list:

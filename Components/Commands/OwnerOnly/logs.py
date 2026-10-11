@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.OwnerOnly._monitor import get_live_logs, record_command
 from Components.Commands._utils import make_embed
@@ -11,7 +11,7 @@ class LiveLogsCommand(commands.Cog):
     @commands.is_owner()
     async def logs_cmd(self, ctx: commands.Context):
         record_command("logs", str(ctx.author))
-        if ctx.guild is not None:
+        if ctx.message and ctx.guild is not None:
             try:
                 await ctx.message.delete()
             except Exception:

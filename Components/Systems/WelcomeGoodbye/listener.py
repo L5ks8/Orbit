@@ -1,8 +1,58 @@
 import discord
 from discord.ext import commands
-from Components.Systems.WelcomeGoodbye._storage import load_welcome_config
-from Components.Systems.WelcomeGoodbye._views import format_welcome_string
+from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, load_goodbye_config
+from Components.Systems.WelcomeGoodbye._views import format_welcome_string, format_goodbye_string
+from Components.Systems.WelcomeGoodbye.image_gen import generate_welcome_image, generate_goodbye_image
 import re
+import aiohttp
+import pathlib
+import tempfile
+import asyncio
+
+def _parse_channel_and_emoji(text: str, guild: discord.Guild) -> str:
+    if not text or not guild:
+        return text or ""
+
+    def replace_channel(match):
+        name_or_id = match.group(1)
+        if name_or_id.isdigit():
+            return f"<#{name_or_id}>"
+        c_name = name_or_id.lower()
+        ch = discord.utils.find(lambda c: c.name.lower() == c_name, guild.text_channels)
+        if ch:
+            return ch.mention
+        return f"#{c_name}"
+
+    def replace_emoji(match):
+        token = match.group(0)
+        m_no_name = re.match(r'<(a?):(\d+)>', token)
+        if m_no_name:
+            is_anim = m_no_name.group(1) == 'a'
+            eid = int(m_no_name.group(2))
+            em = discord.utils.get(guild.emojis, id=eid)
+            if em:
+                return str(em)
+            prefix = "a" if is_anim else ""
+            return f"<{prefix}:e:{eid}>"
+
+        m_colon = re.match(r':([a-zA-Z0-9_-]+):', token)
+        if m_colon:
+            key = m_colon.group(1)
+            if key.isdigit():
+                em = discord.utils.get(guild.emojis, id=int(key))
+                if em:
+                    return str(em)
+                return f"<:e:{key}>"
+            else:
+                em = discord.utils.get(guild.emojis, name=key)
+                if em:
+                    return str(em)
+        return token
+
+    formatted = re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, text)
+    formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
+    return formatted
+
 
 class WelcomeListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -10,10 +60,17 @@ class WelcomeListener(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member, override_config=None, force_test=False):
-        if member.bot and not force_test:
+        if not member:
             return
 
-        config = override_config or load_welcome_config(member.guild.id)
+        guild = getattr(member, "guild", None)
+        if not guild:
+            return
+
+        if getattr(member, "bot", False) and not force_test:
+            return
+
+        config = override_config or load_welcome_config(guild.id)
         if not force_test and (not config.get("enabled") or not config.get("channel_id")):
             return
 
@@ -22,67 +79,30 @@ class WelcomeListener(commands.Cog):
         except (ValueError, TypeError):
             return
 
-        channel = member.guild.get_channel(ch_id)
+        channel = guild.get_channel(ch_id)
         if not channel:
             try:
-                channel = await member.guild.fetch_channel(ch_id)
+                channel = await guild.fetch_channel(ch_id)
             except Exception:
                 return
 
         if not channel:
             return
 
-        def replace_channel(match):
-            name_or_id = match.group(1)
-            if name_or_id.isdigit():
-                return f"<#{name_or_id}>"
-            c_name = name_or_id.lower()
-            ch = discord.utils.find(lambda c: c.name.lower() == c_name, member.guild.text_channels)
-            if ch:
-                return ch.mention
-            return f"#{c_name}"
-
-        def replace_emoji(match):
-            token = match.group(0)
-            m_no_name = re.match(r'<(a?):(\d+)>', token)
-            if m_no_name:
-                is_anim = m_no_name.group(1) == 'a'
-                eid = int(m_no_name.group(2))
-                em = discord.utils.get(member.guild.emojis, id=eid)
-                if em:
-                    return str(em)
-                prefix = "a" if is_anim else ""
-                return f"<{prefix}:e:{eid}>"
-            
-            m_colon = re.match(r':([a-zA-Z0-9_-]+):', token)
-            if m_colon:
-                key = m_colon.group(1)
-                if key.isdigit():
-                    em = discord.utils.get(member.guild.emojis, id=int(key))
-                    if em:
-                        return str(em)
-                    return f"<:e:{key}>"
-                else:
-                    em = discord.utils.get(member.guild.emojis, name=key)
-                    if em:
-                        return str(em)
-            return token
-
         def fmt_text(text: str) -> str:
             if not text:
                 return ""
-            formatted = format_welcome_string(text, member)
-            formatted = re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
-            formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
-            return formatted
+            raw = format_welcome_string(text, member)
+            return _parse_channel_and_emoji(raw, guild)
 
         # Handle DM on Join
         if config.get("dm_enabled") and config.get("dm_message"):
             dm_text = fmt_text(config.get("dm_message"))
-            try:
-                await member.send(dm_text)
-            except Exception:
-                pass
+            if dm_text:
+                try:
+                    await member.send(dm_text)
+                except Exception:
+                    pass
 
         msg_mode = config.get("msg_mode", "image")
 
@@ -106,7 +126,7 @@ class WelcomeListener(commands.Cog):
             thumb = config.get("embed_thumbnail", "")
             if thumb:
                 embed.set_thumbnail(url=thumb)
-            elif member.display_avatar:
+            elif getattr(member, "display_avatar", None):
                 embed.set_thumbnail(url=member.display_avatar.url)
 
             img = config.get("embed_image", "")
@@ -143,29 +163,32 @@ class WelcomeListener(commands.Cog):
                             )
 
             content_text = fmt_text(config.get("message", ""))
+            allowed = discord.AllowedMentions(users=True, roles=False, everyone=False)
 
             try:
-                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=allowed)
+            except discord.Forbidden:
+                fallback_msg = content_text or desc or f"Welcome to {guild.name}, {member.mention}!"
+                try:
+                    await channel.send(content=fallback_msg, allowed_mentions=allowed)
+                except Exception:
+                    pass
             except Exception:
                 pass
             return
 
         # Default Image mode
         formatted = fmt_text(config.get("message", ""))
-
-        from Components.Systems.WelcomeGoodbye.image_gen import generate_welcome_image
-        import aiohttp
-        import pathlib
+        allowed = discord.AllowedMentions(users=True, roles=False, everyone=False)
 
         avatar_bytes = b""
-        if member.display_avatar:
+        if getattr(member, "display_avatar", None):
             try:
                 avatar_bytes = await member.display_avatar.read()
             except Exception:
                 pass
-                
-        bg_path = pathlib.Path("nonexistent.png")
 
+        bg_path = pathlib.Path("nonexistent.png")
         image_url = config.get("image_url", "")
         if image_url:
             if image_url.startswith("/static/"):
@@ -174,31 +197,40 @@ class WelcomeListener(commands.Cog):
                 filename = image_url.split("/")[-1]
                 bg_path = pathlib.Path("Storage/uploads") / filename
             elif image_url.startswith("http"):
-                import tempfile
                 try:
-                    async with aiohttp.ClientSession() as session:
+                    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5.0)) as session:
                         async with session.get(image_url) as resp:
                             if resp.status == 200:
                                 bg_bytes = await resp.read()
-                                temp_path = pathlib.Path(tempfile.gettempdir()) / f"welcome_{member.guild.id}.png"
+                                temp_path = pathlib.Path(tempfile.gettempdir()) / f"welcome_{guild.id}.png"
                                 with open(temp_path, "wb") as f:
                                     f.write(bg_bytes)
                                 bg_path = temp_path
                 except Exception:
                     pass
 
-        import asyncio
-        img_buffer = await asyncio.to_thread(generate_welcome_image, avatar_bytes, bg_path, member.name)
-        file = discord.File(fp=img_buffer, filename="welcome.png")
-
         try:
-            await channel.send(content=formatted, file=file, allowed_mentions=discord.AllowedMentions.none())
+            img_buffer = await asyncio.to_thread(generate_welcome_image, avatar_bytes, bg_path, member.name)
+            file = discord.File(fp=img_buffer, filename="welcome.png")
+            await channel.send(content=formatted if formatted else None, file=file, allowed_mentions=allowed)
         except Exception:
-            pass
+            # Fallback to embed or plain text if image generation or file upload fails
+            try:
+                embed = discord.Embed(
+                    title="Welcome!",
+                    description=formatted or f"Welcome to **{guild.name}**, {member.mention}!",
+                    color=discord.Color.from_rgb(88, 101, 242)
+                )
+                if getattr(member, "display_avatar", None):
+                    embed.set_thumbnail(url=member.display_avatar.url)
+                await channel.send(embed=embed, allowed_mentions=allowed)
+            except Exception:
+                if formatted:
+                    try:
+                        await channel.send(content=formatted, allowed_mentions=allowed)
+                    except Exception:
+                        pass
 
-from Components.Systems.WelcomeGoodbye._storage import load_goodbye_config
-from Components.Systems.WelcomeGoodbye._views import format_goodbye_string
-import re
 
 class GoodbyeListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -206,10 +238,17 @@ class GoodbyeListener(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member, override_config=None, force_test=False):
-        if member.bot and not force_test:
+        if not member:
             return
 
-        config = override_config or load_goodbye_config(member.guild.id)
+        guild = getattr(member, "guild", None)
+        if not guild:
+            return
+
+        if getattr(member, "bot", False) and not force_test:
+            return
+
+        config = override_config or load_goodbye_config(guild.id)
         if not force_test and (not config.get("enabled") or not config.get("channel_id")):
             return
 
@@ -218,67 +257,30 @@ class GoodbyeListener(commands.Cog):
         except (ValueError, TypeError):
             return
 
-        channel = member.guild.get_channel(ch_id)
+        channel = guild.get_channel(ch_id)
         if not channel:
             try:
-                channel = await member.guild.fetch_channel(ch_id)
+                channel = await guild.fetch_channel(ch_id)
             except Exception:
                 return
 
         if not channel:
             return
 
-        def replace_channel(match):
-            name_or_id = match.group(1)
-            if name_or_id.isdigit():
-                return f"<#{name_or_id}>"
-            c_name = name_or_id.lower()
-            ch = discord.utils.find(lambda c: c.name.lower() == c_name, member.guild.text_channels)
-            if ch:
-                return ch.mention
-            return f"#{c_name}"
-
-        def replace_emoji(match):
-            token = match.group(0)
-            m_no_name = re.match(r'<(a?):(\d+)>', token)
-            if m_no_name:
-                is_anim = m_no_name.group(1) == 'a'
-                eid = int(m_no_name.group(2))
-                em = discord.utils.get(member.guild.emojis, id=eid)
-                if em:
-                    return str(em)
-                prefix = "a" if is_anim else ""
-                return f"<{prefix}:e:{eid}>"
-            
-            m_colon = re.match(r':([a-zA-Z0-9_-]+):', token)
-            if m_colon:
-                key = m_colon.group(1)
-                if key.isdigit():
-                    em = discord.utils.get(member.guild.emojis, id=int(key))
-                    if em:
-                        return str(em)
-                    return f"<:e:{key}>"
-                else:
-                    em = discord.utils.get(member.guild.emojis, name=key)
-                    if em:
-                        return str(em)
-            return token
-
         def fmt_text(text: str) -> str:
             if not text:
                 return ""
-            formatted = format_goodbye_string(text, member)
-            formatted = re.sub(r'(?<!<)#([\w-]+)(?!>)', replace_channel, formatted)
-            formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
-            return formatted
+            raw = format_goodbye_string(text, member)
+            return _parse_channel_and_emoji(raw, guild)
 
         # Handle DM on Leave
         if config.get("dm_enabled") and config.get("dm_message"):
             dm_text = fmt_text(config.get("dm_message"))
-            try:
-                await member.send(dm_text)
-            except Exception:
-                pass
+            if dm_text:
+                try:
+                    await member.send(dm_text)
+                except Exception:
+                    pass
 
         msg_mode = config.get("msg_mode", "image")
 
@@ -302,7 +304,7 @@ class GoodbyeListener(commands.Cog):
             thumb = config.get("embed_thumbnail", "")
             if thumb:
                 embed.set_thumbnail(url=thumb)
-            elif member.display_avatar:
+            elif getattr(member, "display_avatar", None):
                 embed.set_thumbnail(url=member.display_avatar.url)
 
             img = config.get("embed_image", "")
@@ -339,29 +341,32 @@ class GoodbyeListener(commands.Cog):
                             )
 
             content_text = fmt_text(config.get("message", ""))
+            allowed = discord.AllowedMentions(users=True, roles=False, everyone=False)
 
             try:
-                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=allowed)
+            except discord.Forbidden:
+                fallback_msg = content_text or desc or f"**{member.name}** left {guild.name}."
+                try:
+                    await channel.send(content=fallback_msg, allowed_mentions=allowed)
+                except Exception:
+                    pass
             except Exception:
                 pass
             return
 
         # Default Image mode
         formatted = fmt_text(config.get("message", ""))
-
-        from Components.Systems.WelcomeGoodbye.image_gen import generate_goodbye_image
-        import aiohttp
-        import pathlib
+        allowed = discord.AllowedMentions(users=True, roles=False, everyone=False)
 
         avatar_bytes = b""
-        if member.display_avatar:
+        if getattr(member, "display_avatar", None):
             try:
                 avatar_bytes = await member.display_avatar.read()
             except Exception:
                 pass
-                
-        bg_path = pathlib.Path("nonexistent.png")
 
+        bg_path = pathlib.Path("nonexistent.png")
         image_url = config.get("image_url", "")
         if image_url:
             if image_url.startswith("/static/"):
@@ -370,27 +375,40 @@ class GoodbyeListener(commands.Cog):
                 filename = image_url.split("/")[-1]
                 bg_path = pathlib.Path("Storage/uploads") / filename
             elif image_url.startswith("http"):
-                import tempfile
                 try:
-                    async with aiohttp.ClientSession() as session:
+                    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5.0)) as session:
                         async with session.get(image_url) as resp:
                             if resp.status == 200:
                                 bg_bytes = await resp.read()
-                                temp_path = pathlib.Path(tempfile.gettempdir()) / f"goodbye_{member.guild.id}.png"
+                                temp_path = pathlib.Path(tempfile.gettempdir()) / f"goodbye_{guild.id}.png"
                                 with open(temp_path, "wb") as f:
                                     f.write(bg_bytes)
                                 bg_path = temp_path
                 except Exception:
                     pass
 
-        import asyncio
-        img_buffer = await asyncio.to_thread(generate_goodbye_image, avatar_bytes, bg_path, member.name)
-        file = discord.File(fp=img_buffer, filename="goodbye.png")
-
         try:
-            await channel.send(content=formatted, file=file, allowed_mentions=discord.AllowedMentions.none())
+            img_buffer = await asyncio.to_thread(generate_goodbye_image, avatar_bytes, bg_path, member.name)
+            file = discord.File(fp=img_buffer, filename="goodbye.png")
+            await channel.send(content=formatted if formatted else None, file=file, allowed_mentions=allowed)
         except Exception:
-            pass
+            # Fallback to embed or plain text if image generation or file upload fails
+            try:
+                embed = discord.Embed(
+                    title="Goodbye!",
+                    description=formatted or f"**{member.name}** left the server.",
+                    color=discord.Color.from_rgb(237, 66, 69)
+                )
+                if getattr(member, "display_avatar", None):
+                    embed.set_thumbnail(url=member.display_avatar.url)
+                await channel.send(embed=embed, allowed_mentions=allowed)
+            except Exception:
+                if formatted:
+                    try:
+                        await channel.send(content=formatted, allowed_mentions=allowed)
+                    except Exception:
+                        pass
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(WelcomeListener(bot))

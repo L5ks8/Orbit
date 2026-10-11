@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Cases._storage import get_user_cases
@@ -96,9 +96,9 @@ class HistoryCog(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Moderate Members permission to view history.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-history", "<@user>"), discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed(format_usage("/history", "<@user>"), discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(f"{format_usage('-history','<@user>')}"), ephemeral=True)
+            await ctx.send(embed=make_embed(f"{format_usage('/history','<@user>')}"), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

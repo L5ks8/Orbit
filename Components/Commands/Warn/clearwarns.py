@@ -17,7 +17,7 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     
     if user.is_timed_out():
         try:
-            await user.timeout(None, reason="Warnings cleared via -clearwarns")
+            await user.timeout(None, reason="Warnings cleared via /clearwarns")
         except Exception:
             pass
     try:
@@ -27,7 +27,7 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     await log_event(
         ctx.guild,
         "moderation_action",
-        "All Warnings Cleared (`-clearwarns`)",
+        "All Warnings Cleared (`/clearwarns`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Total Cleared:** `{cleared_count}` warnings"
     )
 
@@ -53,10 +53,8 @@ class ClearWarnsCog(commands.Cog):
     async def clearwarns_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Moderate Members permission to manage warnings.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed(format_usage("-clearwarns", "<@member>"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed(f"{format_usage('-clearwarns','<@member>')}"), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            await ctx.send(embed=make_embed(format_usage("/clearwarns", "<@member>"), discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ClearWarnsCog(bot))

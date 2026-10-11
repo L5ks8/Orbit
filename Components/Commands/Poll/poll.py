@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -10,7 +10,7 @@ def make_bar(pct: int, length: int = 15) -> str:
     filled = int(round((pct / 100.0) * length))
     filled = max(0, min(length, filled))
     empty = length - filled
-    return "â–ˆ" * filled + "â–‘" * empty
+    return "█" * filled + "░" * empty
 
 class ComponentsPollView(discord.ui.View):
     def __init__(self, guild_id: int, poll_id: str, question: str, options: list[str], author: discord.Member, duration_minutes: int):
@@ -110,7 +110,7 @@ class PollCommand(commands.Cog):
     @poll.error
     async def poll_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: -poll \"<question>\"\"<option1, option2, option3>\"[duration_in_minutes]", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: /poll <question> <options> [duration_in_minutes]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

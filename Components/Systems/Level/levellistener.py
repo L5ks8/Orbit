@@ -1,4 +1,4 @@
-﻿import time
+import time
 import re
 import discord
 from discord.ext import commands, tasks
@@ -173,16 +173,31 @@ class LevelListenerCog(commands.Cog):
         # Determine target channel
         target_ch_setting = config.get("levelup_channel", "current")
         target_ch = channel
-        if target_ch_setting != "current":
+        if target_ch_setting == "dm":
+            try:
+                await member.send(content=content if content else None, embed=embed)
+                return
+            except Exception:
+                target_ch = channel
+        elif target_ch_setting != "current":
             try:
                 ch = guild.get_channel(int(target_ch_setting))
+                if not ch:
+                    ch = await guild.fetch_channel(int(target_ch_setting))
                 if ch:
                     target_ch = ch
-            except (ValueError, TypeError):
+            except Exception:
                 pass
 
         try:
-            await target_ch.send(content=content, embed=embed)
+            await target_ch.send(content=content if content else None, embed=embed)
+        except discord.Forbidden:
+            fallback = f"{content}\n{title}\n{desc}".strip()
+            if fallback:
+                try:
+                    await target_ch.send(content=fallback)
+                except Exception:
+                    pass
         except Exception:
             pass
 

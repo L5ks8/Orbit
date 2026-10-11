@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Channel.channel import channel_group
 
@@ -39,26 +39,15 @@ async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | 
 async def channel_delete_cmd(ctx: commands.Context, channel: discord.abc.GuildChannel = None):
     await _do_delete(ctx, channel)
 
-class ChannelDeleteCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="ch_delete", aliases=["deletechannel", "channeldelete", "delchannel"], hidden=True)
-    @commands.has_permissions(manage_channels=True)
-    async def deletechannel_prefix(self, ctx: commands.Context, channel: discord.abc.GuildChannel = None):
-        await _do_delete(ctx, channel)
-
-    @channel_delete_cmd.error
-    @deletechannel_prefix.error
-    async def delete_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(embed=make_embed("You need `Manage Channels` permission to delete channels.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed("Could not find that channel.", discord.Color.red()), ephemeral=True)
+@channel_delete_cmd.error
+async def delete_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send(embed=make_embed("You need `Manage Channels` permission to delete channels.", discord.Color.red()), ephemeral=True)
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send(embed=make_embed("Could not find that channel.", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     from Components.Commands.Channel.channel import channel_group
     from Components.Commands._utils import make_embed
     if "channel" not in bot.all_commands:
         bot.add_command(channel_group)
-    await bot.add_cog(ChannelDeleteCog(bot))

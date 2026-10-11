@@ -32,7 +32,7 @@ class BotInfoCommand(commands.Cog):
         
         # Links Field
         import os
-        dashboard_url = os.environ.get("BASE_URL")
+        dashboard_url = os.environ.get("BASE_URL") or "https://orbitbot.xyz"
         support_url = "https://discord.gg/orbit"
         
         links = (

@@ -21,7 +21,8 @@ def get_module_disabled_embed(module_name: str) -> discord.Embed:
     )
 
 def format_usage(command: str, *args: str) -> str:
-    usage = f"Usage: {command}"
+    cmd_name = command.lstrip("/-")
+    usage = f"Usage: /{cmd_name}"
     if args:
         usage += " " + " ".join(args)
     return usage

@@ -1,20 +1,40 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Boost._storage import load_boost_config
+from Components.Commands.Boost._image_gen import generate_boost_image
 import re
+import time
+import pathlib
+import tempfile
+import asyncio
+import aiohttp
 
-def format_boost_string(text: str, member: discord.Member) -> str:
+def format_boost_string(text: str, member: discord.Member | discord.User, guild: discord.Guild) -> str:
     if not text:
         return ""
     
-    count = member.guild.premium_subscription_count or 0
+    count = getattr(guild, 'premium_subscription_count', 0) or 0
+    tier = getattr(guild, 'premium_tier', 0) or 0
+    server_name = guild.name if guild else "Server"
+    server_id = str(guild.id) if guild else "0"
+    user_mention = getattr(member, 'mention', f"@{getattr(member, 'name', 'User')}")
+    username = getattr(member, 'name', 'User')
+    user_id = str(getattr(member, 'id', '0'))
+
     replacements = {
-        "{user}": member.mention,
-        "{mention}": member.mention,
-        "{username}": member.name,
-        "{server}": member.guild.name,
+        "{user}": user_mention,
+        "{mention}": user_mention,
+        "{username}": username,
+        "{user.name}": username,
+        "{user.id}": user_id,
+        "{server}": server_name,
+        "{server.name}": server_name,
+        "{server.id}": server_id,
         "{count}": str(count),
-        "{id}": str(member.id)
+        "{boostcount}": str(count),
+        "{tier}": str(tier),
+        "{level}": str(tier),
+        "{id}": user_id
     }
     formatted = str(text)
     for key, val in replacements.items():
@@ -25,7 +45,7 @@ def format_boost_string(text: str, member: discord.Member) -> str:
         if name_or_id.isdigit():
             return f"<#{name_or_id}>"
         c_name = name_or_id.lower()
-        channel = discord.utils.find(lambda c: c.name.lower() == c_name, member.guild.text_channels)
+        channel = discord.utils.find(lambda c: c.name.lower() == c_name, guild.text_channels)
         if channel:
             return channel.mention
         return f"#{c_name}"
@@ -36,7 +56,7 @@ def format_boost_string(text: str, member: discord.Member) -> str:
         if m_no_name:
             is_anim = m_no_name.group(1) == 'a'
             eid = int(m_no_name.group(2))
-            em = discord.utils.get(member.guild.emojis, id=eid)
+            em = discord.utils.get(guild.emojis, id=eid)
             if em:
                 return str(em)
             prefix = "a" if is_anim else ""
@@ -46,12 +66,12 @@ def format_boost_string(text: str, member: discord.Member) -> str:
         if m_colon:
             key = m_colon.group(1)
             if key.isdigit():
-                em = discord.utils.get(member.guild.emojis, id=int(key))
+                em = discord.utils.get(guild.emojis, id=int(key))
                 if em:
                     return str(em)
                 return f"<:e:{key}>"
             else:
-                em = discord.utils.get(member.guild.emojis, name=key)
+                em = discord.utils.get(guild.emojis, name=key)
                 if em:
                     return str(em)
         return token
@@ -64,39 +84,66 @@ def format_boost_string(text: str, member: discord.Member) -> str:
 class BoostListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self._recent_boosts: dict[tuple[int, int], float] = {}
 
-    @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member):
-        if before.bot:
+    async def _handle_boost(self, guild: discord.Guild, member: discord.Member | discord.User):
+        if not guild or not member:
             return
 
-        if before.premium_since is not None or after.premium_since is None:
+        now = time.time()
+        # Clean old deduplication entries (> 60s)
+        self._recent_boosts = {k: v for k, v in self._recent_boosts.items() if now - v < 60}
+        dedup_key = (guild.id, member.id)
+        if dedup_key in self._recent_boosts and (now - self._recent_boosts[dedup_key]) < 25:
             return
+        self._recent_boosts[dedup_key] = now
 
-        config = load_boost_config(after.guild.id)
+        # Ensure member is a Member instance if possible
+        if not isinstance(member, discord.Member):
+            cached = guild.get_member(member.id)
+            if cached:
+                member = cached
+            else:
+                try:
+                    member = await guild.fetch_member(member.id)
+                except Exception:
+                    pass
+
+        config = load_boost_config(guild.id)
         
+        # Reward Role
         reward_role_id = config.get("reward_role_id")
-        if reward_role_id:
+        if reward_role_id and isinstance(member, discord.Member):
             try:
-                role = after.guild.get_role(int(reward_role_id))
-                if role:
-                    await after.add_roles(role, reason="Boost Reward")
+                role = guild.get_role(int(reward_role_id))
+                if role and role not in member.roles:
+                    await member.add_roles(role, reason="Boost Reward")
             except Exception:
                 pass
 
-        if not config.get("enabled") or not config.get("channel_id"):
+        if not config.get("enabled"):
             return
 
-        channel = after.guild.get_channel(config["channel_id"])
+        channel_id_val = config.get("channel_id")
+        if not channel_id_val:
+            return
+
+        try:
+            ch_id = int(channel_id_val)
+        except (ValueError, TypeError):
+            return
+
+        channel = guild.get_channel(ch_id)
         if not channel:
             try:
-                channel = await after.guild.fetch_channel(config["channel_id"])
+                channel = await guild.fetch_channel(ch_id)
             except Exception:
                 return
 
         if not channel:
             return
 
+        allowed = discord.AllowedMentions(users=True, roles=False, everyone=False)
         msg_mode = config.get("msg_mode", "image")
 
         if msg_mode == "embed":
@@ -108,25 +155,25 @@ class BoostListener(commands.Cog):
 
             embed = discord.Embed(color=discord.Color(color_val))
 
-            title = format_boost_string(config.get("embed_title", ""), after)
+            title = format_boost_string(config.get("embed_title", ""), member, guild)
             if title:
                 embed.title = title
 
-            desc = format_boost_string(config.get("embed_description", ""), after)
+            desc = format_boost_string(config.get("embed_description", ""), member, guild)
             if desc:
                 embed.description = desc
 
             thumb = config.get("embed_thumbnail", "")
             if thumb:
                 embed.set_thumbnail(url=thumb)
-            elif after.display_avatar:
-                embed.set_thumbnail(url=after.display_avatar.url)
+            elif getattr(member, "display_avatar", None):
+                embed.set_thumbnail(url=member.display_avatar.url)
 
             img = config.get("embed_image", "")
             if img:
                 embed.set_image(url=img)
 
-            footer = format_boost_string(config.get("embed_footer", ""), after)
+            footer = format_boost_string(config.get("embed_footer", ""), member, guild)
             footer_icon = config.get("embed_footer_icon", "")
             if footer:
                 if footer_icon:
@@ -134,7 +181,7 @@ class BoostListener(commands.Cog):
                 else:
                     embed.set_footer(text=footer)
 
-            author = format_boost_string(config.get("embed_author", ""), after)
+            author = format_boost_string(config.get("embed_author", ""), member, guild)
             author_icon = config.get("embed_author_icon", "")
             if author:
                 if author_icon:
@@ -146,8 +193,8 @@ class BoostListener(commands.Cog):
             if isinstance(fields, list):
                 for f in fields:
                     if isinstance(f, dict):
-                        f_name = format_boost_string(f.get("name", ""), after)
-                        f_val = format_boost_string(f.get("value", ""), after)
+                        f_name = format_boost_string(f.get("name", ""), member, guild)
+                        f_val = format_boost_string(f.get("value", ""), member, guild)
                         if f_name or f_val:
                             embed.add_field(
                                 name=f_name if f_name else "\u200b",
@@ -155,31 +202,31 @@ class BoostListener(commands.Cog):
                                 inline=bool(f.get("inline", False))
                             )
 
-            content_text = format_boost_string(config.get("message", ""), after)
+            content_text = format_boost_string(config.get("message", ""), member, guild)
 
             try:
-                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=allowed)
+            except discord.Forbidden:
+                fallback_msg = content_text or desc or f"Thank you for boosting the server, {member.mention}!"
+                try:
+                    await channel.send(content=fallback_msg, allowed_mentions=allowed)
+                except Exception:
+                    pass
             except Exception:
                 pass
             return
 
         # Default Image mode
-        formatted = format_boost_string(config.get("message", ""), after)
-
-        from Components.Commands.Boost._image_gen import generate_boost_image
-        import aiohttp
-        import pathlib
-        import asyncio
+        formatted = format_boost_string(config.get("message", ""), member, guild)
 
         avatar_bytes = b""
-        if after.display_avatar:
+        if getattr(member, "display_avatar", None):
             try:
-                avatar_bytes = await after.display_avatar.read()
+                avatar_bytes = await member.display_avatar.read()
             except Exception:
                 pass
                 
         bg_path = pathlib.Path("nonexistent.png")
-
         image_url = config.get("image_url", "")
         if image_url:
             if image_url.startswith("/static/"):
@@ -188,26 +235,64 @@ class BoostListener(commands.Cog):
                 filename = image_url.split("/")[-1]
                 bg_path = pathlib.Path("Storage/uploads") / filename
             elif image_url.startswith("http"):
-                import tempfile
                 try:
-                    async with aiohttp.ClientSession() as session:
+                    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5.0)) as session:
                         async with session.get(image_url) as resp:
                             if resp.status == 200:
                                 bg_bytes = await resp.read()
-                                temp_path = pathlib.Path(tempfile.gettempdir()) / f"boost_{after.guild.id}.png"
+                                temp_path = pathlib.Path(tempfile.gettempdir()) / f"boost_{guild.id}.png"
                                 with open(temp_path, "wb") as f:
                                     f.write(bg_bytes)
                                 bg_path = temp_path
                 except Exception:
                     pass
 
-        img_buffer = await asyncio.to_thread(generate_boost_image, avatar_bytes, bg_path, after.name)
-        file = discord.File(fp=img_buffer, filename="boost.png")
-
         try:
-            await channel.send(content=formatted, file=file, allowed_mentions=discord.AllowedMentions.none())
+            img_buffer = await asyncio.to_thread(generate_boost_image, avatar_bytes, bg_path, member.name)
+            file = discord.File(fp=img_buffer, filename="boost.png")
+            await channel.send(content=formatted if formatted else None, file=file, allowed_mentions=allowed)
         except Exception:
-            pass
+            # Fallback to embed or plain text if image generation or file attachment fails
+            try:
+                embed = discord.Embed(
+                    title=" Server Boost!",
+                    description=formatted or f"**{member.name}** just boosted the server!",
+                    color=discord.Color.from_rgb(255, 115, 250)
+                )
+                if getattr(member, "display_avatar", None):
+                    embed.set_thumbnail(url=member.display_avatar.url)
+                await channel.send(embed=embed, allowed_mentions=allowed)
+            except Exception:
+                if formatted:
+                    try:
+                        await channel.send(content=formatted, allowed_mentions=allowed)
+                    except Exception:
+                        pass
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
+        if getattr(after, "bot", False):
+            return
+
+        # Check if member gained premium status or boost status updated
+        if (before.premium_since is None and after.premium_since is not None) or (
+            before.premium_since is not None and after.premium_since is not None and before.premium_since != after.premium_since
+        ):
+            await self._handle_boost(after.guild, after)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if not message.guild:
+            return
+
+        boost_types = (
+            discord.MessageType.premium_guild_subscription,
+            discord.MessageType.premium_guild_tier_1,
+            discord.MessageType.premium_guild_tier_2,
+            discord.MessageType.premium_guild_tier_3,
+        )
+        if message.type in boost_types:
+            await self._handle_boost(message.guild, message.author)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BoostListener(bot))

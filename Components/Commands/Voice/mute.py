@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Whitelist._storage import is_whitelisted
@@ -43,7 +43,7 @@ async def vcmute_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(embed=make_embed("You need Mute Members permission to voice mute users.", discord.Color.red()), ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: `-voice mute <@member> [reason]`", discord.Color.red()), ephemeral=True)
+        await ctx.send(embed=make_embed("Usage: /voice mute <target> [reason]", discord.Color.red()), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
@@ -51,18 +51,8 @@ class VcMuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-class VcMutePrefixFallback(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="vc_mute", aliases=["vcmute"], hidden=True)
-    @commands.has_permissions(mute_members=True)
-    async def vc_mute_prefix(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
-        await _do_vc_mute(ctx, target, reason)
-
 async def setup(bot: commands.Bot):
     from Components.Commands.Voice.voice import voice_group
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)
     await bot.add_cog(VcMuteCommand(bot))
-    await bot.add_cog(VcMutePrefixFallback(bot))

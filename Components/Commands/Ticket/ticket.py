@@ -352,30 +352,6 @@ class TicketCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="tk_add", aliases=["ticketadd"], hidden=True)
-    async def tk_add_prefix(self, ctx: commands.Context, member: discord.Member):
-        await _do_ticket_add(ctx, member)
-
-    @commands.command(name="tk_remove", aliases=["ticketremove"], hidden=True)
-    async def tk_remove_prefix(self, ctx: commands.Context, member: discord.Member):
-        await _do_ticket_remove(ctx, member)
-
-    @commands.command(name="tk_close", aliases=["ticketclose"], hidden=True)
-    async def tk_close_prefix(self, ctx: commands.Context, *, reason: str = "Closed via command"):
-        await _do_ticket_close(ctx, reason)
-
-    @commands.command(name="tk_transcript", aliases=["tickettranscript"], hidden=True)
-    async def tk_transcript_prefix(self, ctx: commands.Context):
-        await _do_ticket_transcript(ctx)
-
-    @commands.command(name="tk_blacklist", aliases=["ticketblacklist"], hidden=True)
-    async def tk_blacklist_prefix(self, ctx: commands.Context, member: discord.Member, *, duration: str = None):
-        await _do_ticket_blacklist(ctx, member, duration)
-
-    @commands.command(name="tk_unblacklist", aliases=["ticketunblacklist"], hidden=True)
-    async def tk_unblacklist_prefix(self, ctx: commands.Context, member: discord.Member):
-        await _do_ticket_unblacklist(ctx, member)
-
     @ticket_add_cmd.error
     async def add_error(self, ctx: commands.Context, error):
         await ctx.send(embed=make_embed(f"Ticket add failed: {error}", discord.Color.red()), ephemeral=True)

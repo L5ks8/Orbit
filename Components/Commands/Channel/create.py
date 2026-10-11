@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Channel.channel import channel_group
 
@@ -48,34 +48,17 @@ async def channel_create_cmd(
 ):
     await _do_create(ctx, name, channel_type, category)
 
-class ChannelCreateCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.command(name="ch_create", aliases=["createchannel", "channelcreate", "mkchannel"], hidden=True)
-    @commands.has_permissions(manage_channels=True)
-    async def createchannel_prefix(
-        self,
-        ctx: commands.Context,
-        name: str,
-        channel_type: str = "text",
-        category: discord.CategoryChannel = None
-    ):
-        await _do_create(ctx, name, channel_type, category)
-
-    @channel_create_cmd.error
-    @createchannel_prefix.error
-    async def create_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(embed=make_embed("You need `Manage Channels` permission to create channels.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: `-channel create <name> [text/voice] [#category]`", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=make_embed("Could not find that category.", discord.Color.red()), ephemeral=True)
+@channel_create_cmd.error
+async def create_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send(embed=make_embed("You need `Manage Channels` permission to create channels.", discord.Color.red()), ephemeral=True)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(embed=make_embed("Usage: `/channel create <name> [text/voice] [#category]`", discord.Color.red()), ephemeral=True)
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send(embed=make_embed("Could not find that category.", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     from Components.Commands.Channel.channel import channel_group
     from Components.Commands._utils import make_embed
     if "channel" not in bot.all_commands:
         bot.add_command(channel_group)
-    await bot.add_cog(ChannelCreateCog(bot))
