@@ -315,15 +315,34 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
         pass
 
     try:
+        color = resolve_color(entry.get("color", 0x5865F2))
+        jump_url = msg.jump_url if msg else None
         if picked_winners:
-            await channel.send(
-                content=f"🎉 **GIVEAWAY ENDED!**\nCongratulations {winners_display}! You won **{entry['prize']}**! 🎊 (Giveaway ID: `#{entry['giveaway_id']}`)",
-                allowed_mentions=discord.AllowedMentions(users=True)
+            desc = f"Congratulations {winners_display}! You won **{entry['prize']}**! 🎊"
+            if jump_url:
+                desc += f"\n\n[Jump to Giveaway]({jump_url})"
+            embed = discord.Embed(
+                title="🎉 Giveaway Ended!",
+                description=desc,
+                color=color
             )
+            embed.add_field(name="Prize", value=str(entry['prize']), inline=True)
+            embed.add_field(name="Winner(s)", value=winners_display, inline=True)
+            embed.set_footer(text=f"Giveaway ID: #{entry['giveaway_id']}")
+            await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
         else:
-            await channel.send(content=f"Giveaway **{entry['prize']}** (`#{entry['giveaway_id']}`) ended with no valid entries. 😔")
-    except Exception:
-        pass
+            desc = f"Giveaway for **{entry['prize']}** ended with no valid entries. 😔"
+            if jump_url:
+                desc += f"\n\n[Jump to Giveaway]({jump_url})"
+            embed = discord.Embed(
+                title="Giveaway Ended",
+                description=desc,
+                color=discord.Color.dark_gray()
+            )
+            embed.set_footer(text=f"Giveaway ID: #{entry['giveaway_id']}")
+            await channel.send(embed=embed)
+    except Exception as e:
+        print(f"[Giveaway] Failed to send winner announcement embed: {e}")
 
     return True
 

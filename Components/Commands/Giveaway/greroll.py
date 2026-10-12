@@ -66,10 +66,21 @@ class GiveawayRerollCommand(commands.Cog):
             except Exception:
                 pass
 
-            await channel.send(
-                content=f"🎉 **GIVEAWAY REROLL!**\nCongratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! 🎊 (Giveaway ID: `#{entry['giveaway_id']}`)",
-                allowed_mentions=discord.AllowedMentions(users=True)
+            from Components.Commands.Giveaway.giveaway import resolve_color
+            color = resolve_color(entry.get("color", 0x5865F2))
+            jump_url = msg.jump_url if msg else None
+            desc = f"Congratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! 🎊"
+            if jump_url:
+                desc += f"\n\n[Jump to Giveaway]({jump_url})"
+            reroll_embed = discord.Embed(
+                title="🎉 Giveaway Rerolled!",
+                description=desc,
+                color=color
             )
+            reroll_embed.add_field(name="Prize", value=str(entry['prize']), inline=True)
+            reroll_embed.add_field(name="New Winner", value=f"<@{new_winner_id}>", inline=True)
+            reroll_embed.set_footer(text=f"Giveaway ID: #{entry['giveaway_id']}")
+            await channel.send(embed=reroll_embed, allowed_mentions=discord.AllowedMentions(users=True))
             await ctx.send(embed=make_embed(f"Rerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", discord.Color.green()))
         else:
             await ctx.send(embed=make_embed("Could not access the original giveaway channel to announce the reroll.", discord.Color.red()), ephemeral=True)
