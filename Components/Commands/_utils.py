@@ -15,12 +15,17 @@ except ImportError:
     ActionRow = None
     Separator = None
 
-def make_embed(description: str, color: discord.Color = ORBIT_COLOR) -> discord.Embed:
-    return discord.Embed(description=description, color=color)
+def make_embed(description: str, color: discord.Color = ORBIT_COLOR, title: str = None) -> discord.Embed:
+    actual_color = ORBIT_COLOR if color is None or color in (discord.Color.red(), discord.Color.green(), discord.Color.orange(), discord.Color.dark_gray()) else color
+    embed = discord.Embed(description=description, color=actual_color)
+    if title:
+        embed.title = title
+    return embed
 
 def make_v2_card(body: str, *components, color: discord.Color = ORBIT_COLOR, footer: str = None) -> LayoutView | None:
     if not HAS_V2:
         return None
+    actual_color = ORBIT_COLOR if color is None or color in (discord.Color.red(), discord.Color.green(), discord.Color.orange(), discord.Color.dark_gray()) else color
     view = LayoutView(timeout=None)
     items = [TextDisplay(content=body)]
     for comp in components:
@@ -30,7 +35,7 @@ def make_v2_card(body: str, *components, color: discord.Color = ORBIT_COLOR, foo
             items.append(ActionRow(*comp))
         elif comp is not None:
             items.append(comp)
-    container = Container(*items, accent_color=color)
+    container = Container(*items, accent_color=actual_color)
     view.add_item(container)
     if footer:
         view.add_item(TextDisplay(content=f"-# {footer}"))

@@ -28,11 +28,11 @@ async def _do_bl_remove(ctx: commands.Context, target_id_str: str = None):
         "User Removed from Blacklist (`/unblacklist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)"
     )
-    card = make_v2_card(f"# {Emojis.VERIFICATION} User Removed from Blacklist\n\nRemoved ID `{user_id}` from the command blacklist.", color=discord.Color.green())
+    card = make_v2_card(f"# {Emojis.VERIFICATION} User Removed from Blacklist\n\nRemoved ID `{user_id}` from the command blacklist.", color=ORBIT_COLOR)
     if card:
         await ctx.send(view=card, ephemeral=True)
     else:
-        await ctx.send(embed=make_embed(f"Removed ID `{user_id}` from the command blacklist.", discord.Color.green()), ephemeral=True)
+        await ctx.send(embed=make_embed(f"Removed ID `{user_id}` from the command blacklist.", ORBIT_COLOR), ephemeral=True)
 
 @commands.hybrid_command(name="unblacklist", description="Remove a user ID from the server command blacklist.")
 @commands.has_permissions(administrator=True)

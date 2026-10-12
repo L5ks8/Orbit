@@ -19,10 +19,10 @@ class LeaveServerCommand(commands.Cog):
         try:
             await guild.leave()
             desc = f"Successfully left server: **{guild.name}** (`{guild.id}`)."
-            card = make_v2_card(f"# {Emojis.VERIFICATION} Server Left\n\n{desc}", color=discord.Color.green())
+            card = make_v2_card(f"# {Emojis.VERIFICATION} Server Left\n\n{desc}", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card)
-            await ctx.send(embed=make_embed(desc, discord.Color.green()))
+            await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
         except Exception as e:
             await ctx.send(embed=make_embed(f"Failed to leave server: {e}", discord.Color.red()))
 

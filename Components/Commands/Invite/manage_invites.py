@@ -129,13 +129,13 @@ class ManageInvitesCommand(commands.Cog):
             reset_invites(ctx.guild.id)
             msg = "Reset all invites for the entire server."
             
-        card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Reset\n\n{msg}", color=discord.Color.red())
+        card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Reset\n\n{msg}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
             title=f"{Emojis.BACKSPACE} Invites Reset",
             description=msg,
-            color=discord.Color.red()
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 

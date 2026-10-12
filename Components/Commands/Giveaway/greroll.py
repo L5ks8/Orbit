@@ -94,11 +94,11 @@ class GiveawayRerollCommand(commands.Cog):
             else:
                 await channel.send(embed=reroll_embed, allowed_mentions=discord.AllowedMentions(users=True))
 
-            success_card = make_v2_card(f"# {Emojis.VERIFICATION} Reroll Complete\n\nRerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", color=discord.Color.green())
+            success_card = make_v2_card(f"# {Emojis.VERIFICATION} Reroll Complete\n\nRerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", color=ORBIT_COLOR)
             if success_card:
                 await ctx.send(view=success_card)
             else:
-                await ctx.send(embed=make_embed(f"Rerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", discord.Color.green()))
+                await ctx.send(embed=make_embed(f"Rerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", ORBIT_COLOR))
         else:
             await ctx.send(embed=make_embed("Could not access the original giveaway channel to announce the reroll.", discord.Color.red()), ephemeral=True)
 

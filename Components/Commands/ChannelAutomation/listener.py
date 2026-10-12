@@ -248,7 +248,7 @@ class ChannelAutomationListener(commands.Cog):
                     fail_reason = f"{message.author.mention} sent wrong number (expected **{expected_number}**, got **{parsed_number}**)!"
 
                 fail_content = f"# {Emojis.ERROR} Counting Failed!\n\n{fail_reason}\n\n**Count has been reset to 0.**"
-                card = make_v2_card(fail_content, color=discord.Color.red())
+                card = make_v2_card(fail_content, color=ORBIT_COLOR)
 
                 try:
                     if card:
@@ -257,7 +257,7 @@ class ChannelAutomationListener(commands.Cog):
                         fail_embed = discord.Embed(
                             title=f"{Emojis.ERROR} Counting Failed!",
                             description=f"{fail_reason}\n\n**Count has been reset to 0.**",
-                            color=discord.Color.red()
+                            color=ORBIT_COLOR
                         )
                         await message.channel.send(
                             embed=fail_embed,

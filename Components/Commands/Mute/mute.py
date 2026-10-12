@@ -76,10 +76,10 @@ class MuteCommand(commands.Cog):
             f"**Moderator:** {ctx.author.mention}"
             + (f"\n**Role Assigned:** {role.mention}" if role else "")
         )
-        card = make_v2_card(body, color=discord.Color.red())
+        card = make_v2_card(body, color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
-        embed = discord.Embed(title=f"{Emojis.WARNING} User Muted", color=discord.Color.red())
+        embed = discord.Embed(title=f"{Emojis.WARNING} User Muted", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Reason", value=reason, inline=False)
         embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

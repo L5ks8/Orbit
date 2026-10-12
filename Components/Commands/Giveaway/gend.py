@@ -27,11 +27,11 @@ class GiveawayEndCommand(commands.Cog):
 
         success = await end_giveaway_logic(self.bot, ctx.guild.id, entry)
         if success:
-            card = make_v2_card(f"# {Emojis.VERIFICATION} Giveaway Ended\n\nSuccessfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!", color=discord.Color.green())
+            card = make_v2_card(f"# {Emojis.VERIFICATION} Giveaway Ended\n\nSuccessfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!", color=ORBIT_COLOR)
             if card:
                 await ctx.send(view=card)
             else:
-                await ctx.send(embed=make_embed(f"Successfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!", discord.Color.green()))
+                await ctx.send(embed=make_embed(f"Successfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!", ORBIT_COLOR))
         else:
             await ctx.send(embed=make_embed(f"Failed to end or pick winners for Giveaway `{entry['giveaway_id']}`.", discord.Color.red()), ephemeral=True)
 

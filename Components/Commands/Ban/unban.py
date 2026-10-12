@@ -50,11 +50,11 @@ class UnbanConfirmView(discord.ui.View):
         async def cancel_callback(interaction: discord.Interaction):
             if interaction.user.id != self.author.id:
                 return await interaction.response.send_message(embed=make_embed("You are not authorized to perform this action.", discord.Color.red()), ephemeral=True)
-            card = make_v2_card(f"# {Emojis.ERROR} Unban Cancelled\n\nThe operation was cancelled.", color=discord.Color.red())
+            card = make_v2_card(f"# {Emojis.ERROR} Unban Cancelled\n\nThe operation was cancelled.", color=ORBIT_COLOR)
             if card:
                 await interaction.response.edit_message(view=card, embed=None)
             else:
-                embed = discord.Embed(title=f"{Emojis.ERROR} Unban cancelled", description="The operation was cancelled.", color=discord.Color.red())
+                embed = discord.Embed(title=f"{Emojis.ERROR} Unban cancelled", description="The operation was cancelled.", color=ORBIT_COLOR)
                 await interaction.response.edit_message(embed=embed, view=None)
             self.stop()
 

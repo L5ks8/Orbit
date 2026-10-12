@@ -29,12 +29,12 @@ class GeminiChatbot(commands.Cog):
     @app_commands.command(name="ai_reset_memory", description="Reset Orbit AI conversation memory in this channel.")
     async def memory_reset(self, interaction: discord.Interaction):
         self.memory_resets[interaction.channel_id] = discord.utils.utcnow()
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Memory Reset\n\nAI conversation memory for this channel has been reset.", color=discord.Color.green())
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Memory Reset\n\nAI conversation memory for this channel has been reset.", color=ORBIT_COLOR)
         if card:
             await interaction.response.send_message(view=card, ephemeral=True)
         else:
             await interaction.response.send_message(
-                embed=make_embed("AI conversation memory for this channel has been reset.", discord.Color.green()),
+                embed=make_embed("AI conversation memory for this channel has been reset.", ORBIT_COLOR),
                 ephemeral=True
             )
 

@@ -30,11 +30,11 @@ class ReloadCommand(commands.Cog):
         except Exception as e:
             import traceback
             tb = traceback.format_exc()
-            card = make_v2_card(f"# {Emojis.ERROR} Error Loading Module\n\nFailed to load/reload `{module}`:\n```py\n{tb[:1800]}\n```", color=discord.Color.red())
+            card = make_v2_card(f"# {Emojis.ERROR} Error Loading Module\n\nFailed to load/reload `{module}`:\n```py\n{tb[:1800]}\n```", color=ORBIT_COLOR)
             if card:
                 await ctx.send(view=card)
             else:
-                await ctx.send(embed=discord.Embed(title=f"{Emojis.ERROR} Error Loading Module", description=f"Failed to load/reload `{module}`:\n```py\n{tb[:1900]}\n```", color=discord.Color.red()))
+                await ctx.send(embed=discord.Embed(title=f"{Emojis.ERROR} Error Loading Module", description=f"Failed to load/reload `{module}`:\n```py\n{tb[:1900]}\n```", color=ORBIT_COLOR))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ReloadCommand(bot))

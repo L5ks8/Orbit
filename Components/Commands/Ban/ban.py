@@ -56,11 +56,11 @@ class BanCommand(commands.Cog):
             )
             
             content = f"# {Emojis.BAN} User Banned\n\n**Target:** {target.mention} (`{target.id}`)\n**Reason:** {reason}\n**Moderator:** {ctx.author.mention}"
-            card = make_v2_card(content, color=discord.Color.red())
+            card = make_v2_card(content, color=ORBIT_COLOR)
             if card:
                 await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
             else:
-                embed = discord.Embed(title=f"{Emojis.BAN} User Banned", color=discord.Color.red())
+                embed = discord.Embed(title=f"{Emojis.BAN} User Banned", color=ORBIT_COLOR)
                 embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
                 embed.add_field(name="Reason", value=reason, inline=False)
                 embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

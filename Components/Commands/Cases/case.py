@@ -52,10 +52,10 @@ async def case_info(ctx: commands.Context, fall: int):
 async def case_delete(ctx: commands.Context, fall: int):
     success = delete_case(ctx.guild.id, fall)
     if success:
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Case Deleted\n\nCase #{fall} has been successfully deleted.", color=discord.Color.green())
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Case Deleted\n\nCase #{fall} has been successfully deleted.", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, ephemeral=True)
-        await ctx.send(embed=make_embed(f"Case #{fall} has been successfully deleted.", discord.Color.green()), ephemeral=True)
+        await ctx.send(embed=make_embed(f"Case #{fall} has been successfully deleted.", ORBIT_COLOR), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"Case #{fall} could not be found or deleted.", discord.Color.red()), ephemeral=True)
 
@@ -64,10 +64,10 @@ async def case_delete(ctx: commands.Context, fall: int):
 async def case_reason(ctx: commands.Context, fall: int, *, grund: str):
     success = update_case_reason(ctx.guild.id, fall, grund)
     if success:
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Case Reason Updated\n\nReason for Case #{fall} has been updated to: **{grund}**", color=discord.Color.green())
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Case Reason Updated\n\nReason for Case #{fall} has been updated to: **{grund}**", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, ephemeral=True)
-        await ctx.send(embed=make_embed(f"Reason for Case #{fall} has been updated to: **{grund}**", discord.Color.green()), ephemeral=True)
+        await ctx.send(embed=make_embed(f"Reason for Case #{fall} has been updated to: **{grund}**", ORBIT_COLOR), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"Case #{fall} could not be found.", discord.Color.red()), ephemeral=True)
 

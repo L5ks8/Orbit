@@ -83,14 +83,14 @@ class TempBanCog(commands.Cog):
         add_modlog(ctx.guild.id, user.id, ctx.author.id, "Tempban", f"[{duration}] {reason}")
         
         content = f"# {Emojis.BAN} User Tempbanned\n\nSuccessfully tempbanned {user.mention} for **{duration}**.\nThey will be automatically unbanned <t:{unban_time}:R>."
-        card = make_v2_card(content, color=discord.Color.red())
+        card = make_v2_card(content, color=ORBIT_COLOR)
         if card:
             await ctx.send(view=card)
         else:
             embed = discord.Embed(
                 title=f"{Emojis.BAN} User Tempbanned",
                 description=f"Successfully tempbanned {user.mention} for **{duration}**.\nThey will be automatically unbanned <t:{unban_time}:R>.",
-                color=discord.Color.red()
+                color=ORBIT_COLOR
             )
             await ctx.send(embed=embed)
 

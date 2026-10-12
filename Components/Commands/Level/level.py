@@ -231,10 +231,10 @@ class LevelCommandsCog(commands.Cog):
         from Components.Systems.Level._storage import add_xp
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
         desc = f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level})."
-        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Added\n\n{desc}", color=discord.Color.green())
+        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Added\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
-        await ctx.send(embed=make_embed(desc, discord.Color.green()))
+        await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
 
     @xp.command(name="remove", description="Remove XP from a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to remove")
@@ -251,10 +251,10 @@ class LevelCommandsCog(commands.Cog):
         set_user_xp(ctx.guild.id, member.id, data)
         new_level = level_from_xp(new_xp)
         desc = f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level})."
-        card = make_v2_card(f"# {Emojis.BACKSPACE} XP Removed\n\n{desc}", color=discord.Color.green())
+        card = make_v2_card(f"# {Emojis.BACKSPACE} XP Removed\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
-        await ctx.send(embed=make_embed(desc, discord.Color.green()))
+        await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
 
     @xp.command(name="set", description="Set a member's XP.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to set")
@@ -295,10 +295,10 @@ class LevelCommandsCog(commands.Cog):
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
         
         desc = f"Successfully transferred **{amount:,} XP** to {member.mention}!"
-        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Transferred\n\n{desc}", color=discord.Color.green())
+        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Transferred\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
-        await ctx.send(embed=make_embed(desc, discord.Color.green()))
+        await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
 
 
 async def setup(bot: commands.Bot):
