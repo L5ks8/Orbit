@@ -2,7 +2,7 @@ import math
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 
 @commands.hybrid_group(name="all", description="View all server items.")
 async def all_group(ctx: commands.Context):
@@ -80,7 +80,7 @@ class AllRolesLayout(discord.ui.View):
 
         roles_text = "\n".join(lines) if lines else "No roles found on this page."
         
-        embed = discord.Embed(title=f"Server Roles (Page {self.page} of {self.total_pages})", description=roles_text, color=discord.Color.blue())
+        embed = discord.Embed(title=f"Server Roles (Page {self.page} of {self.total_pages})", description=roles_text, color=ORBIT_COLOR)
         embed.add_field(name="Total Roles", value=f"`{len(self.roles)}`", inline=False)
         
         return {"embed": embed, "view": self}

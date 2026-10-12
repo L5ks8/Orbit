@@ -2,7 +2,7 @@ import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, ORBIT_COLOR
 from Components.Systems.Automoderation.log_storage import log_event
 
 class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
@@ -185,7 +185,7 @@ class DMCommand(commands.Cog):
         embed = discord.Embed(
             title="?? Compose Anonymous DM",
             description=f"Target: {target_display}\n\nClick the button below to open the composition window where you can properly format your anonymous message.",
-            color=discord.Color.blue()
+            color=ORBIT_COLOR
         )
 
         view = ComposeDMView(

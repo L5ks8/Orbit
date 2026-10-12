@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_inviter_stats
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR
 
 
 class InvitesCommand(commands.Cog):
@@ -16,7 +16,7 @@ class InvitesCommand(commands.Cog):
         stats = get_inviter_stats(ctx.guild.id, target.id)
         
         embed = discord.Embed(
-            color=0x00FFFF
+            color=ORBIT_COLOR
         )
         embed.set_author(name=target.display_name, icon_url=target.display_avatar.url if target else None)
         

@@ -19,6 +19,7 @@ from Components.Systems.Tickets._views import (
     TicketControlLayout,
     close_ticket_flow
 )
+from Components.Commands._utils import ORBIT_COLOR
 
 async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
@@ -177,7 +178,7 @@ async def _do_ticket_transcript(ctx: commands.Context):
     transcript_text = html_template + "\n".join(msgs_html) + "\n    </div>\n</body>\n</html>"
     file = discord.File(fp=io.BytesIO(transcript_text.encode("utf-8")), filename=f"transcript-{ctx.channel.name}.html")
 
-    embed = discord.Embed(title="Ticket Transcript Generated", color=discord.Color.blue())
+    embed = discord.Embed(title="Ticket Transcript Generated", color=ORBIT_COLOR)
     embed.add_field(name="Ticket", value=f"`#{ctx.channel.name}` (`{ctx.channel.id}`)", inline=False)
     embed.add_field(name="Subject", value=f"`{subject}`", inline=True)
     embed.add_field(name="Messages", value=f"`{len(messages)}`", inline=True)

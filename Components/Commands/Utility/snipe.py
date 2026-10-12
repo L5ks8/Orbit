@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from Components.Commands._utils import ORBIT_COLOR
+
 class Snipe(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -41,7 +43,7 @@ class Snipe(commands.Cog):
         if not data:
             return await ctx.send(embed=discord.Embed(description="No deleted messages found.", color=discord.Color.red()), ephemeral=True)
 
-        embed = discord.Embed(description=data["content"] or "*No text*", color=0x2B2D31, timestamp=data["created_at"])
+        embed = discord.Embed(description=data["content"] or "*No text*", color=ORBIT_COLOR, timestamp=data["created_at"])
         embed.set_author(name=data["author"], icon_url=data["author"].display_avatar.url)
         embed.set_footer(text="Sniped")
         
@@ -56,7 +58,7 @@ class Snipe(commands.Cog):
         if not data:
             return await ctx.send(embed=discord.Embed(description="No edited messages found.", color=discord.Color.red()), ephemeral=True)
 
-        embed = discord.Embed(color=0x2B2D31, timestamp=data["created_at"])
+        embed = discord.Embed(color=ORBIT_COLOR, timestamp=data["created_at"])
         embed.set_author(name=data["author"], icon_url=data["author"].display_avatar.url)
         embed.add_field(name="Before", value=data["before_content"][:1024] or "*No text*", inline=False)
         embed.add_field(name="After", value=data["after_content"][:1024] or "*No text*", inline=False)

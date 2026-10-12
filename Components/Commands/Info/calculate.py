@@ -331,9 +331,8 @@ class CalculateCommand(commands.Cog):
         aliases=["calculator", "calc"],
         description="Opens an interactive calculator."
     )
-    @discord.app_commands.describe(color="Optional hex color for the card's accent stripe (e.g. #5865F2).")
-    async def calculate(self, ctx: commands.Context, color: str = None):
-        color_val = resolve_color(color) if color else discord.Color(0x5865F2)
+    async def calculate(self, ctx: commands.Context):
+        color_val = discord.Color(0x5865F2)
 
         if HAS_V2:
             try:

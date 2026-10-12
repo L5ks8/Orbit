@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from typing import Union
+from Components.Commands._utils import ORBIT_COLOR
 
 async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, discord.User, None]):
     await ctx.defer()
@@ -37,7 +38,7 @@ async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, disco
 
     bot_badge = " *(Bot)*" if target.bot else ""
     
-    embed = discord.Embed(title=f"User Information: {target.display_name}{bot_badge}", color=target.color if target.color != discord.Color.default() else discord.Color.blue())
+    embed = discord.Embed(title=f"User Information: {target.display_name}{bot_badge}", color=target.color if target.color != discord.Color.default() else ORBIT_COLOR)
     embed.set_thumbnail(url=target.display_avatar.url)
     embed.add_field(name="Username", value=f"`{target.name}`", inline=True)
     embed.add_field(name="User ID", value=f"`{target.id}`", inline=True)

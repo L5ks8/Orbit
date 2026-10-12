@@ -4,6 +4,15 @@ from discord.ext import commands
 from discord.ui import ActionRow, Button, Select
 from Components.Commands._utils import make_embed
 
+try:
+    from discord.ui import LayoutView, Container, TextDisplay
+    HAS_V2 = True
+except ImportError:
+    HAS_V2 = False
+    LayoutView = discord.ui.View
+    Container = None
+    TextDisplay = None
+
 
 
 PAGES = [
@@ -158,7 +167,7 @@ class HelpCategorySelect(discord.ui.Select):
         self.parent_view.current_page = page_idx
         await interaction.response.edit_message(**self.parent_view.get_kwargs())
 
-class HelpLayout(discord.ui.View):
+class HelpLayout(LayoutView):
     def __init__(self, bot: commands.Bot, author_id: int, guild_id: int = None, current_page: int = 0):
         super().__init__(timeout=300)
         self.bot = bot
@@ -203,18 +212,31 @@ class HelpLayout(discord.ui.View):
         btn_next.callback = next_cb
         btn_close.callback = close_cb
 
-        components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
+        signature_color = discord.Color(0x5865F2)
+        self.clear_items()
 
+        if HAS_V2:
+            body_text = f"# 📖 Orbit Command Guide: {page['title']}\n\n{page['description']}"
+            container = Container(
+                TextDisplay(content=body_text),
+                ActionRow(select_menu),
+                ActionRow(btn_prev, btn_page, btn_next, btn_close),
+                accent_color=signature_color
+            )
+            self.add_item(container)
+            self.add_item(TextDisplay(content=f"-# Page {self.current_page + 1} of {len(PAGES)} • Orbit Command System"))
+            return {"view": self}
+
+        components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
         embed = discord.Embed(
             title=f"Orbit Command Guide: {page['title']}",
             description=page["description"],
-            color=discord.Color.blue()
+            color=signature_color
         )
         if icon_url:
             embed.set_thumbnail(url=icon_url)
         embed.set_footer(text=f"Page {self.current_page + 1} of {len(PAGES)}")
 
-        self.clear_items()
         for comp in components:
             self.add_item(comp)
 

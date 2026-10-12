@@ -3,7 +3,7 @@ import io
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_leaderboard
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR
 
 
 class LeaderboardCommand(commands.Cog):
@@ -26,7 +26,7 @@ class LeaderboardCommand(commands.Cog):
             embed = discord.Embed(
                 title="Invite Leaderboard",
                 description="No invite data found for this server.",
-                color=0x2B2D31
+                color=ORBIT_COLOR
             )
             return await ctx.send(embed=embed)
 
@@ -70,7 +70,7 @@ class LeaderboardCommand(commands.Cog):
         embed = discord.Embed(
             title="Invite Leaderboard",
             description=f"[Want to see more than Top {limit}?]({base_url}/leaderboard/{ctx.guild.id}?sort=invites)",
-            color=0x2B2D31
+            color=ORBIT_COLOR
         )
         embed.set_image(url="attachment://leaderboard.png")
 

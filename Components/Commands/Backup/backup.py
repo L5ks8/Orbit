@@ -1,4 +1,4 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord import app_commands
 import uuid
@@ -7,7 +7,7 @@ from datetime import datetime
 
 from Components.Commands.Backup._storage import save_backup, get_backups, get_backup
 from Components.Commands.Backup._views import OverwriteBackupView, BackupListView, ConfirmLoadView
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 
 class BackupCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -138,7 +138,7 @@ class BackupCommand(commands.Cog):
         if not existing_backups:
             return await interaction.response.send_message(embed=make_embed("No backups found for this server."), ephemeral=True)
             
-        embed = discord.Embed(title="Server Backups", color=discord.Color.blue())
+        embed = discord.Embed(title="Server Backups", color=ORBIT_COLOR)
         for b in existing_backups:
             name = b.get("name", b["_id"])
             ts = b.get("timestamp", 0)

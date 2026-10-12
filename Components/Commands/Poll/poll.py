@@ -12,7 +12,17 @@ def make_bar(pct: int, length: int = 15) -> str:
     empty = length - filled
     return "█" * filled + "░" * empty
 
-class ComponentsPollView(discord.ui.View):
+try:
+    from discord.ui import LayoutView, Container, TextDisplay, ActionRow
+    HAS_V2 = True
+except ImportError:
+    HAS_V2 = False
+    LayoutView = discord.ui.View
+    Container = None
+    TextDisplay = None
+    ActionRow = None
+
+class ComponentsPollView(LayoutView):
     def __init__(self, guild_id: int, poll_id: str, question: str, options: list[str], author: discord.Member, duration_minutes: int):
         super().__init__(timeout=None)
         self.guild_id = guild_id
@@ -22,6 +32,7 @@ class ComponentsPollView(discord.ui.View):
         self.author = author
         self.duration_minutes = duration_minutes
         self.votes: dict[str, set[int]] = {opt: set() for opt in options}
+
     def get_kwargs(self):
         buttons = []
         for idx, opt in enumerate(self.options, 1):
@@ -42,29 +53,49 @@ class ComponentsPollView(discord.ui.View):
             buttons.append(btn)
 
         total_votes = sum(len(v) for v in self.votes.values())
-        
         dur_str = f"{self.duration_minutes}m ({round(self.duration_minutes/60, 1)}h)" if self.duration_minutes >= 60 else f"{self.duration_minutes}m"
-        
+
         lines = []
         for idx, opt in enumerate(self.options, 1):
             v_count = len(self.votes.get(opt, set()))
             pct = int(round((v_count / total_votes) * 100)) if total_votes > 0 else 0
             bar = make_bar(pct, length=12)
             lines.append(f"**`#{idx}` {opt}**\n`{bar}` **`{pct}%`** (`{v_count} votes`)")
-            
+
         content_str = "\n\n".join(lines)
-        
+        signature_color = discord.Color(0x5865F2)
+
+        self.clear_items()
+
+        if HAS_V2:
+            body_text = (
+                f"# 📊 Community Poll\n\n"
+                f"**Question**\n{self.question}\n\n"
+                f"**Author** <@{self.author.id}> · **Duration** `{dur_str}` · **Total Votes** `{total_votes}`\n\n"
+                f"{content_str}"
+            )
+            # Group buttons into rows of up to 5
+            action_rows = []
+            for i in range(0, len(buttons), 5):
+                action_rows.append(ActionRow(*buttons[i:i+5]))
+
+            container = Container(
+                TextDisplay(content=body_text),
+                *action_rows,
+                accent_color=signature_color
+            )
+            self.add_item(container)
+            self.add_item(TextDisplay(content=f"-# Poll ID: #{self.poll_id} • Select a button to cast your vote"))
+            return {"view": self}
+
         embed = discord.Embed(
             title="Community Poll",
             description=f"**Question:** {self.question}\n**Author:** {self.author.mention} | **Duration:** `{dur_str}` | **Total Votes:** `{total_votes}`\n\n{content_str}",
-            color=discord.Color.blue()
+            color=signature_color
         )
         embed.set_footer(text=f"Poll ID: {self.poll_id}")
-        
-        self.clear_items()
         for btn in buttons:
             self.add_item(btn)
-            
         return {"embed": embed, "view": self}
 
 class PollCommand(commands.Cog):

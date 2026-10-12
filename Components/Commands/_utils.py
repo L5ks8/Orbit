@@ -2,8 +2,39 @@ import discord
 from discord.ext import commands
 import os
 
-def make_embed(description: str, color: discord.Color = discord.Color.blurple()) -> discord.Embed:
+ORBIT_COLOR = discord.Color(0x5865F2)
+
+try:
+    from discord.ui import Button, Container, TextDisplay, ActionRow, LayoutView, Separator
+    HAS_V2 = True
+except ImportError:
+    HAS_V2 = False
+    LayoutView = discord.ui.View
+    Container = None
+    TextDisplay = None
+    ActionRow = None
+    Separator = None
+
+def make_embed(description: str, color: discord.Color = ORBIT_COLOR) -> discord.Embed:
     return discord.Embed(description=description, color=color)
+
+def make_v2_card(body: str, *components, color: discord.Color = ORBIT_COLOR, footer: str = None) -> LayoutView | None:
+    if not HAS_V2:
+        return None
+    view = LayoutView(timeout=None)
+    items = [TextDisplay(content=body)]
+    for comp in components:
+        if isinstance(comp, ActionRow):
+            items.append(comp)
+        elif isinstance(comp, (list, tuple)):
+            items.append(ActionRow(*comp))
+        elif comp is not None:
+            items.append(comp)
+    container = Container(*items, accent_color=color)
+    view.add_item(container)
+    if footer:
+        view.add_item(TextDisplay(content=f"-# {footer}"))
+    return view
 
 class ModuleDisabledView(discord.ui.View):
     def __init__(self, guild_id: int, module_name: str):
@@ -119,7 +150,7 @@ def is_immune(guild_id: int, target: discord.User | discord.Member) -> bool:
                 
     return False
 
-def build_embed(guild: discord.Guild | None, title: str = None, description: str = None, color: discord.Color = discord.Color.blurple(), **kwargs) -> discord.Embed:
+def build_embed(guild: discord.Guild | None, title: str = None, description: str = None, color: discord.Color = ORBIT_COLOR, **kwargs) -> discord.Embed:
     from Components.Database.mongodb import get_config
     settings = get_config("Settings", guild.id) if guild else {}
     style = settings.get("embed_style", "normal")

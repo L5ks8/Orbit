@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card
 
 class BotsListCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -47,10 +47,14 @@ class BotsListCommand(commands.Cog):
         if len(bots_str) > 4000:
             bots_str = bots_str[:3990] + "..."
             
+        card = make_v2_card(f"### Bots in {guild.name}\n{bots_str}", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, ephemeral=True)
+
         embed = discord.Embed(
             title=f"Bots in {guild.name}",
             description=bots_str,
-            color=0x3B82F6
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, ephemeral=True)
 

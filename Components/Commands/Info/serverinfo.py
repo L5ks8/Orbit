@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card
 
 
 
@@ -17,7 +17,7 @@ async def _do_server_info(ctx: commands.Context):
     voice_channels = len(ctx.guild.voice_channels)
     categories = len(ctx.guild.categories)
     
-    embed = discord.Embed(title=f"Server Information: {ctx.guild.name}", color=discord.Color.purple())
+    embed = discord.Embed(title=f"Server Information: {ctx.guild.name}", color=ORBIT_COLOR)
     if ctx.guild.icon:
         embed.set_thumbnail(url=ctx.guild.icon.url)
     embed.add_field(name="Server ID", value=f"`{ctx.guild.id}`", inline=True)
@@ -42,10 +42,15 @@ class ServerInfoCommand(commands.Cog):
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
             
+        count = ctx.guild.member_count or len(ctx.guild.members)
+        card = make_v2_card(f"### Members in {ctx.guild.name}\nTotal: **{count:,}**", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
+
         embed = discord.Embed(
             title="Members",
-            description=str(ctx.guild.member_count or len(ctx.guild.members)),
-            color=0x3B82F6
+            description=str(count),
+            color=ORBIT_COLOR
         )
         embed.timestamp = discord.utils.utcnow()
         await ctx.send(embed=embed)

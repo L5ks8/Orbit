@@ -1,8 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from discord import app_commands
 from Components.Commands.Cases._storage import get_case, delete_case, update_case_reason
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 
 @commands.hybrid_group(name="case", description="Manage moderation cases.")
 @commands.has_permissions(manage_messages=True)
@@ -26,7 +26,7 @@ async def case_info(ctx: commands.Context, fall: int):
     
     embed = discord.Embed(
         title=f"Case #{fall} | {action}",
-        color=discord.Color.blue()
+        color=ORBIT_COLOR
     )
     embed.add_field(name="User", value=f"<@{user_id}> (`{user_id}`)", inline=False)
     embed.add_field(name="Moderator", value=f"<@{mod_id}> (`{mod_id}`)", inline=False)

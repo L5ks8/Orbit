@@ -6,7 +6,7 @@ from Components.Systems.Level._storage import (
     get_leaderboard, get_leaderboard_by, get_user_rank, level_from_xp
 )
 import io
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 
 # ── Leaderboard category config ──
 LB_CATEGORIES = {
@@ -124,7 +124,7 @@ class LevelCommandsCog(commands.Cog):
         embed = discord.Embed(
             title=cat["title"],
             description=f"[Want to see more than Top 10?]({base_url}/leaderboard/{guild.id})",
-            color=0x2B2D31
+            color=ORBIT_COLOR
         )
         embed.set_image(url="attachment://leaderboard.png")
         
@@ -191,7 +191,7 @@ class LevelCommandsCog(commands.Cog):
             progress = int((current_xp / needed_xp) * 10) if needed_xp > 0 else 10
             bar = "🟦" * progress + "⬛" * (10 - progress)
 
-            embed = discord.Embed(color=0x3B82F6)
+            embed = discord.Embed(color=ORBIT_COLOR)
             embed.set_author(name=target.display_name, icon_url=target.display_avatar.url)
             embed.add_field(name="Rank", value=f"#{rank}", inline=True)
             embed.add_field(name="Level", value=str(level), inline=True)

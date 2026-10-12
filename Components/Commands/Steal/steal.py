@@ -4,7 +4,7 @@ from discord.ext import commands
 import re
 import aiohttp
 import datetime
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 
 def _get_footer(guild_name: str) -> str:
     return f"{guild_name} • {datetime.datetime.now().strftime('%m/%d/%Y')}"
@@ -17,7 +17,7 @@ async def _do_steal_emoji(guild: discord.Guild, author: discord.Member | discord
         embed = discord.Embed(
             title="Name already exists!",
             description="The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!",
-            color=0x4AACBD
+            color=ORBIT_COLOR
         )
         embed.set_footer(text=_get_footer(guild.name))
         return await send_func(embed=embed, ephemeral=True)
@@ -50,7 +50,7 @@ async def _do_steal_emoji(guild: discord.Guild, author: discord.Member | discord
         embed = discord.Embed(
             title="Successfully added!",
             description=f"Emoji was sucessfully added you should be able to use {new_emoji} now :)",
-            color=0x4AACBD
+            color=ORBIT_COLOR
         )
         embed.set_footer(text=_get_footer(guild.name))
         await send_func(embed=embed)
@@ -69,7 +69,7 @@ async def _do_steal_emojiurl(guild: discord.Guild, author: discord.Member | disc
         embed = discord.Embed(
             title="Name already exists!",
             description="The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!",
-            color=0x4AACBD
+            color=ORBIT_COLOR
         )
         embed.set_footer(text=_get_footer(guild.name))
         return await send_func(embed=embed, ephemeral=True)
@@ -95,7 +95,7 @@ async def _do_steal_emojiurl(guild: discord.Guild, author: discord.Member | disc
         embed = discord.Embed(
             title="Successfully added!",
             description=f"Emoji was sucessfully added you should be able to use {new_emoji} now :)",
-            color=0x4AACBD
+            color=ORBIT_COLOR
         )
         embed.set_footer(text=_get_footer(guild.name))
         await send_func(embed=embed)

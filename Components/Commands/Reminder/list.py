@@ -3,6 +3,7 @@ from discord.ext import commands
 from Components.Commands.Reminder.reminder import reminder_group
 from Components.Commands.Reminder.remind import remind_group
 from Components.Commands.Reminder._storage import get_user_reminders
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
 
 async def _do_remind_list(ctx: commands.Context):
     await ctx.defer(ephemeral=True)
@@ -16,10 +17,14 @@ async def _do_remind_list(ctx: commands.Context):
             lines.append(f"**{idx}. ID:** `{r.get('id')}` | **Due:** <t:{r.get('expires_at', 0)}:R>\n> {r.get('text')}")
         content_str = "\n\n".join(lines)
         
+    card = make_v2_card(f"### Orbit Active Reminders\n\n{content_str}", color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+
     embed = discord.Embed(
         title="Orbit Active Reminders",
         description=content_str,
-        color=discord.Color.blue()
+        color=ORBIT_COLOR
     )
     await ctx.send(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 

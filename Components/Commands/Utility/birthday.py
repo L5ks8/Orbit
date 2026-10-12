@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import datetime
 from Components.Database.mongodb import get_db
+from Components.Commands._utils import ORBIT_COLOR
 
 class Birthday(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -34,7 +35,7 @@ class Birthday(commands.Cog):
                 upsert=True
             )
             await ctx.send(
-                embed=discord.Embed(description=f"Your birthday has been successfully set to **{date}**!", color=0x2B2D31),
+                embed=discord.Embed(description=f"Your birthday has been successfully set to **{date}**!", color=ORBIT_COLOR),
                 ephemeral=True
             )
         else:

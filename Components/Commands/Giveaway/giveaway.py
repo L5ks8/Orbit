@@ -378,8 +378,7 @@ class GiveawayCommand(commands.Cog):
         prize="The prize being given away (e.g. 2x Volt Quarterly)",
         winners="Number of winners to pick when ended (1-20)",
         duration="Giveaway duration in minutes (e.g. 60 for 1 hour)",
-        required_role="Optional role required to enter this giveaway",
-        color="Optional hex color for the embed stripe (e.g. #5865F2)"
+        required_role="Optional role required to enter this giveaway"
     )
     async def giveaway(
         self,
@@ -387,8 +386,7 @@ class GiveawayCommand(commands.Cog):
         prize: str,
         winners: int = 1,
         duration: int = 60,
-        required_role: discord.Role | None = None,
-        color: str | None = None
+        required_role: discord.Role | None = None
     ):
         await ctx.defer()
         if not ctx.guild:
@@ -398,8 +396,6 @@ class GiveawayCommand(commands.Cog):
             winners = 1
         if duration < 1 or duration > 46080:
             duration = 60
-
-        resolved_col = resolve_color(color) if color else discord.Color(0x5865F2)
 
         gid = generate_giveaway_id(ctx.guild.id)
         end_time = int(time.time()) + (duration * 60)
@@ -414,7 +410,7 @@ class GiveawayCommand(commands.Cog):
             end_timestamp=end_time,
             author_id=ctx.author.id,
             required_role_id=required_role.id if required_role else None,
-            color=resolved_col.value
+            color=0x5865F2
         )
 
         msg = await send_giveaway_message(ctx, entry, ctx.guild.id)
@@ -428,7 +424,7 @@ class GiveawayCommand(commands.Cog):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Server permission to host giveaways.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: `/giveaway <prize> [winners_count] [duration_minutes] [required_role] [color]`", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/giveaway <prize> [winners_count] [duration_minutes] [required_role]`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
