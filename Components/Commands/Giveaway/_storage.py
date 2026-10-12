@@ -1,4 +1,4 @@
-﻿from Components.Database.mongodb import get_config, set_config
+from Components.Database.mongodb import get_config, set_config
 import json
 import pathlib
 import random
@@ -45,7 +45,8 @@ def create_giveaway_entry(
     winners: int,
     end_timestamp: int,
     author_id: int,
-    required_role_id: int | None = None
+    required_role_id: int | None = None,
+    color: int | str | None = None
 ) -> Dict[str, Any]:
     data = load_giveaways(guild_id)
     entry = {
@@ -58,7 +59,8 @@ def create_giveaway_entry(
         "entries": [],
         "ended": False,
         "author_id": author_id,
-        "required_role_id": required_role_id
+        "required_role_id": required_role_id,
+        "color": color or 0x5865F2
     }
     data[giveaway_id] = entry
     save_giveaways(guild_id, data)
@@ -87,14 +89,32 @@ def update_giveaway_entry(guild_id: int, entry: Dict[str, Any]) -> None:
 
 def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
     active = []
-    if False: # STORAGE_ROOT.exists():
-        return active
-    for guild_folder in STORAGE_ROOT.iterdir():
-        if guild_folder.is_dir() and guild_folder.name.isdigit():
-            gid = int(guild_folder.name)
-            data = load_giveaways(gid)
-            for entry in data.values():
-                if not entry.get("ended"):
-                    active.append((gid, entry))
+    # 1. Try querying MongoDB directly
+    try:
+        from Components.Database.mongodb import get_db
+        db = get_db()
+        if db is not None:
+            col = db["Giveaway"]
+            for doc in col.find():
+                gid_str = doc.get("_id")
+                if gid_str and str(gid_str).isdigit():
+                    gid = int(gid_str)
+                    for k, v in doc.items():
+                        if k != "_id" and isinstance(v, dict) and not v.get("ended"):
+                            active.append((gid, v))
+            if active:
+                return active
+    except Exception:
+        pass
+
+    # 2. Local fallback if storage directory exists
+    if STORAGE_ROOT.exists():
+        for guild_folder in STORAGE_ROOT.iterdir():
+            if guild_folder.is_dir() and guild_folder.name.isdigit():
+                gid = int(guild_folder.name)
+                data = load_giveaways(gid)
+                for entry in data.values():
+                    if not entry.get("ended"):
+                        active.append((gid, entry))
     return active
 

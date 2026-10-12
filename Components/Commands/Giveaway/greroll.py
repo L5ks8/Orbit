@@ -44,6 +44,11 @@ class GiveawayRerollCommand(commands.Cog):
             return await ctx.send(embed=make_embed("No valid entrants available to reroll a new winner from."), ephemeral=True)
 
         new_winner_id = random.choice(valid_entrants)
+        picked_winners = [new_winner_id]
+        entry["picked_winners"] = picked_winners
+        from Components.Commands.Giveaway._storage import update_giveaway_entry
+        update_giveaway_entry(ctx.guild.id, entry)
+
         channel = ctx.guild.get_channel(entry["channel_id"])
         if not channel:
             try:
@@ -51,9 +56,21 @@ class GiveawayRerollCommand(commands.Cog):
             except Exception:
                 pass
 
+        winners_display = f"<@{new_winner_id}>"
         if channel:
-            await channel.send(content=f" **GIVEAWAY REROLL!** \nCongratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! 🎊 (Giveaway ID: `#{entry['giveaway_id']}`)")
-            await ctx.send(embed=make_embed(f"Rerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`)."))
+            try:
+                msg = await channel.fetch_message(entry["message_id"])
+                if msg:
+                    from Components.Commands.Giveaway.giveaway import update_giveaway_message
+                    await update_giveaway_message(msg, ctx.guild.id, entry, ended=True, winners_display=winners_display)
+            except Exception:
+                pass
+
+            await channel.send(
+                content=f"🎉 **GIVEAWAY REROLL!**\nCongratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! 🎊 (Giveaway ID: `#{entry['giveaway_id']}`)",
+                allowed_mentions=discord.AllowedMentions(users=True)
+            )
+            await ctx.send(embed=make_embed(f"Rerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", discord.Color.green()))
         else:
             await ctx.send(embed=make_embed("Could not access the original giveaway channel to announce the reroll.", discord.Color.red()), ephemeral=True)
 
