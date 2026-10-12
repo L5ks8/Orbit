@@ -22,7 +22,6 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      // If less than 250px below, but enough space above, flip it up.
       if (spaceBelow < 250 && rect.top > 250) {
         setDropUp(true);
       } else {

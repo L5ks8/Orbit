@@ -3,7 +3,6 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-// Sub-components for icons
 const CheckIcon = ({ color = '#23a559' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={color} stroke="#151517" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ borderRadius: '50%', background: color, color: '#151517', padding: '2px' }}>
     <polyline points="20 6 9 17 4 12"></polyline>
@@ -34,7 +33,6 @@ export default function Status() {
   useEffect(() => {
     if (!chartRef.current) return;
 
-    // 1. Generate initial data (60 seconds / 30 steps of 2s)
     const data = [];
     for (let i = -30; i <= 0; i++) {
       data.push({
@@ -54,7 +52,7 @@ export default function Status() {
           {
             label: 'Servers',
             data: dataRef.current.map(d => ({ x: d.time, y: d.servers })),
-            borderColor: '#5865F2', // Blurple
+            borderColor: '#5865F2',
             backgroundColor: 'transparent',
             borderWidth: 2,
             tension: 0.4,
@@ -64,7 +62,7 @@ export default function Status() {
           {
             label: 'RAM (MB)',
             data: dataRef.current.map(d => ({ x: d.time, y: d.ram })),
-            borderColor: '#9b59b6', // Purple
+            borderColor: '#9b59b6',
             backgroundColor: 'transparent',
             borderWidth: 2,
             tension: 0.4,
@@ -74,7 +72,7 @@ export default function Status() {
           {
             label: 'Ping (ms)',
             data: dataRef.current.map(d => ({ x: d.time, y: d.ping })),
-            borderColor: '#57F287', // Green
+            borderColor: '#57F287',
             backgroundColor: 'transparent',
             borderWidth: 2,
             tension: 0.4,
@@ -144,7 +142,6 @@ export default function Status() {
         const res = await fetch('/api/stats');
         const payload = await res.json();
         
-        // Handle the new payload structure
         const statsHistory = Array.isArray(payload) ? payload : (payload.history || []);
         if (payload.devmode !== undefined) {
             setIsDevmode(payload.devmode);
@@ -209,8 +206,8 @@ export default function Status() {
       blocks = uptimeData.map((day, i) => {
         const pings = day[dataKey] || 0;
         let color = '#23a559';
-        if (pings === 0) color = '#ed4245'; // Outage
-        else if (pings < 270) color = '#faa61a'; // Partial Outage
+        if (pings === 0) color = '#ed4245';
+        else if (pings < 270) color = '#faa61a';
         
         return (
           <div 

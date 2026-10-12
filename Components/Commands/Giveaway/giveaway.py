@@ -66,7 +66,6 @@ def build_fallback_kwargs(entry: dict, guild_id: int, ended: bool = False, winne
         color=color
     )
     body_text = build_giveaway_body(entry, ended=ended, winners_display=winners_display)
-    # Remove top markdown header for embed title consistency
     clean_body = body_text.replace("# Giveaway!\n", "").strip()
     embed.description = clean_body
     embed.set_footer(text="One entry per Discord account. Winners are selected at random.")
@@ -124,7 +123,6 @@ class PersistentGiveawayLayout(discord.ui.LayoutView):
             self.btn_secondary.callback = self.leave_callback
 
         if not self.entry:
-            # Stub container for bot.add_view() registration on startup
             stub_container = Container(
                 TextDisplay(content="### Giveaway!"),
                 ActionRow(self.btn_primary, self.btn_secondary),

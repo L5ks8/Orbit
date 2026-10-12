@@ -18,7 +18,6 @@ class ChannelAutomationListener(commands.Cog):
         if not config.get("enabled", False):
             return
         
-        # 1. Media-Only Channels
         media_cfg = config.get("media_only", {})
         media_channels = media_cfg.get("channels", [])
         if str(message.channel.id) in media_channels:
@@ -37,13 +36,11 @@ class ChannelAutomationListener(commands.Cog):
                         pass
                     except discord.NotFound:
                         pass
-                    return # Message deleted, stop processing
+                    return
 
-        # 2. Command-Only Channels
         cmd_cfg = config.get("command_only", {})
         cmd_channels = cmd_cfg.get("channels", [])
         if str(message.channel.id) in cmd_channels:
-            # Normal user text messages get deleted; only bots and slash command replies remain.
             if not message.author.bot:
                 try:
                     await message.delete()
@@ -51,8 +48,7 @@ class ChannelAutomationListener(commands.Cog):
                     pass
                 except discord.NotFound:
                     pass
-                return # Message deleted
-        # 3. File-Only Channels
+                return
         file_only_list = config.get("file_only", [])
         for f_cfg in file_only_list:
             if str(message.channel.id) == f_cfg.get("channel_id"):
@@ -80,9 +76,8 @@ class ChannelAutomationListener(commands.Cog):
                             pass
                         except discord.NotFound:
                             pass
-                        return # Message deleted
+                        return
 
-        # 4. Auto-Reaction Channels
         reaction_list = config.get("auto_reaction", [])
         for r_cfg in reaction_list:
             if str(message.channel.id) == r_cfg.get("channel_id"):
@@ -91,12 +86,9 @@ class ChannelAutomationListener(commands.Cog):
                     emoji = r_cfg.get("emoji")
                     if emoji:
                         try:
-                            # Try to add the reaction. If it's a custom emoji string like <:name:id>, discord.py might need partial emoji or just the string.
-                            # message.add_reaction supports unicode and custom emoji strings.
                             await message.add_reaction(emoji.strip())
                         except discord.HTTPException:
-                            pass # Emoji not found or bot lacks permissions
-        # 5. Auto Ban Channel (Honeypot)
+                            pass
         auto_ban_cfg = config.get("auto_ban", {})
         ban_channel_id = auto_ban_cfg.get("channel_id")
         is_enabled = auto_ban_cfg.get("enabled", False)
@@ -115,13 +107,11 @@ class ChannelAutomationListener(commands.Cog):
                             break
                             
                 if not is_exempt:
-                    # Delete the message first
                     try:
                         await message.delete()
                     except (discord.Forbidden, discord.NotFound):
                         pass
                         
-                    # Execute Punishment
                     action = auto_ban_cfg.get("action", "softban")
                     reason_text = "Caught in Auto Ban Honeypot channel."
                     try:
@@ -139,15 +129,13 @@ class ChannelAutomationListener(commands.Cog):
                             import datetime
                             await message.author.timeout(datetime.timedelta(days=7), reason=reason_text)
                     except discord.Forbidden:
-                        pass # Bot lacks permission
+                        pass
                         
-                    # Update configuration
                     ban_count = auto_ban_cfg.get("ban_count", 0) + 1
                     auto_ban_cfg["ban_count"] = ban_count
                     config["auto_ban"] = auto_ban_cfg
                     save_automation_config(message.guild.id, config)
                     
-                    # Update or send the honeypot message
                     msg_mode = auto_ban_cfg.get("msg_mode", "message")
                     
                     action_label = action.capitalize() + "s"
@@ -210,9 +198,8 @@ class ChannelAutomationListener(commands.Cog):
                             save_automation_config(message.guild.id, config)
                         except discord.Forbidden:
                             pass
-            return # Always return to prevent other automations running in this channel
+            return
 
-        # 6. Counting Channel
         counting_cfg = config.get("counting", {})
         counting_enabled = counting_cfg.get("enabled", False)
         counting_channel_id = str(counting_cfg.get("channel_id", "") or "").strip()
@@ -222,7 +209,6 @@ class ChannelAutomationListener(commands.Cog):
                 return
 
             whitelisted_roles = counting_cfg.get("whitelisted_roles", [])
-            # Check if member has any whitelisted role
             is_whitelisted = False
             if hasattr(message.author, "roles"):
                 for role in message.author.roles:
@@ -231,7 +217,7 @@ class ChannelAutomationListener(commands.Cog):
                         break
 
             if is_whitelisted:
-                return # Whitelisted role can chat freely without affecting count!
+                return
 
             content_clean = message.content.strip()
             current_count = int(counting_cfg.get("current_count", 0))
@@ -273,13 +259,11 @@ class ChannelAutomationListener(commands.Cog):
                 except Exception:
                     pass
 
-                # Temporarily lock channel for everyone
                 try:
                     await message.channel.set_permissions(message.guild.default_role, send_messages=False, reason="Counting failed - temporary lock")
                 except Exception:
                     pass
 
-                # Countdown: 3, 2, 1, 0
                 countdown_msg = None
                 try:
                     countdown_msg = await message.channel.send(" Channel locked! Restarting count in **3...**")
@@ -293,13 +277,11 @@ class ChannelAutomationListener(commands.Cog):
                 except Exception:
                     await asyncio.sleep(3)
 
-                # Reset count in config
                 counting_cfg["current_count"] = 0
                 counting_cfg["last_user_id"] = ""
                 config["counting"] = counting_cfg
                 save_automation_config(message.guild.id, config)
 
-                # Unlock channel
                 try:
                     await message.channel.set_permissions(message.guild.default_role, send_messages=None, reason="Counting reset - unlocked")
                 except Exception:

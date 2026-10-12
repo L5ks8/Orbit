@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 
 export default function Verify() {
   const { token } = useParams();
-  const [status, setStatus] = useState('verifying'); // verifying, success, error
+  const [status, setStatus] = useState('verifying');
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {

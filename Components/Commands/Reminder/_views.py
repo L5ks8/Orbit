@@ -23,5 +23,3 @@ def parse_duration(time_str: str) -> int | None:
             total_seconds += val * 86400
     return total_seconds if total_seconds > 0 else None
 
-
-

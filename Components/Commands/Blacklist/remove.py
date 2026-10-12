@@ -38,4 +38,3 @@ async def setup(bot: commands.Bot):
     if "unblacklist" not in bot.all_commands:
         bot.add_command(unblacklist_cmd)
 
-

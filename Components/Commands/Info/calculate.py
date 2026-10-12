@@ -28,7 +28,6 @@ def resolve_color(val) -> discord.Color:
     return discord.Color(0x5865F2)
 
 def safe_eval(expr: str):
-    # safe evaluation of mathematical expressions
     clean_expr = (
         expr.replace("÷", "/")
         .replace("x", "*")
@@ -39,11 +38,9 @@ def safe_eval(expr: str):
     if not clean_expr:
         return "Waiting..."
 
-    # If currently ends with an operator, return "Waiting..." instead of syntax error
     if clean_expr.endswith(("+", "-", "*", "/", "%", "**", "(")):
         return "Waiting..."
 
-    # Auto-close open parentheses for live evaluation
     open_parens = clean_expr.count("(")
     close_parens = clean_expr.count(")")
     if open_parens > close_parens:

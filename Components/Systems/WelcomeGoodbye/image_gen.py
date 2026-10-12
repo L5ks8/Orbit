@@ -10,7 +10,6 @@ FONT_REGULAR_URL = "https://raw.githubusercontent.com/googlefonts/roboto-2/main/
 def _generate_gradient_bg(width: int = 800, height: int = 300, accent: tuple = (88, 101, 242)) -> Image.Image:
     base = Image.new("RGBA", (width, height), (22, 24, 29, 255))
     draw = ImageDraw.Draw(base)
-    # Smooth horizontal gradient
     for x in range(width):
         ratio = x / width
         r = int(24 + (34 - 24) * ratio)
@@ -18,7 +17,6 @@ def _generate_gradient_bg(width: int = 800, height: int = 300, accent: tuple = (
         b = int(32 + (45 - 32) * ratio)
         draw.line([(x, 0), (x, height)], fill=(r, g, b, 255))
         
-    # Accent color radial glow in top-left
     glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow)
     ar, ag, ab = accent[:3]
@@ -58,7 +56,6 @@ def _get_font(url: str, filename: str, size: int) -> ImageFont.FreeTypeFont:
         except Exception:
             pass
 
-    # Try common OS system fonts
     for sys_font in ["DejaVuSans-Bold.ttf", "arialbd.ttf", "segoeuib.ttf", "DejaVuSans.ttf", "arial.ttf", "segoeui.ttf"]:
         try:
             return ImageFont.truetype(sys_font, size)
@@ -73,7 +70,6 @@ def _get_font(url: str, filename: str, size: int) -> ImageFont.FreeTypeFont:
 def _build_card(avatar_bytes: bytes, background_path: pathlib.Path, username: str, title: str, accent: tuple) -> io.BytesIO:
     bg = _get_bg(background_path, accent)
 
-    # Dark overlay gradient for readable text
     gradient = Image.new('RGBA', (800, 300))
     draw_grad = ImageDraw.Draw(gradient)
     ar, ag, ab = accent[:3]
@@ -82,7 +78,6 @@ def _build_card(avatar_bytes: bytes, background_path: pathlib.Path, username: st
         draw_grad.line([(x, 0), (x, 300)], fill=(ar // 5, ag // 5, ab // 5, alpha))
     bg = Image.alpha_composite(bg, gradient)
 
-    # Avatar handling
     avatar_size = 140
     try:
         if avatar_bytes:
@@ -94,7 +89,6 @@ def _build_card(avatar_bytes: bytes, background_path: pathlib.Path, username: st
 
     avatar = avatar.resize((avatar_size, avatar_size))
 
-    # Circular mask
     mask = Image.new("L", (avatar_size, avatar_size), 0)
     draw_mask = ImageDraw.Draw(mask)
     draw_mask.ellipse((0, 0, avatar_size, avatar_size), fill=255)
@@ -102,7 +96,6 @@ def _build_card(avatar_bytes: bytes, background_path: pathlib.Path, username: st
     circle_avatar = Image.new("RGBA", (avatar_size, avatar_size))
     circle_avatar.paste(avatar, (0, 0), mask)
 
-    # Border
     border_size = 6
     avatar_with_border = Image.new("RGBA", (avatar_size + border_size, avatar_size + border_size), (0, 0, 0, 0))
     draw_border = ImageDraw.Draw(avatar_with_border)
@@ -113,7 +106,6 @@ def _build_card(avatar_bytes: bytes, background_path: pathlib.Path, username: st
     top_padding = (300 - (avatar_size + border_size)) // 2
     bg.paste(avatar_with_border, (left_padding, top_padding), avatar_with_border)
 
-    # Typography
     draw = ImageDraw.Draw(bg)
     font_large = _get_font(FONT_BOLD_ITALIC_URL, "orbit_font_bold_italic.ttf", 46)
     font_small = _get_font(FONT_REGULAR_URL, "orbit_font_regular.ttf", 26)
@@ -122,16 +114,13 @@ def _build_card(avatar_bytes: bytes, background_path: pathlib.Path, username: st
     text_y_title = top_padding + 22
     text_y_user = text_y_title + 52
 
-    # Draw Title
     draw.text((text_x, text_y_title), title, fill=(255, 255, 255, 255), font=font_large)
 
-    # Clean & truncate username
     clean_user = str(username or "User").strip()
     if len(clean_user) > 22:
         clean_user = clean_user[:20] + "..."
     user_tag = f"@{clean_user}"
 
-    # Draw Username
     draw.text((text_x, text_y_user), user_tag, fill=(220, 225, 235, 210), font=font_small)
 
     out = io.BytesIO()

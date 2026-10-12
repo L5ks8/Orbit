@@ -12,7 +12,6 @@ class BotVCCommand(commands.Cog):
         await ctx.defer()
         target_channel = channel
         
-        # If no channel is specified, try to use the user's current voice channel
         if not target_channel:
             if ctx.author.voice and ctx.author.voice.channel:
                 target_channel = ctx.author.voice.channel
@@ -20,16 +19,13 @@ class BotVCCommand(commands.Cog):
                 return await ctx.send(embed=make_embed("Please specify a voice channel or join one yourself (`/connect #channel`).", discord.Color.red()), ephemeral=True)
 
         try:
-            # If the bot is already connected somewhere in this server
             if ctx.guild.voice_client:
                 if ctx.guild.voice_client.channel.id == target_channel.id:
                     return await ctx.send(embed=make_embed(f"I am already connected to {target_channel.mention}.", discord.Color.red()), ephemeral=True)
                 
-                # Move to the new channel
                 await ctx.guild.voice_client.move_to(target_channel)
                 return await ctx.send(embed=make_embed(f"Moved to {target_channel.mention}."))
             else:
-                # Connect to the channel
                 await target_channel.connect()
                 return await ctx.send(embed=make_embed(f"Successfully joined {target_channel.mention} and will stay here until disconnected.", discord.Color.green()))
         except discord.Forbidden:

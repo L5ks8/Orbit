@@ -12,7 +12,6 @@ export default function Leaderboard() {
 
   const currentSort = searchParams.get('sort') || 'total_xp';
   
-  // Normalize the sort to one of our three tabs
   let activeTab = 'level';
   if (currentSort === 'invites') activeTab = 'invites';
 
@@ -46,9 +45,9 @@ export default function Leaderboard() {
   };
 
   const getRankColor = (rank) => {
-    if (rank === 1) return 'var(--accent)'; // Gold/Accent
-    if (rank === 2) return '#9ca3af'; // Silver
-    if (rank === 3) return '#b45309'; // Bronze
+    if (rank === 1) return 'var(--accent)';
+    if (rank === 2) return '#9ca3af';
+    if (rank === 3) return '#b45309';
     return 'rgba(255,255,255,0.1)';
   };
 

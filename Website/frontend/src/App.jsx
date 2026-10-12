@@ -35,7 +35,6 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
   }, []);
 
   useEffect(() => {
-    // Ambient glows
     const ambientBg = document.createElement('div');
     ambientBg.className = 'ambient-bg';
     const orb1 = document.createElement('div');
@@ -51,10 +50,8 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
     };
   }, []);
 
-  // Global auto-grow for all textareas
   useEffect(() => {
     const resizeTextarea = (t) => {
-      // Small timeout to ensure styles/layout are fully applied
       setTimeout(() => {
         if (!t) return;
         t.style.height = 'auto';
@@ -70,7 +67,6 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
     
     document.addEventListener('input', handleInput);
 
-    // Override value setter to detect programmatic changes (e.g. React state updates)
     const descriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
     const originalSet = descriptor.set;
     
@@ -82,14 +78,12 @@ function AppContent({ isSearchOpen, setIsSearchOpen }) {
       get: descriptor.get
     });
 
-    // Resize existing textareas immediately
     document.querySelectorAll('textarea').forEach(resizeTextarea);
 
-    // Observer for newly added textareas
     const observer = new MutationObserver((mutations) => {
       mutations.forEach(mutation => {
         mutation.addedNodes.forEach(node => {
-          if (node.nodeType === 1) { // Element node
+          if (node.nodeType === 1) {
             if (node.tagName === 'TEXTAREA') resizeTextarea(node);
             if (node.querySelectorAll) {
               node.querySelectorAll('textarea').forEach(resizeTextarea);

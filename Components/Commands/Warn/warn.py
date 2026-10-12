@@ -9,7 +9,6 @@ from Components.Commands._utils import MemberOrIDConverter, format_usage, make_e
 from Components.Commands.Whitelist._storage import is_whitelisted
 
 
-
 async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.User, reason: str):
     await ctx.defer()
     if not ctx.guild:
@@ -139,6 +138,4 @@ async def warn_cmd_error(ctx: commands.Context, error):
 async def setup(bot: commands.Bot):
     if "warn" not in bot.all_commands:
         bot.add_command(warn_cmd)
-
-
 

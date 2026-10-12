@@ -11,11 +11,9 @@ from Components.Systems.Level._storage import (
 class LevelListenerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        # Cooldown dicts: {guild_id: {user_id: timestamp}}
         self._msg_cooldowns = {}
         self._cmd_cooldowns = {}
         self._react_cooldowns = {}
-        # Voice tracking: {guild_id: {user_id: join_timestamp}}
         self._voice_join_times = {}
         self.voice_xp_loop.start()
         self.leaderboard_loop.start()
@@ -80,7 +78,6 @@ class LevelListenerCog(commands.Cog):
         guild = member.guild
         earned_roles = []
 
-        # Assign level roles
         level_roles = config.get("level_roles", [])
         stack = config.get("level_roles_stack", False)
         roles_to_add = []
@@ -96,13 +93,11 @@ class LevelListenerCog(commands.Cog):
                     roles_to_add.append(role)
                     earned_roles.append(role.mention)
                 if not stack and lr_level < new_level:
-                    # Remove lower level roles if not stacking
                     pass
             elif not stack and role in member.roles:
                 roles_to_remove.append(role)
 
         if not stack:
-            # Only keep the highest level role
             highest_role = None
             for lr in sorted(level_roles, key=lambda x: int(x.get("level", 0)), reverse=True):
                 lr_level = int(lr.get("level", 0))
@@ -124,7 +119,6 @@ class LevelListenerCog(commands.Cog):
         except Exception:
             pass
 
-        # Send level up message
         content = config.get("levelup_message_content", "{user_mention}")
         title = config.get("levelup_embed_title", " Level Up!")
         desc = config.get("levelup_embed_description", "")
@@ -134,7 +128,6 @@ class LevelListenerCog(commands.Cog):
         show_avatar = config.get("levelup_show_avatar", True)
         conditional = config.get("levelup_conditional", "")
 
-        # Variable replacement
         def replace_vars(text):
             text = text.replace("{user_mention}", member.mention)
             text = text.replace("{user_globalname}", member.global_name or member.display_name)
@@ -146,15 +139,12 @@ class LevelListenerCog(commands.Cog):
         title = replace_vars(title)
         desc = replace_vars(desc)
 
-        # Parse conditional messages
         if conditional:
-            # {earned: text} - shown only when roles are earned
             earned_matches = re.findall(r'\{earned:\s*(.+?)\}', conditional)
             if earned_matches and earned_roles:
                 for m in earned_matches:
                     desc += "\n" + replace_vars(m)
 
-            # {level[X]: text} - shown only at level X
             level_matches = re.findall(r'\{level\[(\d+)\]:\s*(.+?)\}', conditional)
             for lvl_str, text in level_matches:
                 if int(lvl_str) == new_level:
@@ -170,7 +160,6 @@ class LevelListenerCog(commands.Cog):
         if show_avatar:
             embed.set_thumbnail(url=member.display_avatar.url)
 
-        # Determine target channel
         target_ch_setting = config.get("levelup_channel", "current")
         target_ch = channel
         if target_ch_setting == "dm":
@@ -270,7 +259,6 @@ class LevelListenerCog(commands.Cog):
         if new_level > old_level:
             await self._handle_level_up(member, message.channel, old_level, new_level, config)
 
-        # Check stat roles
         data = get_user_xp(message.guild.id, member.id)
         await self._check_stat_roles(member, "msg", data.get("message_count", 0), config)
 
@@ -321,11 +309,9 @@ class LevelListenerCog(commands.Cog):
         if guild_id not in self._voice_join_times:
             self._voice_join_times[guild_id] = {}
 
-        # User joined a voice channel
         if before.channel is None and after.channel is not None:
             self._voice_join_times[guild_id][member.id] = time.time()
 
-        # User left a voice channel
         elif before.channel is not None and after.channel is None:
             self._voice_join_times[guild_id].pop(member.id, None)
 
@@ -358,7 +344,6 @@ class LevelListenerCog(commands.Cog):
                     increment_stat(guild.id, member.id, "voice_minutes")
 
                     if new_level > old_level:
-                        # Find a text channel to send level up
                         ch_setting = config.get("levelup_channel", "current")
                         target_ch = guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
                         if ch_setting != "current":
@@ -417,7 +402,6 @@ class LevelListenerCog(commands.Cog):
                     if role:
                         roles_to_add.append(role)
         else:
-            # Only the highest
             for lr in sorted(level_roles, key=lambda x: int(x.get("level", 0)), reverse=True):
                 if int(lr.get("level", 0)) <= level:
                     role = member.guild.get_role(int(lr.get("role_id", 0)))

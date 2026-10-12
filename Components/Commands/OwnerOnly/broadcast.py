@@ -37,7 +37,6 @@ class Broadcast(commands.Cog):
         success = 0
         failed = 0
         
-        # To avoid rate limits and too much memory blocking, do this slowly
         for guild in self.bot.guilds:
             if guild.owner:
                 try:

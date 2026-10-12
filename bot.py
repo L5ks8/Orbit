@@ -12,14 +12,11 @@ from Components.Commands._utils import make_embed
 def custom_has_permissions(**perms: bool):
     def decorator(func):
         async def predicate(ctx: commands.Context) -> bool:
-            # 1. Bypass if server owner
             if ctx.guild and ctx.author.id == ctx.guild.owner_id:
                 return True
-            # 2. Bypass if bot owner
             if await ctx.bot.is_owner(ctx.author):
                 return True
             
-            # 3. Standard check
             ch = ctx.channel
             permissions = ch.permissions_for(ctx.author)
             missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
@@ -143,8 +140,6 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             pass
 
 
-
-# Patch commands.Context.send to handle ephemeral kwarg safely for prefix commands
 _old_send = commands.Context.send
 async def _safe_send(self, *args, **kwargs):
     if self.interaction is None:
@@ -356,8 +351,6 @@ class OrbitBot(commands.Bot):
             print(f"Failed to load Boost Listener: {e}")
 
 
-
-        # Load root command group modules first (e.g. Commands/Role/role.py, Commands/Ticket/ticket.py)
         for file_path in commands_dir.rglob("*.py"):
             if file_path.name.startswith("_"):
                 continue
@@ -493,10 +486,8 @@ async def start_bot_loop():
             retry_delay = 10
         
         print(f"Retrying connection in {retry_delay} seconds...", flush=True)
-        # Sleep asynchronously to keep the web server alive!
         await asyncio.sleep(retry_delay)
         
-        # Cleanly restart the process to reset discord.py session state
         os.environ["RETRY_DELAY"] = str(retry_delay)
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
@@ -518,7 +509,6 @@ async def main():
     except Exception as e:
         print(f"Failed to start Web Dashboard: {e}", flush=True)
 
-    # Start the bot in the same event loop, letting it handle its own retries
     await start_bot_loop()
     
     if runner:

@@ -4,7 +4,6 @@ import time
 import os
 import sys
 
-# Ensure backend can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 from Components.Database.mongodb import get_db
 
@@ -24,7 +23,7 @@ class DashboardMessage(commands.Cog):
             return await ctx.send(embed=embed)
             
         notification = {
-            "target": target, # "all" or user id
+            "target": target,
             "message": message,
             "timestamp": int(time.time()),
             "author_id": str(ctx.author.id)

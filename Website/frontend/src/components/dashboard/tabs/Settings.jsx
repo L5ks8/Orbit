@@ -24,8 +24,6 @@ export default function ({ guildId, serverData, setServerData }) {
   const [saving, setSaving] = useState(false);
   const cacheKey = `modules_config_${guildId}`;
   
-  // We can't synchronously populate all this complex state easily in useState, 
-  // so we'll just set loading to false if we have cache, and parse it in useEffect.
   const [loading, setLoading] = useState(() => !getCache(cacheKey));
 
   useEffect(() => {
@@ -132,9 +130,6 @@ export default function ({ guildId, serverData, setServerData }) {
         autoresponder_enabled: parsedS.autoresponder_enabled || false,
         messages_enabled: parsedS.messages_enabled || false
       });
-      // the initialState payload has immune_users as array of IDs, but we can't easily fetch their objects synchronously here.
-      // however, resetting from dirty state usually just means reloading the page or trusting the old objects. 
-      // We can just keep the old objects that match the old IDs.
       const oldIds = parsedS.immune_users || [];
       setImmuneUsers(prev => prev.filter(u => oldIds.includes(String(u.id))));
       

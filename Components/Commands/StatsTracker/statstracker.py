@@ -57,7 +57,7 @@ class StatsTracker(commands.Cog):
         now = time.time()
         self.bot.recent_messages[guild_id].append(now)
         
-        cutoff = now - 3900 # 65 minutes
+        cutoff = now - 3900
         self.bot.recent_messages[guild_id] = [ts for ts in self.bot.recent_messages[guild_id] if ts > cutoff]
 
     @commands.Cog.listener()
@@ -73,7 +73,6 @@ class StatsTracker(commands.Cog):
         if member.bot:
             return
             
-        # Track active users (joined voice)
         if after.channel and not before.channel:
             db = get_db()
             if db is not None:
@@ -88,7 +87,6 @@ class StatsTracker(commands.Cog):
                 except:
                     pass
 
-        # Track Voice Minutes
         uid = str(member.id)
         if before.channel is None and after.channel is not None:
             if not after.afk and not after.self_deaf and not after.deaf:

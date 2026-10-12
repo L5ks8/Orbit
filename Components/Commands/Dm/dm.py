@@ -16,9 +16,9 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
 
     def __init__(self, target_type, target_obj, context_msg, guild, author, original_message=""):
         super().__init__()
-        self.target_type = target_type  # 'role' or 'user'
+        self.target_type = target_type
         self.target_obj = target_obj
-        self.context_msg = context_msg  # the message containing the compose button (if any)
+        self.context_msg = context_msg
         self.guild = guild
         self.author = author
         if original_message:
@@ -145,12 +145,10 @@ class DMCommand(commands.Cog):
         target_obj = None
         extracted_message = message or ""
 
-        # 1. Try role lookup by ID or role mention
         cleaned_role_id = target_str.strip("<@&> ")
         if cleaned_role_id.isdigit():
             matched_role = ctx.guild.get_role(int(cleaned_role_id))
 
-        # 2. Try role lookup by exact or partial role name
         if not matched_role:
             for r in ctx.guild.roles:
                 if r.name.lower() in (target_str.lower(), target_str.lstrip("@").lower()):
@@ -197,7 +195,6 @@ class DMCommand(commands.Cog):
         )
 
         if ctx.interaction:
-            # If slash command, we can technically open the modal right away, but to keep behavior consistent:
             await ctx.send(embed=embed, view=view, ephemeral=True)
         else:
             await ctx.send(embed=embed, view=view)

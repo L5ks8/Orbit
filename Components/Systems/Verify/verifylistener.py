@@ -31,7 +31,6 @@ class VerifyListenerCog(commands.Cog):
 
         timeout_action = config.get("timeout_action", "none")
         timeout_minutes = config.get("timeout_minutes", 0)
-        # fallback to old auto_kick_minutes if timeout_minutes is 0
         if timeout_minutes == 0:
             timeout_minutes = config.get("auto_kick_minutes", 0)
             if timeout_minutes > 0 and timeout_action == "none":

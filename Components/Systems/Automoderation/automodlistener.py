@@ -163,7 +163,6 @@ class AutoModListener(commands.Cog):
             allowed_words = banned_cfg.get("allowed_words", [])
             custom_words = banned_cfg.get("words", [])
             
-            # Predefined word lists based on filter level
             profanity_basic = ["fuck", "shit", "bitch", "asshole", "cunt", "nigger", "nigga", "faggot", "whore", "slut", "dick", "cock", "pussy"]
             profanity_strict = profanity_basic + ["bastard", "motherfucker", "twat", "wanker", "prick", "retard", "dyke", "tranny", "kys", "kill yourself"]
             profanity_maximum = profanity_strict + ["crap", "damn", "ass", "piss", "boobs", "tits", "vagina", "penis", "cum", "jizz", "wank"]
@@ -185,7 +184,6 @@ class AutoModListener(commands.Cog):
             for w in words_to_check:
                 w = w.strip()
                 if not w: continue
-                # Handle asterisk wildcards
                 if w.startswith("*") and w.endswith("*"):
                     pattern = re.escape(w[1:-1])
                 elif w.startswith("*"):
@@ -280,7 +278,6 @@ class AutoModListener(commands.Cog):
                 return
 
 
-
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if not member.guild:
@@ -290,7 +287,6 @@ class AutoModListener(commands.Cog):
         if not config.get("enabled", False):
             return
 
-        # Anti-Bot Add
         if member.bot:
             bot_cfg = config.get("anti_bot", {})
             if bot_cfg.get("enabled", False):
@@ -298,7 +294,6 @@ class AutoModListener(commands.Cog):
                 settings = get_config("Settings", member.guild.id) or {}
                 bot_adders = settings.get("bot_adders", [])
                 
-                # Check audit logs for bot add
                 try:
                     inviter = None
                     async for entry in member.guild.audit_logs(limit=5, action=discord.AuditLogAction.bot_add):
@@ -308,13 +303,11 @@ class AutoModListener(commands.Cog):
                     
                     if inviter:
                         if str(inviter.id) not in bot_adders and inviter.id != member.guild.owner_id:
-                            # Kick the bot immediately
                             try:
                                 await member.kick(reason="AutoMod: Anti-Bot Add triggered")
                             except:
                                 pass
                             
-                            # Punish the inviter
                             action = bot_cfg.get("action", "kick")
                             escalation_str, warn_count = await self._apply_action(inviter, action, 5, "AutoMod: Unauthorized bot invite")
                             embed = discord.Embed(title="Orbit AutoMod Triggered", color=discord.Color.orange())
@@ -325,7 +318,6 @@ class AutoModListener(commands.Cog):
                                 embed.add_field(name="Escalation", value=f"`{escalation_str}`", inline=False)
                             
                             try:
-                                # Try to find a system channel to send notice to, or general
                                 channel = member.guild.system_channel
                                 if not channel:
                                     for c in member.guild.text_channels:
@@ -395,7 +387,4 @@ class AutoModListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModListener(bot))
-
-
-
 

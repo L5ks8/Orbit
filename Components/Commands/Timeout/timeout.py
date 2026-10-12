@@ -9,7 +9,6 @@ from Components.Commands.Cases._storage import create_case
 from Components.Commands._utils import make_embed
 
 
-
 class TimeoutCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -66,6 +65,4 @@ class TimeoutCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(TimeoutCommand(bot))
-
-
 

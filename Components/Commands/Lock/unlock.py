@@ -4,7 +4,6 @@ from discord.ui import Container, TextDisplay, Separator
 from Components.Commands._utils import make_embed
 
 
-
 class UnlockCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot

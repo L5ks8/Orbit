@@ -86,7 +86,6 @@ class ConfigMixin:
         from Components.Systems.WebDashboard._storage import load_settings_config
         settings_cfg = load_settings_config(guild_id)
         
-        # Resolve immune users for the frontend
         immune_user_ids = settings_cfg.get("immune_users", [])
         resolved_immune_users = []
         for uid_str in immune_user_ids:
@@ -402,7 +401,6 @@ class ConfigMixin:
             if user_perms.get("is_admin") and "extra_settings" in data:
                 ext = data["extra_settings"]
                 
-                # AI Enabled
                 from Components.Database.mongodb import get_config, set_config
                 g_cfg = get_config("Settings", guild_id) or {}
                 g_cfg["ai_enabled"] = bool(ext.get("ai_enabled", True))
@@ -938,7 +936,6 @@ class ConfigMixin:
             
             save_botprofile_config(guild_id, data)
             
-            # Update discord bot member
             nickname = data.get("nickname", "")
             bio = data.get("bio", "")
             
@@ -957,7 +954,6 @@ class ConfigMixin:
             avatar_bytes = await _fetch_bytes(new_avatar)
             banner_bytes = await _fetch_bytes(new_banner)
             
-            # Apply to Discord
             try:
                 edit_kwargs = {"nick": nickname if nickname else None}
                 if avatar_bytes is not None or not new_avatar:

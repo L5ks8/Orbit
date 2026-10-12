@@ -6,7 +6,6 @@ STORAGE_ROOT = pathlib.Path("Storage")
 
 DEFAULT_WELCOME_MESSAGE = "Welcome {user} to **{server}**! We are happy to have you as member #{count}."
 DEFAULT_GOODBYE_MESSAGE = "We're sad to see you go, {user}! We hope you enjoyed your time in **{server}**."
-# Backward compatibility alias
 DEFAULT_MESSAGE = DEFAULT_WELCOME_MESSAGE
 
 def _get_welcome_file_path(guild_id: int) -> pathlib.Path:

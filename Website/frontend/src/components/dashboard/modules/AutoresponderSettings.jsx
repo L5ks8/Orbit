@@ -5,13 +5,12 @@ import CustomSelect from '../../ui/CustomSelect';
 export default function AutoresponderSettings({ config, channels, onSave, saving, onReset }) {
   const arCfg = config?.autoresponder || {};
   
-  // Convert dictionary { "trigger": { response: "reply", exact_match: true } } to array
   const initialTriggers = Object.keys(arCfg).map((trigger, i) => {
     const t = arCfg[trigger];
     return {
-      id: Date.now() + i, // Generate unique ID
+      id: Date.now() + i,
       trigger: trigger,
-      reply: t.response || t.reply || '', // Support both "response" (backend) and "reply"
+      reply: t.response || t.reply || '',
       exactMatch: t.exact_match || false,
       useAi: t.use_ai || false,
       channelId: t.channel_id || null
@@ -52,9 +51,8 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
   const getPayload = () => {
     const autoresponderDict = {};
     triggers.forEach(t => {
-      // Use trigger as key, as expected by the Python backend
       autoresponderDict[t.trigger] = {
-        response: t.reply, // Backend uses "response"
+        response: t.reply,
         exact_match: t.exactMatch,
         channel_id: t.channelId,
         use_ai: t.useAi

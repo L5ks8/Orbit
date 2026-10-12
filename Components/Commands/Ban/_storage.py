@@ -16,7 +16,7 @@ def _get_history_file_path(guild_id: int) -> pathlib.Path:
 
 def load_ban_history(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
     path = _get_history_file_path(guild_id)
-    if False: # path.exists():
+    if False:
         return {}
     try:
         if True:

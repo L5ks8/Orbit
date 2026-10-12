@@ -14,7 +14,6 @@ function escapeHtml(text) {
 function parseDiscordMarkdown(text, channels = [], roles = []) {
   if (!text) return null;
 
-  // Split by lines for block-level processing
   const lines = text.split('\n');
   const elements = [];
   let inBlockQuote = false;
@@ -41,11 +40,9 @@ function parseDiscordMarkdown(text, channels = [], roles = []) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // >>> block quote (rest of message)
     if (line.startsWith('>>> ')) {
       inBlockQuote = true;
       blockQuoteLines.push(line.slice(4));
-      // Collect remaining lines
       for (let j = i + 1; j < lines.length; j++) {
         blockQuoteLines.push(lines[j]);
       }
@@ -53,7 +50,6 @@ function parseDiscordMarkdown(text, channels = [], roles = []) {
       break;
     }
 
-    // > single line quote
     if (line.startsWith('> ')) {
       if (!inBlockQuote) {
         flushBlockQuote();
@@ -63,12 +59,10 @@ function parseDiscordMarkdown(text, channels = [], roles = []) {
       continue;
     }
 
-    // Not a quote line
     if (inBlockQuote) {
       flushBlockQuote();
     }
 
-    // Empty line
     if (line.trim() === '') {
       elements.push(<div key={`br-${i}`} style={{ height: '8px' }} />);
       continue;
@@ -89,7 +83,6 @@ function parseDiscordMarkdown(text, channels = [], roles = []) {
 function formatInline(text, channels = [], roles = []) {
   if (!text) return null;
   
-  // Emoji map for common shortcodes
   const emojiMap = {
     'smile': '😄', 'joy': '😂', 'rofl': '🤣', 'sweat_smile': '😅', 'laughing': '😆', 'wink': '😉', 'blush': '😊', 'yum': '😋', 'heart_eyes': '😍', 'kissing_heart': '😘',
     'kissing': '😗', 'kissing_smiling_eyes': '😙', 'kissing_closed_eyes': '😚', 'stuck_out_tongue': '😛', 'stuck_out_tongue_winking_eye': '😜', 'stuck_out_tongue_closed_eyes': '😝',
@@ -108,9 +101,7 @@ function formatInline(text, channels = [], roles = []) {
   let remaining = text;
   let keyCounter = 0;
 
-  // Process the text character by character with regex patterns
   const patterns = [
-    // Standard Emoji shortcodes :name:
     { regex: /:([a-zA-Z0-9_]+):/, render: (match) => {
       const emojiChar = emojiMap[match[1].toLowerCase()];
       if (emojiChar) {
@@ -118,7 +109,6 @@ function formatInline(text, channels = [], roles = []) {
       }
       return <span key={keyCounter++}>{match[0]}</span>;
     }},
-    // Custom Variable Pills {{pill:color:text}}
     { regex: /\{\{pill:([^:]+):([^}]+)\}\}/, render: (match) => {
       const color = match[1];
       const text = match[2];
@@ -137,21 +127,17 @@ function formatInline(text, channels = [], roles = []) {
         </span>
       );
     }},
-    // Code blocks (inline)
     { regex: /`([^`]+)`/, render: (match) => (
       <code key={keyCounter++} style={{ background: '#1e1f22', padding: '2px 6px', borderRadius: '3px', fontSize: '85%', fontFamily: '"Consolas", "Monaco", monospace', color: '#d4d4d4' }}>
         {match[1]}
       </code>
     )},
-    // Custom animated emoji <a:name:id> or <a:id>
     { regex: /<a:(?:([^:]*):)?(\d+)>/, render: (match) => (
       <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.gif`} alt={match[1] || 'emoji'} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} onError={(e) => { e.target.replaceWith(':' + (e.target.alt || 'emoji') + ':'); }} />
     )},
-    // Custom emoji <:name:id> or <:id>
     { regex: /<:(?:([^:]*):)?(\d+)>/, render: (match) => (
       <img key={keyCounter++} src={`https://cdn.discordapp.com/emojis/${match[2]}.webp`} alt={match[1] || 'emoji'} style={{ width: '22px', height: '22px', verticalAlign: 'middle', margin: '0 2px' }} onError={(e) => { e.target.replaceWith(':' + (e.target.alt || 'emoji') + ':'); }} />
     )},
-    // Channel mention <#id>
     { regex: /<#(\d+)>/, render: (match) => {
       const ch = channels.find(c => c.id === match[1]);
       return (
@@ -160,7 +146,6 @@ function formatInline(text, channels = [], roles = []) {
         </span>
       );
     }},
-    // Role mention <@&id>
     { regex: /<@&(\d+)>/, render: (match) => {
       const role = roles.find(r => r.id === match[1]);
       const color = role?.color || '#c9cdfb';
@@ -170,13 +155,11 @@ function formatInline(text, channels = [], roles = []) {
         </span>
       );
     }},
-    // User mention <@id> or <@!id>
     { regex: /<@!?(\d+)>/, render: (match) => (
       <span key={keyCounter++} style={{ background: 'rgba(88,101,242,0.15)', color: '#c9cdfb', padding: '0 4px', borderRadius: '3px', fontWeight: '500', cursor: 'pointer' }}>
         @user
       </span>
     )},
-    // Hyperlinks [text](url)
     { regex: /\[([^\]]+)\]\(([^)]+)\)/, render: (match) => (
       <a key={keyCounter++} href={match[2]} target="_blank" rel="noopener noreferrer" style={{ color: '#00A8FC', textDecoration: 'none' }}>
         {match[1]}
@@ -190,11 +173,9 @@ function formatInline(text, channels = [], roles = []) {
     { regex: /\*\*(.+?)\*\*/, render: (match) => (
       <strong key={keyCounter++}>{formatInline(match[1], channels, roles)}</strong>
     )},
-    // Italic *text*
     { regex: /\*(.+?)\*/, render: (match) => (
       <em key={keyCounter++}>{formatInline(match[1], channels, roles)}</em>
     )},
-    // Underline __text__
     { regex: /__(.+?)__/, render: (match) => (
       <u key={keyCounter++}>{formatInline(match[1], channels, roles)}</u>
     )},
@@ -204,7 +185,6 @@ function formatInline(text, channels = [], roles = []) {
     )},
   ];
 
-  // Iteratively find the earliest match
   while (remaining.length > 0) {
     let earliestMatch = null;
     let earliestIndex = Infinity;
@@ -220,27 +200,22 @@ function formatInline(text, channels = [], roles = []) {
     }
 
     if (!earliestMatch) {
-      // No more patterns found, push remaining text
       parts.push(remaining);
       break;
     }
 
-    // Push text before the match
     if (earliestIndex > 0) {
       parts.push(remaining.slice(0, earliestIndex));
     }
 
-    // Push the rendered match
     parts.push(earliestPattern.render(earliestMatch));
 
-    // Move past the match
     remaining = remaining.slice(earliestIndex + earliestMatch[0].length);
   }
 
   return parts;
 }
 
-// Replace {user}, {server}, {count}, {id}, {username}, {mention} placeholders with styled spans
 function replaceVariables(text) {
   if (!text) return text;
   return text

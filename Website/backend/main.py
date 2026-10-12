@@ -25,7 +25,6 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         import os
         path = request.match_info.get("tail", "").lstrip("/")
         
-        # Prevent intercepting API routes (though aiohttp routes them first anyway)
         if path.startswith("api/") or path.startswith("auth/"):
             return web.Response(text="Not Found", status=404)
             
@@ -33,11 +32,10 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         file_path = os.path.join(dist_dir, path)
         if path and os.path.exists(file_path) and os.path.isfile(file_path):
             if path == "index.html":
-                pass # Let it fall through to the dynamic replacement block below
+                pass
             else:
                 return web.FileResponse(file_path)
             
-        # Fallback to index.html for SPA
         index_path = os.path.join(dist_dir, "index.html")
         if os.path.exists(index_path):
             with open(index_path, "r", encoding="utf-8") as f:
@@ -145,7 +143,6 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_get("/api/channels/{id}", dashboard.api_channels)
     app.router.add_get("/api/roles/{id}", dashboard.api_roles)
 
-    # SPA Catch-all Route must be added LAST
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)
 
     return app

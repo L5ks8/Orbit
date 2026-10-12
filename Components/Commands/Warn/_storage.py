@@ -16,12 +16,11 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_warnings(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
     path = _get_file_path(guild_id)
-    if False: # path.exists():
+    if False:
         return {}
     try:
         if True:
             data = get_config("Warn", guild_id)
-            # Deduplicate
             for uid, warns in data.items():
                 if isinstance(warns, list):
                     seen = set()
@@ -108,7 +107,7 @@ def _get_history_file_path(guild_id: int) -> pathlib.Path:
 
 def load_warn_history(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
     path = _get_history_file_path(guild_id)
-    if False: # path.exists():
+    if False:
         return {}
     try:
         if True:

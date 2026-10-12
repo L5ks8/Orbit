@@ -21,7 +21,6 @@ async def _resolve_channel(ctx: commands.Context, channel_raw: Union[str, discor
             except Exception:
                 pass
 
-        # Case-insensitive name lookup
         target_name_lower = channel_raw.lower()
         for ch in ctx.guild.voice_channels + ctx.guild.stage_channels:
             if ch.name.lower() == target_name_lower:
@@ -43,7 +42,6 @@ async def _do_vc_move(
     if not dest_channel:
         return await ctx.send(embed=make_embed("Could not find a valid voice channel with that ID or name.", discord.Color.red()), ephemeral=True)
 
-    # Check if target is 'all'
     target_str = str(target_raw).strip().lower() if not isinstance(target_raw, discord.Member) else ""
     is_all = target_str in ["all", "@everyone", "*", "everyone", "allmembers"]
 
@@ -80,7 +78,6 @@ async def _do_vc_move(
         return await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     else:
-        # Resolve target member
         target_member: Optional[discord.Member] = None
         if isinstance(target_raw, discord.Member):
             target_member = target_raw

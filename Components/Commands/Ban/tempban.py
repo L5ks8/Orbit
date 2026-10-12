@@ -69,7 +69,6 @@ class TempBanCog(commands.Cog):
         except discord.HTTPException:
             return await ctx.send(embed=make_embed("Failed to ban the user due to an API error.", discord.Color.red()), ephemeral=True)
             
-        # Store in DB
         db = get_db()
         if db is not None:
             db["Tempbans"].insert_one({
@@ -79,7 +78,6 @@ class TempBanCog(commands.Cog):
                 "moderator_id": str(ctx.author.id)
             })
             
-        # Log it
         create_case(ctx.guild.id, user.id, ctx.author.id, "ban", f"[TEMPBAN {duration}] {reason}")
         add_modlog(ctx.guild.id, user.id, ctx.author.id, "Tempban", f"[{duration}] {reason}")
         
@@ -106,11 +104,10 @@ class TempBanCog(commands.Cog):
                     user = discord.Object(id=int(record["user_id"]))
                     await guild.unban(user, reason="Tempban expired")
                     
-                    # Log the unban
                     create_case(guild.id, user.id, self.bot.user.id, "unban", "Tempban expired")
                     add_modlog(guild.id, user.id, self.bot.user.id, "Unban", "Tempban expired")
             except Exception:
-                pass # User might already be unbanned or guild unavailable
+                pass
                 
             db["Tempbans"].delete_one({"_id": record["_id"]})
 

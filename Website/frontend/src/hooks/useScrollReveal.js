@@ -11,7 +11,6 @@ export function useScrollReveal() {
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
 
-    // Use a small timeout to let React render the DOM first
     const timeoutId = setTimeout(() => {
       const elements = document.querySelectorAll('.reveal');
       elements.forEach(el => observer.observe(el));

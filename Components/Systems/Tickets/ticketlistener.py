@@ -34,7 +34,6 @@ class TicketListenerCog(commands.Cog):
                 
                 try:
                     last_message_time = ticket_data.get("created_at", time.time())
-                    # Attempt to get the actual last message time if history is available
                     async for msg in channel.history(limit=1):
                         last_message_time = msg.created_at.timestamp()
                         break

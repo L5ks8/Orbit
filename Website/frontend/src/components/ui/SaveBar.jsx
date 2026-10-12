@@ -7,7 +7,7 @@ export default function SaveBar({ show, onReset, onSave, saving }) {
     if (show) {
       setVisible(true);
     } else {
-      const timer = setTimeout(() => setVisible(false), 300); // fade out duration
+      const timer = setTimeout(() => setVisible(false), 300);
       return () => clearTimeout(timer);
     }
   }, [show]);

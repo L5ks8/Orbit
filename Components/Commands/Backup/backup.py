@@ -39,7 +39,6 @@ class BackupCommand(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         guild = interaction.guild
 
-        # Serialize roles
         roles_data = []
         for role in sorted(guild.roles, key=lambda r: r.position):
             if role.is_bot_managed() or role.is_integration() or role.is_default():
@@ -53,7 +52,6 @@ class BackupCommand(commands.Cog):
                 "old_id": role.id
             })
 
-        # Serialize categories and channels
         categories_data = []
         channels_data = []
 
@@ -82,12 +80,11 @@ class BackupCommand(commands.Cog):
                 ch_data["user_limit"] = ch.user_limit
                 ch_data["bitrate"] = ch.bitrate
 
-            # Overwrites are tricky, we'll try to save them
             overwrites = {}
             for target, ow in ch.overwrites.items():
                 if isinstance(target, discord.Role):
                     if target.is_default() or target.is_bot_managed() or target.is_integration():
-                        continue # Skip default and bot roles to avoid complexity
+                        continue
                     overwrites[f"role_{target.id}"] = {"allow": ow.pair()[0].value, "deny": ow.pair()[1].value}
             
             ch_data["overwrites"] = overwrites
@@ -156,14 +153,12 @@ class BackupCommand(commands.Cog):
 
         await interaction.followup.send(embed=make_embed("Starting backup restoration... This may take a while."), ephemeral=True)
 
-        # 1. Delete all channels
         for ch in guild.channels:
             try:
                 await ch.delete()
             except discord.HTTPException:
                 pass
 
-        # 2. Delete all roles (except managed/bot roles)
         for role in guild.roles:
             if role.is_bot_managed() or role.is_integration() or role.is_default() or role.is_premium_subscriber():
                 continue
@@ -174,7 +169,6 @@ class BackupCommand(commands.Cog):
             except discord.HTTPException:
                 pass
 
-        # 3. Create roles and map IDs
         role_map = {}
         roles_data = backup_data.get("roles", [])
         for r_data in roles_data:
@@ -191,7 +185,6 @@ class BackupCommand(commands.Cog):
             except discord.HTTPException:
                 pass
 
-        # 4. Create categories and map IDs
         category_map = {}
         categories_data = backup_data.get("categories", [])
         for cat_data in categories_data:
@@ -204,11 +197,9 @@ class BackupCommand(commands.Cog):
             except discord.HTTPException:
                 pass
 
-        # 5. Create channels
         channels_data = backup_data.get("channels", [])
         for ch_data in channels_data:
             try:
-                # Prepare overwrites
                 overwrites = {}
                 for ow_target, ow_perms in ch_data.get("overwrites", {}).items():
                     if ow_target.startswith("role_"):
@@ -241,11 +232,9 @@ class BackupCommand(commands.Cog):
                         overwrites=overwrites,
                         reason="Backup restoration"
                     )
-                # Note: other channel types like news, forum, stage are omitted for simplicity but could be added
             except discord.HTTPException:
                 pass
 
-        # We need a way to notify the owner since their original channel might have been deleted
         try:
             owner = guild.owner
             if owner:

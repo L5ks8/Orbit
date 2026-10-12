@@ -5,7 +5,6 @@ from Components.Systems.JoinToCreate._storage import get_active_channel, update_
 from Components.Commands._utils import make_embed
 
 
-
 class RenameVoiceModal(Modal, title="Rename Voice Channel"):
     name_input = TextInput(
         label="New Channel Name",
@@ -96,7 +95,6 @@ class PersistentJTCControlLayout(discord.ui.View):
         row1 = [btn_lock, btn_hide, btn_rename, btn_limit]
         row2 = [btn_kick, btn_trust, btn_claim, btn_delete]
         
-        # We must group them into ActionRows or just pass the flat list to the Embed dispatcher
         components = row1 + row2
 
         owner_id = self.data.get("owner_id", "Unknown")

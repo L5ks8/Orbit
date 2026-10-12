@@ -49,12 +49,10 @@ class ActionsMixin:
             data = load_embeds_config(guild_id)
             embeds = data.get("embeds", [])
             
-            # If payload has an 'id', update it, else create a new one
             embed_id = payload.get("id")
             if embed_id:
                 for idx, emb in enumerate(embeds):
                     if emb.get("id") == embed_id:
-                        # Update fields but preserve id
                         embeds[idx] = payload
                         break
                 else:
@@ -134,7 +132,6 @@ class ActionsMixin:
                 
             embed = discord.Embed()
             
-            # Helper to replace basic variables and emojis
             def replace_vars(text):
                 if not text: return text
                 t = text.replace("{user}", request.headers.get("X-User-ID", "Unknown User"))
@@ -414,7 +411,7 @@ class ActionsMixin:
                     
                 if components:
                     for comp in components:
-                        if comp.get("style") == 5: # URL Button
+                        if comp.get("style") == 5:
                             url_str = comp.get("url")
                             label = comp.get("label", "Link")
                             if url_str and url_str.startswith("http"):
@@ -587,7 +584,6 @@ class ActionsMixin:
                 if not cog:
                     return web.json_response({"error": "Welcome module is not loaded."}, status=500)
                 config = load_welcome_config(guild_id)
-                # Allow overrides from frontend (e.g. current selected channel or unsaved edits)
                 if isinstance(data.get("config"), dict):
                     config.update(data["config"])
                 if data.get("channel_id"):
@@ -611,7 +607,6 @@ class ActionsMixin:
                 if not cog:
                     return web.json_response({"error": "Goodbye module is not loaded."}, status=500)
                 config = load_goodbye_config(guild_id)
-                # Allow overrides from frontend
                 if isinstance(data.get("config"), dict):
                     config.update(data["config"])
                 if data.get("channel_id"):
@@ -667,7 +662,6 @@ class ActionsMixin:
             if channel_id and channel_id != "current":
                 target_ch = guild.get_channel(int(channel_id))
             
-            # If no channel selected or 'current', try to find a valid text channel
             if not target_ch:
                 target_ch = next((ch for ch in guild.text_channels if ch.permissions_for(guild.me).send_messages), None)
                 
@@ -730,7 +724,7 @@ class ActionsMixin:
         
         data = await request.json()
         user_id = data.get("user_id")
-        action = data.get("action") # "accept" or "decline"
+        action = data.get("action")
         if not user_id or action not in ["accept", "decline"]:
             return web.json_response({"error": "Invalid payload"}, status=400)
             
@@ -740,7 +734,6 @@ class ActionsMixin:
         from Components.Systems.BanAppeals._storage import load_appeals_config
         cfg = load_appeals_config(guild_id)
         
-        # Get the moderator's name (either the Discord user or 'a Moderator')
         member = guild.get_member(user_discord_id)
         if not member:
             try:
@@ -874,7 +867,6 @@ class ActionsMixin:
                 data["id"] = msg_id
                 
             data["guild_id"] = str(guild_id)
-            # Default name if missing
             if not data.get("name"):
                 data["name"] = "Untitled Message"
             
@@ -1066,7 +1058,6 @@ class ActionsMixin:
                 
             msg = await channel.send(**msg_kwargs)
             
-            # Update database with message_id
             rr["message_id"] = str(msg.id)
             rr["channel_id"] = str(channel_id)
             from Components.Systems.Roles.reaction_panels import save_reaction_role
@@ -1183,7 +1174,6 @@ class ActionsMixin:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
-    # SPA handles /verify/:token
 
     async def handle_api_captcha(self, request: web.Request):
         token = request.match_info.get("token")
@@ -1272,8 +1262,6 @@ class ActionsMixin:
                 return web.json_response({"error": "Verification role not found in server"}, status=400)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
-
-
 
 
     async def api_get_recent_appeals(self, request: web.Request):

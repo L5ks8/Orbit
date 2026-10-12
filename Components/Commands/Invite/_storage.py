@@ -6,7 +6,6 @@ import discord
 
 
 # ─── In-memory invite cache ───
-# guild_id -> {code: uses}
 _invite_cache: Dict[int, Dict[str, int]] = {}
 
 

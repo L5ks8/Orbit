@@ -91,14 +91,12 @@ class BoostListener(commands.Cog):
             return
 
         now = time.time()
-        # Clean old deduplication entries (> 60s)
         self._recent_boosts = {k: v for k, v in self._recent_boosts.items() if now - v < 60}
         dedup_key = (guild.id, member.id)
         if dedup_key in self._recent_boosts and (now - self._recent_boosts[dedup_key]) < 25:
             return
         self._recent_boosts[dedup_key] = now
 
-        # Ensure member is a Member instance if possible
         if not isinstance(member, discord.Member):
             cached = guild.get_member(member.id)
             if cached:
@@ -111,7 +109,6 @@ class BoostListener(commands.Cog):
 
         config = load_boost_config(guild.id)
         
-        # Reward Role
         reward_role_id = config.get("reward_role_id")
         if reward_role_id and isinstance(member, discord.Member):
             try:
@@ -216,7 +213,6 @@ class BoostListener(commands.Cog):
                 pass
             return
 
-        # Default Image mode
         formatted = format_boost_string(config.get("message", ""), member, guild)
 
         avatar_bytes = b""
@@ -252,7 +248,6 @@ class BoostListener(commands.Cog):
             file = discord.File(fp=img_buffer, filename="boost.png")
             await channel.send(content=formatted if formatted else None, file=file, allowed_mentions=allowed)
         except Exception:
-            # Fallback to embed or plain text if image generation or file attachment fails
             try:
                 embed = discord.Embed(
                     title=" Server Boost!",
@@ -274,7 +269,6 @@ class BoostListener(commands.Cog):
         if getattr(after, "bot", False):
             return
 
-        # Check if member gained premium status or boost status updated
         if (before.premium_since is None and after.premium_since is not None) or (
             before.premium_since is not None and after.premium_since is not None and before.premium_since != after.premium_since
         ):

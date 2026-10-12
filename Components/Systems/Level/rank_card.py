@@ -18,7 +18,6 @@ def _draw_chat_icon(draw, x, y, s=28, col=(255, 255, 255)):
     r = int(s * 0.2)
     lw = max(2, int(s * 0.12))
     draw.rounded_rectangle([(x, y), (x + w, y + h)], radius=r, outline=col, width=lw)
-    # Tail
     tx = x + int(w * 0.15)
     ty = y + h - 1
     draw.polygon([
@@ -30,17 +29,14 @@ def _draw_chat_icon(draw, x, y, s=28, col=(255, 255, 255)):
 def _draw_mic_icon(draw, x, y, s=28, col=(255, 255, 255)):
     """Microphone icon."""
     lw = max(2, int(s * 0.12))
-    # Mic body (rounded rect)
     bw = int(s * 0.35)
     bh = int(s * 0.5)
     bx = x + (s - bw) // 2
     draw.rounded_rectangle([(bx, y), (bx + bw, y + bh)], radius=int(bw * 0.4), outline=col, width=lw)
-    # Arc under mic
     aw = int(s * 0.7)
     ax = x + (s - aw) // 2
     ay = y + int(bh * 0.4)
     draw.arc([(ax, ay), (ax + aw, ay + int(s * 0.55))], start=0, end=180, fill=col, width=lw)
-    # Stem
     cx = x + s // 2
     stem_top = ay + int(s * 0.55) // 2
     stem_bot = y + int(s * 0.9)
@@ -50,12 +46,10 @@ def _draw_smile_icon(draw, x, y, s=28, col=(255, 255, 255)):
     """Smiley face icon."""
     lw = max(2, int(s * 0.12))
     draw.ellipse([(x, y), (x + s, y + s)], outline=col, width=lw)
-    # Eyes
     er = max(2, int(s * 0.06))
     ley = y + int(s * 0.35)
     draw.ellipse([(x + int(s * 0.3) - er, ley - er), (x + int(s * 0.3) + er, ley + er)], fill=col)
     draw.ellipse([(x + int(s * 0.7) - er, ley - er), (x + int(s * 0.7) + er, ley + er)], fill=col)
-    # Smile arc
     sw = int(s * 0.4)
     sx = x + (s - sw) // 2
     sy = y + int(s * 0.35)
@@ -65,14 +59,11 @@ def _draw_arrow_up_icon(draw, x, y, s=28, col=(255, 255, 255)):
     """Upload/arrow-up icon."""
     lw = max(2, int(s * 0.12))
     cx = x + s // 2
-    # Arrow head
     head_w = int(s * 0.45)
     head_top = y + int(s * 0.1)
     head_bot = y + int(s * 0.45)
     draw.line([(cx - head_w, head_bot), (cx, head_top), (cx + head_w, head_bot)], fill=col, width=lw, joint="curve")
-    # Stem
     draw.line([(cx, head_top), (cx, y + int(s * 0.75))], fill=col, width=lw)
-    # Base line
     draw.line([(x + int(s * 0.15), y + int(s * 0.9)), (x + int(s * 0.85), y + int(s * 0.9))], fill=col, width=lw)
 
 
@@ -126,9 +117,8 @@ def generate_rank_card(
         try:
             font_dir = os.path.join(os.path.dirname(__file__), "fonts")
             f = ImageFont.truetype(os.path.join(font_dir, "Inter-Bold.ttf"), sz)
-            # Inter is a variable font – force Bold weight (700)
             try:
-                f.set_variation_by_axes([14, 700])  # opsz=14, wght=700
+                f.set_variation_by_axes([14, 700])
             except Exception:
                 try:
                     f.set_variation_by_name("Bold")
@@ -144,10 +134,10 @@ def generate_rank_card(
                 continue
         return ImageFont.load_default()
 
-    font_rl = load_font(24)      # RANG / LEVEL
-    font_name = load_font(34)    # Username
-    font_xp = load_font(28)      # XP numbers
-    font_stats = load_font(17)   # Stats line
+    font_rl = load_font(24)
+    font_name = load_font(34)
+    font_xp = load_font(28)
+    font_stats = load_font(17)
 
     text_x = avatar_x + AVATAR_SIZE + 30 * SCALE
     text_area_w = WIDTH - text_x - PADDING
@@ -157,7 +147,6 @@ def generate_rank_card(
     rang_str = f"RANK {rank}"
     level_str = f"LEVEL {level}"
 
-    # Right-align: LEVEL first, then RANG with gap
     level_w = draw.textlength(level_str, font=font_rl)
     rang_w = draw.textlength(rang_str, font=font_rl)
     gap = 20 * SCALE
@@ -198,37 +187,32 @@ def generate_rank_card(
     # ── Stats line ──
     stats_y = 195 * SCALE
     cur_x = text_x
-    icon_gap = 8 * SCALE     # gap between icon and number
-    stat_gap = 22 * SCALE    # gap between stats
+    icon_gap = 8 * SCALE
+    stat_gap = 22 * SCALE
 
-    # 1) Chat
     _draw_chat_icon(draw, cur_x, stats_y, s=ICON_SIZE, col=(255, 255, 255))
     cur_x += ICON_SIZE + icon_gap
     t = str(message_count)
     draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
     cur_x += int(draw.textlength(t, font=font_stats)) + stat_gap
 
-    # 2) Mic
     _draw_mic_icon(draw, cur_x, stats_y, s=ICON_SIZE, col=(255, 255, 255))
     cur_x += ICON_SIZE + icon_gap
     t = str(voice_minutes) if isinstance(voice_minutes, int) else f"{voice_minutes:.1f}"
     draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
     cur_x += int(draw.textlength(t, font=font_stats)) + stat_gap
 
-    # 3) Smiley
     _draw_smile_icon(draw, cur_x, stats_y, s=ICON_SIZE, col=(255, 255, 255))
     cur_x += ICON_SIZE + icon_gap
     t = str(reaction_count)
     draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
     cur_x += int(draw.textlength(t, font=font_stats)) + stat_gap
 
-    # 4) Arrow up
     _draw_arrow_up_icon(draw, cur_x, stats_y, s=ICON_SIZE, col=(255, 255, 255))
     cur_x += ICON_SIZE + icon_gap
     t = f"{int(progress * 100)}%"
     draw.text((cur_x, stats_y + 2 * SCALE), t, fill=(255, 255, 255), font=font_stats)
 
-    # Right: TOTAL XP
     total_fmt = _format_number(total_xp).lower() if total_xp >= 1000 else str(total_xp)
     draw.text(
         (text_x + text_area_w, stats_y + 2 * SCALE),

@@ -140,13 +140,11 @@ export default function ({ guildId, serverData, setServerData }) {
   const cachedRrData = getCache(`roles_reactionRoles_${guildId}`);
   const [loading, setLoading] = useState(!cachedData || !cachedRrData);
 
-  // Reaction Roles State
   const [reactionRoles, setReactionRoles] = useState(cachedRrData || []);
   const [rrBuilderOpen, setRrBuilderOpen] = useState(false);
   const [rrBuilderData, setRrBuilderData] = useState(null);
   const [panelToDelete, setPanelToDelete] = useState(null);
 
-  // Auto roles state
   const jrInit = cachedData?.config?.joinroles || {};
   const [autoRolesEnabled, setAutoRolesEnabled] = useState(
     jrInit.enabled || false,

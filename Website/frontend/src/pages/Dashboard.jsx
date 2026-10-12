@@ -21,8 +21,6 @@ import { getCache, setCache } from '../utils/cache';
 import LoadingScreen from '../components/ui/LoadingScreen';
 
 
-
-
 function DashboardInner() {
   const { guildId } = useParams();
   const { user, loading } = useAuth();
@@ -62,7 +60,6 @@ function DashboardInner() {
         setGuildName('Error');
       });
 
-    // Preload critical dashboard data incrementally
     const token = localStorage.getItem('token');
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     

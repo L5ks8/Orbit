@@ -38,7 +38,6 @@ export default function Appeal() {
     e.preventDefault();
     setSubmitting(true);
     
-    // Format answers into a single reason string
     let reasonText = `**Punishment Type:** ${punishmentType}\n\n`;
     info.questions.forEach((q, i) => {
       reasonText += `**${q}**\n${answers[i] || 'No answer provided.'}\n\n`;

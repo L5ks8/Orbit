@@ -52,9 +52,6 @@ export default function Overview({ guildId, serverData }) {
       .catch(console.error);
       
     
-
-    
-      
     return Promise.all([p1, p2, p3]).then(() => setInitialLoading(false));
   };
 
@@ -70,7 +67,6 @@ export default function Overview({ guildId, serverData }) {
     loadData().finally(() => setTimeout(() => setIsRefreshing(false), 500));
   };
 
-  // Process History Data for Charts
   const historyRaw = stats?.history || [];
   const getFilteredHistory = (range) => {
     if (range === 'all') return historyRaw;
@@ -136,12 +132,11 @@ export default function Overview({ guildId, serverData }) {
   const voiceHours = stats?.today_voice_minutes ? (stats.today_voice_minutes / 60).toFixed(1) : 0;
   const openTickets = stats?.open_tickets || 0;
 
-  // Features Checks
   const isFeatureActive = (key) => {
     if (!config) return false;
     switch(key) {
       case 'welcome': return config.welcome?.enabled;
-      case 'polls': return false; // Or find if polls exist
+      case 'polls': return false;
       case 'tickets': return config.ticket?.enabled;
       case 'automod': return config.automod?.enabled;
       case 'voice': return config.tempvoice?.enabled;
@@ -205,7 +200,7 @@ export default function Overview({ guildId, serverData }) {
             const getChangeBadge = (val) => {
               if (!val) return { text: '+0%', badgeClass: 'pb-badge-neutral', Icon: ArrowRight };
               const seed = typeof val === 'string' ? parseFloat(val) : val;
-              const change = Math.floor((seed * 1.3) % 20) - 5; // derived pseudo-random between -5 and +14
+              const change = Math.floor((seed * 1.3) % 20) - 5;
               if (change > 0) return { text: `+${change}%`, badgeClass: 'pb-badge-green', Icon: ArrowUpRight };
               if (change < 0) return { text: `${change}%`, badgeClass: 'pb-badge-red', Icon: ArrowDownRight };
               return { text: '+0%', badgeClass: 'pb-badge-neutral', Icon: ArrowRight };

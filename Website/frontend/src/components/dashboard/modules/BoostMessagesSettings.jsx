@@ -25,17 +25,14 @@ export default function BoostMessagesSettings({ guildId, config, channels, roles
     .catch(console.error);
   }, [guildId]);
   
-  // Message State
   const [content, setContent] = useState(bCfg.message || 'Thank you for boosting the server, {user}!');
   
-  // Embed State
   const [embedColor, setEmbedColor] = useState(bCfg.embed_color || '#EB459E');
   const [embedAuthor, setEmbedAuthor] = useState(bCfg.embed_author || '');
   const [embedTitle, setEmbedTitle] = useState(bCfg.embed_title || 'SERVER BOOST');
   const [embedDesc, setEmbedDesc] = useState(bCfg.embed_description || '');
   const [embedFooter, setEmbedFooter] = useState(bCfg.embed_footer || '');
 
-  // Image Card State
   const [bgImageUrl, setBgImageUrl] = useState(bCfg.image_url || '');
 
   const channelOptions = channels.map(c => ({ value: c.id, label: `# ${c.name}` }));

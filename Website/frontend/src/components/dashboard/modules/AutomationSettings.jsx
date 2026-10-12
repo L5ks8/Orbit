@@ -10,7 +10,6 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
   const toast = useToast();
   const autCfg = config?.automation || {};
   
-  // States for dynamic lists
   const [enabled, setEnabled] = useState(autCfg.enabled || false);
   const [fileChannels, setFileChannels] = useState(autCfg.file_channels || []);
   const [reactionChannels, setReactionChannels] = useState(autCfg.reaction_channels || []);

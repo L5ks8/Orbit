@@ -17,9 +17,8 @@ class Birthday(commands.Cog):
     @app_commands.describe(date="Your birthday in DD.MM format (e.g., 15.08)")
     async def set_birthday(self, ctx: commands.Context, date: str):
         try:
-            # Validate format
             day, month = map(int, date.split('.'))
-            datetime.date(2000, month, day) # Dummy year to check validity
+            datetime.date(2000, month, day)
         except ValueError:
             return await ctx.send(
                 embed=discord.Embed(description="Invalid format! Please use **DD.MM** (e.g., 15.08)", color=discord.Color.red()),
@@ -43,7 +42,6 @@ class Birthday(commands.Cog):
 
     @tasks.loop(time=datetime.time(hour=8, minute=0, tzinfo=datetime.timezone.utc))
     async def check_birthdays(self):
-        # Runs every day at 8:00 UTC
         db = get_db()
         if db is None:
             return
@@ -51,14 +49,11 @@ class Birthday(commands.Cog):
         today = datetime.datetime.now(datetime.timezone.utc)
         collection = db['birthdays']
         
-        # Find all users whose birthday is today
         birthday_users = list(collection.find({"day": today.day, "month": today.month}))
         if not birthday_users:
             return
 
         for guild in self.bot.guilds:
-            # We need a channel to send the message. We'll use the system_channel if available,
-            # otherwise the first text channel the bot can send messages in.
             channel = guild.system_channel
             if not channel:
                 for c in guild.text_channels:

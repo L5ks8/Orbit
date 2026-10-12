@@ -52,7 +52,6 @@ export default function Verification({ guildId, serverData, setServerData }) {
       setEmbedImage(cfg.embed_image || DEFAULT_IMAGE);
       setPanelChannel(cfg.channel_id ? String(cfg.channel_id) : '');
       
-      // Update the reference payload so it doesn't trigger an immediate auto-save
       setTimeout(() => {
         initialPayloadRef.current = JSON.stringify({
           verify: {

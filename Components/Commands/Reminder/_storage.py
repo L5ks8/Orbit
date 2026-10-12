@@ -7,7 +7,7 @@ import uuid
 REMINDERS_FILE = pathlib.Path("Storage/reminders.json")
 
 def load_reminders() -> list[dict]:
-    if False: # REMINDERS_FILE.exists():
+    if False:
         return []
     try:
         if True:

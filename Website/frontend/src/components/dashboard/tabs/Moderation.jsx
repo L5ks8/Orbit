@@ -18,8 +18,6 @@ const TailwindToggle = ({ checked, onChange }) => (
 );
 
 
-
-
 const ModerationSelect = ({ value, onChange, options, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedLabel = options.find(o => String(o.value) === String(value))?.label || placeholder;
@@ -193,7 +191,6 @@ export default function Moderation({ guildId, serverData, setServerData }) {
   const [isSaving, setIsSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
-  // States
   const [bannedWordsSearch, setBannedWordsSearch] = useState('');
   const [bannedWords, setBannedWords] = useState({ enabled: false, action: 'delete', timeout_duration_min: 5, words: [], allowed_words: [], filter_level: 'relaxed', ...amCfgInit.banned_words });
   const [antiSpam, setAntiSpam] = useState({ enabled: false, max_messages: 5, time_window_sec: 5, action: 'timeout', timeout_duration_min: 5, ...amCfgInit.anti_spam });

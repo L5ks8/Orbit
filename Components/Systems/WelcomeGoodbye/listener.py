@@ -107,7 +107,6 @@ class WelcomeListener(commands.Cog):
         if not channel:
             return False, f"Welcome channel with ID {ch_id} not found."
 
-        # Permission verification
         me = guild.me or (guild.get_member(self.bot.user.id) if self.bot.user else None)
         if me:
             perms = channel.permissions_for(me)
@@ -122,7 +121,6 @@ class WelcomeListener(commands.Cog):
             raw = format_welcome_string(text, member)
             return _parse_channel_and_emoji(raw, guild)
 
-        # Handle DM on Join (only for real joins, skipped in tests)
         if not force_test and config.get("dm_enabled") and config.get("dm_message"):
             dm_text = fmt_text(config.get("dm_message"))
             if dm_text:
@@ -162,19 +160,16 @@ class WelcomeListener(commands.Cog):
             if desc:
                 embed.description = desc
 
-            # Safely resolve thumbnail
             thumb_url = _resolve_url(config.get("embed_thumbnail", ""), member, guild)
             if not thumb_url and not config.get("embed_thumbnail") and getattr(member, "display_avatar", None):
                 thumb_url = member.display_avatar.url
             if thumb_url:
                 embed.set_thumbnail(url=thumb_url)
 
-            # Safely resolve main embed image
             img_url = _resolve_url(config.get("embed_image", ""), member, guild)
             if img_url:
                 embed.set_image(url=img_url)
 
-            # Footer
             footer = fmt_text(config.get("embed_footer", ""))
             f_icon = _resolve_url(config.get("embed_footer_icon", ""), member, guild)
             if footer:
@@ -183,7 +178,6 @@ class WelcomeListener(commands.Cog):
                 else:
                     embed.set_footer(text=footer)
 
-            # Author
             author = fmt_text(config.get("embed_author", ""))
             a_icon = _resolve_url(config.get("embed_author_icon", ""), member, guild)
             if author:
@@ -269,7 +263,6 @@ class WelcomeListener(commands.Cog):
             except Exception as e:
                 print(f"[Welcome] Failed to send image file: {e}")
 
-        # Fallback to embed
         try:
             embed = discord.Embed(
                 title="Welcome!",
@@ -281,7 +274,6 @@ class WelcomeListener(commands.Cog):
             await channel.send(embed=embed, allowed_mentions=allowed)
             return True, f"Welcome sent as embed fallback in #{channel.name}"
         except Exception:
-            # Fallback to plain text
             try:
                 await channel.send(content=formatted, allowed_mentions=allowed)
                 return True, f"Welcome sent as plain text in #{channel.name}"
@@ -338,7 +330,6 @@ class GoodbyeListener(commands.Cog):
         if not channel:
             return False, f"Goodbye channel with ID {ch_id} not found."
 
-        # Permission verification
         me = guild.me or (guild.get_member(self.bot.user.id) if self.bot.user else None)
         if me:
             perms = channel.permissions_for(me)
@@ -353,7 +344,6 @@ class GoodbyeListener(commands.Cog):
             raw = format_goodbye_string(text, member)
             return _parse_channel_and_emoji(raw, guild)
 
-        # Handle DM on Leave
         if not force_test and config.get("dm_enabled") and config.get("dm_message"):
             dm_text = fmt_text(config.get("dm_message"))
             if dm_text:
@@ -393,19 +383,16 @@ class GoodbyeListener(commands.Cog):
             if desc:
                 embed.description = desc
 
-            # Safely resolve thumbnail
             thumb_url = _resolve_url(config.get("embed_thumbnail", ""), member, guild)
             if not thumb_url and not config.get("embed_thumbnail") and getattr(member, "display_avatar", None):
                 thumb_url = member.display_avatar.url
             if thumb_url:
                 embed.set_thumbnail(url=thumb_url)
 
-            # Safely resolve main embed image
             img_url = _resolve_url(config.get("embed_image", ""), member, guild)
             if img_url:
                 embed.set_image(url=img_url)
 
-            # Footer
             footer = fmt_text(config.get("embed_footer", ""))
             f_icon = _resolve_url(config.get("embed_footer_icon", ""), member, guild)
             if footer:
@@ -414,7 +401,6 @@ class GoodbyeListener(commands.Cog):
                 else:
                     embed.set_footer(text=footer)
 
-            # Author
             author = fmt_text(config.get("embed_author", ""))
             a_icon = _resolve_url(config.get("embed_author_icon", ""), member, guild)
             if author:
@@ -500,7 +486,6 @@ class GoodbyeListener(commands.Cog):
             except Exception as e:
                 print(f"[Goodbye] Failed to send image file: {e}")
 
-        # Fallback to embed
         try:
             embed = discord.Embed(
                 title="Goodbye!",
@@ -512,7 +497,6 @@ class GoodbyeListener(commands.Cog):
             await channel.send(embed=embed, allowed_mentions=allowed)
             return True, f"Goodbye sent as embed fallback in #{channel.name}"
         except Exception:
-            # Fallback to plain text
             try:
                 await channel.send(content=formatted, allowed_mentions=allowed)
                 return True, f"Goodbye sent as plain text in #{channel.name}"

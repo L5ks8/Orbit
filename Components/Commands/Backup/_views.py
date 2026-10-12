@@ -50,7 +50,6 @@ class OverwriteBackupView(View):
             return await interaction.response.send_message(embed=make_embed("Only the server owner can do this."), ephemeral=True)
         
         target_id = self.select.values[0]
-        # Keep the target_id to overwrite the same slot, or just delete target_id and save new one
         delete_backup(target_id)
         
         await interaction.response.defer()

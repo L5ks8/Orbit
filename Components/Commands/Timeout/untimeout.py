@@ -6,7 +6,6 @@ from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands._utils import make_embed
 
 
-
 class UntimeoutCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -52,6 +51,4 @@ class UntimeoutCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UntimeoutCommand(bot))
-
-
 

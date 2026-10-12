@@ -26,11 +26,8 @@ def parse_time(time_str: str) -> int:
 class SecurityModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        # Format: {guild_id: {admin_id: [timestamp1, timestamp2, ...]}}
         self.anti_nuke_logs = defaultdict(lambda: defaultdict(list))
-        # Format: {guild_id: [join_time1, join_time2, ...]}
         self.anti_raid_joins = defaultdict(list)
-        # Format: {guild_id: {channel_id: [webhook_create_time1, ...]}}
         self.webhook_logs = defaultdict(lambda: defaultdict(list))
 
     def is_exempt(self, member: discord.Member, config: dict, module: str) -> bool:
@@ -88,15 +85,12 @@ class SecurityModule(commands.Cog):
 
         try:
             if level == "conservative":
-                # Strip roles -> kick
                 await member.edit(roles=[], reason="Orbit Anti-Nuke: Conservative")
                 await member.kick(reason="Orbit Anti-Nuke: Conservative")
             elif level == "recommended":
-                # Quarantine (strip roles) -> Ban
                 await member.edit(roles=[], reason="Orbit Anti-Nuke: Recommended")
                 await member.ban(reason="Orbit Anti-Nuke: Recommended")
             elif level == "aggressive":
-                # Instant Ban
                 await member.ban(reason="Orbit Anti-Nuke: Aggressive")
             
             log_threat(guild.id, "nuke", f"{member.name} ({member.id}) was punished for triggering Anti-Nuke.")
@@ -109,7 +103,6 @@ class SecurityModule(commands.Cog):
             return False
             
         current_time = time.time()
-        # Default threshold is 10 actions in 30 seconds for simplicity if mass_emoji is used as baseline
         threshold = int(cfg.get("mass_emoji_threshold", 10))
         time_window = 30 
         
@@ -174,7 +167,6 @@ class SecurityModule(commands.Cog):
             return
             
         try:
-            # Check if it was a kick
             async for entry in guild.audit_logs(action=discord.AuditLogAction.kick, limit=1):
                 if entry.target.id == member.id:
                     await self._handle_nuke_event(guild, entry, config)
@@ -204,7 +196,6 @@ class SecurityModule(commands.Cog):
         if not cfg.get("enabled", False) or not cfg.get("privilege_escalation", False):
             return
             
-        # Privilege escalation check
         if not before.permissions.administrator and after.permissions.administrator:
             try:
                 async for entry in guild.audit_logs(action=discord.AuditLogAction.role_update, limit=1):
@@ -231,7 +222,6 @@ class SecurityModule(commands.Cog):
                         member = after.get_member(entry.user.id)
                         if member and not self.is_exempt(member, config, "anti_nuke"):
                             await self._punish_nuker(after, member, config)
-                            # Revert changes
                             try:
                                 await after.edit(name=before.name, icon=before.icon if before.icon else None, reason="Orbit Anti-Nuke: Reverting server identity change")
                             except:
@@ -246,7 +236,6 @@ class SecurityModule(commands.Cog):
         guild = member.guild
         config = load_security_config(guild.id)
         
-        # Anti-Nuke: Block Unknown Bot Check
         nuke_cfg = config.get("anti_nuke", {})
         if nuke_cfg.get("enabled", False) and nuke_cfg.get("block_unknown_bot", False):
             if member.bot:
@@ -267,7 +256,6 @@ class SecurityModule(commands.Cog):
         if not cfg.get("enabled", False):
             return
             
-        # Handle Suspicious Account checks
         if cfg.get("suspicious_account", False):
             suspicious = False
             reasons = []
@@ -321,7 +309,6 @@ class SecurityModule(commands.Cog):
                                 channel = None
 
                         if channel:
-                            # Yellow for flag/timeout, Red for kick/ban
                             color = 0xed4245 if action in ("kick", "ban") else 0xfee75c
                             embed = discord.Embed(
                                 title="⚠️ Suspicious Account Joined",
@@ -365,7 +352,6 @@ class SecurityModule(commands.Cog):
                     except Exception as e:
                         print(f"[Security] Failed to send suspicious account alert: {e}")
 
-        # Handle Join Velocity (Mass Join Raid)
         current_time = time.time()
         threshold = int(cfg.get("join_threshold", 5))
         time_window = parse_time(cfg.get("join_time_window", "10s"))
@@ -453,7 +439,6 @@ class SecurityModule(commands.Cog):
         try:
             async for entry in guild.audit_logs(action=discord.AuditLogAction.webhook_create, limit=1):
                 if entry.target.channel.id == channel.id:
-                    # Check if trusted
                     trusted = str(cfg.get("trusted_webhooks", "")).split(",")
                     if str(entry.target.id) in trusted:
                         return
@@ -462,7 +447,6 @@ class SecurityModule(commands.Cog):
                     if creator and self.is_exempt(creator, config, "webhook_protection"):
                         return
                         
-                    # Rate limiting check
                     rate_limit = int(cfg.get("rate_limit", 5))
                     current_time = time.time()
                     logs = self.webhook_logs[guild.id][channel.id]
@@ -472,13 +456,11 @@ class SecurityModule(commands.Cog):
                     
                     if len(logs) > rate_limit:
                         try:
-                            # Delete the webhook
                             webhook = await self.bot.fetch_webhook(entry.target.id)
                             await webhook.delete(reason="Orbit Webhook Protection: Rate limit exceeded")
                         except:
                             pass
                             
-                        # Action on creator
                         action = cfg.get("action", "delete")
                         if creator and isinstance(creator, discord.Member):
                             try:
@@ -500,7 +482,6 @@ class SecurityModule(commands.Cog):
         if not message.guild:
             return
             
-        # Anti-Scam (Legacy support if still needed)
         config = load_security_config(message.guild.id)
         if config.get("anti_scam_enabled", False) and not message.author.bot:
             content = message.content.lower()
@@ -516,7 +497,6 @@ class SecurityModule(commands.Cog):
                 except Exception:
                     pass
 
-        # Webhook Message Protection
         if message.webhook_id:
             cfg = config.get("webhook_protection", {})
             if cfg.get("enabled", False):

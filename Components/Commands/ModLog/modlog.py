@@ -81,23 +81,19 @@ class ModLogCommand(commands.Cog):
         guild_id = ctx.guild.id
         moderator_id = user_target.id
 
-        # 1. Fetch unified ModLogs by moderator
         from Components.Commands.ModLog._modlog_storage import get_modlogs_by_moderator
         unified_logs = get_modlogs_by_moderator(guild_id, moderator_id)
 
-        # 2. Fetch old warnings by this moderator
         all_warns = load_warnings(guild_id)
         old_warns = []
         for target_uid, warns in all_warns.items():
             for w in warns:
-                # Some old storages use "moderator" and some use "moderator_id"
                 mod_val = w.get("moderator") or w.get("moderator_id")
                 if str(mod_val) == str(moderator_id):
                     w_copy = dict(w)
                     w_copy["target_id"] = target_uid
                     old_warns.append(w_copy)
         
-        # 3. Fetch old bans by this moderator
         all_bans = load_ban_history(guild_id)
         old_bans = []
         for target_uid, bans in all_bans.items():
@@ -108,7 +104,6 @@ class ModLogCommand(commands.Cog):
                     b_copy["target_id"] = target_uid
                     old_bans.append(b_copy)
 
-        # Combine all logs
         all_logs = []
         all_logs.extend(unified_logs)
         
@@ -136,14 +131,12 @@ class ModLogCommand(commands.Cog):
                 seen.add(identifier)
                 unique_logs.append(log)
 
-        # Sort by timestamp, descending (newest first)
         unique_logs.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
 
         view = ModLogPaginationView(ctx, user_target, unique_logs)
         embed = view.generate_embed()
         
         if len(unique_logs) <= view.per_page:
-            # No need for buttons
             await ctx.send(embed=embed)
         else:
             await ctx.send(embed=embed, view=view)

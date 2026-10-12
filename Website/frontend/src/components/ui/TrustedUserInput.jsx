@@ -5,7 +5,6 @@ export default function TrustedUserInput({ value, onChange }) {
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState({});
 
-  // value is a comma-separated string of user IDs
   const userIds = (value || '').split(',').map(id => id.trim()).filter(id => id.length > 0);
 
   useEffect(() => {
@@ -38,11 +37,10 @@ export default function TrustedUserInput({ value, onChange }) {
   const commitInput = () => {
     if (!inputValue.trim()) return;
     
-    // Split by comma, space, or newline to allow pasting multiple IDs
     const rawIds = inputValue.split(/[\s,]+/);
     const validNewIds = rawIds
       .map(id => id.trim())
-      .filter(id => id.length >= 15 && /^\d+$/.test(id)) // basic Discord ID validation
+      .filter(id => id.length >= 15 && /^\d+$/.test(id))
       .filter(id => !userIds.includes(id));
       
     if (validNewIds.length > 0) {

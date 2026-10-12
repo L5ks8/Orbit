@@ -54,4 +54,3 @@ async def setup(bot: commands.Bot):
     if "blacklist" not in bot.all_commands:
         bot.add_command(blacklist_cmd)
 
-

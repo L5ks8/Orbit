@@ -17,8 +17,6 @@ def configure_cloudinary():
         url = os.environ.get("CLOUDINARY_URL")
         
     if url:
-        # cloudinary configures itself automatically from the CLOUDINARY_URL env var
-        # if we just import it, but we can force it:
         cloudinary.config()
         _configured = True
     else:
@@ -49,21 +47,15 @@ def delete_image_by_url(url: str) -> bool:
         return False
         
     try:
-        # URL format: https://res.cloudinary.com/<cloud>/image/upload/v123456/Folder/Filename.png
-        # We need to extract 'Folder/Filename' as the public ID
-        # Split by /upload/
         parts = url.split("/upload/")
         if len(parts) < 2:
             return False
             
-        # The right side is like 'v123456/Orbit/e7vtg.png' or just 'Orbit/e7vtg.png'
         path_parts = parts[1].split("/")
         
-        # If the first part starts with 'v' and followed by numbers, it's a version tag
         if path_parts[0].startswith("v") and path_parts[0][1:].isdigit():
             path_parts.pop(0)
             
-        # Join the remaining parts, then strip the extension
         public_id_with_ext = "/".join(path_parts)
         public_id = public_id_with_ext.rsplit(".", 1)[0]
         

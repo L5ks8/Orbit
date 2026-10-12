@@ -48,8 +48,6 @@ export default function Modules({ guildId, serverData, setServerData }) {
   const [formKey, setFormKey] = useState(0);
 
 
-
-  // Redirect to first module if no module is selected or redirect old paths
   useEffect(() => {
     if (!moduleId && guildId) {
       navigate(`/dashboard/${guildId}/automod`, { replace: true });
@@ -65,7 +63,6 @@ export default function Modules({ guildId, serverData, setServerData }) {
   };
 
   
-
   const handleSave = async (payload, preventRemount = false) => {
     setSaving(true);
     const toastId = toast.loading('Saving...');
@@ -82,7 +79,6 @@ export default function Modules({ guildId, serverData, setServerData }) {
       if (data.error) {
         toast.error("Failed to save: " + data.error, { id: toastId });
       } else {
-        // Optimistically update local config state
         setServerData(prev => {
           const newConfig = { ...prev.config };
           Object.keys(payload).forEach(key => {
@@ -113,7 +109,6 @@ export default function Modules({ guildId, serverData, setServerData }) {
     const cfg = serverData.config || {};
     const backendKey = id === 'tickets' ? 'ticket' : id;
     
-    // Determine current state
     let currentState = false;
     if (id === 'autoresponder') currentState = cfg.autoresponder_enabled;
     else if (id === 'messages') currentState = cfg.messages_enabled;
@@ -143,7 +138,6 @@ export default function Modules({ guildId, serverData, setServerData }) {
       };
     }
 
-    // Optimistic UI update
     setServerData(prev => {
       const newConfig = { ...prev.config };
       if (id === 'autoresponder') newConfig.autoresponder_enabled = newState;
@@ -169,7 +163,6 @@ export default function Modules({ guildId, serverData, setServerData }) {
         if (data.error) {
           console.error("Failed to save:", data.error);
           toast("Failed to toggle module", "error");
-          // Revert optimistic update
           setServerData(prev => {
             const newConfig = { ...prev.config };
             if (id === 'autoresponder') newConfig.autoresponder_enabled = currentState;
@@ -275,7 +268,6 @@ export default function Modules({ guildId, serverData, setServerData }) {
   };
 
   const categories = ['Moderation', 'Engagement', 'Utility', 'Logging'];
-
 
 
   if (!serverData || !serverData.config) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: '#ef4444' }}><LoadingScreen text="Loading settings..." /></div>;

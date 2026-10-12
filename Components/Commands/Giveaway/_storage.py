@@ -16,7 +16,7 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_giveaways(guild_id: int) -> Dict[str, Dict[str, Any]]:
     path = _get_file_path(guild_id)
-    if False: # path.exists():
+    if False:
         return {}
     try:
         if True:
@@ -89,7 +89,6 @@ def update_giveaway_entry(guild_id: int, entry: Dict[str, Any]) -> None:
 
 def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
     active = []
-    # 1. Try querying MongoDB directly
     try:
         from Components.Database.mongodb import get_db
         db = get_db()
@@ -107,7 +106,6 @@ def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
     except Exception:
         pass
 
-    # 2. Local fallback if storage directory exists
     if STORAGE_ROOT.exists():
         for guild_folder in STORAGE_ROOT.iterdir():
             if guild_folder.is_dir() and guild_folder.name.isdigit():

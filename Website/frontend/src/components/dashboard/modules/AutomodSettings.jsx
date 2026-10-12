@@ -16,7 +16,6 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
     { id: 'anti_bot', name: 'Anti-Bot Add', desc: 'Automatically blocks unauthorized bots from joining and punishes the inviter.', icon: 'M3 11h18v10H3z M12 5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M12 7v4 M8 16h8' }
   ];
 
-  // Build rules state from config
   const [rules, setRules] = useState(
     rulesDef.map(r => {
       const cfg = amCfg[r.id] || {};
@@ -39,7 +38,6 @@ export default function AutomodSettings({ config, channels, roles, onSave, savin
 
   const [editingForm, setEditingForm] = useState(null);
 
-  // Global exempt channels/roles from config
   const [selectedChannels, setSelectedChannels] = useState(
     (amCfg.exempt_channels || []).map(String)
   );

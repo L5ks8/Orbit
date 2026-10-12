@@ -4,7 +4,6 @@ from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Slowmode.slowmode import slowmode_group
 
 
-
 async def _do_slowmode_remove(ctx: commands.Context, channel: discord.TextChannel | None):
     await ctx.defer()
     target_channel = channel or ctx.channel

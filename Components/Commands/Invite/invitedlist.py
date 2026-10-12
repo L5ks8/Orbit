@@ -18,11 +18,9 @@ class InvitedListCommand(commands.Cog):
         if target is None:
             member = ctx.author
         else:
-            # Try to resolve as member
             try:
                 member = await commands.MemberConverter().convert(ctx, target)
             except commands.BadArgument:
-                # Treat as invite code
                 code = target.strip()
 
         invited = []

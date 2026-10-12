@@ -332,7 +332,6 @@ class TicketControlLayout(discord.ui.View):
         self.add_item(self.btn_close)
 
 
-
 class PersistentTicketPanelLayout(discord.ui.View):
     def __init__(self, title: str = "Support Ticket Desk", description: str = "Click the button below to open a direct support channel with our team.", instructions: str = "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel.", options: list | None = None, options_slots: list | None = None):
         super().__init__(timeout=None)

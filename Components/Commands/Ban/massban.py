@@ -30,12 +30,10 @@ class MassBanCog(commands.Cog):
     async def massban_cmd(self, ctx: commands.Context, users: str, reason: str = "No reason provided", history: int = 0):
         await ctx.defer()
         
-        # Extract all IDs from the input string (mentions or raw IDs)
         user_ids_raw = re.findall(r'\d+', users)
         if not user_ids_raw:
             return await ctx.send(embed=make_embed("No valid user IDs or mentions found in the input."), ephemeral=True)
             
-        # Deduplicate while preserving order
         seen = set()
         user_ids = [int(uid) for uid in user_ids_raw if not (uid in seen or seen.add(uid))]
         
@@ -51,7 +49,6 @@ class MassBanCog(commands.Cog):
                 continue
                 
             try:
-                # Ban the user even if they are not in the server
                 await ctx.guild.ban(
                     discord.Object(id=uid),
                     reason=f"Massban by {ctx.author} | Reason: {reason}",
@@ -59,7 +56,6 @@ class MassBanCog(commands.Cog):
                 )
                 success_count += 1
                 
-                # Log to case storage and modlogs
                 create_case(ctx.guild.id, uid, ctx.author.id, "ban", reason)
                 add_modlog(ctx.guild.id, uid, ctx.author.id, "Ban (Mass)", reason)
                 

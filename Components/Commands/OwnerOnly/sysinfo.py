@@ -21,7 +21,6 @@ class SysInfo(commands.Cog):
     async def sysinfo_cmd(self, ctx: commands.Context):
         embed = discord.Embed(title="System Information", color=0x2B2D31)
         
-        # Uptime
         uptime_seconds = int(time.time() - self.start_time)
         m, s = divmod(uptime_seconds, 60)
         h, m = divmod(m, 60)
@@ -29,16 +28,13 @@ class SysInfo(commands.Cog):
         uptime_str = f"{d}d {h}h {m}m {s}s"
         embed.add_field(name="Uptime", value=f"`{uptime_str}`", inline=True)
         
-        # Bot Stats
         embed.add_field(name="Servers", value=f"`{len(self.bot.guilds)}`", inline=True)
         embed.add_field(name="Users", value=f"`{len(self.bot.users)}`", inline=True)
         
-        # Active Tasks
         import asyncio
         tasks = [t for t in asyncio.all_tasks() if not t.done()]
         embed.add_field(name="Active Tasks", value=f"`{len(tasks)}`", inline=True)
         
-        # DB Ping
         from Components.Database.mongodb import get_db
         db = get_db()
         ping_start = time.time()
@@ -50,7 +46,6 @@ class SysInfo(commands.Cog):
             db_status = "`Disconnected/Error`"
         embed.add_field(name="DB Ping", value=db_status, inline=True)
         
-        # CPU / RAM
         if HAS_PSUTIL:
             cpu_percent = psutil.cpu_percent()
             mem = psutil.virtual_memory()

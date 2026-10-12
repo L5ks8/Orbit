@@ -36,7 +36,6 @@ class AskVoice(commands.Cog):
             self.client = AsyncClient()
 
 
-
     def _build_system_prompt(self, guild: discord.Guild | None) -> str:
         server_info = (
             f"Server Name: {guild.name}\nMember Count: {guild.member_count}"
@@ -77,7 +76,6 @@ class AskVoice(commands.Cog):
         if audio_buffer.getbuffer().nbytes == 0:
             return None
         return audio_buffer.read()
-
 
 
     async def _handle_ask(self, question: str, guild, user, voice_client, send, send_ephemeral):

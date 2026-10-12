@@ -7,7 +7,7 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
   
   const [embeds, setEmbeds] = useState([]);
   const [search, setSearch] = useState('');
-  const [activeEmbed, setActiveEmbed] = useState(null); // null = list view
+  const [activeEmbed, setActiveEmbed] = useState(null);
   const [loading, setLoading] = useState(true);
   
   const [menuOpenId, setMenuOpenId] = useState(null);
@@ -43,7 +43,6 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
     fetchEmbeds();
   }, [guildId]);
   
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClick = () => setMenuOpenId(null);
     window.addEventListener('click', handleClick);
@@ -63,9 +62,8 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
       const data = await res.json();
       if (data.success) {
         if (!embedData.id) {
-          embedData.id = data.id; // update local ID if it was new
+          embedData.id = data.id;
         }
-        // Update local state without fetching again to prevent lag
         setEmbeds(prev => {
           const exists = prev.find(e => e.id === embedData.id);
           if (exists) {

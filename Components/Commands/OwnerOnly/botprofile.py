@@ -40,7 +40,6 @@ class BotProfile(commands.Cog):
     @commands.is_owner()
     async def reset_avatar(self, ctx: commands.Context):
         import os
-        # Path to the logo in the Website/frontend/public/img directory
         logo_path = os.path.join(os.path.dirname(__file__), "..", "..", "Website", "frontend", "public", "img", "logo.png")
         try:
             if os.path.exists(logo_path):
@@ -49,7 +48,6 @@ class BotProfile(commands.Cog):
                 await self.bot.user.edit(avatar=avatar_bytes)
                 await ctx.send(embed=discord.Embed(description="Avatar reset to default Orbit logo.", color=0x2B2D31))
             else:
-                # Fallback to None if logo is missing, though it removes the avatar entirely
                 await self.bot.user.edit(avatar=None)
                 await ctx.send(embed=discord.Embed(description="Local logo file not found. Avatar cleared instead.", color=0x2B2D31))
         except discord.HTTPException as e:
@@ -79,7 +77,6 @@ class BotProfile(commands.Cog):
     @commands.command(name="resetusername", hidden=True)
     @commands.is_owner()
     async def reset_username(self, ctx: commands.Context):
-        # Default name is 'Orbit' but it could be rate limited.
         try:
             await self.bot.user.edit(username="Orbit")
             await ctx.send(embed=discord.Embed(description="Username reset to **Orbit**.", color=0x2B2D31))

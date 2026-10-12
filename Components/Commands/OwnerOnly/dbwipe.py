@@ -15,7 +15,6 @@ class DbWipeCommand(commands.Cog):
         if db is not None:
             for coll_name in db.list_collection_names():
                 coll = db[coll_name]
-                # Try string _id (settings), int guild_id (levels, economy), string guild_id
                 res1 = coll.delete_many({"_id": str(guild_id)})
                 res2 = coll.delete_many({"guild_id": guild_id})
                 res3 = coll.delete_many({"guild_id": str(guild_id)})

@@ -13,7 +13,6 @@ def load_botprofile_config(guild_id: int) -> Dict[str, Any]:
         if not data:
             return default.copy()
         
-        # Merge with default to ensure keys exist
         merged = default.copy()
         for k in default.keys():
             if k in data:

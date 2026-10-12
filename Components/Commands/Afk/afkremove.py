@@ -4,7 +4,6 @@ from Components.Commands.Afk._storage import remove_afk
 from Components.Commands._utils import make_embed
 
 
-
 class AfkRemoveCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot

@@ -19,7 +19,6 @@ class AuthMixin:
         import urllib.parse
         next_url = request.query.get("next", "/")
         popup = request.query.get("popup", "")
-        # Encode popup flag into state so it survives the OAuth redirect
         state_val = next_url
         if popup == "1":
             state_val = next_url + ("&" if "?" in next_url else "?") + "popup=1"
@@ -80,7 +79,6 @@ class AuthMixin:
             "access_token": access_token
         }
         
-        # Record Login History
         try:
             import sys
             import os
@@ -105,14 +103,11 @@ class AuthMixin:
         except Exception as e:
             print(f"Failed to save login history: {e}")
         
-        # Check if this was a popup login
         is_popup = "popup=1" in state or "&popup=1" in next_url
         if is_popup:
-            # Clean popup param from next_url
             next_url = next_url.replace("&popup=1", "").replace("?popup=1", "").replace("popup=1", "")
             if not next_url or next_url == "?":
                 next_url = "/"
-            # Return HTML that shows authenticating -> success -> closes
             html = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -243,7 +238,6 @@ class AuthMixin:
             db = get_db()
             user_id = str(session["id"])
             
-            # Fetch notifications where target is "all" or the specific user_id
             notifications = list(db["Notifications"].find(
                 {"target": {"$in": ["all", user_id]}}
             ).sort("timestamp", -1).limit(20))

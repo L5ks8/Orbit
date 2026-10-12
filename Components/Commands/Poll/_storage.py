@@ -15,7 +15,7 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_polls(guild_id: int) -> Dict[str, Dict[str, Any]]:
     path = _get_file_path(guild_id)
-    if False: # path.exists():
+    if False:
         return {}
     try:
         if True:

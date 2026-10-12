@@ -62,9 +62,7 @@ def get_recent_modlogs(guild_id: int) -> List[Dict[str, Any]]:
         return []
     try:
         cutoff = int(time.time()) - (24 * 3600)
-        # Delete older than 24h
         modlogs_col.delete_many({"guild_id": guild_id, "timestamp": {"$lt": cutoff}})
-        # Fetch recent
         cursor = modlogs_col.find({"guild_id": guild_id}).sort("timestamp", pymongo.DESCENDING).limit(10)
         return list(cursor)
     except Exception as e:

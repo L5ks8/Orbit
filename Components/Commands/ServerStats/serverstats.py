@@ -89,7 +89,6 @@ class ServerStats(commands.Cog):
                         except Exception as e:
                             print(f"Failed to create {key} stat channel in {guild.id}: {e}")
                 else:
-                    # Use the template from the website settings
                     target_name = template.replace("{count}", str(count))
 
                     try:

@@ -9,11 +9,9 @@ _level_lock = threading.Lock()
 # ─── Default Config ───────────────────────────────────────────────────────────
 DEFAULT_LEVEL_CONFIG = {
     "enabled": False,
-    # Message XP
     "msg_xp_enabled": True,
     "msg_xp_amount": 20,
     "msg_xp_cooldown": 60,
-    # Voice XP
     "voice_xp_enabled": False,
     "voice_xp_amount": 6,
     "voice_xp_ignore_muted": True,
@@ -22,26 +20,21 @@ DEFAULT_LEVEL_CONFIG = {
     "cmd_xp_enabled": True,
     "cmd_xp_amount": 15,
     "cmd_xp_cooldown": 60,
-    # Reaction XP
     "react_xp_enabled": True,
     "react_xp_amount": 15,
     "react_xp_cooldown": 300,
-    # XP Options
     "reset_on_leave": False,
     "reset_on_ban": False,
     "vote_boost": True,
     "xp_multiplier": 1.0,
-    # Channels / Roles
     "blocked_channels": [],
     "blocked_roles": [],
-    "channel_mode": "blacklist",  # "blacklist" or "whitelist"
+    "channel_mode": "blacklist",
     "role_mode": "blacklist",
-    "levelup_channel": "current",  # "current" or a channel ID
-    # Leaderboard
+    "levelup_channel": "current",
     "leaderboard_url": "",
     "leaderboard_channel": "",
     "leaderboard_color": "#3B82F6",
-    # Level Up Message
     "levelup_message_content": "{user_mention}",
     "levelup_embed_author": "",
     "levelup_embed_title": " Level Up!",
@@ -50,24 +43,21 @@ DEFAULT_LEVEL_CONFIG = {
     "levelup_embed_image": "",
     "levelup_show_avatar": True,
     "levelup_conditional": "",
-    # Level Roles
     "level_roles_stack": False,
     "level_roles_rejoin": False,
-    "level_roles": [],  # [{"level": 5, "role_id": "123"}]
-    # Stat Roles
+    "level_roles": [],
     "stat_roles_msg_stack": False,
     "stat_roles_msg_cooldown": 5,
-    "stat_roles_msg": [],  # [{"count": 100, "role_id": "123"}]
+    "stat_roles_msg": [],
     "stat_roles_voice_stack": False,
     "stat_roles_voice_cooldown": 5,
     "stat_roles_voice": [],
     "stat_roles_react_stack": False,
     "stat_roles_react_cooldown": 5,
     "stat_roles_react": [],
-    # Boosters
     "role_boosters_stack": True,
-    "role_boosters": [],  # [{"multiplier": 2.0, "role_id": "123"}]
-    "channel_boosters": [],  # [{"multiplier": 2.0, "channel_id": "123"}]
+    "role_boosters": [],
+    "channel_boosters": [],
 }
 
 # ─── XP / Level Math ──────────────────────────────────────────────────────────

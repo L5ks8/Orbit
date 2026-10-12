@@ -14,7 +14,6 @@ except ImportError:
     TextDisplay = None
 
 
-
 PAGES = [
     {
         "title": "Overview & Navigation",

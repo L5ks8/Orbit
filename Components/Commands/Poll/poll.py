@@ -74,7 +74,6 @@ class ComponentsPollView(LayoutView):
                 f"**Author** <@{self.author.id}> · **Duration** `{dur_str}` · **Total Votes** `{total_votes}`\n\n"
                 f"{content_str}"
             )
-            # Group buttons into rows of up to 5
             action_rows = []
             for i in range(0, len(buttons), 5):
                 action_rows.append(ActionRow(*buttons[i:i+5]))

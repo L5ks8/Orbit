@@ -7,16 +7,13 @@ export default function SearchModal({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
 
-  // Simple search logic
   const results = [];
   if (query.trim().length > 0) {
     const q = query.toLowerCase();
     Object.entries(docsData).forEach(([key, data]) => {
-      // Check title match
       if (data.title.toLowerCase().includes(q)) {
         results.push({ key, title: data.title, type: 'Page', matchedText: data.title });
       }
-      // Check TOC items match
       if (data.toc) {
         data.toc.forEach(t => {
           if (t.label.toLowerCase().includes(q)) {

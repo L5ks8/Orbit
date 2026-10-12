@@ -887,7 +887,6 @@ export default function Docs() {
 
   const activeContent = docsData[activeTab];
 
-  // Flatten IDs for prev/next logic
   const flatKeys = [];
   sidebarConfig.forEach(item => {
     if (item.id) {

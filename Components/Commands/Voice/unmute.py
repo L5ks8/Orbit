@@ -4,7 +4,6 @@ from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Voice.voice import voice_group
 
 
-
 async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: str):
     await ctx.defer()
     if not target.voice:

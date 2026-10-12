@@ -97,11 +97,9 @@ class LevelAdminCog(commands.Cog):
         
         from_xp = from_data.get("total_xp", 0)
         
-        # Add to the new user
         to_data["total_xp"] = to_data.get("total_xp", 0) + from_xp
         set_user_xp(interaction.guild.id, to_user.id, to_data)
         
-        # Reset the old user
         from_data["total_xp"] = 0
         set_user_xp(interaction.guild.id, from_user.id, from_data)
         
@@ -138,7 +136,6 @@ class LevelAdminCog(commands.Cog):
                         
                         if uid and xp > 0:
                             doc_id = f"{interaction.guild.id}_{uid}"
-                            # Upsert the XP but don't overwrite if they already have more
                             existing = col.find_one({"_id": doc_id})
                             if existing:
                                 new_total = existing.get("total_xp", 0) + xp

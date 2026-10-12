@@ -81,7 +81,6 @@ export default function EmbedBuilderEditor({
   
   const [openSection, setOpenSection] = useState('description');
   
-  // Ref to hold current state for auto-save on unmount
   const stateRef = useRef({
     id: initialEmbed?.id,
     name: initialEmbed?.name || 'Neue Nachricht',
@@ -116,7 +115,6 @@ export default function EmbedBuilderEditor({
     footerText, footerIcon
   ]);
 
-  // Debounced auto-save
   useEffect(() => {
     const timer = setTimeout(() => {
       onSave(stateRef.current, false);
@@ -153,7 +151,6 @@ export default function EmbedBuilderEditor({
     setIsSubmitting(true);
     setStatusMsg('Sending...');
     
-    // Auto-save before sending
     await onSave(stateRef.current, false);
     
     try {
@@ -174,7 +171,6 @@ export default function EmbedBuilderEditor({
         setStatusMsg(`Error: ${data.error || 'Failed to send'}`);
       }
       
-      // Auto-hide success message after 4 seconds
       if (res.ok) {
         setTimeout(() => setStatusMsg(''), 4000);
       }

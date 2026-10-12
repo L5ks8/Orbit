@@ -55,7 +55,6 @@ class UnbanConfirmView(discord.ui.View):
         self.add_item(btn_cancel)
 
 
-
 class UnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -96,6 +95,4 @@ class UnbanCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(UnbanCommand(bot))
-
-
 

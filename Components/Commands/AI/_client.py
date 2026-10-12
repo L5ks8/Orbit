@@ -5,7 +5,6 @@ import asyncio
 import aiohttp
 from typing import List, Dict, Optional
 
-# List of working G4F models to try in fallback
 FALLBACK_G4F_MODELS = ["gpt-4o-mini", "llama-3.3-70b", "deepseek-chat"]
 
 async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: float = 14.0) -> str:
@@ -75,7 +74,6 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
         pass
 
     # ── Tier 3: Off-thread G4F with DuckDuckGo / DDG / Blackbox ────────────
-    # Must run strictly in a thread pool to avoid blocking Discord Gateway!
     try:
         def _call_g4f_sync():
             import g4f
@@ -104,7 +102,6 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
                         continue
             return None
 
-        # Execute off-thread with strict timeout
         g4f_result = await asyncio.wait_for(
             asyncio.to_thread(_call_g4f_sync),
             timeout=min(timeout_sec, 8.0)
@@ -119,6 +116,5 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
 
 def _clean_response(text: str) -> str:
     """Strips leading bot-name prefixes or citations from AI outputs."""
-    # Remove leading bot prefix e.g. "Orbit: "
     text = re.sub(r"^(Orbit|Assistant|Bot):\s*", "", text, flags=re.IGNORECASE).strip()
     return text

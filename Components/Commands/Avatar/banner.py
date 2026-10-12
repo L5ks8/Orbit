@@ -3,7 +3,6 @@ from discord.ext import commands
 from Components.Commands._utils import make_embed
 
 
-
 class BannerCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot

@@ -6,7 +6,6 @@ from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 
-
 async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str):
     await ctx.defer()
     if not ctx.guild:
@@ -53,5 +52,4 @@ class DelWarnCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DelWarnCog(bot))
-
 

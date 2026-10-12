@@ -19,17 +19,15 @@ export default function Hero() {
     }
 
     function createParticle(resetY = false) {
-      // Start further up/left to allow for diagonal falling across the whole screen
       const startY = resetY ? -(Math.random() * 200 + 100) : Math.random() * canvas.height;
       
-      // Speed multiplier for depth effect (some are fast and close, some are slow and far)
       const depth = Math.random() * 0.8 + 0.2; 
       
       return {
         x: resetY ? Math.random() * canvas.width * 1.5 - canvas.width * 0.5 : Math.random() * canvas.width,
         y: startY,
         size: depth * 1.5 + 0.5,
-        speedX: depth * 3 + 1, // Fall diagonally down and right
+        speedX: depth * 3 + 1,
         speedY: depth * 3 + 1,
         length: depth * 120 + 40,
         opacity: depth * 0.6 + 0.1
@@ -60,11 +58,9 @@ export default function Hero() {
         const tailEndX = p.x - nx * p.length;
         const tailEndY = p.y - ny * p.length;
         
-        // Glow effect for the head
         ctx.shadowBlur = p.size * 5;
-        ctx.shadowColor = `rgba(167, 139, 250, ${p.opacity * 0.8})`; // Subtle purple/blue glow
+        ctx.shadowColor = `rgba(167, 139, 250, ${p.opacity * 0.8})`;
 
-        // Tail gradient
         const grad = ctx.createLinearGradient(p.x, p.y, tailEndX, tailEndY);
         grad.addColorStop(0, `rgba(255, 255, 255, ${p.opacity})`);
         grad.addColorStop(1, `rgba(255, 255, 255, 0)`);
@@ -76,13 +72,11 @@ export default function Hero() {
         ctx.lineWidth = p.size * 0.8;
         ctx.stroke();
         
-        // Head
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity + 0.2})`;
         ctx.fill();
         
-        // Reset shadow for next particle
         ctx.shadowBlur = 0;
       });
       ctx.globalAlpha = 1.0;

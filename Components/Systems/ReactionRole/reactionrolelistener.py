@@ -47,7 +47,6 @@ class ReactionRoleListener(commands.Cog):
             except Exception as e:
                 await interaction.response.send_message(embed=make_embed(f"Failed to assign role: {e}", discord.Color.red()), ephemeral=True)
         else:
-            # Default toggle
             if has_role:
                 try:
                     await interaction.user.remove_roles(role, reason="Reaction Role toggle (remove)")

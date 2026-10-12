@@ -24,7 +24,6 @@ class CaptchaInputModal(Modal, title="CAPTCHA Security Check"):
         self.remove_role_id = int(remove_role_id) if remove_role_id else None
 
     async def on_submit(self, interaction: discord.Interaction):
-        # Acknowledge immediately to avoid Discord 3s interaction timeouts
         await interaction.response.defer(ephemeral=True)
 
         if not interaction.guild or not isinstance(interaction.user, discord.Member):
@@ -119,7 +118,6 @@ async def handle_verify_interaction(interaction: discord.Interaction):
         return
     ACTIVE_INTERACTIONS.add(interaction.id)
     try:
-        # Acknowledge immediately to avoid Discord 3s interaction timeouts
         if not interaction.response.is_done():
             try:
                 await interaction.response.defer(ephemeral=True)
@@ -153,11 +151,9 @@ async def handle_verify_interaction(interaction: discord.Interaction):
         if not role:
             return await interaction.followup.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not found in server`).", discord.Color.red()), ephemeral=True)
 
-        # Check already verified
         if isinstance(member, discord.Member) and any(r.id == role_id for r in member.roles):
             return await interaction.followup.send(embed=make_embed("You are already verified on this server!", discord.Color.green()), ephemeral=True)
 
-        # Role hierarchy check
         if interaction.guild.me.top_role <= role:
             return await interaction.followup.send(embed=make_embed(f"I cannot assign {role.mention} because my bot role is lower in the hierarchy. Please ask a server admin to move my role above the verified role in Server Settings -> Roles.", discord.Color.red()), ephemeral=True)
 
@@ -220,7 +216,6 @@ async def handle_verify_interaction(interaction: discord.Interaction):
                 await interaction.followup.send(embed=make_embed(f"Failed to generate verification panel: {e}", discord.Color.red()), ephemeral=True)
             return
 
-        # DISCORD IMAGE CAPTCHA (DEFAULT)
         else:
             try:
                 code, img_bytes = generate_captcha()

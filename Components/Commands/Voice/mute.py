@@ -6,7 +6,6 @@ from Components.Commands.Voice.voice import voice_group
 from Components.Commands._utils import make_embed
 
 
-
 async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str):
     await ctx.defer()
     if is_whitelisted(ctx.guild.id, target.id):

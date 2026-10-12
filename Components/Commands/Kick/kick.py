@@ -8,7 +8,6 @@ from Components.Commands.Cases._storage import create_case
 from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
 
 
-
 class KickCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -67,6 +66,4 @@ class KickCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(KickCommand(bot))
-
-
 

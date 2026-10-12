@@ -186,7 +186,6 @@ class GuildsMixin:
             bot_guild = self.bot.get_guild(int(g["id"]))
             bot_in_server = bot_guild is not None
                 
-            # Additional manager role check for users without direct perms
             if not (is_admin or manage_guild):
                 if not bot_in_server:
                     continue

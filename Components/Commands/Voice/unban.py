@@ -4,7 +4,6 @@ from Components.Commands.Voice._storage import remove_from_vcban
 from Components.Commands.Voice.voice import voice_group
 
 
-
 async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     await ctx.defer()
     if not ctx.guild:

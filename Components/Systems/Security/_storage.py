@@ -52,7 +52,6 @@ def load_security_config(guild_id: int) -> Dict[str, Any]:
     except Exception:
         data = default_cfg.copy()
 
-    # Deep merge defaults
     for key, val in default_cfg.items():
         if key not in data:
             data[key] = val
@@ -78,6 +77,5 @@ def log_threat(guild_id: int, threat_type: str, message: str) -> None:
         "message": message
     })
     
-    # Keep only last 50 logs
     config["threat_logs"] = config["threat_logs"][:50]
     save_security_config(guild_id, config)

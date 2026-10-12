@@ -66,7 +66,6 @@ export default function Security({ guildId, serverData, setServerData }) {
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
   const [activeThreatTab, setActiveThreatTab] = useState('All');
 
-  // States
   const [antiNuke, setAntiNuke] = useState({ enabled: false, test_mode: false, privilege_escalation: false, webhook_firewall: false, server_identity: false, block_unknown_bot: false, level: 'recommended', exempt_users: '', exempt_roles: [], permissions_granted_watch: [], permissions_removed_watch: [], mass_emoji_threshold: 10, ...initialCfg.anti_nuke });
   const [antiRaid, setAntiRaid] = useState({ enabled: false, verification_challenge: false, suspicious_account: false, no_profile_picture: false, default_username: false, suspicious_account_age: '14d', suspicious_action: 'flag', suspicious_alert_channel: null, join_threshold: 5, join_time_window: '10s', action: 'timeout', young_account_cutoff: '14d', auto_unlock_after: '1h', immune_users: '', immune_roles: [], alert_channel: null, level: 'balanced', ...initialCfg.anti_raid });
   const [webhookProtection, setWebhookProtection] = useState({ enabled: false, block_everyone: false, block_invite_links: false, rate_limit: 5, action: 'delete', trusted_webhooks: '', ...initialCfg.webhook_protection });

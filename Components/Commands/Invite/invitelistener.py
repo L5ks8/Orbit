@@ -65,7 +65,6 @@ class InviteTrackerListener(commands.Cog):
         for inv in current_invites:
             new_cache[inv.code] = inv.uses or 0
 
-        # Find which invite was used by diffing
         used_invite = None
         inviter = None
         for inv in current_invites:
@@ -76,13 +75,11 @@ class InviteTrackerListener(commands.Cog):
                 inviter = inv.inviter
                 break
 
-        # Update cache
         set_invite_cache(guild.id, new_cache)
 
         if used_invite and inviter:
             record_invite(guild.id, member.id, inviter.id, used_invite.code)
 
-            # Log invite event
             await log_event(
                 guild,
                 "invite_tracking",
@@ -100,5 +97,4 @@ class InviteTrackerListener(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(InviteTrackerListener(bot))
-
 

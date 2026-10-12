@@ -28,7 +28,6 @@ export default function MessageLogsSettings({ config, channels, roles, onSave, s
     onSave(getPayload());
   };
 
-  // Mock log categories
   const logCategories = [
     {
       title: 'Messages',

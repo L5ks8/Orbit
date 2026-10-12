@@ -49,7 +49,6 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
     if "closed_tickets" not in data or not isinstance(data["closed_tickets"], list):
         data["closed_tickets"] = []
         
-    # Prune closed tickets older than 30 days to prevent bloat
     now = time.time()
     thirty_days = 30 * 24 * 60 * 60
     data["closed_tickets"] = [t for t in data["closed_tickets"] if now - t.get("closed_at", 0) < thirty_days]

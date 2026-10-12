@@ -31,7 +31,6 @@ def _lb_stat_line(entry, guild, key):
     name = member.display_name if member else f"User#{uid}"
     
     if key == "voice_minutes":
-        # Convert minutes to hours
         val = val / 60.0
         val_str = f"{val:.1f}"
     else:
@@ -151,22 +150,20 @@ class LevelCommandsCog(commands.Cog):
         voice_mins = data.get("voice_minutes", 0)
         react_count = data.get("reaction_count", 0)
 
-        # Try to generate rank card image
         try:
             from Components.Systems.Level.rank_card import generate_rank_card
             avatar_bytes = await target.display_avatar.read()
-            # Dynamic bar color based on level
             colors = [
-                (59, 130, 246),   # 0-9: Blue
-                (16, 185, 129),   # 10-19: Green
-                (245, 158, 11),   # 20-29: Yellow
-                (239, 68, 68),    # 30-39: Red
-                (139, 92, 246),   # 40-49: Purple
-                (236, 72, 153),   # 50-59: Pink
-                (20, 184, 166),   # 60-69: Teal
-                (249, 115, 22),   # 70-79: Orange
-                (99, 102, 241),   # 80-89: Indigo
-                (217, 70, 239)    # 90+: Fuchsia
+                (59, 130, 246),
+                (16, 185, 129),
+                (245, 158, 11),
+                (239, 68, 68),
+                (139, 92, 246),
+                (236, 72, 153),
+                (20, 184, 166),
+                (249, 115, 22),
+                (99, 102, 241),
+                (217, 70, 239)
             ]
             idx = min(level // 10, len(colors) - 1)
             bar_color = colors[idx]
@@ -187,7 +184,6 @@ class LevelCommandsCog(commands.Cog):
             file = discord.File(io.BytesIO(img_bytes), filename="rank_card.png")
             await interaction.response.send_message(file=file)
         except Exception:
-            # Fallback to embed if image gen fails
             progress = int((current_xp / needed_xp) * 10) if needed_xp > 0 else 10
             bar = "🟦" * progress + "⬛" * (10 - progress)
 
@@ -280,11 +276,9 @@ class LevelCommandsCog(commands.Cog):
         if current_xp < amount:
             return await ctx.send(embed=make_embed(f"You don't have enough XP to transfer {amount:,}. You only have {current_xp:,} XP."), ephemeral=True)
             
-        # Deduct from author
         data["total_xp"] = current_xp - amount
         set_user_xp(ctx.guild.id, ctx.author.id, data)
         
-        # Add to target
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
         
         await ctx.send(embed=make_embed(f"Successfully transferred **{amount:,} XP** to {member.mention}!", discord.Color.green()))

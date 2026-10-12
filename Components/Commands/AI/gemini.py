@@ -45,7 +45,7 @@ class GeminiChatbot(commands.Cog):
                 if message.reference.resolved.author.id == self.bot.user.id:
                     is_reply_to_bot = True
                     if len(message.reference.resolved.embeds) > 0:
-                        return # Ignore replies to bot embeds
+                        return
 
         if not (is_mentioned or is_reply_to_bot):
             return
@@ -137,7 +137,6 @@ class GeminiChatbot(commands.Cog):
                 for msg in messages:
                     if msg.author.id == self.bot.user.id:
                         content = msg.clean_content
-                        # Clean up old messages that might have the prefix
                         if content.startswith(f"{self.bot.user.display_name}:"):
                             content = content[len(self.bot.user.display_name)+1:].strip()
                         elif content.startswith("Orbit:"):
@@ -152,7 +151,6 @@ class GeminiChatbot(commands.Cog):
                 text_response = await generate_ai_response(messages_payload)
                             
                 if text_response:
-                    # Parse tool calls
                     if "[CONFIG_UPDATE:" in text_response and is_admin:
                         import re
                         import json
@@ -211,7 +209,6 @@ class GeminiChatbot(commands.Cog):
                                     if raw_mod_name:
                                         mod_name = module_map.get(raw_mod_name, raw_mod_name)
                                         
-                                        # Use the correct load/save methods to ensure caches are updated
                                         if raw_mod_name == "Leveling":
                                             from Components.Systems.Level._storage import load_level_config, save_level_config
                                             cfg = load_level_config(message.guild.id)
@@ -273,7 +270,6 @@ class GeminiChatbot(commands.Cog):
                                             cfg["enabled"] = is_enabled
                                             save_join_roles(message.guild.id, cfg)
                                         else:
-                                            # Fallback
                                             cfg = get_config(mod_name, message.guild.id) or {}
                                             if mod_name == "Settings":
                                                 cfg["ai_enabled"] = is_enabled
@@ -285,7 +281,6 @@ class GeminiChatbot(commands.Cog):
                             except Exception as e:
                                 print(f"[Config AI] Failed to execute config: {e}")
                             
-                            # Clean response for user
                             text_response = re.sub(r"\[CONFIG_UPDATE:.*?\]", "", text_response).strip()
 
                     if text_response:
@@ -306,5 +301,4 @@ class GeminiChatbot(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GeminiChatbot(bot))
-
 

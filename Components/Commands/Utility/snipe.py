@@ -6,7 +6,6 @@ from Components.Commands._utils import ORBIT_COLOR
 class Snipe(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        # Snipes are stored in RAM: dict mapping channel_id to a list of messages or a single message
         self.deleted_messages = {}
         self.edited_messages = {}
 
@@ -15,7 +14,6 @@ class Snipe(commands.Cog):
         if message.author.bot:
             return
         
-        # Store the last deleted message for the channel
         self.deleted_messages[message.channel.id] = {
             "content": message.content,
             "author": message.author,

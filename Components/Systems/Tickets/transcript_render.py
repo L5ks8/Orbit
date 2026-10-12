@@ -83,7 +83,6 @@ class TranscriptHTMLParser(HTMLParser):
             elif self._in_div == "time":
                 self._current_msg["time"] = text
             elif self._in_div == "text":
-                # Only add if we actually captured text, handles multiple msg-text parts or formatting
                 if "text" not in self._current_msg:
                     self._current_msg["text"] = text
                 else:
@@ -128,7 +127,6 @@ def wrap_text(text, font, max_width):
     current_line = []
     for word in words:
         current_line.append(word)
-        # Use getbbox() as getsize() is deprecated
         bbox = font.getbbox(' '.join(current_line))
         w = bbox[2] - bbox[0]
         if w > max_width:
@@ -161,11 +159,9 @@ async def generate_transcript_image(messages, page: int, per_page: int = 50):
     font_time = _load_font_regular(20)
     font_text = _load_font_regular(26)
     
-    # Calculate heights and pre-wrap text
     msg_layouts = []
     total_height = PADDING_Y * 2
     
-    # We need to fetch avatars concurrently for this page
     avatar_urls = [m.get("avatar_url") for m in page_msgs]
     async with aiohttp.ClientSession() as session:
         tasks = [fetch_avatar(session, url) for url in avatar_urls]
@@ -176,25 +172,21 @@ async def generate_transcript_image(messages, page: int, per_page: int = 50):
         time_str = msg.get("time", "")
         text = msg.get("text", "")
         
-        # Max width for text is WIDTH - PADDING_X*2 - AVATAR_SIZE - 20 (spacing)
         max_text_width = WIDTH - (PADDING_X * 2) - AVATAR_SIZE - 30
         
-        # Split text by newlines first
         lines = []
         for raw_line in text.split('\\n'):
             for subline in raw_line.split('\n'):
                 wrapped = wrap_text(subline, font_text, max_text_width)
                 lines.extend(wrapped)
         
-        # Height calculations
-        # getbbox returns (left, top, right, bottom)
         author_bbox = font_author.getbbox(author)
         author_h = author_bbox[3] - author_bbox[1]
         
         text_h = 0
         if lines:
             line_bbox = font_text.getbbox("A")
-            line_h = line_bbox[3] - line_bbox[1] + 8 # 8px line spacing
+            line_h = line_bbox[3] - line_bbox[1] + 8
             text_h = len(lines) * line_h
             
         msg_h = max(AVATAR_SIZE, author_h + 10 + text_h) + MSG_SPACING
@@ -208,8 +200,7 @@ async def generate_transcript_image(messages, page: int, per_page: int = 50):
         
         total_height += msg_h
         
-    # Generate image
-    img = Image.new("RGBA", (WIDTH, total_height), (49, 51, 56, 255)) # Discord dark mode bg
+    img = Image.new("RGBA", (WIDTH, total_height), (49, 51, 56, 255))
     draw = ImageDraw.Draw(img)
     
     current_y = PADDING_Y
@@ -221,13 +212,11 @@ async def generate_transcript_image(messages, page: int, per_page: int = 50):
         time_str = msg.get("time", "")
         lines = layout["lines"]
         
-        # Draw avatar
         if avatar_b:
             try:
                 av_img = Image.open(io.BytesIO(avatar_b)).convert("RGBA")
                 av_img = av_img.resize((AVATAR_SIZE, AVATAR_SIZE), Image.Resampling.LANCZOS)
                 
-                # Circular mask
                 mask = Image.new("L", (AVATAR_SIZE, AVATAR_SIZE), 0)
                 mask_draw = ImageDraw.Draw(mask)
                 mask_draw.ellipse((0, 0, AVATAR_SIZE, AVATAR_SIZE), fill=255)
@@ -239,7 +228,6 @@ async def generate_transcript_image(messages, page: int, per_page: int = 50):
         else:
             draw.ellipse((PADDING_X, current_y, PADDING_X + AVATAR_SIZE, current_y + AVATAR_SIZE), fill=(88, 101, 242))
             
-        # Draw author and time
         text_x = PADDING_X + AVATAR_SIZE + 20
         draw.text((text_x, current_y), author, font=font_author, fill=(242, 243, 245, 255))
         
@@ -249,7 +237,6 @@ async def generate_transcript_image(messages, page: int, per_page: int = 50):
         
         draw.text((text_x + author_w + 12, current_y + (author_h/2) - 8), time_str, font=font_time, fill=(148, 155, 164, 255))
         
-        # Draw text lines
         line_y = current_y + author_h + 10
         line_bbox = font_text.getbbox("A")
         line_h = line_bbox[3] - line_bbox[1] + 8

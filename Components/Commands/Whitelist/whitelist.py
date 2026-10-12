@@ -41,4 +41,3 @@ async def setup(bot: commands.Bot):
     if "whitelist" not in bot.all_commands:
         bot.add_command(whitelist_cmd)
 
-

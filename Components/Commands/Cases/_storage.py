@@ -25,7 +25,6 @@ def create_case(guild_id: int, user_id: int, moderator_id: int, action: str, rea
     if col is None or settings_col is None:
         return None
 
-    # Get the next case ID for this guild
     settings = settings_col.find_one_and_update(
         {"_id": str(guild_id)},
         {"$inc": {"last_case_id": 1}},

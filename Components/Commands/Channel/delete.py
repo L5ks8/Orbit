@@ -3,7 +3,6 @@ from discord.ext import commands
 from Components.Commands.Channel.channel import channel_group
 
 
-
 async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | None):
     await ctx.defer()
     if not ctx.guild:

@@ -3,7 +3,6 @@ from discord.ext import commands
 from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card
 
 
-
 async def _do_server_info(ctx: commands.Context):
     await ctx.defer()
     if not ctx.guild:
@@ -56,7 +55,6 @@ class ServerInfoCommand(commands.Cog):
         await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):
-    # Remove old group command if still present
     if "server" in bot.all_commands and isinstance(bot.all_commands["server"], commands.Group):
         bot.remove_command("server")
     await bot.add_cog(ServerInfoCommand(bot))

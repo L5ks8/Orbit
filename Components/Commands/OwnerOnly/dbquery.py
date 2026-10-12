@@ -14,22 +14,17 @@ class DBQuery(commands.Cog):
         """Execute a MongoDB expression, e.g. list(db['users'].find().limit(5))"""
         db = get_db()
         
-        # Clean codeblock formatting if present
         if query.startswith("```") and query.endswith("```"):
             query = "\n".join(query.split("\n")[1:-1])
         elif query.startswith("`") and query.endswith("`"):
             query = query.strip("`")
             
-        # Optional: remove python marker if used
         if query.startswith("py\n") or query.startswith("python\n"):
             query = "\n".join(query.split("\n")[1:])
             
         try:
-            # We use eval for expressions (like find, count_documents, etc)
-            # Example query: list(db.guilds.find({}).limit(2))
             result = eval(query, {"db": db, "get_db": get_db, "discord": discord, "bot": self.bot, "ctx": ctx})
             
-            # Convert result to string or JSON
             try:
                 formatted = json.dumps(result, indent=2, default=str)
                 code_lang = "json"

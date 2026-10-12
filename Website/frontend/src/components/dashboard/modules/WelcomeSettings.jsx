@@ -62,7 +62,6 @@ export default function WelcomeSettings({
   const [goodbyeImageUrl, setGoodbyeImageUrl] = useState(gCfg.image_url || "");
 
   const handleUpload = async (file, type) => {
-    // We will just use the toast logic passed down or handled here
     const formData = new FormData();
     formData.append("file", file);
       try {
@@ -374,8 +373,6 @@ export default function WelcomeSettings({
                       </div>
                     )}
 
-
-                  
 
                   </div>
 
@@ -1022,7 +1019,6 @@ export default function WelcomeSettings({
                       )}
 
                   
-
                     </div>
                     {goodbyeMsgMode === "embed" && (
                     <div className="pt-4 border-t border-neutral-800/60  space-y-3">

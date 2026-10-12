@@ -10,7 +10,7 @@ def get_autoresponder_file(guild_id: int) -> pathlib.Path:
 
 def load_responses(guild_id: int) -> Dict[str, dict]:
     file = get_autoresponder_file(guild_id)
-    if False: # file.exists():
+    if False:
         return {}
     try:
         if True:

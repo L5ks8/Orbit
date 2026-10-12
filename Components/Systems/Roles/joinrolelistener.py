@@ -19,7 +19,6 @@ class JoinRoleListener(commands.Cog):
 
         roles_to_add = []
         
-        # User/Bot Roles
         if member.bot:
             if config.get("bot_roles_enabled", False):
                 role_ids = config.get("bot_roles", [])
@@ -35,7 +34,6 @@ class JoinRoleListener(commands.Cog):
                     if role and not role.is_default() and not role.managed and member.guild.me.top_role > role:
                         roles_to_add.append(role)
                         
-        # Tag Roles
         if not member.bot and config.get("tag_roles_enabled", False) and config.get("tag_role"):
             tag_role = member.guild.get_role(int(config.get("tag_role")))
             if tag_role and not tag_role.is_default() and not tag_role.managed and member.guild.me.top_role > tag_role:

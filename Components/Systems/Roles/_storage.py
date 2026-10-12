@@ -26,7 +26,6 @@ def load_join_roles(guild_id: int) -> Dict[str, Any]:
                 _joinrole_cache[guild_id] = cfg
                 return cfg
 
-            # Migration: old format had "roles" instead of "user_roles"
             if "roles" in data and "user_roles" not in data:
                 migrated = {
                     "enabled": True,
@@ -40,7 +39,6 @@ def load_join_roles(guild_id: int) -> Dict[str, Any]:
                 _joinrole_cache[guild_id] = migrated
                 return migrated
 
-            # Ensure all keys exist with defaults
             cfg = {
                 "enabled": data.get("enabled", False),
                 "user_roles_enabled": data.get("user_roles_enabled", False),

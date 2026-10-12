@@ -50,16 +50,12 @@ def generate_boost_image(avatar_bytes: bytes, background_path: pathlib.Path, use
         
     bg = bg.resize((800, 300))
 
-    # Add pink/dark gradient
     gradient = Image.new('RGBA', (800, 300))
     draw_grad = ImageDraw.Draw(gradient)
     for x in range(800):
-        # Pinkish gradient on left fading to blackish on right
-        alpha_pink = int(76 * (1 - (x / 800))) # Max 0.3 * 255
-        alpha_black = int(102 * (x / 800)) # Max 0.4 * 255
+        alpha_pink = int(76 * (1 - (x / 800)))
+        alpha_black = int(102 * (x / 800))
         
-        # We blend the color:
-        # Far left: more pink. Far right: more black.
         r = int(255 * (1 - (x / 800)))
         g = int(115 * (1 - (x / 800)))
         b = int(250 * (1 - (x / 800)))
@@ -87,7 +83,6 @@ def generate_boost_image(avatar_bytes: bytes, background_path: pathlib.Path, use
     border_size = 8
     avatar_with_border = Image.new("RGBA", (avatar_size + border_size, avatar_size + border_size), (0, 0, 0, 0))
     draw_border = ImageDraw.Draw(avatar_with_border)
-    # Nitro Pink border
     draw_border.ellipse((0, 0, avatar_size + border_size, avatar_size + border_size), fill=(255, 115, 250, 255))
     avatar_with_border.paste(circle_avatar, (border_size//2, border_size//2), circle_avatar)
 

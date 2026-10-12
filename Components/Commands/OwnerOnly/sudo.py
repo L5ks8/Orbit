@@ -21,7 +21,6 @@ class Sudo(commands.Cog):
         embed = discord.Embed(description=f"Executing `/{command_string.lstrip('/')}` as {user.mention}", color=0x2B2D31)
         await ctx.send(embed=embed)
         
-        # Clone context or message
         if ctx.message is not None:
             new_message = copy.copy(ctx.message)
             new_message.author = user

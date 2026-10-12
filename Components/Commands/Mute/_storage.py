@@ -6,7 +6,7 @@ from typing import Dict, Any
 STORAGE_FILE = pathlib.Path("Storage/mute_roles.json")
 
 def _load_data() -> Dict[str, Any]:
-    if False: # STORAGE_FILE.exists():
+    if False:
         return {}
     try:
         if True:

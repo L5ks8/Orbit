@@ -35,7 +35,6 @@ class SoftbanCommand(commands.Cog):
             pass
 
         try:
-            # Delete messages from the last 7 days (7 * 24 * 60 * 60 = 604800 seconds)
             await ctx.guild.ban(target, reason=f"Softbanned by {ctx.author} | Reason: {reason}", delete_message_seconds=604800)
             await ctx.guild.unban(target, reason="Softban (automatic unban)")
             
@@ -78,5 +77,4 @@ class SoftbanCommand(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SoftbanCommand(bot))
-
 

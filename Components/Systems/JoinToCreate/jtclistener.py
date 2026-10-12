@@ -116,4 +116,3 @@ async def setup(bot: commands.Bot):
     bot.add_view(PersistentJTCControlLayout())
     await bot.add_cog(JTCListenerCog(bot))
 
-

@@ -96,17 +96,12 @@ export default function ServerSelector() {
     );
   }
 
-  // Filter based on search query
   const filteredGuilds = guilds.filter(g => 
     g.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // A guild is active if bot_in_server is explicitly NOT false (handles missing fields as active)
-  // or if isActive is explicitly NOT false.
   const activeGuilds = filteredGuilds.filter(g => g.bot_in_server !== false && g.isActive !== false);
   
-  // A guild is inactive if bot_in_server is explicitly false, or isActive is explicitly false.
-  // We only show inactive servers where the user is the owner.
   const inactiveGuilds = filteredGuilds.filter(g => (g.bot_in_server === false || g.isActive === false) && g.owner);
 
   return (

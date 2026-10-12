@@ -4,7 +4,6 @@ from Components.Commands.Afk._storage import set_afk, get_afk
 from Components.Commands._utils import make_embed
 
 
-
 class AfkCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot

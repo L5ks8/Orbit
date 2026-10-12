@@ -22,8 +22,6 @@ async def _do_steal_emoji(guild: discord.Guild, author: discord.Member | discord
         embed.set_footer(text=_get_footer(guild.name))
         return await send_func(embed=embed, ephemeral=True)
         
-    # Deferred or typing should be handled before calling this, but we will assume it's deferred
-    # Match <a:name:id> or <:name:id>
     match = re.match(r"<(a?):([a-zA-Z0-9_]+):([0-9]+)>", emoji.strip())
     if not match:
         return await send_func("Could not find a valid custom emoji. Make sure to paste a custom emoji, not a default unicode emoji.", ephemeral=True)
@@ -41,7 +39,6 @@ async def _do_steal_emoji(guild: discord.Guild, author: discord.Member | discord
                     return await send_func("Failed to download the emoji.", ephemeral=True)
                 image_bytes = await resp.read()
                 
-        # Check size limits (Discord max is 256kb)
         if len(image_bytes) > 256 * 1024:
             return await send_func("The emoji file is too large (exceeds 256KB limits).", ephemeral=True)
             
@@ -86,7 +83,6 @@ async def _do_steal_emojiurl(guild: discord.Guild, author: discord.Member | disc
                     
                 image_bytes = await resp.read()
                 
-        # Check size limits (Discord max is 256kb)
         if len(image_bytes) > 256 * 1024:
             return await send_func("The image file is too large (exceeds 256KB limits).", ephemeral=True)
             

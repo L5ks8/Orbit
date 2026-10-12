@@ -14,7 +14,6 @@ class WipeUserCommand(commands.Cog):
         if db is not None:
             for coll_name in db.list_collection_names():
                 coll = db[coll_name]
-                # Try string _id, int user_id, string user_id
                 res1 = coll.delete_many({"_id": str(user_id)})
                 res2 = coll.delete_many({"user_id": user_id})
                 res3 = coll.delete_many({"user_id": str(user_id)})
