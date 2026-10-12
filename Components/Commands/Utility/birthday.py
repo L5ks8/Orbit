@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import datetime
 from Components.Database.mongodb import get_db
-from Components.Commands._utils import ORBIT_COLOR
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
 from Components.emojis import Emojis
 
 class Birthday(commands.Cog):
@@ -22,7 +22,7 @@ class Birthday(commands.Cog):
             datetime.date(2000, month, day)
         except ValueError:
             return await ctx.send(
-                embed=discord.Embed(description="Invalid format! Please use **DD.MM** (e.g., 15.08)", color=discord.Color.red()),
+                embed=make_embed("Invalid format! Please use **DD.MM** (e.g., 15.08)", discord.Color.red()),
                 ephemeral=True
             )
 
@@ -34,12 +34,15 @@ class Birthday(commands.Cog):
                 {"$set": {"day": day, "month": month}},
                 upsert=True
             )
+            card = make_v2_card(f"# {Emojis.VERIFICATION} Birthday Saved\n\nYour birthday has been successfully set to **{date}**!", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, ephemeral=True)
             await ctx.send(
-                embed=discord.Embed(description=f"Your birthday has been successfully set to **{date}**!", color=ORBIT_COLOR),
+                embed=discord.Embed(description=f"{Emojis.VERIFICATION} Your birthday has been successfully set to **{date}**!", color=ORBIT_COLOR),
                 ephemeral=True
             )
         else:
-            await ctx.send("Database error.", ephemeral=True)
+            await ctx.send(embed=make_embed("Database error.", discord.Color.red()), ephemeral=True)
 
     @tasks.loop(time=datetime.time(hour=8, minute=0, tzinfo=datetime.timezone.utc))
     async def check_birthdays(self):
@@ -72,13 +75,21 @@ class Birthday(commands.Cog):
                     celebrants.append(member.mention)
 
             if celebrants:
+                v2_body = (
+                    f"# {Emojis.WINNER} Happy Birthday! {Emojis.WINNER}\n\n"
+                    f"Happy birthday to: {', '.join(celebrants)}!\nWe hope you have a great day!"
+                )
+                card = make_v2_card(v2_body, color=ORBIT_COLOR)
                 embed = discord.Embed(
                     title=f"{Emojis.WINNER} Happy Birthday! {Emojis.WINNER}",
                     description=f"Happy birthday to: {', '.join(celebrants)}!\nWe hope you have a great day!",
-                    color=discord.Color.gold()
+                    color=ORBIT_COLOR
                 )
                 try:
-                    await channel.send(embed=embed)
+                    if card:
+                        await channel.send(view=card)
+                    else:
+                        await channel.send(embed=embed)
                 except discord.HTTPException:
                     pass
 

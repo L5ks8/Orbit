@@ -1,6 +1,7 @@
 ﻿import discord
 from discord.ext import commands
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 
 @commands.hybrid_group(name="channel", description="Channel management commands.")
 @commands.has_permissions(manage_channels=True)

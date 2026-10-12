@@ -5,7 +5,7 @@ import discord
 from discord.ui import Modal, TextInput, View, Button
 from Components.Systems.Verify._storage import load_verify_config, remove_pending_kick
 from Components.Systems.Verify._captcha import generate_captcha
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 from Components.emojis import Emojis
 
 CAPTCHA_SESSIONS = {}
@@ -104,7 +104,7 @@ class CaptchaInteractionLayout(View):
         embed = discord.Embed(
             title="Security Verification: Solve the CAPTCHA",
             description="Please look at the characters in the image below and click **Enter CAPTCHA Code** to type what you see.",
-            color=discord.Color.blurple()
+            color=ORBIT_COLOR
         )
         embed.set_image(url=f"attachment://{filename}")
 
@@ -210,7 +210,7 @@ async def handle_verify_interaction(interaction: discord.Interaction):
                 embed = discord.Embed(
                     title=f"{Emojis.VERIFICATION} Web Security Verification",
                     description=f"Please click the button below to solve the CAPTCHA in your browser.\n*This link is unique to you and will expire in 10 minutes.*\n\n[Privacy Policy]({base_url}/privacy) · [Support Server](https://discord.gg/wekuhwCsUg)",
-                    color=discord.Color.blurple()
+                    color=ORBIT_COLOR
                 )
                 await interaction.followup.send(embed=embed, view=view, ephemeral=True)
             except Exception as e:
@@ -229,7 +229,7 @@ async def handle_verify_interaction(interaction: discord.Interaction):
                 embed = discord.Embed(
                     title=f"{Emojis.VERIFICATION} Security Verification: Solve the CAPTCHA",
                     description="Please look at the characters in the image below and click **Enter CAPTCHA Code** to type what you see.",
-                    color=discord.Color.blurple()
+                    color=ORBIT_COLOR
                 )
                 embed.set_image(url=f"attachment://{filename}")
 

@@ -2,7 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Cases._storage import get_user_cases
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class HistoryPagination(discord.ui.View):
     def __init__(self, target_name: str, cases: list, per_page: int = 5):
@@ -26,8 +27,8 @@ class HistoryPagination(discord.ui.View):
 
     def _generate_embed(self) -> discord.Embed:
         embed = discord.Embed(
-            title=f"Moderation History: {self.target_name}",
-            color=discord.Color.blurple()
+            title=f"{Emojis.GUIDE} Moderation History: {self.target_name}",
+            color=ORBIT_COLOR
         )
         
         start_idx = self.current_page * self.per_page
@@ -77,7 +78,7 @@ class HistoryCog(commands.Cog):
     async def history_cmd(self, ctx: commands.Context, user: discord.Member | discord.User, page: int = 1):
         cases = get_user_cases(ctx.guild.id, user.id)
         if not cases:
-            embed = discord.Embed(description="This user has no history.", color=discord.Color.red())
+            embed = discord.Embed(description=f"{Emojis.ERROR} This user has no history.", color=discord.Color.red())
             return await ctx.send(embed=embed, ephemeral=True)
             
         view = HistoryPagination(user.display_name, cases)

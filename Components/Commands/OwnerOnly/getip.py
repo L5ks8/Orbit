@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 
 class GetIpCommand(commands.Cog):
@@ -45,7 +47,7 @@ class GetIpCommand(commands.Cog):
                 desc += f"**IP:** `{item['ip']}` (Guild: `{item['guild_id']}`)\n"
             title = f"IPs for User {query}"
             
-        embed = discord.Embed(title=title, description=desc[:4000], color=0x2B2D31)
+        embed = discord.Embed(title=title, description=desc[:4000], color=0x5865F2)
         await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):

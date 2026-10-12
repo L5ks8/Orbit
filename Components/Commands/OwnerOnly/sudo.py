@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 import copy
 
@@ -11,15 +13,20 @@ class Sudo(commands.Cog):
     async def sudo_cmd(self, ctx: commands.Context, user: discord.Member, *, command_string: str):
         parts = command_string.strip().split()
         if not parts:
-            return await ctx.send(embed=discord.Embed(description="Please specify a command to execute.", color=discord.Color.red()))
+            return await ctx.send(embed=discord.Embed(description=f"{Emojis.ERROR} Please specify a command to execute.", color=discord.Color.red()))
             
         cmd_name = parts[0].lstrip("/")
         cmd = self.bot.get_command(cmd_name)
         if not cmd:
-            return await ctx.send(embed=discord.Embed(description=f"Command `/{cmd_name}` not found.", color=discord.Color.red()))
+            return await ctx.send(embed=discord.Embed(description=f"{Emojis.ERROR} Command `/{cmd_name}` not found.", color=discord.Color.red()))
 
-        embed = discord.Embed(description=f"Executing `/{command_string.lstrip('/')}` as {user.mention}", color=0x2B2D31)
-        await ctx.send(embed=embed)
+        desc = f"Executing `/{command_string.lstrip('/')}` as {user.mention}"
+        card = make_v2_card(f"# {Emojis.KEYBOARD} Sudo Execution\n\n{desc}", color=ORBIT_COLOR)
+        if card:
+            await ctx.send(view=card)
+        else:
+            embed = discord.Embed(description=f"{Emojis.KEYBOARD} {desc}", color=ORBIT_COLOR)
+            await ctx.send(embed=embed)
         
         if ctx.message is not None:
             new_message = copy.copy(ctx.message)
@@ -33,7 +40,7 @@ class Sudo(commands.Cog):
         try:
             await cmd.invoke(new_ctx)
         except Exception as e:
-            await ctx.send(embed=discord.Embed(description=f"Error executing command: {e}", color=discord.Color.red()))
+            await ctx.send(embed=discord.Embed(description=f"{Emojis.ERROR} Error executing command: {e}", color=discord.Color.red()))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Sudo(bot))

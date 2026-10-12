@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
 from Components.emojis import Emojis
 import re
 import asyncio
@@ -246,17 +247,22 @@ class ChannelAutomationListener(commands.Cog):
                 else:
                     fail_reason = f"{message.author.mention} sent wrong number (expected **{expected_number}**, got **{parsed_number}**)!"
 
-                fail_embed = discord.Embed(
-                    title=" Counting Failed!",
-                    description=f"{fail_reason}\n\n**Count has been reset to 0.**",
-                    color=discord.Color.red()
-                )
+                fail_content = f"# {Emojis.ERROR} Counting Failed!\n\n{fail_reason}\n\n**Count has been reset to 0.**"
+                card = make_v2_card(fail_content, color=discord.Color.red())
 
                 try:
-                    await message.channel.send(
-                        embed=fail_embed,
-                        allowed_mentions=discord.AllowedMentions.none()
-                    )
+                    if card:
+                        await message.channel.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+                    else:
+                        fail_embed = discord.Embed(
+                            title=f"{Emojis.ERROR} Counting Failed!",
+                            description=f"{fail_reason}\n\n**Count has been reset to 0.**",
+                            color=discord.Color.red()
+                        )
+                        await message.channel.send(
+                            embed=fail_embed,
+                            allowed_mentions=discord.AllowedMentions.none()
+                        )
                 except Exception:
                     pass
 
@@ -267,12 +273,12 @@ class ChannelAutomationListener(commands.Cog):
 
                 countdown_msg = None
                 try:
-                    countdown_msg = await message.channel.send(" Channel locked! Restarting count in **3...**")
+                    countdown_msg = await message.channel.send(f"{Emojis.NO_ENTRY} Channel locked! Restarting count in **3...**")
                     for i in [2, 1, 0]:
                         await asyncio.sleep(1)
                         if countdown_msg:
                             try:
-                                await countdown_msg.edit(content=f" Channel locked! Restarting count in **{i}...**")
+                                await countdown_msg.edit(content=f"{Emojis.NO_ENTRY} Channel locked! Restarting count in **{i}...**")
                             except Exception:
                                 pass
                 except Exception:
@@ -290,9 +296,9 @@ class ChannelAutomationListener(commands.Cog):
 
                 try:
                     if countdown_msg:
-                        await countdown_msg.edit(content=" **Channel unlocked!** Next number is **1**.")
+                        await countdown_msg.edit(content=f"{Emojis.VERIFICATION} **Channel unlocked!** Next number is **1**.")
                     else:
-                        await message.channel.send(" **Channel unlocked!** Next number is **1**.")
+                        await message.channel.send(f"{Emojis.VERIFICATION} **Channel unlocked!** Next number is **1**.")
                 except Exception:
                     pass
 

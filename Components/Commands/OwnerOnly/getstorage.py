@@ -37,7 +37,8 @@ class GetStorageCommand(commands.Cog):
     @commands.is_owner()
     async def getstorage_cmd(self, ctx: commands.Context):
         from Components.Commands.OwnerOnly._monitor import record_command
-        from Components.Commands._utils import make_embed
+        from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
         record_command("getstorage", str(ctx.author))
 
         msg = await ctx.send(embed=make_embed("Zipping storage directory... This might take a moment."), allowed_mentions=discord.AllowedMentions.none())
@@ -54,7 +55,7 @@ class GetStorageCommand(commands.Cog):
         embed = discord.Embed(
             title="Orbit Storage Archive Ready",
             description=f"**File:** `{filename}` (`{size_kb:.2f} KB`)\n**Access:** Bot Owner DM Exclusive\n\n*Extract this archive into your local `Storage/` folder before uploading or restoring!*",
-            color=0x2B2D31
+            color=0x5865F2
         )
         
         try:

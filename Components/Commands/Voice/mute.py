@@ -3,7 +3,8 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Voice.voice import voice_group
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str):
@@ -16,10 +17,23 @@ async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str
         return await ctx.send(embed=make_embed("This user is already voice muted.", discord.Color.red()), ephemeral=True)
 
     try:
-        from Components.Commands._utils import send_moderation_dm, make_embed
+        from Components.Commands._utils import send_moderation_dm
         await send_moderation_dm(target, ctx.guild.name, "voice muted", reason, guild_id=ctx.guild.id)
         await target.edit(mute=True, reason=f"Voice muted by {ctx.author} | Reason: {reason}")
-        embed = discord.Embed(title="Voice Muted", color=discord.Color.red())
+        
+        v2_body = (
+            f"# {Emojis.WARNING} Voice Muted\n\n"
+            f"**Target:** {target.mention} (`{target.id}`)\n"
+            f"**Destination Channel:** {target.voice.channel.mention if target.voice.channel else 'N/A'}\n"
+            f"**Moderator:** {ctx.author.mention}"
+        )
+        if reason and reason != "No reason provided":
+            v2_body += f"\n**Reason:** {reason}"
+        card = make_v2_card(v2_body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+        embed = discord.Embed(title=f"{Emojis.WARNING} Voice Muted", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Destination Channel", value=target.voice.channel.mention if target.voice.channel else "N/A", inline=False)
         if reason and reason != "No reason provided":

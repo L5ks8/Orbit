@@ -5,7 +5,8 @@ from Components.Commands.Mute._storage import get_muted_role_id
 from Components.Commands.Mute.mute import get_or_create_muted_role
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class UnmuteCommand(commands.Cog):
@@ -36,7 +37,17 @@ class UnmuteCommand(commands.Cog):
             "User Unmuted (`/unmute`)",
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Removed Role:** {role.mention}"
         )
-        embed = discord.Embed(title="User Unmuted", color=discord.Color.green())
+        body = (
+            f"# {Emojis.VERIFICATION} User Unmuted\n\n"
+            f"**Target:** {target.mention} (`{target.id}`)\n"
+            f"**Reason:** {reason}\n"
+            f"**Moderator:** {ctx.author.mention}"
+            + (f"\n**Role Removed:** {role.mention}" if role else "")
+        )
+        card = make_v2_card(body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title=f"{Emojis.VERIFICATION} User Unmuted", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Reason", value=reason, inline=False)
         embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

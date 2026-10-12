@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 import aiohttp
 
@@ -30,7 +32,7 @@ class BotProfile(commands.Cog):
                             img.save(out, format="PNG")
                             data = out.getvalue()
                         await self.bot.user.edit(avatar=data)
-                        await ctx.send(embed=discord.Embed(description="Avatar updated successfully.", color=0x2B2D31))
+                        await ctx.send(embed=discord.Embed(description="Avatar updated successfully.", color=0x5865F2))
                     except Exception as e:
                         await ctx.send(embed=discord.Embed(description=f"Failed to update avatar: {e}", color=discord.Color.red()))
                 else:
@@ -46,10 +48,10 @@ class BotProfile(commands.Cog):
                 with open(logo_path, "rb") as f:
                     avatar_bytes = f.read()
                 await self.bot.user.edit(avatar=avatar_bytes)
-                await ctx.send(embed=discord.Embed(description="Avatar reset to default Orbit logo.", color=0x2B2D31))
+                await ctx.send(embed=discord.Embed(description="Avatar reset to default Orbit logo.", color=0x5865F2))
             else:
                 await self.bot.user.edit(avatar=None)
-                await ctx.send(embed=discord.Embed(description="Local logo file not found. Avatar cleared instead.", color=0x2B2D31))
+                await ctx.send(embed=discord.Embed(description="Local logo file not found. Avatar cleared instead.", color=0x5865F2))
         except discord.HTTPException as e:
             if e.code == 50035 and "verified" in str(e).lower():
                 await ctx.send(embed=discord.Embed(description="**Discord API Restriction:** Verified bots cannot change their avatar via commands. Please change it in the [Discord Developer Portal](https://discord.com/developers/applications).", color=discord.Color.red()))
@@ -63,7 +65,7 @@ class BotProfile(commands.Cog):
     async def set_username(self, ctx: commands.Context, *, name: str):
         try:
             await self.bot.user.edit(username=name)
-            await ctx.send(embed=discord.Embed(description=f"Username updated to **{name}**.", color=0x2B2D31))
+            await ctx.send(embed=discord.Embed(description=f"Username updated to **{name}**.", color=0x5865F2))
         except discord.HTTPException as e:
             if e.code == 50035 and "verified" in str(e).lower():
                 await ctx.send(embed=discord.Embed(description="**Discord API Restriction:** Verified bots cannot change their username via commands. Please change it in the [Discord Developer Portal](https://discord.com/developers/applications).", color=discord.Color.red()))
@@ -79,7 +81,7 @@ class BotProfile(commands.Cog):
     async def reset_username(self, ctx: commands.Context):
         try:
             await self.bot.user.edit(username="Orbit")
-            await ctx.send(embed=discord.Embed(description="Username reset to **Orbit**.", color=0x2B2D31))
+            await ctx.send(embed=discord.Embed(description="Username reset to **Orbit**.", color=0x5865F2))
         except Exception as e:
             await ctx.send(embed=discord.Embed(description=f"Failed to reset username: {e}", color=discord.Color.red()))
 

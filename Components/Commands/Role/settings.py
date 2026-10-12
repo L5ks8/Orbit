@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
@@ -67,8 +69,20 @@ async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission
             failed += 1
 
     state_display = "Enabled" if state.lower() == "on" else ("Disabled" if state.lower() == "off" else "Reset (Neutral)")
+    body = (
+        f"# {Emojis.VERIFICATION} Role Configuration Changed\n\n"
+        f"Mass updated `{permission}` to `{state_display}` for {role.mention}\n\n"
+        f"**Success:** `{success}` channels\n"
+        f"**Failed:** `{failed}` channels\n"
+        f"**Skipped:** `{skipped}` channels\n"
+        f"**Moderator:** {ctx.author.mention}"
+    )
+    card = make_v2_card(body, color=role.color if role.color.value else ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
     embed = discord.Embed(
-        title="Role Configuration Changed",
+        title=f"{Emojis.VERIFICATION} Role Configuration Changed",
         description=f"Mass updated `{permission}` to `{state_display}` for {role.mention}",
         color=role.color
     )

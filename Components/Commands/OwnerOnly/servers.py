@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from discord.ui import View, Button
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class ServersPaginationView(View):
     def __init__(self, bot: commands.Bot, author_id: int, current_page: int = 0):
@@ -60,7 +61,7 @@ class ServersPaginationView(View):
         embed = discord.Embed(
             title="Orbit Connected Server Empire",
             description=content_str,
-            color=0x2B2D31
+            color=0x5865F2
         )
         embed.add_field(name="Stats", value=f"**Total Guilds:** `{len(self.guilds_list)}`\n**Total Members:** `{total_members:,}`", inline=False)
         embed.set_footer(text=f"Page {self.current_page + 1} / {self.total_pages}")

@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from Components.Commands.OwnerOnly._monitor import record_command
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class LeaveServerCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -17,7 +18,11 @@ class LeaveServerCommand(commands.Cog):
         
         try:
             await guild.leave()
-            await ctx.send(embed=make_embed(f"Successfully left server: **{guild.name}** (`{guild.id}`).", discord.Color.green()))
+            desc = f"Successfully left server: **{guild.name}** (`{guild.id}`)."
+            card = make_v2_card(f"# {Emojis.VERIFICATION} Server Left\n\n{desc}", color=discord.Color.green())
+            if card:
+                return await ctx.send(view=card)
+            await ctx.send(embed=make_embed(desc, discord.Color.green()))
         except Exception as e:
             await ctx.send(embed=make_embed(f"Failed to leave server: {e}", discord.Color.red()))
 

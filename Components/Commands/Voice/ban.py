@@ -3,7 +3,8 @@ from discord.ext import commands
 from Components.Commands.Voice._storage import add_to_vcban, is_vcbanned
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Voice.voice import voice_group
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     await ctx.defer()
@@ -22,14 +23,27 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     if user.voice and user.voice.channel:
         vc = user.voice.channel
         try:
-            from Components.Commands._utils import send_moderation_dm, make_embed
+            from Components.Commands._utils import send_moderation_dm
             await send_moderation_dm(user, ctx.guild.name, "voice banned", reason, guild_id=ctx.guild.id)
             
             await user.edit(voice_channel=None, reason=f"Voice banned by {ctx.author} | Reason: {reason}")
         except Exception:
             pass
 
-    embed = discord.Embed(title="User Voice Banned", color=discord.Color.red())
+    v2_body = (
+        f"# {Emojis.BANNED} User Voice Banned\n\n"
+        f"**Target:** {user.mention} (`{user.id}`)\n"
+        f"**Destination Channel:** {vc.mention if vc else 'N/A'}\n"
+        f"**Moderator:** {ctx.author.mention}\n"
+        f"**Status:** `Active (Banned from Voice Channels)`"
+    )
+    if reason and reason != "No reason provided":
+        v2_body += f"\n**Reason:** {reason}"
+    card = make_v2_card(v2_body, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+    embed = discord.Embed(title=f"{Emojis.BANNED} User Voice Banned", color=ORBIT_COLOR)
     embed.add_field(name="Target", value=f"{user.mention} (`{user.id}`)", inline=False)
     embed.add_field(name="Destination Channel", value=vc.mention if vc else "N/A", inline=False)
     if reason and reason != "No reason provided":

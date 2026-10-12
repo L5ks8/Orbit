@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class InviteCodesCommand(commands.Cog):
@@ -19,14 +20,9 @@ class InviteCodesCommand(commands.Cog):
 
         user_invites = [inv for inv in guild_invites if inv.inviter and inv.inviter.id == target.id]
 
-        embed = discord.Embed(
-            title="Invite Codes",
-            color=discord.Color.blurple()
-        )
-        embed.set_thumbnail(url=target.display_avatar.url if hasattr(target, "display_avatar") else None)
-
         if not user_invites:
-            embed.description = f"{target.mention} has no active invite codes."
+            desc = f"{target.mention} has no active invite codes."
+            footer = None
         else:
             lines = []
             for inv in user_invites[:25]:
@@ -35,12 +31,26 @@ class InviteCodesCommand(commands.Cog):
                 lines.append(
                     f"`{inv.code}` — **{inv.uses}**/{max_uses} uses — Expires: {expires}"
                 )
-            embed.description = f"**Invite codes for {target.mention}:**\n\n" + "\n".join(lines)
+            desc = f"**Invite codes for {target.mention}:**\n\n" + "\n".join(lines)
             if len(user_invites) > 25:
-                embed.set_footer(text=f"Showing 25 of {len(user_invites)} invite codes")
+                footer = f"Showing 25 of {len(user_invites)} invite codes"
             elif ctx.guild:
-                embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+                footer = ctx.guild.name
+            else:
+                footer = None
 
+        card = make_v2_card(f"# {Emojis.MAIL} Invite Codes\n\n{desc}", color=ORBIT_COLOR, footer=footer)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+        embed = discord.Embed(
+            title=f"{Emojis.MAIL} Invite Codes",
+            description=desc,
+            color=ORBIT_COLOR
+        )
+        embed.set_thumbnail(url=target.display_avatar.url if hasattr(target, "display_avatar") else None)
+        if footer:
+            embed.set_footer(text=footer)
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @invitecodes.error

@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 
 class ClearCacheCommand(commands.Cog):
@@ -53,10 +55,14 @@ class ClearCacheCommand(commands.Cog):
             pass
 
         cleared_str = "\n- ".join(cleared_list) if cleared_list else "No active caches to clear"
+        body = f"# {Emojis.VERIFICATION} System Caches Flushed\n\n**Caches Cleared:**\n- {cleared_str}"
+        card = make_v2_card(body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, ephemeral=True)
         embed = discord.Embed(
-            title="System Caches Flushed",
+            title=f"{Emojis.VERIFICATION} System Caches Flushed",
             description=f"**Caches Cleared:**\n- {cleared_str}",
-            color=0x2B2D31
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, ephemeral=True)
 

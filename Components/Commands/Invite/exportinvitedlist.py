@@ -1,9 +1,10 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_invited_by_user
 import csv
 import io
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class ExportInvitedListCommand(commands.Cog):
@@ -31,10 +32,13 @@ class ExportInvitedListCommand(commands.Cog):
         csv_file.seek(0)
         file = discord.File(fp=io.BytesIO(csv_file.getvalue().encode('utf-8')), filename=f"invited_list_{target.id}.csv")
         
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Export Invited List\n\nSuccessfully exported the invited list for {target.mention}.", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, file=file, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title="Export Invited List",
+            title=f"{Emojis.VERIFICATION} Export Invited List",
             description=f"Successfully exported the invited list for {target.mention}.",
-            color=discord.Color.green()
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, file=file, allowed_mentions=discord.AllowedMentions.none())
 

@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_invite_info
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class InviterCommand(commands.Cog):
@@ -28,23 +29,28 @@ class InviterCommand(commands.Cog):
                 except Exception:
                     pass
 
-        embed = discord.Embed(
-            title="Inviter",
-            color=discord.Color.blurple()
-        )
-        embed.set_thumbnail(url=target.display_avatar.url if target else None)
-
         if inviter_user:
-            embed.description = (
+            desc = (
                 f"**Member:** {target.mention}\n"
                 f"**Invited by:** {inviter_user.mention}\n"
                 f"**Invite Code:** `{code or 'Unknown'}`"
             )
         else:
-            embed.description = f"No invite data found for {target.mention}."
+            desc = f"No invite data found for {target.mention}."
 
-        if ctx.guild:
-            embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+        footer_text = ctx.guild.name if ctx.guild else None
+        card = make_v2_card(f"# {Emojis.MAIL} Inviter\n\n{desc}", color=ORBIT_COLOR, footer=footer_text)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+        embed = discord.Embed(
+            title=f"{Emojis.MAIL} Inviter",
+            description=desc,
+            color=ORBIT_COLOR
+        )
+        embed.set_thumbnail(url=target.display_avatar.url if target else None)
+        if footer_text:
+            embed.set_footer(text=footer_text, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
 
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 

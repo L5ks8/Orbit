@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class LockCommand(commands.Cog):
@@ -24,7 +25,17 @@ class LockCommand(commands.Cog):
         try:
             overwrite.send_messages = False
             await target_channel.set_permissions(ctx.guild.default_role, overwrite=overwrite, reason=f"Locked by {ctx.author} | Reason: {reason}")
-            embed = discord.Embed(title="Channel Locked", color=discord.Color.orange())
+            body = (
+                f"# {Emojis.NO_ENTRY} Channel Locked\n\n"
+                f"**Channel:** {target_channel.mention} (`{target_channel.id}`)\n"
+                f"**Reason:** {reason}\n"
+                f"**Moderator:** {ctx.author.mention}\n"
+                f"**Status:** `@everyone` send messages disabled"
+            )
+            card = make_v2_card(body, color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title=f"{Emojis.NO_ENTRY} Channel Locked", color=ORBIT_COLOR)
             embed.add_field(name="Channel", value=f"{target_channel.mention} (`{target_channel.id}`)", inline=False)
             embed.add_field(name="Reason", value=reason, inline=False)
             embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

@@ -1,5 +1,7 @@
 import asyncio
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 
 class DmClearCommand(commands.Cog):
@@ -39,7 +41,7 @@ class DmClearCommand(commands.Cog):
             embed = discord.Embed(
                 title="Orbit DM Cleanup Complete",
                 description=f"Cleaned up `{deleted_count}` Orbit message(s) from our DM history.",
-                color=0x2B2D31
+                color=0x5865F2
             )
             await ctx.author.send(embed=embed, delete_after=5.0)
         except Exception:

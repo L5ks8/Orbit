@@ -3,7 +3,8 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
 from Components.Commands.Warn._storage import get_user_warnings
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class WarningsListLayout(discord.ui.View):
     def __init__(self, member: discord.Member, warnings: list[dict], author_id: int, page: int = 1):
@@ -72,9 +73,9 @@ class WarningsListLayout(discord.ui.View):
         warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
 
         embed = discord.Embed(
-            title=f"️ Warning History (Page {self.page} of {self.total_pages})",
+            title=f"{Emojis.WARNING} Warning History (Page {self.page} of {self.total_pages})",
             description=warns_text,
-            color=discord.Color.orange()
+            color=ORBIT_COLOR
         )
         embed.add_field(name="Target", value=self.member.mention, inline=True)
         embed.add_field(name="Total Warnings", value=f"`{len(self.warnings)}`", inline=True)

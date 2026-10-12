@@ -3,7 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import View, Button
 import aiohttp
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 from Components.Systems.Level._storage import (
     get_user_xp, set_user_xp, total_xp_for_level, level_from_xp, get_db
 )
@@ -163,7 +164,7 @@ class LevelAdminCog(commands.Cog):
         view = ConfirmResetView(interaction.user.id)
         
         embed = discord.Embed(
-            title="️ Reset All Levels?",
+            title=f"{Emojis.WARNING} Reset All Levels?",
             description="Are you absolutely sure you want to reset **ALL** levels and XP for everyone on this server?\n\n**This action cannot be undone!**",
             color=discord.Color.red()
         )
@@ -176,16 +177,20 @@ class LevelAdminCog(commands.Cog):
             col = db["LevelData"]
             result = col.delete_many({"guild_id": interaction.guild.id})
             
-            success_embed = discord.Embed(
-                title=" Levels Reset",
-                description=f"Successfully deleted all XP and Level data for **{result.deleted_count}** users.",
-                color=discord.Color.green()
-            )
-            await interaction.edit_original_response(embed=success_embed, view=None)
+            card = make_v2_card(f"# {Emojis.VERIFICATION} Levels Reset\n\nSuccessfully deleted all XP and Level data for **{result.deleted_count}** users.", color=ORBIT_COLOR)
+            if card:
+                await interaction.edit_original_response(view=card, embed=None)
+            else:
+                success_embed = discord.Embed(
+                    title=f"{Emojis.VERIFICATION} Levels Reset",
+                    description=f"Successfully deleted all XP and Level data for **{result.deleted_count}** users.",
+                    color=ORBIT_COLOR
+                )
+                await interaction.edit_original_response(embed=success_embed, view=None)
         elif view.value is False:
-            await interaction.edit_original_response(content=" Level reset cancelled.", embed=None, view=None)
+            await interaction.edit_original_response(content=f"{Emojis.ERROR} Level reset cancelled.", embed=None, view=None)
         else:
-            await interaction.edit_original_response(content=" Confirmation timed out.", embed=None, view=None)
+            await interaction.edit_original_response(content=f"{Emojis.WARNING} Confirmation timed out.", embed=None, view=None)
 
 
 async def setup(bot: commands.Bot):

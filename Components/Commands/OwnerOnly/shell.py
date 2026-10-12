@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 
 class Shell(commands.Cog):
@@ -23,10 +25,14 @@ class Shell(commands.Cog):
         if len(result) > 1900:
             result = result[:1900] + "\n... [Truncated]"
             
+        card = make_v2_card(f"# {Emojis.KEYBOARD} Shell Execution\n\n```bash\n$ {command}\n\n{result}\n```", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
+
         embed = discord.Embed(
-            title=f"Shell Execution",
+            title=f"{Emojis.KEYBOARD} Shell Execution",
             description=f"```bash\n$ {command}\n\n{result}\n```",
-            color=0x2B2D31
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed)
 

@@ -2,7 +2,8 @@ import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 from Components.Systems.Automoderation.log_storage import log_event
 
 class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
@@ -52,16 +53,26 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
                     failed_count += 1
                 await asyncio.sleep(0.35)
 
-            summary_embed = discord.Embed(
-                title="?? Mass Role DM Delivered",
-                color=discord.Color.green()
+            content = (
+                f"# {Emojis.MAIL} Mass Role DM Delivered\n\n"
+                f"**Target Role:** {matched_role.mention}\n"
+                f"**Total Members:** `{len(target_members)}`\n"
+                f"**Successfully Sent:** `{success_count}`\n"
+                f"**Failed (DMs Closed):** `{failed_count}`"
             )
-            summary_embed.add_field(name="Target Role", value=matched_role.mention, inline=True)
-            summary_embed.add_field(name="Total Members", value=str(len(target_members)), inline=True)
-            summary_embed.add_field(name="Successfully Sent", value=f" `{success_count}`", inline=True)
-            summary_embed.add_field(name="Failed (DMs Closed)", value=f" `{failed_count}`", inline=True)
-
-            await interaction.followup.send(embed=summary_embed, ephemeral=True)
+            card = make_v2_card(content, color=ORBIT_COLOR)
+            if card:
+                await interaction.followup.send(view=card, ephemeral=True)
+            else:
+                summary_embed = discord.Embed(
+                    title=f"{Emojis.MAIL} Mass Role DM Delivered",
+                    color=ORBIT_COLOR
+                )
+                summary_embed.add_field(name="Target Role", value=matched_role.mention, inline=True)
+                summary_embed.add_field(name="Total Members", value=str(len(target_members)), inline=True)
+                summary_embed.add_field(name="Successfully Sent", value=f" `{success_count}`", inline=True)
+                summary_embed.add_field(name="Failed (DMs Closed)", value=f" `{failed_count}`", inline=True)
+                await interaction.followup.send(embed=summary_embed, ephemeral=True)
 
             await log_event(
                 self.guild,
@@ -77,13 +88,22 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
             except Exception:
                 return await interaction.followup.send(embed=make_embed(f"Failed to send DM to **{user_target}** (`{user_target.id}`). Their DMs may be closed.", discord.Color.red()), ephemeral=True)
 
-            embed = discord.Embed(
-                title=" Direct Message Sent",
-                description=f"Direct message successfully delivered to **{user_target.mention}** (`{user_target.id}`).",
-                color=discord.Color.green()
+            content = (
+                f"# {Emojis.MAIL} Direct Message Sent\n\n"
+                f"Direct message successfully delivered to **{user_target.mention}** (`{user_target.id}`).\n\n"
+                f"**Message Content:**\n{message[:1024]}"
             )
-            embed.add_field(name="Message Content", value=message[:1024], inline=False)
-            await interaction.followup.send(embed=embed, ephemeral=True)
+            card = make_v2_card(content, color=ORBIT_COLOR)
+            if card:
+                await interaction.followup.send(view=card, ephemeral=True)
+            else:
+                embed = discord.Embed(
+                    title=f"{Emojis.MAIL} Direct Message Sent",
+                    description=f"Direct message successfully delivered to **{user_target.mention}** (`{user_target.id}`).",
+                    color=ORBIT_COLOR
+                )
+                embed.add_field(name="Message Content", value=message[:1024], inline=False)
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
             await log_event(
                 self.guild,
@@ -101,7 +121,7 @@ class ComposeDMView(discord.ui.View):
         self.author = author
         self.original_message = original_message
 
-    @discord.ui.button(label="Compose DM", style=discord.ButtonStyle.primary, emoji="??")
+    @discord.ui.button(label="Compose DM", style=discord.ButtonStyle.primary)
     async def compose_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.author.id:
             return await interaction.response.send_message(embed=make_embed("Only the command executor can use this."), ephemeral=True)
@@ -181,7 +201,7 @@ class DMCommand(commands.Cog):
 
         target_display = target_obj.mention if hasattr(target_obj, 'mention') else str(target_obj)
         embed = discord.Embed(
-            title="?? Compose Anonymous DM",
+            title=f"{Emojis.MAIL} Compose Anonymous DM",
             description=f"Target: {target_display}\n\nClick the button below to open the composition window where you can properly format your anonymous message.",
             color=ORBIT_COLOR
         )

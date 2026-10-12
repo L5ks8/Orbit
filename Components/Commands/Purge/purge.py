@@ -2,7 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import re
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_name: str = "", user: discord.Member = None, after: str = None, is_all: bool = False):
     if not isinstance(ctx.channel, (discord.TextChannel, discord.VoiceChannel, discord.Thread)):
@@ -33,10 +34,14 @@ async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_n
         if after:
             filter_text += f"\n**After ID:** `{after}`"
             
+        desc = f"**Total Messages Deleted:** `{len(deleted)}`\n\n**Channel:** {ctx.channel.mention}\n**Moderator:** {ctx.author.mention}{filter_text}"
+        card = make_v2_card(f"# {Emojis.BACKSPACE} Messages Purged\n\n{desc}", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, ephemeral=True, allowed_mentions=discord.AllowedMentions.none(), delete_after=5)
         embed = discord.Embed(
-            title="Messages Purged",
-            description=f"**Total Messages Deleted:** `{len(deleted)}`\n\n**Channel:** {ctx.channel.mention}\n**Moderator:** {ctx.author.mention}{filter_text}",
-            color=discord.Color.green()
+            title=f"{Emojis.BACKSPACE} Messages Purged",
+            description=desc,
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none(), delete_after=5)
     except discord.Forbidden:

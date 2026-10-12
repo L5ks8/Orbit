@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 
 
 async def _do_server_info(ctx: commands.Context):
@@ -16,7 +17,22 @@ async def _do_server_info(ctx: commands.Context):
     voice_channels = len(ctx.guild.voice_channels)
     categories = len(ctx.guild.categories)
     
-    embed = discord.Embed(title=f"Server Information: {ctx.guild.name}", color=ORBIT_COLOR)
+    body = (
+        f"# {Emojis.GUIDE} Server Information: {ctx.guild.name}\n\n"
+        f"**Server ID:** `{ctx.guild.id}` · **Owner:** <@{ctx.guild.owner_id}>\n"
+        f"**Created On:** <t:{created_timestamp}:F> (<t:{created_timestamp}:R>)\n\n"
+        f"### Members ({total_members})\n"
+        f"> Humans: `{humans}` | Bots: `{bots}`\n\n"
+        f"### Channels ({text_channels + voice_channels + categories})\n"
+        f"> Text: `{text_channels}` | Voice: `{voice_channels}` | Categories: `{categories}`\n\n"
+        f"### Roles & Boosts\n"
+        f"> Roles: `{len(ctx.guild.roles)}` | Boost Level: `Tier {ctx.guild.premium_tier}` (`{ctx.guild.premium_subscription_count or 0} Boosts`)"
+    )
+    card = make_v2_card(body, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+    embed = discord.Embed(title=f"{Emojis.GUIDE} Server Information: {ctx.guild.name}", color=ORBIT_COLOR)
     if ctx.guild.icon:
         embed.set_thumbnail(url=ctx.guild.icon.url)
     embed.add_field(name="Server ID", value=f"`{ctx.guild.id}`", inline=True)
@@ -42,12 +58,12 @@ class ServerInfoCommand(commands.Cog):
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
             
         count = ctx.guild.member_count or len(ctx.guild.members)
-        card = make_v2_card(f"### Members in {ctx.guild.name}\nTotal: **{count:,}**", color=ORBIT_COLOR)
+        card = make_v2_card(f"# {Emojis.GUIDE} Members in {ctx.guild.name}\n\nTotal: **{count:,}**", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
 
         embed = discord.Embed(
-            title="Members",
+            title=f"{Emojis.GUIDE} Members",
             description=str(count),
             color=ORBIT_COLOR
         )

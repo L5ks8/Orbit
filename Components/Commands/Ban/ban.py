@@ -4,7 +4,8 @@ from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 import typing
@@ -54,11 +55,16 @@ class BanCommand(commands.Cog):
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             
-            embed = discord.Embed(title="User Banned", color=discord.Color.red())
-            embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
-            embed.add_field(name="Reason", value=reason, inline=False)
-            embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
-            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            content = f"# {Emojis.BAN} User Banned\n\n**Target:** {target.mention} (`{target.id}`)\n**Reason:** {reason}\n**Moderator:** {ctx.author.mention}"
+            card = make_v2_card(content, color=discord.Color.red())
+            if card:
+                await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+            else:
+                embed = discord.Embed(title=f"{Emojis.BAN} User Banned", color=discord.Color.red())
+                embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
+                embed.add_field(name="Reason", value=reason, inline=False)
+                embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
+                await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         except discord.Forbidden:
             await ctx.send(embed=make_embed("I do not have sufficient permissions to ban this user.", discord.Color.red()), ephemeral=True)
         except Exception as e:

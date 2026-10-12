@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands
 from typing import Optional, Literal
 
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 from Components.emojis import Emojis
 from Components.Systems.Verify._storage import (
     load_verify_config,
@@ -77,7 +77,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         try:
             color = discord.Color(int(str(raw_color).lstrip('#'), 16))
         except Exception:
-            color = discord.Color.blurple()
+            color=ORBIT_COLOR
 
         embed = discord.Embed(
             title=title,
@@ -183,7 +183,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         rem_role = ctx.guild.get_role(cfg.get("remove_role_id")) if cfg.get("remove_role_id") else None
         channel = ctx.guild.get_channel(cfg.get("channel_id")) if cfg.get("channel_id") else None
 
-        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Server Verification Status", color=discord.Color.blurple())
+        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Server Verification Status", color=ORBIT_COLOR)
         embed.add_field(name="Status", value="Enabled" if cfg.get("enabled") else f"{Emojis.NO_ENTRY} Disabled", inline=True)
         embed.add_field(name="Mode", value=f"`{cfg.get('verification_type', 'captcha')}`", inline=True)
         embed.add_field(name="Channel", value=channel.mention if channel else "None configured", inline=True)

@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class BotVCCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -24,9 +25,15 @@ class BotVCCommand(commands.Cog):
                     return await ctx.send(embed=make_embed(f"I am already connected to {target_channel.mention}.", discord.Color.red()), ephemeral=True)
                 
                 await ctx.guild.voice_client.move_to(target_channel)
+                card = make_v2_card(f"# {Emojis.VOICE_HOURS} Voice Channel Moved\n\nMoved to {target_channel.mention}.", color=ORBIT_COLOR)
+                if card:
+                    return await ctx.send(view=card)
                 return await ctx.send(embed=make_embed(f"Moved to {target_channel.mention}."))
             else:
                 await target_channel.connect()
+                card = make_v2_card(f"# {Emojis.VOICE_HOURS} Voice Connected\n\nSuccessfully joined {target_channel.mention} and will stay here until disconnected.", color=discord.Color.green())
+                if card:
+                    return await ctx.send(view=card)
                 return await ctx.send(embed=make_embed(f"Successfully joined {target_channel.mention} and will stay here until disconnected.", discord.Color.green()))
         except discord.Forbidden:
             return await ctx.send(embed=make_embed("I do not have permission to join that voice channel.", discord.Color.red()), ephemeral=True)
@@ -40,6 +47,9 @@ class BotVCCommand(commands.Cog):
         if ctx.guild.voice_client:
             try:
                 await ctx.guild.voice_client.disconnect()
+                card = make_v2_card(f"# {Emojis.VERIFICATION} Voice Disconnected\n\nSuccessfully disconnected from the voice channel.", color=discord.Color.green())
+                if card:
+                    return await ctx.send(view=card)
                 await ctx.send(embed=make_embed("Successfully disconnected from the voice channel.", discord.Color.green()))
             except Exception as e:
                 await ctx.send(embed=make_embed(f"Error disconnecting: {e}", discord.Color.red()), ephemeral=True)

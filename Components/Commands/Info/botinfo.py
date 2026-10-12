@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 import time
 

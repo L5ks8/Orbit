@@ -4,7 +4,7 @@ import asyncio
 import discord
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput, Select, ChannelSelect, RoleSelect
 from Components.Systems.Tickets._storage import load_ticket_config, create_active_ticket, claim_ticket, close_active_ticket
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 
 _user_ticket_selections = {}
 
@@ -219,7 +219,7 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
 
         create_active_ticket(interaction.guild.id, ticket_channel.id, interaction.user.id, subject, description, self.category_option)
 
-        embed = discord.Embed(title=f"Ticket Opened: #{ticket_channel.name}", color=discord.Color.blurple())
+        embed = discord.Embed(title=f"Ticket Opened: #{ticket_channel.name}", color=ORBIT_COLOR)
         embed.add_field(name="Category", value=self.category_option, inline=False)
         embed.add_field(name="Creator", value=interaction.user.mention, inline=True)
         embed.add_field(name="Assigned Team", value=support_role.mention, inline=True)
@@ -286,7 +286,7 @@ class TicketControlLayout(discord.ui.View):
             claim_ticket(interaction.guild.id, interaction.channel.id, interaction.user.id)
 
             updated_view = TicketControlLayout(claimed_name=interaction.user.display_name)
-            embed = discord.Embed(title=f"Ticket Opened: #{interaction.channel.name}", color=discord.Color.blurple())
+            embed = discord.Embed(title=f"Ticket Opened: #{interaction.channel.name}", color=ORBIT_COLOR)
             embed.add_field(name="Category", value=ticket_data.get('category', 'Unknown'), inline=False)
             embed.add_field(name="Creator", value=f"<@{ticket_data.get('creator_id')}>", inline=True)
             embed.add_field(name="Assigned Team", value=interaction.user.mention, inline=True)

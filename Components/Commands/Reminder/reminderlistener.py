@@ -1,5 +1,7 @@
 import time
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands, tasks
 from Components.Commands.Reminder._storage import remove_reminder, load_reminders
 
@@ -26,16 +28,23 @@ class ReminderListener(commands.Cog):
         await self.bot.wait_until_ready()
 
     async def _deliver_alert(self, entry: dict):
+        body = (
+            f"# {Emojis.GUIDE} Orbit Reminder Alert\n\n"
+            f"**Scheduled By:** <@{entry.get('user_id')}>\n"
+            f"**Created At:** <t:{entry.get('created_at', 0)}:F> (<t:{entry.get('created_at', 0)}:R>)\n\n"
+            f"**Reminder Note:**\n> {entry.get('text')}"
+        )
+        card = make_v2_card(body, color=ORBIT_COLOR)
         embed = discord.Embed(
-            title="Orbit Reminder Alert",
+            title=f"{Emojis.GUIDE} Orbit Reminder Alert",
             description=(
                 f"**Scheduled By:** <@{entry.get('user_id')}>\n"
                 f"**Created At:** <t:{entry.get('created_at', 0)}:F> (<t:{entry.get('created_at', 0)}:R>)\n\n"
                 f"**Reminder Note:**\n> {entry.get('text')}"
             ),
-            color=discord.Color.gold()
+            color=ORBIT_COLOR
         )
-        kwargs = {"embed": embed}
+        kwargs = {"view": card} if card else {"embed": embed}
         mention_str = f"<@{entry['user_id']}>"
         
         delivered = False

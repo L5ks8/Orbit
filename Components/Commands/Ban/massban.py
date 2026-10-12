@@ -4,7 +4,8 @@ from discord.ext import commands
 import re
 from Components.Commands.Cases._storage import create_case
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class MassBanCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -64,12 +65,18 @@ class MassBanCog(commands.Cog):
             except discord.HTTPException:
                 failed_count += 1
                 
-        embed = discord.Embed(
-            title="Mass Ban Complete",
-            description=f"Successfully banned **{success_count}** user(s).\nFailed to ban **{failed_count}** user(s).",
-            color=discord.Color.green() if success_count > 0 else discord.Color.red()
-        )
-        await ctx.send(embed=embed)
+        card_color = ORBIT_COLOR if success_count > 0 else discord.Color.red()
+        content = f"# {Emojis.BAN} Mass Ban Complete\n\nSuccessfully banned **{success_count}** user(s).\nFailed to ban **{failed_count}** user(s)."
+        card = make_v2_card(content, color=card_color)
+        if card:
+            await ctx.send(view=card)
+        else:
+            embed = discord.Embed(
+                title=f"{Emojis.BAN} Mass Ban Complete",
+                description=f"Successfully banned **{success_count}** user(s).\nFailed to ban **{failed_count}** user(s).",
+                color=card_color
+            )
+            await ctx.send(embed=embed)
 
     @massban_cmd.error
     async def massban_error(self, ctx: commands.Context, error):

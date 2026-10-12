@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 from typing import Literal
 
@@ -23,10 +24,13 @@ class ManageCodesCommand(commands.Cog):
                 
             await target_invite.delete(reason=f"Deleted by {ctx.author}")
             
+            card = make_v2_card(f"# {Emojis.BACKSPACE} Invite Deleted\n\nSuccessfully deleted the invite code `{code}`.", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
             embed = discord.Embed(
-                title="Invite Deleted",
+                title=f"{Emojis.BACKSPACE} Invite Deleted",
                 description=f"Successfully deleted the invite code `{code}`.",
-                color=discord.Color.green()
+                color=ORBIT_COLOR
             )
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             
@@ -73,10 +77,13 @@ class ManageCodesCommand(commands.Cog):
                     except Exception:
                         pass
                         
+            card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Purged\n\nSuccessfully purged **{purged}** invite(s) matching condition `{condition}`.", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
             embed = discord.Embed(
-                title="Invites Purged",
+                title=f"{Emojis.BACKSPACE} Invites Purged",
                 description=f"Successfully purged **{purged}** invite(s) matching condition `{condition}`.",
-                color=discord.Color.green()
+                color=ORBIT_COLOR
             )
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             

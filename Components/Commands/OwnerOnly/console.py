@@ -10,7 +10,8 @@ import discord
 from discord.ext import commands
 from discord.ui import View, Button, Modal, TextInput
 from Components.Commands.OwnerOnly._monitor import record_command
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class ConsoleEvalModal(Modal, title="Interactive Python Console"):
     code_input = TextInput(
@@ -79,7 +80,7 @@ class ConsoleEvalModal(Modal, title="Interactive Python Console"):
         result_embed = discord.Embed(
             title=f"Console Execution (`{status}`)",
             description=f"**Executed Code:**\n```python\n{display_code}\n```\n**Output:**\n```python\n{display_out}\n```",
-            color=0x2B2D31
+            color=0x5865F2
         )
 
         result_view = View(timeout=300)
@@ -147,7 +148,7 @@ class ConsoleCommand(commands.Cog):
                 "Execute live async Python snippets, inspect internal bot state, sync slash commands, or modify database items directly in the live runtime.\n\n"
                 "Click the **Launch Interactive Terminal** button below to open the modal terminal input window!"
             ),
-            color=0x2B2D31
+            color=0x5865F2
         )
         embed.set_footer(text=f"Authorized Developer: {ctx.author}")
         

@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from typing import Union, Optional
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 async def _resolve_channel(ctx: commands.Context, channel_raw: Union[str, discord.VoiceChannel, discord.StageChannel]) -> Optional[Union[discord.VoiceChannel, discord.StageChannel]]:
     if isinstance(channel_raw, (discord.VoiceChannel, discord.StageChannel)):
@@ -68,7 +69,19 @@ async def _do_vc_move(
         if moved_count == 0:
             return await ctx.send(embed=make_embed("Failed to move members. Please check my permissions.", discord.Color.red()), ephemeral=True)
 
-        embed = discord.Embed(title="Moved All Voice Users", color=ORBIT_COLOR)
+        v2_body = (
+            f"# {Emojis.GLOBE_VERIFICATION} Moved All Voice Users\n\n"
+            f"**Moved Members:** `{moved_count}`\n"
+            f"**Destination Channel:** {dest_channel.mention}\n"
+            f"**Moderator:** {ctx.author.mention}"
+        )
+        if reason and reason != "No reason provided":
+            v2_body += f"\n**Reason:** {reason}"
+        card = make_v2_card(v2_body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+        embed = discord.Embed(title=f"{Emojis.GLOBE_VERIFICATION} Moved All Voice Users", color=ORBIT_COLOR)
         if moved_count > 0:
             embed.add_field(name="Moved Members", value=f"`{moved_count}`", inline=False)
         embed.add_field(name="Destination Channel", value=dest_channel.mention, inline=False)
@@ -104,7 +117,19 @@ async def _do_vc_move(
 
         try:
             await target_member.edit(voice_channel=dest_channel, reason=f"Moved by {ctx.author} | Reason: {reason}")
-            embed = discord.Embed(title="Moved User", color=ORBIT_COLOR)
+            v2_body = (
+                f"# {Emojis.GLOBE_VERIFICATION} Moved User\n\n"
+                f"**Target:** {target_member.mention} (`{target_member.id}`)\n"
+                f"**Destination Channel:** {dest_channel.mention}\n"
+                f"**Moderator:** {ctx.author.mention}"
+            )
+            if reason and reason != "No reason provided":
+                v2_body += f"\n**Reason:** {reason}"
+            card = make_v2_card(v2_body, color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+            embed = discord.Embed(title=f"{Emojis.GLOBE_VERIFICATION} Moved User", color=ORBIT_COLOR)
             embed.add_field(name="Target", value=f"{target_member.mention} (`{target_member.id}`)", inline=False)
             embed.add_field(name="Destination Channel", value=dest_channel.mention, inline=False)
             if reason and reason != "No reason provided":

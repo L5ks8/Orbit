@@ -5,7 +5,8 @@ from discord.ui import View, Button
 from Components.Commands.ModLog._modlog_storage import get_modlogs
 from Components.Commands.Warn._storage import load_warnings
 from Components.Commands.Ban._storage import load_ban_history
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class ModLogPaginationView(View):
     def __init__(self, interaction_or_ctx, user_target, logs: list):
@@ -24,8 +25,8 @@ class ModLogPaginationView(View):
 
     def generate_embed(self):
         embed = discord.Embed(
-            title=f"Actions by: {self.user_target.display_name if hasattr(self.user_target, 'display_name') else str(self.user_target)}",
-            color=discord.Color.gold()
+            title=f"{Emojis.GUIDE} Actions by: {self.user_target.display_name if hasattr(self.user_target, 'display_name') else str(self.user_target)}",
+            color=ORBIT_COLOR
         )
         if hasattr(self.user_target, 'avatar') and self.user_target.avatar:
             embed.set_thumbnail(url=self.user_target.avatar.url)
@@ -137,6 +138,24 @@ class ModLogCommand(commands.Cog):
         embed = view.generate_embed()
         
         if len(unique_logs) <= view.per_page:
+            name = user_target.display_name if hasattr(user_target, 'display_name') else str(user_target)
+            if not unique_logs:
+                card = make_v2_card(f"# {Emojis.GUIDE} Actions by: {name}\n\nNo moderation history found for this user.", color=ORBIT_COLOR)
+                if card:
+                    return await ctx.send(view=card)
+            else:
+                lines = []
+                for i, log in enumerate(unique_logs, start=1):
+                    action = log.get('action_type', 'Unknown Action')
+                    reason = log.get('reason', 'No reason provided')
+                    ts = log.get('timestamp', 0)
+                    date_str = f"<t:{int(ts)}:f>" if ts else "Unknown date"
+                    target_id = log.get('user_id', 'Unknown')
+                    lines.append(f"**{i}. {action}**\n**Date:** {date_str} | **Target:** <@{target_id}>\n**Reason:** {reason}")
+                body = f"# {Emojis.GUIDE} Actions by: {name}\n\n" + "\n\n".join(lines)
+                card = make_v2_card(body, color=ORBIT_COLOR, footer=f"Total records: {len(unique_logs)}")
+                if card:
+                    return await ctx.send(view=card)
             await ctx.send(embed=embed)
         else:
             await ctx.send(embed=embed, view=view)

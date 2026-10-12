@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Voice.voice import voice_group
 
@@ -15,7 +17,18 @@ async def _do_vc_unlock(ctx: commands.Context, channel: discord.VoiceChannel | N
     try:
         overwrite.connect = None
         await target_channel.set_permissions(ctx.guild.default_role, overwrite=overwrite, reason=f"Voice channel unlocked by {ctx.author} | Reason: {reason}")
-        embed = discord.Embed(title="Channel Unlocked", color=discord.Color.green())
+        v2_body = (
+            f"# {Emojis.VERIFICATION} Channel Unlocked\n\n"
+            f"**Destination Channel:** {target_channel.mention}\n"
+            f"**Moderator:** {ctx.author.mention}"
+        )
+        if reason and reason != "No reason provided":
+            v2_body += f"\n**Reason:** {reason}"
+        card = make_v2_card(v2_body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Channel Unlocked", color=ORBIT_COLOR)
         embed.add_field(name="Destination Channel", value=target_channel.mention, inline=False)
         if reason and reason != "No reason provided":
             embed.add_field(name="Reason", value=reason, inline=False)

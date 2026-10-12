@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 async def _do_createrole(ctx: commands.Context, name: str, color: str = None, hoist: bool = False, mentionable: bool = False):
     await ctx.defer()
@@ -21,8 +23,12 @@ async def _do_createrole(ctx: commands.Context, name: str, color: str = None, ho
             reason=f"Created by {ctx.author}"
         )
         
+        body = f"# {Emojis.VERIFICATION} Role Created\n\nSuccessfully created the role {new_role.mention}."
+        card = make_v2_card(body, color=parsed_color if parsed_color.value else ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
         embed = discord.Embed(
-            title="Role Created", 
+            title=f"{Emojis.VERIFICATION} Role Created", 
             description=f"Successfully created the role {new_role.mention}.", 
             color=parsed_color
         )
@@ -53,7 +59,6 @@ class RoleCreateCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     from Components.Commands.Role.role import role_group
-    from Components.Commands._utils import make_embed
     if "role" not in bot.all_commands:
         bot.add_command(role_group)
     await bot.add_cog(RoleCreateCog(bot))

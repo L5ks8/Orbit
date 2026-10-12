@@ -3,7 +3,8 @@ from discord.ext import commands
 from discord.ui import ActionRow, Button
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class UnbanConfirmView(discord.ui.View):
     def __init__(self, ban_entry: discord.BanEntry, reason: str, author: discord.Member):
@@ -29,11 +30,16 @@ class UnbanConfirmView(discord.ui.View):
                     f"**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Reason:** {self.reason}"
                 )
 
-                embed = discord.Embed(title="User unbanned", color=discord.Color.green())
-                embed.add_field(name="Target", value=f"{self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)", inline=False)
-                embed.add_field(name="Reason", value=self.reason, inline=False)
-                embed.add_field(name="Moderator", value=self.author.mention, inline=False)
-                await interaction.response.edit_message(embed=embed, view=None)
+                content = f"# {Emojis.VERIFICATION} User Unbanned\n\n**Target:** {self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)\n**Reason:** {self.reason}\n**Moderator:** {self.author.mention}"
+                card = make_v2_card(content, color=ORBIT_COLOR)
+                if card:
+                    await interaction.response.edit_message(view=card, embed=None)
+                else:
+                    embed = discord.Embed(title=f"{Emojis.VERIFICATION} User Unbanned", color=ORBIT_COLOR)
+                    embed.add_field(name="Target", value=f"{self.ban_entry.user.mention} (`{self.ban_entry.user.id}`)", inline=False)
+                    embed.add_field(name="Reason", value=self.reason, inline=False)
+                    embed.add_field(name="Moderator", value=self.author.mention, inline=False)
+                    await interaction.response.edit_message(embed=embed, view=None)
                 
                 self.stop()
             except discord.Forbidden:
@@ -44,8 +50,12 @@ class UnbanConfirmView(discord.ui.View):
         async def cancel_callback(interaction: discord.Interaction):
             if interaction.user.id != self.author.id:
                 return await interaction.response.send_message(embed=make_embed("You are not authorized to perform this action.", discord.Color.red()), ephemeral=True)
-            embed = discord.Embed(title="Unban cancelled", description="The operation was cancelled.", color=discord.Color.red())
-            await interaction.response.edit_message(embed=embed, view=None)
+            card = make_v2_card(f"# {Emojis.ERROR} Unban Cancelled\n\nThe operation was cancelled.", color=discord.Color.red())
+            if card:
+                await interaction.response.edit_message(view=card, embed=None)
+            else:
+                embed = discord.Embed(title=f"{Emojis.ERROR} Unban cancelled", description="The operation was cancelled.", color=discord.Color.red())
+                await interaction.response.edit_message(embed=embed, view=None)
             self.stop()
 
         btn_confirm.callback = confirm_callback
@@ -75,11 +85,22 @@ class UnbanCommand(commands.Cog):
         except discord.Forbidden:
             return await ctx.send(embed=make_embed("I do not have permission to view the ban list.", discord.Color.red()), ephemeral=True)
 
-        embed = discord.Embed(title="Confirm unban", description=f"Are you sure you want to unban **{ban_entry.user.name}**?", color=discord.Color.orange())
+        view = UnbanConfirmView(ban_entry, reason, ctx.author)
+        prompt_text = (
+            f"# {Emojis.BAN} Confirm Unban\n\n"
+            f"Are you sure you want to unban **{ban_entry.user.name}**?\n\n"
+            f"**Target:** {ban_entry.user.mention} (`{ban_entry.user.id}`)\n"
+            f"**Original Ban Reason:** {ban_entry.reason or 'None'}\n"
+            f"**New Reason:** {reason}"
+        )
+        embed = discord.Embed(
+            title=f"{Emojis.BAN} Confirm Unban",
+            description=f"Are you sure you want to unban **{ban_entry.user.name}**?",
+            color=ORBIT_COLOR
+        )
         embed.add_field(name="Target", value=f"{ban_entry.user.mention} (`{ban_entry.user.id}`)", inline=False)
         embed.add_field(name="Original Ban Reason", value=ban_entry.reason or 'None', inline=False)
         embed.add_field(name="New Reason", value=reason, inline=False)
-        view = UnbanConfirmView(ban_entry, reason, ctx.author)
         await ctx.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
     @unban.error

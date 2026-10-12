@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 import json, os
 
@@ -22,10 +24,18 @@ class AddDevCommand(commands.Cog):
             devs.append(user.id)
             with open(path, "w") as f:
                 json.dump(devs, f)
-            embed = discord.Embed(description=f"Added {user.mention} as a developer.", color=0x2B2D31)
+            desc = f"Added {user.mention} as a developer."
+            card = make_v2_card(f"# {Emojis.VERIFICATION} Developer Added\n\n{desc}", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card)
+            embed = discord.Embed(description=f"{Emojis.VERIFICATION} {desc}", color=ORBIT_COLOR)
             await ctx.send(embed=embed)
         else:
-            embed = discord.Embed(description="User is already a developer.", color=0x2B2D31)
+            desc = "User is already a developer."
+            card = make_v2_card(f"# {Emojis.WARNING} Notice\n\n{desc}", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card)
+            embed = discord.Embed(description=f"{Emojis.WARNING} {desc}", color=ORBIT_COLOR)
             await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):

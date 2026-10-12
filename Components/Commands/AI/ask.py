@@ -7,7 +7,8 @@ from discord.ext import commands
 from discord import app_commands
 from g4f.client import AsyncClient
 import g4f
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 try:
     import edge_tts
@@ -82,36 +83,64 @@ class AskVoice(commands.Cog):
         try:
             answer = await self._generate_response(question, guild)
         except Exception as e:
-            return await send_ephemeral(f"️ Could not generate an AI response: `{e}`")
+            return await send_ephemeral(f"{Emojis.ERROR} Could not generate an AI response: `{e}`")
 
         if not voice_client or not voice_client.is_connected():
+            card = make_v2_card(
+                f"# {Emojis.KEYBOARD} AI Response\n\n**{answer}**\n\n-# *Connect me to a voice channel with `/connect` to hear the answer spoken!*",
+                color=ORBIT_COLOR
+            )
+            if card:
+                return await send(view=card)
             embed = discord.Embed(
-                description=f" **{answer}**\n\n-# *Connect me to a voice channel with `/connect` to hear the answer spoken!*",
-                color=discord.Color.blurple(),
+                title=f"{Emojis.KEYBOARD} AI Response",
+                description=f"**{answer}**\n\n-# *Connect me to a voice channel with `/connect` to hear the answer spoken!*",
+                color=ORBIT_COLOR,
             )
             embed.set_footer(text=f"Asked by {user.display_name}")
             return await send(embed=embed)
 
         if not HAS_EDGE_TTS:
+            card = make_v2_card(
+                f"# {Emojis.KEYBOARD} AI Response\n\n**{answer}**\n\n-# *edge-tts is not installed – voice playback unavailable.*",
+                color=ORBIT_COLOR
+            )
+            if card:
+                return await send(view=card)
             embed = discord.Embed(
-                description=f" **{answer}**\n\n-# *edge-tts is not installed – voice playback unavailable.*",
-                color=discord.Color.orange(),
+                title=f"{Emojis.KEYBOARD} AI Response",
+                description=f"**{answer}**\n\n-# *edge-tts is not installed – voice playback unavailable.*",
+                color=ORBIT_COLOR,
             )
             return await send(embed=embed)
 
         try:
             audio_data = await self._text_to_speech(answer)
         except Exception as e:
+            card = make_v2_card(
+                f"# {Emojis.KEYBOARD} AI Response\n\n**{answer}**\n\n-# *TTS failed: `{e}`*",
+                color=ORBIT_COLOR
+            )
+            if card:
+                return await send(view=card)
             embed = discord.Embed(
-                description=f" **{answer}**\n\n-# *TTS failed: `{e}`*",
-                color=discord.Color.orange(),
+                title=f"{Emojis.KEYBOARD} AI Response",
+                description=f"**{answer}**\n\n-# *TTS failed: `{e}`*",
+                color=ORBIT_COLOR,
             )
             return await send(embed=embed)
 
         if not audio_data:
+            card = make_v2_card(
+                f"# {Emojis.KEYBOARD} AI Response\n\n**{answer}**\n\n-# *Could not generate audio.*",
+                color=ORBIT_COLOR
+            )
+            if card:
+                return await send(view=card)
             embed = discord.Embed(
-                description=f" **{answer}**\n\n-# *Could not generate audio.*",
-                color=discord.Color.orange(),
+                title=f"{Emojis.KEYBOARD} AI Response",
+                description=f"**{answer}**\n\n-# *Could not generate audio.*",
+                color=ORBIT_COLOR,
             )
             return await send(embed=embed)
 
@@ -135,12 +164,20 @@ class AskVoice(commands.Cog):
             source = discord.FFmpegPCMAudio(tmp_path)
             voice_client.play(source, after=after_playing)
 
-            embed = discord.Embed(
-                description=f" **{answer}**",
-                color=discord.Color.green(),
+            card = make_v2_card(
+                f"# {Emojis.KEYBOARD} AI Response\n\n**{answer}**",
+                color=ORBIT_COLOR
             )
-            embed.set_footer(text=f"Asked by {user.display_name} • Speaking in {voice_client.channel.name}")
-            await send(embed=embed)
+            if card:
+                await send(view=card)
+            else:
+                embed = discord.Embed(
+                    title=f"{Emojis.KEYBOARD} AI Response",
+                    description=f"**{answer}**",
+                    color=ORBIT_COLOR,
+                )
+                embed.set_footer(text=f"Asked by {user.display_name} • Speaking in {voice_client.channel.name}")
+                await send(embed=embed)
 
             try:
                 await asyncio.wait_for(done_event.wait(), timeout=120.0)

@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Channel.channel import channel_group
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | None):
@@ -25,11 +27,21 @@ async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | 
                 await ctx.message.delete()
             except Exception:
                 pass
-            embed = discord.Embed(title="Channel Deleted", color=discord.Color.red())
-            embed.add_field(name="Channel", value=f"`#{name}`", inline=False)
-            embed.add_field(name="Type", value=f"`{ch_type}`", inline=True)
-            embed.add_field(name="Deleted by", value=ctx.author.mention, inline=False)
-            await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+            content = (
+                f"# {Emojis.BACKSPACE} Channel Deleted\n\n"
+                f"**Channel:** `#{name}`\n"
+                f"**Type:** `{ch_type}`\n"
+                f"**Deleted by:** {ctx.author.mention}"
+            )
+            card = make_v2_card(content, color=discord.Color.red())
+            if card:
+                await ctx.send(view=card, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+            else:
+                embed = discord.Embed(title=f"{Emojis.BACKSPACE} Channel Deleted", color=discord.Color.red())
+                embed.add_field(name="Channel", value=f"`#{name}`", inline=False)
+                embed.add_field(name="Type", value=f"`{ch_type}`", inline=True)
+                embed.add_field(name="Deleted by", value=ctx.author.mention, inline=False)
+                await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
     else:
         await ctx.send(embed=make_embed("That channel type cannot be deleted with this command.", discord.Color.red()), ephemeral=True)
 
@@ -46,7 +58,5 @@ async def delete_error(ctx: commands.Context, error):
         await ctx.send(embed=make_embed("Could not find that channel.", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Channel.channel import channel_group
-    from Components.Commands._utils import make_embed
     if "channel" not in bot.all_commands:
         bot.add_command(channel_group)

@@ -1,7 +1,8 @@
-﻿import discord
+import discord
 from discord import app_commands
 from discord.ext import commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class MassMoveCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -36,10 +37,20 @@ class MassMoveCog(commands.Cog):
             except discord.HTTPException:
                 failed_count += 1
                 
+        v2_body = (
+            f"# {Emojis.GLOBE_VERIFICATION} Mass Move Complete\n\n"
+            f"Successfully moved **{success_count}** member(s) from {from_channel.mention} to {to_channel.mention}."
+        )
+        if failed_count > 0:
+            v2_body += f"\nFailed to move **{failed_count}** member(s)."
+        card = make_v2_card(v2_body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
+
         embed = discord.Embed(
-            title="Mass Move Complete",
+            title=f"{Emojis.GLOBE_VERIFICATION} Mass Move Complete",
             description=f"Successfully moved **{success_count}** member(s) from {from_channel.mention} to {to_channel.mention}.",
-            color=discord.Color.green()
+            color=ORBIT_COLOR
         )
         if failed_count > 0:
             embed.description += f"\nFailed to move **{failed_count}** member(s)."

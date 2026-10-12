@@ -1,6 +1,7 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class CheckBanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -15,7 +16,12 @@ class CheckBanCommand(commands.Cog):
             ban_entry = await ctx.guild.fetch_ban(discord.Object(id=target_id))
             reason = ban_entry.reason or "No reason provided"
             
-            embed = discord.Embed(title="User is Banned", color=discord.Color.red())
+            content = f"# {Emojis.BAN} User is Banned\n\n**User:** {ban_entry.user} (`{ban_entry.user.id}`)\n**Reason:** {reason}"
+            card = make_v2_card(content, color=discord.Color.red())
+            if card:
+                return await ctx.send(view=card)
+
+            embed = discord.Embed(title=f"{Emojis.BAN} User is Banned", color=discord.Color.red())
             embed.add_field(name="User", value=f"{ban_entry.user} (`{ban_entry.user.id}`)", inline=False)
             embed.add_field(name="Reason", value=reason, inline=False)
             await ctx.send(embed=embed)

@@ -3,7 +3,8 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class UntimeoutCommand(commands.Cog):
@@ -28,7 +29,19 @@ class UntimeoutCommand(commands.Cog):
                 "User Timeout Removed (`/untimeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
-            embed = discord.Embed(title="User Timeout Removed", color=discord.Color.green())
+            v2_body = (
+                f"# {Emojis.VERIFICATION} User Timeout Removed\n\n"
+                f"**Target:** {target.mention} (`{target.id}`)\n"
+                f"**Moderator:** {ctx.author.mention}\n"
+                f"**Status:** `Cleared`"
+            )
+            if reason and reason != "No reason provided":
+                v2_body += f"\n**Reason:** {reason}"
+            card = make_v2_card(v2_body, color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+            embed = discord.Embed(title=f"{Emojis.VERIFICATION} User Timeout Removed", color=ORBIT_COLOR)
             embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
             if reason and reason != "No reason provided":
                 embed.add_field(name="Reason", value=reason, inline=False)

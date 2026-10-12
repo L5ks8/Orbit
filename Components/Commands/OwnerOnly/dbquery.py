@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Database.mongodb import get_db
 import json
@@ -38,7 +40,7 @@ class DBQuery(commands.Cog):
             embed = discord.Embed(
                 title="Database Query Result",
                 description=f"```\n{query}\n```\n**Result:**\n```{code_lang}\n{formatted}\n```",
-                color=0x2B2D31
+                color=0x5865F2
             )
             await ctx.send(embed=embed)
         except Exception as e:
@@ -46,7 +48,7 @@ class DBQuery(commands.Cog):
             embed = discord.Embed(
                 title="Database Query Error",
                 description=f"```\n{query}\n```\n**Error:**\n```py\n{err}\n```",
-                color=0x2B2D31
+                color=0x5865F2
             )
             await ctx.send(embed=embed)
 

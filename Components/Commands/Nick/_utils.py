@@ -1,9 +1,10 @@
-﻿import discord
+import discord
 from discord.ext import commands
 
 
 from Components.Commands.Whitelist._storage import is_whitelisted
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 async def perform_nick_edit(ctx: commands.Context, target: discord.Member, nickname: str | None):
     await ctx.defer()
@@ -30,10 +31,14 @@ async def perform_nick_edit(ctx: commands.Context, target: discord.Member, nickn
         old_display = old_nick if old_nick else f"{target.name} (Default)"
         new_display = nickname if nickname else f"{target.name} (Reset to Default)"
 
+        desc = f"**Target:** {target.mention} (`{target.id}`)\n\n**Old Nickname:** `{old_display}`\n**New Nickname:** `{new_display}`\n**Changed by:** {ctx.author.mention}"
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Nickname Updated\n\n{desc}", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title="Nickname Updated",
-            description=f"**Target:** {target.mention} (`{target.id}`)\n\n**Old Nickname:** `{old_display}`\n**New Nickname:** `{new_display}`\n**Changed by:** {ctx.author.mention}",
-            color=discord.Color.green()
+            title=f"{Emojis.VERIFICATION} Nickname Updated",
+            description=desc,
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
     except discord.Forbidden:

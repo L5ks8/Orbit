@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from Components.Commands.Nick._utils import perform_nick_edit
 from Components.Commands._utils import format_usage, make_embed
+from Components.emojis import Emojis
 
 class NickCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

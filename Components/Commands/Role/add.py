@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
@@ -13,7 +15,17 @@ async def _do_addrole(ctx: commands.Context, target: discord.Member, role: disco
 
     try:
         await target.add_roles(role, reason=f"Role added by {ctx.author} | Reason: {reason}")
-        embed = discord.Embed(title="Role Added", color=role.color)
+        body = (
+            f"# {Emojis.VERIFICATION} Role Added\n\n"
+            f"**Target:** {target.mention} (`{target.id}`)\n"
+            f"**Role:** {role.mention} (`{role.id}`)\n"
+            f"**Reason:** {reason}\n"
+            f"**Moderator:** {ctx.author.mention}"
+        )
+        card = make_v2_card(body, color=role.color if role.color.value else ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Role Added", color=role.color)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
         embed.add_field(name="Reason", value=reason, inline=False)

@@ -1,3 +1,4 @@
+from Components.Commands._utils import ORBIT_COLOR
 import discord
 import time
 import datetime
@@ -137,7 +138,7 @@ class AutoModListener(commands.Cog):
             action = cfg.get("action", "warn")
             timeout_min = cfg.get("timeout_duration_min", 5)
             escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
-            embed = discord.Embed(title="Orbit AutoMod Triggered", color=discord.Color.orange())
+            embed = discord.Embed(title="Orbit AutoMod Triggered", color=ORBIT_COLOR)
             embed.add_field(name="Target", value=f"{message.author.mention} (`{message.author.id}`)", inline=False)
             embed.add_field(name="Reason", value=reason, inline=True)
             embed.add_field(name="Action Taken", value=f"`{action.upper()}` (Total Warnings: {warn_count})", inline=True)
@@ -310,7 +311,7 @@ class AutoModListener(commands.Cog):
                             
                             action = bot_cfg.get("action", "kick")
                             escalation_str, warn_count = await self._apply_action(inviter, action, 5, "AutoMod: Unauthorized bot invite")
-                            embed = discord.Embed(title="Orbit AutoMod Triggered", color=discord.Color.orange())
+                            embed = discord.Embed(title="Orbit AutoMod Triggered", color=ORBIT_COLOR)
                             embed.add_field(name="Target", value=f"{inviter.mention} (`{inviter.id}`)", inline=False)
                             embed.add_field(name="Reason", value="Unauthorized Bot Invite", inline=True)
                             embed.add_field(name="Action Taken", value=f"`{action.upper()}` (Total Warnings: {warn_count})", inline=True)

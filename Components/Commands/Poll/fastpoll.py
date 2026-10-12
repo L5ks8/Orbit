@@ -6,6 +6,7 @@ from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow,
 from Components.Commands.Poll.poll import ComponentsPollView
 from Components.Commands.Poll._storage import generate_poll_id, create_poll_entry
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 
 class FastPollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):

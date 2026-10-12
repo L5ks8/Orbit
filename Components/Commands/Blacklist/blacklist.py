@@ -4,7 +4,8 @@ from discord.ext import commands
 from Components.Commands.Blacklist._storage import add_to_blacklist
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card
+from Components.emojis import Emojis
 
 async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
     await ctx.defer()
@@ -40,7 +41,11 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
         "User Blacklisted (`/blacklist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}{ban_msg}"
     )
-    await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the blacklist.{ban_msg}", discord.Color.green()), ephemeral=True)
+    card = make_v2_card(f"# {Emojis.VERIFICATION} User Blacklisted\n\nAdded ID `{user_id}` to the blacklist.{ban_msg}", color=discord.Color.green())
+    if card:
+        await ctx.send(view=card, ephemeral=True)
+    else:
+        await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the blacklist.{ban_msg}", discord.Color.green()), ephemeral=True)
 
 @commands.hybrid_command(
     name="blacklist",

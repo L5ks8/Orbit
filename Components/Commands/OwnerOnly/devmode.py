@@ -1,34 +1,46 @@
 import discord
 from discord.ext import commands
 from Components.Commands.OwnerOnly._storage import load_devmode_config, save_devmode_config
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class DevmodeCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    def _get_embed(self, enabled: bool, reason: str, owner: discord.abc.User):
+    def _get_card_and_embed(self, enabled: bool, reason: str, owner: discord.abc.User):
         status_text = "**ACTIVE (`Developer Mode ON`)**" if enabled else "**DISABLED (`Normal Operations`)**"
         title_text = "Orbit Developer Mode Activated" if enabled else "Orbit Developer Mode Deactivated"
+        emoji = Emojis.WARNING if enabled else Emojis.VERIFICATION
         
+        body = (
+            f"# {emoji} {title_text}\n\n"
+            f"**Devmode Status:** {status_text}\n"
+            f"**Lockdown Reason:** `{reason}`\n"
+            f"**Authorized By:** {owner.mention}\n\n"
+            f"*-# While Developer Mode is ACTIVE, regular users are restricted across all servers while the bot owner retains 100% full access.*"
+        )
+        card = make_v2_card(body, color=ORBIT_COLOR)
         embed = discord.Embed(
-            title=title_text,
+            title=f"{emoji} {title_text}",
             description=(
                 f"**Devmode Status:** {status_text}\n"
                 f"**Lockdown Reason:** `{reason}`\n"
                 f"**Authorized By:** {owner.mention}\n\n"
                 f"*-# While Developer Mode is ACTIVE, regular users are restricted across all servers while the bot owner retains 100% full access.*"
             ),
-            color=0x2B2D31
+            color=ORBIT_COLOR
         )
-        return embed
+        return card, embed
 
     @commands.command(name="devmode", hidden=True)
     @commands.is_owner()
     async def devmode_cmd(self, ctx: commands.Context, state: str = None, *, reason: str = "System upgrades and developer testing"):
         config = load_devmode_config()
         if state is None:
-            embed = self._get_embed(config.get("enabled", False), config.get("reason", "System upgrades and developer testing"), ctx.author)
+            card, embed = self._get_card_and_embed(config.get("enabled", False), config.get("reason", "System upgrades and developer testing"), ctx.author)
+            if card:
+                return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
             return await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
         clean_state = state.lower().strip()
@@ -44,7 +56,9 @@ class DevmodeCommand(commands.Cog):
             config["reason"] = reason.strip()
 
         save_devmode_config(config)
-        embed = self._get_embed(enabled, config["reason"], ctx.author)
+        card, embed = self._get_card_and_embed(enabled, config["reason"], ctx.author)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @devmode_cmd.error

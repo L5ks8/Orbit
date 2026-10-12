@@ -1,11 +1,24 @@
 import discord
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
 async def _do_roleinfo(ctx: commands.Context, role: discord.Role):
     await ctx.defer()
     created_ts = int(role.created_at.timestamp())
-    embed = discord.Embed(title="Role Info", color=role.color)
+    body = (
+        f"# {Emojis.GUIDE} Role Info\n\n"
+        f"**Role:** {role.mention} (`{role.id}`)\n"
+        f"**Created At:** <t:{created_ts}:F> (<t:{created_ts}:R>)\n"
+        f"**Members:** `{len(role.members)}` | **Position:** `{role.position}`\n"
+        f"**Hoisted:** `{role.hoist}` | **Mentionable:** `{role.mentionable}` | **Managed:** `{role.managed}`"
+    )
+    card = make_v2_card(body, color=role.color if role.color.value else ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+    embed = discord.Embed(title=f"{Emojis.GUIDE} Role Info", color=role.color)
     embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
     embed.add_field(name="Created At", value=f"<t:{created_ts}:F> (<t:{created_ts}:R>)", inline=False)
     embed.add_field(name="Members", value=f"`{len(role.members)}`", inline=True)

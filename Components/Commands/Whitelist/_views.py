@@ -3,7 +3,8 @@ import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
 from Components.Commands.Whitelist._storage import load_whitelist, add_to_whitelist, remove_from_whitelist
-from Components.Commands._utils import ORBIT_COLOR
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.emojis import Emojis
 
 class AddWhitelistModal(Modal, title="Add ID to Whitelist"):
     def __init__(self, parent_view: "WhitelistListLayout"):
@@ -109,7 +110,7 @@ class WhitelistListLayout(discord.ui.View):
                 content_text += f"\n\n*And {count - 15} more users...*"
 
         embed = discord.Embed(
-            title=f"Whitelist Overview ({count} Users)",
+            title=f"{Emojis.GLOBE_VERIFICATION} Whitelist Overview ({count} Users)",
             description=content_text,
             color=ORBIT_COLOR
         )

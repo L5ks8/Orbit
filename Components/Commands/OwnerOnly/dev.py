@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 PAGES = [
     {
@@ -170,9 +171,9 @@ class DevLayout(discord.ui.View):
         components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
 
         embed = discord.Embed(
-            title=f"Developer Control Center - {page['title']}",
+            title=f"{Emojis.GUIDE} Developer Control Center - {page['title']}",
             description=page["description"],
-            color=0x2B2D31
+            color=ORBIT_COLOR
         )
         try:
             import subprocess

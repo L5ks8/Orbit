@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 
 class GuildInfoCommand(commands.Cog):
@@ -12,7 +14,7 @@ class GuildInfoCommand(commands.Cog):
         if not guild:
             return await ctx.send(embed=discord.Embed(description="I am not in a server with that ID.", color=discord.Color.red()))
             
-        embed = discord.Embed(title=f"Guild Info: {guild.name}", color=0x2B2D31)
+        embed = discord.Embed(title=f"Guild Info: {guild.name}", color=0x5865F2)
         if guild.icon:
             embed.set_thumbnail(url=guild.icon.url)
             

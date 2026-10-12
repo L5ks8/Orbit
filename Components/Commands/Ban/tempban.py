@@ -6,7 +6,8 @@ import time
 from Components.Commands.Cases._storage import create_case
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Database.mongodb import get_db
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 def parse_duration(duration_str: str) -> int:
     """Parses a duration string like '1d', '12h', '30m' into seconds."""
@@ -81,12 +82,17 @@ class TempBanCog(commands.Cog):
         create_case(ctx.guild.id, user.id, ctx.author.id, "ban", f"[TEMPBAN {duration}] {reason}")
         add_modlog(ctx.guild.id, user.id, ctx.author.id, "Tempban", f"[{duration}] {reason}")
         
-        embed = discord.Embed(
-            title="User Tempbanned",
-            description=f"Successfully tempbanned {user.mention} for **{duration}**.\nThey will be automatically unbanned <t:{unban_time}:R>.",
-            color=discord.Color.red()
-        )
-        await ctx.send(embed=embed)
+        content = f"# {Emojis.BAN} User Tempbanned\n\nSuccessfully tempbanned {user.mention} for **{duration}**.\nThey will be automatically unbanned <t:{unban_time}:R>."
+        card = make_v2_card(content, color=discord.Color.red())
+        if card:
+            await ctx.send(view=card)
+        else:
+            embed = discord.Embed(
+                title=f"{Emojis.BAN} User Tempbanned",
+                description=f"Successfully tempbanned {user.mention} for **{duration}**.\nThey will be automatically unbanned <t:{unban_time}:R>.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
 
     @tasks.loop(minutes=1.0)
     async def check_tempbans(self):

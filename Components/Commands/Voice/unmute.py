@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Voice.voice import voice_group
@@ -13,7 +15,19 @@ async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: s
 
     try:
         await target.edit(mute=False, reason=f"Voice unmuted by {ctx.author} | Reason: {reason}")
-        embed = discord.Embed(title="Voice Unmuted", color=discord.Color.green())
+        v2_body = (
+            f"# {Emojis.VERIFICATION} Voice Unmuted\n\n"
+            f"**Target:** {target.mention} (`{target.id}`)\n"
+            f"**Destination Channel:** {target.voice.channel.mention if target.voice.channel else 'N/A'}\n"
+            f"**Moderator:** {ctx.author.mention}"
+        )
+        if reason and reason != "No reason provided":
+            v2_body += f"\n**Reason:** {reason}"
+        card = make_v2_card(v2_body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Voice Unmuted", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Destination Channel", value=target.voice.channel.mention if target.voice.channel else "N/A", inline=False)
         if reason and reason != "No reason provided":

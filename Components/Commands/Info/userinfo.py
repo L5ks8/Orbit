@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from typing import Union
-from Components.Commands._utils import ORBIT_COLOR
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 
 async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, discord.User, None]):
     await ctx.defer()
@@ -38,7 +39,21 @@ async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, disco
 
     bot_badge = " *(Bot)*" if target.bot else ""
     
-    embed = discord.Embed(title=f"User Information: {target.display_name}{bot_badge}", color=target.color if target.color != discord.Color.default() else ORBIT_COLOR)
+    body = (
+        f"# {Emojis.GUIDE} User Information: {target.display_name}{bot_badge}\n\n"
+        f"**Username:** `{target.name}` · **User ID:** `{target.id}`\n"
+        f"**Account Created:** <t:{created_timestamp}:F> (<t:{created_timestamp}:R>)\n"
+        f"**Joined Server:** {joined_str}\n"
+        f"**Top Role:** {top_role}\n\n"
+        f"### Roles ({len(roles)})\n{roles_display}\n\n"
+        f"### Key Permissions\n{perms_str}"
+    )
+    card_color = target.color if target.color != discord.Color.default() else ORBIT_COLOR
+    card = make_v2_card(body, color=card_color)
+    if card:
+        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+    embed = discord.Embed(title=f"{Emojis.GUIDE} User Information: {target.display_name}{bot_badge}", color=card_color)
     embed.set_thumbnail(url=target.display_avatar.url)
     embed.add_field(name="Username", value=f"`{target.name}`", inline=True)
     embed.add_field(name="User ID", value=f"`{target.id}`", inline=True)

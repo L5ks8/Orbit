@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 import time
 import os
@@ -35,7 +37,7 @@ class DashboardMessage(commands.Cog):
         embed = discord.Embed(
             title="Notification Sent",
             description=f"Successfully sent to **{target_display}** on the dashboard:\n\n> {message}",
-            color=0x2B2D31
+            color=0x5865F2
         )
         await ctx.send(embed=embed)
 

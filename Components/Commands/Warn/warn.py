@@ -5,7 +5,8 @@ from Components.Commands.Warn._storage import add_warning, get_user_warnings
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 from Components.Commands.Whitelist._storage import is_whitelisted
 
 
@@ -76,7 +77,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
                 punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
 
     try:
-        dm_embed = discord.Embed(title=f"️ Formal Warning Received", color=discord.Color.red())
+        dm_embed = discord.Embed(title=f"{Emojis.WARNING} Formal Warning Received", color=discord.Color.red())
         dm_embed.add_field(name="Server", value=ctx.guild.name, inline=False)
         dm_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=False)
         dm_embed.add_field(name="Reason", value=f"{reason}{punishment_text}", inline=False)
@@ -100,20 +101,33 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
         await ctx.message.delete()
     except Exception:
         pass
-    public_embed = discord.Embed(title=f"️ Warning Issued", color=discord.Color.orange())
-    public_embed.add_field(name="User", value=user.mention, inline=False)
-    public_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=True)
-    public_embed.add_field(name="Total Warnings", value=f"`{total_warns}`", inline=True)
-    public_embed.add_field(name="Moderator", value=f"<@{warn_entry['moderator_id']}>", inline=False)
-    public_embed.add_field(name="Reason", value=warn_entry['reason'], inline=False)
-    public_embed.add_field(name="Date", value=f"<t:{warn_entry['timestamp']}:f> (<t:{warn_entry['timestamp']}:R>)", inline=False)
-    
     await log_event(
         ctx.guild,
         "moderation_action",
         "User Warned (`/warn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}{punishment_text}"
     )
+
+    v2_body = (
+        f"# {Emojis.WARNING} Warning Issued\n\n"
+        f"**User:** {user.mention}\n"
+        f"**Warn ID:** `{warn_entry['warn_id']}`\n"
+        f"**Total Warnings:** `{total_warns}`\n"
+        f"**Moderator:** <@{warn_entry['moderator_id']}>\n"
+        f"**Reason:** {warn_entry['reason']}\n"
+        f"**Date:** <t:{warn_entry['timestamp']}:f> (<t:{warn_entry['timestamp']}:R>)"
+    )
+    card = make_v2_card(v2_body, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+
+    public_embed = discord.Embed(title=f"{Emojis.WARNING} Warning Issued", color=ORBIT_COLOR)
+    public_embed.add_field(name="User", value=user.mention, inline=False)
+    public_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=True)
+    public_embed.add_field(name="Total Warnings", value=f"`{total_warns}`", inline=True)
+    public_embed.add_field(name="Moderator", value=f"<@{warn_entry['moderator_id']}>", inline=False)
+    public_embed.add_field(name="Reason", value=warn_entry['reason'], inline=False)
+    public_embed.add_field(name="Date", value=f"<t:{warn_entry['timestamp']}:f> (<t:{warn_entry['timestamp']}:R>)", inline=False)
     
     await ctx.send(embed=public_embed, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 

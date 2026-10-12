@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 import json, os
 
@@ -21,10 +23,18 @@ class RemoveDevCommand(commands.Cog):
             devs.remove(user.id)
             with open(path, "w") as f:
                 json.dump(devs, f)
-            embed = discord.Embed(description=f"Removed {user.mention} from developers.", color=0x2B2D31)
+            desc = f"Removed {user.mention} from developers."
+            card = make_v2_card(f"# {Emojis.BACKSPACE} Developer Removed\n\n{desc}", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card)
+            embed = discord.Embed(description=f"{Emojis.BACKSPACE} {desc}", color=ORBIT_COLOR)
             await ctx.send(embed=embed)
         else:
-            embed = discord.Embed(description="User is not a developer.", color=0x2B2D31)
+            desc = "User is not a developer."
+            card = make_v2_card(f"# {Emojis.WARNING} Notice\n\n{desc}", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card)
+            embed = discord.Embed(description=f"{Emojis.WARNING} {desc}", color=ORBIT_COLOR)
             await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):

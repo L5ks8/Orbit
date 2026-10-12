@@ -3,7 +3,8 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import delete_warning, get_user_warnings
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str):
@@ -25,10 +26,21 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
         "Warning Deleted (`/delwarn`)",
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Removed Warn ID:** `{warn_id}`\n**Remaining Warnings:** `{remaining}`"
     )
+
+    v2_body = (
+        f"# {Emojis.VERIFICATION} Warning Deleted\n\n"
+        f"**Target Member:** {user.mention} (`{user.id}`)\n"
+        f"**Removed ID:** `{warn_id}`\n"
+        f"**Remaining Warnings:** `{remaining}`"
+    )
+    card = make_v2_card(v2_body, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+
     embed = discord.Embed(
-        title="? Warning Deleted",
+        title=f"{Emojis.VERIFICATION} Warning Deleted",
         description=f"**Target Member:** {user.mention} (`{user.id}`)",
-        color=discord.Color.green()
+        color=ORBIT_COLOR
     )
     embed.add_field(name="Removed ID", value=f"`{warn_id}`", inline=True)
     embed.add_field(name="Remaining Warnings", value=f"`{remaining}`", inline=True)

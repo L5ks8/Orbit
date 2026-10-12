@@ -1,6 +1,7 @@
 ﻿import discord
 from discord.ext import commands
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 
 @commands.hybrid_group(name="voice", aliases=["vc"], description="Voice channel controls")
 async def voice_group(ctx: commands.Context):

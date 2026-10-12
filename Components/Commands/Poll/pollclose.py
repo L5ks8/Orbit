@@ -2,7 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Poll._storage import get_poll_entry, close_poll_entry
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class PollCloseCommand(commands.Cog):
@@ -41,18 +42,27 @@ class PollCloseCommand(commands.Cog):
             if channel:
                 msg = await channel.fetch_message(poll_data["message_id"])
                 if msg:
-                    embed = discord.Embed(
-                        title="Community Poll Closed",
-                        description=f"**Question:** {poll_data['question']}\n\n**Status:** Voting session has ended. Results locked.\n**Closed By:** {ctx.author.mention}",
-                        color=discord.Color.red()
-                    )
-                    embed.set_footer(text=f"Poll ID: {clean_pid}")
-                    await msg.edit(embed=embed, view=None)
+                    body = f"# {Emojis.POLL} Community Poll Closed\n\n**Question:** {poll_data['question']}\n\n**Status:** Voting session has ended. Results locked.\n**Closed By:** {ctx.author.mention}"
+                    card = make_v2_card(body, color=ORBIT_COLOR, footer=f"Poll ID: {clean_pid}")
+                    if card:
+                        await msg.edit(view=card)
+                    else:
+                        embed = discord.Embed(
+                            title=f"{Emojis.POLL} Community Poll Closed",
+                            description=f"**Question:** {poll_data['question']}\n\n**Status:** Voting session has ended. Results locked.\n**Closed By:** {ctx.author.mention}",
+                            color=ORBIT_COLOR
+                        )
+                        embed.set_footer(text=f"Poll ID: {clean_pid}")
+                        await msg.edit(embed=embed, view=None)
         except Exception:
             pass
 
         close_poll_entry(ctx.guild.id, clean_pid)
-        await ctx.send(embed=make_embed(f"Successfully closed Poll `{clean_pid}` (`{poll_data['question']}`). No further votes can be submitted.", discord.Color.red()))
+        desc = f"Successfully closed Poll `{clean_pid}` (`{poll_data['question']}`). No further votes can be submitted."
+        card = make_v2_card(f"# {Emojis.POLL} Poll Closed\n\n{desc}", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
+        await ctx.send(embed=make_embed(desc, ORBIT_COLOR, title=f"{Emojis.POLL} Poll Closed"))
 
     @pollclose.error
     async def pollclose_error(self, ctx: commands.Context, error):

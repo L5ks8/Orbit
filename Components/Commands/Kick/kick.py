@@ -5,7 +5,8 @@ from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class KickCommand(commands.Cog):
@@ -43,7 +44,16 @@ class KickCommand(commands.Cog):
                 "User Kicked (`/kick`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
-            embed = discord.Embed(title="User Kicked", color=discord.Color.red())
+            body = (
+                f"# {Emojis.BAN} User Kicked\n\n"
+                f"**Target:** {target.mention} (`{target.id}`)\n"
+                f"**Reason:** {reason}\n"
+                f"**Moderator:** {ctx.author.mention}"
+            )
+            card = make_v2_card(body, color=discord.Color.red())
+            if card:
+                return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title=f"{Emojis.BAN} User Kicked", color=discord.Color.red())
             embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
             embed.add_field(name="Reason", value=reason, inline=False)
             embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

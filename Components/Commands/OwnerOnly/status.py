@@ -24,7 +24,8 @@ def _save_status(act_type: str, text: str, status_str: str = "online"):
 def _load_status() -> dict | None:
     try:
         from Components.Database.mongodb import get_db
-        from Components.Commands._utils import make_embed
+        from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
         db = get_db()
         if db is not None:
             doc = db["OwnerOnly_BotStatus"].find_one({"_id": "GLOBAL"})
@@ -188,7 +189,7 @@ class StatusInteractiveView(View):
         return discord.Embed(
             title="Orbit Activity & Presence Hub",
             description=f"**Current Status:** `{d_status}`\n**Activity Type:** `{d_type}`\n**Activity Text:** `{d_text}`",
-            color=0x2B2D31
+            color=0x5865F2
         )
 
 def is_true_owner_check():
@@ -226,7 +227,7 @@ class StatusCommand(commands.Cog):
                 embed = discord.Embed(
                     title="Presence Updated",
                     description=f"Bot presence updated to `{clean_type.upper()}`",
-                    color=0x2B2D31
+                    color=0x5865F2
                 )
                 await ctx.send(embed=embed)
                 return
@@ -241,7 +242,7 @@ class StatusCommand(commands.Cog):
             embed = discord.Embed(
                 title="Activity Updated",
                 description=f"Bot activity updated to `{clean_type.title()} {text}`",
-                color=0x2B2D31
+                color=0x5865F2
             )
             await ctx.send(embed=embed)
             return

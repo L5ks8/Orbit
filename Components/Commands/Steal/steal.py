@@ -4,7 +4,8 @@ from discord.ext import commands
 import re
 import aiohttp
 import datetime
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 def _get_footer(guild_name: str) -> str:
     return f"{guild_name} • {datetime.datetime.now().strftime('%m/%d/%Y')}"
@@ -14,9 +15,13 @@ async def _do_steal_emoji(guild: discord.Guild, author: discord.Member | discord
         return await send_func("I need the 'Manage Expressions' permission to add emojis.", ephemeral=True)
         
     if any(e.name == name for e in guild.emojis):
+        desc = "The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!"
+        card = make_v2_card(f"# {Emojis.WARNING} Name already exists!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
+        if card:
+            return await send_func(view=card, ephemeral=True)
         embed = discord.Embed(
-            title="Name already exists!",
-            description="The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!",
+            title=f"{Emojis.WARNING} Name already exists!",
+            description=desc,
             color=ORBIT_COLOR
         )
         embed.set_footer(text=_get_footer(guild.name))
@@ -44,9 +49,13 @@ async def _do_steal_emoji(guild: discord.Guild, author: discord.Member | discord
             
         new_emoji = await guild.create_custom_emoji(name=name, image=image_bytes, reason=f"Stolen by {author}")
         
+        desc = f"Emoji was successfully added you should be able to use {new_emoji} now :)"
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Successfully added!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
+        if card:
+            return await send_func(view=card)
         embed = discord.Embed(
-            title="Successfully added!",
-            description=f"Emoji was sucessfully added you should be able to use {new_emoji} now :)",
+            title=f"{Emojis.VERIFICATION} Successfully added!",
+            description=desc,
             color=ORBIT_COLOR
         )
         embed.set_footer(text=_get_footer(guild.name))
@@ -63,9 +72,13 @@ async def _do_steal_emojiurl(guild: discord.Guild, author: discord.Member | disc
         return await send_func("I need the 'Manage Expressions' permission to add emojis.", ephemeral=True)
         
     if any(e.name == name for e in guild.emojis):
+        desc = "The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!"
+        card = make_v2_card(f"# {Emojis.WARNING} Name already exists!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
+        if card:
+            return await send_func(view=card, ephemeral=True)
         embed = discord.Embed(
-            title="Name already exists!",
-            description="The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!",
+            title=f"{Emojis.WARNING} Name already exists!",
+            description=desc,
             color=ORBIT_COLOR
         )
         embed.set_footer(text=_get_footer(guild.name))
@@ -88,9 +101,13 @@ async def _do_steal_emojiurl(guild: discord.Guild, author: discord.Member | disc
             
         new_emoji = await guild.create_custom_emoji(name=name, image=image_bytes, reason=f"Stolen by {author}")
         
+        desc = f"Emoji was successfully added you should be able to use {new_emoji} now :)"
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Successfully added!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
+        if card:
+            return await send_func(view=card)
         embed = discord.Embed(
-            title="Successfully added!",
-            description=f"Emoji was sucessfully added you should be able to use {new_emoji} now :)",
+            title=f"{Emojis.VERIFICATION} Successfully added!",
+            description=desc,
             color=ORBIT_COLOR
         )
         embed.set_footer(text=_get_footer(guild.name))

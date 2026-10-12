@@ -1,5 +1,6 @@
 import io
 import asyncio
+import html
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -19,7 +20,8 @@ from Components.Systems.Tickets._views import (
     TicketControlLayout,
     close_ticket_flow
 )
-from Components.Commands._utils import ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
@@ -51,10 +53,19 @@ async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
             reason=f"Added to ticket by {ctx.author}"
         )
 
-        embed = discord.Embed(title=f"Member Added: #{ctx.channel.name}", color=discord.Color.green())
-        embed.add_field(name="User Added", value=f"{member.mention} (`{member.id}`)", inline=False)
-        embed.add_field(name="Added By", value=ctx.author.mention, inline=False)
-        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+        body = (
+            f"# {Emojis.VERIFICATION} Member Added: #{ctx.channel.name}\n\n"
+            f"**User Added:** {member.mention} (`{member.id}`)\n"
+            f"**Added By:** {ctx.author.mention}"
+        )
+        card = make_v2_card(body, color=ORBIT_COLOR)
+        if card:
+            await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        else:
+            embed = discord.Embed(title=f"{Emojis.VERIFICATION} Member Added: #{ctx.channel.name}", color=ORBIT_COLOR)
+            embed.add_field(name="User Added", value=f"{member.mention} (`{member.id}`)", inline=False)
+            embed.add_field(name="Added By", value=ctx.author.mention, inline=False)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
         await ctx.send(embed=make_embed(f"I do not have permission to modify channel overwrites for {member.mention}.", discord.Color.red()), ephemeral=True)
@@ -87,10 +98,19 @@ async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
     try:
         await ctx.channel.set_permissions(member, overwrite=None, reason=f"Removed from ticket by {ctx.author}")
 
-        embed = discord.Embed(title=f"Member Removed: #{ctx.channel.name}", color=discord.Color.red())
-        embed.add_field(name="User Removed", value=f"{member.mention} (`{member.id}`)", inline=False)
-        embed.add_field(name="Removed By", value=ctx.author.mention, inline=False)
-        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+        body = (
+            f"# {Emojis.BACKSPACE} Member Removed: #{ctx.channel.name}\n\n"
+            f"**User Removed:** {member.mention} (`{member.id}`)\n"
+            f"**Removed By:** {ctx.author.mention}"
+        )
+        card = make_v2_card(body, color=ORBIT_COLOR)
+        if card:
+            await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        else:
+            embed = discord.Embed(title=f"{Emojis.BACKSPACE} Member Removed: #{ctx.channel.name}", color=ORBIT_COLOR)
+            embed.add_field(name="User Removed", value=f"{member.mention} (`{member.id}`)", inline=False)
+            embed.add_field(name="Removed By", value=ctx.author.mention, inline=False)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
         await ctx.send(embed=make_embed(f"I do not have permission to modify channel overwrites for {member.mention}.", discord.Color.red()), ephemeral=True)
@@ -151,24 +171,43 @@ async def _do_ticket_transcript(ctx: commands.Context):
     except Exception as e:
         return await ctx.send(embed=make_embed(f"Failed to fetch channel history: {e}", discord.Color.red()), ephemeral=True)
 
-    lines = [
-        "=== TICKET TRANSCRIPT ===",
-        f"Server: {ctx.guild.name} ({ctx.guild.id})",
-        f"Ticket Channel: #{ctx.channel.name} ({ctx.channel.id})",
-        f"Creator ID: {creator_id}",
-        f"Subject: {subject}",
-        f"Exported By: {ctx.author.display_name} ({ctx.author.id})",
-        "=========================\n"
-    ]
-
+    html_template = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ticket Transcript: #{ctx.channel.name}</title>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #313338; color: #dbdee1; margin: 0; padding: 20px; }}
+        .header {{ background-color: #2b2d31; padding: 20px; border-radius: 8px; margin-bottom: 20px; }}
+        .header h1 {{ margin: 0 0 10px 0; color: #f2f3f5; font-size: 24px; }}
+        .header p {{ margin: 5px 0; font-size: 14px; color: #b5bac1; }}
+        .message {{ display: flex; margin-bottom: 20px; }}
+        .avatar {{ width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; background-color: #5865F2; flex-shrink: 0; overflow: hidden; }}
+        .avatar img {{ width: 100%; height: 100%; object-fit: cover; }}
+        .msg-content {{ display: flex; flex-direction: column; }}
+        .msg-header {{ margin-bottom: 5px; }}
+        .msg-author {{ font-weight: 600; color: #f2f3f5; margin-right: 10px; font-size: 16px; }}
+        .msg-time {{ font-size: 12px; color: #949ba4; }}
+        .msg-text {{ font-size: 15px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Ticket Transcript: #{ctx.channel.name}</h1>
+        <p><strong>Server:</strong> {ctx.guild.name} ({ctx.guild.id})</p>
+        <p><strong>Creator ID:</strong> {creator_id}</p>
+        <p><strong>Subject:</strong> {subject}</p>
+        <p><strong>Exported By:</strong> {ctx.author.display_name} ({ctx.author.id})</p>
+    </div>
+    <div class="messages">
+"""
+    msgs_html = []
     for m in messages:
-        timestamp = m.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        lines.append(f"[{timestamp}] {m.author.display_name} ({m.author.id}): {m.content}")
         t_str = m.created_at.strftime("%Y-%m-%d %H:%M:%S")
         avatar_url = m.author.display_avatar.url if m.author.display_avatar else "https://cdn.discordapp.com/embed/avatars/0.png"
         safe_content = html.escape(m.content or "")
         msgs_html.append(f'''        <div class="message">
-            <div class="avatar"><img src="{avatar_url}"></div>
+            <div class="avatar"><img src="{avatar_url}" alt="avatar"></div>
             <div class="msg-content">
                 <div class="msg-header"><span class="msg-author">{html.escape(m.author.display_name)}</span><span class="msg-time">{t_str}</span></div>
                 <div class="msg-text">{safe_content}</div>
@@ -178,7 +217,19 @@ async def _do_ticket_transcript(ctx: commands.Context):
     transcript_text = html_template + "\n".join(msgs_html) + "\n    </div>\n</body>\n</html>"
     file = discord.File(fp=io.BytesIO(transcript_text.encode("utf-8")), filename=f"transcript-{ctx.channel.name}.html")
 
-    embed = discord.Embed(title="Ticket Transcript Generated", color=ORBIT_COLOR)
+    body = (
+        f"# {Emojis.GUIDE} Ticket Transcript Generated\n\n"
+        f"**Ticket:** `#{ctx.channel.name}` (`{ctx.channel.id}`)\n"
+        f"**Subject:** `{subject}`\n"
+        f"**Messages:** `{len(messages)}`\n"
+        f"**Creator ID:** `{creator_id}`\n"
+        f"**Exported By:** {ctx.author.mention} (`{ctx.author.id}`)"
+    )
+    card = make_v2_card(body, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, file=file, allowed_mentions=discord.AllowedMentions.none())
+
+    embed = discord.Embed(title=f"{Emojis.GUIDE} Ticket Transcript Generated", color=ORBIT_COLOR)
     embed.add_field(name="Ticket", value=f"`#{ctx.channel.name}` (`{ctx.channel.id}`)", inline=False)
     embed.add_field(name="Subject", value=f"`{subject}`", inline=True)
     embed.add_field(name="Messages", value=f"`{len(messages)}`", inline=True)
@@ -215,7 +266,7 @@ async def _do_ticket_blacklist(ctx: commands.Context, member: discord.Member, du
     add_to_blacklist(ctx.guild.id, member.id, dur_secs)
     
     dur_text = f"for {duration}" if dur_secs else "permanently"
-    await ctx.send(embed=discord.Embed(description=f"{member.mention} has been blacklisted from opening tickets {dur_text}.", color=discord.Color.green()))
+    await ctx.send(embed=discord.Embed(description=f"{member.mention} has been blacklisted from opening tickets {dur_text}.", color=ORBIT_COLOR))
 
 async def _do_ticket_unblacklist(ctx: commands.Context, member: discord.Member):
     await ctx.defer()
@@ -229,9 +280,9 @@ async def _do_ticket_unblacklist(ctx: commands.Context, member: discord.Member):
     
     removed = remove_from_blacklist(ctx.guild.id, member.id)
     if removed:
-        await ctx.send(embed=discord.Embed(description=f"{member.mention} has been removed from the ticket blacklist.", color=discord.Color.green()))
+        await ctx.send(embed=discord.Embed(description=f"{member.mention} has been removed from the ticket blacklist.", color=ORBIT_COLOR))
     else:
-        await ctx.send(embed=discord.Embed(description=f"{member.mention} was not blacklisted.", color=discord.Color.yellow()), ephemeral=True)
+        await ctx.send(embed=discord.Embed(description=f"{member.mention} was not blacklisted.", color=ORBIT_COLOR), ephemeral=True)
 
 @commands.hybrid_group(name="ticket", description="Support ticket tools.")
 @commands.has_permissions(manage_channels=True)

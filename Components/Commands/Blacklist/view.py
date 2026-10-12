@@ -2,6 +2,7 @@
 from discord.ext import commands
 from Components.Commands.Blacklist._views import BlacklistListLayout
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 
 async def _do_bl_list(ctx: commands.Context):
     if not ctx.guild:

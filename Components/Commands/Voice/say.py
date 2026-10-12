@@ -12,6 +12,8 @@ except ImportError:
     HAS_EDGE_TTS = False
 
 from Components.Commands.Voice.voice import voice_group
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 VOICE = "de-DE-ConradNeural"
 
@@ -71,12 +73,17 @@ async def vc_say_cmd(ctx: commands.Context, *, text: str):
         source = discord.FFmpegPCMAudio(tmp_path)
         voice_client.play(source, after=after_playing)
 
-        embed = discord.Embed(
-            description=f" **{text}**",
-            color=discord.Color.green(),
-        )
-        embed.set_footer(text=f"{ctx.author.display_name} • {voice_client.channel.name}")
-        await ctx.send(embed=embed)
+        v2_body = f"# {Emojis.ANNOUNCEMENT} TTS Speech\n\n**Text:** {text}\n\n*Spoken by {ctx.author.display_name} in {voice_client.channel.name}*"
+        card = make_v2_card(v2_body, color=ORBIT_COLOR)
+        if card:
+            await ctx.send(view=card)
+        else:
+            embed = discord.Embed(
+                description=f"{Emojis.ANNOUNCEMENT} **{text}**",
+                color=ORBIT_COLOR,
+            )
+            embed.set_footer(text=f"{ctx.author.display_name} • {voice_client.channel.name}")
+            await ctx.send(embed=embed)
 
         try:
             await asyncio.wait_for(done_event.wait(), timeout=120.0)
@@ -99,6 +106,5 @@ async def vc_say_error(ctx: commands.Context, error):
 
 async def setup(bot: commands.Bot):
     from Components.Commands.Voice.voice import voice_group
-    from Components.Commands._utils import make_embed
     if "voice" not in bot.all_commands:
         bot.add_command(voice_group)

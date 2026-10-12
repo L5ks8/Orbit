@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_invited_by_user, get_invited_by_code
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class InvitedListCommand(commands.Cog):
@@ -53,19 +54,13 @@ class InvitedListCommand(commands.Cog):
 
         is_code = code is not None
 
-        embed = discord.Embed(
-            title="Invited List",
-            color=discord.Color.blurple()
-        )
-
         if is_code:
             header = f"Members invited with code `{display_target}`"
         else:
             header = f"Members invited by {display_target.mention}"
-            embed.set_thumbnail(url=display_target.display_avatar.url if hasattr(display_target, "display_avatar") else None)
 
         if not invited:
-            embed.description = f"{header}\n\nNo invited members found."
+            body = f"{header}\n\nNo invited members found."
         else:
             lines = []
             for i, entry in enumerate(invited[:25], 1):
@@ -76,11 +71,22 @@ class InvitedListCommand(commands.Cog):
                 else:
                     uid = entry.get("user_id", "?")
                     lines.append(f"`{i}.` User ID: `{uid}` — Code: `{code_str}`")
-            embed.description = f"{header}\n\n" + "\n".join(lines)
-            if len(invited) > 25:
-                embed.set_footer(text=f"Showing 25 of {len(invited)} invited members")
-            elif ctx.guild:
-                embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+            body = f"{header}\n\n" + "\n".join(lines)
+
+        footer_text = f"Showing 25 of {len(invited)} invited members" if len(invited) > 25 else (ctx.guild.name if ctx.guild else None)
+        card = make_v2_card(f"# {Emojis.MAIL} Invited List\n\n{body}", color=ORBIT_COLOR, footer=footer_text)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+        embed = discord.Embed(
+            title=f"{Emojis.MAIL} Invited List",
+            description=body,
+            color=ORBIT_COLOR
+        )
+        if not is_code and hasattr(display_target, "display_avatar"):
+            embed.set_thumbnail(url=display_target.display_avatar.url)
+        if footer_text:
+            embed.set_footer(text=footer_text, icon_url=ctx.guild.icon.url if ctx.guild and ctx.guild.icon and len(invited) <= 25 else None)
 
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 

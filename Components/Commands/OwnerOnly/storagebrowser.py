@@ -1,6 +1,8 @@
 import json
 import pathlib
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 from discord.ui import View, Select, Button
 from Components.Commands.OwnerOnly._monitor import record_command
@@ -88,7 +90,7 @@ class StorageBrowserView(View):
         embed = discord.Embed(
             title="Orbit SQL & Storage JSON Browser",
             description=file_str,
-            color=0x2B2D31
+            color=0x5865F2
         )
         embed.set_footer(text=f"Authorized Developer: {self.owner}")
         return embed

@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 from discord.ui import LayoutView, Container, TextDisplay, ActionRow, Button
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 from Components.emojis import Emojis
 from Components.Commands.Giveaway._storage import (
     generate_giveaway_id,
@@ -39,7 +39,7 @@ def build_giveaway_body(entry: dict, ended: bool = False, winners_display: str =
     author_id = entry.get("author_id")
 
     lines = [
-        "# Giveaway!\n",
+        f"# {Emojis.WINNER} Giveaway!\n",
         f"**Prize**\n{prize}\n",
         f"**Winners** {winners_count} · **Entries** {entries_count}\n"
     ]
@@ -63,11 +63,11 @@ def build_giveaway_body(entry: dict, ended: bool = False, winners_display: str =
 def build_fallback_kwargs(entry: dict, guild_id: int, ended: bool = False, winners_display: str = None) -> dict:
     color = resolve_color(entry.get("color", 0x5865F2))
     embed = discord.Embed(
-        title="Giveaway!",
+        title=f"{Emojis.WINNER} Giveaway!",
         color=color
     )
     body_text = build_giveaway_body(entry, ended=ended, winners_display=winners_display)
-    clean_body = body_text.replace("# Giveaway!\n", "").strip()
+    clean_body = body_text.replace(f"# {Emojis.WINNER} Giveaway!\n", "").replace("# Giveaway!\n", "").strip()
     embed.description = clean_body
     embed.set_footer(text="One entry per Discord account. Winners are selected at random.")
 

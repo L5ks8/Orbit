@@ -4,7 +4,8 @@ from discord import app_commands
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 import typing
 
 class SoftbanCommand(commands.Cog):
@@ -49,13 +50,20 @@ class SoftbanCommand(commands.Cog):
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             
-            embed = discord.Embed(
-                title="?? User Softbanned",
-                description=f" **{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*",
-                color=discord.Color.orange()
-            )
-            embed.add_field(name="Reason", value=reason, inline=False)
-            await ctx.send(embed=embed)
+            reason_line = f"\n\n**Reason:** {reason}" if reason and reason != "No reason provided" else ""
+            content = f"# {Emojis.BAN} User Softbanned\n\n{Emojis.VERIFICATION} **{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*{reason_line}"
+            card = make_v2_card(content, color=ORBIT_COLOR)
+            if card:
+                await ctx.send(view=card)
+            else:
+                embed = discord.Embed(
+                    title=f"{Emojis.BAN} User Softbanned",
+                    description=f"{Emojis.VERIFICATION} **{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*",
+                    color=ORBIT_COLOR
+                )
+                if reason and reason != "No reason provided":
+                    embed.add_field(name="Reason", value=reason, inline=False)
+                await ctx.send(embed=embed)
 
         except discord.Forbidden:
             await ctx.send(embed=make_embed("I do not have sufficient permissions to softban this user.", discord.Color.red()), ephemeral=True)

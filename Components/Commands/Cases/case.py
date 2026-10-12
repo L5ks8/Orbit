@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from Components.Commands.Cases._storage import get_case, delete_case, update_case_reason
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 @commands.hybrid_group(name="case", description="Manage moderation cases.")
 @commands.has_permissions(manage_messages=True)
@@ -24,8 +25,19 @@ async def case_info(ctx: commands.Context, fall: int):
     mod_id = case_data.get("moderator_id", "Unknown")
     timestamp = case_data.get("timestamp", 0)
     
+    content = (
+        f"# {Emojis.GUIDE} Case #{fall} | {action}\n\n"
+        f"**User:** <@{user_id}> (`{user_id}`)\n"
+        f"**Moderator:** <@{mod_id}> (`{mod_id}`)\n"
+        f"**Reason:** {reason}\n"
+        f"**Date:** <t:{timestamp}:F> (<t:{timestamp}:R>)"
+    )
+    card = make_v2_card(content, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card)
+
     embed = discord.Embed(
-        title=f"Case #{fall} | {action}",
+        title=f"{Emojis.GUIDE} Case #{fall} | {action}",
         color=ORBIT_COLOR
     )
     embed.add_field(name="User", value=f"<@{user_id}> (`{user_id}`)", inline=False)
@@ -40,6 +52,9 @@ async def case_info(ctx: commands.Context, fall: int):
 async def case_delete(ctx: commands.Context, fall: int):
     success = delete_case(ctx.guild.id, fall)
     if success:
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Case Deleted\n\nCase #{fall} has been successfully deleted.", color=discord.Color.green())
+        if card:
+            return await ctx.send(view=card, ephemeral=True)
         await ctx.send(embed=make_embed(f"Case #{fall} has been successfully deleted.", discord.Color.green()), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"Case #{fall} could not be found or deleted.", discord.Color.red()), ephemeral=True)
@@ -49,6 +64,9 @@ async def case_delete(ctx: commands.Context, fall: int):
 async def case_reason(ctx: commands.Context, fall: int, *, grund: str):
     success = update_case_reason(ctx.guild.id, fall, grund)
     if success:
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Case Reason Updated\n\nReason for Case #{fall} has been updated to: **{grund}**", color=discord.Color.green())
+        if card:
+            return await ctx.send(view=card, ephemeral=True)
         await ctx.send(embed=make_embed(f"Reason for Case #{fall} has been updated to: **{grund}**", discord.Color.green()), ephemeral=True)
     else:
         await ctx.send(embed=make_embed(f"Case #{fall} could not be found.", discord.Color.red()), ephemeral=True)

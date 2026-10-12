@@ -5,7 +5,8 @@ from Components.Commands.Invite._storage import (
     add_bonus_invites, remove_bonus_invites,
     reset_invites
 )
-from Components.Commands._utils import format_usage, make_embed
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class ManageInvitesCommand(commands.Cog):
@@ -21,10 +22,13 @@ class ManageInvitesCommand(commands.Cog):
             
         add_fake_invites(ctx.guild.id, user.id, amount)
         
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Invites Managed\n\nAdded **{amount}** fake invites for {user.mention}.", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title="Invites Managed",
+            title=f"{Emojis.VERIFICATION} Invites Managed",
             description=f"Added **{amount}** fake invites for {user.mention}.",
-            color=discord.Color.green()
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
@@ -44,10 +48,13 @@ class ManageInvitesCommand(commands.Cog):
             
         remove_fake_invites(ctx.guild.id, user.id, amount)
         
+        card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Managed\n\nRemoved **{amount}** fake invites for {user.mention}.", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title="Invites Managed",
+            title=f"{Emojis.BACKSPACE} Invites Managed",
             description=f"Removed **{amount}** fake invites for {user.mention}.",
-            color=discord.Color.green()
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
@@ -67,10 +74,13 @@ class ManageInvitesCommand(commands.Cog):
             
         add_bonus_invites(ctx.guild.id, user.id, amount)
         
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Invites Managed\n\nAdded **{amount}** regular invites for {user.mention}.", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title="Invites Managed",
+            title=f"{Emojis.VERIFICATION} Invites Managed",
             description=f"Added **{amount}** regular invites for {user.mention}.",
-            color=discord.Color.green()
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
@@ -90,10 +100,13 @@ class ManageInvitesCommand(commands.Cog):
             
         remove_bonus_invites(ctx.guild.id, user.id, amount)
         
+        card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Managed\n\nRemoved **{amount}** regular invites for {user.mention}.", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title="Invites Managed",
+            title=f"{Emojis.BACKSPACE} Invites Managed",
             description=f"Removed **{amount}** regular invites for {user.mention}.",
-            color=discord.Color.green()
+            color=ORBIT_COLOR
         )
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
@@ -116,8 +129,11 @@ class ManageInvitesCommand(commands.Cog):
             reset_invites(ctx.guild.id)
             msg = "Reset all invites for the entire server."
             
+        card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Reset\n\n{msg}", color=discord.Color.red())
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title="Invites Reset",
+            title=f"{Emojis.BACKSPACE} Invites Reset",
             description=msg,
             color=discord.Color.red()
         )

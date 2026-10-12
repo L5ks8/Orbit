@@ -3,7 +3,8 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import clear_user_warnings
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
@@ -30,10 +31,20 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Total Cleared:** `{cleared_count}` warnings"
     )
 
+    v2_body = (
+        f"# {Emojis.VERIFICATION} All Warnings Cleared\n\n"
+        f"**Target Member:** {user.mention} (`{user.id}`)\n"
+        f"**Total Removed:** `{cleared_count}` warnings\n"
+        f"**Current Remaining:** `0`"
+    )
+    card = make_v2_card(v2_body, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
+
     embed = discord.Embed(
-        title="? All Warnings Cleared",
+        title=f"{Emojis.VERIFICATION} All Warnings Cleared",
         description=f"**Target Member:** {user.mention} (`{user.id}`)",
-        color=discord.Color.green()
+        color=ORBIT_COLOR
     )
     embed.add_field(name="Total Removed", value=f"`{cleared_count}` warnings", inline=True)
     embed.add_field(name="Current Remaining", value="`0`", inline=True)

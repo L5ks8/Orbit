@@ -7,7 +7,8 @@ from datetime import datetime
 
 from Components.Commands.Backup._storage import save_backup, get_backups, get_backup
 from Components.Commands.Backup._views import OverwriteBackupView, BackupListView, ConfirmLoadView
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class BackupCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -18,10 +19,19 @@ class BackupCommand(commands.Cog):
     async def save_new_backup(self, interaction: discord.Interaction, backup_data: dict):
         save_backup(backup_data)
         try:
+            content = f"# {Emojis.VERIFICATION} Backup Created\n\nSuccessfully created backup **{backup_data['name']}**."
+            card = make_v2_card(content, color=ORBIT_COLOR)
+            if card:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(view=card, ephemeral=True)
+                else:
+                    await interaction.edit_original_response(view=card, embed=None, content=None)
+                return
+
             embed = discord.Embed(
-                title="Backup Created",
+                title=f"{Emojis.VERIFICATION} Backup Created",
                 description=f"Successfully created backup **{backup_data['name']}**.",
-                color=discord.Color.green()
+                color=ORBIT_COLOR
             )
             if not interaction.response.is_done():
                 await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -135,15 +145,26 @@ class BackupCommand(commands.Cog):
         if not existing_backups:
             return await interaction.response.send_message(embed=make_embed("No backups found for this server."), ephemeral=True)
             
-        embed = discord.Embed(title="Server Backups", color=ORBIT_COLOR)
+        lines = []
         for b in existing_backups:
             name = b.get("name", b["_id"])
             ts = b.get("timestamp", 0)
             date_str = f"<t:{int(ts)}:f>"
-            embed.add_field(name=name, value=f"Created: {date_str}", inline=False)
-            
+            lines.append(f"• **{name}** — Created: {date_str}")
+        
         view = BackupListView(existing_backups, self)
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        card = make_v2_card(f"# {Emojis.GUIDE} Server Backups\n\n" + "\n".join(lines), color=ORBIT_COLOR)
+        if card:
+            # We can attach the view items to card if supported, or pass view
+            await interaction.response.send_message(embed=discord.Embed(title=f"{Emojis.GUIDE} Server Backups", description="\n".join(lines), color=ORBIT_COLOR), view=view, ephemeral=True)
+        else:
+            embed = discord.Embed(title=f"{Emojis.GUIDE} Server Backups", color=ORBIT_COLOR)
+            for b in existing_backups:
+                name = b.get("name", b["_id"])
+                ts = b.get("timestamp", 0)
+                date_str = f"<t:{int(ts)}:f>"
+                embed.add_field(name=name, value=f"Created: {date_str}", inline=False)
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     async def execute_backup_load(self, interaction: discord.Interaction, backup_id: str):
         guild = interaction.guild
@@ -238,7 +259,11 @@ class BackupCommand(commands.Cog):
         try:
             owner = guild.owner
             if owner:
-                await owner.send(f" The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!")
+                card = make_v2_card(f"# {Emojis.VERIFICATION} Backup Restored\n\nThe server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!", color=ORBIT_COLOR)
+                if card:
+                    await owner.send(view=card)
+                else:
+                    await owner.send(f"{Emojis.VERIFICATION} The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!")
         except Exception:
             pass
 

@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from Components.Commands.OwnerOnly._monitor import get_live_logs, record_command
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class LiveLogsCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -29,7 +30,7 @@ class LiveLogsCommand(commands.Cog):
         embed = discord.Embed(
             title="Orbit Live System Event Stream",
             description=logs_str,
-            color=0x2B2D31
+            color=0x5865F2
         )
         embed.set_footer(text=f"Authorized Developer: {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())

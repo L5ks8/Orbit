@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 
 class WipeUserCommand(commands.Cog):
@@ -21,7 +23,11 @@ class WipeUserCommand(commands.Cog):
                 res5 = coll.delete_many({"author_id": str(user_id)})
                 deleted_count += res1.deleted_count + res2.deleted_count + res3.deleted_count + res4.deleted_count + res5.deleted_count
         
-        embed = discord.Embed(description=f"Wiped all database records for User ID `{user_id}`. ({deleted_count} DB records deleted)", color=0x2B2D31)
+        desc = f"Wiped all database records for User ID `{user_id}`. ({deleted_count} DB records deleted)"
+        card = make_v2_card(f"# {Emojis.BACKSPACE} User Data Wiped\n\n{desc}", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
+        embed = discord.Embed(description=f"{Emojis.BACKSPACE} {desc}", color=ORBIT_COLOR)
         await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):

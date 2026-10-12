@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 UPDATE_CHANNEL_ID = 1525664972720312390
 
@@ -65,7 +66,7 @@ class UpdatePostModal(discord.ui.Modal, title="Post Orbit Changelog & Update"):
         embed = discord.Embed(
             title=title_str,
             description=desc_str,
-            color=0x2B2D31,
+            color=0x5865F2,
             timestamp=discord.utils.utcnow()
         )
         footer_text = f"Orbit System Updates | {ver_str}" if ver_str else "Orbit System Updates"
@@ -139,7 +140,7 @@ class UpdateCommand(commands.Cog):
         embed = discord.Embed(
             title="Orbit Update Studio",
             description=f"Click the button below to open your private update editor modal (Title & Content).\nWhen submitted, your announcement will be broadcasted directly to <#{UPDATE_CHANNEL_ID}>.",
-            color=0x2B2D31
+            color=0x5865F2
         )
         
         view = UpdateLaunchView(ctx.author.id)

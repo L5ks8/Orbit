@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands
 from discord.ui import View, Button
 from Components.Commands.OwnerOnly._monitor import get_error_log, clear_errors, record_command
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class ErrorsView(View):
     def __init__(self, owner: discord.abc.User):
@@ -32,7 +33,7 @@ class ErrorsView(View):
         embed = discord.Embed(
             title="Orbit System Error Inspector",
             description=err_text,
-            color=0x2B2D31
+            color=0x5865F2
         )
         embed.set_footer(text=f"Authorized Developer: {self.owner}")
         return embed

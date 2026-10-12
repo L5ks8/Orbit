@@ -1,7 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
 from Components.Commands.Afk._storage import remove_afk
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class AfkRemoveCommand(commands.Cog):
@@ -17,8 +18,13 @@ class AfkRemoveCommand(commands.Cog):
         if not success:
             return await ctx.send(embed=make_embed("You are not currently AFK on this server.", discord.Color.red()), ephemeral=True)
 
-        embed = discord.Embed(title="AFK Status Removed", description=f"Welcome back, {ctx.author.mention} (`{ctx.author.id}`)!\nYour AFK status on this server has been cleared.", color=discord.Color.green())
-        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+        content = f"# {Emojis.VERIFICATION} AFK Status Removed\n\nWelcome back, {ctx.author.mention} (`{ctx.author.id}`)!\nYour AFK status on this server has been cleared."
+        card = make_v2_card(content, color=ORBIT_COLOR)
+        if card:
+            await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        else:
+            embed = discord.Embed(title=f"{Emojis.VERIFICATION} AFK Status Removed", description=f"Welcome back, {ctx.author.mention} (`{ctx.author.id}`)!\nYour AFK status on this server has been cleared.", color=ORBIT_COLOR)
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AfkRemoveCommand(bot))

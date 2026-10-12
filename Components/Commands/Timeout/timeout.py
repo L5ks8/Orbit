@@ -6,7 +6,8 @@ from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class TimeoutCommand(commands.Cog):
@@ -28,7 +29,7 @@ class TimeoutCommand(commands.Cog):
             return await ctx.send(embed=make_embed("Duration must be between 1 minute and 28 days (40320 minutes).", discord.Color.red()), ephemeral=True)
 
         try:
-            from Components.Commands._utils import send_moderation_dm, make_embed
+            from Components.Commands._utils import send_moderation_dm
             await send_moderation_dm(target, ctx.guild.name, "timed out", reason, f"{minutes} minutes", guild_id=ctx.guild.id)
 
             duration = datetime.timedelta(minutes=minutes)
@@ -41,7 +42,20 @@ class TimeoutCommand(commands.Cog):
                 "User Timed Out (`/timeout`)",
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Duration:** `{minutes} minutes`\n**Reason:** {reason}"
             )
-            embed = discord.Embed(title="User Timed Out", color=discord.Color.orange())
+            v2_body = (
+                f"# {Emojis.WARNING} User Timed Out\n\n"
+                f"**Target:** {target.mention} (`{target.id}`)\n"
+                f"**Duration:** `{minutes} minutes`\n"
+                f"**Moderator:** {ctx.author.mention}\n"
+                f"**Status:** `Active (Cannot send messages or join VC)`"
+            )
+            if reason and reason != "No reason provided":
+                v2_body += f"\n**Reason:** {reason}"
+            card = make_v2_card(v2_body, color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+            embed = discord.Embed(title=f"{Emojis.WARNING} User Timed Out", color=ORBIT_COLOR)
             embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
             embed.add_field(name="Duration", value=f"`{minutes} minutes`", inline=False)
             if reason and reason != "No reason provided":

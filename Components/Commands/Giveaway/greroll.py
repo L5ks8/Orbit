@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Giveaway._storage import get_giveaway
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
 from Components.emojis import Emojis
 
 class GiveawayRerollCommand(commands.Cog):
@@ -81,8 +81,24 @@ class GiveawayRerollCommand(commands.Cog):
             reroll_embed.add_field(name="Prize", value=str(entry['prize']), inline=True)
             reroll_embed.add_field(name="New Winner", value=f"<@{new_winner_id}>", inline=True)
             reroll_embed.set_footer(text=f"Giveaway ID: #{entry['giveaway_id']}")
-            await channel.send(embed=reroll_embed, allowed_mentions=discord.AllowedMentions(users=True))
-            await ctx.send(embed=make_embed(f"Rerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", discord.Color.green()))
+            card = make_v2_card(
+                f"# {Emojis.WINNER} Giveaway Rerolled!\n\n"
+                f"{desc}\n\n"
+                f"**Prize:** {entry['prize']}\n"
+                f"**New Winner:** <@{new_winner_id}>",
+                color=color,
+                footer=f"Giveaway ID: #{entry['giveaway_id']}"
+            )
+            if card:
+                await channel.send(view=card, allowed_mentions=discord.AllowedMentions(users=True))
+            else:
+                await channel.send(embed=reroll_embed, allowed_mentions=discord.AllowedMentions(users=True))
+
+            success_card = make_v2_card(f"# {Emojis.VERIFICATION} Reroll Complete\n\nRerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", color=discord.Color.green())
+            if success_card:
+                await ctx.send(view=success_card)
+            else:
+                await ctx.send(embed=make_embed(f"Rerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", discord.Color.green()))
         else:
             await ctx.send(embed=make_embed("Could not access the original giveaway channel to announce the reroll.", discord.Color.red()), ephemeral=True)
 

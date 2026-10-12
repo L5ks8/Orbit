@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 class GetInviteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -55,7 +56,7 @@ class GetInviteCommand(commands.Cog):
                 f"**Invite URL:** {invite_url}\n\n"
                 f"*Invite link generated securely from bot permissions.*"
             ),
-            color=0x2B2D31
+            color=0x5865F2
         )
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 

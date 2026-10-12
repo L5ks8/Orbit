@@ -3,7 +3,8 @@ import discord
 from discord.ext import commands
 from Components.Commands.Whitelist._storage import remove_from_whitelist
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
     await ctx.defer()
@@ -27,7 +28,23 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
         "User Removed from Whitelist (`/unwhitelist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)"
     )
-    await ctx.send(embed=make_embed(f"Removed ID `{user_id}` from the server moderation whitelist.", discord.Color.green()), ephemeral=True)
+
+    v2_body = (
+        f"# {Emojis.VERIFICATION} User Removed from Whitelist\n\n"
+        f"**Target ID:** `{user_id}`\n"
+        f"**Moderator:** {ctx.author.mention}\n\n"
+        f"Removed ID `{user_id}` from the server moderation whitelist."
+    )
+    card = make_v2_card(v2_body, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+    embed = discord.Embed(
+        title=f"{Emojis.VERIFICATION} User Removed from Whitelist",
+        description=f"Removed ID `{user_id}` from the server moderation whitelist.",
+        color=ORBIT_COLOR
+    )
+    await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @commands.hybrid_command(name="unwhitelist", description="Remove a user ID from the server moderation whitelist.")
 @commands.has_permissions(administrator=True)

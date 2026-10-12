@@ -1,10 +1,11 @@
-﻿import re
+import re
 import discord
 from discord.ext import commands
 from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal
 from Components.Commands.Blacklist._storage import load_blacklist, add_to_blacklist, remove_from_blacklist
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands._utils import build_embed, make_embed
+from Components.emojis import Emojis
 
 class AddBlacklistModal(Modal, title="Add ID to Blacklist"):
     def __init__(self, parent_view: "BlacklistListLayout"):
@@ -110,7 +111,7 @@ class BlacklistListLayout(discord.ui.View):
 
         embed = build_embed(
             guild=self.guild,
-            title="Command Blacklist",
+            title=f"{Emojis.NO_ENTRY} Command Blacklist",
             description="\n".join(lines) if lines else "The blacklist is currently empty.",
             color=discord.Color.red()
         )

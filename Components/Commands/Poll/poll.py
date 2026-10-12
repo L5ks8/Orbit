@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import Button
 from Components.Commands.Poll._storage import generate_poll_id, create_poll_entry, get_poll_entry
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 from Components.emojis import Emojis
 
 def make_bar(pct: int, length: int = 15) -> str:

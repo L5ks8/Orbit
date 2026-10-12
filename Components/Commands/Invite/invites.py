@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_inviter_stats
-from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 class InvitesCommand(commands.Cog):
@@ -15,7 +16,17 @@ class InvitesCommand(commands.Cog):
 
         stats = get_inviter_stats(ctx.guild.id, target.id)
         
+        content = (
+            f"# {Emojis.MAIL} Invites: {target.display_name}\n\n"
+            f"{target.mention} currently has **{stats['total']}** invites.\n"
+            f"(**{stats['regular']}** regular, **{stats['left']}** left, **{stats['fake']}** fake, **{stats['bonus']}** bonus)"
+        )
+        card = make_v2_card(content, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
         embed = discord.Embed(
+            title=f"{Emojis.MAIL} Invites: {target.display_name}",
             color=ORBIT_COLOR
         )
         embed.set_author(name=target.display_name, icon_url=target.display_avatar.url if target else None)

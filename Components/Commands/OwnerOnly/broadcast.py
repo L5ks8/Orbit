@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 import asyncio
 
@@ -13,7 +15,7 @@ class Broadcast(commands.Cog):
         confirm_embed = discord.Embed(
             title="Confirm Broadcast",
             description=f"Are you sure you want to send this message to **{len(self.bot.guilds)}** server owners?\n\n**Message:**\n{message}",
-            color=0x2B2D31
+            color=0x5865F2
         )
         msg = await ctx.send(embed=confirm_embed)
         await msg.add_reaction("✅")
@@ -51,7 +53,7 @@ class Broadcast(commands.Cog):
         result_embed = discord.Embed(
             title="Broadcast Complete",
             description=f"**Success:** {success}\n**Failed (DMs disabled):** {failed}",
-            color=0x2B2D31
+            color=0x5865F2
         )
         await ctx.send(embed=result_embed)
 

@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Channel.channel import channel_group
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 
 async def _do_create(ctx: commands.Context, name: str, channel_type: str, category: discord.CategoryChannel | None):
@@ -29,13 +31,23 @@ async def _do_create(ctx: commands.Context, name: str, channel_type: str, catego
     ch_type_display = "Voice" if isinstance(new_channel, discord.VoiceChannel) else "Text"
     cat_display = new_channel.category.name if new_channel.category else "No Category"
     
-    embed = discord.Embed(title="Channel Created", color=discord.Color.green())
-    embed.add_field(name="Channel", value=new_channel.mention, inline=False)
-    embed.add_field(name="Type", value=f"`{ch_type_display}`", inline=True)
-    embed.add_field(name="Category", value=f"`{cat_display}`", inline=True)
-    embed.add_field(name="Created by", value=ctx.author.mention, inline=False)
-    
-    await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+    content = (
+        f"# {Emojis.VERIFICATION} Channel Created\n\n"
+        f"**Channel:** {new_channel.mention}\n"
+        f"**Type:** `{ch_type_display}`\n"
+        f"**Category:** `{cat_display}`\n"
+        f"**Created by:** {ctx.author.mention}"
+    )
+    card = make_v2_card(content, color=ORBIT_COLOR)
+    if card:
+        await ctx.send(view=card, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+    else:
+        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Channel Created", color=ORBIT_COLOR)
+        embed.add_field(name="Channel", value=new_channel.mention, inline=False)
+        embed.add_field(name="Type", value=f"`{ch_type_display}`", inline=True)
+        embed.add_field(name="Category", value=f"`{cat_display}`", inline=True)
+        embed.add_field(name="Created by", value=ctx.author.mention, inline=False)
+        await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
 
 @channel_group.command(name="create", description="Create a new channel.")
 @commands.has_permissions(manage_channels=True)
@@ -57,7 +69,5 @@ async def create_error(ctx: commands.Context, error):
         await ctx.send(embed=make_embed("Could not find that category.", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Channel.channel import channel_group
-    from Components.Commands._utils import make_embed
     if "channel" not in bot.all_commands:
         bot.add_command(channel_group)

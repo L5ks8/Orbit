@@ -1,6 +1,8 @@
-﻿import discord
+import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
+from discord.ui import ActionRow, Button, View
 
 
 class BannerCommand(commands.Cog):
@@ -21,10 +23,23 @@ class BannerCommand(commands.Cog):
             return await ctx.send(embed=make_embed(f"`{target.display_name}` does not have a custom profile banner set."), ephemeral=True)
 
         banner_url = full_user.banner.with_size(4096).url
-        embed = discord.Embed(title=f"Profile Banner: {full_user.display_name}", description=f"**User ID:** `{full_user.id}`", color=discord.Color.blurple())
+        link_str = f"[Download High-Res (`4096px`)]({banner_url})"
+        btn = Button(label="Download Banner", url=banner_url, style=discord.ButtonStyle.link)
+
+        card = make_v2_card(
+            f"# {Emojis.GUIDE} Profile Banner: {full_user.display_name}\n\n**User ID:** `{full_user.id}`\n\n**Banner Link:** {link_str}",
+            ActionRow(btn),
+            color=ORBIT_COLOR
+        )
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+        embed = discord.Embed(title=f"{Emojis.GUIDE} Profile Banner: {full_user.display_name}", description=f"**User ID:** `{full_user.id}`", color=ORBIT_COLOR)
         embed.set_image(url=banner_url)
-        embed.add_field(name="Banner Link", value=f"[Download High-Res (`4096px`)]({banner_url})", inline=False)
-        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+        embed.add_field(name="Banner Link", value=link_str, inline=False)
+        view = View()
+        view.add_item(btn)
+        await ctx.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BannerCommand(bot))

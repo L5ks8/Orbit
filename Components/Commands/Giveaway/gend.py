@@ -3,7 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Giveaway._storage import get_giveaway
 from Components.Commands.Giveaway.giveaway import end_giveaway_logic
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card
+from Components.emojis import Emojis
 
 class GiveawayEndCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -26,7 +27,11 @@ class GiveawayEndCommand(commands.Cog):
 
         success = await end_giveaway_logic(self.bot, ctx.guild.id, entry)
         if success:
-            await ctx.send(embed=make_embed(f"Successfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!", discord.Color.green()))
+            card = make_v2_card(f"# {Emojis.VERIFICATION} Giveaway Ended\n\nSuccessfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!", color=discord.Color.green())
+            if card:
+                await ctx.send(view=card)
+            else:
+                await ctx.send(embed=make_embed(f"Successfully ended Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`). Winner(s) have been announced!", discord.Color.green()))
         else:
             await ctx.send(embed=make_embed(f"Failed to end or pick winners for Giveaway `{entry['giveaway_id']}`.", discord.Color.red()), ephemeral=True)
 

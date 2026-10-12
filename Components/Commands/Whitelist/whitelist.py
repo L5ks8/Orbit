@@ -3,7 +3,8 @@ import discord
 from discord.ext import commands
 from Components.Commands.Whitelist._storage import add_to_whitelist
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 
 async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
     await ctx.defer()
@@ -27,7 +28,23 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
         "User Whitelisted (`/whitelist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
     )
-    await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the server moderation whitelist.", discord.Color.green()), ephemeral=True)
+
+    v2_body = (
+        f"# {Emojis.GLOBE_VERIFICATION} User Whitelisted\n\n"
+        f"**Target ID:** `{user_id}`\n"
+        f"**Moderator:** {ctx.author.mention}\n"
+        f"**Reason:** {reason}"
+    )
+    card = make_v2_card(v2_body, color=ORBIT_COLOR)
+    if card:
+        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+
+    embed = discord.Embed(
+        title=f"{Emojis.GLOBE_VERIFICATION} User Whitelisted",
+        description=f"Added ID `{user_id}` to the server moderation whitelist.\n\n**Reason:** {reason}",
+        color=ORBIT_COLOR
+    )
+    await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @commands.hybrid_command(
     name="whitelist",

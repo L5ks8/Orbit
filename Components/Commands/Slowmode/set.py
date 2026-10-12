@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Slowmode.slowmode import slowmode_group
@@ -15,7 +17,16 @@ async def _do_slowmode_set(ctx: commands.Context, seconds: int, channel: discord
 
     try:
         await target_channel.edit(slowmode_delay=seconds, reason=f"Slowmode set by {ctx.author}")
-        embed = discord.Embed(title="Slowmode Enabled", color=discord.Color.orange())
+        body = (
+            f"# {Emojis.WARNING} Slowmode Enabled\n\n"
+            f"**Channel:** {target_channel.mention}\n"
+            f"**Delay:** `{seconds} seconds` between messages\n"
+            f"**Moderator:** {ctx.author.mention}"
+        )
+        card = make_v2_card(body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        embed = discord.Embed(title=f"{Emojis.WARNING} Slowmode Enabled", color=ORBIT_COLOR)
         embed.add_field(name="Channel", value=target_channel.mention, inline=False)
         embed.add_field(name="Delay", value=f"`{seconds} seconds` between messages", inline=False)
         embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

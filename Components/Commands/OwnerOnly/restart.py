@@ -1,6 +1,8 @@
 import os
 import asyncio
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 
 class RestartCommand(commands.Cog):
@@ -11,12 +13,17 @@ class RestartCommand(commands.Cog):
     @commands.is_owner()
     async def restart_cmd(self, ctx: commands.Context):
         await ctx.defer(ephemeral=True)
-        embed = discord.Embed(
-            title="Orbit System Reboot Initiated",
-            description="**Action:** Closing Discord Gateway session and terminating process...\n\n*Render will automatically boot a fresh Orbit instance within seconds.*",
-            color=0x2B2D31
-        )
-        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+        body = f"# {Emojis.RELOAD} Orbit System Reboot Initiated\n\n**Action:** Closing Discord Gateway session and terminating process...\n\n*Render will automatically boot a fresh Orbit instance within seconds.*"
+        card = make_v2_card(body, color=ORBIT_COLOR)
+        if card:
+            await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        else:
+            embed = discord.Embed(
+                title=f"{Emojis.RELOAD} Orbit System Reboot Initiated",
+                description="**Action:** Closing Discord Gateway session and terminating process...\n\n*Render will automatically boot a fresh Orbit instance within seconds.*",
+                color=ORBIT_COLOR
+            )
+            await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
         
         await self.bot.close()
 

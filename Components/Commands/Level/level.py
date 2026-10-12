@@ -6,7 +6,7 @@ from Components.Systems.Level._storage import (
     get_leaderboard, get_leaderboard_by, get_user_rank, level_from_xp
 )
 import io
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
 from Components.emojis import Emojis
 
 # ── Leaderboard category config ──
@@ -230,7 +230,11 @@ class LevelCommandsCog(commands.Cog):
             
         from Components.Systems.Level._storage import add_xp
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
-        await ctx.send(embed=make_embed(f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).", discord.Color.green()))
+        desc = f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level})."
+        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Added\n\n{desc}", color=discord.Color.green())
+        if card:
+            return await ctx.send(view=card)
+        await ctx.send(embed=make_embed(desc, discord.Color.green()))
 
     @xp.command(name="remove", description="Remove XP from a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to remove")
@@ -246,7 +250,11 @@ class LevelCommandsCog(commands.Cog):
         data["total_xp"] = new_xp
         set_user_xp(ctx.guild.id, member.id, data)
         new_level = level_from_xp(new_xp)
-        await ctx.send(embed=make_embed(f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level}).", discord.Color.green()))
+        desc = f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level})."
+        card = make_v2_card(f"# {Emojis.BACKSPACE} XP Removed\n\n{desc}", color=discord.Color.green())
+        if card:
+            return await ctx.send(view=card)
+        await ctx.send(embed=make_embed(desc, discord.Color.green()))
 
     @xp.command(name="set", description="Set a member's XP.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to set")
@@ -260,7 +268,11 @@ class LevelCommandsCog(commands.Cog):
         data["total_xp"] = amount
         set_user_xp(ctx.guild.id, member.id, data)
         new_level = level_from_xp(amount)
-        await ctx.send(embed=make_embed(f"Set {member.mention}'s XP to **{amount:,} XP** (Level {new_level})."))
+        desc = f"Set {member.mention}'s XP to **{amount:,} XP** (Level {new_level})."
+        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Set\n\n{desc}", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
+        await ctx.send(embed=make_embed(desc))
 
     @xp.command(name="transfer", description="Transfer XP between members.")
     @app_commands.describe(member="The member to transfer XP to", amount="Amount of XP to transfer")
@@ -282,7 +294,11 @@ class LevelCommandsCog(commands.Cog):
         
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
         
-        await ctx.send(embed=make_embed(f"Successfully transferred **{amount:,} XP** to {member.mention}!", discord.Color.green()))
+        desc = f"Successfully transferred **{amount:,} XP** to {member.mention}!"
+        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Transferred\n\n{desc}", color=discord.Color.green())
+        if card:
+            return await ctx.send(view=card)
+        await ctx.send(embed=make_embed(desc, discord.Color.green()))
 
 
 async def setup(bot: commands.Bot):

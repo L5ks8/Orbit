@@ -1,6 +1,8 @@
 import json
 import pathlib
 import discord
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.OwnerOnly._monitor import record_command
 
@@ -36,14 +38,22 @@ class GlobalBlacklistCommand(commands.Cog):
         
         if target_guild_id is None:
             if not bl:
-                embed = discord.Embed(title="Global Server Blacklist", description="The global server blacklist is currently empty.", color=0x2B2D31)
-                return await ctx.send(embed=embed)
-            bl_str = ", ".join([f"`{gid}`" for gid in bl])
-            embed = discord.Embed(title="Global Server Blacklist", description=f"**Globally Blacklisted Servers ({len(bl)}):**\n{bl_str}", color=0x2B2D31)
+                desc = "The global server blacklist is currently empty."
+            else:
+                bl_str = ", ".join([f"`{gid}`" for gid in bl])
+                desc = f"**Globally Blacklisted Servers ({len(bl)}):**\n{bl_str}"
+            card = make_v2_card(f"# {Emojis.NO_ENTRY} Global Server Blacklist\n\n{desc}", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card)
+            embed = discord.Embed(title=f"{Emojis.NO_ENTRY} Global Server Blacklist", description=desc, color=ORBIT_COLOR)
             return await ctx.send(embed=embed)
             
         if target_guild_id in bl:
-            embed = discord.Embed(title="Global Server Blacklist", description=f"Server `{target_guild_id}` is already globally blacklisted.", color=0x2B2D31)
+            desc = f"Server `{target_guild_id}` is already globally blacklisted."
+            card = make_v2_card(f"# {Emojis.WARNING} Global Server Blacklist\n\n{desc}", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, ephemeral=True)
+            embed = discord.Embed(title=f"{Emojis.WARNING} Global Server Blacklist", description=desc, color=ORBIT_COLOR)
             return await ctx.send(embed=embed, ephemeral=True)
         
         bl.append(target_guild_id)
@@ -58,7 +68,10 @@ class GlobalBlacklistCommand(commands.Cog):
             except Exception:
                 pass
                 
-        embed = discord.Embed(title="Server Blacklisted", description=desc, color=0x2B2D31)
+        card = make_v2_card(f"# {Emojis.NO_ENTRY} Server Blacklisted\n\n{desc}", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
+        embed = discord.Embed(title=f"{Emojis.NO_ENTRY} Server Blacklisted", description=desc, color=ORBIT_COLOR)
         await ctx.send(embed=embed)
 
     @commands.command(name="gblacklistremove", hidden=True)
@@ -67,13 +80,21 @@ class GlobalBlacklistCommand(commands.Cog):
         record_command("gblacklistremove", str(ctx.author))
         bl = _load_gblacklist()
         if target_guild_id not in bl:
-            embed = discord.Embed(title="Global Server Blacklist", description=f"Server `{target_guild_id}` is not blacklisted.", color=0x2B2D31)
+            desc = f"Server `{target_guild_id}` is not blacklisted."
+            card = make_v2_card(f"# {Emojis.WARNING} Global Server Blacklist\n\n{desc}", color=ORBIT_COLOR)
+            if card:
+                return await ctx.send(view=card, ephemeral=True)
+            embed = discord.Embed(title=f"{Emojis.WARNING} Global Server Blacklist", description=desc, color=ORBIT_COLOR)
             return await ctx.send(embed=embed, ephemeral=True)
             
         bl.remove(target_guild_id)
         _save_gblacklist(bl)
         
-        embed = discord.Embed(title="Server Unblacklisted", description=f"Server `{target_guild_id}` has been removed from the global blacklist.", color=0x2B2D31)
+        desc = f"Server `{target_guild_id}` has been removed from the global blacklist."
+        card = make_v2_card(f"# {Emojis.VERIFICATION} Server Unblacklisted\n\n{desc}", color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card)
+        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Server Unblacklisted", description=desc, color=ORBIT_COLOR)
         await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):

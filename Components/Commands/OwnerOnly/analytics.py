@@ -1,4 +1,6 @@
 import discord
+from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 from discord.ext import commands
 
 class AnalyticsCommand(commands.Cog):
@@ -19,7 +21,7 @@ class AnalyticsCommand(commands.Cog):
                 tb = traceback.format_exc()
                 return await ctx.send(embed=discord.Embed(title="Metrics Error", description=f"```py\n{tb[:2000]}\n```", color=discord.Color.red()))
             
-            embed = discord.Embed(title="Orbit Global Analytics", color=0x2B2D31)
+            embed = discord.Embed(title="Orbit Global Analytics", color=0x5865F2)
             embed.add_field(name="Total Commands Run", value=f"`{metrics['commands']:,}`", inline=True)
             embed.add_field(name="Total Messages Seen", value=f"`{metrics['messages']:,}`", inline=True)
             embed.add_field(name="Error Count", value=f"`{metrics['error_count']}`", inline=True)
