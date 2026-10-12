@@ -64,9 +64,24 @@ class SecurityModule(commands.Cog):
         try:
             owner = guild.owner
             if owner:
-                await owner.send(f"⚠️ **ANTI-NUKE ALERT** ⚠️\nUser {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}**.")
+                embed = discord.Embed(
+                    title="⚠️ Anti-Nuke Alert",
+                    description=f"User {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}**.",
+                    color=0xed4245,
+                    timestamp=discord.utils.utcnow()
+                )
+                embed.set_thumbnail(url=member.display_avatar.url)
+                embed.add_field(name="User", value=f"{member.mention} (`{member.id}`)\n{member.name}", inline=True)
+                embed.add_field(name="Nuke Level", value=str(level).capitalize(), inline=True)
+                embed.add_field(name="Mode", value="Test Mode (No action)" if test_mode else "Active (Punishment applied)", inline=True)
+                embed.set_footer(text=f"Orbit Security • {guild.name}", icon_url=guild.icon.url if guild.icon else None)
+                await owner.send(embed=embed)
         except Exception:
-            pass
+            try:
+                if owner:
+                    await owner.send(f"⚠️ **ANTI-NUKE ALERT** ⚠️\nUser {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}**.")
+            except Exception:
+                pass
 
         if test_mode:
             return
@@ -255,14 +270,31 @@ class SecurityModule(commands.Cog):
         # Handle Suspicious Account checks
         if cfg.get("suspicious_account", False):
             suspicious = False
-            age_cutoff = parse_time(cfg.get("young_account_cutoff", "14d"))
-            if (discord.utils.utcnow() - member.created_at).total_seconds() < age_cutoff:
+            reasons = []
+
+            cutoff_raw = cfg.get("young_account_cutoff") or cfg.get("suspicious_account_age", "14d")
+            age_cutoff = parse_time(cutoff_raw)
+            diff = discord.utils.utcnow() - member.created_at
+            account_age_days = diff.days
+
+            if diff.total_seconds() < age_cutoff:
                 suspicious = True
-            elif cfg.get("no_profile_picture", False) and member.avatar is None:
+                reasons.append(f"Account age is {account_age_days}d (Threshold: {cutoff_raw})")
+
+            if cfg.get("no_profile_picture", False) and member.avatar is None:
                 suspicious = True
-            
+                reasons.append("No custom profile picture (Default Avatar)")
+
             if suspicious:
-                action = cfg.get("suspicious_action", "flag")
+                action = str(cfg.get("suspicious_action", "flag")).lower()
+                action_map = {
+                    "flag": "Flagged (Alert Only)",
+                    "timeout": "Timed Out (1 hour)",
+                    "kick": "Kicked from Server",
+                    "ban": "Banned from Server",
+                }
+                action_display = action_map.get(action, action.capitalize())
+
                 try:
                     if action == "timeout":
                         await member.timeout(discord.utils.utcnow() + datetime.timedelta(hours=1), reason="Orbit Anti-Raid: Suspicious Account")
@@ -270,32 +302,87 @@ class SecurityModule(commands.Cog):
                         await member.kick(reason="Orbit Anti-Raid: Suspicious Account")
                     elif action == "ban":
                         await member.ban(reason="Orbit Anti-Raid: Suspicious Account")
-                        
+
                     log_threat(guild.id, "raid", f"Suspicious account {member.name} ({member.id}) joined and was {action}ed.")
                 except discord.Forbidden:
-                    pass
-                    
+                    action_display += " (Missing Permissions)"
+                except Exception as e:
+                    action_display += f" (Error: {e})"
+
                 channel_id = cfg.get("suspicious_alert_channel")
                 if channel_id:
-                    channel = guild.get_channel(int(channel_id))
-                    if channel:
-                        try:
-                            await channel.send(f"⚠️ **Suspicious Account Joined:** {member.mention} (`{member.id}`). Age: {(discord.utils.utcnow() - member.created_at).days} days.")
-                        except:
-                            pass
+                    try:
+                        ch_int = int(channel_id)
+                        channel = guild.get_channel(ch_int)
+                        if not channel:
+                            try:
+                                channel = await self.bot.fetch_channel(ch_int)
+                            except Exception:
+                                channel = None
+
+                        if channel:
+                            # Yellow for flag/timeout, Red for kick/ban
+                            color = 0xed4245 if action in ("kick", "ban") else 0xfee75c
+                            embed = discord.Embed(
+                                title="⚠️ Suspicious Account Joined",
+                                color=color,
+                                timestamp=discord.utils.utcnow()
+                            )
+                            embed.set_thumbnail(url=member.display_avatar.url)
+                            embed.add_field(
+                                name="User",
+                                value=f"{member.mention}\n`{member.name}` (`{member.id}`)",
+                                inline=True
+                            )
+                            embed.add_field(
+                                name="Account Age",
+                                value=f"**{account_age_days} days**\nCreated <t:{int(member.created_at.timestamp())}:R>",
+                                inline=True
+                            )
+                            embed.add_field(
+                                name="Action Taken",
+                                value=f"**{action_display}**",
+                                inline=True
+                            )
+                            if reasons:
+                                embed.add_field(
+                                    name="Detection Reason",
+                                    value="\n".join(f"• {r}" for r in reasons),
+                                    inline=False
+                                )
+                            embed.set_footer(
+                                text=f"Orbit Security • Anti-Raid • {guild.name}",
+                                icon_url=guild.icon.url if guild.icon else None
+                            )
+
+                            perms = channel.permissions_for(guild.me) if guild.me else None
+                            if perms and not perms.embed_links:
+                                await channel.send(
+                                    f"⚠️ **Suspicious Account Joined:** {member.mention} (`{member.id}`). Age: {account_age_days} days. Action: {action_display}"
+                                )
+                            else:
+                                await channel.send(embed=embed)
+                    except Exception as e:
+                        print(f"[Security] Failed to send suspicious account alert: {e}")
 
         # Handle Join Velocity (Mass Join Raid)
         current_time = time.time()
         threshold = int(cfg.get("join_threshold", 5))
         time_window = parse_time(cfg.get("join_time_window", "10s"))
-        
+
         joins = self.anti_raid_joins[guild.id]
         joins = [t for t in joins if current_time - t <= time_window]
         joins.append(current_time)
         self.anti_raid_joins[guild.id] = joins
-        
+
         if len(joins) >= threshold:
-            action = cfg.get("action", "timeout")
+            action = str(cfg.get("action", "timeout")).lower()
+            action_map = {
+                "timeout": "Timed Out (1 hour)",
+                "kick": "Kicked from Server",
+                "ban": "Banned from Server",
+            }
+            action_display = action_map.get(action, action.capitalize())
             try:
                 if action == "timeout":
                     await member.timeout(discord.utils.utcnow() + datetime.timedelta(hours=1), reason="Orbit Anti-Raid: Mass Join Raid")
@@ -305,16 +392,54 @@ class SecurityModule(commands.Cog):
                     await member.ban(reason="Orbit Anti-Raid: Mass Join Raid")
                 log_threat(guild.id, "raid", f"Mass join raid detected. Action '{action}' taken on {member.name}.")
             except discord.Forbidden:
-                pass
-                
+                action_display += " (Missing Permissions)"
+            except Exception as e:
+                action_display += f" (Error: {e})"
+
             channel_id = cfg.get("alert_channel")
             if channel_id:
-                channel = guild.get_channel(int(channel_id))
-                if channel:
-                    try:
-                        await channel.send(f"🚨 **ANTI-RAID TRIGGERED** 🚨\nMass join detected. Action `{action}` taken on {member.mention}.")
-                    except:
-                        pass
+                try:
+                    ch_int = int(channel_id)
+                    channel = guild.get_channel(ch_int)
+                    if not channel:
+                        try:
+                            channel = await self.bot.fetch_channel(ch_int)
+                        except Exception:
+                            channel = None
+                    if channel:
+                        embed = discord.Embed(
+                            title="🚨 Anti-Raid Triggered",
+                            description=f"Mass join detected on **{guild.name}**.",
+                            color=0xed4245,
+                            timestamp=discord.utils.utcnow()
+                        )
+                        embed.set_thumbnail(url=member.display_avatar.url)
+                        embed.add_field(
+                            name="Trigger Member",
+                            value=f"{member.mention}\n`{member.name}` (`{member.id}`)",
+                            inline=True
+                        )
+                        embed.add_field(
+                            name="Velocity",
+                            value=f"**{len(joins)} joins** in {cfg.get('join_time_window', '10s')}\n(Threshold: {threshold})",
+                            inline=True
+                        )
+                        embed.add_field(
+                            name="Action Taken",
+                            value=f"**{action_display}**",
+                            inline=True
+                        )
+                        embed.set_footer(
+                            text=f"Orbit Security • Anti-Raid • {guild.name}",
+                            icon_url=guild.icon.url if guild.icon else None
+                        )
+                        perms = channel.permissions_for(guild.me) if guild.me else None
+                        if perms and not perms.embed_links:
+                            await channel.send(f"🚨 **ANTI-RAID TRIGGERED** 🚨\nMass join detected. Action `{action_display}` taken on {member.mention}.")
+                        else:
+                            await channel.send(embed=embed)
+                except Exception as e:
+                    print(f"[Security] Failed to send anti-raid alert: {e}")
 
     # --- WEBHOOK PROTECTION ---
     @commands.Cog.listener()
