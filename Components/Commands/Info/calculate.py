@@ -29,7 +29,13 @@ def resolve_color(val) -> discord.Color:
 
 def safe_eval(expr: str):
     # safe evaluation of mathematical expressions
-    clean_expr = expr.replace("÷", "/").replace("x", "*").replace("^", "**").strip()
+    clean_expr = (
+        expr.replace("÷", "/")
+        .replace("x", "*")
+        .replace("×", "*")
+        .replace("^", "**")
+        .strip()
+    )
     if not clean_expr:
         return "Waiting..."
 
@@ -37,42 +43,65 @@ def safe_eval(expr: str):
     if clean_expr.endswith(("+", "-", "*", "/", "%", "**", "(")):
         return "Waiting..."
 
+    # Auto-close open parentheses for live evaluation
+    open_parens = clean_expr.count("(")
+    close_parens = clean_expr.count(")")
+    if open_parens > close_parens:
+        test_expr = clean_expr + (")" * (open_parens - close_parens))
+    else:
+        test_expr = clean_expr
+
     allowed_operators = {
-        ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
-        ast.Div: operator.truediv, ast.Pow: operator.pow, ast.BitXor: operator.xor,
-        ast.USub: operator.neg, ast.Mod: operator.mod
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.Pow: operator.pow,
+        ast.Mod: operator.mod,
+        ast.USub: operator.neg,
+        ast.UAdd: operator.pos,
+        ast.BitXor: operator.xor,
     }
 
     def eval_node(node):
-        if isinstance(node, ast.Num): # <number>
-            return node.n
-        elif isinstance(node, ast.BinOp): # <left> <operator> <right>
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, (int, float)):
+                return node.value
+            raise TypeError("Only numbers are allowed")
+        elif isinstance(node, ast.BinOp):
             left = eval_node(node.left)
             right = eval_node(node.right)
-            if node.op.__class__ in allowed_operators:
-                if isinstance(node.op, ast.Pow) and isinstance(right, (int, float)) and right > 1000:
+            op_type = type(node.op)
+            if op_type in allowed_operators:
+                if op_type is ast.Pow and isinstance(right, (int, float)) and right > 1000:
                     raise ValueError("Exponent too large")
-                return allowed_operators[node.op.__class__](left, right)
+                return allowed_operators[op_type](left, right)
             raise ValueError(f"Unsupported operator: {node.op}")
-        elif isinstance(node, ast.UnaryOp): # <operator> <operand> e.g., -1
+        elif isinstance(node, ast.UnaryOp):
             operand = eval_node(node.operand)
-            if node.op.__class__ in allowed_operators:
-                return allowed_operators[node.op.__class__](operand)
+            op_type = type(node.op)
+            if op_type in allowed_operators:
+                return allowed_operators[op_type](operand)
             raise ValueError(f"Unsupported operator: {node.op}")
         elif isinstance(node, ast.Expression):
             return eval_node(node.body)
-        elif isinstance(node, ast.Constant):
-            return node.value
         else:
             raise TypeError(f"Unsupported expression: {node}")
 
     try:
-        parsed = ast.parse(clean_expr, mode='eval')
+        parsed = ast.parse(test_expr, mode='eval')
         result = eval_node(parsed)
         if isinstance(result, float) and result.is_integer():
             return str(int(result))
-        return str(round(result, 4))
-    except Exception:
+        elif isinstance(result, float):
+            return str(round(result, 6))
+        return str(result)
+    except ZeroDivisionError:
+        return "Cannot divide by 0"
+    except SyntaxError:
+        return "Waiting..."
+    except Exception as e:
+        print(f"[Calculator] Evaluation error for '{expr}': {e}")
         return "Error"
 
 def build_calculator_body(expression: str, result: str, timed_out: bool = False) -> str:
@@ -173,7 +202,7 @@ class CalculatorLayoutView(LayoutView):
         elif label == "=":
             eval_res = safe_eval(self.expression)
             self.result = eval_res
-            if eval_res not in ("Error", "Waiting..."):
+            if eval_res not in ("Error", "Waiting...", "Cannot divide by 0"):
                 self.expression = eval_res
         elif label == "()":
             open_count = self.expression.count("(")
@@ -264,7 +293,7 @@ class ClassicCalculatorView(discord.ui.View):
         elif label == "=":
             eval_res = safe_eval(self.expression)
             self.result = eval_res
-            if eval_res not in ("Error", "Waiting..."):
+            if eval_res not in ("Error", "Waiting...", "Cannot divide by 0"):
                 self.expression = eval_res
         elif label == "()":
             open_count = self.expression.count("(")
