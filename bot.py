@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands, tasks
 import discord.ext.commands.core as core
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 
 def custom_has_permissions(**perms: bool):
     def decorator(func):
@@ -75,7 +76,7 @@ async def send_dev_error(bot, source: str, error):
             msg = str(error)[:300]
             
         embed = discord.Embed(
-            title="️ System Error Captured", 
+            title=f"{Emojis.CLOUD_ERROR} System Error Captured", 
             description=f"**Source:** {source}\n**Message:** {msg}", 
             color=discord.Color.red()
         )
@@ -101,9 +102,9 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             if is_blacklisted(interaction.guild.id, interaction.user.id):
                 try:
                     if interaction.response.is_done():
-                        await interaction.followup.send(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), ephemeral=True)
+                        await interaction.followup.send(embed=make_embed(f"{Emojis.NO_ENTRY} You are blacklisted from using bot commands on this server.", discord.Color.red()), ephemeral=True)
                     else:
-                        await interaction.response.send_message(embed=make_embed("You are blacklisted from using bot commands on this server.", discord.Color.red()), ephemeral=True)
+                        await interaction.response.send_message(embed=make_embed(f"{Emojis.NO_ENTRY} You are blacklisted from using bot commands on this server.", discord.Color.red()), ephemeral=True)
                 except Exception:
                     pass
                 return False
@@ -135,7 +136,7 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             pass
         try:
             if not interaction.response.is_done():
-                await interaction.response.send_message(embed=make_embed(f"An error occurred: `{error}`", discord.Color.red()), ephemeral=True)
+                await interaction.response.send_message(embed=make_embed(f"{Emojis.ERROR} An error occurred: `{error}`", discord.Color.red()), ephemeral=True)
         except Exception:
             pass
 

@@ -7,6 +7,7 @@ from Components.Systems.Level._storage import (
 )
 import io
 from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.emojis import Emojis
 
 # ── Leaderboard category config ──
 LB_CATEGORIES = {
@@ -192,7 +193,7 @@ class LevelCommandsCog(commands.Cog):
             embed.add_field(name="Rank", value=f"#{rank}", inline=True)
             embed.add_field(name="Level", value=str(level), inline=True)
             embed.add_field(name="XP", value=f"{current_xp:,} / {needed_xp:,}", inline=True)
-            embed.add_field(name="Progress", value=f"{bar}\n📨 {msg_count:,} •  {voice_mins:,}m • 😄 {react_count:,} • Total: {total_xp:,} XP", inline=False)
+            embed.add_field(name="Progress", value=f"{bar}\n{Emojis.MESSAGES} {msg_count:,} • {Emojis.VOICE_HOURS} {voice_mins:,}m • Total: {total_xp:,} XP", inline=False)
             embed.set_thumbnail(url=target.display_avatar.url)
             await interaction.response.send_message(embed=embed)
 

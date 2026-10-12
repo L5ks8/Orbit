@@ -4,6 +4,7 @@ from discord.ext import commands, tasks
 import datetime
 from Components.Database.mongodb import get_db
 from Components.Commands._utils import ORBIT_COLOR
+from Components.emojis import Emojis
 
 class Birthday(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -72,7 +73,7 @@ class Birthday(commands.Cog):
 
             if celebrants:
                 embed = discord.Embed(
-                    title="🎉 Happy Birthday! 🎉",
+                    title=f"{Emojis.WINNER} Happy Birthday! {Emojis.WINNER}",
                     description=f"Happy birthday to: {', '.join(celebrants)}!\nWe hope you have a great day!",
                     color=discord.Color.gold()
                 )

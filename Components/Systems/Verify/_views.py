@@ -6,6 +6,7 @@ from discord.ui import Modal, TextInput, View, Button
 from Components.Systems.Verify._storage import load_verify_config, remove_pending_kick
 from Components.Systems.Verify._captcha import generate_captcha
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 
 CAPTCHA_SESSIONS = {}
 
@@ -72,7 +73,7 @@ class CaptchaInteractionLayout(View):
         self.role_id = int(role_id) if role_id else None
         self.remove_role_id = int(remove_role_id) if remove_role_id else None
 
-    @discord.ui.button(label="Enter CAPTCHA Code", style=discord.ButtonStyle.primary, emoji="⌨️")
+    @discord.ui.button(label="Enter CAPTCHA Code", style=discord.ButtonStyle.primary, emoji=Emojis.KEYBOARD)
     async def enter_code(self, interaction: discord.Interaction, button: Button):
         if not interaction.guild or not isinstance(interaction.user, discord.Member):
             return await interaction.response.send_message(embed=make_embed("Verification must be completed inside a server.", discord.Color.red()), ephemeral=True)
@@ -83,7 +84,7 @@ class CaptchaInteractionLayout(View):
         modal = CaptchaInputModal(self.role_id, self.remove_role_id)
         await interaction.response.send_modal(modal)
 
-    @discord.ui.button(label="Request New CAPTCHA", style=discord.ButtonStyle.secondary, emoji="🔄")
+    @discord.ui.button(label="Request New CAPTCHA", style=discord.ButtonStyle.secondary, emoji=Emojis.RELOAD)
     async def refresh_captcha(self, interaction: discord.Interaction, button: Button):
         if not interaction.guild or not isinstance(interaction.user, discord.Member):
             return await interaction.response.send_message(embed=make_embed("Verification must be completed inside a server.", discord.Color.red()), ephemeral=True)
@@ -204,10 +205,10 @@ async def handle_verify_interaction(interaction: discord.Interaction):
                 verify_url = f"{base_url}/verify/{token}"
 
                 view = View(timeout=600)
-                view.add_item(Button(label="Open Verification Page", style=discord.ButtonStyle.link, url=verify_url, emoji="🌐"))
+                view.add_item(Button(label="Open Verification Page", style=discord.ButtonStyle.link, url=verify_url, emoji=Emojis.GLOBE_VERIFICATION))
 
                 embed = discord.Embed(
-                    title="🛡️ Web Security Verification",
+                    title=f"{Emojis.VERIFICATION} Web Security Verification",
                     description=f"Please click the button below to solve the CAPTCHA in your browser.\n*This link is unique to you and will expire in 10 minutes.*\n\n[Privacy Policy]({base_url}/privacy) · [Support Server](https://discord.gg/wekuhwCsUg)",
                     color=discord.Color.blurple()
                 )
@@ -226,7 +227,7 @@ async def handle_verify_interaction(interaction: discord.Interaction):
 
                 view = CaptchaInteractionLayout(role_id, remove_role_id)
                 embed = discord.Embed(
-                    title="🛡️ Security Verification: Solve the CAPTCHA",
+                    title=f"{Emojis.VERIFICATION} Security Verification: Solve the CAPTCHA",
                     description="Please look at the characters in the image below and click **Enter CAPTCHA Code** to type what you see.",
                     color=discord.Color.blurple()
                 )

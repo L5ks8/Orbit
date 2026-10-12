@@ -7,6 +7,7 @@ from Components.Systems.Level._storage import (
     increment_stat, level_from_xp, xp_progress,
     get_leaderboard, delete_user_xp
 )
+from Components.emojis import Emojis
 
 class LevelListenerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -452,11 +453,11 @@ class LevelListenerCog(commands.Cog):
                 lvl = level_from_xp(xp)
                 member = guild.get_member(uid)
                 name = member.display_name if member else f"User#{uid}"
-                medal = ["🥇", "🥈", "🥉"][i-1] if i <= 3 else f"`#{i}`"
+                medal = [Emojis.GOLD, "`#2`", "`#3`"][i-1] if i <= 3 else f"`#{i}`"
                 desc_lines.append(f"{medal} **{name}** — Level {lvl} • {xp:,} XP")
 
             embed = discord.Embed(
-                title=" XP Leaderboard",
+                title=f"{Emojis.GOLD} XP Leaderboard",
                 description="\n".join(desc_lines),
                 color=color
             )

@@ -4,6 +4,7 @@ from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Giveaway._storage import get_giveaway
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 
 class GiveawayRerollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -69,11 +70,11 @@ class GiveawayRerollCommand(commands.Cog):
             from Components.Commands.Giveaway.giveaway import resolve_color
             color = resolve_color(entry.get("color", 0x5865F2))
             jump_url = msg.jump_url if msg else None
-            desc = f"Congratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! 🎊"
+            desc = f"Congratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! {Emojis.WINNER}"
             if jump_url:
                 desc += f"\n\n[Jump to Giveaway]({jump_url})"
             reroll_embed = discord.Embed(
-                title="🎉 Giveaway Rerolled!",
+                title=f"{Emojis.WINNER} Giveaway Rerolled!",
                 description=desc,
                 color=color
             )

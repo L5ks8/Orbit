@@ -7,6 +7,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from discord.ui import LayoutView, Container, TextDisplay, ActionRow, Button
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 from Components.Commands.Giveaway._storage import (
     generate_giveaway_id,
     create_giveaway_entry,
@@ -186,7 +187,7 @@ class PersistentGiveawayLayout(discord.ui.LayoutView):
         update_giveaway_entry(interaction.guild.id, entry)
 
         await interaction.response.send_message(
-            embed=make_embed("🎉 **You have entered the giveaway!** Good luck!", discord.Color.green()),
+            embed=make_embed(f"{Emojis.WINNER} **You have entered the giveaway!** Good luck!", discord.Color.green()),
             ephemeral=True
         )
 
@@ -316,11 +317,11 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
         color = resolve_color(entry.get("color", 0x5865F2))
         jump_url = msg.jump_url if msg else None
         if picked_winners:
-            desc = f"Congratulations {winners_display}! You won **{entry['prize']}**! 🎊"
+            desc = f"Congratulations {winners_display}! You won **{entry['prize']}**! {Emojis.WINNER}"
             if jump_url:
                 desc += f"\n\n[Jump to Giveaway]({jump_url})"
             embed = discord.Embed(
-                title="🎉 Giveaway Ended!",
+                title=f"{Emojis.WINNER} Giveaway Ended!",
                 description=desc,
                 color=color
             )

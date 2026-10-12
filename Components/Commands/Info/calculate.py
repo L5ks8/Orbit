@@ -3,6 +3,7 @@ from discord.ext import commands
 import ast
 import operator
 import math
+from Components.emojis import Emojis
 
 try:
     from discord.ui import Button, Container, TextDisplay, ActionRow, LayoutView
@@ -127,10 +128,11 @@ class CalculatorLayoutView(LayoutView):
     def build_ui(self, disabled: bool = False):
         self.clear_items()
 
-        def make_btn(label: str, style: discord.ButtonStyle):
-            b = Button(label=label, style=style, disabled=disabled)
+        def make_btn(label: str, style: discord.ButtonStyle, emoji=None, action: str = None):
+            act = action if action is not None else label
+            b = Button(label=label if label else None, emoji=emoji, style=style, disabled=disabled)
             async def cb(interaction: discord.Interaction):
-                await self.handle_button_press(interaction, label)
+                await self.handle_button_press(interaction, act)
             b.callback = cb
             return b
 
@@ -146,7 +148,7 @@ class CalculatorLayoutView(LayoutView):
             make_btn("5", discord.ButtonStyle.secondary),
             make_btn("6", discord.ButtonStyle.secondary),
             make_btn("x", discord.ButtonStyle.primary),
-            make_btn("⌫", discord.ButtonStyle.danger),
+            make_btn("", discord.ButtonStyle.danger, emoji=Emojis.BACKSPACE, action="⌫"),
         )
         r2 = ActionRow(
             make_btn("1", discord.ButtonStyle.secondary),
@@ -231,12 +233,13 @@ class CalculatorLayoutView(LayoutView):
 
 
 class ClassicCalculatorButton(discord.ui.Button):
-    def __init__(self, label: str, style: discord.ButtonStyle, row: int):
-        super().__init__(label=label, style=style, row=row)
+    def __init__(self, label: str, style: discord.ButtonStyle, row: int, emoji=None, action: str = None):
+        self.action_key = action if action is not None else label
+        super().__init__(label=label if label else None, emoji=emoji, style=style, row=row)
 
     async def callback(self, interaction: discord.Interaction):
         view: ClassicCalculatorView = self.view
-        await view.handle_button_press(interaction, self.label)
+        await view.handle_button_press(interaction, self.action_key)
 
 
 class ClassicCalculatorView(discord.ui.View):
@@ -252,13 +255,13 @@ class ClassicCalculatorView(discord.ui.View):
     def _setup_buttons(self, disabled: bool = False):
         self.clear_items()
         buttons = [
-            ("7", discord.ButtonStyle.secondary, 0), ("8", discord.ButtonStyle.secondary, 0), ("9", discord.ButtonStyle.secondary, 0), ("÷", discord.ButtonStyle.primary, 0), ("AC", discord.ButtonStyle.danger, 0),
-            ("4", discord.ButtonStyle.secondary, 1), ("5", discord.ButtonStyle.secondary, 1), ("6", discord.ButtonStyle.secondary, 1), ("x", discord.ButtonStyle.primary, 1), ("⌫", discord.ButtonStyle.danger, 1),
-            ("1", discord.ButtonStyle.secondary, 2), ("2", discord.ButtonStyle.secondary, 2), ("3", discord.ButtonStyle.secondary, 2), ("-", discord.ButtonStyle.primary, 2), ("()", discord.ButtonStyle.primary, 2),
-            ("0", discord.ButtonStyle.secondary, 3), (".", discord.ButtonStyle.secondary, 3), ("=", discord.ButtonStyle.success, 3), ("+", discord.ButtonStyle.primary, 3), ("^", discord.ButtonStyle.primary, 3),
+            ("7", discord.ButtonStyle.secondary, 0, None, "7"), ("8", discord.ButtonStyle.secondary, 0, None, "8"), ("9", discord.ButtonStyle.secondary, 0, None, "9"), ("÷", discord.ButtonStyle.primary, 0, None, "÷"), ("AC", discord.ButtonStyle.danger, 0, None, "AC"),
+            ("4", discord.ButtonStyle.secondary, 1, None, "4"), ("5", discord.ButtonStyle.secondary, 1, None, "5"), ("6", discord.ButtonStyle.secondary, 1, None, "6"), ("x", discord.ButtonStyle.primary, 1, None, "x"), ("", discord.ButtonStyle.danger, 1, Emojis.BACKSPACE, "⌫"),
+            ("1", discord.ButtonStyle.secondary, 2, None, "1"), ("2", discord.ButtonStyle.secondary, 2, None, "2"), ("3", discord.ButtonStyle.secondary, 2, None, "3"), ("-", discord.ButtonStyle.primary, 2, None, "-"), ("()", discord.ButtonStyle.primary, 2, None, "()"),
+            ("0", discord.ButtonStyle.secondary, 3, None, "0"), (".", discord.ButtonStyle.secondary, 3, None, "."), ("=", discord.ButtonStyle.success, 3, None, "="), ("+", discord.ButtonStyle.primary, 3, None, "+"), ("^", discord.ButtonStyle.primary, 3, None, "^"),
         ]
-        for label, style, row in buttons:
-            btn = ClassicCalculatorButton(label, style, row)
+        for label, style, row, emoji, act in buttons:
+            btn = ClassicCalculatorButton(label, style, row, emoji=emoji, action=act)
             btn.disabled = disabled
             self.add_item(btn)
 

@@ -5,6 +5,7 @@ from discord.ext import commands
 from typing import Optional, Literal
 
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 from Components.Systems.Verify._storage import (
     load_verify_config,
     save_verify_config,
@@ -38,7 +39,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         """Root command for server verification settings."""
         if ctx.invoked_subcommand is None:
             embed = make_embed(
-                "🛡️ **Verification System Commands**\n\n"
+                f"{Emojis.VERIFICATION} **Verification System Commands**\n\n"
                 "• `/verification panel [channel]` - Deploy the official verification panel\n"
                 "• `/verification setup [role] [remove_role] [mode]` - Configure verification roles and mode\n"
                 "• `/verification status` - View current verification configuration\n"
@@ -63,7 +64,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         if not role_id:
             return await ctx.send(
                 embed=make_embed(
-                    "⚠️ **Verified Role Not Configured!**\n"
+                    f"{Emojis.WARNING} **Verified Role Not Configured!**\n"
                     "Please configure a verified role first with `/verification setup` or via the web dashboard.",
                     discord.Color.gold()
                 ),
@@ -148,7 +149,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         if ctx.guild.me.top_role <= role:
             return await ctx.send(
                 embed=make_embed(
-                    f"⚠️ Warning: My bot role is lower than {role.mention} in the server hierarchy.\n"
+                    f"{Emojis.WARNING} Warning: My bot role is lower than {role.mention} in the server hierarchy.\n"
                     "Please drag my role above the verified role in **Server Settings -> Roles**.",
                     discord.Color.gold()
                 ),
@@ -163,7 +164,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         save_verify_config(ctx.guild.id, verify_cfg)
 
         msg = (
-            f" **Verification Configured Successfully!**\n\n"
+            f"**Verification Configured Successfully!**\n\n"
             f"• **Verified Role:** {role.mention}\n"
             f"• **Remove Role:** {remove_role.mention if remove_role else 'None'}\n"
             f"• **Mode:** `{mode}`\n\n"
@@ -182,8 +183,8 @@ class VerificationCog(commands.Cog, name="Verification"):
         rem_role = ctx.guild.get_role(cfg.get("remove_role_id")) if cfg.get("remove_role_id") else None
         channel = ctx.guild.get_channel(cfg.get("channel_id")) if cfg.get("channel_id") else None
 
-        embed = discord.Embed(title="🛡️ Server Verification Status", color=discord.Color.blurple())
-        embed.add_field(name="Status", value=" Enabled" if cfg.get("enabled") else "❌ Disabled", inline=True)
+        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Server Verification Status", color=discord.Color.blurple())
+        embed.add_field(name="Status", value="Enabled" if cfg.get("enabled") else f"{Emojis.NO_ENTRY} Disabled", inline=True)
         embed.add_field(name="Mode", value=f"`{cfg.get('verification_type', 'captcha')}`", inline=True)
         embed.add_field(name="Channel", value=channel.mention if channel else "None configured", inline=True)
         embed.add_field(name="Verified Role", value=role.mention if role else "Not set", inline=True)

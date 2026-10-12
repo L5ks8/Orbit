@@ -5,6 +5,7 @@ from discord.ext import commands
 from discord.ui import Button
 from Components.Commands.Poll._storage import generate_poll_id, create_poll_entry, get_poll_entry
 from Components.Commands._utils import make_embed
+from Components.emojis import Emojis
 
 def make_bar(pct: int, length: int = 15) -> str:
     filled = int(round((pct / 100.0) * length))
@@ -69,7 +70,7 @@ class ComponentsPollView(LayoutView):
 
         if HAS_V2:
             body_text = (
-                f"# 📊 Community Poll\n\n"
+                f"# {Emojis.POLL} Community Poll\n\n"
                 f"**Question**\n{self.question}\n\n"
                 f"**Author** <@{self.author.id}> · **Duration** `{dur_str}` · **Total Votes** `{total_votes}`\n\n"
                 f"{content_str}"
@@ -88,7 +89,7 @@ class ComponentsPollView(LayoutView):
             return {"view": self}
 
         embed = discord.Embed(
-            title="Community Poll",
+            title=f"{Emojis.POLL} Community Poll",
             description=f"**Question:** {self.question}\n**Author:** {self.author.mention} | **Duration:** `{dur_str}` | **Total Votes:** `{total_votes}`\n\n{content_str}",
             color=signature_color
         )

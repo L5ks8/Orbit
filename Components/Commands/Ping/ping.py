@@ -3,6 +3,7 @@ from discord.ext import commands
 
 
 from Components.Commands._utils import ORBIT_COLOR, HAS_V2
+from Components.emojis import Emojis
 
 if HAS_V2:
     from discord.ui import LayoutView, Container, TextDisplay
@@ -19,7 +20,7 @@ class PingCommand(commands.Cog):
             try:
                 view = LayoutView(timeout=60)
                 container = Container(
-                    TextDisplay(content=f"# 🏓 Pong!\n\n**Latency**\n`{ms} ms`"),
+                    TextDisplay(content=f"# {Emojis.PING} Pong!\n\n**Latency**\n`{ms} ms`"),
                     accent_color=ORBIT_COLOR
                 )
                 view.add_item(container)
@@ -29,7 +30,7 @@ class PingCommand(commands.Cog):
                 pass
 
         embed = discord.Embed(
-            title="🏓 Pong!",
+            title=f"{Emojis.PING} Pong!",
             description=f"**Latency:** `{ms} ms`",
             color=ORBIT_COLOR
         )

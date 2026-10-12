@@ -46,8 +46,9 @@ class ModuleDisabledView(discord.ui.View):
         self.add_item(discord.ui.Button(label="Activate Module", style=discord.ButtonStyle.link, url=f"{base_url}/dashboard/{guild_id}/modules/{tab_name}"))
 
 def get_module_disabled_embed(module_name: str) -> discord.Embed:
+    from Components.emojis import Emojis
     return discord.Embed(
-        description=f"The {module_name} module must be activated to use this command.",
+        description=f"{Emojis.NO_ENTRY} The {module_name} module must be activated to use this command.",
         color=discord.Color.red()
     )
 

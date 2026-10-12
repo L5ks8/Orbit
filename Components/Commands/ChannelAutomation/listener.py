@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
+from Components.emojis import Emojis
 import re
 import asyncio
 
@@ -157,7 +158,7 @@ class ChannelAutomationListener(commands.Cog):
                             embed.set_thumbnail(url=embed_thumb)
                             
                         view = discord.ui.View()
-                        view.add_item(discord.ui.Button(label=f"{action_label}: {ban_count:,}", emoji="🍯", disabled=True, style=discord.ButtonStyle.secondary))
+                        view.add_item(discord.ui.Button(label=f"{action_label}: {ban_count:,}", emoji=Emojis.HONEYPOT, disabled=True, style=discord.ButtonStyle.secondary))
                         
                         content_kw["embed"] = embed
                         content_kw["view"] = view
@@ -165,10 +166,10 @@ class ChannelAutomationListener(commands.Cog):
                         template = auto_ban_cfg.get("message")
                         if not template:
                             template = (
-                                "# :warning: POSTING IN THIS CHANNEL WILL GET YOU BANNED. :hammer:\n"
+                                f"# {Emojis.WARNING} POSTING IN THIS CHANNEL WILL GET YOU BANNED. {Emojis.BAN}\n"
                                 "## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n"
-                                ":no_entry_sign: THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
-                                ":information_source: Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n"
+                                f"{Emojis.NO_ENTRY} THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
+                                "Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n"
                                 "**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\n"
                                 f"{action_label[:-1]} Counter: `{{count}}`"
                             )
