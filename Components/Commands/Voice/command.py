@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from .voice import voice_group
+from . import say
 from .ban import VcBanCommand
 from .limit import VcLimitCommand
 from .lock import VcLockCommand

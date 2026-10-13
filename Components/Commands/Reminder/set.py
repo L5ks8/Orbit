@@ -1,13 +1,12 @@
 import discord
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
-from Components.Commands.Reminder.reminder import reminder_group
 from Components.Commands.Reminder.remind import remind_group
 from Components.Commands.Reminder._storage import add_reminder
 from Components.Commands.Reminder._views import parse_duration
 
-async def _do_remind_set(interaction: discord.Interaction, duration_str: str, text: str):
+async def _do_remind_set(ctx: InteractionContext, duration_str: str, text: str):
     await ctx.defer()
     seconds = parse_duration(duration_str)
     if not seconds or seconds <= 0:
@@ -25,9 +24,6 @@ async def _do_remind_set(interaction: discord.Interaction, duration_str: str, te
         f"**Reminder Text:** {entry.get('text')}\n\n"
         f"*I will notify you right here or via DMs when the timer completes.*"
     )
-    card = make_v2_card(f"# Orbit Reminder Scheduled\n\n{desc}", color=ORBIT_COLOR)
-    if card:
-        return await ctx.send(view=card, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
     embed = discord.Embed(
         title="Orbit Reminder Scheduled",
         description=desc,

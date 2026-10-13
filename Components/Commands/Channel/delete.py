@@ -1,11 +1,10 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Channel.channel import channel_group
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
-
-async def _do_delete(interaction: discord.Interaction, channel: discord.abc.GuildChannel | None):
+async def _do_delete(ctx: InteractionContext, channel: discord.abc.GuildChannel | None):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -16,7 +15,7 @@ async def _do_delete(interaction: discord.Interaction, channel: discord.abc.Guil
         ch_type = "Voice" if isinstance(target, discord.VoiceChannel) else "Text"
         name = target.name
         try:
-            await target.delete(reason=f"Deleted by {ctx.author} via Orbit -deletechannel")
+            await target.delete(reason=f"Deleted by {ctx.author} via Orbit /channel delete")
         except discord.Forbidden:
             return await ctx.send(embed=make_embed("I don't have permission to delete that channel."), ephemeral=True)
         except discord.HTTPException as e:
@@ -24,24 +23,15 @@ async def _do_delete(interaction: discord.Interaction, channel: discord.abc.Guil
 
         if target != ctx.channel:
             try:
-                await ctx.message.delete()
+                if ctx.message:
+                    await ctx.message.delete()
             except Exception:
                 pass
-            content = (
-                f"# Channel Deleted\n\n"
-                f"**Channel:** `#{name}`\n"
-                f"**Type:** `{ch_type}`\n"
-                f"**Deleted by:** {ctx.author.mention}"
-            )
-            card = make_v2_card(content, color=ORBIT_COLOR)
-            if card:
-                await ctx.send(view=card, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
-            else:
-                embed = discord.Embed(title="Channel Deleted", color=ORBIT_COLOR)
-                embed.add_field(name="Channel", value=f"`#{name}`", inline=False)
-                embed.add_field(name="Type", value=f"`{ch_type}`", inline=True)
-                embed.add_field(name="Deleted by", value=ctx.author.mention, inline=False)
-                await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
+            embed = discord.Embed(title="Channel Deleted", color=ORBIT_COLOR)
+            embed.add_field(name="Channel", value=f"`#{name}`", inline=False)
+            embed.add_field(name="Type", value=f"`{ch_type}`", inline=True)
+            embed.add_field(name="Deleted by", value=ctx.author.mention, inline=False)
+            await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
     else:
         await ctx.send(embed=make_embed("That channel type cannot be deleted with this command.", discord.Color.red()), ephemeral=True)
 
@@ -49,8 +39,6 @@ async def _do_delete(interaction: discord.Interaction, channel: discord.abc.Guil
 async def channel_delete_cmd(interaction: discord.Interaction, channel: discord.abc.GuildChannel = None):
     ctx = InteractionContext(interaction)
     await _do_delete(ctx, channel)
-
-
 
 async def setup(bot: commands.Bot):
     pass

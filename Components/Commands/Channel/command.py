@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from .channel import channel_group
+from . import create
+from . import delete
 from .getchannel import GetChannelCog
 
 async def setup(bot: commands.Bot):
