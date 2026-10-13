@@ -325,6 +325,7 @@ class RenderTranscriptView(discord.ui.View):
     def __init__(self, interaction: discord.Interaction, messages, current_page: int = 0):
         super().__init__(timeout=300)
         self.interaction = interaction
+        self.guild = interaction.guild
         self.messages = messages
         self.current_page = current_page
         self.per_page = 50
@@ -343,7 +344,7 @@ class RenderTranscriptView(discord.ui.View):
 
     async def _update_page(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        img = await generate_transcript_image(self.messages, self.current_page, self.per_page)
+        img = await generate_transcript_image(self.messages, self.current_page, self.per_page, guild=self.guild)
         if not img:
             return await interaction.followup.send(embed=make_embed("Failed to render page.", discord.Color.red()), ephemeral=True)
             
@@ -383,7 +384,7 @@ async def render_transcript_cmd(interaction: discord.Interaction, file: discord.
         if not messages:
             return await interaction.followup.send(embed=make_embed("No valid messages found in the transcript file."), ephemeral=True)
             
-        img = await generate_transcript_image(messages, page=0, per_page=50)
+        img = await generate_transcript_image(messages, page=0, per_page=50, guild=interaction.guild)
         if not img:
             return await interaction.followup.send(embed=make_embed("Failed to render image.", discord.Color.red()), ephemeral=True)
             

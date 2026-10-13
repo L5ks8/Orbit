@@ -31,24 +31,86 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
     except Exception:
         pass
 
+    def _resolve_mentions(text: str, g: discord.Guild) -> str:
+        if not text:
+            return ""
+        import re
+        from datetime import datetime, timezone
+
+        def replace_user(match):
+            uid = int(match.group(1))
+            mem = g.get_member(uid) if g else None
+            if mem:
+                return f"@{mem.display_name}"
+            usr = g._state.get_user(uid) if (g and hasattr(g, "_state")) else None
+            if usr:
+                return f"@{usr.display_name}"
+            return f"@{uid}"
+
+        def replace_role(match):
+            rid = int(match.group(1))
+            role = g.get_role(rid) if g else None
+            if role:
+                return f"@{role.name}"
+            return f"@role-{rid}"
+
+        def replace_channel(match):
+            cid = int(match.group(1))
+            ch = g.get_channel(cid) if g else None
+            if ch:
+                return f"#{ch.name}"
+            return f"#channel-{cid}"
+
+        def replace_ts(match):
+            ts = int(match.group(1))
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+            return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+        text = re.sub(r'<@!?(\d+)>', replace_user, text)
+        text = re.sub(r'<@&(\d+)>', replace_role, text)
+        text = re.sub(r'<#(\d+)>', replace_channel, text)
+        text = re.sub(r'<t:(\d+)(?::[a-zA-Z])?>', replace_ts, text)
+        return text
+
     html_template = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <title>Ticket Transcript: #{channel.name}</title>
     <style>
-        body {{  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #313338; color: #dbdee1; margin: 0; padding: 20px; }} 
-        .header {{  background-color: #2b2d31; padding: 20px; border-radius: 8px; margin-bottom: 20px; }} 
-        .header h1 {{  margin: 0 0 10px 0; color: #f2f3f5; font-size: 24px; }} 
-        .header p {{  margin: 5px 0; font-size: 14px; color: #b5bac1; }} 
-        .message {{  display: flex; margin-bottom: 20px; }} 
-        .avatar {{  width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; background-color: #5865F2; flex-shrink: 0; overflow: hidden; }} 
-        .avatar img {{  width: 100%; height: 100%; object-fit: cover; }} 
-        .msg-content {{  display: flex; flex-direction: column; }} 
-        .msg-header {{  margin-bottom: 5px; }} 
-        .msg-author {{  font-weight: 600; color: #f2f3f5; margin-right: 10px; font-size: 16px; }} 
-        .msg-time {{  font-size: 12px; color: #949ba4; }} 
-        .msg-text {{  font-size: 15px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }} 
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #313338; color: #dbdee1; margin: 0; padding: 24px; }}
+        .header {{ background-color: #2b2d31; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #383a40; }}
+        .header h1 {{ margin: 0 0 10px 0; color: #f2f3f5; font-size: 24px; }}
+        .header p {{ margin: 6px 0; font-size: 14px; color: #b5bac1; }}
+        .header p strong {{ color: #f2f3f5; }}
+        .message {{ display: flex; margin-bottom: 18px; line-height: 1.4; }}
+        .avatar {{ width: 44px; height: 44px; border-radius: 50%; margin-right: 16px; background-color: #5865F2; flex-shrink: 0; overflow: hidden; }}
+        .avatar img {{ width: 100%; height: 100%; object-fit: cover; }}
+        .msg-content {{ display: flex; flex-direction: column; flex-grow: 1; max-width: calc(100% - 60px); }}
+        .msg-header {{ display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }}
+        .msg-author {{ font-weight: 600; color: #f2f3f5; font-size: 16px; }}
+        .bot-badge {{ background-color: #5865F2; color: #ffffff; font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; }}
+        .msg-time {{ font-size: 12px; color: #949ba4; }}
+        .msg-text {{ font-size: 15px; word-wrap: break-word; white-space: pre-wrap; color: #dbdee1; }}
+        .mention {{ background-color: rgba(88, 101, 242, 0.3); color: #c9cdfb; border-radius: 4px; padding: 1px 4px; font-weight: 500; }}
+        .embed {{ background-color: #2b2d31; border-left: 4px solid #5865f2; border-radius: 4px; padding: 12px 16px; margin-top: 8px; max-width: 600px; display: flex; flex-direction: column; gap: 6px; }}
+        .embed-author {{ font-size: 13px; font-weight: 600; color: #f2f3f5; display: flex; align-items: center; gap: 8px; }}
+        .embed-author-icon {{ width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }}
+        .embed-title {{ font-size: 16px; font-weight: 700; color: #f2f3f5; }}
+        .embed-desc {{ font-size: 14px; color: #dbdee1; white-space: pre-wrap; line-height: 1.4; }}
+        .embed-fields {{ display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }}
+        .embed-field {{ flex: 1 1 100%; }}
+        .embed-field-inline {{ flex: 1 1 calc(50% - 10px); min-width: 140px; }}
+        .embed-field-name {{ font-size: 13px; font-weight: 600; color: #f2f3f5; margin-bottom: 2px; }}
+        .embed-field-value {{ font-size: 13px; color: #dbdee1; white-space: pre-wrap; }}
+        .embed-thumbnail {{ max-width: 80px; max-height: 80px; border-radius: 4px; float: right; margin-left: 10px; object-fit: cover; }}
+        .embed-image {{ max-width: 100%; max-height: 320px; border-radius: 4px; margin-top: 6px; object-fit: contain; }}
+        .embed-footer {{ font-size: 12px; color: #949ba4; display: flex; align-items: center; gap: 6px; margin-top: 4px; }}
+        .embed-footer-icon {{ width: 16px; height: 16px; border-radius: 50%; object-fit: cover; }}
+        .attachment {{ margin-top: 6px; }}
+        .attachment img {{ max-width: 400px; max-height: 280px; border-radius: 6px; object-fit: contain; }}
+        .attachment a {{ color: #00a8fc; text-decoration: none; font-size: 14px; }}
+        .attachment a:hover {{ text-decoration: underline; }}
     </style>
 </head>
 <body>
@@ -62,24 +124,117 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
     </div>
     <div class="messages">
 """
+    import html
     msgs_html = []
     for m in messages:
         t_str = m.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        avatar_url = m.author.display_avatar.url if m.author.display_avatar else "https://cdn.discordapp.com/embed/avatars/0.png"
-        import html
-        safe_content = html.escape(m.content or "")
-        msgs_html.append(f'''        <div class="message">
+
+        author_member = guild.get_member(m.author.id) if guild else None
+        if not author_member and isinstance(m.author, discord.Member):
+            author_member = m.author
+
+        display_name = author_member.display_name if author_member else m.author.display_name
+        is_bot = bool(m.author.bot)
+
+        author_color = ""
+        if author_member and author_member.color and author_member.color.value != 0:
+            author_color = f"#{author_member.color.value:06x}"
+
+        avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
+        if author_member and hasattr(author_member, "display_avatar") and author_member.display_avatar:
+            avatar_url = author_member.display_avatar.with_format("png").with_size(128).url
+        elif hasattr(m.author, "display_avatar") and m.author.display_avatar:
+            avatar_url = m.author.display_avatar.with_format("png").with_size(128).url
+
+        # Process content
+        raw_content = m.content or ""
+        resolved_content = _resolve_mentions(raw_content, guild)
+        safe_content = html.escape(resolved_content)
+
+        # Process embeds
+        embeds_html = []
+        for emb in m.embeds:
+            color_hex = f"#{emb.color.value:06x}" if (emb.color and emb.color.value != 0) else "#5865F2"
+            emb_parts = []
+
+            # Thumbnail
+            if emb.thumbnail and emb.thumbnail.url:
+                emb_parts.append(f'<img class="embed-thumbnail" src="{emb.thumbnail.url}" alt="thumbnail">')
+
+            # Author
+            if emb.author and emb.author.name:
+                author_icon = f'<img class="embed-author-icon" src="{emb.author.icon_url}">' if emb.author.icon_url else ""
+                emb_parts.append(f'<div class="embed-author">{author_icon}<span>{html.escape(emb.author.name)}</span></div>')
+
+            # Title
+            if emb.title:
+                emb_parts.append(f'<div class="embed-title">{html.escape(emb.title)}</div>')
+
+            # Description
+            if emb.description:
+                emb_desc = html.escape(_resolve_mentions(emb.description, guild))
+                emb_parts.append(f'<div class="embed-desc">{emb_desc}</div>')
+
+            # Fields
+            if emb.fields:
+                emb_parts.append('<div class="embed-fields">')
+                for f in emb.fields:
+                    f_name = html.escape(f.name or "")
+                    f_val = html.escape(_resolve_mentions(f.value or "", guild))
+                    inline_cls = " embed-field-inline" if f.inline else ""
+                    emb_parts.append(f'<div class="embed-field{inline_cls}"><div class="embed-field-name">{f_name}</div><div class="embed-field-value">{f_val}</div></div>')
+                emb_parts.append('</div>')
+
+            # Image
+            if emb.image and emb.image.url:
+                emb_parts.append(f'<img class="embed-image" src="{emb.image.url}" alt="image">')
+
+            # Footer & timestamp
+            footer_text = html.escape(emb.footer.text) if (emb.footer and emb.footer.text) else ""
+            emb_ts = emb.timestamp.strftime("%Y-%m-%d %H:%M:%S") if emb.timestamp else ""
+            footer_line = ""
+            if footer_text and emb_ts:
+                footer_line = f"{footer_text} • {emb_ts}"
+            elif footer_text:
+                footer_line = footer_text
+            elif emb_ts:
+                footer_line = emb_ts
+
+            if footer_line or (emb.footer and emb.footer.icon_url):
+                footer_icon = f'<img class="embed-footer-icon" src="{emb.footer.icon_url}">' if (emb.footer and emb.footer.icon_url) else ""
+                emb_parts.append(f'<div class="embed-footer">{footer_icon}<span>{footer_line}</span></div>')
+
+            embed_body = "".join(emb_parts)
+            embeds_html.append(f'<div class="embed" data-color="{color_hex}" style="border-left-color: {color_hex};">{embed_body}</div>')
+
+        # Process attachments
+        attachments_html = []
+        for att in m.attachments:
+            is_img = any(att.filename.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif", ".webp"])
+            if is_img:
+                attachments_html.append(f'<div class="attachment image-attachment"><img src="{att.url}" alt="{html.escape(att.filename)}"></div>')
+            else:
+                attachments_html.append(f'<div class="attachment file-attachment"><a href="{att.url}" target="_blank">{html.escape(att.filename)}</a></div>')
+
+        author_style = f' style="color: {author_color};"' if author_color else ""
+        bot_badge = '<span class="bot-badge">BOT</span>' if is_bot else ""
+        text_block = f'<div class="msg-text">{safe_content}</div>' if safe_content else ""
+
+        msgs_html.append(f'''        <div class="message" data-author-id="{m.author.id}" data-is-bot="{str(is_bot).lower()}">
             <div class="avatar"><img src="{avatar_url}" alt="avatar"></div>
             <div class="msg-content">
                 <div class="msg-header">
-                    <span class="msg-author">{html.escape(m.author.display_name)}</span>
+                    <span class="msg-author"{author_style}>{html.escape(display_name)}</span>
+                    {bot_badge}
                     <span class="msg-time">{t_str}</span>
                 </div>
-                <div class="msg-text">{safe_content}</div>
+                {text_block}
+                {"".join(embeds_html)}
+                {"".join(attachments_html)}
             </div>
         </div>''')
-    
-    transcript_text = html_template + "\\n".join(msgs_html) + "\\n    </div>\\n</body>\\n</html>"
+
+    transcript_text = html_template + "\n".join(msgs_html) + "\n    </div>\n</body>\n</html>"
     transcript_bytes = transcript_text.encode("utf-8")
 
     log_ch_id = config.get("log_channel_id")
