@@ -6,7 +6,16 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 from discord.ui import Button
-from Components.Commands._utils import make_embed, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import (
+    make_embed,
+    ORBIT_COLOR,
+    InteractionContext,
+    HAS_V2,
+    Container,
+    TextDisplay,
+    ActionRow,
+    LayoutView
+)
 from Components.emojis import Emojis
 from Components.Commands.Giveaway._storage import (
     generate_giveaway_id,
@@ -184,14 +193,56 @@ class PersistentGiveawayView(discord.ui.View):
         except Exception as e:
             print(f"[Giveaway] Failed to update message after leave: {e}")
 
+def build_giveaway_v2_view(entry: dict, guild_id: int, ended: bool = False, winners_display: str = None):
+    if not HAS_V2:
+        return None
+    view = LayoutView(timeout=None)
+    color = resolve_color(entry.get("color", 0x5865F2))
+    body_text = build_giveaway_body(entry, ended=ended, winners_display=winners_display)
+
+    if ended:
+        btn_closed = Button(label="Closed", style=discord.ButtonStyle.secondary, disabled=True, custom_id="orbit:giveaway_closed")
+        btn_leave = Button(label="Leave", style=discord.ButtonStyle.secondary, disabled=True, custom_id="orbit:giveaway_leave_ended")
+        rows = [ActionRow(btn_closed, btn_leave)]
+    else:
+        btn_enter = Button(label="Enter", style=discord.ButtonStyle.primary, custom_id="orbit:giveaway_enter")
+        btn_leave = Button(label="Leave", style=discord.ButtonStyle.secondary, custom_id="orbit:giveaway_leave")
+        rows = [ActionRow(btn_enter, btn_leave)]
+
+    container = Container(
+        TextDisplay(content=f"# Giveaway!\n\n{body_text}"),
+        *rows,
+        accent_color=color
+    )
+    view.add_item(container)
+    view.add_item(TextDisplay(content="-# One entry per Discord account. Winners are selected at random."))
+    return view
+
 PersistentGiveawayLayout = PersistentGiveawayView
 
 async def send_giveaway_message(target, entry: dict, guild_id: int):
+    if HAS_V2:
+        try:
+            v2_view = build_giveaway_v2_view(entry, guild_id, ended=False)
+            if v2_view:
+                return await target.send(view=v2_view, allowed_mentions=discord.AllowedMentions.none())
+        except Exception as e:
+            print(f"[Giveaway] V2 send failed ({e}), falling back to embed.")
+
     embed = build_giveaway_embed(entry, ended=False)
     view = PersistentGiveawayView(ended=False)
     return await target.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
 async def update_giveaway_message(message: discord.Message, guild_id: int, entry: dict, ended: bool = False, winners_display: str = None):
+    if HAS_V2:
+        try:
+            v2_view = build_giveaway_v2_view(entry, guild_id, ended=ended, winners_display=winners_display)
+            if v2_view:
+                await message.edit(view=v2_view, allowed_mentions=discord.AllowedMentions.none())
+                return
+        except Exception as e:
+            print(f"[Giveaway] V2 update failed ({e}), falling back to embed.")
+
     embed = build_giveaway_embed(entry, ended=ended, winners_display=winners_display)
     view = PersistentGiveawayView(ended=ended)
     try:
@@ -360,10 +411,9 @@ class GiveawayCommand(commands.Cog):
             return await ctx.send(embed=make_embed("Giveaway duration cannot exceed 30 days.", discord.Color.red()), ephemeral=True)
 
         end_time = int(time.time()) + secs
-        gid = generate_giveaway_id()
+        gid = generate_giveaway_id(ctx.guild.id)
 
         await ctx.defer(ephemeral=True)
-        await ctx.send(embed=make_embed(f"Giveaway for **{prize}** is being posted!"), ephemeral=True)
 
         entry = create_giveaway_entry(
             guild_id=ctx.guild.id,
@@ -383,13 +433,15 @@ class GiveawayCommand(commands.Cog):
             entry["channel_id"] = msg.channel.id
             update_giveaway_entry(ctx.guild.id, entry)
 
+        await ctx.send(embed=make_embed(f"Giveaway for **{prize}** has been posted successfully!"), ephemeral=True)
+
     @giveaway.error
     async def giveaway_error(self, interaction: discord.Interaction, error):
         ctx = InteractionContext(interaction)
         if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Manage Server permission to host giveaways.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
-            await ctx.send(embed=make_embed("Usage: `/giveaway <prize> [winners_count] [duration_minutes] [required_role]`", discord.Color.red()), ephemeral=True)
+        elif isinstance(error, (commands.MissingRequiredArgument, app_commands.CommandSignatureMismatch)):
+            await ctx.send(embed=make_embed("Usage: `/giveaway <prize> [winners] [duration] [required_role]`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

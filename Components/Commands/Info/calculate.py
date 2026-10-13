@@ -5,7 +5,15 @@ import ast
 import operator
 import math
 import re
-from Components.Commands._utils import ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import (
+    ORBIT_COLOR,
+    InteractionContext,
+    HAS_V2,
+    Container,
+    TextDisplay,
+    ActionRow,
+    LayoutView
+)
 from Components.emojis import Emojis
 
 def resolve_color(val) -> discord.Color:
@@ -99,6 +107,135 @@ def safe_eval(expr: str):
     except Exception as e:
         print(f"[Calculator] Evaluation error for '{expr}': {e}")
         return "Error"
+
+def build_calculator_body(expression: str, result: str, timed_out: bool = False) -> str:
+    expr_display = expression if expression else "0"
+    res_display = result if result else "Waiting..."
+
+    lines = [
+        "# Calculator!\n",
+        f"**Expression**\n`{expr_display}`\n",
+        f"**Result**\n`{res_display}`"
+    ]
+    if timed_out:
+        lines.append("\n**Status**\nSession ended (Timed out)")
+    return "\n".join(lines).strip()
+
+class CalculatorLayoutView(LayoutView):
+    def __init__(self, user: discord.User, color: discord.Color = None):
+        super().__init__(timeout=180)
+        self.user = user
+        self.color = color or discord.Color(0x5865F2)
+        self.expression = ""
+        self.result = "Waiting..."
+        self.message = None
+        self.build_ui(disabled=False)
+
+    def build_ui(self, disabled: bool = False):
+        self.clear_items()
+
+        def make_btn(label: str, style: discord.ButtonStyle, emoji=None, action: str = None):
+            act = action if action is not None else label
+            b = Button(label=label if label else None, emoji=emoji, style=style, disabled=disabled)
+            async def cb(interaction: discord.Interaction):
+                await self.handle_button_press(interaction, act)
+            b.callback = cb
+            return b
+
+        r0 = ActionRow(
+            make_btn("7", discord.ButtonStyle.secondary),
+            make_btn("8", discord.ButtonStyle.secondary),
+            make_btn("9", discord.ButtonStyle.secondary),
+            make_btn("÷", discord.ButtonStyle.primary),
+            make_btn("AC", discord.ButtonStyle.danger),
+        )
+        r1 = ActionRow(
+            make_btn("4", discord.ButtonStyle.secondary),
+            make_btn("5", discord.ButtonStyle.secondary),
+            make_btn("6", discord.ButtonStyle.secondary),
+            make_btn("x", discord.ButtonStyle.primary),
+            make_btn("Back", discord.ButtonStyle.danger, action="⌫"),
+        )
+        r2 = ActionRow(
+            make_btn("1", discord.ButtonStyle.secondary),
+            make_btn("2", discord.ButtonStyle.secondary),
+            make_btn("3", discord.ButtonStyle.secondary),
+            make_btn("-", discord.ButtonStyle.primary),
+            make_btn("()", discord.ButtonStyle.primary),
+        )
+        r3 = ActionRow(
+            make_btn("0", discord.ButtonStyle.secondary),
+            make_btn(".", discord.ButtonStyle.secondary),
+            make_btn("=", discord.ButtonStyle.success),
+            make_btn("+", discord.ButtonStyle.primary),
+            make_btn("^", discord.ButtonStyle.primary),
+        )
+
+        accent = self.color if not disabled else discord.Color.dark_gray()
+        body = build_calculator_body(self.expression, self.result, timed_out=disabled)
+
+        container = Container(
+            TextDisplay(content=body),
+            r0, r1, r2, r3,
+            accent_color=accent
+        )
+        self.add_item(container)
+        self.add_item(TextDisplay(content=f"-# Requested by {self.user.display_name} • Interactive Calculator"))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.user.id:
+            await interaction.response.send_message(
+                "You cannot use this calculator session. Start your own with `/calculate`!",
+                ephemeral=True
+            )
+            return False
+        return True
+
+    async def handle_button_press(self, interaction: discord.Interaction, label: str):
+        if interaction.user.id != self.user.id:
+            return await interaction.response.send_message(
+                "You cannot use this calculator session. Start your own with `/calculate`!",
+                ephemeral=True
+            )
+
+        if label == "AC":
+            self.expression = ""
+            self.result = "Waiting..."
+        elif label in ("⌫", "Back"):
+            self.expression = self.expression[:-1]
+            self.result = safe_eval(self.expression) if self.expression else "Waiting..."
+        elif label == "=":
+            eval_res = safe_eval(self.expression)
+            self.result = eval_res
+            if eval_res not in ("Error", "Waiting...", "Cannot divide by 0"):
+                self.expression = eval_res
+        elif label == "()":
+            open_count = self.expression.count("(")
+            close_count = self.expression.count(")")
+            if open_count > close_count:
+                self.expression += ")"
+            else:
+                self.expression += "("
+            self.result = safe_eval(self.expression)
+        else:
+            if len(self.expression) >= 100:
+                return await interaction.response.send_message("Expression is too long!", ephemeral=True)
+            self.expression += label
+            self.result = safe_eval(self.expression)
+
+        self.build_ui(disabled=False)
+        try:
+            await interaction.response.edit_message(view=self)
+        except Exception as e:
+            print(f"[Calculator] LayoutView update error: {e}")
+
+    async def on_timeout(self):
+        self.build_ui(disabled=True)
+        try:
+            if hasattr(self, 'message') and self.message:
+                await self.message.edit(view=self)
+        except Exception:
+            pass
 
 class ClassicCalculatorButton(discord.ui.Button):
     def __init__(self, label: str, style: discord.ButtonStyle, row: int, emoji=None, action: str = None):
@@ -199,6 +336,15 @@ class CalculateCommand(commands.Cog):
     async def calculate(self, interaction: discord.Interaction):
         ctx = InteractionContext(interaction)
         color_val = discord.Color(0x5865F2)
+        if HAS_V2:
+            try:
+                view = CalculatorLayoutView(ctx.author, color=color_val)
+                msg = await ctx.send(view=view, allowed_mentions=discord.AllowedMentions.none())
+                view.message = msg
+                return
+            except Exception as e:
+                print(f"[Calculator] LayoutView send failed ({e}), falling back to embed.")
+
         fallback_view = ClassicCalculatorView(ctx.author, color=color_val)
         embed = fallback_view.build_embed()
         msg = await ctx.send(embed=embed, view=fallback_view, allowed_mentions=discord.AllowedMentions.none())

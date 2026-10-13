@@ -4,12 +4,18 @@ import os
 
 ORBIT_COLOR = discord.Color(0x5865F2)
 
-HAS_V2 = False
-LayoutView = discord.ui.View
-Container = None
-TextDisplay = None
-ActionRow = None
-Separator = None
+try:
+    from discord.ui import Button, Container, TextDisplay, ActionRow, LayoutView, Separator
+    HAS_V2 = True
+    print("[V2] Discord Components V2 is available and enabled!", flush=True)
+except (ImportError, AttributeError) as e:
+    HAS_V2 = False
+    LayoutView = discord.ui.View
+    Container = None
+    TextDisplay = None
+    ActionRow = None
+    Separator = None
+    print(f"[V2] Discord Components V2 is not available: {e}", flush=True)
 
 def make_embed(description: str, color: discord.Color = ORBIT_COLOR, title: str = None) -> discord.Embed:
     actual_color = ORBIT_COLOR if color is None or color in (discord.Color.red(), discord.Color.green(), discord.Color.orange(), discord.Color.dark_gray()) else color
@@ -19,8 +25,22 @@ def make_embed(description: str, color: discord.Color = ORBIT_COLOR, title: str 
     return embed
 
 def make_v2_card(body: str, *components, color: discord.Color = ORBIT_COLOR, footer: str = None):
-    """Disabled to ensure all bot commands render clean, native Discord Embeds."""
-    return None
+    if not HAS_V2:
+        return None
+    view = LayoutView(timeout=None)
+    items = [TextDisplay(content=body)]
+    for comp in components:
+        if isinstance(comp, ActionRow):
+            items.append(comp)
+        elif isinstance(comp, (list, tuple)):
+            items.append(ActionRow(*comp))
+        elif comp is not None:
+            items.append(comp)
+    container = Container(*items, accent_color=color)
+    view.add_item(container)
+    if footer:
+        view.add_item(TextDisplay(content=f"-# {footer}"))
+    return view
 
 class InteractionContext:
     def __init__(self, interaction: discord.Interaction):

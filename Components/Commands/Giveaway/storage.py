@@ -29,8 +29,8 @@ def save_giveaways(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
     if True:
         set_config("Giveaway", guild_id, data)
 
-def generate_giveaway_id(guild_id: int) -> str:
-    data = load_giveaways(guild_id)
+def generate_giveaway_id(guild_id: int = None) -> str:
+    data = load_giveaways(guild_id) if guild_id else {}
     while True:
         gid = "G-" + "".join(random.choices(string.digits, k=6))
         if gid not in data:
@@ -40,11 +40,11 @@ def create_giveaway_entry(
     guild_id: int,
     giveaway_id: str,
     channel_id: int,
-    message_id: int,
     prize: str,
     winners: int,
     end_timestamp: int,
     author_id: int,
+    message_id: int = 0,
     required_role_id: int | None = None,
     color: int | str | None = None
 ) -> Dict[str, Any]:
