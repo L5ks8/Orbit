@@ -38,7 +38,6 @@ class GetStorageCommand(commands.Cog):
     async def getstorage_cmd(self, ctx: commands.Context):
         from Components.Commands.OwnerOnly._monitor import record_command
         from Components.Commands._utils import make_embed, ORBIT_COLOR
-from Components.emojis import Emojis
         record_command("getstorage", str(ctx.author))
 
         msg = await ctx.send(embed=make_embed("Zipping storage directory... This might take a moment."), allowed_mentions=discord.AllowedMentions.none())
