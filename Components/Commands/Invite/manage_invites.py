@@ -22,11 +22,11 @@ class ManageInvitesCommand(commands.Cog):
             
         add_fake_invites(ctx.guild.id, user.id, amount)
         
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Invites Managed\n\nAdded **{amount}** fake invites for {user.mention}.", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Invites Managed\n\nAdded **{amount}** fake invites for {user.mention}.", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title=f"{Emojis.VERIFICATION} Invites Managed",
+            title="Invites Managed",
             description=f"Added **{amount}** fake invites for {user.mention}.",
             color=ORBIT_COLOR
         )
@@ -48,11 +48,11 @@ class ManageInvitesCommand(commands.Cog):
             
         remove_fake_invites(ctx.guild.id, user.id, amount)
         
-        card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Managed\n\nRemoved **{amount}** fake invites for {user.mention}.", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Invites Managed\n\nRemoved **{amount}** fake invites for {user.mention}.", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title=f"{Emojis.BACKSPACE} Invites Managed",
+            title="Invites Managed",
             description=f"Removed **{amount}** fake invites for {user.mention}.",
             color=ORBIT_COLOR
         )
@@ -74,11 +74,11 @@ class ManageInvitesCommand(commands.Cog):
             
         add_bonus_invites(ctx.guild.id, user.id, amount)
         
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Invites Managed\n\nAdded **{amount}** regular invites for {user.mention}.", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Invites Managed\n\nAdded **{amount}** regular invites for {user.mention}.", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title=f"{Emojis.VERIFICATION} Invites Managed",
+            title="Invites Managed",
             description=f"Added **{amount}** regular invites for {user.mention}.",
             color=ORBIT_COLOR
         )
@@ -100,11 +100,11 @@ class ManageInvitesCommand(commands.Cog):
             
         remove_bonus_invites(ctx.guild.id, user.id, amount)
         
-        card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Managed\n\nRemoved **{amount}** regular invites for {user.mention}.", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Invites Managed\n\nRemoved **{amount}** regular invites for {user.mention}.", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title=f"{Emojis.BACKSPACE} Invites Managed",
+            title="Invites Managed",
             description=f"Removed **{amount}** regular invites for {user.mention}.",
             color=ORBIT_COLOR
         )
@@ -129,11 +129,11 @@ class ManageInvitesCommand(commands.Cog):
             reset_invites(ctx.guild.id)
             msg = "Reset all invites for the entire server."
             
-        card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Reset\n\n{msg}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Invites Reset\n\n{msg}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title=f"{Emojis.BACKSPACE} Invites Reset",
+            title="Invites Reset",
             description=msg,
             color=ORBIT_COLOR
         )

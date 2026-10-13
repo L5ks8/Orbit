@@ -18,7 +18,7 @@ async def _do_vc_lock(ctx: commands.Context, channel: discord.VoiceChannel | Non
         overwrite.connect = False
         await target_channel.set_permissions(ctx.guild.default_role, overwrite=overwrite, reason=f"Voice channel locked by {ctx.author} | Reason: {reason}")
         v2_body = (
-            f"# {Emojis.NO_ENTRY} Channel Locked\n\n"
+            f"# Channel Locked\n\n"
             f"**Destination Channel:** {target_channel.mention}\n"
             f"**Moderator:** {ctx.author.mention}"
         )
@@ -28,7 +28,7 @@ async def _do_vc_lock(ctx: commands.Context, channel: discord.VoiceChannel | Non
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-        embed = discord.Embed(title=f"{Emojis.NO_ENTRY} Channel Locked", color=ORBIT_COLOR)
+        embed = discord.Embed(title="Channel Locked", color=ORBIT_COLOR)
         embed.add_field(name="Destination Channel", value=target_channel.mention, inline=False)
         if reason and reason != "No reason provided":
             embed.add_field(name="Reason", value=reason, inline=False)

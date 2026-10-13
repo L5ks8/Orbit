@@ -30,7 +30,7 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     )
 
     v2_body = (
-        f"# {Emojis.GLOBE_VERIFICATION} User Whitelisted\n\n"
+        f"# User Whitelisted\n\n"
         f"**Target ID:** `{user_id}`\n"
         f"**Moderator:** {ctx.author.mention}\n"
         f"**Reason:** {reason}"
@@ -40,7 +40,7 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
     embed = discord.Embed(
-        title=f"{Emojis.GLOBE_VERIFICATION} User Whitelisted",
+        title="User Whitelisted",
         description=f"Added ID `{user_id}` to the server moderation whitelist.\n\n**Reason:** {reason}",
         color=ORBIT_COLOR
     )

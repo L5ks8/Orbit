@@ -159,7 +159,7 @@ class ChannelAutomationListener(commands.Cog):
                             embed.set_thumbnail(url=embed_thumb)
                             
                         view = discord.ui.View()
-                        view.add_item(discord.ui.Button(label=f"{action_label}: {ban_count:,}", emoji=Emojis.HONEYPOT, disabled=True, style=discord.ButtonStyle.secondary))
+                        view.add_item(discord.ui.Button(label=f"{action_label}: {ban_count:,}", disabled=True, style=discord.ButtonStyle.secondary))
                         
                         content_kw["embed"] = embed
                         content_kw["view"] = view
@@ -167,9 +167,9 @@ class ChannelAutomationListener(commands.Cog):
                         template = auto_ban_cfg.get("message")
                         if not template:
                             template = (
-                                f"# {Emojis.WARNING} POSTING IN THIS CHANNEL WILL GET YOU BANNED. {Emojis.BAN}\n"
+                                f"# POSTING IN THIS CHANNEL WILL GET YOU BANNED. \n"
                                 "## DO NOT SEND ANY MESSAGES HERE, OR YOU WILL BE __IRREVERSIBLY BANNED.__\n"
-                                f"{Emojis.NO_ENTRY} THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
+                                f"THIS IS A TRAP FOR COMPROMISED ACCOUNTS.\n\n"
                                 "Messages posted here will be **automatically** deleted, and the sender will be **automatically** banned by this bot.\n\n"
                                 "**YOU HAVE BEEN WARNED. INTENTIONALLY SENDING MESSAGES WILL GET YOU BANNED WITH NO APPEALS.**\n"
                                 f"{action_label[:-1]} Counter: `{{count}}`"
@@ -247,7 +247,7 @@ class ChannelAutomationListener(commands.Cog):
                 else:
                     fail_reason = f"{message.author.mention} sent wrong number (expected **{expected_number}**, got **{parsed_number}**)!"
 
-                fail_content = f"# {Emojis.ERROR} Counting Failed!\n\n{fail_reason}\n\n**Count has been reset to 0.**"
+                fail_content = f"# Counting Failed!\n\n{fail_reason}\n\n**Count has been reset to 0.**"
                 card = make_v2_card(fail_content, color=ORBIT_COLOR)
 
                 try:
@@ -255,7 +255,7 @@ class ChannelAutomationListener(commands.Cog):
                         await message.channel.send(view=card, allowed_mentions=discord.AllowedMentions.none())
                     else:
                         fail_embed = discord.Embed(
-                            title=f"{Emojis.ERROR} Counting Failed!",
+                            title="Counting Failed!",
                             description=f"{fail_reason}\n\n**Count has been reset to 0.**",
                             color=ORBIT_COLOR
                         )
@@ -273,12 +273,12 @@ class ChannelAutomationListener(commands.Cog):
 
                 countdown_msg = None
                 try:
-                    countdown_msg = await message.channel.send(f"{Emojis.NO_ENTRY} Channel locked! Restarting count in **3...**")
+                    countdown_msg = await message.channel.send(f"Channel locked! Restarting count in **3...**")
                     for i in [2, 1, 0]:
                         await asyncio.sleep(1)
                         if countdown_msg:
                             try:
-                                await countdown_msg.edit(content=f"{Emojis.NO_ENTRY} Channel locked! Restarting count in **{i}...**")
+                                await countdown_msg.edit(content=f"Channel locked! Restarting count in **{i}...**")
                             except Exception:
                                 pass
                 except Exception:
@@ -296,9 +296,9 @@ class ChannelAutomationListener(commands.Cog):
 
                 try:
                     if countdown_msg:
-                        await countdown_msg.edit(content=f"{Emojis.VERIFICATION} **Channel unlocked!** Next number is **1**.")
+                        await countdown_msg.edit(content=f"**Channel unlocked!** Next number is **1**.")
                     else:
-                        await message.channel.send(f"{Emojis.VERIFICATION} **Channel unlocked!** Next number is **1**.")
+                        await message.channel.send(f"**Channel unlocked!** Next number is **1**.")
                 except Exception:
                     pass
 

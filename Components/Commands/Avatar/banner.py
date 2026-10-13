@@ -27,14 +27,14 @@ class BannerCommand(commands.Cog):
         btn = Button(label="Download Banner", url=banner_url, style=discord.ButtonStyle.link)
 
         card = make_v2_card(
-            f"# {Emojis.GUIDE} Profile Banner: {full_user.display_name}\n\n**User ID:** `{full_user.id}`\n\n**Banner Link:** {link_str}",
+            f"# Profile Banner: {full_user.display_name}\n\n**User ID:** `{full_user.id}`\n\n**Banner Link:** {link_str}",
             ActionRow(btn),
             color=ORBIT_COLOR
         )
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-        embed = discord.Embed(title=f"{Emojis.GUIDE} Profile Banner: {full_user.display_name}", description=f"**User ID:** `{full_user.id}`", color=ORBIT_COLOR)
+        embed = discord.Embed(title=f"Profile Banner: {full_user.display_name}", description=f"**User ID:** `{full_user.id}`", color=ORBIT_COLOR)
         embed.set_image(url=banner_url)
         embed.add_field(name="Banner Link", value=link_str, inline=False)
         view = View()

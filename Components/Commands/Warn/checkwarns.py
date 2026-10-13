@@ -73,7 +73,7 @@ class WarningsListLayout(discord.ui.View):
         warns_text = "\n\n".join(lines) if lines else "No warnings found on this page."
 
         embed = discord.Embed(
-            title=f"{Emojis.WARNING} Warning History (Page {self.page} of {self.total_pages})",
+            title=f"Warning History (Page {self.page} of {self.total_pages})",
             description=warns_text,
             color=ORBIT_COLOR
         )

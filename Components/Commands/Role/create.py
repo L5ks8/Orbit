@@ -23,12 +23,12 @@ async def _do_createrole(ctx: commands.Context, name: str, color: str = None, ho
             reason=f"Created by {ctx.author}"
         )
         
-        body = f"# {Emojis.VERIFICATION} Role Created\n\nSuccessfully created the role {new_role.mention}."
+        body = f"# Role Created\n\nSuccessfully created the role {new_role.mention}."
         card = make_v2_card(body, color=parsed_color if parsed_color.value else ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
         embed = discord.Embed(
-            title=f"{Emojis.VERIFICATION} Role Created", 
+            title="Role Created", 
             description=f"Successfully created the role {new_role.mention}.", 
             color=parsed_color
         )

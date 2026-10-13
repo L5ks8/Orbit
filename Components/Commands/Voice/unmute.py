@@ -16,7 +16,7 @@ async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: s
     try:
         await target.edit(mute=False, reason=f"Voice unmuted by {ctx.author} | Reason: {reason}")
         v2_body = (
-            f"# {Emojis.VERIFICATION} Voice Unmuted\n\n"
+            f"# Voice Unmuted\n\n"
             f"**Target:** {target.mention} (`{target.id}`)\n"
             f"**Destination Channel:** {target.voice.channel.mention if target.voice.channel else 'N/A'}\n"
             f"**Moderator:** {ctx.author.mention}"
@@ -27,7 +27,7 @@ async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: s
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Voice Unmuted", color=ORBIT_COLOR)
+        embed = discord.Embed(title="Voice Unmuted", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Destination Channel", value=target.voice.channel.mention if target.voice.channel else "N/A", inline=False)
         if reason and reason != "No reason provided":

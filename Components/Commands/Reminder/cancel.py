@@ -12,10 +12,10 @@ async def _do_remind_cancel(ctx: commands.Context, rem_id: str):
     if not removed:
         return await ctx.send(embed=make_embed(f"No active reminder found with ID `{rem_id}` matching your account.", discord.Color.red()), ephemeral=True)
     desc = f"Successfully cancelled and deleted reminder ID `{rem_id}`."
-    card = make_v2_card(f"# {Emojis.BACKSPACE} Reminder Cancelled\n\n{desc}", color=ORBIT_COLOR)
+    card = make_v2_card(f"# Reminder Cancelled\n\n{desc}", color=ORBIT_COLOR)
     if card:
         return await ctx.send(view=card, ephemeral=True)
-    await ctx.send(embed=make_embed(desc, ORBIT_COLOR, title=f"{Emojis.BACKSPACE} Reminder Cancelled"), ephemeral=True)
+    await ctx.send(embed=make_embed(desc, ORBIT_COLOR, title="Reminder Cancelled"), ephemeral=True)
 
 @remind_group.command(name="cancel", description="Cancel a pending reminder by ID.")
 async def remind_cancel_cmd(ctx: commands.Context, reminder_id: str):

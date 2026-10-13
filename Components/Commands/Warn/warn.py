@@ -77,7 +77,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
                 punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
 
     try:
-        dm_embed = discord.Embed(title=f"{Emojis.WARNING} Formal Warning Received", color=discord.Color.red())
+        dm_embed = discord.Embed(title="Formal Warning Received", color=discord.Color.red())
         dm_embed.add_field(name="Server", value=ctx.guild.name, inline=False)
         dm_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=False)
         dm_embed.add_field(name="Reason", value=f"{reason}{punishment_text}", inline=False)
@@ -109,7 +109,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
     )
 
     v2_body = (
-        f"# {Emojis.WARNING} Warning Issued\n\n"
+        f"# Warning Issued\n\n"
         f"**User:** {user.mention}\n"
         f"**Warn ID:** `{warn_entry['warn_id']}`\n"
         f"**Total Warnings:** `{total_warns}`\n"
@@ -121,7 +121,7 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
     if card:
         return await ctx.send(view=card, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
-    public_embed = discord.Embed(title=f"{Emojis.WARNING} Warning Issued", color=ORBIT_COLOR)
+    public_embed = discord.Embed(title="Warning Issued", color=ORBIT_COLOR)
     public_embed.add_field(name="User", value=user.mention, inline=False)
     public_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=True)
     public_embed.add_field(name="Total Warnings", value=f"`{total_warns}`", inline=True)

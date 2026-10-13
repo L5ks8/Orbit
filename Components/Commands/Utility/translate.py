@@ -20,11 +20,11 @@ class Translate(commands.Cog):
             translator = GoogleTranslator(source='auto', target=language.lower())
             translated_text = translator.translate(text)
             
-            card = make_v2_card(f"# {Emojis.GLOBE_VERIFICATION} Google Translate (`{language}`)\n\n**Original:**\n{text[:1000]}\n\n**Translation:**\n{translated_text[:1000]}", color=ORBIT_COLOR)
+            card = make_v2_card(f"# Google Translate (`{language}`)\n\n**Original:**\n{text[:1000]}\n\n**Translation:**\n{translated_text[:1000]}", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card)
 
-            embed = discord.Embed(title=f"{Emojis.GLOBE_VERIFICATION} Google Translate", color=ORBIT_COLOR)
+            embed = discord.Embed(title="Google Translate", color=ORBIT_COLOR)
             embed.set_author(name="Google Translate", icon_url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Google_Translate_logo.svg/2048px-Google_Translate_logo.svg.png")
             embed.add_field(name="Original", value=text[:1024], inline=False)
             embed.add_field(name=f"Translation ({language})", value=translated_text[:1024], inline=False)

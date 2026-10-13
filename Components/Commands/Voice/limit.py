@@ -16,7 +16,7 @@ async def _do_vc_limit(ctx: commands.Context, limit: int, channel: discord.Voice
     try:
         await target_channel.edit(user_limit=limit, reason=f"Voice limit updated by {ctx.author}")
         v2_body = (
-            f"# {Emojis.DISCORD_SETTINGS} User Limit Set\n\n"
+            f"# User Limit Set\n\n"
             f"**Destination Channel:** {target_channel.mention}\n"
             f"**New Limit:** `{limit if limit > 0 else 'None'}`\n"
             f"**Moderator:** {ctx.author.mention}"
@@ -25,7 +25,7 @@ async def _do_vc_limit(ctx: commands.Context, limit: int, channel: discord.Voice
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-        embed = discord.Embed(title=f"{Emojis.DISCORD_SETTINGS} User Limit Set", color=ORBIT_COLOR)
+        embed = discord.Embed(title="User Limit Set", color=ORBIT_COLOR)
         embed.add_field(name="Destination Channel", value=target_channel.mention, inline=False)
         if limit > 0:
             embed.add_field(name="New Limit", value=f"`{limit}`", inline=False)

@@ -70,7 +70,7 @@ class MuteCommand(commands.Cog):
             f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}\n**Muted Role:** {role.mention}"
         )
         body = (
-            f"# {Emojis.WARNING} User Muted\n\n"
+            f"# User Muted\n\n"
             f"**Target:** {target.mention} (`{target.id}`)\n"
             f"**Reason:** {reason}\n"
             f"**Moderator:** {ctx.author.mention}"
@@ -79,7 +79,7 @@ class MuteCommand(commands.Cog):
         card = make_v2_card(body, color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
-        embed = discord.Embed(title=f"{Emojis.WARNING} User Muted", color=ORBIT_COLOR)
+        embed = discord.Embed(title="User Muted", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Reason", value=reason, inline=False)
         embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

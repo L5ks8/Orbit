@@ -16,11 +16,11 @@ async def _do_steal_emoji(guild: discord.Guild, author: discord.Member | discord
         
     if any(e.name == name for e in guild.emojis):
         desc = "The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!"
-        card = make_v2_card(f"# {Emojis.WARNING} Name already exists!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
+        card = make_v2_card(f"# Name already exists!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
         if card:
             return await send_func(view=card, ephemeral=True)
         embed = discord.Embed(
-            title=f"{Emojis.WARNING} Name already exists!",
+            title="Name already exists!",
             description=desc,
             color=ORBIT_COLOR
         )
@@ -50,11 +50,11 @@ async def _do_steal_emoji(guild: discord.Guild, author: discord.Member | discord
         new_emoji = await guild.create_custom_emoji(name=name, image=image_bytes, reason=f"Stolen by {author}")
         
         desc = f"Emoji was successfully added you should be able to use {new_emoji} now :)"
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Successfully added!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
+        card = make_v2_card(f"# Successfully added!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
         if card:
             return await send_func(view=card)
         embed = discord.Embed(
-            title=f"{Emojis.VERIFICATION} Successfully added!",
+            title="Successfully added!",
             description=desc,
             color=ORBIT_COLOR
         )
@@ -73,11 +73,11 @@ async def _do_steal_emojiurl(guild: discord.Guild, author: discord.Member | disc
         
     if any(e.name == name for e in guild.emojis):
         desc = "The given name is already used for another emoji in your server!\nPlease make sure to use a unique name!"
-        card = make_v2_card(f"# {Emojis.WARNING} Name already exists!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
+        card = make_v2_card(f"# Name already exists!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
         if card:
             return await send_func(view=card, ephemeral=True)
         embed = discord.Embed(
-            title=f"{Emojis.WARNING} Name already exists!",
+            title="Name already exists!",
             description=desc,
             color=ORBIT_COLOR
         )
@@ -102,11 +102,11 @@ async def _do_steal_emojiurl(guild: discord.Guild, author: discord.Member | disc
         new_emoji = await guild.create_custom_emoji(name=name, image=image_bytes, reason=f"Stolen by {author}")
         
         desc = f"Emoji was successfully added you should be able to use {new_emoji} now :)"
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Successfully added!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
+        card = make_v2_card(f"# Successfully added!\n\n{desc}", color=ORBIT_COLOR, footer=_get_footer(guild.name))
         if card:
             return await send_func(view=card)
         embed = discord.Embed(
-            title=f"{Emojis.VERIFICATION} Successfully added!",
+            title="Successfully added!",
             description=desc,
             color=ORBIT_COLOR
         )

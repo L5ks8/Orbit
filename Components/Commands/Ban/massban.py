@@ -66,13 +66,13 @@ class MassBanCog(commands.Cog):
                 failed_count += 1
                 
         card_color = ORBIT_COLOR if success_count > 0 else discord.Color.red()
-        content = f"# {Emojis.BAN} Mass Ban Complete\n\nSuccessfully banned **{success_count}** user(s).\nFailed to ban **{failed_count}** user(s)."
+        content = f"# Mass Ban Complete\n\nSuccessfully banned **{success_count}** user(s).\nFailed to ban **{failed_count}** user(s)."
         card = make_v2_card(content, color=card_color)
         if card:
             await ctx.send(view=card)
         else:
             embed = discord.Embed(
-                title=f"{Emojis.BAN} Mass Ban Complete",
+                title="Mass Ban Complete",
                 description=f"Successfully banned **{success_count}** user(s).\nFailed to ban **{failed_count}** user(s).",
                 color=card_color
             )

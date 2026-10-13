@@ -55,12 +55,12 @@ class ClearCacheCommand(commands.Cog):
             pass
 
         cleared_str = "\n- ".join(cleared_list) if cleared_list else "No active caches to clear"
-        body = f"# {Emojis.VERIFICATION} System Caches Flushed\n\n**Caches Cleared:**\n- {cleared_str}"
+        body = f"# System Caches Flushed\n\n**Caches Cleared:**\n- {cleared_str}"
         card = make_v2_card(body, color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, ephemeral=True)
         embed = discord.Embed(
-            title=f"{Emojis.VERIFICATION} System Caches Flushed",
+            title="System Caches Flushed",
             description=f"**Caches Cleared:**\n- {cleared_str}",
             color=ORBIT_COLOR
         )

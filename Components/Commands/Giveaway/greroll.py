@@ -70,11 +70,11 @@ class GiveawayRerollCommand(commands.Cog):
             from Components.Commands.Giveaway.giveaway import resolve_color
             color = resolve_color(entry.get("color", 0x5865F2))
             jump_url = msg.jump_url if msg else None
-            desc = f"Congratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**! {Emojis.WINNER}"
+            desc = f"Congratulations <@{new_winner_id}>! You are the new winner of **{entry['prize']}**!"
             if jump_url:
                 desc += f"\n\n[Jump to Giveaway]({jump_url})"
             reroll_embed = discord.Embed(
-                title=f"{Emojis.WINNER} Giveaway Rerolled!",
+                title="Giveaway Rerolled!",
                 description=desc,
                 color=color
             )
@@ -82,7 +82,7 @@ class GiveawayRerollCommand(commands.Cog):
             reroll_embed.add_field(name="New Winner", value=f"<@{new_winner_id}>", inline=True)
             reroll_embed.set_footer(text=f"Giveaway ID: #{entry['giveaway_id']}")
             card = make_v2_card(
-                f"# {Emojis.WINNER} Giveaway Rerolled!\n\n"
+                f"# Giveaway Rerolled!\n\n"
                 f"{desc}\n\n"
                 f"**Prize:** {entry['prize']}\n"
                 f"**New Winner:** <@{new_winner_id}>",
@@ -94,7 +94,7 @@ class GiveawayRerollCommand(commands.Cog):
             else:
                 await channel.send(embed=reroll_embed, allowed_mentions=discord.AllowedMentions(users=True))
 
-            success_card = make_v2_card(f"# {Emojis.VERIFICATION} Reroll Complete\n\nRerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", color=ORBIT_COLOR)
+            success_card = make_v2_card(f"# Reroll Complete\n\nRerolled new winner (<@{new_winner_id}>) for Giveaway `{entry['giveaway_id']}` (`{entry['prize']}`).", color=ORBIT_COLOR)
             if success_card:
                 await ctx.send(view=success_card)
             else:

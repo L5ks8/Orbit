@@ -15,12 +15,12 @@ class AfkCommand(commands.Cog):
             return await ctx.send(embed=make_embed("This command can only be used inside a server.", discord.Color.red()), ephemeral=True)
 
         set_afk(ctx.guild.id, ctx.author.id, reason)
-        content = f"# {Emojis.MESSAGES} AFK Status Enabled\n\n**User:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
+        content = f"# AFK Status Enabled\n\n**User:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
         card = make_v2_card(content, color=ORBIT_COLOR)
         if card:
             await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         else:
-            embed = discord.Embed(title=f"{Emojis.MESSAGES} AFK Status Enabled", color=ORBIT_COLOR)
+            embed = discord.Embed(title="AFK Status Enabled", color=ORBIT_COLOR)
             embed.add_field(name="User", value=f"{ctx.author.mention} (`{ctx.author.id}`)", inline=False)
             embed.add_field(name="Reason", value=reason, inline=False)
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
@@ -33,13 +33,13 @@ class AfkCommand(commands.Cog):
         from Components.Commands.Afk._storage import remove_afk
         if get_afk(message.guild.id, message.author.id):
             remove_afk(message.guild.id, message.author.id)
-            card = make_v2_card(f"# {Emojis.VERIFICATION} AFK Removed\n\nWelcome back, {message.author.mention}! I've removed your AFK status.", color=ORBIT_COLOR)
+            card = make_v2_card(f"# AFK Removed\n\nWelcome back, {message.author.mention}! I've removed your AFK status.", color=ORBIT_COLOR)
             try:
                 if card:
                     await message.reply(view=card, mention_author=False, delete_after=10, allowed_mentions=discord.AllowedMentions.none())
                 else:
                     embed = discord.Embed(
-                        title=f"{Emojis.VERIFICATION} AFK Removed", 
+                        title="AFK Removed", 
                         description=f"Welcome back, {message.author.mention}! I've removed your AFK status.", 
                         color=ORBIT_COLOR
                     )
@@ -60,12 +60,12 @@ class AfkCommand(commands.Cog):
                 reason = afk_data.get("reason", "AFK")
                 ts = afk_data.get("timestamp", 0)
                 since_text = f"\n**Since:** <t:{ts}:R>" if ts else ""
-                card = make_v2_card(f"# {Emojis.WARNING} AFK Notice\n\n{user.mention} is currently AFK.\n\n**Reason:** {reason}{since_text}", color=ORBIT_COLOR)
+                card = make_v2_card(f"# AFK Notice\n\n{user.mention} is currently AFK.\n\n**Reason:** {reason}{since_text}", color=ORBIT_COLOR)
                 try:
                     if card:
                         await message.reply(view=card, mention_author=False, allowed_mentions=discord.AllowedMentions.none())
                     else:
-                        embed = discord.Embed(title=f"{Emojis.WARNING} AFK Notice", description=f"{user.mention} is currently AFK.", color=ORBIT_COLOR)
+                        embed = discord.Embed(title="AFK Notice", description=f"{user.mention} is currently AFK.", color=ORBIT_COLOR)
                         embed.add_field(name="Reason", value=reason, inline=False)
                         if ts:
                             embed.add_field(name="Since", value=f"<t:{ts}:R>", inline=False)

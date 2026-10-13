@@ -73,13 +73,13 @@ async def vc_say_cmd(ctx: commands.Context, *, text: str):
         source = discord.FFmpegPCMAudio(tmp_path)
         voice_client.play(source, after=after_playing)
 
-        v2_body = f"# {Emojis.ANNOUNCEMENT} TTS Speech\n\n**Text:** {text}\n\n*Spoken by {ctx.author.display_name} in {voice_client.channel.name}*"
+        v2_body = f"# TTS Speech\n\n**Text:** {text}\n\n*Spoken by {ctx.author.display_name} in {voice_client.channel.name}*"
         card = make_v2_card(v2_body, color=ORBIT_COLOR)
         if card:
             await ctx.send(view=card)
         else:
             embed = discord.Embed(
-                description=f"{Emojis.ANNOUNCEMENT} **{text}**",
+                description=f"**{text}**",
                 color=ORBIT_COLOR,
             )
             embed.set_footer(text=f"{ctx.author.display_name} • {voice_client.channel.name}")

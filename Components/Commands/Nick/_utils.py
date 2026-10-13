@@ -32,11 +32,11 @@ async def perform_nick_edit(ctx: commands.Context, target: discord.Member, nickn
         new_display = nickname if nickname else f"{target.name} (Reset to Default)"
 
         desc = f"**Target:** {target.mention} (`{target.id}`)\n\n**Old Nickname:** `{old_display}`\n**New Nickname:** `{new_display}`\n**Changed by:** {ctx.author.mention}"
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Nickname Updated\n\n{desc}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Nickname Updated\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title=f"{Emojis.VERIFICATION} Nickname Updated",
+            title="Nickname Updated",
             description=desc,
             color=ORBIT_COLOR
         )

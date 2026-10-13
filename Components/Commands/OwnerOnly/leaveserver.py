@@ -19,7 +19,7 @@ class LeaveServerCommand(commands.Cog):
         try:
             await guild.leave()
             desc = f"Successfully left server: **{guild.name}** (`{guild.id}`)."
-            card = make_v2_card(f"# {Emojis.VERIFICATION} Server Left\n\n{desc}", color=ORBIT_COLOR)
+            card = make_v2_card(f"# Server Left\n\n{desc}", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card)
             await ctx.send(embed=make_embed(desc, ORBIT_COLOR))

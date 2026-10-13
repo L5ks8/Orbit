@@ -8,7 +8,7 @@ async def _do_roleinfo(ctx: commands.Context, role: discord.Role):
     await ctx.defer()
     created_ts = int(role.created_at.timestamp())
     body = (
-        f"# {Emojis.GUIDE} Role Info\n\n"
+        f"# Role Info\n\n"
         f"**Role:** {role.mention} (`{role.id}`)\n"
         f"**Created At:** <t:{created_ts}:F> (<t:{created_ts}:R>)\n"
         f"**Members:** `{len(role.members)}` | **Position:** `{role.position}`\n"
@@ -18,7 +18,7 @@ async def _do_roleinfo(ctx: commands.Context, role: discord.Role):
     if card:
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-    embed = discord.Embed(title=f"{Emojis.GUIDE} Role Info", color=role.color)
+    embed = discord.Embed(title="Role Info", color=role.color)
     embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
     embed.add_field(name="Created At", value=f"<t:{created_ts}:F> (<t:{created_ts}:R>)", inline=False)
     embed.add_field(name="Members", value=f"`{len(role.members)}`", inline=True)

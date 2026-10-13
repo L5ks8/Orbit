@@ -149,7 +149,7 @@ class CalculatorLayoutView(LayoutView):
             make_btn("5", discord.ButtonStyle.secondary),
             make_btn("6", discord.ButtonStyle.secondary),
             make_btn("x", discord.ButtonStyle.primary),
-            make_btn("", discord.ButtonStyle.danger, emoji=Emojis.BACKSPACE, action="⌫"),
+            make_btn("Back", discord.ButtonStyle.danger, action="⌫"),
         )
         r2 = ActionRow(
             make_btn("1", discord.ButtonStyle.secondary),
@@ -196,7 +196,7 @@ class CalculatorLayoutView(LayoutView):
         if label == "AC":
             self.expression = ""
             self.result = "Waiting..."
-        elif label == "⌫":
+        elif label in ("⌫", "Back"):
             self.expression = self.expression[:-1]
             self.result = safe_eval(self.expression) if self.expression else "Waiting..."
         elif label == "=":
@@ -257,7 +257,7 @@ class ClassicCalculatorView(discord.ui.View):
         self.clear_items()
         buttons = [
             ("7", discord.ButtonStyle.secondary, 0, None, "7"), ("8", discord.ButtonStyle.secondary, 0, None, "8"), ("9", discord.ButtonStyle.secondary, 0, None, "9"), ("÷", discord.ButtonStyle.primary, 0, None, "÷"), ("AC", discord.ButtonStyle.danger, 0, None, "AC"),
-            ("4", discord.ButtonStyle.secondary, 1, None, "4"), ("5", discord.ButtonStyle.secondary, 1, None, "5"), ("6", discord.ButtonStyle.secondary, 1, None, "6"), ("x", discord.ButtonStyle.primary, 1, None, "x"), ("", discord.ButtonStyle.danger, 1, Emojis.BACKSPACE, "⌫"),
+            ("4", discord.ButtonStyle.secondary, 1, None, "4"), ("5", discord.ButtonStyle.secondary, 1, None, "5"), ("6", discord.ButtonStyle.secondary, 1, None, "6"), ("x", discord.ButtonStyle.primary, 1, None, "x"), ("Back", discord.ButtonStyle.danger, 1, None, "⌫"),
             ("1", discord.ButtonStyle.secondary, 2, None, "1"), ("2", discord.ButtonStyle.secondary, 2, None, "2"), ("3", discord.ButtonStyle.secondary, 2, None, "3"), ("-", discord.ButtonStyle.primary, 2, None, "-"), ("()", discord.ButtonStyle.primary, 2, None, "()"),
             ("0", discord.ButtonStyle.secondary, 3, None, "0"), (".", discord.ButtonStyle.secondary, 3, None, "."), ("=", discord.ButtonStyle.success, 3, None, "="), ("+", discord.ButtonStyle.primary, 3, None, "+"), ("^", discord.ButtonStyle.primary, 3, None, "^"),
         ]
@@ -288,7 +288,7 @@ class ClassicCalculatorView(discord.ui.View):
         if label == "AC":
             self.expression = ""
             self.result = "Waiting..."
-        elif label == "⌫":
+        elif label in ("⌫", "Back"):
             self.expression = self.expression[:-1]
             self.result = safe_eval(self.expression) if self.expression else "Waiting..."
         elif label == "=":

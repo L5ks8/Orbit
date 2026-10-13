@@ -91,7 +91,7 @@ class BackupListView(View):
             
         confirm_view = ConfirmLoadView(target_id, self.cog)
         await interaction.response.send_message(
-            f"**{Emojis.WARNING} WARNING:** Loading the backup `{backup_data.get('name')}` will DELETE all existing roles, channels, and categories.\nAre you sure you want to proceed?",
+            f"**WARNING:** Loading the backup `{backup_data.get('name')}` will DELETE all existing roles, channels, and categories.\nAre you sure you want to proceed?",
             view=confirm_view,
             ephemeral=True
         )
@@ -101,4 +101,4 @@ class BackupListView(View):
             return await interaction.response.send_message(embed=make_embed("Only the server owner can do this."), ephemeral=True)
         target_id = self.delete_select.values[0]
         delete_backup(target_id)
-        await interaction.response.edit_message(content=f"{Emojis.VERIFICATION} Backup deleted successfully.", view=None, embed=None)
+        await interaction.response.edit_message(content=f"Backup deleted successfully.", view=None, embed=None)

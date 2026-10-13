@@ -41,7 +41,7 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
         "User Blacklisted (`/blacklist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}{ban_msg}"
     )
-    card = make_v2_card(f"# {Emojis.VERIFICATION} User Blacklisted\n\nAdded ID `{user_id}` to the blacklist.{ban_msg}", color=ORBIT_COLOR)
+    card = make_v2_card(f"# User Blacklisted\n\nAdded ID `{user_id}` to the blacklist.{ban_msg}", color=ORBIT_COLOR)
     if card:
         await ctx.send(view=card, ephemeral=True)
     else:

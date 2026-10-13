@@ -20,7 +20,7 @@ class PingCommand(commands.Cog):
             try:
                 view = LayoutView(timeout=60)
                 container = Container(
-                    TextDisplay(content=f"# {Emojis.PING} Pong!\n\n**Latency**\n`{ms} ms`"),
+                    TextDisplay(content=f"# Pong!\n\n**Latency**\n`{ms} ms`"),
                     accent_color=ORBIT_COLOR
                 )
                 view.add_item(container)
@@ -30,7 +30,7 @@ class PingCommand(commands.Cog):
                 pass
 
         embed = discord.Embed(
-            title=f"{Emojis.PING} Pong!",
+            title="Pong!",
             description=f"**Latency:** `{ms} ms`",
             color=ORBIT_COLOR
         )

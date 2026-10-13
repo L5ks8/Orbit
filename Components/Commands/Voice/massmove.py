@@ -38,7 +38,7 @@ class MassMoveCog(commands.Cog):
                 failed_count += 1
                 
         v2_body = (
-            f"# {Emojis.GLOBE_VERIFICATION} Mass Move Complete\n\n"
+            f"# Mass Move Complete\n\n"
             f"Successfully moved **{success_count}** member(s) from {from_channel.mention} to {to_channel.mention}."
         )
         if failed_count > 0:
@@ -48,7 +48,7 @@ class MassMoveCog(commands.Cog):
             return await ctx.send(view=card)
 
         embed = discord.Embed(
-            title=f"{Emojis.GLOBE_VERIFICATION} Mass Move Complete",
+            title="Mass Move Complete",
             description=f"Successfully moved **{success_count}** member(s) from {from_channel.mention} to {to_channel.mention}.",
             color=ORBIT_COLOR
         )

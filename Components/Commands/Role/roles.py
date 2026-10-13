@@ -81,7 +81,7 @@ class AllRolesLayout(discord.ui.View):
 
         roles_text = "\n".join(lines) if lines else "No roles found on this page."
         
-        embed = discord.Embed(title=f"{Emojis.GUIDE} Server Roles (Page {self.page} of {self.total_pages})", description=roles_text, color=ORBIT_COLOR)
+        embed = discord.Embed(title=f"Server Roles (Page {self.page} of {self.total_pages})", description=roles_text, color=ORBIT_COLOR)
         embed.add_field(name="Total Roles", value=f"`{len(self.roles)}`", inline=False)
         
         return {"embed": embed, "view": self}

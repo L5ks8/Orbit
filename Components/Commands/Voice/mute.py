@@ -22,7 +22,7 @@ async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str
         await target.edit(mute=True, reason=f"Voice muted by {ctx.author} | Reason: {reason}")
         
         v2_body = (
-            f"# {Emojis.WARNING} Voice Muted\n\n"
+            f"# Voice Muted\n\n"
             f"**Target:** {target.mention} (`{target.id}`)\n"
             f"**Destination Channel:** {target.voice.channel.mention if target.voice.channel else 'N/A'}\n"
             f"**Moderator:** {ctx.author.mention}"
@@ -33,7 +33,7 @@ async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-        embed = discord.Embed(title=f"{Emojis.WARNING} Voice Muted", color=ORBIT_COLOR)
+        embed = discord.Embed(title="Voice Muted", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Destination Channel", value=target.voice.channel.mention if target.voice.channel else "N/A", inline=False)
         if reason and reason != "No reason provided":

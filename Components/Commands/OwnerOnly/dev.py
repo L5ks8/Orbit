@@ -171,7 +171,7 @@ class DevLayout(discord.ui.View):
         components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
 
         embed = discord.Embed(
-            title=f"{Emojis.GUIDE} Developer Control Center - {page['title']}",
+            title=f"Developer Control Center - {page['title']}",
             description=page["description"],
             color=ORBIT_COLOR
         )

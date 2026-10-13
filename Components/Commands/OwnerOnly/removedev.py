@@ -24,17 +24,17 @@ class RemoveDevCommand(commands.Cog):
             with open(path, "w") as f:
                 json.dump(devs, f)
             desc = f"Removed {user.mention} from developers."
-            card = make_v2_card(f"# {Emojis.BACKSPACE} Developer Removed\n\n{desc}", color=ORBIT_COLOR)
+            card = make_v2_card(f"# Developer Removed\n\n{desc}", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card)
-            embed = discord.Embed(description=f"{Emojis.BACKSPACE} {desc}", color=ORBIT_COLOR)
+            embed = discord.Embed(description=f"{desc}", color=ORBIT_COLOR)
             await ctx.send(embed=embed)
         else:
             desc = "User is not a developer."
-            card = make_v2_card(f"# {Emojis.WARNING} Notice\n\n{desc}", color=ORBIT_COLOR)
+            card = make_v2_card(f"# Notice\n\n{desc}", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card)
-            embed = discord.Embed(description=f"{Emojis.WARNING} {desc}", color=ORBIT_COLOR)
+            embed = discord.Embed(description=f"{desc}", color=ORBIT_COLOR)
             await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):

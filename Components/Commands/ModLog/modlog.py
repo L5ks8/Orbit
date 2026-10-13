@@ -25,7 +25,7 @@ class ModLogPaginationView(View):
 
     def generate_embed(self):
         embed = discord.Embed(
-            title=f"{Emojis.GUIDE} Actions by: {self.user_target.display_name if hasattr(self.user_target, 'display_name') else str(self.user_target)}",
+            title=f"Actions by: {self.user_target.display_name if hasattr(self.user_target, 'display_name') else str(self.user_target)}",
             color=ORBIT_COLOR
         )
         if hasattr(self.user_target, 'avatar') and self.user_target.avatar:
@@ -140,7 +140,7 @@ class ModLogCommand(commands.Cog):
         if len(unique_logs) <= view.per_page:
             name = user_target.display_name if hasattr(user_target, 'display_name') else str(user_target)
             if not unique_logs:
-                card = make_v2_card(f"# {Emojis.GUIDE} Actions by: {name}\n\nNo moderation history found for this user.", color=ORBIT_COLOR)
+                card = make_v2_card(f"# Actions by: {name}\n\nNo moderation history found for this user.", color=ORBIT_COLOR)
                 if card:
                     return await ctx.send(view=card)
             else:
@@ -152,7 +152,7 @@ class ModLogCommand(commands.Cog):
                     date_str = f"<t:{int(ts)}:f>" if ts else "Unknown date"
                     target_id = log.get('user_id', 'Unknown')
                     lines.append(f"**{i}. {action}**\n**Date:** {date_str} | **Target:** <@{target_id}>\n**Reason:** {reason}")
-                body = f"# {Emojis.GUIDE} Actions by: {name}\n\n" + "\n\n".join(lines)
+                body = f"# Actions by: {name}\n\n" + "\n\n".join(lines)
                 card = make_v2_card(body, color=ORBIT_COLOR, footer=f"Total records: {len(unique_logs)}")
                 if card:
                     return await ctx.send(view=card)

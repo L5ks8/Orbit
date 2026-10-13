@@ -29,7 +29,7 @@ class GeminiChatbot(commands.Cog):
     @app_commands.command(name="ai_reset_memory", description="Reset Orbit AI conversation memory in this channel.")
     async def memory_reset(self, interaction: discord.Interaction):
         self.memory_resets[interaction.channel_id] = discord.utils.utcnow()
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Memory Reset\n\nAI conversation memory for this channel has been reset.", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Memory Reset\n\nAI conversation memory for this channel has been reset.", color=ORBIT_COLOR)
         if card:
             await interaction.response.send_message(view=card, ephemeral=True)
         else:
@@ -103,7 +103,7 @@ class GeminiChatbot(commands.Cog):
                     f"{slash_cmds_str}\n\n"
                     "Answer user questions accurately based on this information, and be as helpful and polite as possible.\n\n"
                     "CRITICAL: Do NOT prefix your response with 'Orbit:' or any username. Just write the message directly. "
-                    "You have internet access enabled, so you can look up current trading values or search the web if needed! "
+                    "You have internet access enabled, so you can look up current trading values or search the web if needed!"
                     "When asked about 'Blox Fruits values' or 'trading values', ALWAYS specifically search and use data from https://bloxfruitsvalues.com/.\n\n"
                     "STRICT RULE: Do NOT include any citations, sources, links, URLs, or references (like [0], [1], etc.) in your response. "
                     "Output ONLY the text answer. Never show where you got the information from."
@@ -122,7 +122,7 @@ class GeminiChatbot(commands.Cog):
                 if is_admin:
                     system_prompt += (
                         "\n\n[ADMINISTRATOR TOOLS AVAILABLE]\n"
-                        "Because the user is an Administrator, you CAN execute server configuration commands for them! "
+                        "Because the user is an Administrator, you CAN execute server configuration commands for them!"
                         "If they ask you to change a setting, you MUST output EXACTLY one of the following commands in your response, and then reply to them normally.\n"
                         "Tools:\n"
                         "- To add a level role (e.g., Level 5 gets Role ID 123): [CONFIG_UPDATE: add_level_role = {\"level\": 5, \"role_id\": 123}]\n"

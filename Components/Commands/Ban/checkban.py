@@ -16,12 +16,12 @@ class CheckBanCommand(commands.Cog):
             ban_entry = await ctx.guild.fetch_ban(discord.Object(id=target_id))
             reason = ban_entry.reason or "No reason provided"
             
-            content = f"# {Emojis.BAN} User is Banned\n\n**User:** {ban_entry.user} (`{ban_entry.user.id}`)\n**Reason:** {reason}"
+            content = f"# User is Banned\n\n**User:** {ban_entry.user} (`{ban_entry.user.id}`)\n**Reason:** {reason}"
             card = make_v2_card(content, color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card)
 
-            embed = discord.Embed(title=f"{Emojis.BAN} User is Banned", color=ORBIT_COLOR)
+            embed = discord.Embed(title="User is Banned", color=ORBIT_COLOR)
             embed.add_field(name="User", value=f"{ban_entry.user} (`{ban_entry.user.id}`)", inline=False)
             embed.add_field(name="Reason", value=reason, inline=False)
             await ctx.send(embed=embed)

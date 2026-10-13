@@ -39,7 +39,7 @@ class GetChannelCog(commands.Cog):
         if not target_channel:
             return await interaction.response.send_message(embed=make_embed("Please specify a valid channel or channel ID.", discord.Color.red()), ephemeral=True)
 
-        content = f"# {Emojis.GUIDE} Channel Name\n\n```{target_channel.name}```\nCopy name: `{target_channel.name}`"
+        content = f"# Channel Name\n\n```{target_channel.name}```\nCopy name: `{target_channel.name}`"
         card = make_v2_card(content, color=ORBIT_COLOR)
         if card:
             return await interaction.response.send_message(view=card, ephemeral=True)

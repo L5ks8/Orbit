@@ -39,12 +39,12 @@ class InviteCodesCommand(commands.Cog):
             else:
                 footer = None
 
-        card = make_v2_card(f"# {Emojis.MAIL} Invite Codes\n\n{desc}", color=ORBIT_COLOR, footer=footer)
+        card = make_v2_card(f"# Invite Codes\n\n{desc}", color=ORBIT_COLOR, footer=footer)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
         embed = discord.Embed(
-            title=f"{Emojis.MAIL} Invite Codes",
+            title="Invite Codes",
             description=desc,
             color=ORBIT_COLOR
         )

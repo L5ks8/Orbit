@@ -26,7 +26,7 @@ class BotInfoCommand(commands.Cog):
             from discord.ui import LayoutView, Container, TextDisplay, ActionRow, Button
             view = LayoutView(timeout=120)
             body = (
-                f"# 🪐 Orbit System Information\n\n"
+                f"# Orbit System Information\n\n"
                 f"**Servers** `{servers:,}` · **Users** `{users:,}`\n\n"
                 f"**Uptime** <t:{uptime}:R> (<t:{uptime}:f>)"
             )

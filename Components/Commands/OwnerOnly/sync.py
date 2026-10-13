@@ -11,11 +11,11 @@ class SyncCommand(commands.Cog):
         desc = f"**Scope:** `{target_scope}`\n**Commands Synced:** `{count}`"
         if extra_info:
             desc += f"\n**Details:** {extra_info}"
-        card = make_v2_card(f"# {Emojis.RELOAD} Orbit Command Tree Synced\n\n{desc}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Orbit Command Tree Synced\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
         embed = discord.Embed(
-            title=f"{Emojis.RELOAD} Orbit Command Tree Synced",
+            title="Orbit Command Tree Synced",
             description=desc,
             color=ORBIT_COLOR
         )

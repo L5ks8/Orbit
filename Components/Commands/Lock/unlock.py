@@ -29,7 +29,7 @@ class UnlockCommand(commands.Cog):
             else:
                 await target_channel.set_permissions(ctx.guild.default_role, overwrite=overwrite, reason=f"Unlocked by {ctx.author} | Reason: {reason}")
             body = (
-                f"# {Emojis.VERIFICATION} Channel Unlocked\n\n"
+                f"# Channel Unlocked\n\n"
                 f"**Channel:** {target_channel.mention} (`{target_channel.id}`)\n"
                 f"**Reason:** {reason}\n"
                 f"**Moderator:** {ctx.author.mention}\n"
@@ -38,7 +38,7 @@ class UnlockCommand(commands.Cog):
             card = make_v2_card(body, color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
-            embed = discord.Embed(title=f"{Emojis.VERIFICATION} Channel Unlocked", color=ORBIT_COLOR)
+            embed = discord.Embed(title="Channel Unlocked", color=ORBIT_COLOR)
             embed.add_field(name="Channel", value=f"{target_channel.mention} (`{target_channel.id}`)", inline=False)
             embed.add_field(name="Reason", value=reason, inline=False)
             embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

@@ -32,7 +32,7 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
     )
 
     v2_body = (
-        f"# {Emojis.VERIFICATION} All Warnings Cleared\n\n"
+        f"# All Warnings Cleared\n\n"
         f"**Target Member:** {user.mention} (`{user.id}`)\n"
         f"**Total Removed:** `{cleared_count}` warnings\n"
         f"**Current Remaining:** `0`"
@@ -42,7 +42,7 @@ async def _do_clearwarnings(ctx: commands.Context, user: discord.Member):
         return await ctx.send(view=card, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
     embed = discord.Embed(
-        title=f"{Emojis.VERIFICATION} All Warnings Cleared",
+        title="All Warnings Cleared",
         description=f"**Target Member:** {user.mention} (`{user.id}`)",
         color=ORBIT_COLOR
     )

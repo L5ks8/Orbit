@@ -28,7 +28,7 @@ async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | 
             except Exception:
                 pass
             content = (
-                f"# {Emojis.BACKSPACE} Channel Deleted\n\n"
+                f"# Channel Deleted\n\n"
                 f"**Channel:** `#{name}`\n"
                 f"**Type:** `{ch_type}`\n"
                 f"**Deleted by:** {ctx.author.mention}"
@@ -37,7 +37,7 @@ async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | 
             if card:
                 await ctx.send(view=card, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
             else:
-                embed = discord.Embed(title=f"{Emojis.BACKSPACE} Channel Deleted", color=ORBIT_COLOR)
+                embed = discord.Embed(title="Channel Deleted", color=ORBIT_COLOR)
                 embed.add_field(name="Channel", value=f"`#{name}`", inline=False)
                 embed.add_field(name="Type", value=f"`{ch_type}`", inline=True)
                 embed.add_field(name="Deleted by", value=ctx.author.mention, inline=False)

@@ -32,11 +32,11 @@ class ExportInvitedListCommand(commands.Cog):
         csv_file.seek(0)
         file = discord.File(fp=io.BytesIO(csv_file.getvalue().encode('utf-8')), filename=f"invited_list_{target.id}.csv")
         
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Export Invited List\n\nSuccessfully exported the invited list for {target.mention}.", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Export Invited List\n\nSuccessfully exported the invited list for {target.mention}.", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, file=file, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(
-            title=f"{Emojis.VERIFICATION} Export Invited List",
+            title="Export Invited List",
             description=f"Successfully exported the invited list for {target.mention}.",
             color=ORBIT_COLOR
         )

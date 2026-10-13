@@ -24,10 +24,10 @@ class WipeUserCommand(commands.Cog):
                 deleted_count += res1.deleted_count + res2.deleted_count + res3.deleted_count + res4.deleted_count + res5.deleted_count
         
         desc = f"Wiped all database records for User ID `{user_id}`. ({deleted_count} DB records deleted)"
-        card = make_v2_card(f"# {Emojis.BACKSPACE} User Data Wiped\n\n{desc}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# User Data Wiped\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
-        embed = discord.Embed(description=f"{Emojis.BACKSPACE} {desc}", color=ORBIT_COLOR)
+        embed = discord.Embed(description=f"{desc}", color=ORBIT_COLOR)
         await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot):

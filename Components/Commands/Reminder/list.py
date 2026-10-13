@@ -18,12 +18,12 @@ async def _do_remind_list(ctx: commands.Context):
             lines.append(f"**{idx}. ID:** `{r.get('id')}` | **Due:** <t:{r.get('expires_at', 0)}:R>\n> {r.get('text')}")
         content_str = "\n\n".join(lines)
         
-    card = make_v2_card(f"# {Emojis.GUIDE} Orbit Active Reminders\n\n{content_str}", color=ORBIT_COLOR)
+    card = make_v2_card(f"# Orbit Active Reminders\n\n{content_str}", color=ORBIT_COLOR)
     if card:
         return await ctx.send(view=card, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 
     embed = discord.Embed(
-        title=f"{Emojis.GUIDE} Orbit Active Reminders",
+        title="Orbit Active Reminders",
         description=content_str,
         color=ORBIT_COLOR
     )

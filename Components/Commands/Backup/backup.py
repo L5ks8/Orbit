@@ -19,7 +19,7 @@ class BackupCommand(commands.Cog):
     async def save_new_backup(self, interaction: discord.Interaction, backup_data: dict):
         save_backup(backup_data)
         try:
-            content = f"# {Emojis.VERIFICATION} Backup Created\n\nSuccessfully created backup **{backup_data['name']}**."
+            content = f"# Backup Created\n\nSuccessfully created backup **{backup_data['name']}**."
             card = make_v2_card(content, color=ORBIT_COLOR)
             if card:
                 if not interaction.response.is_done():
@@ -29,7 +29,7 @@ class BackupCommand(commands.Cog):
                 return
 
             embed = discord.Embed(
-                title=f"{Emojis.VERIFICATION} Backup Created",
+                title="Backup Created",
                 description=f"Successfully created backup **{backup_data['name']}**.",
                 color=ORBIT_COLOR
             )
@@ -153,12 +153,12 @@ class BackupCommand(commands.Cog):
             lines.append(f"• **{name}** — Created: {date_str}")
         
         view = BackupListView(existing_backups, self)
-        card = make_v2_card(f"# {Emojis.GUIDE} Server Backups\n\n" + "\n".join(lines), color=ORBIT_COLOR)
+        card = make_v2_card(f"# Server Backups\n\n" + "\n".join(lines), color=ORBIT_COLOR)
         if card:
             # We can attach the view items to card if supported, or pass view
-            await interaction.response.send_message(embed=discord.Embed(title=f"{Emojis.GUIDE} Server Backups", description="\n".join(lines), color=ORBIT_COLOR), view=view, ephemeral=True)
+            await interaction.response.send_message(embed=discord.Embed(title="Server Backups", description="\n".join(lines), color=ORBIT_COLOR), view=view, ephemeral=True)
         else:
-            embed = discord.Embed(title=f"{Emojis.GUIDE} Server Backups", color=ORBIT_COLOR)
+            embed = discord.Embed(title="Server Backups", color=ORBIT_COLOR)
             for b in existing_backups:
                 name = b.get("name", b["_id"])
                 ts = b.get("timestamp", 0)
@@ -259,11 +259,11 @@ class BackupCommand(commands.Cog):
         try:
             owner = guild.owner
             if owner:
-                card = make_v2_card(f"# {Emojis.VERIFICATION} Backup Restored\n\nThe server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!", color=ORBIT_COLOR)
+                card = make_v2_card(f"# Backup Restored\n\nThe server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!", color=ORBIT_COLOR)
                 if card:
                     await owner.send(view=card)
                 else:
-                    await owner.send(f"{Emojis.VERIFICATION} The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!")
+                    await owner.send(f"The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!")
         except Exception:
             pass
 

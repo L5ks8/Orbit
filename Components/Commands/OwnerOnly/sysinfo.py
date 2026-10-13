@@ -50,7 +50,7 @@ class SysInfo(commands.Cog):
             hw_info = "**Hardware Info:** `psutil` is not installed.\n"
 
         body = (
-            f"# {Emojis.GUIDE} System Information\n\n"
+            f"# System Information\n\n"
             f"**Uptime:** `{uptime_str}` | **Active Tasks:** `{len(tasks)}`\n"
             f"**Servers:** `{len(self.bot.guilds)}` | **Users:** `{len(self.bot.users)}`\n"
             f"**DB Ping:** {db_status}\n"
@@ -61,7 +61,7 @@ class SysInfo(commands.Cog):
         if card:
             return await ctx.send(view=card)
 
-        embed = discord.Embed(title=f"{Emojis.GUIDE} System Information", color=ORBIT_COLOR)
+        embed = discord.Embed(title="System Information", color=ORBIT_COLOR)
         embed.add_field(name="Uptime", value=f"`{uptime_str}`", inline=True)
         embed.add_field(name="Servers", value=f"`{len(self.bot.guilds)}`", inline=True)
         embed.add_field(name="Users", value=f"`{len(self.bot.users)}`", inline=True)

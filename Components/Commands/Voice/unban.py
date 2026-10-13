@@ -16,7 +16,7 @@ async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
         return await ctx.send(embed=make_embed("This user is not currently voice banned on this server.", discord.Color.red()), ephemeral=True)
 
     v2_body = (
-        f"# {Emojis.VERIFICATION} Voice Unbanned\n\n"
+        f"# Voice Unbanned\n\n"
         f"**Target:** {user.mention} (`{user.id}`)\n"
         f"**Moderator:** {ctx.author.mention}\n"
         f"**Status:** `Cleared`"
@@ -27,7 +27,7 @@ async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     if card:
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-    embed = discord.Embed(title=f"{Emojis.VERIFICATION} Voice Unbanned", color=ORBIT_COLOR)
+    embed = discord.Embed(title="Voice Unbanned", color=ORBIT_COLOR)
     embed.add_field(name="Target", value=f"{user.mention} (`{user.id}`)", inline=False)
     if reason and reason != "No reason provided":
         embed.add_field(name="Reason", value=reason, inline=False)

@@ -453,11 +453,11 @@ class LevelListenerCog(commands.Cog):
                 lvl = level_from_xp(xp)
                 member = guild.get_member(uid)
                 name = member.display_name if member else f"User#{uid}"
-                medal = [Emojis.GOLD, "`#2`", "`#3`"][i-1] if i <= 3 else f"`#{i}`"
+                medal = f"`#{i}`"
                 desc_lines.append(f"{medal} **{name}** — Level {lvl} • {xp:,} XP")
 
             embed = discord.Embed(
-                title=f"{Emojis.GOLD} XP Leaderboard",
+                title="XP Leaderboard",
                 description="\n".join(desc_lines),
                 color=color
             )

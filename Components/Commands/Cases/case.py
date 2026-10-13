@@ -26,7 +26,7 @@ async def case_info(ctx: commands.Context, fall: int):
     timestamp = case_data.get("timestamp", 0)
     
     content = (
-        f"# {Emojis.GUIDE} Case #{fall} | {action}\n\n"
+        f"# Case #{fall} | {action}\n\n"
         f"**User:** <@{user_id}> (`{user_id}`)\n"
         f"**Moderator:** <@{mod_id}> (`{mod_id}`)\n"
         f"**Reason:** {reason}\n"
@@ -37,7 +37,7 @@ async def case_info(ctx: commands.Context, fall: int):
         return await ctx.send(view=card)
 
     embed = discord.Embed(
-        title=f"{Emojis.GUIDE} Case #{fall} | {action}",
+        title=f"Case #{fall} | {action}",
         color=ORBIT_COLOR
     )
     embed.add_field(name="User", value=f"<@{user_id}> (`{user_id}`)", inline=False)
@@ -52,7 +52,7 @@ async def case_info(ctx: commands.Context, fall: int):
 async def case_delete(ctx: commands.Context, fall: int):
     success = delete_case(ctx.guild.id, fall)
     if success:
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Case Deleted\n\nCase #{fall} has been successfully deleted.", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Case Deleted\n\nCase #{fall} has been successfully deleted.", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, ephemeral=True)
         await ctx.send(embed=make_embed(f"Case #{fall} has been successfully deleted.", ORBIT_COLOR), ephemeral=True)
@@ -64,7 +64,7 @@ async def case_delete(ctx: commands.Context, fall: int):
 async def case_reason(ctx: commands.Context, fall: int, *, grund: str):
     success = update_case_reason(ctx.guild.id, fall, grund)
     if success:
-        card = make_v2_card(f"# {Emojis.VERIFICATION} Case Reason Updated\n\nReason for Case #{fall} has been updated to: **{grund}**", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Case Reason Updated\n\nReason for Case #{fall} has been updated to: **{grund}**", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, ephemeral=True)
         await ctx.send(embed=make_embed(f"Reason for Case #{fall} has been updated to: **{grund}**", ORBIT_COLOR), ephemeral=True)

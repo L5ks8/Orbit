@@ -53,7 +53,7 @@ class ModuleDisabledView(discord.ui.View):
 def get_module_disabled_embed(module_name: str) -> discord.Embed:
     from Components.emojis import Emojis
     return discord.Embed(
-        description=f"{Emojis.NO_ENTRY} The {module_name} module must be activated to use this command.",
+        description=f"The {module_name} module must be activated to use this command.",
         color=discord.Color.red()
     )
 

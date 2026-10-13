@@ -39,7 +39,7 @@ def build_giveaway_body(entry: dict, ended: bool = False, winners_display: str =
     author_id = entry.get("author_id")
 
     lines = [
-        f"# {Emojis.WINNER} Giveaway!\n",
+        f"# Giveaway!\n",
         f"**Prize**\n{prize}\n",
         f"**Winners** {winners_count} · **Entries** {entries_count}\n"
     ]
@@ -63,11 +63,11 @@ def build_giveaway_body(entry: dict, ended: bool = False, winners_display: str =
 def build_fallback_kwargs(entry: dict, guild_id: int, ended: bool = False, winners_display: str = None) -> dict:
     color = resolve_color(entry.get("color", 0x5865F2))
     embed = discord.Embed(
-        title=f"{Emojis.WINNER} Giveaway!",
+        title="Giveaway!",
         color=color
     )
     body_text = build_giveaway_body(entry, ended=ended, winners_display=winners_display)
-    clean_body = body_text.replace(f"# {Emojis.WINNER} Giveaway!\n", "").replace("# Giveaway!\n", "").strip()
+    clean_body = body_text.replace(f"# Giveaway!\n", "").replace("# Giveaway!\n", "").strip()
     embed.description = clean_body
     embed.set_footer(text="One entry per Discord account. Winners are selected at random.")
 
@@ -187,7 +187,7 @@ class PersistentGiveawayLayout(discord.ui.LayoutView):
         update_giveaway_entry(interaction.guild.id, entry)
 
         await interaction.response.send_message(
-            embed=make_embed(f"{Emojis.WINNER} **You have entered the giveaway!** Good luck!", discord.Color.green()),
+            embed=make_embed(f"**You have entered the giveaway!** Good luck!", discord.Color.green()),
             ephemeral=True
         )
 
@@ -317,11 +317,11 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
         color = resolve_color(entry.get("color", 0x5865F2))
         jump_url = msg.jump_url if msg else None
         if picked_winners:
-            desc = f"Congratulations {winners_display}! You won **{entry['prize']}**! {Emojis.WINNER}"
+            desc = f"Congratulations {winners_display}! You won **{entry['prize']}**!"
             if jump_url:
                 desc += f"\n\n[Jump to Giveaway]({jump_url})"
             embed = discord.Embed(
-                title=f"{Emojis.WINNER} Giveaway Ended!",
+                title="Giveaway Ended!",
                 description=desc,
                 color=color
             )
@@ -330,7 +330,7 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
             embed.set_footer(text=f"Giveaway ID: #{entry['giveaway_id']}")
             await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
         else:
-            desc = f"Giveaway for **{entry['prize']}** ended with no valid entries. 😔"
+            desc = f"Giveaway for **{entry['prize']}** ended with no valid entries."
             if jump_url:
                 desc += f"\n\n[Jump to Giveaway]({jump_url})"
             embed = discord.Embed(

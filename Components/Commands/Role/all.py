@@ -23,7 +23,7 @@ async def _do_roleall(ctx: commands.Context, role: discord.Role, reason: str):
                 pass
 
     body = (
-        f"# {Emojis.VERIFICATION} Role Added to All\n\n"
+        f"# Role Added to All\n\n"
         f"**Role:** {role.mention} (`{role.id}`)\n"
         f"**Affected:** `{updated_count}` members\n"
         f"**Moderator:** {ctx.author.mention}"
@@ -31,7 +31,7 @@ async def _do_roleall(ctx: commands.Context, role: discord.Role, reason: str):
     card = make_v2_card(body, color=role.color if role.color.value else ORBIT_COLOR)
     if card:
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
-    embed = discord.Embed(title=f"{Emojis.VERIFICATION} Role Added to All", color=role.color)
+    embed = discord.Embed(title="Role Added to All", color=role.color)
     embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
     embed.add_field(name="Affected", value=f"`{updated_count}` members", inline=False)
     embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)

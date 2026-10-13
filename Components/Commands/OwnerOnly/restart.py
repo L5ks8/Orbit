@@ -13,13 +13,13 @@ class RestartCommand(commands.Cog):
     @commands.is_owner()
     async def restart_cmd(self, ctx: commands.Context):
         await ctx.defer(ephemeral=True)
-        body = f"# {Emojis.RELOAD} Orbit System Reboot Initiated\n\n**Action:** Closing Discord Gateway session and terminating process...\n\n*Render will automatically boot a fresh Orbit instance within seconds.*"
+        body = f"# Orbit System Reboot Initiated\n\n**Action:** Closing Discord Gateway session and terminating process...\n\n*Render will automatically boot a fresh Orbit instance within seconds.*"
         card = make_v2_card(body, color=ORBIT_COLOR)
         if card:
             await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         else:
             embed = discord.Embed(
-                title=f"{Emojis.RELOAD} Orbit System Reboot Initiated",
+                title="Orbit System Reboot Initiated",
                 description="**Action:** Closing Discord Gateway session and terminating process...\n\n*Render will automatically boot a fresh Orbit instance within seconds.*",
                 color=ORBIT_COLOR
             )

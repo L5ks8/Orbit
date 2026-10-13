@@ -110,7 +110,7 @@ class WhitelistListLayout(discord.ui.View):
                 content_text += f"\n\n*And {count - 15} more users...*"
 
         embed = discord.Embed(
-            title=f"{Emojis.GLOBE_VERIFICATION} Whitelist Overview ({count} Users)",
+            title=f"Whitelist Overview ({count} Users)",
             description=content_text,
             color=ORBIT_COLOR
         )

@@ -40,7 +40,7 @@ async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, disco
     bot_badge = " *(Bot)*" if target.bot else ""
     
     body = (
-        f"# {Emojis.GUIDE} User Information: {target.display_name}{bot_badge}\n\n"
+        f"# User Information: {target.display_name}{bot_badge}\n\n"
         f"**Username:** `{target.name}` · **User ID:** `{target.id}`\n"
         f"**Account Created:** <t:{created_timestamp}:F> (<t:{created_timestamp}:R>)\n"
         f"**Joined Server:** {joined_str}\n"
@@ -53,7 +53,7 @@ async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, disco
     if card:
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-    embed = discord.Embed(title=f"{Emojis.GUIDE} User Information: {target.display_name}{bot_badge}", color=card_color)
+    embed = discord.Embed(title=f"User Information: {target.display_name}{bot_badge}", color=card_color)
     embed.set_thumbnail(url=target.display_avatar.url)
     embed.add_field(name="Username", value=f"`{target.name}`", inline=True)
     embed.add_field(name="User ID", value=f"`{target.id}`", inline=True)

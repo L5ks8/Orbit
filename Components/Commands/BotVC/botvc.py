@@ -25,13 +25,13 @@ class BotVCCommand(commands.Cog):
                     return await ctx.send(embed=make_embed(f"I am already connected to {target_channel.mention}.", discord.Color.red()), ephemeral=True)
                 
                 await ctx.guild.voice_client.move_to(target_channel)
-                card = make_v2_card(f"# {Emojis.VOICE_HOURS} Voice Channel Moved\n\nMoved to {target_channel.mention}.", color=ORBIT_COLOR)
+                card = make_v2_card(f"# Voice Channel Moved\n\nMoved to {target_channel.mention}.", color=ORBIT_COLOR)
                 if card:
                     return await ctx.send(view=card)
                 return await ctx.send(embed=make_embed(f"Moved to {target_channel.mention}."))
             else:
                 await target_channel.connect()
-                card = make_v2_card(f"# {Emojis.VOICE_HOURS} Voice Connected\n\nSuccessfully joined {target_channel.mention} and will stay here until disconnected.", color=ORBIT_COLOR)
+                card = make_v2_card(f"# Voice Connected\n\nSuccessfully joined {target_channel.mention} and will stay here until disconnected.", color=ORBIT_COLOR)
                 if card:
                     return await ctx.send(view=card)
                 return await ctx.send(embed=make_embed(f"Successfully joined {target_channel.mention} and will stay here until disconnected.", ORBIT_COLOR))
@@ -47,7 +47,7 @@ class BotVCCommand(commands.Cog):
         if ctx.guild.voice_client:
             try:
                 await ctx.guild.voice_client.disconnect()
-                card = make_v2_card(f"# {Emojis.VERIFICATION} Voice Disconnected\n\nSuccessfully disconnected from the voice channel.", color=ORBIT_COLOR)
+                card = make_v2_card(f"# Voice Disconnected\n\nSuccessfully disconnected from the voice channel.", color=ORBIT_COLOR)
                 if card:
                     return await ctx.send(view=card)
                 await ctx.send(embed=make_embed("Successfully disconnected from the voice channel.", ORBIT_COLOR))

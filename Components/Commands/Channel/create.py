@@ -32,7 +32,7 @@ async def _do_create(ctx: commands.Context, name: str, channel_type: str, catego
     cat_display = new_channel.category.name if new_channel.category else "No Category"
     
     content = (
-        f"# {Emojis.VERIFICATION} Channel Created\n\n"
+        f"# Channel Created\n\n"
         f"**Channel:** {new_channel.mention}\n"
         f"**Type:** `{ch_type_display}`\n"
         f"**Category:** `{cat_display}`\n"
@@ -42,7 +42,7 @@ async def _do_create(ctx: commands.Context, name: str, channel_type: str, catego
     if card:
         await ctx.send(view=card, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
     else:
-        embed = discord.Embed(title=f"{Emojis.VERIFICATION} Channel Created", color=ORBIT_COLOR)
+        embed = discord.Embed(title="Channel Created", color=ORBIT_COLOR)
         embed.add_field(name="Channel", value=new_channel.mention, inline=False)
         embed.add_field(name="Type", value=f"`{ch_type_display}`", inline=True)
         embed.add_field(name="Category", value=f"`{cat_display}`", inline=True)

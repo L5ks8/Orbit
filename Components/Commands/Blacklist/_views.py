@@ -111,7 +111,7 @@ class BlacklistListLayout(discord.ui.View):
 
         embed = build_embed(
             guild=self.guild,
-            title=f"{Emojis.NO_ENTRY} Command Blacklist",
+            title="Command Blacklist",
             description="\n".join(lines) if lines else "The blacklist is currently empty.",
             color=discord.Color.red()
         )

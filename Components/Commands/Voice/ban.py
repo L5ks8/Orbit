@@ -31,7 +31,7 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
             pass
 
     v2_body = (
-        f"# {Emojis.BANNED} User Voice Banned\n\n"
+        f"# User Voice Banned\n\n"
         f"**Target:** {user.mention} (`{user.id}`)\n"
         f"**Destination Channel:** {vc.mention if vc else 'N/A'}\n"
         f"**Moderator:** {ctx.author.mention}\n"
@@ -43,7 +43,7 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     if card:
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-    embed = discord.Embed(title=f"{Emojis.BANNED} User Voice Banned", color=ORBIT_COLOR)
+    embed = discord.Embed(title="User Voice Banned", color=ORBIT_COLOR)
     embed.add_field(name="Target", value=f"{user.mention} (`{user.id}`)", inline=False)
     embed.add_field(name="Destination Channel", value=vc.mention if vc else "N/A", inline=False)
     if reason and reason != "No reason provided":

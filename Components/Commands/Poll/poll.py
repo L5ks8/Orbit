@@ -70,7 +70,7 @@ class ComponentsPollView(LayoutView):
 
         if HAS_V2:
             body_text = (
-                f"# {Emojis.POLL} Community Poll\n\n"
+                f"# Community Poll\n\n"
                 f"**Question**\n{self.question}\n\n"
                 f"**Author** <@{self.author.id}> · **Duration** `{dur_str}` · **Total Votes** `{total_votes}`\n\n"
                 f"{content_str}"
@@ -89,7 +89,7 @@ class ComponentsPollView(LayoutView):
             return {"view": self}
 
         embed = discord.Embed(
-            title=f"{Emojis.POLL} Community Poll",
+            title="Community Poll",
             description=f"**Question:** {self.question}\n**Author:** {self.author.mention} | **Duration:** `{dur_str}` | **Total Votes:** `{total_votes}`\n\n{content_str}",
             color=signature_color
         )

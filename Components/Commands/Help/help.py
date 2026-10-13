@@ -216,7 +216,7 @@ class HelpLayout(LayoutView):
         self.clear_items()
 
         if HAS_V2:
-            body_text = f"# {Emojis.GUIDE} Orbit Command Guide: {page['title']}\n\n{page['description']}"
+            body_text = f"# Orbit Command Guide: {page['title']}\n\n{page['description']}"
             container = Container(
                 TextDisplay(content=body_text),
                 ActionRow(select_menu),
@@ -229,7 +229,7 @@ class HelpLayout(LayoutView):
 
         components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
         embed = discord.Embed(
-            title=f"{Emojis.GUIDE} Orbit Command Guide: {page['title']}",
+            title=f"Orbit Command Guide: {page['title']}",
             description=page["description"],
             color=signature_color
         )

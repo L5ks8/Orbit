@@ -18,7 +18,7 @@ async def _do_server_info(ctx: commands.Context):
     categories = len(ctx.guild.categories)
     
     body = (
-        f"# {Emojis.GUIDE} Server Information: {ctx.guild.name}\n\n"
+        f"# Server Information: {ctx.guild.name}\n\n"
         f"**Server ID:** `{ctx.guild.id}` · **Owner:** <@{ctx.guild.owner_id}>\n"
         f"**Created On:** <t:{created_timestamp}:F> (<t:{created_timestamp}:R>)\n\n"
         f"### Members ({total_members})\n"
@@ -32,7 +32,7 @@ async def _do_server_info(ctx: commands.Context):
     if card:
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-    embed = discord.Embed(title=f"{Emojis.GUIDE} Server Information: {ctx.guild.name}", color=ORBIT_COLOR)
+    embed = discord.Embed(title=f"Server Information: {ctx.guild.name}", color=ORBIT_COLOR)
     if ctx.guild.icon:
         embed.set_thumbnail(url=ctx.guild.icon.url)
     embed.add_field(name="Server ID", value=f"`{ctx.guild.id}`", inline=True)
@@ -58,12 +58,12 @@ class ServerInfoCommand(commands.Cog):
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
             
         count = ctx.guild.member_count or len(ctx.guild.members)
-        card = make_v2_card(f"# {Emojis.GUIDE} Members in {ctx.guild.name}\n\nTotal: **{count:,}**", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Members in {ctx.guild.name}\n\nTotal: **{count:,}**", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
 
         embed = discord.Embed(
-            title=f"{Emojis.GUIDE} Members",
+            title="Members",
             description=str(count),
             color=ORBIT_COLOR
         )

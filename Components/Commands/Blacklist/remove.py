@@ -28,7 +28,7 @@ async def _do_bl_remove(ctx: commands.Context, target_id_str: str = None):
         "User Removed from Blacklist (`/unblacklist`)",
         f"**Target ID:** `{user_id}`\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)"
     )
-    card = make_v2_card(f"# {Emojis.VERIFICATION} User Removed from Blacklist\n\nRemoved ID `{user_id}` from the command blacklist.", color=ORBIT_COLOR)
+    card = make_v2_card(f"# User Removed from Blacklist\n\nRemoved ID `{user_id}` from the command blacklist.", color=ORBIT_COLOR)
     if card:
         await ctx.send(view=card, ephemeral=True)
     else:

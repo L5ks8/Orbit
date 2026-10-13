@@ -63,7 +63,7 @@ class SecurityModule(commands.Cog):
             owner = guild.owner
             if owner:
                 embed = discord.Embed(
-                    title=f"{Emojis.WARNING} Anti-Nuke Alert",
+                    title="Anti-Nuke Alert",
                     description=f"User {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}**.",
                     color=0xed4245,
                     timestamp=discord.utils.utcnow()
@@ -77,7 +77,7 @@ class SecurityModule(commands.Cog):
         except Exception:
             try:
                 if owner:
-                    await owner.send(f"{Emojis.WARNING} **ANTI-NUKE ALERT** {Emojis.WARNING}\nUser {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}**.")
+                    await owner.send(f"**ANTI-NUKE ALERT** \nUser {member.mention} (`{member.id}`) triggered the Anti-Nuke system in **{guild.name}**.")
             except Exception:
                 pass
 
@@ -312,7 +312,7 @@ class SecurityModule(commands.Cog):
                         if channel:
                             color = 0xed4245 if action in ("kick", "ban") else 0xfee75c
                             embed = discord.Embed(
-                                title=f"{Emojis.WARNING} Suspicious Account Joined",
+                                title="Suspicious Account Joined",
                                 color=color,
                                 timestamp=discord.utils.utcnow()
                             )
@@ -346,7 +346,7 @@ class SecurityModule(commands.Cog):
                             perms = channel.permissions_for(guild.me) if guild.me else None
                             if perms and not perms.embed_links:
                                 await channel.send(
-                                    f"{Emojis.WARNING} **Suspicious Account Joined:** {member.mention} (`{member.id}`). Age: {account_age_days} days. Action: {action_display}"
+                                    f"**Suspicious Account Joined:** {member.mention} (`{member.id}`). Age: {account_age_days} days. Action: {action_display}"
                                 )
                             else:
                                 await channel.send(embed=embed)
@@ -395,7 +395,7 @@ class SecurityModule(commands.Cog):
                             channel = None
                     if channel:
                         embed = discord.Embed(
-                            title=f"{Emojis.BAN} Anti-Raid Triggered",
+                            title="Anti-Raid Triggered",
                             description=f"Mass join detected on **{guild.name}**.",
                             color=0xed4245,
                             timestamp=discord.utils.utcnow()
@@ -422,7 +422,7 @@ class SecurityModule(commands.Cog):
                         )
                         perms = channel.permissions_for(guild.me) if guild.me else None
                         if perms and not perms.embed_links:
-                            await channel.send(f"{Emojis.BAN} **ANTI-RAID TRIGGERED** {Emojis.BAN}\nMass join detected. Action `{action_display}` taken on {member.mention}.")
+                            await channel.send(f"**ANTI-RAID TRIGGERED** \nMass join detected. Action `{action_display}` taken on {member.mention}.")
                         else:
                             await channel.send(embed=embed)
                 except Exception as e:
@@ -489,7 +489,7 @@ class SecurityModule(commands.Cog):
             if any(scam in content for scam in SCAM_LINKS):
                 try:
                     await message.delete()
-                    warning = await message.channel.send(f"{Emojis.WARNING} {message.author.mention}, that link is blacklisted for phishing/scams.")
+                    warning = await message.channel.send(f"{message.author.mention}, that link is blacklisted for phishing/scams.")
                     try:
                         await message.author.timeout(discord.utils.utcnow() + datetime.timedelta(minutes=5), reason="Posting known scam links")
                     except discord.Forbidden:

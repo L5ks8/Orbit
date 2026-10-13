@@ -42,7 +42,7 @@ class Snipe(commands.Cog):
         if not data:
             return await ctx.send(embed=make_embed("No deleted messages found.", discord.Color.red()), ephemeral=True)
 
-        v2_body = f"# {Emojis.FILE} Sniped Message\n\n**Author:** {data['author'].mention} (`{data['author']}`)\n\n{data['content'] or '*No text*'}"
+        v2_body = f"# Sniped Message\n\n**Author:** {data['author'].mention} (`{data['author']}`)\n\n{data['content'] or '*No text*'}"
         card = make_v2_card(v2_body, color=ORBIT_COLOR)
         if card and not data["attachments"]:
             return await ctx.send(view=card)
@@ -63,7 +63,7 @@ class Snipe(commands.Cog):
             return await ctx.send(embed=make_embed("No edited messages found.", discord.Color.red()), ephemeral=True)
 
         v2_body = (
-            f"# {Emojis.FILE} Edit Sniped Message\n\n"
+            f"# Edit Sniped Message\n\n"
             f"**Author:** {data['author'].mention} (`{data['author']}`)\n\n"
             f"**Before:**\n{data['before_content'][:1000] or '*No text*'}\n\n"
             f"**After:**\n{data['after_content'][:1000] or '*No text*'}"

@@ -29,14 +29,14 @@ class ReminderListener(commands.Cog):
 
     async def _deliver_alert(self, entry: dict):
         body = (
-            f"# {Emojis.GUIDE} Orbit Reminder Alert\n\n"
+            f"# Orbit Reminder Alert\n\n"
             f"**Scheduled By:** <@{entry.get('user_id')}>\n"
             f"**Created At:** <t:{entry.get('created_at', 0)}:F> (<t:{entry.get('created_at', 0)}:R>)\n\n"
             f"**Reminder Note:**\n> {entry.get('text')}"
         )
         card = make_v2_card(body, color=ORBIT_COLOR)
         embed = discord.Embed(
-            title=f"{Emojis.GUIDE} Orbit Reminder Alert",
+            title="Orbit Reminder Alert",
             description=(
                 f"**Scheduled By:** <@{entry.get('user_id')}>\n"
                 f"**Created At:** <t:{entry.get('created_at', 0)}:F> (<t:{entry.get('created_at', 0)}:R>)\n\n"

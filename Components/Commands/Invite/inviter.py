@@ -39,12 +39,12 @@ class InviterCommand(commands.Cog):
             desc = f"No invite data found for {target.mention}."
 
         footer_text = ctx.guild.name if ctx.guild else None
-        card = make_v2_card(f"# {Emojis.MAIL} Inviter\n\n{desc}", color=ORBIT_COLOR, footer=footer_text)
+        card = make_v2_card(f"# Inviter\n\n{desc}", color=ORBIT_COLOR, footer=footer_text)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
         embed = discord.Embed(
-            title=f"{Emojis.MAIL} Inviter",
+            title="Inviter",
             description=desc,
             color=ORBIT_COLOR
         )

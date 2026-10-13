@@ -28,14 +28,14 @@ class AvatarCommand(commands.Cog):
             buttons.append(Button(label="Server Avatar", url=guild_url, style=discord.ButtonStyle.link))
 
         card = make_v2_card(
-            f"# {Emojis.GUIDE} Profile Avatar: {target.display_name}\n\n**User ID:** `{target.id}`\n\n{links_str}",
+            f"# Profile Avatar: {target.display_name}\n\n**User ID:** `{target.id}`\n\n{links_str}",
             ActionRow(*buttons),
             color=ORBIT_COLOR
         )
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-        embed = discord.Embed(title=f"{Emojis.GUIDE} Profile Avatar: {target.display_name}", description=f"**User ID:** `{target.id}`", color=ORBIT_COLOR)
+        embed = discord.Embed(title=f"Profile Avatar: {target.display_name}", description=f"**User ID:** `{target.id}`", color=ORBIT_COLOR)
         embed.set_image(url=global_url)
         embed.add_field(name="Links", value=links_str, inline=False)
         view = View()

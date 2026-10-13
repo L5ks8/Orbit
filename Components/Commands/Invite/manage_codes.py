@@ -24,11 +24,11 @@ class ManageCodesCommand(commands.Cog):
                 
             await target_invite.delete(reason=f"Deleted by {ctx.author}")
             
-            card = make_v2_card(f"# {Emojis.BACKSPACE} Invite Deleted\n\nSuccessfully deleted the invite code `{code}`.", color=ORBIT_COLOR)
+            card = make_v2_card(f"# Invite Deleted\n\nSuccessfully deleted the invite code `{code}`.", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
             embed = discord.Embed(
-                title=f"{Emojis.BACKSPACE} Invite Deleted",
+                title="Invite Deleted",
                 description=f"Successfully deleted the invite code `{code}`.",
                 color=ORBIT_COLOR
             )
@@ -77,11 +77,11 @@ class ManageCodesCommand(commands.Cog):
                     except Exception:
                         pass
                         
-            card = make_v2_card(f"# {Emojis.BACKSPACE} Invites Purged\n\nSuccessfully purged **{purged}** invite(s) matching condition `{condition}`.", color=ORBIT_COLOR)
+            card = make_v2_card(f"# Invites Purged\n\nSuccessfully purged **{purged}** invite(s) matching condition `{condition}`.", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
             embed = discord.Embed(
-                title=f"{Emojis.BACKSPACE} Invites Purged",
+                title="Invites Purged",
                 description=f"Successfully purged **{purged}** invite(s) matching condition `{condition}`.",
                 color=ORBIT_COLOR
             )

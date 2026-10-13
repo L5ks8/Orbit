@@ -54,7 +54,7 @@ async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
         )
 
         body = (
-            f"# {Emojis.VERIFICATION} Member Added: #{ctx.channel.name}\n\n"
+            f"# Member Added: #{ctx.channel.name}\n\n"
             f"**User Added:** {member.mention} (`{member.id}`)\n"
             f"**Added By:** {ctx.author.mention}"
         )
@@ -62,7 +62,7 @@ async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
         if card:
             await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         else:
-            embed = discord.Embed(title=f"{Emojis.VERIFICATION} Member Added: #{ctx.channel.name}", color=ORBIT_COLOR)
+            embed = discord.Embed(title=f"Member Added: #{ctx.channel.name}", color=ORBIT_COLOR)
             embed.add_field(name="User Added", value=f"{member.mention} (`{member.id}`)", inline=False)
             embed.add_field(name="Added By", value=ctx.author.mention, inline=False)
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
@@ -99,7 +99,7 @@ async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
         await ctx.channel.set_permissions(member, overwrite=None, reason=f"Removed from ticket by {ctx.author}")
 
         body = (
-            f"# {Emojis.BACKSPACE} Member Removed: #{ctx.channel.name}\n\n"
+            f"# Member Removed: #{ctx.channel.name}\n\n"
             f"**User Removed:** {member.mention} (`{member.id}`)\n"
             f"**Removed By:** {ctx.author.mention}"
         )
@@ -107,7 +107,7 @@ async def _do_ticket_remove(ctx: commands.Context, member: discord.Member):
         if card:
             await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         else:
-            embed = discord.Embed(title=f"{Emojis.BACKSPACE} Member Removed: #{ctx.channel.name}", color=ORBIT_COLOR)
+            embed = discord.Embed(title=f"Member Removed: #{ctx.channel.name}", color=ORBIT_COLOR)
             embed.add_field(name="User Removed", value=f"{member.mention} (`{member.id}`)", inline=False)
             embed.add_field(name="Removed By", value=ctx.author.mention, inline=False)
             await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
@@ -218,7 +218,7 @@ async def _do_ticket_transcript(ctx: commands.Context):
     file = discord.File(fp=io.BytesIO(transcript_text.encode("utf-8")), filename=f"transcript-{ctx.channel.name}.html")
 
     body = (
-        f"# {Emojis.GUIDE} Ticket Transcript Generated\n\n"
+        f"# Ticket Transcript Generated\n\n"
         f"**Ticket:** `#{ctx.channel.name}` (`{ctx.channel.id}`)\n"
         f"**Subject:** `{subject}`\n"
         f"**Messages:** `{len(messages)}`\n"
@@ -229,7 +229,7 @@ async def _do_ticket_transcript(ctx: commands.Context):
     if card:
         return await ctx.send(view=card, file=file, allowed_mentions=discord.AllowedMentions.none())
 
-    embed = discord.Embed(title=f"{Emojis.GUIDE} Ticket Transcript Generated", color=ORBIT_COLOR)
+    embed = discord.Embed(title="Ticket Transcript Generated", color=ORBIT_COLOR)
     embed.add_field(name="Ticket", value=f"`#{ctx.channel.name}` (`{ctx.channel.id}`)", inline=False)
     embed.add_field(name="Subject", value=f"`{subject}`", inline=True)
     embed.add_field(name="Messages", value=f"`{len(messages)}`", inline=True)

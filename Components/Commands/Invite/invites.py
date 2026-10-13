@@ -17,7 +17,7 @@ class InvitesCommand(commands.Cog):
         stats = get_inviter_stats(ctx.guild.id, target.id)
         
         content = (
-            f"# {Emojis.MAIL} Invites: {target.display_name}\n\n"
+            f"# Invites: {target.display_name}\n\n"
             f"{target.mention} currently has **{stats['total']}** invites.\n"
             f"(**{stats['regular']}** regular, **{stats['left']}** left, **{stats['fake']}** fake, **{stats['bonus']}** bonus)"
         )
@@ -26,7 +26,7 @@ class InvitesCommand(commands.Cog):
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
         embed = discord.Embed(
-            title=f"{Emojis.MAIL} Invites: {target.display_name}",
+            title=f"Invites: {target.display_name}",
             color=ORBIT_COLOR
         )
         embed.set_author(name=target.display_name, icon_url=target.display_avatar.url if target else None)

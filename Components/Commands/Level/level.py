@@ -186,14 +186,14 @@ class LevelCommandsCog(commands.Cog):
             await interaction.response.send_message(file=file)
         except Exception:
             progress = int((current_xp / needed_xp) * 10) if needed_xp > 0 else 10
-            bar = "🟦" * progress + "⬛" * (10 - progress)
+            bar = "■" * progress + "□" * (10 - progress)
 
             embed = discord.Embed(color=ORBIT_COLOR)
             embed.set_author(name=target.display_name, icon_url=target.display_avatar.url)
             embed.add_field(name="Rank", value=f"#{rank}", inline=True)
             embed.add_field(name="Level", value=str(level), inline=True)
             embed.add_field(name="XP", value=f"{current_xp:,} / {needed_xp:,}", inline=True)
-            embed.add_field(name="Progress", value=f"{bar}\n{Emojis.MESSAGES} {msg_count:,} • {Emojis.VOICE_HOURS} {voice_mins:,}m • Total: {total_xp:,} XP", inline=False)
+            embed.add_field(name="Progress", value=f"{bar}\n{msg_count:,} • {voice_mins:,}m • Total: {total_xp:,} XP", inline=False)
             embed.set_thumbnail(url=target.display_avatar.url)
             await interaction.response.send_message(embed=embed)
 
@@ -231,7 +231,7 @@ class LevelCommandsCog(commands.Cog):
         from Components.Systems.Level._storage import add_xp
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
         desc = f"Added **{amount:,} XP** to {member.mention}. They now have **{new_xp:,} XP** (Level {new_level})."
-        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Added\n\n{desc}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# XP Added\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
         await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
@@ -251,7 +251,7 @@ class LevelCommandsCog(commands.Cog):
         set_user_xp(ctx.guild.id, member.id, data)
         new_level = level_from_xp(new_xp)
         desc = f"Removed **{amount:,} XP** from {member.mention}. They now have **{new_xp:,} XP** (Level {new_level})."
-        card = make_v2_card(f"# {Emojis.BACKSPACE} XP Removed\n\n{desc}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# XP Removed\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
         await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
@@ -269,7 +269,7 @@ class LevelCommandsCog(commands.Cog):
         set_user_xp(ctx.guild.id, member.id, data)
         new_level = level_from_xp(amount)
         desc = f"Set {member.mention}'s XP to **{amount:,} XP** (Level {new_level})."
-        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Set\n\n{desc}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# XP Set\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
         await ctx.send(embed=make_embed(desc))
@@ -295,7 +295,7 @@ class LevelCommandsCog(commands.Cog):
         old_level, new_level, new_xp = add_xp(ctx.guild.id, member.id, amount)
         
         desc = f"Successfully transferred **{amount:,} XP** to {member.mention}!"
-        card = make_v2_card(f"# {Emojis.VERIFICATION} XP Transferred\n\n{desc}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# XP Transferred\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card)
         await ctx.send(embed=make_embed(desc, ORBIT_COLOR))

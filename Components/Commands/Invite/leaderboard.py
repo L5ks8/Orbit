@@ -25,7 +25,7 @@ class LeaderboardCommand(commands.Cog):
 
         if not lb:
             embed = discord.Embed(
-                title=f"{Emojis.WINNER} Invite Leaderboard",
+                title="Invite Leaderboard",
                 description="No invite data found for this server.",
                 color=ORBIT_COLOR
             )
@@ -69,7 +69,7 @@ class LeaderboardCommand(commands.Cog):
         import os
         base_url = os.environ.get("BASE_URL")
         embed = discord.Embed(
-            title=f"{Emojis.WINNER} Invite Leaderboard",
+            title="Invite Leaderboard",
             description=f"[Want to see more than Top {limit}?]({base_url}/leaderboard/{ctx.guild.id}?sort=invites)",
             color=ORBIT_COLOR
         )

@@ -34,11 +34,11 @@ class Birthday(commands.Cog):
                 {"$set": {"day": day, "month": month}},
                 upsert=True
             )
-            card = make_v2_card(f"# {Emojis.VERIFICATION} Birthday Saved\n\nYour birthday has been successfully set to **{date}**!", color=ORBIT_COLOR)
+            card = make_v2_card(f"# Birthday Saved\n\nYour birthday has been successfully set to **{date}**!", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card, ephemeral=True)
             await ctx.send(
-                embed=discord.Embed(description=f"{Emojis.VERIFICATION} Your birthday has been successfully set to **{date}**!", color=ORBIT_COLOR),
+                embed=discord.Embed(description=f"Your birthday has been successfully set to **{date}**!", color=ORBIT_COLOR),
                 ephemeral=True
             )
         else:
@@ -76,12 +76,12 @@ class Birthday(commands.Cog):
 
             if celebrants:
                 v2_body = (
-                    f"# {Emojis.WINNER} Happy Birthday! {Emojis.WINNER}\n\n"
+                    f"# Happy Birthday! \n\n"
                     f"Happy birthday to: {', '.join(celebrants)}!\nWe hope you have a great day!"
                 )
                 card = make_v2_card(v2_body, color=ORBIT_COLOR)
                 embed = discord.Embed(
-                    title=f"{Emojis.WINNER} Happy Birthday! {Emojis.WINNER}",
+                    title="Happy Birthday!",
                     description=f"Happy birthday to: {', '.join(celebrants)}!\nWe hope you have a great day!",
                     color=ORBIT_COLOR
                 )

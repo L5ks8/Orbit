@@ -35,11 +35,11 @@ async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_n
             filter_text += f"\n**After ID:** `{after}`"
             
         desc = f"**Total Messages Deleted:** `{len(deleted)}`\n\n**Channel:** {ctx.channel.mention}\n**Moderator:** {ctx.author.mention}{filter_text}"
-        card = make_v2_card(f"# {Emojis.BACKSPACE} Messages Purged\n\n{desc}", color=ORBIT_COLOR)
+        card = make_v2_card(f"# Messages Purged\n\n{desc}", color=ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, ephemeral=True, allowed_mentions=discord.AllowedMentions.none(), delete_after=5)
         embed = discord.Embed(
-            title=f"{Emojis.BACKSPACE} Messages Purged",
+            title="Messages Purged",
             description=desc,
             color=ORBIT_COLOR
         )

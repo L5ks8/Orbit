@@ -11,10 +11,9 @@ class DevmodeCommand(commands.Cog):
     def _get_card_and_embed(self, enabled: bool, reason: str, owner: discord.abc.User):
         status_text = "**ACTIVE (`Developer Mode ON`)**" if enabled else "**DISABLED (`Normal Operations`)**"
         title_text = "Orbit Developer Mode Activated" if enabled else "Orbit Developer Mode Deactivated"
-        emoji = Emojis.WARNING if enabled else Emojis.VERIFICATION
         
         body = (
-            f"# {emoji} {title_text}\n\n"
+            f"# {title_text}\n\n"
             f"**Devmode Status:** {status_text}\n"
             f"**Lockdown Reason:** `{reason}`\n"
             f"**Authorized By:** {owner.mention}\n\n"
@@ -22,7 +21,7 @@ class DevmodeCommand(commands.Cog):
         )
         card = make_v2_card(body, color=ORBIT_COLOR)
         embed = discord.Embed(
-            title=f"{emoji} {title_text}",
+            title=title_text,
             description=(
                 f"**Devmode Status:** {status_text}\n"
                 f"**Lockdown Reason:** `{reason}`\n"

@@ -30,7 +30,7 @@ class UntimeoutCommand(commands.Cog):
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Reason:** {reason}"
             )
             v2_body = (
-                f"# {Emojis.VERIFICATION} User Timeout Removed\n\n"
+                f"# User Timeout Removed\n\n"
                 f"**Target:** {target.mention} (`{target.id}`)\n"
                 f"**Moderator:** {ctx.author.mention}\n"
                 f"**Status:** `Cleared`"
@@ -41,7 +41,7 @@ class UntimeoutCommand(commands.Cog):
             if card:
                 return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-            embed = discord.Embed(title=f"{Emojis.VERIFICATION} User Timeout Removed", color=ORBIT_COLOR)
+            embed = discord.Embed(title="User Timeout Removed", color=ORBIT_COLOR)
             embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
             if reason and reason != "No reason provided":
                 embed.add_field(name="Reason", value=reason, inline=False)

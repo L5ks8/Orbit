@@ -16,7 +16,7 @@ async def _do_removerole(ctx: commands.Context, target: discord.Member, role: di
     try:
         await target.remove_roles(role, reason=f"Role removed by {ctx.author} | Reason: {reason}")
         body = (
-            f"# {Emojis.BACKSPACE} Role Removed\n\n"
+            f"# Role Removed\n\n"
             f"**Target:** {target.mention} (`{target.id}`)\n"
             f"**Role:** {role.mention} (`{role.id}`)\n"
             f"**Reason:** {reason}\n"
@@ -25,7 +25,7 @@ async def _do_removerole(ctx: commands.Context, target: discord.Member, role: di
         card = make_v2_card(body, color=role.color if role.color.value else ORBIT_COLOR)
         if card:
             return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
-        embed = discord.Embed(title=f"{Emojis.BACKSPACE} Role Removed", color=role.color)
+        embed = discord.Embed(title="Role Removed", color=role.color)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
         embed.add_field(name="Reason", value=reason, inline=False)

@@ -43,7 +43,7 @@ class TimeoutCommand(commands.Cog):
                 f"**Target:** {target.mention} (`{target.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Duration:** `{minutes} minutes`\n**Reason:** {reason}"
             )
             v2_body = (
-                f"# {Emojis.WARNING} User Timed Out\n\n"
+                f"# User Timed Out\n\n"
                 f"**Target:** {target.mention} (`{target.id}`)\n"
                 f"**Duration:** `{minutes} minutes`\n"
                 f"**Moderator:** {ctx.author.mention}\n"
@@ -55,7 +55,7 @@ class TimeoutCommand(commands.Cog):
             if card:
                 return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
-            embed = discord.Embed(title=f"{Emojis.WARNING} User Timed Out", color=ORBIT_COLOR)
+            embed = discord.Embed(title="User Timed Out", color=ORBIT_COLOR)
             embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
             embed.add_field(name="Duration", value=f"`{minutes} minutes`", inline=False)
             if reason and reason != "No reason provided":

@@ -252,14 +252,14 @@ class BoostListener(commands.Cog):
         except Exception:
             try:
                 card = make_v2_card(
-                    f"# {Emojis.GOLD} Server Boost!\n\n" + (formatted or f"**{member.name}** just boosted the server!"),
+                    f"# Server Boost!\n\n" + (formatted or f"**{member.name}** just boosted the server!"),
                     color=discord.Color.from_rgb(255, 115, 250)
                 )
                 if card:
                     await channel.send(view=card, allowed_mentions=allowed)
                 else:
                     embed = discord.Embed(
-                        title=f"{Emojis.GOLD} Server Boost!",
+                        title="Server Boost!",
                         description=formatted or f"**{member.name}** just boosted the server!",
                         color=discord.Color.from_rgb(255, 115, 250)
                     )

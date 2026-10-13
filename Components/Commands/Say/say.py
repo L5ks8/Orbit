@@ -19,10 +19,10 @@ class SayCommand(commands.Cog):
         try:
             await target_channel.send(message)
             desc = f"Message sent successfully to {target_channel.mention}."
-            card = make_v2_card(f"# {Emojis.MESSAGES} Message Sent\n\n{desc}", color=ORBIT_COLOR)
+            card = make_v2_card(f"# Message Sent\n\n{desc}", color=ORBIT_COLOR)
             if card:
                 return await ctx.send(view=card, ephemeral=True)
-            await ctx.send(embed=make_embed(desc, ORBIT_COLOR, title=f"{Emojis.MESSAGES} Message Sent"), ephemeral=True)
+            await ctx.send(embed=make_embed(desc, ORBIT_COLOR, title="Message Sent"), ephemeral=True)
         except discord.Forbidden:
             await ctx.send(embed=make_embed("I do not have permissions to send messages inside that channel.", discord.Color.red()), ephemeral=True)
         except Exception as e:

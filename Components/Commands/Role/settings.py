@@ -70,7 +70,7 @@ async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission
 
     state_display = "Enabled" if state.lower() == "on" else ("Disabled" if state.lower() == "off" else "Reset (Neutral)")
     body = (
-        f"# {Emojis.VERIFICATION} Role Configuration Changed\n\n"
+        f"# Role Configuration Changed\n\n"
         f"Mass updated `{permission}` to `{state_display}` for {role.mention}\n\n"
         f"**Success:** `{success}` channels\n"
         f"**Failed:** `{failed}` channels\n"
@@ -82,7 +82,7 @@ async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
     embed = discord.Embed(
-        title=f"{Emojis.VERIFICATION} Role Configuration Changed",
+        title="Role Configuration Changed",
         description=f"Mass updated `{permission}` to `{state_display}` for {role.mention}",
         color=role.color
     )

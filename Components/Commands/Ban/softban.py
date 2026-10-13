@@ -51,14 +51,14 @@ class SoftbanCommand(commands.Cog):
             )
             
             reason_line = f"\n\n**Reason:** {reason}" if reason and reason != "No reason provided" else ""
-            content = f"# {Emojis.BAN} User Softbanned\n\n{Emojis.VERIFICATION} **{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*{reason_line}"
+            content = f"# User Softbanned\n\n**{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*{reason_line}"
             card = make_v2_card(content, color=ORBIT_COLOR)
             if card:
                 await ctx.send(view=card)
             else:
                 embed = discord.Embed(
-                    title=f"{Emojis.BAN} User Softbanned",
-                    description=f"{Emojis.VERIFICATION} **{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*",
+                    title="User Softbanned",
+                    description=f"**{target.mention}** has been softbanned.\n*Their messages from the last 7 days have been wiped, and they can rejoin the server.*",
                     color=ORBIT_COLOR
                 )
                 if reason and reason != "No reason provided":

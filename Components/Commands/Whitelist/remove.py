@@ -30,7 +30,7 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
     )
 
     v2_body = (
-        f"# {Emojis.VERIFICATION} User Removed from Whitelist\n\n"
+        f"# User Removed from Whitelist\n\n"
         f"**Target ID:** `{user_id}`\n"
         f"**Moderator:** {ctx.author.mention}\n\n"
         f"Removed ID `{user_id}` from the server moderation whitelist."
@@ -40,7 +40,7 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
         return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
 
     embed = discord.Embed(
-        title=f"{Emojis.VERIFICATION} User Removed from Whitelist",
+        title="User Removed from Whitelist",
         description=f"Removed ID `{user_id}` from the server moderation whitelist.",
         color=ORBIT_COLOR
     )

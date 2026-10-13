@@ -54,7 +54,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
                 await asyncio.sleep(0.35)
 
             content = (
-                f"# {Emojis.MAIL} Mass Role DM Delivered\n\n"
+                f"# Mass Role DM Delivered\n\n"
                 f"**Target Role:** {matched_role.mention}\n"
                 f"**Total Members:** `{len(target_members)}`\n"
                 f"**Successfully Sent:** `{success_count}`\n"
@@ -65,7 +65,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
                 await interaction.followup.send(view=card, ephemeral=True)
             else:
                 summary_embed = discord.Embed(
-                    title=f"{Emojis.MAIL} Mass Role DM Delivered",
+                    title="Mass Role DM Delivered",
                     color=ORBIT_COLOR
                 )
                 summary_embed.add_field(name="Target Role", value=matched_role.mention, inline=True)
@@ -89,7 +89,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
                 return await interaction.followup.send(embed=make_embed(f"Failed to send DM to **{user_target}** (`{user_target.id}`). Their DMs may be closed.", discord.Color.red()), ephemeral=True)
 
             content = (
-                f"# {Emojis.MAIL} Direct Message Sent\n\n"
+                f"# Direct Message Sent\n\n"
                 f"Direct message successfully delivered to **{user_target.mention}** (`{user_target.id}`).\n\n"
                 f"**Message Content:**\n{message[:1024]}"
             )
@@ -98,7 +98,7 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
                 await interaction.followup.send(view=card, ephemeral=True)
             else:
                 embed = discord.Embed(
-                    title=f"{Emojis.MAIL} Direct Message Sent",
+                    title="Direct Message Sent",
                     description=f"Direct message successfully delivered to **{user_target.mention}** (`{user_target.id}`).",
                     color=ORBIT_COLOR
                 )
@@ -201,7 +201,7 @@ class DMCommand(commands.Cog):
 
         target_display = target_obj.mention if hasattr(target_obj, 'mention') else str(target_obj)
         embed = discord.Embed(
-            title=f"{Emojis.MAIL} Compose Anonymous DM",
+            title="Compose Anonymous DM",
             description=f"Target: {target_display}\n\nClick the button below to open the composition window where you can properly format your anonymous message.",
             color=ORBIT_COLOR
         )

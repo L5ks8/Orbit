@@ -25,11 +25,11 @@ async def _do_remind_set(ctx: commands.Context, duration_str: str, text: str):
         f"**Reminder Text:** {entry.get('text')}\n\n"
         f"*I will notify you right here or via DMs when the timer completes.*"
     )
-    card = make_v2_card(f"# {Emojis.VERIFICATION} Orbit Reminder Scheduled\n\n{desc}", color=ORBIT_COLOR)
+    card = make_v2_card(f"# Orbit Reminder Scheduled\n\n{desc}", color=ORBIT_COLOR)
     if card:
         return await ctx.send(view=card, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
     embed = discord.Embed(
-        title=f"{Emojis.VERIFICATION} Orbit Reminder Scheduled",
+        title="Orbit Reminder Scheduled",
         description=desc,
         color=ORBIT_COLOR
     )

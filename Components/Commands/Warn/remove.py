@@ -28,7 +28,7 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
     )
 
     v2_body = (
-        f"# {Emojis.VERIFICATION} Warning Deleted\n\n"
+        f"# Warning Deleted\n\n"
         f"**Target Member:** {user.mention} (`{user.id}`)\n"
         f"**Removed ID:** `{warn_id}`\n"
         f"**Remaining Warnings:** `{remaining}`"
@@ -38,7 +38,7 @@ async def _do_delwarn(ctx: commands.Context, user: discord.Member, warn_id: str)
         return await ctx.send(view=card, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
     embed = discord.Embed(
-        title=f"{Emojis.VERIFICATION} Warning Deleted",
+        title="Warning Deleted",
         description=f"**Target Member:** {user.mention} (`{user.id}`)",
         color=ORBIT_COLOR
     )
