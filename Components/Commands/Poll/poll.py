@@ -22,7 +22,8 @@ from Components.Commands._utils import (
     Container,
     TextDisplay,
     ActionRow,
-    LayoutView
+    LayoutView,
+    parse_duration
 )
 
 def make_bar(pct: int, length: int = 10) -> str:
@@ -325,9 +326,9 @@ class PollCommand(commands.Cog):
     @app_commands.describe(
         question="The poll question to ask",
         options="Comma-separated options (e.g. Red, Blue, Green)",
-        duration="Poll duration in minutes (e.g. 60 for 1 hour, 1440 for 24 hours)"
+        duration="Poll duration format (e.g. 10m, 1h, 1d, 7d). Default: 1h"
     )
-    async def poll(self, interaction: discord.Interaction, question: str, options: str, duration: int = 60):
+    async def poll(self, interaction: discord.Interaction, question: str, options: str, duration: str = "1h"):
         ctx = InteractionContext(interaction)
         await ctx.defer()
         if not ctx.guild:
@@ -337,12 +338,14 @@ class PollCommand(commands.Cog):
         if len(opts) < 2 or len(opts) > 10:
             return await ctx.send(embed=make_embed("Please specify between 2 and 10 options separated by commas (`Option 1, Option 2, Option 3`).", discord.Color.red()), ephemeral=True)
 
-        if duration < 1 or duration > 43200:
-            duration = 60
+        secs = parse_duration(duration, default_unit="m")
+        if secs is None or secs < 10 or secs > 86400 * 30:
+            return await ctx.send(embed=make_embed("Poll duration must be between 10 seconds and 30 days (e.g. `10m`, `1h`, `1d`).", discord.Color.red()), ephemeral=True)
 
         poll_id = generate_poll_id(ctx.guild.id)
         now = int(time.time())
-        end_time = now + (duration * 60)
+        end_time = now + secs
+        duration_minutes = max(1, secs // 60)
 
         entry = create_poll_entry(
             guild_id=ctx.guild.id,
@@ -352,7 +355,7 @@ class PollCommand(commands.Cog):
             question=question,
             options=opts,
             author_id=ctx.author.id,
-            duration_minutes=duration,
+            duration_minutes=duration_minutes,
             end_timestamp=end_time
         )
 
@@ -368,7 +371,7 @@ class PollCommand(commands.Cog):
     async def poll_error(self, interaction: discord.Interaction, error):
         ctx = InteractionContext(interaction)
         if isinstance(error, (commands.MissingRequiredArgument, app_commands.CommandSignatureMismatch)):
-            await ctx.send(embed=make_embed("Usage: `/poll <question> <options> [duration_in_minutes]`", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/poll <question> <options> [duration]` (e.g. `10m`, `1h`, `1d`)", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

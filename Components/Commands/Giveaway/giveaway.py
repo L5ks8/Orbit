@@ -14,7 +14,8 @@ from Components.Commands._utils import (
     Container,
     TextDisplay,
     ActionRow,
-    LayoutView
+    LayoutView,
+    parse_duration
 )
 from Components.emojis import Emojis
 from Components.Commands.Giveaway._storage import (
@@ -389,24 +390,9 @@ class GiveawayCommand(commands.Cog):
         if winners < 1 or winners > 25:
             return await ctx.send(embed=make_embed("Winners must be between 1 and 25.", discord.Color.red()), ephemeral=True)
 
-        dur_str = duration.lower().strip()
-        secs = 0
-        try:
-            if dur_str.endswith("s"):
-                secs = int(dur_str[:-1])
-            elif dur_str.endswith("m"):
-                secs = int(dur_str[:-1]) * 60
-            elif dur_str.endswith("h"):
-                secs = int(dur_str[:-1]) * 3600
-            elif dur_str.endswith("d"):
-                secs = int(dur_str[:-1]) * 86400
-            else:
-                secs = int(dur_str) * 60
-        except ValueError:
+        secs = parse_duration(duration, default_unit="h")
+        if secs is None or secs < 10:
             return await ctx.send(embed=make_embed("Invalid duration format! Examples: `30s`, `10m`, `2h`, `1d`.", discord.Color.red()), ephemeral=True)
-
-        if secs < 10:
-            return await ctx.send(embed=make_embed("Giveaway duration must be at least 10 seconds.", discord.Color.red()), ephemeral=True)
         if secs > 86400 * 30:
             return await ctx.send(embed=make_embed("Giveaway duration cannot exceed 30 days.", discord.Color.red()), ephemeral=True)
 

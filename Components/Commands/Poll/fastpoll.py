@@ -8,7 +8,7 @@ from Components.Commands.Poll._storage import (
     create_poll_entry,
     update_poll_entry
 )
-from Components.Commands._utils import make_embed, InteractionContext
+from Components.Commands._utils import make_embed, InteractionContext, parse_duration
 
 class FastPollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -20,21 +20,23 @@ class FastPollCommand(commands.Cog):
     )
     @app_commands.describe(
         question="The Yes/No question to ask",
-        duration="Poll duration in minutes (e.g. 60 for 1 hour, 1440 for 24 hours)"
+        duration="Poll duration format (e.g. 10m, 1h, 1d, 7d). Default: 1h"
     )
-    async def fastpoll(self, interaction: discord.Interaction, question: str, duration: int = 60):
+    async def fastpoll(self, interaction: discord.Interaction, question: str, duration: str = "1h"):
         ctx = InteractionContext(interaction)
         await ctx.defer()
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
-        if duration < 1 or duration > 43200:
-            duration = 60
+        secs = parse_duration(duration, default_unit="m")
+        if secs is None or secs < 10 or secs > 86400 * 30:
+            return await ctx.send(embed=make_embed("Poll duration must be between 10 seconds and 30 days (e.g. `10m`, `1h`, `1d`).", discord.Color.red()), ephemeral=True)
 
         opts = ["Yes", "No"]
         poll_id = generate_poll_id(ctx.guild.id)
         now = int(time.time())
-        end_time = now + (duration * 60)
+        end_time = now + secs
+        duration_minutes = max(1, secs // 60)
 
         entry = create_poll_entry(
             guild_id=ctx.guild.id,
@@ -44,7 +46,7 @@ class FastPollCommand(commands.Cog):
             question=question,
             options=opts,
             author_id=ctx.author.id,
-            duration_minutes=duration,
+            duration_minutes=duration_minutes,
             end_timestamp=end_time
         )
 
@@ -60,7 +62,7 @@ class FastPollCommand(commands.Cog):
     async def fastpoll_error(self, interaction: discord.Interaction, error):
         ctx = InteractionContext(interaction)
         if isinstance(error, (commands.MissingRequiredArgument, app_commands.CommandSignatureMismatch)):
-            await ctx.send(embed=make_embed("Usage: `/fastpoll <question> [duration_in_minutes]`", discord.Color.red()), ephemeral=True)
+            await ctx.send(embed=make_embed("Usage: `/fastpoll <question> [duration]` (e.g. `10m`, `1h`, `1d`)", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 

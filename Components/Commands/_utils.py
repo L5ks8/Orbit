@@ -212,3 +212,110 @@ def build_embed(guild: discord.Guild | None, title: str = None, description: str
     else:
         embed = discord.Embed(title=title, description=description, color=color, **kwargs)
         return embed
+
+import re
+
+def parse_duration(duration_input: str | int | float | None, default_unit: str = "m") -> int | None:
+    """
+    Parses human duration formats into integer seconds.
+    Supports:
+      - '1s', '30s', '10sec', 'seconds'
+      - '1m', '10m', '15min', 'minutes'
+      - '1h', '2h', '24hours'
+      - '1d', '7d', '3days'
+      - '1w', '2weeks'
+      - Compound: '1d 2h', '1h 30m', '1d12h30m'
+      - Raw digits: '60' -> uses default_unit ('s', 'm', 'h', 'd')
+    Returns total seconds as int, or None if invalid or <= 0.
+    """
+    if duration_input is None:
+        return None
+    if isinstance(duration_input, (int, float)):
+        val = int(duration_input)
+        if val <= 0:
+            return 0
+        if default_unit == "s":
+            return val
+        elif default_unit == "m":
+            return val * 60
+        elif default_unit == "h":
+            return val * 3600
+        elif default_unit == "d":
+            return val * 86400
+        return val * 60
+
+    s = str(duration_input).strip().lower()
+    if not s:
+        return None
+
+    if s.isdigit():
+        val = int(s)
+        if val == 0:
+            return 0
+        if default_unit == "s":
+            return val
+        elif default_unit == "m":
+            return val * 60
+        elif default_unit == "h":
+            return val * 3600
+        elif default_unit == "d":
+            return val * 86400
+        return val * 60
+
+    pattern = re.compile(r'(\d+)\s*([a-zA-Z]+)')
+    matches = pattern.findall(s)
+    if not matches:
+        return None
+
+    total_seconds = 0
+    unit_map = {
+        's': 1, 'sec': 1, 'secs': 1, 'second': 1, 'seconds': 1,
+        'm': 60, 'min': 60, 'mins': 60, 'minute': 60, 'minutes': 60,
+        'h': 3600, 'hr': 3600, 'hrs': 3600, 'hour': 3600, 'hours': 3600,
+        'd': 86400, 'day': 86400, 'days': 86400,
+        'w': 604800, 'wk': 604800, 'wks': 604800, 'week': 604800, 'weeks': 604800,
+    }
+
+    found_any = False
+    for value_str, unit_str in matches:
+        unit_key = unit_str.lower()
+        mult = None
+        if unit_key in unit_map:
+            mult = unit_map[unit_key]
+        elif unit_key.startswith('s'):
+            mult = 1
+        elif unit_key.startswith('m'):
+            mult = 60
+        elif unit_key.startswith('h'):
+            mult = 3600
+        elif unit_key.startswith('d'):
+            mult = 86400
+        elif unit_key.startswith('w'):
+            mult = 604800
+
+        if mult is not None:
+            found_any = True
+            total_seconds += int(value_str) * mult
+
+    if not found_any:
+        return None
+    return total_seconds
+
+def format_duration(seconds: int) -> str:
+    """Formats seconds into human friendly duration like '1d 2h 30m'."""
+    if seconds <= 0:
+        return "0s"
+    parts = []
+    days, rem = divmod(seconds, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, secs = divmod(rem, 60)
+    if days > 0:
+        parts.append(f"{days}d")
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if minutes > 0:
+        parts.append(f"{minutes}m")
+    if secs > 0 and len(parts) < 2:
+        parts.append(f"{secs}s")
+    return " ".join(parts) if parts else f"{seconds}s"
+

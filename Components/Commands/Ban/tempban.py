@@ -6,23 +6,8 @@ import time
 from Components.Commands.Cases._storage import create_case
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Database.mongodb import get_db
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext, parse_duration, format_duration
 from Components.emojis import Emojis
-
-def parse_duration(duration_str: str) -> int:
-    """Parses a duration string like '1d', '12h', '30m' into seconds."""
-    duration_str = duration_str.lower().strip()
-    match = re.match(r'^(\d+)([dhms])$', duration_str)
-    if not match:
-        return 0
-    val = int(match.group(1))
-    unit = match.group(2)
-    
-    if unit == 'd': return val * 86400
-    elif unit == 'h': return val * 3600
-    elif unit == 'm': return val * 60
-    elif unit == 's': return val
-    return 0
 
 class TempBanCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -56,7 +41,7 @@ class TempBanCog(commands.Cog):
         await ctx.defer()
         
         seconds = parse_duration(duration)
-        if seconds <= 0:
+        if seconds is None or seconds <= 0:
             return await ctx.send(embed=make_embed("Invalid duration format. Please use formats like `1d`, `12h`, `30m`.", discord.Color.red()), ephemeral=True)
             
         unban_time = int(time.time()) + seconds

@@ -20,7 +20,7 @@ from Components.Systems.Tickets._views import (
     TicketControlLayout,
     close_ticket_flow
 )
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext, parse_duration
 from Components.emojis import Emojis
 
 async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
@@ -240,17 +240,7 @@ async def _do_ticket_transcript(ctx: commands.Context):
 def _parse_duration(duration_str: str):
     if not duration_str:
         return None
-    import re
-    match = re.match(r"^(\d+)([smhd]?)$", duration_str.lower().strip())
-    if not match:
-        return None
-    val = int(match.group(1))
-    unit = match.group(2)
-    if unit == 's': return val
-    if unit == 'm': return val * 60
-    if unit == 'h': return val * 3600
-    if unit == 'd': return val * 86400
-    return val
+    return parse_duration(duration_str, default_unit="d")
 
 async def _do_ticket_blacklist(ctx: commands.Context, member: discord.Member, duration: str = None):
     await ctx.defer()
