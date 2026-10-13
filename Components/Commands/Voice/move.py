@@ -152,7 +152,7 @@ async def vc_moveall_cmd(interaction: discord.Interaction, channel: str, *, reas
     ctx = InteractionContext(interaction)
     await _do_vc_move(ctx, "all", channel, reason)
 
-@vc_move_cmd.error
+
 
 
 class MoveCommand(commands.Cog):
