@@ -1,12 +1,12 @@
 import discord
-from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Voice.voice import voice_group
 
 
-async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: str):
+async def _do_vc_unmute(interaction: discord.Interaction, target: discord.Member, reason: str):
     await ctx.defer()
     if not target.voice:
         return await ctx.send(embed=make_embed("This user is not currently in a voice channel.", discord.Color.red()), ephemeral=True)
@@ -40,26 +40,15 @@ async def _do_vc_unmute(ctx: commands.Context, target: discord.Member, reason: s
         await ctx.send(embed=make_embed(f"Error voice unmuting user: {e}", discord.Color.red()), ephemeral=True)
 
 @voice_group.command(name="unmute", description="Remove a voice mute from a member.")
-@commands.has_permissions(mute_members=True)
-@commands.bot_has_permissions(mute_members=True)
-async def vc_unmute_cmd(ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+async def vc_unmute_cmd(interaction: discord.Interaction, target: discord.Member, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_vc_unmute(ctx, target, reason)
 
-@vc_unmute_cmd.error
-async def vcunmute_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need Mute Members permission to voice unmute users.", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: /voice unmute <target> [reason]", discord.Color.red()), ephemeral=True)
-    else:
-        await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
+
 
 class VcUnmuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Voice.voice import voice_group
-    if "voice" not in bot.all_commands:
-        bot.add_command(voice_group)
-    await bot.add_cog(VcUnmuteCommand(bot))
+    pass

@@ -377,7 +377,7 @@ export default function Moderation({ guildId, serverData, setServerData }) {
       if (data.error) {
         toast.error("Failed to save: " + data.error, { id: toastId });
       } else {
-        toast.success("Settings saved", { id: toastId });
+        toast.success("Saved", { id: toastId });
         initialPayloadRef.current = payloadString;
       }
     } catch (e) {

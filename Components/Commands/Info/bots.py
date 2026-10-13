@@ -1,17 +1,18 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card
+from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 class BotsListCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="bots", description="Get a list of all bots in the server.")
+    @app_commands.command(name="bots", description="Get a list of all bots in the server.")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=False)
-    async def bots_cmd(self, ctx: commands.Context):
+    async def bots_cmd(self, interaction: discord.Interaction):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         
         guild_id = ctx.interaction.guild_id if ctx.interaction else (ctx.guild.id if ctx.guild else None)

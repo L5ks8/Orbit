@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Cases._storage import get_user_cases
-from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR
+from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class HistoryPagination(discord.ui.View):
@@ -72,10 +72,12 @@ class HistoryCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="history", description="Check the moderation history of a user.")
+    @app_commands.command(name="history", description="Check the moderation history of a user.")
     @app_commands.describe(user="The user to check", page="The page number to view")
-    @commands.has_permissions(moderate_members=True)
-    async def history_cmd(self, ctx: commands.Context, user: discord.Member | discord.User, page: int = 1):
+    @app_commands.default_permissions(moderate_members=True)
+    @app_commands.checks.has_permissions(moderate_members=True)
+    async def history_cmd(self, interaction: discord.Interaction, user: discord.Member | discord.User, page: int = 1):
+        ctx = InteractionContext(interaction)
         cases = get_user_cases(ctx.guild.id, user.id)
         if not cases:
             embed = discord.Embed(description=f"This user has no history.", color=discord.Color.red())
@@ -93,12 +95,13 @@ class HistoryCog(commands.Cog):
         await ctx.send(embed=view._generate_embed(), view=view)
 
     @history_cmd.error
-    async def history_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def history_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Moderate Members permission to view history.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed(format_usage("/history", "<@user>"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.BadArgument)):
             await ctx.send(embed=make_embed(f"{format_usage('/history','<@user>')}"), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

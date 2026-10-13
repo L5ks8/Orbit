@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Poll._storage import get_poll_entry, close_poll_entry
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -10,15 +10,15 @@ class PollCloseCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(
+    @app_commands.command(
         name="pollclose",
-        aliases=["poll_close"],
         description="Closes an active poll using its unique Poll ID (e.g. P-123456)."
     )
     @app_commands.describe(
         poll_id="The unique ID of the poll displayed in its header (e.g. P-123456 or 123456)"
     )
-    async def pollclose(self, ctx: commands.Context, poll_id: str):
+    async def pollclose(self, interaction: discord.Interaction, poll_id: str):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -65,8 +65,9 @@ class PollCloseCommand(commands.Cog):
         await ctx.send(embed=make_embed(desc, ORBIT_COLOR, title="Poll Closed"))
 
     @pollclose.error
-    async def pollclose_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingRequiredArgument):
+    async def pollclose_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed("Usage: /pollclose <poll_id>", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

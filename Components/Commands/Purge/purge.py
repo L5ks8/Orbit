@@ -2,10 +2,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import re
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
-async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_name: str = "", user: discord.Member = None, after: str = None, is_all: bool = False):
+async def _do_purge(ctx, count: int, check_func=None, filter_name: str = "", user: discord.Member = None, after: str = None, is_all: bool = False):
     if not isinstance(ctx.channel, (discord.TextChannel, discord.VoiceChannel, discord.Thread)):
         return await ctx.send(embed=make_embed("This command can only be used in server channels.", discord.Color.red()), ephemeral=True, delete_after=5)
 
@@ -23,7 +23,7 @@ async def _do_purge(ctx: commands.Context, count: int, check_func=None, filter_n
     
     if after:
         if not after.isdigit():
-            return await ctx.send(embed=make_embed("The'after' parameter must be a valid Message ID.", discord.Color.red()), ephemeral=True, delete_after=5)
+            return await ctx.send(embed=make_embed("The 'after' parameter must be a valid Message ID.", discord.Color.red()), ephemeral=True, delete_after=5)
         purge_kwargs["after"] = discord.Object(id=int(after))
 
     try:
@@ -56,88 +56,97 @@ class PurgeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_group(name="purge", aliases=["clear", "clean", "prg"], fallback="normal", description="Deletes a number of messages.")
-    @commands.has_permissions(manage_messages=True)
-    @commands.bot_has_permissions(manage_messages=True)
+    purge_group = app_commands.Group(name="purge", description="Deletes a number of messages.", default_permissions=discord.Permissions(manage_messages=True))
+
+    @purge_group.command(name="messages", description="Deletes a number of messages.")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.bot_has_permissions(manage_messages=True)
     @app_commands.describe(
         count="Number of messages to delete (1-100)",
         user="Optional member to filter deleted messages by",
         after="Message ID to purge messages after"
     )
-    async def purge_group(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
+    async def purge_messages(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
+        await ctx.defer(ephemeral=True)
+        await _do_purge(ctx, count, None, "", user, after)
+
+    @purge_group.command(name="normal", description="Deletes a number of messages.")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.bot_has_permissions(manage_messages=True)
+    @app_commands.describe(
+        count="Number of messages to delete (1-100)",
+        user="Optional member to filter deleted messages by",
+        after="Message ID to purge messages after"
+    )
+    async def purge_normal(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, None, "", user, after)
 
     @purge_group.command(name="all", description="Deletes all messages in the channel (up to 14 days old).")
-    @commands.has_permissions(manage_messages=True)
-    async def purge_all(self, ctx: commands.Context):
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def purge_all(self, interaction: discord.Interaction):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, 0, None, "All", None, None, is_all=True)
 
     @purge_group.command(name="bots", description="Deletes messages sent by bots.")
-    @commands.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.describe(count="Number of messages to delete (1-100)", user="Optional member to filter deleted messages by", after="Message ID to purge messages after")
-    async def purge_bots(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
+    async def purge_bots(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, lambda m: m.author.bot, "Bots", user, after)
 
     @purge_group.command(name="embeds", description="Deletes messages containing embeds.")
-    @commands.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.describe(count="Number of messages to delete (1-100)", user="Optional member to filter deleted messages by", after="Message ID to purge messages after")
-    async def purge_embeds(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
+    async def purge_embeds(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, lambda m: len(m.embeds) > 0, "Embeds", user, after)
 
     @purge_group.command(name="humans", description="Deletes messages sent by humans.")
-    @commands.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.describe(count="Number of messages to delete (1-100)", user="Optional member to filter deleted messages by", after="Message ID to purge messages after")
-    async def purge_humans(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
+    async def purge_humans(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, lambda m: not m.author.bot, "Humans", user, after)
 
     @purge_group.command(name="images", description="Deletes messages containing images/attachments.")
-    @commands.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.describe(count="Number of messages to delete (1-100)", user="Optional member to filter deleted messages by", after="Message ID to purge messages after")
-    async def purge_images(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
+    async def purge_images(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, lambda m: len(m.attachments) > 0, "Images", user, after)
 
     @purge_group.command(name="invites", description="Deletes messages containing Discord invites.")
-    @commands.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.describe(count="Number of messages to delete (1-100)", user="Optional member to filter deleted messages by", after="Message ID to purge messages after")
-    async def purge_invites(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
+    async def purge_invites(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, lambda m: "discord.gg/" in m.content.lower() or "discord.com/invite/" in m.content.lower(), "Invites", user, after)
 
     @purge_group.command(name="links", description="Deletes messages containing links.")
-    @commands.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.describe(count="Number of messages to delete (1-100)", user="Optional member to filter deleted messages by", after="Message ID to purge messages after")
-    async def purge_links(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
+    async def purge_links(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, lambda m: "http://" in m.content.lower() or "https://" in m.content.lower(), "Links", user, after)
 
     @purge_group.command(name="mentions", description="Deletes messages containing mentions.")
-    @commands.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.describe(count="Number of messages to delete (1-100)", user="Optional member to filter deleted messages by", after="Message ID to purge messages after")
-    async def purge_mentions(self, ctx: commands.Context, count: int, user: discord.Member = None, after: str = None):
+    async def purge_mentions(self, interaction: discord.Interaction, count: int, user: discord.Member = None, after: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         await _do_purge(ctx, count, lambda m: len(m.mentions) > 0 or len(m.role_mentions) > 0, "Mentions", user, after)
 
-    @purge_group.error
-    @purge_all.error
-    @purge_bots.error
-    @purge_embeds.error
-    @purge_humans.error
-    @purge_images.error
-    @purge_invites.error
-    @purge_links.error
-    @purge_mentions.error
-    async def purge_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(embed=make_embed("You need Manage Messages permission to purge messages.", discord.Color.red()), ephemeral=True)
-        else:
-            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    bot.remove_command("purge")
     await bot.add_cog(PurgeCog(bot))

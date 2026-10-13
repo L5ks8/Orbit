@@ -1,9 +1,10 @@
 import math
 import discord
+from discord import app_commands
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, Button, ActionRow
+from discord.ui import Button
 from Components.Commands.Warn._storage import get_user_warnings
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class WarningsListLayout(discord.ui.View):
@@ -18,7 +19,6 @@ class WarningsListLayout(discord.ui.View):
         self._build_view()
 
     def _build_view(self):
-
         btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def close_cb(interaction: discord.Interaction):
@@ -98,13 +98,15 @@ class CheckWarnsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="checkwarns", aliases=["checkwarn", "warnings", "warnlist"], description="Check all active warnings issued to a member.")
-    async def checkwarn_cmd(self, ctx: commands.Context, user: discord.Member = None):
+    @app_commands.command(name="checkwarns", description="Check all active warnings issued to a member.")
+    async def checkwarn_cmd(self, interaction: discord.Interaction, user: discord.Member = None):
+        ctx = InteractionContext(interaction)
         await _do_warnings(ctx, user)
 
     @checkwarn_cmd.error
-    async def checkwarns_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.BadArgument):
+    async def checkwarns_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.AppCommandError, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/checkwarns", "[member]")), ephemeral=True)
 
 async def setup(bot: commands.Bot):

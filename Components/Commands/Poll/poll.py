@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import Button
 from Components.Commands.Poll._storage import generate_poll_id, create_poll_entry, get_poll_entry
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.Commands._utils import make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 def make_bar(pct: int, length: int = 15) -> str:
@@ -13,17 +13,7 @@ def make_bar(pct: int, length: int = 15) -> str:
     empty = length - filled
     return "█" * filled + "░" * empty
 
-try:
-    from discord.ui import LayoutView, Container, TextDisplay, ActionRow
-    HAS_V2 = True
-except ImportError:
-    HAS_V2 = False
-    LayoutView = discord.ui.View
-    Container = None
-    TextDisplay = None
-    ActionRow = None
-
-class ComponentsPollView(LayoutView):
+class ComponentsPollView(discord.ui.View):
     def __init__(self, guild_id: int, poll_id: str, question: str, options: list[str], author: discord.Member, duration_minutes: int):
         super().__init__(timeout=None)
         self.guild_id = guild_id
@@ -67,26 +57,8 @@ class ComponentsPollView(LayoutView):
         signature_color = discord.Color(0x5865F2)
 
         self.clear_items()
-
-        if HAS_V2:
-            body_text = (
-                f"# Community Poll\n\n"
-                f"**Question**\n{self.question}\n\n"
-                f"**Author** <@{self.author.id}> · **Duration** `{dur_str}` · **Total Votes** `{total_votes}`\n\n"
-                f"{content_str}"
-            )
-            action_rows = []
-            for i in range(0, len(buttons), 5):
-                action_rows.append(ActionRow(*buttons[i:i+5]))
-
-            container = Container(
-                TextDisplay(content=body_text),
-                *action_rows,
-                accent_color=signature_color
-            )
-            self.add_item(container)
-            self.add_item(TextDisplay(content=f"-# Poll ID: #{self.poll_id} • Select a button to cast your vote"))
-            return {"view": self}
+        for btn in buttons:
+            self.add_item(btn)
 
         embed = discord.Embed(
             title="Community Poll",
@@ -94,15 +66,13 @@ class ComponentsPollView(LayoutView):
             color=signature_color
         )
         embed.set_footer(text=f"Poll ID: {self.poll_id}")
-        for btn in buttons:
-            self.add_item(btn)
         return {"embed": embed, "view": self}
 
 class PollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(
+    @app_commands.command(
         name="poll",
         description="Creates a visual bar poll with options separated by commas and duration in minutes."
     )
@@ -111,7 +81,8 @@ class PollCommand(commands.Cog):
         options="Comma-separated options (e.g. Red, Blue, Green)",
         duration="Poll duration in minutes (e.g. 60 for 1 hour, 1440 for 24 hours)"
     )
-    async def poll(self, ctx: commands.Context, question: str, options: str, duration: int = 60):
+    async def poll(self, interaction: discord.Interaction, question: str, options: str, duration: int = 60):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -139,8 +110,9 @@ class PollCommand(commands.Cog):
             )
 
     @poll.error
-    async def poll_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingRequiredArgument):
+    async def poll_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed("Usage: /poll <question> <options> [duration_in_minutes]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

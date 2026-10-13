@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -8,9 +8,11 @@ class SayCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="say", description="Makes the bot send a custom message into a channel.")
-    @commands.has_permissions(manage_messages=True)
-    async def say(self, ctx: commands.Context, message: str, channel: discord.TextChannel = None):
+    @app_commands.command(name="say", description="Makes the bot send a custom message into a channel.")
+    @app_commands.default_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def say(self, interaction: discord.Interaction, message: str, channel: discord.TextChannel = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         target_channel = channel or ctx.channel
         if not isinstance(target_channel, discord.TextChannel):
@@ -29,10 +31,11 @@ class SayCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"Error sending message: {e}", discord.Color.red()), ephemeral=True)
 
     @say.error
-    async def say_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def say_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Manage Messages permission to use the say command.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed("Usage: /say <message> [channel]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

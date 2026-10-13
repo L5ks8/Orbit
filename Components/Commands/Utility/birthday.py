@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import datetime
 from Components.Database.mongodb import get_db
-from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 class Birthday(commands.Cog):
@@ -14,9 +14,10 @@ class Birthday(commands.Cog):
     def cog_unload(self):
         self.check_birthdays.cancel()
 
-    @commands.hybrid_command(name="setbirthday", description="Save your birthday (Format: DD.MM)")
+    @app_commands.command(name="setbirthday", description="Save your birthday (Format: DD.MM)")
     @app_commands.describe(date="Your birthday in DD.MM format (e.g., 15.08)")
-    async def set_birthday(self, ctx: commands.Context, date: str):
+    async def set_birthday(self, interaction: discord.Interaction, date: str):
+        ctx = InteractionContext(interaction)
         try:
             day, month = map(int, date.split('.'))
             datetime.date(2000, month, day)

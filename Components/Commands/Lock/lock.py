@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -9,10 +9,12 @@ class LockCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="lock", description="Locks a text channel so regular members cannot send messages.")
-    @commands.has_permissions(manage_channels=True)
-    @commands.bot_has_permissions(manage_channels=True)
-    async def lock(self, ctx: commands.Context, channel: discord.TextChannel = None, *, reason: str = "No reason provided"):
+    @app_commands.command(name="lock", description="Locks a text channel so regular members cannot send messages.")
+    @app_commands.default_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.bot_has_permissions(manage_channels=True)
+    async def lock(self, interaction: discord.Interaction, channel: discord.TextChannel = None, *, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         target_channel = channel or ctx.channel
         if not isinstance(target_channel, discord.TextChannel):
@@ -47,10 +49,11 @@ class LockCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"Error locking channel: {e}", discord.Color.red()), ephemeral=True)
 
     @lock.error
-    async def lock_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def lock_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Manage Channels permission to lock channels.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed("Usage: /lock [#channel] [reason]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

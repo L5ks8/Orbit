@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ui import ActionRow, Button
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class UnbanConfirmView(discord.ui.View):
@@ -69,10 +69,12 @@ class UnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="unban", description="Unbans a user from the server using Components V2 UI.")
-    @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members=True)
-    async def unban(self, ctx: commands.Context, user_id: str, *, reason: str = "No reason provided"):
+    @app_commands.command(name="unban", description="Unbans a user from the server using Components V2 UI.")
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.bot_has_permissions(ban_members=True)
+    async def unban(self, interaction: discord.Interaction, user_id: str, *, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
         try:
             target_id = int(user_id.strip("<@!>"))
         except ValueError:
@@ -104,12 +106,13 @@ class UnbanCommand(commands.Cog):
         await ctx.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
     @unban.error
-    async def unban_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def unban_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You do not have permission to unban members.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BotMissingPermissions):
+        elif isinstance(error, (app_commands.BotMissingPermissions, commands.BotMissingPermissions)):
             await ctx.send(embed=make_embed("I am missing the Ban Members permission.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed("Usage: `/unban <ID> [reason]`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

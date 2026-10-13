@@ -5,7 +5,7 @@ from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -13,10 +13,12 @@ class KickCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="kick", description="Kicks a user immediately without confirmation using Components V2.")
-    @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True)
-    async def kick(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+    @app_commands.command(name="kick", description="Kicks a user immediately without confirmation using Components V2.")
+    @app_commands.default_permissions(kick_members=True)
+    @app_commands.checks.has_permissions(kick_members=True)
+    @app_commands.checks.bot_has_permissions(kick_members=True)
+    async def kick(self, interaction: discord.Interaction, target: discord.Member, *, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if target.id == ctx.author.id:
             return await ctx.send(embed=make_embed("You cannot kick yourself.", discord.Color.red()), ephemeral=True)
@@ -64,10 +66,11 @@ class KickCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"Error kicking user: {e}", discord.Color.red()), ephemeral=True)
 
     @kick.error
-    async def kick_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def kick_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You do not have permission to kick members.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BotMissingPermissions):
+        elif isinstance(error, (app_commands.BotMissingPermissions, commands.BotMissingPermissions)):
             await ctx.send(embed=make_embed("I am missing the Kick Members permission.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/kick", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)

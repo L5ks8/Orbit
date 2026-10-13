@@ -1,9 +1,10 @@
 import discord
 import io
+import os
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_leaderboard
-from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR
+from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -11,14 +12,12 @@ class LeaderboardCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_group(name="inviteleaderboard", description="Displays invite leaderboards for the server.")
-    async def leaderboard_group(self, ctx: commands.Context):
-        if ctx.invoked_subcommand is None:
-            await ctx.send(embed=make_embed("Please use `/inviteleaderboard invites`."), ephemeral=True)
+    leaderboard_group = app_commands.Group(name="inviteleaderboard", description="Displays invite leaderboards for the server.")
 
     @leaderboard_group.command(name="invites", description="Displays the top inviters of the server.")
     @app_commands.describe(limit="The number of users to show on the leaderboard")
-    async def leaderboard_invites(self, ctx: commands.Context, limit: int = 10):
+    async def leaderboard_invites(self, interaction: discord.Interaction, limit: int = 10):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         
         lb = get_leaderboard(ctx.guild.id, limit=limit)
@@ -66,7 +65,6 @@ class LeaderboardCommand(commands.Cog):
         )
         
         file = discord.File(io.BytesIO(img_bytes), filename="leaderboard.png")
-        import os
         base_url = os.environ.get("BASE_URL")
         embed = discord.Embed(
             title="Invite Leaderboard",
@@ -78,7 +76,8 @@ class LeaderboardCommand(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @leaderboard_invites.error
-    async def leaderboard_invites_error(self, ctx: commands.Context, error):
+    async def leaderboard_invites_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        ctx = InteractionContext(interaction)
         await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 

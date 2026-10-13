@@ -1,5 +1,5 @@
 import discord
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord import app_commands
 from discord.ext import commands
@@ -23,7 +23,7 @@ PERMISSION_MAP = {
 
 PERMISSION_CHOICES = [app_commands.Choice(name=k, value=k) for k in PERMISSION_MAP]
 
-async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission: str, state: str):
+async def _do_rolesettings(interaction: discord.Interaction, role: discord.Role, permission: str, state: str):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -94,8 +94,6 @@ async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission
     await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @role_group.command(name="settings", description="Configure permissions for a role across all channels.")
-@commands.has_permissions(administrator=True)
-@commands.bot_has_permissions(manage_roles=True)
 @app_commands.describe(
     role="The role to configure permissions for",
     permission="The permission to change across all channels",
@@ -109,7 +107,8 @@ async def _do_rolesettings(ctx: commands.Context, role: discord.Role, permission
         app_commands.Choice(name="reset", value="reset"),
     ]
 )
-async def role_settings_cmd(ctx: commands.Context, role: discord.Role, permission: str, state: str):
+async def role_settings_cmd(interaction: discord.Interaction, role: discord.Role, permission: str, state: str):
+    ctx = InteractionContext(interaction)
     await _do_rolesettings(ctx, role, permission, state)
 
 class RoleSettingsCog(commands.Cog):
@@ -117,7 +116,7 @@ class RoleSettingsCog(commands.Cog):
         self.bot = bot
 
     @role_settings_cmd.error
-    async def role_settings_error(self, ctx: commands.Context, error):
+    async def role_settings_error(self, interaction: discord.Interaction, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Administrator permission to use role settings.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
@@ -130,7 +129,4 @@ class RoleSettingsCog(commands.Cog):
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Role.role import role_group
-    if "role" not in bot.all_commands:
-        bot.add_command(role_group)
-    await bot.add_cog(RoleSettingsCog(bot))
+    pass

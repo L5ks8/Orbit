@@ -4,14 +4,14 @@ from discord.ext import commands
 import re
 from Components.Commands.Cases._storage import create_case
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class MassBanCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="massban", description="Bans multiple users from the server at once.")
+    @app_commands.command(name="massban", description="Bans multiple users from the server at once.")
     @app_commands.describe(
         users="The users to ban, separated by spaces (IDs or mentions)",
         reason="The reason for the mass ban",
@@ -26,9 +26,11 @@ class MassBanCog(commands.Cog):
         app_commands.Choice(name="3 Days", value=259200),
         app_commands.Choice(name="7 Days", value=604800)
     ])
-    @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members=True)
-    async def massban_cmd(self, ctx: commands.Context, users: str, reason: str = "No reason provided", history: int = 0):
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.bot_has_permissions(ban_members=True)
+    async def massban_cmd(self, interaction: discord.Interaction, users: str, reason: str = "No reason provided", history: int = 0):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         
         user_ids_raw = re.findall(r'\d+', users)
@@ -79,10 +81,11 @@ class MassBanCog(commands.Cog):
             await ctx.send(embed=embed)
 
     @massban_cmd.error
-    async def massban_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def massban_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need `Ban Members` permission to use this command.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BotMissingPermissions):
+        elif isinstance(error, (app_commands.BotMissingPermissions, commands.BotMissingPermissions)):
             await ctx.send(embed=make_embed("I need `Ban Members` permission to execute this command."), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

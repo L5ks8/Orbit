@@ -1,12 +1,12 @@
 import discord
-from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Voice._storage import remove_from_vcban
 from Components.Commands.Voice.voice import voice_group
 
 
-async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
+async def _do_vc_unban(interaction: discord.Interaction, user: discord.User, reason: str):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -36,25 +36,15 @@ async def _do_vc_unban(ctx: commands.Context, user: discord.User, reason: str):
     await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @voice_group.command(name="unban", description="Remove a voice ban from a user.")
-@commands.has_permissions(move_members=True)
-async def vc_unban_cmd(ctx: commands.Context, user: discord.User, *, reason: str = "No reason provided"):
+async def vc_unban_cmd(interaction: discord.Interaction, user: discord.User, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_vc_unban(ctx, user, reason)
 
-@vc_unban_cmd.error
-async def vcunban_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need Move Members permission to voice unban users.", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: `/voice unban <target> [reason]`", discord.Color.red()), ephemeral=True)
-    else:
-        await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
+
 
 class VcUnbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Voice.voice import voice_group
-    if "voice" not in bot.all_commands:
-        bot.add_command(voice_group)
-    await bot.add_cog(VcUnbanCommand(bot))
+    pass

@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 from typing import Literal
@@ -10,9 +10,11 @@ class ManageCodesCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="deleteinvite", description="Delete an invite code in the server.")
-    @commands.has_permissions(manage_guild=True)
-    async def deleteinvite(self, ctx: commands.Context, code: str):
+    @app_commands.command(name="deleteinvite", description="Delete an invite code in the server.")
+    @app_commands.default_permissions(manage_guild=True)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def deleteinvite(self, interaction: discord.Interaction, code: str):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         
         try:
@@ -40,16 +42,19 @@ class ManageCodesCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"An error occurred: {e}", discord.Color.red()), ephemeral=True)
 
     @deleteinvite.error
-    async def deleteinvite_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def deleteinvite_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 
-    @commands.hybrid_command(name="purge-invite-codes", description="Purge invite codes from your server based on conditions.")
-    @commands.has_permissions(manage_guild=True)
-    async def purge_invite_codes(self, ctx: commands.Context, condition: Literal["all", "0_uses", "expired", "temporary"]):
+    @app_commands.command(name="purge-invite-codes", description="Purge invite codes from your server based on conditions.")
+    @app_commands.default_permissions(manage_guild=True)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def purge_invite_codes(self, interaction: discord.Interaction, condition: Literal["all", "0_uses", "expired", "temporary"]):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         
         try:
@@ -93,8 +98,9 @@ class ManageCodesCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"An error occurred: {e}", discord.Color.red()), ephemeral=True)
 
     @purge_invite_codes.error
-    async def purge_invite_codes_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def purge_invite_codes_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You do not have permission to manage invites.", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

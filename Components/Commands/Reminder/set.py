@@ -1,5 +1,5 @@
 import discord
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Reminder.reminder import reminder_group
@@ -7,7 +7,7 @@ from Components.Commands.Reminder.remind import remind_group
 from Components.Commands.Reminder._storage import add_reminder
 from Components.Commands.Reminder._views import parse_duration
 
-async def _do_remind_set(ctx: commands.Context, duration_str: str, text: str):
+async def _do_remind_set(interaction: discord.Interaction, duration_str: str, text: str):
     await ctx.defer()
     seconds = parse_duration(duration_str)
     if not seconds or seconds <= 0:
@@ -36,10 +36,9 @@ async def _do_remind_set(ctx: commands.Context, duration_str: str, text: str):
     await ctx.send(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 
 @remind_group.command(name="set", description="Schedule a new reminder.")
-async def remind_set_cmd(ctx: commands.Context, duration: str, *, text: str):
+async def remind_set_cmd(interaction: discord.Interaction, duration: str, *, text: str):
+    ctx = InteractionContext(interaction)
     await _do_remind_set(ctx, duration, text)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Reminder.remind import remind_group
-    if "remind" not in bot.all_commands:
-        bot.add_command(remind_group)
+    pass

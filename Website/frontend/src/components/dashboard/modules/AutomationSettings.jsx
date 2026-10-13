@@ -69,11 +69,12 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
       }
     });
 
-  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
+  const [initialState, setInitialState] = React.useState(() => JSON.stringify(getPayload()));
   const isDirty = JSON.stringify(getPayload()) !== initialState;
 
   const handleSave = () => {
-    onSave(getPayload());
+    onSave(getPayload(), true);
+    setInitialState(JSON.stringify(getPayload()));
     if (resetCountRequested) {
       setCurrentCount(0);
       setResetCountRequested(false);

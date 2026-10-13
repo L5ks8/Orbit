@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 class Snipe(commands.Cog):
@@ -36,8 +36,9 @@ class Snipe(commands.Cog):
             "created_at": discord.utils.utcnow()
         }
 
-    @commands.hybrid_command(name="snipe", description="Shows the last deleted message in this channel.")
-    async def snipe(self, ctx: commands.Context):
+    @app_commands.command(name="snipe", description="Shows the last deleted message in this channel.")
+    async def snipe(self, interaction: discord.Interaction):
+        ctx = InteractionContext(interaction)
         data = self.deleted_messages.get(ctx.channel.id)
         if not data:
             return await ctx.send(embed=make_embed("No deleted messages found.", discord.Color.red()), ephemeral=True)
@@ -56,8 +57,9 @@ class Snipe(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="editsnipe", description="Shows the original version of the last edited message.")
-    async def editsnipe(self, ctx: commands.Context):
+    @app_commands.command(name="editsnipe", description="Shows the original version of the last edited message.")
+    async def editsnipe(self, interaction: discord.Interaction):
+        ctx = InteractionContext(interaction)
         data = self.edited_messages.get(ctx.channel.id)
         if not data:
             return await ctx.send(embed=make_embed("No edited messages found.", discord.Color.red()), ephemeral=True)

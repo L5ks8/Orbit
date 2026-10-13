@@ -1,14 +1,10 @@
 import math
 import discord
+from discord import app_commands
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from discord.ui import Button
+from Components.Commands._utils import make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
-
-@commands.hybrid_group(name="all", description="View all server items.")
-async def all_group(ctx: commands.Context):
-    if ctx.invoked_subcommand is None:
-        await ctx.send(embed=make_embed("Please use `/all roles`."), ephemeral=True)
 
 class AllRolesLayout(discord.ui.View):
     def __init__(self, guild: discord.Guild, roles: list[discord.Role], author_id: int):
@@ -24,7 +20,6 @@ class AllRolesLayout(discord.ui.View):
     def refresh_page(self):
         self.clear_items()
 
-
         btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def close_callback(interaction: discord.Interaction):
@@ -33,9 +28,7 @@ class AllRolesLayout(discord.ui.View):
             try:
                 await interaction.message.delete()
             except Exception:
-                self.clear_items()
-                self.add_item(Container(TextDisplay(content="### Roles list closed\nSession ended by moderator.")))
-                await interaction.response.edit_message(view=self)
+                await interaction.response.edit_message(content="Session ended by moderator.", embed=None, view=None)
                 self.stop()
 
         btn_close.callback = close_callback
@@ -62,6 +55,7 @@ class AllRolesLayout(discord.ui.View):
 
             btn_prev.callback = prev_callback
             btn_next.callback = next_callback
+
         components = []
         if self.total_pages > 1:
             components.extend([btn_prev, btn_next])
@@ -99,16 +93,10 @@ async def _do_allroles(ctx: commands.Context):
     kwargs = view.get_kwargs(ctx.guild.id)
     await ctx.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
 
-@commands.hybrid_command(name="allroles", description="Display all roles on the server.")
-async def allroles_cmd(ctx: commands.Context):
-    await _do_allroles(ctx)
-
-@all_group.command(name="roles", description="Display all roles on the server.")
-async def all_roles_cmd(ctx: commands.Context):
+@app_commands.command(name="allroles", description="Display all roles on the server.")
+async def allroles_cmd(interaction: discord.Interaction):
+    ctx = InteractionContext(interaction)
     await _do_allroles(ctx)
 
 async def setup(bot: commands.Bot):
-    if "all" not in bot.all_commands:
-        bot.add_command(all_group)
-    if "allroles" not in bot.all_commands:
-        bot.add_command(allroles_cmd)
+    bot.tree.add_command(allroles_cmd)

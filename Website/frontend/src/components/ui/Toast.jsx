@@ -23,7 +23,7 @@ export function ToastProvider({ children }) {
     return id;
   }, [removeToast]);
 
-  const updateToast = useCallback((id, message, type = 'info', duration = 5000) => {
+  const updateToast = useCallback((id, message, type = 'info', duration = 3000) => {
     setToasts(prev => prev.map(t => t.id === id ? { ...t, message, type, leaving: false } : t));
     if (duration > 0) {
       setTimeout(() => removeToast(id), duration);
@@ -52,7 +52,7 @@ export function ToastProvider({ children }) {
               )}
               {toast.type === 'loading' && (
                 <svg className="animate-spin text-neutral-400" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" strokeWidth="4"></circle>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               )}
@@ -84,8 +84,8 @@ export function useToast() {
   return React.useMemo(() => {
     const toast = (message, type) => addToast(message, type);
     toast.loading = (message) => addToast(message, 'loading', 0);
-    toast.success = (message, opts) => opts?.id ? updateToast(opts.id, message, 'success') : addToast(message, 'success');
-    toast.error = (message, opts) => opts?.id ? updateToast(opts.id, message, 'error') : addToast(message, 'error');
+    toast.success = (message, opts) => opts?.id ? updateToast(opts.id, message, 'success', opts?.duration ?? 3000) : addToast(message, 'success', opts?.duration ?? 3000);
+    toast.error = (message, opts) => opts?.id ? updateToast(opts.id, message, 'error', opts?.duration ?? 4000) : addToast(message, 'error', opts?.duration ?? 4000);
     toast.dismiss = (id) => removeToast(id);
     return toast;
   }, [addToast, removeToast, updateToast]);

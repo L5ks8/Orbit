@@ -5,7 +5,7 @@ from discord.ui import View, Button
 from Components.Commands.ModLog._modlog_storage import get_modlogs
 from Components.Commands.Warn._storage import load_warnings
 from Components.Commands.Ban._storage import load_ban_history
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class ModLogPaginationView(View):
@@ -72,10 +72,12 @@ class ModLogCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="modlog", aliases=["modlogs"], description="View the moderation actions performed by an admin/moderator.")
+    @app_commands.command(name="modlog", description="View the moderation actions performed by an admin/moderator.")
     @app_commands.describe(user="The moderator or admin to check")
-    @commands.has_permissions(moderate_members=True)
-    async def modlog_cmd(self, ctx: commands.Context, user: discord.Member | discord.User):
+    @app_commands.default_permissions(moderate_members=True)
+    @app_commands.checks.has_permissions(moderate_members=True)
+    async def modlog_cmd(self, interaction: discord.Interaction, user: discord.Member | discord.User):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         
         user_target = user
@@ -161,8 +163,9 @@ class ModLogCommand(commands.Cog):
             await ctx.send(embed=embed, view=view)
 
     @modlog_cmd.error
-    async def modlog_cmd_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def modlog_cmd_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need `Moderate Members` permission to view modlogs.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/modlog", "<user>"), discord.Color.red()), ephemeral=True)

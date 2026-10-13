@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card
+from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -48,12 +48,14 @@ class ServerInfoCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="serverinfo", aliases=["server"], description="Display complete server statistics and overview.")
-    async def serverinfo_cmd(self, ctx: commands.Context):
+    @app_commands.command(name="serverinfo", description="Display complete server statistics and overview.")
+    async def serverinfo_cmd(self, interaction: discord.Interaction):
+        ctx = InteractionContext(interaction)
         await _do_server_info(ctx)
 
-    @commands.hybrid_command(name="membercount", description="Get the server member count.")
-    async def membercount_cmd(self, ctx: commands.Context):
+    @app_commands.command(name="membercount", description="Get the server member count.")
+    async def membercount_cmd(self, interaction: discord.Interaction):
+        ctx = InteractionContext(interaction)
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
             

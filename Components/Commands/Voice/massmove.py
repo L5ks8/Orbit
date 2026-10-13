@@ -1,21 +1,23 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class MassMoveCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="massmove", description="Moves all members from one voice channel to another.")
+    @app_commands.command(name="massmove", description="Moves all members from one voice channel to another.")
     @app_commands.describe(
         from_channel="The voice channel to move members from",
         to_channel="The voice channel to move members to"
     )
-    @commands.has_permissions(move_members=True)
-    @commands.bot_has_permissions(move_members=True)
-    async def massmove_cmd(self, ctx: commands.Context, from_channel: discord.VoiceChannel, to_channel: discord.VoiceChannel):
+    @app_commands.default_permissions(move_members=True)
+    @app_commands.checks.has_permissions(move_members=True)
+    @app_commands.checks.bot_has_permissions(move_members=True)
+    async def massmove_cmd(self, interaction: discord.Interaction, from_channel: discord.VoiceChannel, to_channel: discord.VoiceChannel):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         
         if from_channel.id == to_channel.id:
@@ -58,10 +60,11 @@ class MassMoveCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @massmove_cmd.error
-    async def massmove_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def massmove_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need `Move Members` permission to use this command.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BotMissingPermissions):
+        elif isinstance(error, (app_commands.BotMissingPermissions, commands.BotMissingPermissions)):
             await ctx.send(embed=make_embed("I need `Move Members` permission to execute this command."), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

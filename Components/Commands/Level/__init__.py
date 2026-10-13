@@ -1,1 +1,3 @@
-from Components.Commands.Level import level, level_admin
+import sys
+sys.dont_write_bytecode = True
+from .init import setup

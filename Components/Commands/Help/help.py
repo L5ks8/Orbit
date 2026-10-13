@@ -1,19 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import ActionRow, Button, Select
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from discord.ui import Button, Select
+from Components.Commands._utils import make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
-
-try:
-    from discord.ui import LayoutView, Container, TextDisplay
-    HAS_V2 = True
-except ImportError:
-    HAS_V2 = False
-    LayoutView = discord.ui.View
-    Container = None
-    TextDisplay = None
-
 
 PAGES = [
     {
@@ -167,7 +157,7 @@ class HelpCategorySelect(discord.ui.Select):
         self.parent_view.current_page = page_idx
         await interaction.response.edit_message(**self.parent_view.get_kwargs())
 
-class HelpLayout(LayoutView):
+class HelpLayout(discord.ui.View):
     def __init__(self, bot: commands.Bot, author_id: int, guild_id: int = None, current_page: int = 0):
         super().__init__(timeout=300)
         self.bot = bot
@@ -215,18 +205,6 @@ class HelpLayout(LayoutView):
         signature_color = discord.Color(0x5865F2)
         self.clear_items()
 
-        if HAS_V2:
-            body_text = f"# Orbit Command Guide: {page['title']}\n\n{page['description']}"
-            container = Container(
-                TextDisplay(content=body_text),
-                ActionRow(select_menu),
-                ActionRow(btn_prev, btn_page, btn_next, btn_close),
-                accent_color=signature_color
-            )
-            self.add_item(container)
-            self.add_item(TextDisplay(content=f"-# Page {self.current_page + 1} of {len(PAGES)} • Orbit Command System"))
-            return {"view": self}
-
         components = [select_menu, btn_prev, btn_page, btn_next, btn_close]
         embed = discord.Embed(
             title=f"Orbit Command Guide: {page['title']}",
@@ -246,14 +224,16 @@ class HelpCommandCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="help", description="Displays an interactive paginated guide of all Orbit commands.")
-    async def help_cmd(self, ctx: commands.Context):
+    @app_commands.command(name="help", description="Displays an interactive paginated guide of all Orbit commands.")
+    async def help_cmd(self, interaction: discord.Interaction):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         view = HelpLayout(self.bot, ctx.author.id, ctx.guild.id if ctx.guild else 0, 0)
         await ctx.send(**view.get_kwargs(), allowed_mentions=discord.AllowedMentions.none())
 
     @help_cmd.error
-    async def help_error(self, ctx: commands.Context, error):
+    async def help_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         await ctx.send(embed=make_embed(f"An error occurred displaying help: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):

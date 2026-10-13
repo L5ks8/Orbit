@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import delete_warning, get_user_warnings
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -50,14 +50,17 @@ class DelWarnCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="delwarn", aliases=["removewarn", "warnremove"], description="Remove a specific warning from a member by ID.")
-    @commands.has_permissions(moderate_members=True)
-    async def delwarn_cmd(self, ctx: commands.Context, user: discord.Member, warn_id: str):
+    @app_commands.command(name="delwarn", description="Remove a specific warning from a member by ID.")
+    @app_commands.default_permissions(moderate_members=True)
+    @app_commands.checks.has_permissions(moderate_members=True)
+    async def delwarn_cmd(self, interaction: discord.Interaction, user: discord.Member, warn_id: str):
+        ctx = InteractionContext(interaction)
         await _do_delwarn(ctx, user, warn_id)
 
     @delwarn_cmd.error
-    async def delwarn_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def delwarn_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Moderate Members permission to manage warnings.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/delwarn", "<@member>", "<warn_id>"), discord.Color.red()), ephemeral=True)

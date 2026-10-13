@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Afk._storage import set_afk, get_afk
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -9,8 +9,9 @@ class AfkCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="afk", description="Sets your AFK status with an optional reason.")
-    async def afk(self, ctx: commands.Context, *, reason: str = "AFK"):
+    @app_commands.command(name="afk", description="Sets your AFK status with an optional reason.")
+    async def afk(self, interaction: discord.Interaction, *, reason: str = "AFK"):
+        ctx = InteractionContext(interaction)
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command can only be used inside a server.", discord.Color.red()), ephemeral=True)
 

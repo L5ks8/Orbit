@@ -1,10 +1,11 @@
 import re
 import discord
 from discord.ext import commands
+from discord import app_commands
 from Components.Commands.Blacklist._storage import add_to_blacklist
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import make_embed, make_v2_card
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
@@ -47,15 +48,16 @@ async def _do_bl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     else:
         await ctx.send(embed=make_embed(f"Added ID `{user_id}` to the blacklist.{ban_msg}", ORBIT_COLOR), ephemeral=True)
 
-@commands.hybrid_command(
-    name="blacklist",
-    description="Add an ID to the blacklist."
-)
-@commands.has_permissions(administrator=True)
-async def blacklist_cmd(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
-    await _do_bl_add(ctx, target_id, reason)
+class BlacklistCommand(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @app_commands.command(name="blacklist", description="Add an ID to the server command blacklist.")
+    @app_commands.describe(target_id="The user ID to blacklist", reason="Reason for the blacklist")
+    @app_commands.default_permissions(administrator=True)
+    async def blacklist_cmd(self, interaction: discord.Interaction, target_id: str = None, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
+        await _do_bl_add(ctx, target_id, reason)
 
 async def setup(bot: commands.Bot):
-    if "blacklist" not in bot.all_commands:
-        bot.add_command(blacklist_cmd)
-
+    await bot.add_cog(BlacklistCommand(bot))

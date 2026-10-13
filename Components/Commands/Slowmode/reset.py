@@ -1,12 +1,12 @@
 import discord
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Slowmode.slowmode import slowmode_group
 
 
-async def _do_slowmode_remove(ctx: commands.Context, channel: discord.TextChannel | None):
+async def _do_slowmode_remove(interaction: discord.Interaction, channel: discord.TextChannel | None):
     await ctx.defer()
     target_channel = channel or ctx.channel
     if not isinstance(target_channel, discord.TextChannel):
@@ -35,9 +35,8 @@ async def _do_slowmode_remove(ctx: commands.Context, channel: discord.TextChanne
         await ctx.send(embed=make_embed(f"Error removing slowmode: {e}", discord.Color.red()), ephemeral=True)
 
 @slowmode_group.command(name="reset", description="Reset channel slowmode delay.")
-@commands.has_permissions(manage_channels=True)
-@commands.bot_has_permissions(manage_channels=True)
-async def slowmode_remove_cmd(ctx: commands.Context, channel: discord.TextChannel = None):
+async def slowmode_remove_cmd(interaction: discord.Interaction, channel: discord.TextChannel = None):
+    ctx = InteractionContext(interaction)
     await _do_slowmode_remove(ctx, channel)
 
 class SlowmodeRemoveCommand(commands.Cog):
@@ -45,14 +44,11 @@ class SlowmodeRemoveCommand(commands.Cog):
         self.bot = bot
 
     @slowmode_remove_cmd.error
-    async def slowmoderemove_error(self, ctx: commands.Context, error):
+    async def slowmoderemove_error(self, interaction: discord.Interaction, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Channels permission to reset slowmode.", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Slowmode.slowmode import slowmode_group
-    if "slowmode" not in bot.all_commands:
-        bot.add_command(slowmode_group)
-    await bot.add_cog(SlowmodeRemoveCommand(bot))
+    pass

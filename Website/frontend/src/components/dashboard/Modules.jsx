@@ -63,7 +63,7 @@ export default function Modules({ guildId, serverData, setServerData }) {
   };
 
   
-  const handleSave = async (payload, preventRemount = false) => {
+  const handleSave = async (payload, preventRemount = true) => {
     setSaving(true);
     const toastId = toast.loading('Saving...');
     try {
@@ -90,7 +90,7 @@ export default function Modules({ guildId, serverData, setServerData }) {
           });
           return { ...prev, config: newConfig };
         });
-        toast.success("Settings saved successfully!", { id: toastId });
+        toast.success("Saved", { id: toastId });
         if (!preventRemount) {
           handleReset();
         }

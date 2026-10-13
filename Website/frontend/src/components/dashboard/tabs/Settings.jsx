@@ -104,6 +104,7 @@ export default function Settings({ guildId, serverData, setServerData }) {
 
   const saveSettings = () => {
     setSaving(true);
+    const toastId = toast.loading("Saving...");
     fetch(`/api/config/${guildId}`, {
       method: 'POST',
       headers: { 
@@ -113,11 +114,15 @@ export default function Settings({ guildId, serverData, setServerData }) {
       body: JSON.stringify(getPayload())
     })
       .then(res => res.json())
-      .then(() => {
-        toast("Settings saved!", 'success');
-        setInitialState(JSON.stringify(getPayload()));
+      .then((data) => {
+        if (data.error) {
+          toast.error("Failed to save: " + data.error, { id: toastId });
+        } else {
+          toast.success("Saved", { id: toastId });
+          setInitialState(JSON.stringify(getPayload()));
+        }
       })
-      .catch(() => toast("Failed to save settings.", 'error'))
+      .catch(() => toast.error("Failed to save settings.", { id: toastId }))
       .finally(() => setSaving(false));
   };
 

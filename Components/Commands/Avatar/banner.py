@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord.ui import ActionRow, Button, View
 
@@ -9,8 +9,9 @@ class BannerCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="banner", description="Displays a user's profile banner.")
-    async def banner(self, ctx: commands.Context, user: discord.Member = None):
+    @app_commands.command(name="banner", description="Displays a user's profile banner.")
+    async def banner(self, interaction: discord.Interaction, user: discord.Member = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         target = user or ctx.author
 

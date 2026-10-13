@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Channel.channel import channel_group
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
-async def _do_create(ctx: commands.Context, name: str, channel_type: str, category: discord.CategoryChannel | None):
+async def _do_create(interaction: discord.Interaction, name: str, channel_type: str, category: discord.CategoryChannel | None):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -50,24 +50,15 @@ async def _do_create(ctx: commands.Context, name: str, channel_type: str, catego
         await ctx.send(embed=embed, delete_after=8, allowed_mentions=discord.AllowedMentions.none())
 
 @channel_group.command(name="create", description="Create a new channel.")
-@commands.has_permissions(manage_channels=True)
 async def channel_create_cmd(
-    ctx: commands.Context,
-    name: str,
+    ctx = InteractionContext(interaction)
+    interaction: discord.Interaction, name: str,
     channel_type: str = "text",
     category: discord.CategoryChannel = None
 ):
     await _do_create(ctx, name, channel_type, category)
 
-@channel_create_cmd.error
-async def create_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need `Manage Channels` permission to create channels.", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: `/channel create <name> [text/voice] [#category]`", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.BadArgument):
-        await ctx.send(embed=make_embed("Could not find that category.", discord.Color.red()), ephemeral=True)
+
 
 async def setup(bot: commands.Bot):
-    if "channel" not in bot.all_commands:
-        bot.add_command(channel_group)
+    pass

@@ -20,7 +20,7 @@ from Components.Systems.Tickets._views import (
     TicketControlLayout,
     close_ticket_flow
 )
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_ticket_add(ctx: commands.Context, member: discord.Member):
@@ -284,39 +284,47 @@ async def _do_ticket_unblacklist(ctx: commands.Context, member: discord.Member):
     else:
         await ctx.send(embed=discord.Embed(description=f"{member.mention} was not blacklisted.", color=ORBIT_COLOR), ephemeral=True)
 
-@commands.hybrid_group(name="ticket", description="Support ticket tools.")
-@commands.has_permissions(manage_channels=True)
-async def ticket_group(ctx: commands.Context):
-    if ctx.invoked_subcommand is None:
-        await ctx.send(embed=make_embed("Use: `add`, `remove`, `close`, or `transcript`.", discord.Color.red()), ephemeral=True)
+ticket_group = app_commands.Group(name="ticket", description="Support ticket tools.", default_permissions=discord.Permissions(manage_channels=True))
 
 @ticket_group.command(name="add", description="Add a member to a ticket")
 @app_commands.describe(member="The member to grant access to this ticket")
-async def ticket_add_cmd(ctx: commands.Context, member: discord.Member):
+@app_commands.checks.has_permissions(manage_channels=True)
+async def ticket_add_cmd(interaction: discord.Interaction, member: discord.Member):
+    ctx = InteractionContext(interaction)
     await _do_ticket_add(ctx, member)
 
 @ticket_group.command(name="remove", description="Remove a member from a ticket")
 @app_commands.describe(member="The member to remove from this ticket")
-async def ticket_remove_cmd(ctx: commands.Context, member: discord.Member):
+@app_commands.checks.has_permissions(manage_channels=True)
+async def ticket_remove_cmd(interaction: discord.Interaction, member: discord.Member):
+    ctx = InteractionContext(interaction)
     await _do_ticket_remove(ctx, member)
 
 @ticket_group.command(name="close", description="Close the current ticket")
 @app_commands.describe(reason="Optional explanation for why the ticket is being closed")
-async def ticket_close_cmd(ctx: commands.Context, reason: str = "Closed via command"):
+@app_commands.checks.has_permissions(manage_channels=True)
+async def ticket_close_cmd(interaction: discord.Interaction, reason: str = "Closed via command"):
+    ctx = InteractionContext(interaction)
     await _do_ticket_close(ctx, reason)
 
 @ticket_group.command(name="transcript", description="Export this ticket transcript")
-async def ticket_transcript_cmd(ctx: commands.Context):
+@app_commands.checks.has_permissions(manage_channels=True)
+async def ticket_transcript_cmd(interaction: discord.Interaction):
+    ctx = InteractionContext(interaction)
     await _do_ticket_transcript(ctx)
 
 @ticket_group.command(name="blacklist", description="Blacklist a user from opening tickets")
 @app_commands.describe(member="The user to blacklist", duration="Duration (e.g. 1d, 2h). Leave empty for permanent.")
-async def ticket_blacklist_cmd(ctx: commands.Context, member: discord.Member, duration: str = None):
+@app_commands.checks.has_permissions(manage_channels=True)
+async def ticket_blacklist_cmd(interaction: discord.Interaction, member: discord.Member, duration: str = None):
+    ctx = InteractionContext(interaction)
     await _do_ticket_blacklist(ctx, member, duration)
 
 @ticket_group.command(name="unblacklist", description="Remove a user from the ticket blacklist")
 @app_commands.describe(member="The user to unblacklist")
-async def ticket_unblacklist_cmd(ctx: commands.Context, member: discord.Member):
+@app_commands.checks.has_permissions(manage_channels=True)
+async def ticket_unblacklist_cmd(interaction: discord.Interaction, member: discord.Member):
+    ctx = InteractionContext(interaction)
     await _do_ticket_unblacklist(ctx, member)
 
 render_group = app_commands.Group(name="render", description="Render images from data")
@@ -343,22 +351,33 @@ class RenderTranscriptView(discord.ui.View):
         self.add_item(self.btn_next)
 
     async def _update_page(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        img = await generate_transcript_image(self.messages, self.current_page, self.per_page, guild=self.guild)
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer()
+        except Exception:
+            pass
+
+        img = await generate_transcript_image(self.messages, self.current_page, self.per_page, guild=self.guild, bot=interaction.client)
         if not img:
             return await interaction.followup.send(embed=make_embed("Failed to render page.", discord.Color.red()), ephemeral=True)
-            
+
         import io
         b = io.BytesIO()
         img.save(b, format='PNG')
         b.seek(0)
         file = discord.File(fp=b, filename=f"transcript_p{self.current_page+1}.png")
-        
+
         self.btn_prev.disabled = (self.current_page == 0)
         self.btn_next.disabled = (self.current_page == self.total_pages - 1)
         self.btn_page.label = f"Page {self.current_page + 1}/{self.total_pages}"
-        
-        await interaction.message.edit(attachments=[file], view=self)
+
+        try:
+            await interaction.message.edit(attachments=[file], view=self)
+        except Exception:
+            try:
+                await interaction.edit_original_response(attachments=[file], view=self)
+            except Exception:
+                pass
 
     async def on_prev(self, interaction: discord.Interaction):
         self.current_page -= 1
@@ -372,65 +391,48 @@ class RenderTranscriptView(discord.ui.View):
 @render_group.command(name="transcript", description="Render a ticket transcript HTML file into a chat history image")
 @app_commands.describe(file="The transcript HTML file to render")
 async def render_transcript_cmd(interaction: discord.Interaction, file: discord.Attachment):
+    # Defer immediately to prevent 10062 Unknown Interaction
+    try:
+        if not interaction.response.is_done():
+            await interaction.response.defer(thinking=True)
+    except Exception:
+        pass
+
     if not file.filename.endswith(".html"):
-        return await interaction.response.send_message(embed=make_embed("Please upload a valid .html transcript file."), ephemeral=True)
-        
-    await interaction.response.defer()
+        return await interaction.followup.send(embed=make_embed("Please upload a valid .html transcript file.", discord.Color.red()), ephemeral=True)
+
     try:
         content_bytes = await file.read()
         content_str = content_bytes.decode('utf-8', errors='ignore')
-        
+
         messages = parse_transcript(content_str)
         if not messages:
-            return await interaction.followup.send(embed=make_embed("No valid messages found in the transcript file."), ephemeral=True)
-            
-        img = await generate_transcript_image(messages, page=0, per_page=50, guild=interaction.guild)
+            return await interaction.followup.send(embed=make_embed("No valid messages found in the transcript file.", discord.Color.red()), ephemeral=True)
+
+        img = await generate_transcript_image(messages, page=0, per_page=50, guild=interaction.guild, bot=interaction.client)
         if not img:
             return await interaction.followup.send(embed=make_embed("Failed to render image.", discord.Color.red()), ephemeral=True)
-            
+
         import io
-        from Components.Commands._utils import make_embed
         b = io.BytesIO()
         img.save(b, format='PNG')
         b.seek(0)
         discord_file = discord.File(fp=b, filename="transcript_p1.png")
-        
+
         view = RenderTranscriptView(interaction, messages, current_page=0)
         await interaction.followup.send(file=discord_file, view=view)
-        
+
     except Exception as e:
-        await interaction.followup.send(embed=make_embed(f"An error occurred while rendering: {e}", discord.Color.red()), ephemeral=True)
+        try:
+            await interaction.followup.send(embed=make_embed(f"An error occurred while rendering: {e}", discord.Color.red()), ephemeral=True)
+        except Exception:
+            pass
 
 class TicketCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @ticket_add_cmd.error
-    async def add_error(self, ctx: commands.Context, error):
-        await ctx.send(embed=make_embed(f"Ticket add failed: {error}", discord.Color.red()), ephemeral=True)
-
-    @ticket_remove_cmd.error
-    async def remove_error(self, ctx: commands.Context, error):
-        await ctx.send(embed=make_embed(f"Ticket remove failed: {error}", discord.Color.red()), ephemeral=True)
-
-    @ticket_close_cmd.error
-    async def close_error(self, ctx: commands.Context, error):
-        await ctx.send(embed=make_embed(f"Ticket close failed: {error}", discord.Color.red()), ephemeral=True)
-
-    @ticket_transcript_cmd.error
-    async def transcript_error(self, ctx: commands.Context, error):
-        await ctx.send(embed=make_embed(f"Ticket transcript failed: {error}", discord.Color.red()), ephemeral=True)
-
-    @ticket_blacklist_cmd.error
-    async def blacklist_error(self, ctx: commands.Context, error):
-        await ctx.send(embed=make_embed(f"Ticket blacklist failed: {error}", discord.Color.red()), ephemeral=True)
-
-    @ticket_unblacklist_cmd.error
-    async def unblacklist_error(self, ctx: commands.Context, error):
-        await ctx.send(embed=make_embed(f"Ticket unblacklist failed: {error}", discord.Color.red()), ephemeral=True)
-
 async def setup(bot: commands.Bot):
-    if "ticket" not in bot.all_commands:
-        bot.add_command(ticket_group)
+    bot.tree.add_command(ticket_group)
     bot.tree.add_command(render_group)
     await bot.add_cog(TicketCog(bot))

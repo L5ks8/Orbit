@@ -4,16 +4,12 @@ import os
 
 ORBIT_COLOR = discord.Color(0x5865F2)
 
-try:
-    from discord.ui import Button, Container, TextDisplay, ActionRow, LayoutView, Separator
-    HAS_V2 = True
-except ImportError:
-    HAS_V2 = False
-    LayoutView = discord.ui.View
-    Container = None
-    TextDisplay = None
-    ActionRow = None
-    Separator = None
+HAS_V2 = False
+LayoutView = discord.ui.View
+Container = None
+TextDisplay = None
+ActionRow = None
+Separator = None
 
 def make_embed(description: str, color: discord.Color = ORBIT_COLOR, title: str = None) -> discord.Embed:
     actual_color = ORBIT_COLOR if color is None or color in (discord.Color.red(), discord.Color.green(), discord.Color.orange(), discord.Color.dark_gray()) else color
@@ -22,24 +18,49 @@ def make_embed(description: str, color: discord.Color = ORBIT_COLOR, title: str 
         embed.title = title
     return embed
 
-def make_v2_card(body: str, *components, color: discord.Color = ORBIT_COLOR, footer: str = None) -> LayoutView | None:
-    if not HAS_V2:
-        return None
-    actual_color = ORBIT_COLOR if color is None or color in (discord.Color.red(), discord.Color.green(), discord.Color.orange(), discord.Color.dark_gray()) else color
-    view = LayoutView(timeout=None)
-    items = [TextDisplay(content=body)]
-    for comp in components:
-        if isinstance(comp, ActionRow):
-            items.append(comp)
-        elif isinstance(comp, (list, tuple)):
-            items.append(ActionRow(*comp))
-        elif comp is not None:
-            items.append(comp)
-    container = Container(*items, accent_color=actual_color)
-    view.add_item(container)
-    if footer:
-        view.add_item(TextDisplay(content=f"-# {footer}"))
-    return view
+def make_v2_card(body: str, *components, color: discord.Color = ORBIT_COLOR, footer: str = None):
+    """Disabled to ensure all bot commands render clean, native Discord Embeds."""
+    return None
+
+class InteractionContext:
+    def __init__(self, interaction: discord.Interaction):
+        self.interaction = interaction
+        self.bot = interaction.client
+        self.client = interaction.client
+        self.guild = interaction.guild
+        self.channel = interaction.channel
+        self.author = interaction.user
+        self.user = interaction.user
+        self.me = interaction.guild.me if interaction.guild else interaction.client.user
+        self.message = None
+        self.command = getattr(interaction, "command", None)
+        self.invoked_with = interaction.command.name if getattr(interaction, "command", None) else ""
+        self.invoked_subcommand = None
+
+    async def defer(self, *, ephemeral: bool = False, thinking: bool = True):
+        if not self.interaction.response.is_done():
+            await self.interaction.response.defer(ephemeral=ephemeral, thinking=thinking)
+
+    async def send(self, *args, **kwargs):
+        delete_after = kwargs.pop("delete_after", None)
+        if self.interaction.response.is_done():
+            msg = await self.interaction.followup.send(*args, **kwargs)
+        else:
+            await self.interaction.response.send_message(*args, **kwargs)
+            try:
+                msg = await self.interaction.original_response()
+            except Exception:
+                msg = None
+        if delete_after and msg and hasattr(msg, "delete"):
+            import asyncio
+            async def _auto_del():
+                try:
+                    await asyncio.sleep(delete_after)
+                    await msg.delete()
+                except Exception:
+                    pass
+            asyncio.create_task(_auto_del())
+        return msg
 
 class ModuleDisabledView(discord.ui.View):
     def __init__(self, guild_id: int, module_name: str):

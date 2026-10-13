@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands
 from typing import Optional, Literal
 
-from Components.Commands._utils import make_embed, ORBIT_COLOR
+from Components.Commands._utils import make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from Components.Systems.Verify._storage import (
     load_verify_config,
@@ -33,26 +33,13 @@ class VerificationCog(commands.Cog, name="Verification"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_group(name="verification", description="Manage and deploy server verification.", invoke_without_command=True)
-    @commands.has_permissions(manage_guild=True)
-    async def verification(self, ctx: commands.Context):
-        """Root command for server verification settings."""
-        if ctx.invoked_subcommand is None:
-            embed = make_embed(
-                f"**Verification System Commands**\n\n"
-                "• `/verification panel [channel]` - Deploy the official verification panel\n"
-                "• `/verification setup [role] [remove_role] [mode]` - Configure verification roles and mode\n"
-                "• `/verification status` - View current verification configuration\n"
-                "• `/verify` - Verify your account directly",
-                discord.Color.blurple()
-            )
-            await ctx.send(embed=embed, ephemeral=True)
+    verification = app_commands.Group(name="verification", description="Manage and deploy server verification.", default_permissions=discord.Permissions(manage_guild=True))
 
     @verification.command(name="panel", description="Deploy the verification panel with the standard banner and button.")
     @app_commands.describe(channel="The channel where the verification embed should be sent (defaults to current channel).")
-    @commands.has_permissions(manage_guild=True)
-    async def panel(self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None):
+    async def panel(self, interaction: discord.Interaction, channel: Optional[discord.TextChannel] = None):
         """Sends the verification panel to the designated channel."""
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         target_channel = channel or ctx.channel
 
@@ -135,15 +122,15 @@ class VerificationCog(commands.Cog, name="Verification"):
         remove_role="Optional unverified role to remove upon verification.",
         mode="Verification security type (captcha, oneclick, web_captcha)."
     )
-    @commands.has_permissions(manage_guild=True)
     async def setup_cmd(
         self,
-        ctx: commands.Context,
+        interaction: discord.Interaction,
         role: discord.Role,
         remove_role: Optional[discord.Role] = None,
         mode: Literal["captcha", "oneclick", "web_captcha"] = "captcha"
     ):
         """Configures verification roles and verification type."""
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
 
         if ctx.guild.me.top_role <= role:
@@ -173,9 +160,9 @@ class VerificationCog(commands.Cog, name="Verification"):
         await ctx.send(embed=make_embed(msg, discord.Color.green()), ephemeral=True)
 
     @verification.command(name="status", description="Check current verification settings.")
-    @commands.has_permissions(manage_guild=True)
-    async def status_cmd(self, ctx: commands.Context):
+    async def status_cmd(self, interaction: discord.Interaction):
         """Displays current verification configuration."""
+        ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
         cfg = load_verify_config(ctx.guild.id)
 
@@ -184,7 +171,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         channel = ctx.guild.get_channel(cfg.get("channel_id")) if cfg.get("channel_id") else None
 
         embed = discord.Embed(title="Server Verification Status", color=ORBIT_COLOR)
-        embed.add_field(name="Status", value="Enabled" if cfg.get("enabled") else f"Disabled", inline=True)
+        embed.add_field(name="Status", value="Enabled" if cfg.get("enabled") else "Disabled", inline=True)
         embed.add_field(name="Mode", value=f"`{cfg.get('verification_type', 'captcha')}`", inline=True)
         embed.add_field(name="Channel", value=channel.mention if channel else "None configured", inline=True)
         embed.add_field(name="Verified Role", value=role.mention if role else "Not set", inline=True)
@@ -196,15 +183,12 @@ class VerificationCog(commands.Cog, name="Verification"):
 
         await ctx.send(embed=embed, ephemeral=True)
 
-    @commands.hybrid_command(name="verify", description="Start verification to access the server.")
-    async def verify_command(self, ctx: commands.Context):
+    @app_commands.command(name="verify", description="Start verification to access the server.")
+    async def verify_command(self, interaction: discord.Interaction):
         """Direct verify command for users."""
-        if ctx.interaction:
-            await handle_verify_interaction(ctx.interaction)
-        else:
-            embed = make_embed("Please use `/verify` slash command or click the Verify button on the verification panel.", discord.Color.blurple())
-            await ctx.send(embed=embed, ephemeral=True)
+        await handle_verify_interaction(interaction)
 
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(VerificationCog(bot))
+

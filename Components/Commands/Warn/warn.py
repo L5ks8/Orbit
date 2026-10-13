@@ -1,14 +1,13 @@
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator
+from discord import app_commands
 from Components.Commands.Warn._storage import add_warning, get_user_warnings
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from Components.Commands.Whitelist._storage import is_whitelisted
-
 
 async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.User, reason: str):
     await ctx.defer()
@@ -108,19 +107,6 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
         f"**Target:** {user.mention} (`{user.id}`)\n**Moderator:** {ctx.author.mention} (`{ctx.author.id}`)\n**Warn ID:** `{warn_entry['warn_id']}`\n**Total Warnings:** `{total_warns}`\n**Reason:** {reason}{punishment_text}"
     )
 
-    v2_body = (
-        f"# Warning Issued\n\n"
-        f"**User:** {user.mention}\n"
-        f"**Warn ID:** `{warn_entry['warn_id']}`\n"
-        f"**Total Warnings:** `{total_warns}`\n"
-        f"**Moderator:** <@{warn_entry['moderator_id']}>\n"
-        f"**Reason:** {warn_entry['reason']}\n"
-        f"**Date:** <t:{warn_entry['timestamp']}:f> (<t:{warn_entry['timestamp']}:R>)"
-    )
-    card = make_v2_card(v2_body, color=ORBIT_COLOR)
-    if card:
-        return await ctx.send(view=card, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
-
     public_embed = discord.Embed(title="Warning Issued", color=ORBIT_COLOR)
     public_embed.add_field(name="User", value=user.mention, inline=False)
     public_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=True)
@@ -131,25 +117,16 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
     
     await ctx.send(embed=public_embed, delete_after=5, allowed_mentions=discord.AllowedMentions.none())
 
-@commands.hybrid_command(
-    name="warn",
-    description="Issue a formal warning to a member or user ID."
-)
-@commands.has_permissions(moderate_members=True)
-async def warn_cmd(ctx: commands.Context, user: str, *, reason: str = "No reason provided."):
-    resolved_user = await MemberOrIDConverter().convert(ctx, user)
-    await _do_warn_add(ctx, resolved_user, reason)
+class WarnCommand(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
 
-@warn_cmd.error
-async def warn_cmd_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need Moderate Members permission to issue warnings.", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed(format_usage("/warn", "<target>", "[reason]"), discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.BadArgument):
-        await ctx.send(embed=make_embed(f"Error: {error}", discord.Color.red()), ephemeral=True)
+    @app_commands.command(name="warn", description="Issue a formal warning to a member or user ID.")
+    @app_commands.describe(user="The member or user ID to warn", reason="The reason for the warning")
+    @app_commands.default_permissions(moderate_members=True)
+    async def warn_cmd(self, interaction: discord.Interaction, user: discord.Member, reason: str = "No reason provided."):
+        ctx = InteractionContext(interaction)
+        await _do_warn_add(ctx, user, reason)
 
 async def setup(bot: commands.Bot):
-    if "warn" not in bot.all_commands:
-        bot.add_command(warn_cmd)
-
+    await bot.add_cog(WarnCommand(bot))

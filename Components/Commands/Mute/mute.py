@@ -5,7 +5,7 @@ from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Mute._storage import get_muted_role_id, set_muted_role_id
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 async def get_or_create_muted_role(guild: discord.Guild) -> discord.Role:
@@ -35,10 +35,12 @@ class MuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="mute", description="Mutes a user.")
-    @commands.has_permissions(manage_roles=True)
-    @commands.bot_has_permissions(manage_roles=True)
-    async def mute(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+    @app_commands.command(name="mute", description="Mutes a user.")
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.bot_has_permissions(manage_roles=True)
+    async def mute(self, interaction: discord.Interaction, target: discord.Member, *, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if target.id == ctx.author.id:
             return await ctx.send(embed=make_embed("You cannot mute yourself.", discord.Color.red()), ephemeral=True)
@@ -88,8 +90,9 @@ class MuteCommand(commands.Cog):
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @mute.error
-    async def mute_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def mute_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Manage Roles permission to mute users.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/mute", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)

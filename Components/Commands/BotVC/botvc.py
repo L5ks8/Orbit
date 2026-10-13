@@ -1,15 +1,17 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class BotVCCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="connect", aliases=["join"], description="Makes the bot join a voice channel.")
-    @commands.has_permissions(manage_channels=True)
-    async def connect_cmd(self, ctx: commands.Context, channel: discord.VoiceChannel = None):
+    @app_commands.command(name="connect", description="Makes the bot join a voice channel.")
+    @app_commands.default_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def connect_cmd(self, interaction: discord.Interaction, channel: discord.VoiceChannel = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         target_channel = channel
         
@@ -40,9 +42,11 @@ class BotVCCommand(commands.Cog):
         except Exception as e:
             return await ctx.send(embed=make_embed(f"Error joining voice channel: {e}", discord.Color.red()), ephemeral=True)
 
-    @commands.hybrid_command(name="disconnect", aliases=["leave", "dc"], description="Makes the bot leave the voice channel.")
-    @commands.has_permissions(manage_channels=True)
-    async def disconnect_cmd(self, ctx: commands.Context):
+    @app_commands.command(name="disconnect", description="Makes the bot leave the voice channel.")
+    @app_commands.default_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def disconnect_cmd(self, interaction: discord.Interaction):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if ctx.guild.voice_client:
             try:
@@ -57,17 +61,19 @@ class BotVCCommand(commands.Cog):
             await ctx.send(embed=make_embed("I am not currently in a voice channel on this server.", discord.Color.red()), ephemeral=True)
 
     @connect_cmd.error
-    async def connect_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def connect_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Manage Channels permission to use this command.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.BadArgument)):
             await ctx.send(embed=make_embed("Could not find that voice channel. Please tag it correctly or provide its ID.", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
     @disconnect_cmd.error
-    async def disconnect_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def disconnect_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Manage Channels permission to use this command.", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

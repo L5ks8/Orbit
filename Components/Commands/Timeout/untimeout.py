@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -11,10 +11,12 @@ class UntimeoutCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="untimeout", description="Removes an active timeout from a user.")
-    @commands.has_permissions(moderate_members=True)
-    @commands.bot_has_permissions(moderate_members=True)
-    async def untimeout(self, ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+    @app_commands.command(name="untimeout", description="Removes an active timeout from a user.")
+    @app_commands.default_permissions(moderate_members=True)
+    @app_commands.checks.has_permissions(moderate_members=True)
+    @app_commands.checks.bot_has_permissions(moderate_members=True)
+    async def untimeout(self, interaction: discord.Interaction, target: discord.Member, *, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if not target.is_timed_out():
             return await ctx.send(embed=make_embed("This user is not currently timed out.", discord.Color.red()), ephemeral=True)
@@ -54,8 +56,9 @@ class UntimeoutCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"Error removing timeout: {e}", discord.Color.red()), ephemeral=True)
 
     @untimeout.error
-    async def untimeout_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def untimeout_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Moderate Members permission to remove timeouts.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             await ctx.send(embed=make_embed("Usage: /untimeout <target> [reason]", discord.Color.red()), ephemeral=True)

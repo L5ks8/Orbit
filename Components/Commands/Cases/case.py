@@ -2,19 +2,16 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from Components.Commands.Cases._storage import get_case, delete_case, update_case_reason
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
-@commands.hybrid_group(name="case", description="Manage moderation cases.")
-@commands.has_permissions(manage_messages=True)
-async def case_group(ctx: commands.Context):
-    if ctx.invoked_subcommand is None:
-        await ctx.send(embed=make_embed("Please specify a subcommand: info, delete, or reason.", discord.Color.red()), ephemeral=True)
-
+case_group = app_commands.Group(name="case", description="Manage moderation cases.", default_permissions=discord.Permissions(manage_messages=True))
 
 @case_group.command(name="info", description="Zeigt Informationen zu einem Fall an.")
 @app_commands.describe(fall="Die ID des Falls (Zahl)")
-async def case_info(ctx: commands.Context, fall: int):
+@app_commands.checks.has_permissions(manage_messages=True)
+async def case_info(interaction: discord.Interaction, fall: int):
+    ctx = InteractionContext(interaction)
     case_data = get_case(ctx.guild.id, fall)
     if not case_data:
         return await ctx.send(embed=make_embed(f"Case #{fall} not found in this server.", discord.Color.red()), ephemeral=True)
@@ -49,7 +46,9 @@ async def case_info(ctx: commands.Context, fall: int):
 
 @case_group.command(name="delete", description="Löscht einen Fall.")
 @app_commands.describe(fall="Die ID des Falls (Zahl)")
-async def case_delete(ctx: commands.Context, fall: int):
+@app_commands.checks.has_permissions(manage_messages=True)
+async def case_delete(interaction: discord.Interaction, fall: int):
+    ctx = InteractionContext(interaction)
     success = delete_case(ctx.guild.id, fall)
     if success:
         card = make_v2_card(f"# Case Deleted\n\nCase #{fall} has been successfully deleted.", color=ORBIT_COLOR)
@@ -61,7 +60,9 @@ async def case_delete(ctx: commands.Context, fall: int):
 
 @case_group.command(name="reason", description="Ändert den Grund eines Falls.")
 @app_commands.describe(fall="Die ID des Falls (Zahl)", grund="Der neue Grund")
-async def case_reason(ctx: commands.Context, fall: int, *, grund: str):
+@app_commands.checks.has_permissions(manage_messages=True)
+async def case_reason(interaction: discord.Interaction, fall: int, *, grund: str):
+    ctx = InteractionContext(interaction)
     success = update_case_reason(ctx.guild.id, fall, grund)
     if success:
         card = make_v2_card(f"# Case Reason Updated\n\nReason for Case #{fall} has been updated to: **{grund}**", color=ORBIT_COLOR)
@@ -72,5 +73,4 @@ async def case_reason(ctx: commands.Context, fall: int, *, grund: str):
         await ctx.send(embed=make_embed(f"Case #{fall} could not be found.", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    bot.add_command(case_group)
-    pass
+    bot.tree.add_command(case_group)

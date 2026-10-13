@@ -4,7 +4,7 @@ from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Commands.Cases._storage import create_case
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -14,10 +14,12 @@ class BanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="ban", description="Bans a member permanently from the server.")
-    @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx: commands.Context, target: typing.Union[discord.Member, discord.User], *, reason: str = "No reason provided"):
+    @app_commands.command(name="ban", description="Bans a member permanently from the server.")
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.bot_has_permissions(ban_members=True)
+    async def ban(self, interaction: discord.Interaction, target: typing.Union[discord.Member, discord.User], *, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if target.id == ctx.author.id:
             return await ctx.send(embed=make_embed("You cannot ban yourself.", discord.Color.red()), ephemeral=True)
@@ -71,14 +73,15 @@ class BanCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"Error banning user: {e}", discord.Color.red()), ephemeral=True)
 
     @ban.error
-    async def ban_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def ban_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You do not have permission to ban members.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BotMissingPermissions):
+        elif isinstance(error, (app_commands.BotMissingPermissions, commands.BotMissingPermissions)):
             await ctx.send(embed=make_embed("I am missing the Ban Members permission.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed(format_usage("/ban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.BadArgument)):
             await ctx.send(embed=make_embed(f"{format_usage('/ban','<@member>','[reason]')}"), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

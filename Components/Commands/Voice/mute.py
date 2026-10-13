@@ -3,11 +3,11 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Voice.voice import voice_group
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
-async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str):
+async def _do_vc_mute(interaction: discord.Interaction, target: discord.Member, reason: str):
     await ctx.defer()
     if is_whitelisted(ctx.guild.id, target.id):
         return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Voice Mute`).", discord.Color.red()), ephemeral=True)
@@ -46,26 +46,15 @@ async def _do_vc_mute(ctx: commands.Context, target: discord.Member, reason: str
         await ctx.send(embed=make_embed(f"Error voice muting user: {e}", discord.Color.red()), ephemeral=True)
 
 @voice_group.command(name="mute", description="Voice mute a member in a voice channel.")
-@commands.has_permissions(mute_members=True)
-@commands.bot_has_permissions(mute_members=True)
-async def vc_mute_cmd(ctx: commands.Context, target: discord.Member, *, reason: str = "No reason provided"):
+async def vc_mute_cmd(interaction: discord.Interaction, target: discord.Member, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_vc_mute(ctx, target, reason)
 
-@vc_mute_cmd.error
-async def vcmute_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need Mute Members permission to voice mute users.", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: /voice mute <target> [reason]", discord.Color.red()), ephemeral=True)
-    else:
-        await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
+
 
 class VcMuteCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Voice.voice import voice_group
-    if "voice" not in bot.all_commands:
-        bot.add_command(voice_group)
-    await bot.add_cog(VcMuteCommand(bot))
+    pass

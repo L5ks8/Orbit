@@ -12,7 +12,7 @@ except ImportError:
     HAS_EDGE_TTS = False
 
 from Components.Commands.Voice.voice import voice_group
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 VOICE = "de-DE-ConradNeural"
@@ -31,7 +31,8 @@ async def _text_to_speech(text: str) -> bytes | None:
     return audio_buffer.read()
 
 @voice_group.command(name="say", description="Bot speaks your text in the voice channel.")
-async def vc_say_cmd(ctx: commands.Context, *, text: str):
+async def vc_say_cmd(interaction: discord.Interaction, text: str):
+    ctx = InteractionContext(interaction)
     voice_client = ctx.guild.voice_client if ctx.guild else None
 
     if not voice_client or not voice_client.is_connected():
@@ -97,14 +98,7 @@ async def vc_say_cmd(ctx: commands.Context, *, text: str):
             except OSError:
                 pass
 
-@vc_say_cmd.error
-async def vc_say_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: /voice say <text>", discord.Color.red()), ephemeral=True)
-    else:
-        await ctx.send(embed=make_embed(f"Error: {error}", discord.Color.red()), ephemeral=True)
+
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Voice.voice import voice_group
-    if "voice" not in bot.all_commands:
-        bot.add_command(voice_group)
+    pass

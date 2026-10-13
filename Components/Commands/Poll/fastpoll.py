@@ -2,17 +2,16 @@ import datetime
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button
 from Components.Commands.Poll.poll import ComponentsPollView
 from Components.Commands.Poll._storage import generate_poll_id, create_poll_entry
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, InteractionContext
 from Components.emojis import Emojis
 
 class FastPollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(
+    @app_commands.command(
         name="fastpoll",
         description="Creates a visual bar Yes/No poll with duration in minutes."
     )
@@ -20,7 +19,8 @@ class FastPollCommand(commands.Cog):
         question="The Yes/No question to ask",
         duration="Poll duration in minutes (e.g. 60 for 1 hour, 1440 for 24 hours)"
     )
-    async def fastpoll(self, ctx: commands.Context, question: str, duration: int = 60):
+    async def fastpoll(self, interaction: discord.Interaction, question: str, duration: int = 60):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -45,8 +45,9 @@ class FastPollCommand(commands.Cog):
             )
 
     @fastpoll.error
-    async def fastpoll_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingRequiredArgument):
+    async def fastpoll_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed("Usage: /fastpoll <question> [duration_in_minutes]", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

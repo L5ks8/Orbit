@@ -1,9 +1,10 @@
 import re
 import discord
 from discord.ext import commands
+from discord import app_commands
 from Components.Commands.Whitelist._storage import add_to_whitelist
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: str = "No reason provided"):
@@ -46,15 +47,16 @@ async def _do_wl_add(ctx: commands.Context, target_id_str: str = None, reason: s
     )
     await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
-@commands.hybrid_command(
-    name="whitelist",
-    description="Add an ID to the server moderation whitelist."
-)
-@commands.has_permissions(administrator=True)
-async def whitelist_cmd(ctx: commands.Context, target_id: str = None, *, reason: str = "No reason provided"):
-    await _do_wl_add(ctx, target_id, reason)
+class WhitelistCommand(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @app_commands.command(name="whitelist", description="Add an ID to the server moderation whitelist.")
+    @app_commands.describe(target_id="The user ID to whitelist", reason="Reason for whitelisting")
+    @app_commands.default_permissions(administrator=True)
+    async def whitelist_cmd(self, interaction: discord.Interaction, target_id: str = None, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
+        await _do_wl_add(ctx, target_id, reason)
 
 async def setup(bot: commands.Bot):
-    if "whitelist" not in bot.all_commands:
-        bot.add_command(whitelist_cmd)
-
+    await bot.add_cog(WhitelistCommand(bot))

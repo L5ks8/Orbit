@@ -7,7 +7,7 @@ from datetime import datetime
 
 from Components.Commands.Backup._storage import save_backup, get_backups, get_backup
 from Components.Commands.Backup._views import OverwriteBackupView, BackupListView, ConfirmLoadView
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, ORBIT_COLOR
 from Components.emojis import Emojis
 
 class BackupCommand(commands.Cog):
@@ -19,15 +19,6 @@ class BackupCommand(commands.Cog):
     async def save_new_backup(self, interaction: discord.Interaction, backup_data: dict):
         save_backup(backup_data)
         try:
-            content = f"# Backup Created\n\nSuccessfully created backup **{backup_data['name']}**."
-            card = make_v2_card(content, color=ORBIT_COLOR)
-            if card:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(view=card, ephemeral=True)
-                else:
-                    await interaction.edit_original_response(view=card, embed=None, content=None)
-                return
-
             embed = discord.Embed(
                 title="Backup Created",
                 description=f"Successfully created backup **{backup_data['name']}**.",
@@ -145,26 +136,15 @@ class BackupCommand(commands.Cog):
         if not existing_backups:
             return await interaction.response.send_message(embed=make_embed("No backups found for this server."), ephemeral=True)
             
-        lines = []
+        embed = discord.Embed(title="Server Backups", color=ORBIT_COLOR)
         for b in existing_backups:
             name = b.get("name", b["_id"])
             ts = b.get("timestamp", 0)
             date_str = f"<t:{int(ts)}:f>"
-            lines.append(f"• **{name}** — Created: {date_str}")
+            embed.add_field(name=name, value=f"Created: {date_str}", inline=False)
         
         view = BackupListView(existing_backups, self)
-        card = make_v2_card(f"# Server Backups\n\n" + "\n".join(lines), color=ORBIT_COLOR)
-        if card:
-            # We can attach the view items to card if supported, or pass view
-            await interaction.response.send_message(embed=discord.Embed(title="Server Backups", description="\n".join(lines), color=ORBIT_COLOR), view=view, ephemeral=True)
-        else:
-            embed = discord.Embed(title="Server Backups", color=ORBIT_COLOR)
-            for b in existing_backups:
-                name = b.get("name", b["_id"])
-                ts = b.get("timestamp", 0)
-                date_str = f"<t:{int(ts)}:f>"
-                embed.add_field(name=name, value=f"Created: {date_str}", inline=False)
-            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     async def execute_backup_load(self, interaction: discord.Interaction, backup_id: str):
         guild = interaction.guild
@@ -259,11 +239,9 @@ class BackupCommand(commands.Cog):
         try:
             owner = guild.owner
             if owner:
-                card = make_v2_card(f"# Backup Restored\n\nThe server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!", color=ORBIT_COLOR)
-                if card:
-                    await owner.send(view=card)
-                else:
-                    await owner.send(f"The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!")
+                embed = make_embed(f"The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!", ORBIT_COLOR)
+                embed.title = "Backup Restored"
+                await owner.send(embed=embed)
         except Exception:
             pass
 

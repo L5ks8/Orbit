@@ -4,7 +4,7 @@ from discord import app_commands
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Systems.Automoderation.log_storage import log_event
 from Components.Commands.ModLog._modlog_storage import add_modlog
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 import typing
 
@@ -12,14 +12,16 @@ class SoftbanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="softban", description="Softbans a member (bans and immediately unbans) to delete their recent messages.")
-    @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members=True)
+    @app_commands.command(name="softban", description="Softbans a member (bans and immediately unbans) to delete their recent messages.")
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.bot_has_permissions(ban_members=True)
     @app_commands.describe(
         target="The member to softban",
         reason="Reason for the softban"
     )
-    async def softban(self, ctx: commands.Context, target: typing.Union[discord.Member, discord.User], *, reason: str = "No reason provided"):
+    async def softban(self, interaction: discord.Interaction, target: typing.Union[discord.Member, discord.User], *, reason: str = "No reason provided"):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if target.id == ctx.author.id:
             return await ctx.send(embed=make_embed("You cannot softban yourself.", discord.Color.red()), ephemeral=True)
@@ -71,14 +73,15 @@ class SoftbanCommand(commands.Cog):
             await ctx.send(embed=make_embed(f"Error softbanning user: {e}", discord.Color.red()), ephemeral=True)
 
     @softban.error
-    async def softban_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def softban_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You do not have permission to ban members.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BotMissingPermissions):
+        elif isinstance(error, (app_commands.BotMissingPermissions, commands.BotMissingPermissions)):
             await ctx.send(embed=make_embed("I am missing the Ban Members permission.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed(format_usage("/softban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/softban", "<@member>", "[reason]"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

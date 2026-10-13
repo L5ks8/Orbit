@@ -1,10 +1,10 @@
 import discord
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
-async def _do_roleinfo(ctx: commands.Context, role: discord.Role):
+async def _do_roleinfo(interaction: discord.Interaction, role: discord.Role):
     await ctx.defer()
     created_ts = int(role.created_at.timestamp())
     body = (
@@ -29,8 +29,9 @@ async def _do_roleinfo(ctx: commands.Context, role: discord.Role):
     
     await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
-@role_group.command(name="info", aliases=["roleinfo"], description="Display information about a role.")
-async def role_info_cmd(ctx: commands.Context, role: discord.Role):
+@role_group.command(name="info", description="Display information about a role.")
+async def role_info_cmd(interaction: discord.Interaction, role: discord.Role):
+    ctx = InteractionContext(interaction)
     await _do_roleinfo(ctx, role)
 
 class RoleInfoCog(commands.Cog):
@@ -38,14 +39,11 @@ class RoleInfoCog(commands.Cog):
         self.bot = bot
 
     @role_info_cmd.error
-    async def role_info_error(self, ctx: commands.Context, error):
+    async def role_info_error(self, interaction: discord.Interaction, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(embed=make_embed("Usage: /role info <role>", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Role.role import role_group
-    if "role" not in bot.all_commands:
-        bot.add_command(role_group)
-    await bot.add_cog(RoleInfoCog(bot))
+    pass

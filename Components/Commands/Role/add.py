@@ -1,10 +1,10 @@
 import discord
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
-async def _do_addrole(ctx: commands.Context, target: discord.Member, role: discord.Role, reason: str):
+async def _do_addrole(interaction: discord.Interaction, target: discord.Member, role: discord.Role, reason: str):
     await ctx.defer()
     if role >= ctx.guild.me.top_role:
         return await ctx.send(embed=make_embed("I cannot assign that role because it is higher than or equal to my highest role.", discord.Color.red()), ephemeral=True)
@@ -36,10 +36,9 @@ async def _do_addrole(ctx: commands.Context, target: discord.Member, role: disco
     except Exception as e:
         await ctx.send(embed=make_embed(f"Error adding role: {e}", discord.Color.red()), ephemeral=True)
 
-@role_group.command(name="add", aliases=["addrole"], description="Assign a role to a member.")
-@commands.has_permissions(manage_roles=True)
-@commands.bot_has_permissions(manage_roles=True)
-async def role_add_cmd(ctx: commands.Context, target: discord.Member, role: discord.Role, *, reason: str = "No reason provided"):
+@role_group.command(name="add", description="Assign a role to a member.")
+async def role_add_cmd(interaction: discord.Interaction, target: discord.Member, role: discord.Role, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_addrole(ctx, target, role, reason)
 
 class RoleAddCog(commands.Cog):
@@ -47,7 +46,7 @@ class RoleAddCog(commands.Cog):
         self.bot = bot
 
     @role_add_cmd.error
-    async def role_add_error(self, ctx: commands.Context, error):
+    async def role_add_error(self, interaction: discord.Interaction, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Roles permission to assign roles.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
@@ -56,7 +55,4 @@ class RoleAddCog(commands.Cog):
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Role.role import role_group
-    if "role" not in bot.all_commands:
-        bot.add_command(role_group)
-    await bot.add_cog(RoleAddCog(bot))
+    pass

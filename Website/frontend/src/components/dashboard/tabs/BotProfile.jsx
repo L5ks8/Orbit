@@ -65,7 +65,7 @@ export default function ({ guildId, serverData, setServerData }) {
       if (data.error) {
         toast.error("Failed to save bot profile", { id: toastId });
       } else {
-        toast.success("Profile saved", { id: toastId });
+        toast.success("Saved", { id: toastId });
         setSavedStateStr(JSON.stringify(config));
         setCache(cacheKey, config);
       }

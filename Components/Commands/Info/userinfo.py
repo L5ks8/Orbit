@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from typing import Union
-from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, discord.User, None]):
@@ -69,12 +69,14 @@ class UserInfoCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="userinfo", aliases=["user"], description="Display member statistics and roles.")
-    async def userinfo_cmd(self, ctx: commands.Context, user: Union[discord.Member, discord.User] = None):
+    @app_commands.command(name="userinfo", description="Display member statistics and roles.")
+    async def userinfo_cmd(self, interaction: discord.Interaction, user: Union[discord.Member, discord.User] = None):
+        ctx = InteractionContext(interaction)
         await _do_user_info(ctx, user)
 
     @userinfo_cmd.error
-    async def userinfo_error(self, ctx: commands.Context, error):
+    async def userinfo_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         from Components.Commands._utils import make_embed
         await ctx.send(embed=make_embed("User not found.", discord.Color.red()), ephemeral=True)
 

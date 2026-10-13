@@ -3,17 +3,19 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Giveaway._storage import get_giveaway
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class GiveawayRerollCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="greroll", description="Rerolls a new winner for an ended giveaway.")
-    @commands.has_permissions(manage_guild=True)
+    @app_commands.command(name="greroll", description="Rerolls a new winner for an ended giveaway.")
+    @app_commands.default_permissions(manage_guild=True)
+    @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.describe(giveaway_id="The unique ID of the ended giveaway (e.g. G-849201 or 849201)")
-    async def greroll(self, ctx: commands.Context, giveaway_id: str):
+    async def greroll(self, interaction: discord.Interaction, giveaway_id: str):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -103,10 +105,11 @@ class GiveawayRerollCommand(commands.Cog):
             await ctx.send(embed=make_embed("Could not access the original giveaway channel to announce the reroll.", discord.Color.red()), ephemeral=True)
 
     @greroll.error
-    async def greroll_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def greroll_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Manage Server permission to reroll giveaways.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed("Usage: `/greroll <giveaway_id>`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

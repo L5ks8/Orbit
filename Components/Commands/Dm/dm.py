@@ -2,7 +2,7 @@ import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from Components.Systems.Automoderation.log_storage import log_event
 
@@ -140,17 +140,18 @@ class DMCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(
+    @app_commands.command(
         name="dm",
-        aliases=["directmessage", "pm"],
         description="Send an anonymous direct message to a user or role."
     )
     @app_commands.describe(
         target="Role mention/ID, Member mention, or User ID",
         message="Optional text to pre-fill the compose modal."
     )
-    @commands.has_permissions(manage_messages=True)
-    async def dm_cmd(self, ctx: commands.Context, target: str = None, *, message: str = None):
+    @app_commands.default_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def dm_cmd(self, interaction: discord.Interaction, target: str = None, *, message: str = None):
+        ctx = InteractionContext(interaction)
         if not ctx.guild:
             return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
 
@@ -220,12 +221,13 @@ class DMCommand(commands.Cog):
             await ctx.send(embed=embed, view=view)
 
     @dm_cmd.error
-    async def dm_cmd_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def dm_cmd_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need `Manage Messages` permission to use the `/dm` command.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed(format_usage("/dm", "<@member/ID/@role>", "[optional message]"), discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.BadArgument)):
             await ctx.send(embed=make_embed(f"Error: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):

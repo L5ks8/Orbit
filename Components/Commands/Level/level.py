@@ -6,7 +6,7 @@ from Components.Systems.Level._storage import (
     get_leaderboard, get_leaderboard_by, get_user_rank, level_from_xp
 )
 import io
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 # ── Leaderboard category config ──
@@ -216,15 +216,13 @@ class LevelCommandsCog(commands.Cog):
         view = LeaderboardView(self, interaction.guild)
         await interaction.followup.send(embed=embed, file=file, view=view)
 
-    @commands.hybrid_group(name="xp", description="Manage member XP")
-    async def xp(self, ctx: commands.Context):
-        if ctx.invoked_subcommand is None:
-            await ctx.send_help(ctx.command)
+    xp_group = app_commands.Group(name="xp", description="Manage member XP")
 
-    @xp.command(name="add", description="Add XP to a member.")
+    @xp_group.command(name="add", description="Add XP to a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to add")
-    @commands.has_permissions(administrator=True)
-    async def xp_add(self, ctx: commands.Context, member: discord.Member, amount: int):
+    @app_commands.checks.has_permissions(administrator=True)
+    async def xp_add(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+        ctx = InteractionContext(interaction)
         if amount <= 0:
             return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
@@ -236,10 +234,11 @@ class LevelCommandsCog(commands.Cog):
             return await ctx.send(view=card)
         await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
 
-    @xp.command(name="remove", description="Remove XP from a member.")
+    @xp_group.command(name="remove", description="Remove XP from a member.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to remove")
-    @commands.has_permissions(administrator=True)
-    async def xp_remove(self, ctx: commands.Context, member: discord.Member, amount: int):
+    @app_commands.checks.has_permissions(administrator=True)
+    async def xp_remove(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+        ctx = InteractionContext(interaction)
         if amount <= 0:
             return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
             
@@ -256,10 +255,11 @@ class LevelCommandsCog(commands.Cog):
             return await ctx.send(view=card)
         await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
 
-    @xp.command(name="set", description="Set a member's XP.")
+    @xp_group.command(name="set", description="Set a member's XP.")
     @app_commands.describe(member="The member to modify", amount="Amount of XP to set")
-    @commands.has_permissions(administrator=True)
-    async def xp_set(self, ctx: commands.Context, member: discord.Member, amount: int):
+    @app_commands.checks.has_permissions(administrator=True)
+    async def xp_set(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+        ctx = InteractionContext(interaction)
         if amount < 0:
             return await ctx.send(embed=make_embed("Amount cannot be negative.", discord.Color.red()), ephemeral=True)
             
@@ -274,9 +274,10 @@ class LevelCommandsCog(commands.Cog):
             return await ctx.send(view=card)
         await ctx.send(embed=make_embed(desc))
 
-    @xp.command(name="transfer", description="Transfer XP between members.")
+    @xp_group.command(name="transfer", description="Transfer XP between members.")
     @app_commands.describe(member="The member to transfer XP to", amount="Amount of XP to transfer")
-    async def xp_transfer(self, ctx: commands.Context, member: discord.Member, amount: int):
+    async def xp_transfer(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+        ctx = InteractionContext(interaction)
         if amount <= 0:
             return await ctx.send(embed=make_embed("Amount must be greater than 0.", discord.Color.red()), ephemeral=True)
         if member == ctx.author:
@@ -299,7 +300,6 @@ class LevelCommandsCog(commands.Cog):
         if card:
             return await ctx.send(view=card)
         await ctx.send(embed=make_embed(desc, ORBIT_COLOR))
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(LevelCommandsCog(bot))

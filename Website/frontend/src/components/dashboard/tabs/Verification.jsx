@@ -130,7 +130,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
       if (data.error) {
         toast.error('Failed to save: ' + data.error, { id: toastId });
       } else {
-        toast.success('Settings saved', { id: toastId });
+        toast.success('Saved', { id: toastId });
         initialPayloadRef.current = payloadString;
       }
     } catch (e) {
@@ -431,11 +431,10 @@ export default function Verification({ guildId, serverData, setServerData }) {
                   </div>
                   <button
                     type="button"
-                    disabled={!panelChannel || isSaving || isDirty}
+                    disabled={!panelChannel || isSaving}
                     onClick={async () => {
                       if (isDirty) {
-                        toast.error('Save your changes before sending the panel.');
-                        return;
+                        await handleSave(currentPayloadStr);
                       }
                       const sendToastId = toast.loading('Sending panel...');
                       try {

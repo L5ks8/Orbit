@@ -1,9 +1,10 @@
 import re
 import discord
 from discord.ext import commands
+from discord import app_commands
 from Components.Commands.Blacklist._storage import remove_from_blacklist
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import make_embed, make_v2_card
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_bl_remove(ctx: commands.Context, target_id_str: str = None):
@@ -34,12 +35,16 @@ async def _do_bl_remove(ctx: commands.Context, target_id_str: str = None):
     else:
         await ctx.send(embed=make_embed(f"Removed ID `{user_id}` from the command blacklist.", ORBIT_COLOR), ephemeral=True)
 
-@commands.hybrid_command(name="unblacklist", description="Remove a user ID from the server command blacklist.")
-@commands.has_permissions(administrator=True)
-async def unblacklist_cmd(ctx: commands.Context, target_id: str):
-    await _do_bl_remove(ctx, target_id)
+class UnblacklistCommand(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @app_commands.command(name="unblacklist", description="Remove a user ID from the server command blacklist.")
+    @app_commands.describe(target_id="The user ID to remove from blacklist")
+    @app_commands.default_permissions(administrator=True)
+    async def unblacklist_cmd(self, interaction: discord.Interaction, target_id: str):
+        ctx = InteractionContext(interaction)
+        await _do_bl_remove(ctx, target_id)
 
 async def setup(bot: commands.Bot):
-    if "unblacklist" not in bot.all_commands:
-        bot.add_command(unblacklist_cmd)
-
+    await bot.add_cog(UnblacklistCommand(bot))

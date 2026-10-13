@@ -110,7 +110,7 @@ export default function Invites({ serverData, setServerData }) {
 
   const handleSave = async () => {
     setSaving(true);
-    const toastId = toast.loading("Saving invite settings...");
+    const toastId = toast.loading("Saving...");
     const payload = getPayload();
     try {
       const res = await fetch(`/api/config/${guildId}`, {
@@ -138,7 +138,7 @@ export default function Invites({ serverData, setServerData }) {
             },
           }));
         }
-        toast.success("Invite settings saved successfully!", { id: toastId });
+        toast.success("Saved", { id: toastId });
       }
     } catch (e) {
       console.error(e);

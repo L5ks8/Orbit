@@ -85,16 +85,6 @@ async def send_dev_error(bot, source: str, error):
     except Exception:
         pass
 
-class DevmodeNoticeLayout(discord.ui.LayoutView):
-    def __init__(self, reason: str):
-        super().__init__()
-        self.container = discord.ui.Container(
-            discord.ui.TextDisplay(content="### Orbit Developer Mode Active"),
-            discord.ui.Separator(spacing=discord.SeparatorSpacing.small),
-            discord.ui.TextDisplay(content=f"**Status:** Developer Mode Activated (`Restricted Access`)\n**Reason:** {reason}\n\n*-# All regular bot interactions are temporarily paused while our developer deploys updates or performs maintenance. Please check back shortly!*")
-        )
-        self.add_item(self.container)
-
 class OrbitCommandTree(discord.app_commands.CommandTree):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.guild:
@@ -115,12 +105,16 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
             return True
         if await interaction.client.is_owner(interaction.user):
             return True
-        view = DevmodeNoticeLayout(reason)
+        embed = discord.Embed(
+            title="Orbit Developer Mode Active",
+            description=f"**Status:** Developer Mode Activated (`Restricted Access`)\n**Reason:** {reason}\n\n*All regular bot interactions are temporarily paused while our developer deploys updates or performs maintenance. Please check back shortly!*",
+            color=discord.Color.gold()
+        )
         try:
             if interaction.response.is_done():
-                await interaction.followup.send(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+                await interaction.followup.send(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
             else:
-                await interaction.response.send_message(view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+                await interaction.response.send_message(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
         except Exception:
             pass
         return False
@@ -352,34 +346,35 @@ class OrbitBot(commands.Bot):
             print(f"Failed to load Boost Listener: {e}")
 
 
-        for file_path in commands_dir.rglob("*.py"):
-            if file_path.name.startswith("_"):
+        for folder in commands_dir.iterdir():
+            if not folder.is_dir() or folder.name.startswith("_") or folder.name.startswith("."):
                 continue
-            if file_path.stem.lower() == file_path.parent.name.lower():
-                extension = ".".join(file_path.with_suffix("").parts)
+            if folder.name == "OwnerOnly":
+                continue
+            init_file = folder / "init.py"
+            if init_file.exists():
+                extension = f"Components.Commands.{folder.name}.init"
                 if extension in self.extensions:
                     continue
                 try:
                     await self.load_extension(extension)
-                    print(f"Loaded Root Group: {extension}")
+                    print(f"Loaded Command Module: {extension}")
                 except Exception as e:
-                    print(f"Failed to load root group {extension}: {e}")
+                    print(f"Failed to load command module {extension}: {e}")
 
-        for file_path in commands_dir.rglob("*.py"):
-            if file_path.name.startswith("_"):
-                continue
-            if file_path.stem in ["image_gen", "transcript_render", "rank_card", "leaderboard_card"]:
-                continue
-            if file_path.stem.lower() == file_path.parent.name.lower():
-                continue
-            extension = ".".join(file_path.with_suffix("").parts)
-            if extension in self.extensions:
-                continue
-            try:
-                await self.load_extension(extension)
-                print(f"Loaded: {extension}")
-            except Exception as e:
-                print(f"Failed to load standard cog {extension}: {e}")
+        owner_dir = commands_dir / "OwnerOnly"
+        if owner_dir.exists():
+            for file_path in owner_dir.glob("*.py"):
+                if file_path.name.startswith("_") or file_path.name in ["storage.py", "prefix.py", "listener.py", "command.py", "init.py"]:
+                    continue
+                extension = f"Components.Commands.OwnerOnly.{file_path.stem}"
+                if extension in self.extensions:
+                    continue
+                try:
+                    await self.load_extension(extension)
+                    print(f"Loaded Owner Command: {extension}")
+                except Exception as e:
+                    print(f"Failed to load owner command {extension}: {e}")
 
         async def background_sync():
             try:
@@ -445,7 +440,19 @@ class OrbitBot(commands.Bot):
                 record_message()
             except Exception:
                 pass
-        await super().on_message(message)
+        await self.process_commands(message)
+
+    async def process_commands(self, message: discord.Message):
+        if message.author.bot:
+            return
+        ctx = await self.get_context(message)
+        if ctx.command is None:
+            return
+        cog_name = ctx.command.cog_name or ""
+        module_name = getattr(ctx.command.callback, "__module__", "")
+        if "OwnerOnly" not in cog_name and "OwnerOnly" not in module_name:
+            return
+        await self.invoke(ctx)
 
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
         if isinstance(error, (commands.CommandNotFound, commands.CheckFailure)):

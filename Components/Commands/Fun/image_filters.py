@@ -5,7 +5,7 @@ import aiohttp
 from io import BytesIO
 from PIL import Image, ImageOps, ImageEnhance, ImageDraw, ImageFilter
 import random
-from Components.Commands._utils import make_embed
+from Components.Commands._utils import make_embed, InteractionContext
 from Components.emojis import Emojis
 
 class ImageFilters(commands.Cog):
@@ -21,8 +21,9 @@ class ImageFilters(commands.Cog):
         async with self.session.get(url) as resp:
             return await resp.read()
 
-    @commands.hybrid_command(name="jail", description="Put a user behind bars.")
-    async def jail(self, ctx: commands.Context, user: discord.Member = None):
+    @app_commands.command(name="jail", description="Put a user behind bars.")
+    async def jail(self, interaction: discord.Interaction, user: discord.Member = None):
+        ctx = InteractionContext(interaction)
         user = user or ctx.author
         await ctx.defer()
 
@@ -57,8 +58,9 @@ class ImageFilters(commands.Cog):
         except Exception as e:
             await ctx.send(embed=make_embed(f"Error: {e}", discord.Color.red()))
 
-    @commands.hybrid_command(name="wasted", description="GTA Wasted effect.")
-    async def wasted(self, ctx: commands.Context, user: discord.Member = None):
+    @app_commands.command(name="wasted", description="GTA Wasted effect.")
+    async def wasted(self, interaction: discord.Interaction, user: discord.Member = None):
+        ctx = InteractionContext(interaction)
         user = user or ctx.author
         await ctx.defer()
 
@@ -103,8 +105,9 @@ class ImageFilters(commands.Cog):
         except Exception as e:
             await ctx.send(embed=make_embed(f"Error: {e}", discord.Color.red()))
 
-    @commands.hybrid_command(name="triggered", description="Shaking red GIF.")
-    async def triggered(self, ctx: commands.Context, user: discord.Member = None):
+    @app_commands.command(name="triggered", description="Shaking red GIF.")
+    async def triggered(self, interaction: discord.Interaction, user: discord.Member = None):
+        ctx = InteractionContext(interaction)
         user = user or ctx.author
         await ctx.defer()
 
@@ -132,8 +135,9 @@ class ImageFilters(commands.Cog):
         except Exception as e:
             await ctx.send(embed=make_embed(f"Error: {e}", discord.Color.red()))
 
-    @commands.hybrid_command(name="rip", description="Put a user on a tombstone.")
-    async def rip(self, ctx: commands.Context, user: discord.Member = None):
+    @app_commands.command(name="rip", description="Put a user on a tombstone.")
+    async def rip(self, interaction: discord.Interaction, user: discord.Member = None):
+        ctx = InteractionContext(interaction)
         user = user or ctx.author
         await ctx.defer()
 

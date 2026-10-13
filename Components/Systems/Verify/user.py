@@ -2,8 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from Components.Commands._utils import make_embed
-from discord.ui import Container, TextDisplay, Separator, LayoutView
+from Components.Commands._utils import make_embed, InteractionContext, ORBIT_COLOR
 from Components.Systems.Verify._storage import load_verify_config, remove_pending_kick
 from Components.Systems.Verify._views import CAPTCHA_SESSIONS
 
@@ -17,7 +16,7 @@ async def _do_verify_user(ctx: commands.Context, member: discord.Member):
     remove_role_id = config.get("remove_role_id")
 
     if not role_id:
-        return await ctx.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please run `-verify setup` first.", discord.Color.red()), ephemeral=True)
+        return await ctx.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please run `/verify setup` first.", discord.Color.red()), ephemeral=True)
 
     role = ctx.guild.get_role(role_id)
     if not role:
@@ -40,23 +39,16 @@ async def _do_verify_user(ctx: commands.Context, member: discord.Member):
         if member.id in CAPTCHA_SESSIONS:
             del CAPTCHA_SESSIONS[member.id]
 
-        header_str = f"### Manual Verification: **{member.display_name}**\n**Status:** Verified"
-        info_str = (
-            f"**User:** {member.mention} (`{member.id}`)\n"
-            f"**Granted Role:** {role.mention}\n"
-            f"**Verified By:** {ctx.author.mention}"
-        )
+        embed = discord.Embed(color=ORBIT_COLOR)
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        embed.title = "Manual Verification"
+        embed.add_field(name="User", value=f"{member.mention} (`{member.id}`)", inline=True)
+        embed.add_field(name="Granted Role", value=role.mention, inline=True)
+        embed.add_field(name="Verified By", value=ctx.author.mention, inline=True)
         if remove_role:
-            info_str += f"\n**Removed Role:** {remove_role.mention}"
+            embed.add_field(name="Removed Role", value=remove_role.mention, inline=True)
 
-        container = Container(
-            TextDisplay(content=header_str),
-            Separator(spacing=discord.SeparatorSpacing.small),
-            TextDisplay(content=info_str)
-        )
-        status_view = LayoutView()
-        status_view.add_item(container)
-        await ctx.send(view=status_view, allowed_mentions=discord.AllowedMentions.none())
+        await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     except discord.Forbidden:
         await ctx.send(embed=make_embed(f"I do not have permission to modify roles for {member.mention}. Please check my role hierarchy.", discord.Color.red()), ephemeral=True)
@@ -67,22 +59,12 @@ class VerifyUserCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="verify", description="Manually verify a member.")
-    @commands.has_permissions(manage_guild=True)
+    @app_commands.command(name="manualverify", description="Manually verify a member.")
     @app_commands.describe(member="The member to manually verify")
-    async def verify_cmd(self, ctx: commands.Context, member: discord.Member):
+    @app_commands.default_permissions(manage_guild=True)
+    async def verify_cmd(self, interaction: discord.Interaction, member: discord.Member):
+        ctx = InteractionContext(interaction)
         await _do_verify_user(ctx, member)
-
-    @verify_cmd.error
-    async def verify_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(embed=make_embed("You need Manage Server permission to manually verify members.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(embed=make_embed("Usage: `-verify <@member>`", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, (commands.MemberNotFound, commands.BadArgument)):
-            await ctx.send(embed=make_embed("Member not found in this server.", discord.Color.red()), ephemeral=True)
-        else:
-            await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(VerifyUserCog(bot))

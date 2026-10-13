@@ -1,9 +1,10 @@
 import re
 import discord
 from discord.ext import commands
+from discord import app_commands
 from Components.Commands.Whitelist._storage import remove_from_whitelist
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
@@ -46,12 +47,16 @@ async def _do_wl_remove(ctx: commands.Context, target_id_str: str = None):
     )
     await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
-@commands.hybrid_command(name="unwhitelist", description="Remove a user ID from the server moderation whitelist.")
-@commands.has_permissions(administrator=True)
-async def unwhitelist_cmd(ctx: commands.Context, target_id: str):
-    await _do_wl_remove(ctx, target_id)
+class UnwhitelistCommand(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @app_commands.command(name="unwhitelist", description="Remove a user ID from the server moderation whitelist.")
+    @app_commands.describe(target_id="The user ID to remove from whitelist")
+    @app_commands.default_permissions(administrator=True)
+    async def unwhitelist_cmd(self, interaction: discord.Interaction, target_id: str):
+        ctx = InteractionContext(interaction)
+        await _do_wl_remove(ctx, target_id)
 
 async def setup(bot: commands.Bot):
-    if "unwhitelist" not in bot.all_commands:
-        bot.add_command(unwhitelist_cmd)
-
+    await bot.add_cog(UnwhitelistCommand(bot))

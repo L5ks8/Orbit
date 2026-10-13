@@ -1,15 +1,17 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class CheckBanCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="checkban", description="Check if a user is banned from the server.")
-    @commands.has_permissions(ban_members=True)
-    async def checkban(self, ctx: commands.Context, target: discord.User):
+    @app_commands.command(name="checkban", description="Check if a user is banned from the server.")
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    async def checkban(self, interaction: discord.Interaction, target: discord.User):
+        ctx = InteractionContext(interaction)
         target_id = target.id
 
         try:
@@ -33,10 +35,11 @@ class CheckBanCommand(commands.Cog):
             await ctx.send(embed=make_embed("Failed to fetch ban information due to an API error.", discord.Color.red()), ephemeral=True)
 
     @checkban.error
-    async def checkban_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def checkban_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You do not have permission to use this command.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
             await ctx.send(embed=make_embed("Usage: `/checkban <target>`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

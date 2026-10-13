@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -8,8 +8,9 @@ class InviteCodesCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="invitecodes", description="Displays all invite code(s) for you or the mentioned member.")
-    async def invitecodes(self, ctx: commands.Context, member: discord.Member = None):
+    @app_commands.command(name="invitecodes", description="Displays all invite code(s) for you or the mentioned member.")
+    async def invitecodes(self, interaction: discord.Interaction, member: discord.Member = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         target = member or ctx.author
 
@@ -54,8 +55,9 @@ class InviteCodesCommand(commands.Cog):
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @invitecodes.error
-    async def invitecodes_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.BadArgument):
+    async def invitecodes_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.AppCommandError, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/invitecodes", "[member]"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

@@ -3,10 +3,10 @@ from discord.ext import commands
 from Components.Commands.Voice._storage import add_to_vcban, is_vcbanned
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Voice.voice import voice_group
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
-async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
+async def _do_vc_ban(interaction: discord.Interaction, user: discord.Member, reason: str):
     await ctx.defer()
     if user.id == ctx.author.id:
         return await ctx.send(embed=make_embed("You cannot voice ban yourself.", discord.Color.red()), ephemeral=True)
@@ -53,9 +53,8 @@ async def _do_vc_ban(ctx: commands.Context, user: discord.Member, reason: str):
     await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 @voice_group.command(name="ban", description="Ban a member from voice channels")
-@commands.has_permissions(move_members=True)
-@commands.bot_has_permissions(move_members=True)
-async def vc_ban_cmd(ctx: commands.Context, user: discord.Member, *, reason: str = "No reason provided"):
+async def vc_ban_cmd(interaction: discord.Interaction, user: discord.Member, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_vc_ban(ctx, user, reason)
 
 class VcBanCommand(commands.Cog):
@@ -72,17 +71,7 @@ class VcBanCommand(commands.Cog):
                 await member.edit(voice_channel=None, reason="User is Voice Banned on this server")
             except Exception:
                 pass
-@vc_ban_cmd.error
-async def vc_ban_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need Move Members permission to voice ban users.", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: /voice ban <member> [reason]", discord.Color.red()), ephemeral=True)
-    else:
-        await ctx.send(embed=make_embed(f"Voice ban failed: {error}", discord.Color.red()), ephemeral=True)
+
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Voice.voice import voice_group
-    if "voice" not in bot.all_commands:
-        bot.add_command(voice_group)
-    await bot.add_cog(VcBanCommand(bot))
+    pass

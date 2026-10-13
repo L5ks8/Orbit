@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_invite_info
-from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -9,8 +9,9 @@ class InviterCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="inviter", description="Displays who invited the mentioned member.")
-    async def inviter(self, ctx: commands.Context, member: discord.Member = None):
+    @app_commands.command(name="inviter", description="Displays who invited the mentioned member.")
+    async def inviter(self, interaction: discord.Interaction, member: discord.Member = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         target = member or ctx.author
 
@@ -55,7 +56,8 @@ class InviterCommand(commands.Cog):
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @inviter.error
-    async def inviter_error(self, ctx: commands.Context, error):
+    async def inviter_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         if isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/inviter", "<member>"), discord.Color.red()), ephemeral=True)
         else:

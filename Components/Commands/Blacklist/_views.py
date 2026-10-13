@@ -1,7 +1,7 @@
 import re
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal
+from discord.ui import Button, Modal, TextInput
 from Components.Commands.Blacklist._storage import load_blacklist, add_to_blacklist, remove_from_blacklist
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands._utils import build_embed, make_embed
@@ -11,8 +11,8 @@ class AddBlacklistModal(Modal, title="Add ID to Blacklist"):
     def __init__(self, parent_view: "BlacklistListLayout"):
         super().__init__()
         self.parent_view = parent_view
-        self.target_id = discord.ui.TextInput(label="User ID", placeholder="e.g. 123456789012345678", required=True)
-        self.reason = discord.ui.TextInput(label="Reason", placeholder="Why is this user blacklisted?", required=False)
+        self.target_id = TextInput(label="User ID", placeholder="e.g. 123456789012345678", required=True)
+        self.reason = TextInput(label="Reason", placeholder="Why is this user blacklisted?", required=False)
         self.add_item(self.target_id)
         self.add_item(self.reason)
 
@@ -39,7 +39,7 @@ class RemoveBlacklistModal(Modal, title="Remove ID from Blacklist"):
     def __init__(self, parent_view: "BlacklistListLayout"):
         super().__init__()
         self.parent_view = parent_view
-        self.target_id = discord.ui.TextInput(label="User ID to Remove", placeholder="e.g. 123456789012345678", required=True)
+        self.target_id = TextInput(label="User ID to Remove", placeholder="e.g. 123456789012345678", required=True)
         self.add_item(self.target_id)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -67,9 +67,9 @@ class BlacklistListLayout(discord.ui.View):
         self._setup_ui()
 
     def _setup_ui(self):
-        btn_add = discord.ui.Button(label="Add ID", style=discord.ButtonStyle.success)
-        btn_remove = discord.ui.Button(label="Remove ID", style=discord.ButtonStyle.secondary)
-        btn_close = discord.ui.Button(label="Close", style=discord.ButtonStyle.danger)
+        btn_add = Button(label="Add ID", style=discord.ButtonStyle.success)
+        btn_remove = Button(label="Remove ID", style=discord.ButtonStyle.secondary)
+        btn_close = Button(label="Close", style=discord.ButtonStyle.danger)
 
         async def add_cb(interaction: discord.Interaction):
             if interaction.user.id != self.author_id:

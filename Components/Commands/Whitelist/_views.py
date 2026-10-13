@@ -1,9 +1,9 @@
 import re
 import discord
 from discord.ext import commands
-from discord.ui import LayoutView, Container, TextDisplay, Separator, ActionRow, Button, Modal, TextInput
+from discord.ui import Button, Modal, TextInput
 from Components.Commands.Whitelist._storage import load_whitelist, add_to_whitelist, remove_from_whitelist
-from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.Commands._utils import ORBIT_COLOR, make_embed
 from Components.emojis import Emojis
 
 class AddWhitelistModal(Modal, title="Add ID to Whitelist"):
@@ -81,10 +81,7 @@ class WhitelistListLayout(discord.ui.View):
                 await interaction.message.delete()
             except Exception:
                 self.clear_items()
-                from discord.ui import Container, TextDisplay
-                from Components.Commands._utils import make_embed
-                self.add_item(Container(TextDisplay(content="### Whitelist overview closed.")))
-                await interaction.response.edit_message(**self.get_kwargs(interaction.guild_id))
+                await interaction.response.edit_message(content="Whitelist overview closed.", embed=None, view=None)
                 self.stop()
 
         btn_add.callback = add_cb

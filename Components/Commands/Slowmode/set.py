@@ -1,12 +1,12 @@
 import discord
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Slowmode.slowmode import slowmode_group
 
 
-async def _do_slowmode_set(ctx: commands.Context, seconds: int, channel: discord.TextChannel | None):
+async def _do_slowmode_set(interaction: discord.Interaction, seconds: int, channel: discord.TextChannel | None):
     await ctx.defer()
     target_channel = channel or ctx.channel
     if not isinstance(target_channel, discord.TextChannel):
@@ -37,9 +37,8 @@ async def _do_slowmode_set(ctx: commands.Context, seconds: int, channel: discord
         await ctx.send(embed=make_embed(f"Error setting slowmode: {e}", discord.Color.red()), ephemeral=True)
 
 @slowmode_group.command(name="set", description="Set channel slowmode delay.")
-@commands.has_permissions(manage_channels=True)
-@commands.bot_has_permissions(manage_channels=True)
-async def slowmode_set_cmd(ctx: commands.Context, seconds: int, channel: discord.TextChannel = None):
+async def slowmode_set_cmd(interaction: discord.Interaction, seconds: int, channel: discord.TextChannel = None):
+    ctx = InteractionContext(interaction)
     await _do_slowmode_set(ctx, seconds, channel)
 
 class SlowmodeSetCommand(commands.Cog):
@@ -47,14 +46,11 @@ class SlowmodeSetCommand(commands.Cog):
         self.bot = bot
 
     @slowmode_set_cmd.error
-    async def slowmodeset_error(self, ctx: commands.Context, error):
+    async def slowmodeset_error(self, interaction: discord.Interaction, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Channels permission to configure slowmode.", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Slowmode.slowmode import slowmode_group
-    if "slowmode" not in bot.all_commands:
-        bot.add_command(slowmode_group)
-    await bot.add_cog(SlowmodeSetCommand(bot))
+    pass

@@ -1,10 +1,10 @@
 import discord
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
-async def _do_rolerall(ctx: commands.Context, role: discord.Role, reason: str):
+async def _do_rolerall(interaction: discord.Interaction, role: discord.Role, reason: str):
     await ctx.defer()
     if role >= ctx.guild.me.top_role:
         return await ctx.send(embed=make_embed("I cannot remove that role because it is higher than or equal to my highest role.", discord.Color.red()), ephemeral=True)
@@ -37,10 +37,9 @@ async def _do_rolerall(ctx: commands.Context, role: discord.Role, reason: str):
     embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
     await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
-@role_group.command(name="rall", aliases=["rolerall"], description="Remove a role from every member.")
-@commands.has_permissions(administrator=True)
-@commands.bot_has_permissions(manage_roles=True)
-async def role_rall_cmd(ctx: commands.Context, role: discord.Role, *, reason: str = "No reason provided"):
+@role_group.command(name="rall", description="Remove a role from every member.")
+async def role_rall_cmd(interaction: discord.Interaction, role: discord.Role, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_rolerall(ctx, role, reason)
 
 class RoleRallCog(commands.Cog):
@@ -48,7 +47,7 @@ class RoleRallCog(commands.Cog):
         self.bot = bot
 
     @role_rall_cmd.error
-    async def role_rall_error(self, ctx: commands.Context, error):
+    async def role_rall_error(self, interaction: discord.Interaction, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Administrator permissions to run this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):
@@ -57,7 +56,4 @@ class RoleRallCog(commands.Cog):
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Role.role import role_group
-    if "role" not in bot.all_commands:
-        bot.add_command(role_group)
-    await bot.add_cog(RoleRallCog(bot))
+    pass

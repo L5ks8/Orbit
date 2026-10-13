@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Channel.channel import channel_group
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
-async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | None):
+async def _do_delete(interaction: discord.Interaction, channel: discord.abc.GuildChannel | None):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -46,17 +46,11 @@ async def _do_delete(ctx: commands.Context, channel: discord.abc.GuildChannel | 
         await ctx.send(embed=make_embed("That channel type cannot be deleted with this command.", discord.Color.red()), ephemeral=True)
 
 @channel_group.command(name="delete", description="Delete a channel.")
-@commands.has_permissions(manage_channels=True)
-async def channel_delete_cmd(ctx: commands.Context, channel: discord.abc.GuildChannel = None):
+async def channel_delete_cmd(interaction: discord.Interaction, channel: discord.abc.GuildChannel = None):
+    ctx = InteractionContext(interaction)
     await _do_delete(ctx, channel)
 
-@channel_delete_cmd.error
-async def delete_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need `Manage Channels` permission to delete channels.", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.BadArgument):
-        await ctx.send(embed=make_embed("Could not find that channel.", discord.Color.red()), ephemeral=True)
+
 
 async def setup(bot: commands.Bot):
-    if "channel" not in bot.all_commands:
-        bot.add_command(channel_group)
+    pass

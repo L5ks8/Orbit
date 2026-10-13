@@ -232,6 +232,7 @@ export default function ({ guildId, serverData, setServerData }) {
 
   const handleSave = async (payloadStr) => {
     setIsSaving(true);
+    const toastId = toast.loading("Saving...");
     try {
       const payloadString =
         typeof payloadStr === "string"
@@ -247,14 +248,14 @@ export default function ({ guildId, serverData, setServerData }) {
       });
       const data = await res.json();
       if (data.error) {
-        toast.error("Failed to save: " + data.error);
+        toast.error("Failed to save: " + data.error, { id: toastId });
       } else {
-        toast.success("Auto roles saved");
+        toast.success("Saved", { id: toastId });
         setInitialStateStr(payloadString);
       }
     } catch (e) {
       console.error(e);
-      toast.error("Error saving settings");
+      toast.error("Error saving settings", { id: toastId });
     } finally {
       setIsSaving(false);
     }

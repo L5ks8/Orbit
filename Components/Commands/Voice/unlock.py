@@ -1,10 +1,10 @@
 import discord
-from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Voice.voice import voice_group
 
-async def _do_vc_unlock(ctx: commands.Context, channel: discord.VoiceChannel | None, reason: str):
+async def _do_vc_unlock(interaction: discord.Interaction, channel: discord.VoiceChannel | None, reason: str):
     await ctx.defer()
     target_channel = channel or (ctx.author.voice.channel if ctx.author.voice else None)
     if not target_channel:
@@ -40,24 +40,15 @@ async def _do_vc_unlock(ctx: commands.Context, channel: discord.VoiceChannel | N
         await ctx.send(embed=make_embed(f"Error unlocking voice channel: {e}", discord.Color.red()), ephemeral=True)
 
 @voice_group.command(name="unlock", description="Unlock a voice channel so regular members can connect.")
-@commands.has_permissions(manage_channels=True)
-@commands.bot_has_permissions(manage_channels=True)
-async def vc_unlock_cmd(ctx: commands.Context, channel: discord.VoiceChannel = None, *, reason: str = "No reason provided"):
+async def vc_unlock_cmd(interaction: discord.Interaction, channel: discord.VoiceChannel = None, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_vc_unlock(ctx, channel, reason)
 
-@vc_unlock_cmd.error
-async def vcunlock_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need Manage Channels permission to unlock voice channels.", discord.Color.red()), ephemeral=True)
-    else:
-        await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
+
 
 class VcUnlockCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Voice.voice import voice_group
-    if "voice" not in bot.all_commands:
-        bot.add_command(voice_group)
-    await bot.add_cog(VcUnlockCommand(bot))
+    pass

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from Components.Commands.Invite._storage import get_invited_by_user, get_invited_by_code
-from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -9,8 +9,9 @@ class InvitedListCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="invitedlist", description="Displays who someone or a specific invite code has invited.")
-    async def invitedlist(self, ctx: commands.Context, target: str = None):
+    @app_commands.command(name="invitedlist", description="Displays who someone or a specific invite code has invited.")
+    async def invitedlist(self, interaction: discord.Interaction, target: str = None):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
 
         member = None
@@ -91,8 +92,9 @@ class InvitedListCommand(commands.Cog):
         await ctx.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @invitedlist.error
-    async def invitedlist_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.BadArgument):
+    async def invitedlist_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.AppCommandError, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/invitedlist", "[member or invite code]"), discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

@@ -6,7 +6,7 @@ import time
 from Components.Commands.Cases._storage import create_case
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Database.mongodb import get_db
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 def parse_duration(duration_str: str) -> int:
@@ -32,7 +32,7 @@ class TempBanCog(commands.Cog):
     def cog_unload(self):
         self.check_tempbans.cancel()
 
-    @commands.hybrid_command(name="tempban", description="Temporarily bans a user from the server.")
+    @app_commands.command(name="tempban", description="Temporarily bans a user from the server.")
     @app_commands.describe(
         user="The user to temporarily ban",
         duration="Duration (e.g. 1d, 12h, 30m)",
@@ -48,9 +48,11 @@ class TempBanCog(commands.Cog):
         app_commands.Choice(name="3 Days", value=259200),
         app_commands.Choice(name="7 Days", value=604800)
     ])
-    @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members=True)
-    async def tempban_cmd(self, ctx: commands.Context, user: discord.User, duration: str, reason: str = "No reason provided", history: int = 0):
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.bot_has_permissions(ban_members=True)
+    async def tempban_cmd(self, interaction: discord.Interaction, user: discord.User, duration: str, reason: str = "No reason provided", history: int = 0):
+        ctx = InteractionContext(interaction)
         await ctx.defer()
         
         seconds = parse_duration(duration)
@@ -122,10 +124,11 @@ class TempBanCog(commands.Cog):
         await self.bot.wait_until_ready()
 
     @tempban_cmd.error
-    async def tempban_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def tempban_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need `Ban Members` permission to use this command.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, commands.BotMissingPermissions):
+        elif isinstance(error, (app_commands.BotMissingPermissions, commands.BotMissingPermissions)):
             await ctx.send(embed=make_embed("I need `Ban Members` permission to execute this command."), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

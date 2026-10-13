@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
 from typing import Union, Optional
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
-async def _resolve_channel(ctx: commands.Context, channel_raw: Union[str, discord.VoiceChannel, discord.StageChannel]) -> Optional[Union[discord.VoiceChannel, discord.StageChannel]]:
+async def _resolve_channel(interaction: discord.Interaction, channel_raw: Union[str, discord.VoiceChannel, discord.StageChannel]) -> Optional[Union[discord.VoiceChannel, discord.StageChannel]]:
     if isinstance(channel_raw, (discord.VoiceChannel, discord.StageChannel)):
         return channel_raw
 
@@ -30,8 +30,7 @@ async def _resolve_channel(ctx: commands.Context, channel_raw: Union[str, discor
     return None
 
 async def _do_vc_move(
-    ctx: commands.Context,
-    target_raw: Union[str, discord.Member],
+    interaction: discord.Interaction, target_raw: Union[str, discord.Member],
     channel_raw: Union[str, discord.VoiceChannel, discord.StageChannel],
     reason: str = "No reason provided"
 ):
@@ -144,33 +143,21 @@ async def _do_vc_move(
 from Components.Commands.Voice.voice import voice_group
 
 @voice_group.command(name="move", description="Move a member or 'all' into a voice channel.")
-@commands.has_permissions(move_members=True)
-@commands.bot_has_permissions(move_members=True)
-async def vc_move_cmd(ctx: commands.Context, target: str, channel: str, *, reason: str = "No reason provided"):
+async def vc_move_cmd(interaction: discord.Interaction, target: str, channel: str, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_vc_move(ctx, target, channel, reason)
 
 @voice_group.command(name="moveall", description="Move all members from voice into a destination channel.")
-@commands.has_permissions(move_members=True)
-@commands.bot_has_permissions(move_members=True)
-async def vc_moveall_cmd(ctx: commands.Context, channel: str, *, reason: str = "No reason provided"):
+async def vc_moveall_cmd(interaction: discord.Interaction, channel: str, *, reason: str = "No reason provided"):
+    ctx = InteractionContext(interaction)
     await _do_vc_move(ctx, "all", channel, reason)
 
 @vc_move_cmd.error
-@vc_moveall_cmd.error
-async def move_error(ctx: commands.Context, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send(embed=make_embed("You need `Move Members` permission to move voice users.", discord.Color.red()), ephemeral=True)
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(embed=make_embed("Usage: `/voice move <target> <channel> [reason]`", discord.Color.red()), ephemeral=True)
-    else:
-        await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
+
 
 class MoveCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
 async def setup(bot: commands.Bot):
-    from Components.Commands.Voice.voice import voice_group
-    if "voice" not in bot.all_commands:
-        bot.add_command(voice_group)
-    await bot.add_cog(MoveCommand(bot))
+    pass

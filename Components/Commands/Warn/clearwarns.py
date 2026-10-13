@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import clear_user_warnings
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
@@ -54,14 +54,17 @@ class ClearWarnsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="clearwarns", aliases=["clearwarn", "warnclear", "warnreset"], description="Clear all warnings for a member.")
-    @commands.has_permissions(moderate_members=True)
-    async def clearwarns_cmd(self, ctx: commands.Context, user: discord.Member):
+    @app_commands.command(name="clearwarns", description="Clear all warnings for a member.")
+    @app_commands.default_permissions(moderate_members=True)
+    @app_commands.checks.has_permissions(moderate_members=True)
+    async def clearwarns_cmd(self, interaction: discord.Interaction, user: discord.Member):
+        ctx = InteractionContext(interaction)
         await _do_clearwarnings(ctx, user)
 
     @clearwarns_cmd.error
-    async def clearwarns_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingPermissions):
+    async def clearwarns_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Moderate Members permission to manage warnings.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             await ctx.send(embed=make_embed(format_usage("/clearwarns", "<@member>"), discord.Color.red()), ephemeral=True)

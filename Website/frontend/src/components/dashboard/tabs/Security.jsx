@@ -107,7 +107,7 @@ export default function Security({ guildId, serverData, setServerData }) {
 
   const handleSave = async (payloadString) => {
     setIsSaving(true);
-    const toastId = toast.loading("Saving settings...");
+    const toastId = toast.loading("Saving...");
     try {
       const dataToSave = payloadString ? JSON.parse(payloadString) : getPayload();
       const res = await fetch(`/api/config/${guildId}`, {
@@ -124,7 +124,7 @@ export default function Security({ guildId, serverData, setServerData }) {
       const updatedData = { ...serverData, config: { ...serverData?.config, security: dataToSave } };
       setCache(guildId, updatedData);
       setInitialStateStr(JSON.stringify(dataToSave));
-      toast.success("Settings saved", { id: toastId });
+      toast.success("Saved", { id: toastId });
     } catch (e) {
       console.error(e);
       toast.error("Error saving settings", { id: toastId });
