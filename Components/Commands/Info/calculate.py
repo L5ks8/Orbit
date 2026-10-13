@@ -3,6 +3,7 @@ from discord.ext import commands
 import ast
 import operator
 import math
+import re
 from Components.Commands._utils import ORBIT_COLOR
 from Components.emojis import Emojis
 
@@ -39,6 +40,11 @@ def safe_eval(expr: str):
     )
     if not clean_expr:
         return "Waiting..."
+
+    # Support implicit multiplication like 543(5) -> 543*(5)
+    clean_expr = re.sub(r'(\d)\(', r'\1*(', clean_expr)
+    clean_expr = re.sub(r'\)(\d)', r')*\1', clean_expr)
+    clean_expr = re.sub(r'\)\(', r')*(', clean_expr)
 
     if clean_expr.endswith(("+", "-", "*", "/", "%", "**", "(")):
         return "Waiting..."
@@ -221,6 +227,8 @@ class CalculatorLayoutView(LayoutView):
         self.build_ui(disabled=False)
         try:
             await interaction.response.edit_message(view=self)
+        except discord.NotFound:
+            pass
         except Exception as e:
             print(f"[Calculator] LayoutView update error: {e}")
 

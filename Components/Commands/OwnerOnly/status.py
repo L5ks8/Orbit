@@ -25,7 +25,6 @@ def _load_status() -> dict | None:
     try:
         from Components.Database.mongodb import get_db
         from Components.Commands._utils import make_embed, ORBIT_COLOR
-from Components.emojis import Emojis
         db = get_db()
         if db is not None:
             doc = db["OwnerOnly_BotStatus"].find_one({"_id": "GLOBAL"})
