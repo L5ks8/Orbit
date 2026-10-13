@@ -1,5 +1,10 @@
 import sys
 sys.dont_write_bytecode = True
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+except Exception:
+    pass
 
 import os
 import asyncio
@@ -144,7 +149,8 @@ commands.Context.send = _safe_send
 
 class OrbitBot(commands.Bot):
     def __init__(self):
-        import collections
+        import time, collections
+        self.start_time = time.time()
         self.stats_history = collections.deque(maxlen=30)
         try:
             import psutil, os
@@ -273,75 +279,34 @@ class OrbitBot(commands.Bot):
         except Exception as e:
             print(f"Failed to add PersistentVerifyLayout: {e}")
 
-        try:
-            await self.load_extension("Components.Systems.Automoderation.automodlistener")
-            print("Loaded AutoMod Listener")
-        except Exception as e:
-            print(f"Failed to load AutoMod Listener: {e}")
+        systems_to_load = [
+            ("Components.Systems.Automoderation.automodlistener", "AutoMod Listener"),
+            ("Components.Systems.Automoderation.log_listener", "Log Listener"),
+            ("Components.Systems.Roles.joinrolelistener", "JoinRole Listener"),
+            ("Components.Systems.WelcomeGoodbye.listener", "Welcome Listener"),
+            ("Components.Systems.ReactionRole.reactionrolelistener", "ReactionRole Listener"),
+            ("Components.Systems.JoinToCreate.jtclistener", "JTC Listener"),
+            ("Components.Systems.Tickets.ticketlistener", "Ticket Listener"),
+            ("Components.Systems.Security.security", "Security System"),
+            ("Components.Systems.Level.levellistener", "Level Listener"),
+            ("Components.Systems.Verify.verifylistener", "Verify Listener"),
+            ("Components.Systems.Verify.verify", "Verify Commands"),
+        ]
 
-        try:
-            await self.load_extension("Components.Systems.Automoderation.log_listener")
-            print("Loaded Log Listener")
-        except Exception as e:
-            print(f"Failed to load Log Listener: {e}")
+        print("=== Orbit System Loading ===", flush=True)
+        for ext, name in systems_to_load:
+            try:
+                await self.load_extension(ext)
+                print(f"[OK] System: {name}", flush=True)
+            except Exception as e:
+                import traceback
+                print(f"[ERROR] Failed to load {name} ({ext}): {e}\n{traceback.format_exc()}", flush=True)
 
-        try:
-            await self.load_extension("Components.Systems.Roles.joinrolelistener")
-            print("Loaded JoinRole Listener")
-        except Exception as e:
-            print(f"Failed to load JoinRole Listener: {e}")
+        print("\n=== Orbit Command Modules Loading ===", flush=True)
+        loaded_cmd_modules = []
+        failed_cmd_modules = []
 
-        try:
-            await self.load_extension("Components.Systems.WelcomeGoodbye.listener")
-            print("Loaded Welcome Listener")
-        except Exception as e:
-            print(f"Failed to load Welcome Listener: {e}")
-
-        try:
-            await self.load_extension("Components.Systems.ReactionRole.reactionrolelistener")
-            print("Loaded ReactionRole Listener")
-        except Exception as e:
-            print(f"Failed to load ReactionRole Listener: {e}")
-
-        try:
-            await self.load_extension("Components.Systems.JoinToCreate.jtclistener")
-            print("Loaded JTC Listener")
-        except Exception as e:
-            print(f"Failed to load JTC Listener: {e}")
-
-        try:
-            await self.load_extension("Components.Systems.Tickets.ticketlistener")
-            print("Loaded Ticket Listener")
-        except Exception as e:
-            print(f"Failed to load Ticket Listener: {e}")
-
-        try:
-            await self.load_extension("Components.Systems.Security.security")
-            print("Loaded Security System")
-        except Exception as e:
-            print(f"Failed to load Security System: {e}")
-
-        try:
-            await self.load_extension("Components.Systems.Level.levellistener")
-            print("Loaded Level Listener")
-        except Exception as e:
-            print(f"Failed to load Level Listener: {e}")
-
-        try:
-            await self.load_extension("Components.Systems.Verify.verifylistener")
-            print("Loaded Verify Listener")
-        except Exception as e:
-            print(f"Failed to load Verify Listener: {e}")
-
-        try:
-            await self.load_extension("Components.Systems.Verify.verify")
-            print("Loaded Verify Commands")
-        except Exception as e:
-            print(f"Failed to load Verify Commands: {e}")
-
-
-
-        for folder in commands_dir.iterdir():
+        for folder in sorted(commands_dir.iterdir(), key=lambda p: p.name.lower()):
             if not folder.is_dir() or folder.name.startswith("_") or folder.name.startswith("."):
                 continue
             if folder.name == "OwnerOnly":
@@ -353,13 +318,23 @@ class OrbitBot(commands.Bot):
                     continue
                 try:
                     await self.load_extension(extension)
-                    print(f"Loaded Command Module: {extension}")
+                    loaded_cmd_modules.append(folder.name)
+                    print(f"[OK] Command Module: {folder.name}", flush=True)
                 except Exception as e:
-                    print(f"Failed to load command module {extension}: {e}")
+                    import traceback
+                    failed_cmd_modules.append(folder.name)
+                    print(f"[ERROR] Failed to load command module {folder.name}: {e}\n{traceback.format_exc()}", flush=True)
+            else:
+                print(f"[WARN] No init.py in {folder.name}", flush=True)
+
+        print(f"\nLoaded {len(loaded_cmd_modules)} Command Modules successfully.", flush=True)
+        if failed_cmd_modules:
+            print(f"[WARN] Failed modules: {', '.join(failed_cmd_modules)}", flush=True)
 
         owner_dir = commands_dir / "OwnerOnly"
         if owner_dir.exists():
-            for file_path in owner_dir.glob("*.py"):
+            print("\n=== Orbit Owner Commands Loading ===", flush=True)
+            for file_path in sorted(owner_dir.glob("*.py"), key=lambda p: p.name.lower()):
                 if file_path.name.startswith("_") or file_path.name in ["storage.py", "prefix.py", "listener.py", "command.py", "init.py"]:
                     continue
                 extension = f"Components.Commands.OwnerOnly.{file_path.stem}"
@@ -367,23 +342,32 @@ class OrbitBot(commands.Bot):
                     continue
                 try:
                     await self.load_extension(extension)
-                    print(f"Loaded Owner Command: {extension}")
+                    print(f"[OK] Owner Command: {file_path.stem}", flush=True)
                 except Exception as e:
-                    print(f"Failed to load owner command {extension}: {e}")
+                    import traceback
+                    print(f"[ERROR] Failed to load owner command {file_path.stem}: {e}\n{traceback.format_exc()}", flush=True)
 
         async def background_sync():
             try:
+                print("\n=== Synchronizing Command Tree with Discord... ===", flush=True)
                 synced = await self.tree.sync()
+                top_cmd_names = []
                 total_cmds = 0
                 for cmd in synced:
                     if hasattr(cmd, 'commands'):
-                        total_cmds += len(cmd.commands) + 1
+                        sub_names = [f"/{cmd.name} {sc.name}" for sc in cmd.commands]
+                        top_cmd_names.append(f"/{cmd.name} ({len(sub_names)} subcommands)")
+                        total_cmds += len(sub_names)
                     else:
+                        top_cmd_names.append(f"/{cmd.name}")
                         total_cmds += 1
-                print(f"Synced {len(synced)} top-level command group(s) ({total_cmds} total subcommands & commands across all modules)")
+
+                print(f"=== Successfully Synced {len(synced)} Top-Level Groups/Commands ({total_cmds} Total) with Discord ===", flush=True)
+                print(f"Commands List: {', '.join(sorted(top_cmd_names))}", flush=True)
             except Exception as e:
-                print(f"Failed to sync commands: {e}")
-                
+                import traceback
+                print(f"[ERROR] Failed to sync commands with Discord: {e}\n{traceback.format_exc()}", flush=True)
+
         import asyncio
         asyncio.create_task(background_sync())
 

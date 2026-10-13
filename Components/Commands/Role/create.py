@@ -4,7 +4,7 @@ from Components.Commands.Role.role import role_group
 from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
-async def _do_createrole(interaction: discord.Interaction, name: str, color: str = None, hoist: bool = False, mentionable: bool = False):
+async def _do_createrole(ctx: InteractionContext, name: str, color: str = None, hoist: bool = False, mentionable: bool = False):
     await ctx.defer()
     
     parsed_color = discord.Color.default()
@@ -24,9 +24,7 @@ async def _do_createrole(interaction: discord.Interaction, name: str, color: str
         )
         
         body = f"# Role Created\n\nSuccessfully created the role {new_role.mention}."
-        card = make_v2_card(body, color=parsed_color if parsed_color.value else ORBIT_COLOR)
-        if card:
-            return await ctx.send(view=card)
+        
         embed = discord.Embed(
             title="Role Created", 
             description=f"Successfully created the role {new_role.mention}.", 
@@ -49,6 +47,7 @@ class RoleCreateCog(commands.Cog):
 
     @role_create_cmd.error
     async def role_create_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Roles permission to create roles.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):

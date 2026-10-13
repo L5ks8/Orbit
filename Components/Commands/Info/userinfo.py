@@ -49,9 +49,7 @@ async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, disco
         f"### Key Permissions\n{perms_str}"
     )
     card_color = target.color if target.color != discord.Color.default() else ORBIT_COLOR
-    card = make_v2_card(body, color=card_color)
-    if card:
-        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+    
 
     embed = discord.Embed(title=f"User Information: {target.display_name}{bot_badge}", color=card_color)
     embed.set_thumbnail(url=target.display_avatar.url)
@@ -70,7 +68,7 @@ class UserInfoCommand(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="userinfo", description="Display member statistics and roles.")
-    async def userinfo_cmd(self, interaction: discord.Interaction, user: Union[discord.Member, discord.User] = None):
+    async def userinfo_cmd(self, interaction: discord.Interaction, user: discord.User = None):
         ctx = InteractionContext(interaction)
         await _do_user_info(ctx, user)
 

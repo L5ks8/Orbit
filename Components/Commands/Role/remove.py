@@ -4,7 +4,7 @@ from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
-async def _do_removerole(interaction: discord.Interaction, target: discord.Member, role: discord.Role, reason: str):
+async def _do_removerole(ctx: InteractionContext, target: discord.Member, role: discord.Role, reason: str):
     await ctx.defer()
     if role >= ctx.guild.me.top_role:
         return await ctx.send(embed=make_embed("I cannot remove that role because it is higher than or equal to my highest role.", discord.Color.red()), ephemeral=True)
@@ -22,9 +22,7 @@ async def _do_removerole(interaction: discord.Interaction, target: discord.Membe
             f"**Reason:** {reason}\n"
             f"**Moderator:** {ctx.author.mention}"
         )
-        card = make_v2_card(body, color=role.color if role.color.value else ORBIT_COLOR)
-        if card:
-            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        
         embed = discord.Embed(title="Role Removed", color=role.color)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
@@ -47,6 +45,7 @@ class RoleRemoveCog(commands.Cog):
 
     @role_remove_cmd.error
     async def role_remove_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Roles permission to remove roles.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):

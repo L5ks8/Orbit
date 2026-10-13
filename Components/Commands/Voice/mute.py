@@ -7,7 +7,7 @@ from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, I
 from Components.emojis import Emojis
 
 
-async def _do_vc_mute(interaction: discord.Interaction, target: discord.Member, reason: str):
+async def _do_vc_mute(ctx: InteractionContext, target: discord.Member, reason: str):
     await ctx.defer()
     if is_whitelisted(ctx.guild.id, target.id):
         return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Voice Mute`).", discord.Color.red()), ephemeral=True)

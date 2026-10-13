@@ -6,7 +6,7 @@ from Components.Commands.Voice.voice import voice_group
 from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
-async def _do_vc_ban(interaction: discord.Interaction, user: discord.Member, reason: str):
+async def _do_vc_ban(ctx: InteractionContext, user: discord.Member, reason: str):
     await ctx.defer()
     if user.id == ctx.author.id:
         return await ctx.send(embed=make_embed("You cannot voice ban yourself.", discord.Color.red()), ephemeral=True)

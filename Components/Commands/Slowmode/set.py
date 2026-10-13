@@ -6,7 +6,7 @@ from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Slowmode.slowmode import slowmode_group
 
 
-async def _do_slowmode_set(interaction: discord.Interaction, seconds: int, channel: discord.TextChannel | None):
+async def _do_slowmode_set(ctx: InteractionContext, seconds: int, channel: discord.TextChannel | None):
     await ctx.defer()
     target_channel = channel or ctx.channel
     if not isinstance(target_channel, discord.TextChannel):
@@ -23,9 +23,7 @@ async def _do_slowmode_set(interaction: discord.Interaction, seconds: int, chann
             f"**Delay:** `{seconds} seconds` between messages\n"
             f"**Moderator:** {ctx.author.mention}"
         )
-        card = make_v2_card(body, color=ORBIT_COLOR)
-        if card:
-            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        
         embed = discord.Embed(title="Slowmode Enabled", color=ORBIT_COLOR)
         embed.add_field(name="Channel", value=target_channel.mention, inline=False)
         embed.add_field(name="Delay", value=f"`{seconds} seconds` between messages", inline=False)
@@ -47,6 +45,7 @@ class SlowmodeSetCommand(commands.Cog):
 
     @slowmode_set_cmd.error
     async def slowmodeset_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Channels permission to configure slowmode.", discord.Color.red()), ephemeral=True)
         else:

@@ -6,7 +6,7 @@ from Components.Commands.Voice._storage import remove_from_vcban
 from Components.Commands.Voice.voice import voice_group
 
 
-async def _do_vc_unban(interaction: discord.Interaction, user: discord.User, reason: str):
+async def _do_vc_unban(ctx: InteractionContext, user: discord.User, reason: str):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)

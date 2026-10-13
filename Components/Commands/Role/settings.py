@@ -23,7 +23,7 @@ PERMISSION_MAP = {
 
 PERMISSION_CHOICES = [app_commands.Choice(name=k, value=k) for k in PERMISSION_MAP]
 
-async def _do_rolesettings(interaction: discord.Interaction, role: discord.Role, permission: str, state: str):
+async def _do_rolesettings(ctx: InteractionContext, role: discord.Role, permission: str, state: str):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
@@ -117,6 +117,7 @@ class RoleSettingsCog(commands.Cog):
 
     @role_settings_cmd.error
     async def role_settings_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Administrator permission to use role settings.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):

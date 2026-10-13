@@ -6,7 +6,7 @@ from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Slowmode.slowmode import slowmode_group
 
 
-async def _do_slowmode_remove(interaction: discord.Interaction, channel: discord.TextChannel | None):
+async def _do_slowmode_remove(ctx: InteractionContext, channel: discord.TextChannel | None):
     await ctx.defer()
     target_channel = channel or ctx.channel
     if not isinstance(target_channel, discord.TextChannel):
@@ -22,9 +22,7 @@ async def _do_slowmode_remove(interaction: discord.Interaction, channel: discord
             f"**Channel:** {target_channel.mention}\n"
             f"**Moderator:** {ctx.author.mention}"
         )
-        card = make_v2_card(body, color=ORBIT_COLOR)
-        if card:
-            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+        
         embed = discord.Embed(title="Slowmode Disabled", color=ORBIT_COLOR)
         embed.add_field(name="Channel", value=target_channel.mention, inline=False)
         embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
@@ -45,6 +43,7 @@ class SlowmodeRemoveCommand(commands.Cog):
 
     @slowmode_remove_cmd.error
     async def slowmoderemove_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Manage Channels permission to reset slowmode.", discord.Color.red()), ephemeral=True)
         else:

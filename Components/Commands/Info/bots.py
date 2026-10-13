@@ -49,9 +49,7 @@ class BotsListCommand(commands.Cog):
         if len(bots_str) > 4000:
             bots_str = bots_str[:3990] + "..."
             
-        card = make_v2_card(f"### Bots in {guild.name}\n{bots_str}", color=ORBIT_COLOR)
-        if card:
-            return await ctx.send(view=card, ephemeral=True)
+        
 
         embed = discord.Embed(
             title=f"Bots in {guild.name}",

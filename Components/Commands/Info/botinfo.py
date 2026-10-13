@@ -12,9 +12,9 @@ class BotInfoCommand(commands.Cog):
         ctx = InteractionContext(interaction)
         servers = len(self.bot.guilds)
         users = sum(g.member_count for g in self.bot.guilds if g.member_count)
-        uptime = int(self.bot.start_time)
+        uptime = int(getattr(self.bot, "start_time", time.time()))
 
-        import os
+        import os, time
         dashboard_url = os.environ.get("BASE_URL") or "https://orbitbot.xyz"
         support_url = "https://discord.gg/orbit"
         shard_id = ctx.guild.shard_id if ctx.guild and hasattr(ctx.guild, 'shard_id') else 0

@@ -4,7 +4,7 @@ from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
-async def _do_roleinfo(interaction: discord.Interaction, role: discord.Role):
+async def _do_roleinfo(ctx: InteractionContext, role: discord.Role):
     await ctx.defer()
     created_ts = int(role.created_at.timestamp())
     body = (
@@ -14,9 +14,7 @@ async def _do_roleinfo(interaction: discord.Interaction, role: discord.Role):
         f"**Members:** `{len(role.members)}` | **Position:** `{role.position}`\n"
         f"**Hoisted:** `{role.hoist}` | **Mentionable:** `{role.mentionable}` | **Managed:** `{role.managed}`"
     )
-    card = make_v2_card(body, color=role.color if role.color.value else ORBIT_COLOR)
-    if card:
-        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+    
 
     embed = discord.Embed(title="Role Info", color=role.color)
     embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
@@ -40,6 +38,7 @@ class RoleInfoCog(commands.Cog):
 
     @role_info_cmd.error
     async def role_info_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(embed=make_embed("Usage: /role info <role>", discord.Color.red()), ephemeral=True)
         else:

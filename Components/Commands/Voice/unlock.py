@@ -4,7 +4,7 @@ from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Voice.voice import voice_group
 
-async def _do_vc_unlock(interaction: discord.Interaction, channel: discord.VoiceChannel | None, reason: str):
+async def _do_vc_unlock(ctx: InteractionContext, channel: discord.VoiceChannel | None, reason: str):
     await ctx.defer()
     target_channel = channel or (ctx.author.voice.channel if ctx.author.voice else None)
     if not target_channel:

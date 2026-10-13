@@ -4,7 +4,7 @@ from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Role.role import role_group
 
-async def _do_roleall(interaction: discord.Interaction, role: discord.Role, reason: str):
+async def _do_roleall(ctx: InteractionContext, role: discord.Role, reason: str):
     await ctx.defer()
     if role >= ctx.guild.me.top_role:
         return await ctx.send(embed=make_embed("I cannot assign that role because it is higher than or equal to my highest role.", discord.Color.red()), ephemeral=True)
@@ -28,9 +28,7 @@ async def _do_roleall(interaction: discord.Interaction, role: discord.Role, reas
         f"**Affected:** `{updated_count}` members\n"
         f"**Moderator:** {ctx.author.mention}"
     )
-    card = make_v2_card(body, color=role.color if role.color.value else ORBIT_COLOR)
-    if card:
-        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+    
     embed = discord.Embed(title="Role Added to All", color=role.color)
     embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
     embed.add_field(name="Affected", value=f"`{updated_count}` members", inline=False)
@@ -48,6 +46,7 @@ class RoleAllCog(commands.Cog):
 
     @role_all_cmd.error
     async def role_all_error(self, interaction: discord.Interaction, error):
+        ctx = InteractionContext(interaction)
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(embed=make_embed("You need Administrator permissions to run this command.", discord.Color.red()), ephemeral=True)
         elif isinstance(error, commands.MissingRequiredArgument):

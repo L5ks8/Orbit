@@ -4,7 +4,7 @@ from typing import Union, Optional
 from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
-async def _resolve_channel(interaction: discord.Interaction, channel_raw: Union[str, discord.VoiceChannel, discord.StageChannel]) -> Optional[Union[discord.VoiceChannel, discord.StageChannel]]:
+async def _resolve_channel(ctx: InteractionContext, channel_raw: Union[str, discord.VoiceChannel, discord.StageChannel]) -> Optional[Union[discord.VoiceChannel, discord.StageChannel]]:
     if isinstance(channel_raw, (discord.VoiceChannel, discord.StageChannel)):
         return channel_raw
 

@@ -6,7 +6,7 @@ from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Voice.voice import voice_group
 
 
-async def _do_vc_unmute(interaction: discord.Interaction, target: discord.Member, reason: str):
+async def _do_vc_unmute(ctx: InteractionContext, target: discord.Member, reason: str):
     await ctx.defer()
     if not target.voice:
         return await ctx.send(embed=make_embed("This user is not currently in a voice channel.", discord.Color.red()), ephemeral=True)

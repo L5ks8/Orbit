@@ -28,9 +28,7 @@ async def _do_server_info(ctx: commands.Context):
         f"### Roles & Boosts\n"
         f"> Roles: `{len(ctx.guild.roles)}` | Boost Level: `Tier {ctx.guild.premium_tier}` (`{ctx.guild.premium_subscription_count or 0} Boosts`)"
     )
-    card = make_v2_card(body, color=ORBIT_COLOR)
-    if card:
-        return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+    
 
     embed = discord.Embed(title=f"Server Information: {ctx.guild.name}", color=ORBIT_COLOR)
     if ctx.guild.icon:
