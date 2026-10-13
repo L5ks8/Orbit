@@ -3,6 +3,7 @@ import LoadingScreen from '../../ui/LoadingScreen';
 import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
 import ImageURLPopup from '../../ui/ImageURLPopup';
+import SaveBar from '../../ui/SaveBar';
 
 export default function ({ guildId, serverData, setServerData }) {
   const cacheKey = `botprofile_${guildId}`;
@@ -19,6 +20,7 @@ export default function ({ guildId, serverData, setServerData }) {
   const [urlPopupField, setUrlPopupField] = useState(null);
   const toast = useToast();
   
+  const [savedStateStr, setSavedStateStr] = useState(cachedData ? JSON.stringify(cachedData) : null);
   const [isSaving, setIsSaving] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(!!cachedData);
   const [initialLoading, setInitialLoading] = useState(!cachedData);
@@ -30,12 +32,14 @@ export default function ({ guildId, serverData, setServerData }) {
       .then(res => res.json())
       .then(data => {
         if (!data.error) {
-          setConfig({
+          const loaded = {
             nickname: data.nickname || '',
             avatar_url: data.avatar_url || '',
             banner_url: data.banner_url || '',
             bio: data.bio || ''
-          });
+          };
+          setConfig(loaded);
+          setSavedStateStr(JSON.stringify(loaded));
           setCache(cacheKey, data);
         }
         setHasLoaded(true);
@@ -47,32 +51,39 @@ export default function ({ guildId, serverData, setServerData }) {
         setInitialLoading(false);
       });
   }, [guildId]);
-  
-  useEffect(() => {
-    if (!hasLoaded) return;
-    
-    const handler = setTimeout(() => {
-      setIsSaving(true);
-      const toastId = toast.loading("Saving...");
-      fetch(`/api/botprofile/${guildId}`, {
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const toastId = toast.loading("Saving...");
+    try {
+      const res = await fetch(`/api/botprofile/${guildId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) toast.error("Failed to save bot profile", { id: toastId });
-        else toast.success("Profile saved", { id: toastId });
-      })
-      .catch(err => {
-        console.error("Save error", err);
+      });
+      const data = await res.json();
+      if (data.error) {
         toast.error("Failed to save bot profile", { id: toastId });
-      })
-      .finally(() => setIsSaving(false));
-    }, 1500);
-    
-    return () => clearTimeout(handler);
-  }, [config, guildId, hasLoaded]);
+      } else {
+        toast.success("Profile saved", { id: toastId });
+        setSavedStateStr(JSON.stringify(config));
+        setCache(cacheKey, config);
+      }
+    } catch (err) {
+      console.error("Save error", err);
+      toast.error("Failed to save bot profile", { id: toastId });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (savedStateStr) {
+      setConfig(JSON.parse(savedStateStr));
+    }
+  };
+
+  const isDirty = Boolean(savedStateStr && JSON.stringify(config) !== savedStateStr);
   
   const handleUpload = async (e, field) => {
     if (!e.target.files || !e.target.files[0]) return;
@@ -131,7 +142,7 @@ export default function ({ guildId, serverData, setServerData }) {
   };
 
   return (
-    <div className="pb-overview-container" style={{ maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
       <div data-tour="feature-header" className="scroll-mt-24">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -146,13 +157,6 @@ export default function ({ guildId, serverData, setServerData }) {
               </svg>
             </span>
             <h1 className="text-base font-medium text-white truncate">Bot Profile</h1>
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-neutral-600">
-                {isSaving ? "Saving..." : "Auto-saved"}
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -349,6 +353,7 @@ export default function ({ guildId, serverData, setServerData }) {
           setConfig(prev => ({ ...prev, [urlPopupField]: url }));
         }}
       />
-    </div>
+      <SaveBar show={isDirty} onReset={handleReset} onSave={handleSave} saving={isSaving} />
+    </main>
   );
 }

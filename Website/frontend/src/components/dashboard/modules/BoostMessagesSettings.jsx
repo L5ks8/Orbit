@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview, { parseDiscordMarkdown, replaceVariables } from '../../ui/DiscordPreview';
+import SaveBar from '../../ui/SaveBar';
 
 export default function BoostMessagesSettings({ guildId, config, channels, roles, onSave, saving, onReset }) {
   const bCfg = config?.boost || {};
@@ -56,16 +57,12 @@ export default function BoostMessagesSettings({ guildId, config, channels, roles
 
   const [savedStateStr, setSavedStateStr] = useState(() => JSON.stringify(getPayload()));
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = savedStateStr && currentPayloadStr !== savedStateStr;
+  const isDirty = Boolean(savedStateStr && currentPayloadStr !== savedStateStr);
 
-  useEffect(() => {
-    if (!savedStateStr || !isDirty) return;
-    const timeoutId = setTimeout(() => {
-      onSave(getPayload(), true);
-      setSavedStateStr(currentPayloadStr);
-    }, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, savedStateStr, isDirty, onSave]);
+  const handleSave = () => {
+    onSave(getPayload(), true);
+    setSavedStateStr(currentPayloadStr);
+  };
 
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
@@ -279,6 +276,7 @@ export default function BoostMessagesSettings({ guildId, config, channels, roles
           </div>
         </div>
       </div>
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </main>
   );
 }

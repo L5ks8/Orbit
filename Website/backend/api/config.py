@@ -111,6 +111,37 @@ class ConfigMixin:
         global_settings = get_config("Settings", guild_id)
         ai_enabled = global_settings.get("ai_enabled", True) if global_settings else True
 
+        invites_cfg = get_config("InviteConfig", guild_id) or {}
+        from Components.Commands.Invite._storage import get_leaderboard
+        invite_lb = get_leaderboard(guild_id, limit=10)
+        resolved_lb = []
+        for entry in invite_lb:
+            uid = entry.get("user_id")
+            user_name = "Unknown"
+            avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
+            try:
+                mem = guild.get_member(int(uid)) if uid else None
+                if mem:
+                    user_name = mem.display_name
+                    avatar_url = mem.display_avatar.with_format("png").with_size(64).url
+                else:
+                    u = self.bot.get_user(int(uid)) if uid else None
+                    if u:
+                        user_name = u.name
+                        avatar_url = u.display_avatar.with_format("png").with_size(64).url
+            except Exception:
+                pass
+            resolved_lb.append({
+                "user_id": str(uid),
+                "name": user_name,
+                "avatar": avatar_url,
+                "total": entry.get("total", 0),
+                "regular": entry.get("regular", 0),
+                "left": entry.get("left", 0),
+                "bonus": entry.get("bonus", 0),
+                "fake": entry.get("fake", 0)
+            })
+
         config_data = {
             "settings": settings_cfg,
             "extra_settings": {
@@ -346,6 +377,22 @@ class ConfigMixin:
             "level": level_cfg,
             "serverstats": serverstats_cfg,
             "security": security_cfg,
+            "invites": {
+                "enabled": bool(invites_cfg.get("enabled", True)),
+                "track_leaves": bool(invites_cfg.get("track_leaves", True)),
+                "count_rejoins": bool(invites_cfg.get("count_rejoins", False)),
+                "show_inviter_count": bool(invites_cfg.get("show_inviter_count", True)),
+                "count_vanity": bool(invites_cfg.get("count_vanity", False)),
+                "rewards": invites_cfg.get("rewards", []),
+                "auto_post": {
+                    "enabled": bool(invites_cfg.get("auto_post", {}).get("enabled", False)),
+                    "channel_id": str(invites_cfg.get("auto_post", {}).get("channel_id", "") or ""),
+                    "title": str(invites_cfg.get("auto_post", {}).get("title", "Invite Leaderboard")),
+                    "color": str(invites_cfg.get("auto_post", {}).get("color", "#5865F2")),
+                    "interval": str(invites_cfg.get("auto_post", {}).get("interval", "1h"))
+                },
+                "leaderboard": resolved_lb
+            },
             "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
             "messages_enabled": settings_cfg.get("messages_enabled", False)
         }
@@ -889,6 +936,16 @@ class ConfigMixin:
                 if "messages_enabled" in data:
                     s_cfg["messages_enabled"] = bool(data["messages_enabled"])
                 save_settings_config(guild_id, s_cfg)
+
+            if user_perms.get("can_channels") and "invites" in data:
+                from Components.Database.mongodb import get_config, set_config
+                inv_data = data["invites"]
+                inv_cfg = get_config("InviteConfig", guild_id) or {}
+                if isinstance(inv_data, dict):
+                    for k in ["enabled", "track_leaves", "count_rejoins", "show_inviter_count", "count_vanity", "rewards", "auto_post"]:
+                        if k in inv_data:
+                            inv_cfg[k] = inv_data[k]
+                    set_config("InviteConfig", guild_id, inv_cfg)
 
             return web.json_response({"success": True})
         except Exception as e:

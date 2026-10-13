@@ -4,6 +4,7 @@ import { getCache, setCache } from '../../../utils/cache';
 import { useToast } from '../../ui/Toast';
 import DeleteConfirmation from '../../ui/DeleteConfirmation';
 import ReactionRoleBuilder from '../modules/ReactionRoleBuilder';
+import SaveBar from '../../ui/SaveBar';
 
 const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -260,22 +261,14 @@ export default function ({ guildId, serverData, setServerData }) {
   };
 
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
-
-  useEffect(() => {
-    if (!initialStateStr || !isDirty) return;
-    const timeoutId = setTimeout(() => {
-      handleSave(currentPayloadStr);
-    }, 1500);
-    return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, initialStateStr, isDirty]);
+  const isDirty = Boolean(initialStateStr && currentPayloadStr !== initialStateStr);
 
   if (loading) {
     return <LoadingScreen message="Loading roles..." />;
   }
 
   return (
-    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto">
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
       <div>
         <div data-tour="feature-header" className="scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -1011,6 +1004,7 @@ export default function ({ guildId, serverData, setServerData }) {
           }
         }}
       />
+      <SaveBar show={isDirty} onReset={() => setFormKey(k => k + 1)} onSave={() => handleSave(currentPayloadStr)} saving={isSaving} />
     </main>
   );
 }

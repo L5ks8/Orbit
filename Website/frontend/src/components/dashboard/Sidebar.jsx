@@ -39,7 +39,6 @@ export default function Sidebar({ guildId, isOpen = true }) {
       title: 'MAIN',
       links: [
         { name: 'Overview', path: `/dashboard/${guildId}/overview`, icon: <LayoutDashboard size={16} /> },
-        { name: 'AI Builder', path: `/dashboard/${guildId}/ai-builder`, icon: <Bot size={16} /> },
         { name: 'Bot Profile', path: `/dashboard/${guildId}/bot-profile`, icon: <User size={16} /> },
         { name: 'Analytics', path: `/dashboard/${guildId}/analytics`, icon: <Activity size={16} /> },
       ]

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 
 export default function TicketSettings({ config, channels, roles, categories, onSave, saving, onReset }) {
   const tCfg = config?.ticket || {};
@@ -78,19 +79,11 @@ export default function TicketSettings({ config, channels, roles, categories, on
   const [savedStateStr, setSavedStateStr] = useState(() => JSON.stringify(getPayload()));
   
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = savedStateStr && currentPayloadStr !== savedStateStr;
-
-  useEffect(() => {
-    if (!savedStateStr || !isDirty) return;
-    const timeoutId = setTimeout(() => {
-      onSave(getPayload(), true);
-      setSavedStateStr(currentPayloadStr);
-    }, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, savedStateStr, isDirty, onSave]);
+  const isDirty = Boolean(savedStateStr && currentPayloadStr !== savedStateStr);
 
   const handleSave = () => {
-    onSave(getPayload());
+    onSave(getPayload(), true);
+    setSavedStateStr(currentPayloadStr);
   };
 
   const parseDiscordMarkdown = (text) => {
@@ -503,6 +496,7 @@ export default function TicketSettings({ config, channels, roles, categories, on
           </div>
         </div>
       )}
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </main>
   );
 }

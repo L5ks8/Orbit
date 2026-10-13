@@ -5,6 +5,7 @@ import CustomSelect from "../../ui/CustomSelect";
 import { SketchPicker } from "react-color";
 import { useToast } from '../../ui/Toast';
 import ImageURLPopup from "../../ui/ImageURLPopup";
+import SaveBar from "../../ui/SaveBar";
 
 export default function WelcomeSettings({
   guildId,
@@ -232,47 +233,22 @@ export default function WelcomeSettings({
     if (g.image_url !== undefined) setGoodbyeImageUrl(g.image_url || "");
   }, [config]);
 
+  const [savedStateStr, setSavedStateStr] = useState(() => JSON.stringify(getPayload()));
+
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
     if (isSyncingFromConfig.current) {
       isSyncingFromConfig.current = false;
-      return;
+      setSavedStateStr(JSON.stringify(getPayload()));
     }
-    const handler = setTimeout(() => {
-      onSave(getPayload(), true);
-    }, 1500); 
-    return () => clearTimeout(handler);
-  }, [
-    welcomeEnabled,
-    welcomeChannel,
-    welcomeText,
-    dmJoinEnabled,
-    dmJoinText,
-    welcomeMsgMode,
-    welcomeEmbedTitle,
-    welcomeEmbedDesc,
-    welcomeEmbedThumbnail,
-    welcomeEmbedColor,
-    welcomeEmbedFooter,
-    welcomeImageUrl,
-    welcomeEmbedFields,
-    goodbyeEnabled,
-    goodbyeChannel,
-    goodbyeText,
-    dmLeaveEnabled,
-    dmLeaveText,
-    goodbyeMsgMode,
-    goodbyeEmbedTitle,
-    goodbyeEmbedDesc,
-    goodbyeEmbedThumbnail,
-    goodbyeEmbedColor,
-    goodbyeEmbedFooter,
-    goodbyeImageUrl,
-    goodbyeEmbedFields
-  ]);
+  }, [config]);
+
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = Boolean(savedStateStr && currentPayloadStr !== savedStateStr);
+
+  const handleSave = () => {
+    onSave(getPayload(), true);
+    setSavedStateStr(currentPayloadStr);
+  };
 
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
@@ -764,7 +740,7 @@ export default function WelcomeSettings({
                           >
                             <textarea
                               rows={4}
-                              ref={dmJoinRef} data-setter="dmJoinText" onFocus={() => setActiveRef(dmJoinRef)} value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} onBlur={() => onSave(getPayload(), true)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                              ref={dmJoinRef} data-setter="dmJoinText" onFocus={() => setActiveRef(dmJoinRef)} value={dmJoinText} onChange={e => setDmJoinText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                               style={{
                                 fontFamily:
                                   '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -1329,7 +1305,7 @@ export default function WelcomeSettings({
                             >
                               <textarea
                                 rows={3}
-                                ref={dmLeaveRef} data-setter="dmLeaveText" onFocus={() => setActiveRef(dmLeaveRef)} value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} onBlur={() => onSave(getPayload(), true)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
+                                ref={dmLeaveRef} data-setter="dmLeaveText" onFocus={() => setActiveRef(dmLeaveRef)} value={dmLeaveText} onChange={e => setDmLeaveText(e.target.value)} className="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5"
                                 style={{
                                   fontFamily:
                                     '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
@@ -1456,6 +1432,7 @@ export default function WelcomeSettings({
           if (urlPopupTarget === "goodbye") setGoodbyeImageUrl(url);
         }}
       />
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import { getCache, setCache } from '../../../utils/cache';
+import { Trophy, Medal } from 'lucide-react';
 
 export default function Leaderboard({ guildId }) {
   const [sortCategory, setSortCategory] = useState('total_xp');
@@ -32,70 +33,97 @@ export default function Leaderboard({ guildId }) {
   ];
 
   return (
-    <div className="dash-leaderboard">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div>
-          <h1 className="dash-title">Leaderboard</h1>
-          <p className="dash-subtitle">See who's the most active in your server.</p>
-        </div>
-        <div style={{ width: '220px', position: 'relative', zIndex: 10 }}>
-          <CustomSelect 
-            options={sortOptions} 
-            value={sortCategory} 
-            onChange={setSortCategory} 
-          />
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
+      {/* Header */}
+      <div data-tour="feature-header" className="scroll-mt-24">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+              <Trophy className="w-5 h-5 text-amber-400" />
+            </span>
+            <div>
+              <h1 className="text-base font-medium text-white truncate">Server Leaderboard</h1>
+              <p className="text-xs text-neutral-400 mt-0.5">Top active members ranked by XP, messages, voice, and invites.</p>
+            </div>
+          </div>
+          <div className="w-56">
+            <CustomSelect 
+              options={sortOptions} 
+              value={sortCategory} 
+              onChange={setSortCategory} 
+            />
+          </div>
         </div>
       </div>
 
-      <div className="dash-card" style={{ padding: '0', overflow: 'hidden' }}>
+      {/* Leaderboard Table Card */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
         {loading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Loading Leaderboard...</div>
+          <div className="p-12 text-center text-neutral-500 text-sm">Loading Leaderboard...</div>
         ) : data?.error ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(239,68,68,0.8)' }}>
+          <div className="p-12 text-center text-red-400 text-sm">
             Error: {data.error}
           </div>
         ) : !data?.entries || data.entries.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
-            No data available for this category yet.
+          <div className="p-12 text-center text-neutral-500 text-sm">
+            No activity data available for this category yet.
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <th style={{ padding: '16px', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Rank</th>
-                <th style={{ padding: '16px', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>User</th>
-                <th style={{ padding: '16px', color: 'rgba(255,255,255,0.4)', fontWeight: 500, textAlign: 'right' }}>Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.entries.map(entry => (
-                <tr key={entry.rank} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '16px', fontWeight: 600, color: entry.rank <= 3 ? '#fbbf24' : '#fff' }}>
-                    #{entry.rank}
-                  </td>
-                  <td style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img 
-                      src={entry.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'} 
-                      alt="" 
-                      style={{ width: '32px', height: '32px', borderRadius: '50%' }}
-                      onError={(e) => { e.target.src = 'https://cdn.discordapp.com/embed/avatars/0.png'; }}
-                    />
-                    <div>
-                      <div style={{ fontWeight: 500 }}>{entry.name}</div>
-                      {sortCategory !== 'invites' && (
-                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Level {entry.level}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ padding: '16px', textAlign: 'right', fontWeight: 600 }}>
-                    {typeof entry.value === 'number' ? entry.value.toLocaleString(undefined, {maximumFractionDigits: 1}) : entry.value}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-neutral-800 text-xs font-semibold text-neutral-400 uppercase tracking-wider bg-neutral-950/40">
+                  <th className="py-3.5 px-5 w-20">Rank</th>
+                  <th className="py-3.5 px-5">Member</th>
+                  <th className="py-3.5 px-5 text-right">Score</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-neutral-800/60 text-sm">
+                {data.entries.map(entry => (
+                  <tr key={entry.rank} className="hover:bg-neutral-800/30 transition-colors">
+                    <td className="py-3.5 px-5 font-bold">
+                      {entry.rank === 1 ? (
+                        <span className="inline-flex items-center gap-1 text-amber-400">
+                          <Medal className="w-4 h-4" /> #1
+                        </span>
+                      ) : entry.rank === 2 ? (
+                        <span className="inline-flex items-center gap-1 text-slate-300">
+                          <Medal className="w-4 h-4" /> #2
+                        </span>
+                      ) : entry.rank === 3 ? (
+                        <span className="inline-flex items-center gap-1 text-amber-600">
+                          <Medal className="w-4 h-4" /> #3
+                        </span>
+                      ) : (
+                        <span className="text-neutral-500">#{entry.rank}</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={entry.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'} 
+                          alt="" 
+                          className="w-8 h-8 rounded-full border border-neutral-700 object-cover"
+                          onError={(e) => { e.target.src = 'https://cdn.discordapp.com/embed/avatars/0.png'; }}
+                        />
+                        <div>
+                          <div className="font-medium text-white">{entry.name}</div>
+                          {sortCategory !== 'invites' && entry.level !== undefined && (
+                            <div className="text-[11px] text-neutral-400">Level {entry.level}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-5 text-right font-semibold text-white">
+                      {typeof entry.value === 'number' ? entry.value.toLocaleString(undefined, { maximumFractionDigits: 1 }) : entry.value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

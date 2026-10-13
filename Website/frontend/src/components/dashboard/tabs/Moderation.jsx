@@ -378,7 +378,7 @@ export default function Moderation({ guildId, serverData, setServerData }) {
         toast.error("Failed to save: " + data.error, { id: toastId });
       } else {
         toast.success("Settings saved", { id: toastId });
-        setInitialStateStr(payloadString);
+        initialPayloadRef.current = payloadString;
       }
     } catch (e) {
       console.error(e);
@@ -389,15 +389,7 @@ export default function Moderation({ guildId, serverData, setServerData }) {
   };
 
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialPayloadRef.current && currentPayloadStr !== initialPayloadRef.current;
-
-  useEffect(() => {
-    if (!initialPayloadRef.current || !isDirty) return;
-    const timeoutId = setTimeout(() => {
-      handleSave(currentPayloadStr);
-    }, 1500);
-    return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, isDirty]);
+  const isDirty = Boolean(initialPayloadRef.current && currentPayloadStr !== initialPayloadRef.current);
 
   if (loading) {
     return (
@@ -1396,6 +1388,7 @@ export default function Moderation({ guildId, serverData, setServerData }) {
           </div>
         </div>
       </div>
+      <SaveBar show={isDirty} onReset={() => setFormKey(k => k + 1)} onSave={() => handleSave(currentPayloadStr)} saving={isSaving} />
     </main>
   );
 }

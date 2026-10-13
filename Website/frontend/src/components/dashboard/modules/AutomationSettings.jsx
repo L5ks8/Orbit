@@ -81,11 +81,27 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
   };
 
   return (
-    <div className="dash-settings-module">
-      <div className="dash-card settings-card" style={{ padding: '20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
+      <div data-tour="feature-header" className="scroll-mt-24">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M12 2v20 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </span>
+            <div>
+              <h1 className="text-base font-medium text-white truncate">Automation</h1>
+              <p className="text-xs text-neutral-400 mt-0.5">Automate channels, honeypot spam traps, and counting games.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 flex items-center justify-between">
         <div>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px', color: '#fff' }}>Enable Automation Module</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>Turn the automation features on or off globally.</p>
+          <h2 className="text-sm font-semibold text-white">Enable Automation Module</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">Turn automation rules and traps on or off globally.</p>
         </div>
         <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
       </div>
@@ -343,6 +359,6 @@ export default function AutomationSettings({ config, channels, roles, onSave, sa
       </div>
     
       <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
-    </div>
+    </main>
   );
 }

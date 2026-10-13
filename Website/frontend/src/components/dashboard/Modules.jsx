@@ -212,45 +212,8 @@ export default function Modules({ guildId, serverData, setServerData }) {
     else if (moduleId === 'level') Component = LevelingSystemSettings;
     else return <div style={{ padding: '50px', color: '#fff', textAlign: 'center' }}>Module not found.</div>;
 
-    const isFullScreenModule = ['welcomegoodbye', 'appeals', 'level', 'tickets', 'boost', 'serverstats'].includes(moduleId);
-    if (isFullScreenModule) {
-      return (
-        <div className="animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
-          <Component 
-            key={formKey}
-            guildId={guildId}
-            config={serverData.config}
-            channels={serverData.channels || []}
-            voiceChannels={serverData.voice_channels || []}
-            roles={serverData.roles || []}
-            categories={serverData.categories || []}
-            onSave={handleSave}
-            saving={saving}
-            onReset={handleReset}
-          />
-        </div>
-      );
-    }
-
     return (
-      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
-        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ background: moduleInfo.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '16px' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fff' }}>
-                {moduleInfo.icon}
-              </svg>
-            </div>
-            <div>
-              <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#fff', margin: 0, marginBottom: '4px' }}>{moduleInfo.name}</h1>
-              <p style={{ color: '#949ba4', margin: 0, fontSize: '15px' }}>{moduleInfo.desc}</p>
-            </div>
-          </div>
-          <div style={{ pointerEvents: 'auto' }}>
-             <Toggle checked={getModuleState(moduleId)} onChange={() => toggleModule(moduleId)} />
-          </div>
-        </div>
-
+      <div className="animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
         <Component 
           key={formKey}
           guildId={guildId}

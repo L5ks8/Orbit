@@ -1,10 +1,12 @@
-import SaveBar from '../../ui/SaveBar';
 import React, { useState } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
+import Toggle from '../../ui/Toggle';
+import SaveBar from '../../ui/SaveBar';
 
 export default function AutoresponderSettings({ config, channels, onSave, saving, onReset }) {
   const arCfg = config?.autoresponder || {};
-  
+  const isEnabled = config?.autoresponder_enabled ?? (config?.settings?.autoresponder_enabled ?? true);
+
   const initialTriggers = Object.keys(arCfg).map((trigger, i) => {
     const t = arCfg[trigger];
     return {
@@ -17,6 +19,7 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
     };
   });
 
+  const [enabled, setEnabled] = useState(isEnabled);
   const [triggers, setTriggers] = useState(initialTriggers);
   const [editingTrigger, setEditingTrigger] = useState(null);
 
@@ -60,98 +63,161 @@ export default function AutoresponderSettings({ config, channels, onSave, saving
     });
     
     return {
+      autoresponder_enabled: enabled,
+      settings: {
+        ...(config?.settings || {}),
+        autoresponder_enabled: enabled
+      },
       autoresponder: autoresponderDict
     };
   };
 
-  const [initialState] = React.useState(() => JSON.stringify(getPayload()));
-  const isDirty = JSON.stringify(getPayload()) !== initialState;
+  const [initialState, setInitialState] = React.useState(() => JSON.stringify(getPayload()));
+  const currentPayloadStr = JSON.stringify(getPayload());
+  const isDirty = Boolean(initialState && currentPayloadStr !== initialState);
 
   const handleSave = () => {
-    onSave(getPayload());
+    onSave(getPayload(), true);
+    setInitialState(currentPayloadStr);
   };
 
   return (
-    <div className="dash-settings-module">
-
-
-      <div className="settings-title-row" style={{ justifyContent: 'space-between', marginBottom: '24px' }}>
-        <div>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '4px' }}>Triggers</h3>
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
+      <div data-tour="feature-header" className="scroll-mt-24">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </span>
+            <div>
+              <h1 className="text-base font-medium text-white truncate">Auto Responder</h1>
+              <p className="text-xs text-neutral-400 mt-0.5">Automatically reply to specific user messages or triggers in chat.</p>
+            </div>
+          </div>
         </div>
-        <button className="dash-btn secondary" onClick={() => setEditingTrigger({})}>+ Add Trigger</button>
       </div>
 
-      <div className="dash-card settings-card">
-        <div className="settings-form">
-          {triggers.length === 0 ? (
-            <div className="dash-custom-select-empty" style={{ border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-              No auto-replies configured. Click "Add Trigger" to create one.
-            </div>
-          ) : (
-            triggers.map(t => (
-              <div key={t.id} className="form-group inline" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="form-text">
-                  <label>"{t.trigger}"</label>
-                  <span className="form-hint">Replies: "{t.reply}" • Exact Match: {t.exactMatch ? 'Yes' : 'No'} • AI Context: {t.useAi ? 'Yes' : 'No'}</span>
-                </div>
-                <button className="dash-btn secondary" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setEditingTrigger(t)}>Edit</button>
-              </div>
-            ))
-          )}
+      {/* Master Toggle Card */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-white">Enable Auto Responder</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">Globally activate keyword trigger responses.</p>
         </div>
+        <Toggle checked={enabled} onChange={() => setEnabled(!enabled)} />
+      </div>
+
+      {/* Triggers Card */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 sm:p-6 flex flex-col gap-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Custom Triggers ({triggers.length})</h2>
+            <p className="text-xs text-neutral-400 mt-0.5">When users type the keyword, Orbit will automatically respond.</p>
+          </div>
+          <button
+            onClick={() => setEditingTrigger({})}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-black hover:bg-neutral-200 transition-colors"
+          >
+            + Add Trigger
+          </button>
+        </div>
+
+        {triggers.length === 0 ? (
+          <div className="p-8 text-center bg-neutral-950/50 rounded-xl border border-dashed border-neutral-800">
+            <p className="text-sm text-neutral-500 mb-3">No auto-replies configured yet.</p>
+            <button
+              onClick={() => setEditingTrigger({})}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-neutral-800 hover:bg-neutral-700 text-white transition-colors"
+            >
+              + Create First Trigger
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {triggers.map(t => (
+              <div key={t.id} className="bg-neutral-950/60 border border-neutral-800/80 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-semibold text-white truncate">"{t.trigger}"</span>
+                    {t.exactMatch && <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Exact</span>}
+                    {t.useAi && <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">AI Context</span>}
+                  </div>
+                  <p className="text-xs text-neutral-400 truncate">Replies: <span className="text-neutral-300">"{t.reply}"</span></p>
+                </div>
+                <button
+                  onClick={() => setEditingTrigger(t)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition-colors"
+                >
+                  Edit
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {editingTrigger && (
-        <div className="dash-modal-overlay" onClick={() => setEditingTrigger(null)}>
-          <div className="dash-modal" onClick={e => e.stopPropagation()}>
-            <div className="dash-modal-header">
-              <h3 className="dash-modal-title">{editingTrigger.id ? 'Edit Trigger' : 'New Trigger'}</h3>
-              <button className="dash-modal-close" onClick={() => setEditingTrigger(null)}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEditingTrigger(null)}>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+              <h3 className="text-base font-semibold text-white">{editingTrigger.id ? 'Edit Trigger' : 'New Trigger'}</h3>
+              <button onClick={() => setEditingTrigger(null)} className="text-neutral-400 hover:text-white text-lg leading-none">&times;</button>
             </div>
             
-            <form onSubmit={handleSaveTrigger}>
-              <div className="settings-form">
-                <div className="form-group">
-                  <label>Trigger Phrase</label>
-                  <textarea rows="1"  name="trigger" className="dash-input" defaultValue={editingTrigger.trigger} required placeholder="e.g. hi bot" ></textarea>
-                </div>
-                
-                <div className="form-group">
-                  <label>Bot Reply</label>
-                  <textarea name="reply" className="dash-input" rows="3" defaultValue={editingTrigger.reply} required placeholder="e.g. Hello there!"></textarea>
-                </div>
-
-                <div className="form-group inline">
-                  <div className="form-text">
-                    <label>Exact Match Only</label>
-                    <span className="form-hint">If enabled, the bot will only reply if the message is exactly the trigger phrase.</span>
-                  </div>
-                  <input type="checkbox" name="exactMatch" defaultChecked={editingTrigger.exactMatch} style={{ width: 'auto' }} />
-                </div>
-
-                <div className="form-group inline" style={{ marginTop: '16px' }}>
-                  <div className="form-text">
-                    <label>Smart AI Context (Requires ChatGPT)</label>
-                    <span className="form-hint">Use AI to detect if the user's message matches the context of the trigger, rather than a dumb text search.</span>
-                  </div>
-                  <input type="checkbox" name="useAi" defaultChecked={editingTrigger.useAi} style={{ width: 'auto' }} />
-                </div>
+            <form onSubmit={handleSaveTrigger} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-neutral-300">Trigger Phrase / Keyword</label>
+                <input
+                  type="text"
+                  name="trigger"
+                  className="h-10 px-3 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-white focus:outline-none focus:border-neutral-700"
+                  defaultValue={editingTrigger.trigger}
+                  required
+                  placeholder="e.g. !help, rules, ip"
+                />
+              </div>
+              
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-neutral-300">Bot Reply</label>
+                <textarea
+                  name="reply"
+                  rows="3"
+                  className="p-3 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-white focus:outline-none focus:border-neutral-700 resize-y"
+                  defaultValue={editingTrigger.reply}
+                  required
+                  placeholder="e.g. Check out our website at https://example.com"
+                ></textarea>
               </div>
 
-              <div className="settings-footer" style={{ marginTop: '32px', paddingTop: '20px', justifyContent: 'space-between' }}>
+              <div className="flex items-center justify-between py-2 border-t border-neutral-800/60">
+                <div>
+                  <span className="text-xs font-medium text-neutral-300 block">Exact Match Only</span>
+                  <span className="text-[11px] text-neutral-500">Only trigger if the user's message is an exact match.</span>
+                </div>
+                <input type="checkbox" name="exactMatch" defaultChecked={editingTrigger.exactMatch} className="rounded border-neutral-700 bg-neutral-800 text-white focus:ring-0 w-4 h-4" />
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-t border-neutral-800/60">
+                <div>
+                  <span className="text-xs font-medium text-neutral-300 block">Smart AI Detection</span>
+                  <span className="text-[11px] text-neutral-500">Use AI to recognize intent rather than strict keywords.</span>
+                </div>
+                <input type="checkbox" name="useAi" defaultChecked={editingTrigger.useAi} className="rounded border-neutral-700 bg-neutral-800 text-white focus:ring-0 w-4 h-4" />
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-neutral-800">
                 {editingTrigger.id ? (
-                  <button type="button" className="dash-btn secondary" style={{ color: '#ef4444' }} onClick={() => handleDeleteTrigger(editingTrigger.id)}>Delete</button>
-                ) : <div></div>}
-                <button type="submit" className="dash-btn primary">Save Trigger</button>
+                  <button type="button" className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors" onClick={() => handleDeleteTrigger(editingTrigger.id)}>Delete</button>
+                ) : <div />}
+                <button type="submit" className="h-9 px-4 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-colors">Save Trigger</button>
               </div>
             </form>
           </div>
         </div>
       )}
+
       <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
-    </div>
+    </main>
   );
 }

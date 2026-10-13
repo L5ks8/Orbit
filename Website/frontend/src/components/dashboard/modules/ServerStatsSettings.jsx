@@ -1,6 +1,7 @@
 import Toggle from '../../ui/Toggle';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
+import SaveBar from '../../ui/SaveBar';
 
 export default function ServerStatsSettings({ config, categories, onSave, saving, onReset }) {
   const ssCfg = config?.serverstats || {};
@@ -41,16 +42,12 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
 
   const [savedStateStr, setSavedStateStr] = useState(() => JSON.stringify(getPayload()));
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = savedStateStr && currentPayloadStr !== savedStateStr;
+  const isDirty = Boolean(savedStateStr && currentPayloadStr !== savedStateStr);
 
-  useEffect(() => {
-    if (!savedStateStr || !isDirty) return;
-    const timeoutId = setTimeout(() => {
-      onSave(getPayload(), true);
-      setSavedStateStr(currentPayloadStr);
-    }, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, savedStateStr, isDirty, onSave]);
+  const handleSave = () => {
+    onSave(getPayload(), true);
+    setSavedStateStr(currentPayloadStr);
+  };
 
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
@@ -214,6 +211,7 @@ export default function ServerStatsSettings({ config, categories, onSave, saving
           
         </div>
       </div>
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </main>
   );
 }

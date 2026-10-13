@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import DiscordPreview from '../../ui/DiscordPreview';
 import { useToast } from '../../ui/Toast';
+import SaveBar from '../../ui/SaveBar';
 
 const TailwindToggle = ({ checked, onChange }) => (
     <button 
@@ -21,6 +22,7 @@ const DEFAULT_IMAGE = '/img/default_verify.png';
 const DEFAULT_COLOR = '#5865F2';
 
 export default function Verification({ guildId, serverData, setServerData }) {
+  const [formKey, setFormKey] = useState(0);
   const toast = useToast();
   const vCfg = serverData?.config?.verify || {};
 
@@ -70,7 +72,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
         });
       }, 0);
     }
-  }, [serverData?.config?.verify]);
+  }, [serverData?.config?.verify, formKey]);
 
   const roleOptions = (serverData?.roles || []).map(r => ({ value: String(r.id), label: `@ ${r.name || 'Unknown'}`, color: r.color || '#99aab5' }));
   const channelOptions = (serverData?.channels || []).map(c => ({ value: String(c.id), label: `# ${c.name}` }));
@@ -141,15 +143,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
   };
 
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialPayloadRef.current && currentPayloadStr !== initialPayloadRef.current;
-
-  useEffect(() => {
-    if (!initialPayloadRef.current || !isDirty || isSavingRef.current) return;
-    const timeoutId = setTimeout(() => {
-      handleSave(currentPayloadStr);
-    }, 1500);
-    return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, isDirty]);
+  const isDirty = Boolean(initialPayloadRef.current && currentPayloadStr !== initialPayloadRef.current);
 
   return (
     <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5">
@@ -477,6 +471,7 @@ export default function Verification({ guildId, serverData, setServerData }) {
           </div>
         </div>
       </div>
+      <SaveBar show={isDirty} onReset={() => setFormKey(k => k + 1)} onSave={() => handleSave(currentPayloadStr)} saving={isSaving} />
     </main>
   );
 }

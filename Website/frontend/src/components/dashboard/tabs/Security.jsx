@@ -4,6 +4,7 @@ import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
 import CustomSelect from '../../ui/CustomSelect';
 import TrustedUserInput from '../../ui/TrustedUserInput';
+import SaveBar from '../../ui/SaveBar';
 
 const TailwindToggle = ({ checked, onChange }) => (
   <button
@@ -18,8 +19,7 @@ const TailwindToggle = ({ checked, onChange }) => (
 );
 
 export default function Security({ guildId, serverData, setServerData }) {
-
-
+  const [formKey, setFormKey] = useState(0);
   const toast = useToast();
 
   const initialCfg = serverData?.config?.security || {};
@@ -103,7 +103,7 @@ export default function Security({ guildId, serverData, setServerData }) {
         })
         .catch(err => { console.error(err); setLoading(false); });
     }
-  }, [guildId, serverData]);
+  }, [guildId, serverData, formKey]);
 
   const handleSave = async (payloadString) => {
     setIsSaving(true);
@@ -134,15 +134,7 @@ export default function Security({ guildId, serverData, setServerData }) {
   };
 
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = initialStateStr && currentPayloadStr !== initialStateStr;
-
-  useEffect(() => {
-    if (!initialStateStr || !isDirty) return;
-    const timeoutId = setTimeout(() => {
-      handleSave(currentPayloadStr);
-    }, 1500);
-    return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, isDirty, initialStateStr]);
+  const isDirty = Boolean(initialStateStr && currentPayloadStr !== initialStateStr);
 
   if (loading) {
     return (
@@ -995,6 +987,7 @@ export default function Security({ guildId, serverData, setServerData }) {
             </div>
           </div>
         </div>
+        <SaveBar show={isDirty} onReset={() => setFormKey(k => k + 1)} onSave={() => handleSave(currentPayloadStr)} saving={isSaving} />
       </main>
     </>
   );

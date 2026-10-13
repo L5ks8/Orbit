@@ -4,8 +4,9 @@ import Toggle from '../../ui/Toggle';
 import SaveBar from '../../ui/SaveBar';
 import { useToast } from '../../ui/Toast';
 import { getCache, setCache } from '../../../utils/cache';
+import { Settings as SettingsIcon, ShieldAlert, Shield, Cpu, UserMinus } from 'lucide-react';
 
-export default function ({ guildId, serverData, setServerData }) {
+export default function Settings({ guildId, serverData, setServerData }) {
   const toast = useToast();
   const [settings, setSettings] = useState({
     manager_roles: [],
@@ -99,7 +100,7 @@ export default function ({ guildId, serverData, setServerData }) {
   });
 
   const [initialState, setInitialState] = useState('');
-  const isDirty = initialState && JSON.stringify(getPayload()) !== initialState;
+  const isDirty = Boolean(initialState && JSON.stringify(getPayload()) !== initialState);
 
   const saveSettings = () => {
     setSaving(true);
@@ -138,36 +139,43 @@ export default function ({ guildId, serverData, setServerData }) {
   };
 
   if (loading) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', background: '#09090b', color: '#949ba4' }}>
-      <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#5865F2', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
-      <div style={{ fontSize: '15px', fontWeight: 500 }}>Loading settings...</div>
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    <div className="flex flex-col items-center justify-center min-h-[300px] text-neutral-500">
+      <div className="w-8 h-8 rounded-full border-2 border-neutral-700 border-t-blue-500 animate-spin mb-3"></div>
+      <div className="text-xs">Loading settings...</div>
     </div>
   );
 
   const roleOptions = roles.map(r => ({ value: r.id, label: `@ ${r.name}`, color: r.color }));
 
   return (
-    <div className="dash-settings">
-      <h1 className="dash-title">Server Settings</h1>
-      <p className="dash-subtitle">Configure basic Orbit behavior for this server.</p>
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
+      {/* Header */}
+      <div data-tour="feature-header" className="scroll-mt-24">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+              <SettingsIcon className="w-5 h-5 text-neutral-400" />
+            </span>
+            <div>
+              <h1 className="text-base font-medium text-white truncate">Server Settings</h1>
+              <p className="text-xs text-neutral-400 mt-0.5">Configure bot management roles, command immunity, and server-wide switches.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      
-      <div style={{ 
-        background: 'rgba(255,255,255,0.02)', 
-        border: '1px solid rgba(255,255,255,0.05)', 
-        borderRadius: '8px', 
-        padding: '24px', 
-        marginBottom: '24px' 
-      }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>Anti-Ban & Kick Immunity</h3>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', marginBottom: '20px', lineHeight: '1.5' }}>
-          Users in this list, or users possessing these roles, are immune to the bot's moderation commands (like ban, kick, timeout).
-        </p>
+      {/* Immunity Card */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 sm:p-6 flex flex-col gap-5">
+        <div>
+          <h2 className="text-sm font-semibold text-white">Anti-Ban & Kick Immunity</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">
+            Users in this list or possessing these roles cannot be moderated (banned, kicked, timed out) by Orbit.
+          </p>
+        </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#fff', marginBottom: '8px' }}>Immune Roles</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-neutral-300">Immune Roles</label>
             <CustomSelect 
               isMulti
               options={roleOptions}
@@ -177,20 +185,18 @@ export default function ({ guildId, serverData, setServerData }) {
             />
           </div>
 
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#fff', marginBottom: '8px' }}>Immune Users</h3>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-neutral-300">Immune Users</label>
+            <div className="flex gap-2">
               <input 
                 type="text" 
-                className="dash-input" 
+                className="flex-1 h-9 px-3 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-700" 
                 placeholder="User ID (e.g. 123456789)"
                 value={newUserId}
                 onChange={e => setNewUserId(e.target.value)}
-                style={{ flex: 1 }}
               />
               <button 
-                className="dash-btn" 
-                style={{ background: '#5865F2', color: '#fff', padding: '0 16px' }}
+                className="h-9 px-3.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-medium transition-colors disabled:opacity-40"
                 disabled={fetchingUser || !newUserId}
                 onClick={() => {
                   if (!newUserId) return;
@@ -217,40 +223,37 @@ export default function ({ guildId, serverData, setServerData }) {
               </button>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="flex flex-col gap-1.5 mt-1">
               {immuneUsers.map(user => (
-                <div key={user.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img src={user.avatar} alt="avatar" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
-                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500' }}>{user.name}</span>
+                <div key={user.id} className="flex items-center justify-between bg-neutral-950/60 border border-neutral-800/80 px-3 py-2 rounded-lg">
+                  <div className="flex items-center gap-2.5">
+                    <img src={user.avatar} alt="avatar" className="w-6 h-6 rounded-full border border-neutral-700" />
+                    <span className="text-xs font-medium text-white">{user.name}</span>
                   </div>
                   <button 
                     onClick={() => setImmuneUsers(immuneUsers.filter(u => u.id !== user.id))}
-                    style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                    className="text-red-400 hover:text-red-300 p-1"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                    <UserMinus className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}
               {immuneUsers.length === 0 && (
-                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', fontStyle: 'italic' }}>No immune users added yet.</div>
+                <span className="text-xs text-neutral-500 italic">No immune users added yet.</span>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ 
-        background: 'rgba(255,255,255,0.02)', 
-        border: '1px solid rgba(255,255,255,0.05)', 
-        borderRadius: '8px', 
-        padding: '24px', 
-        marginBottom: '24px' 
-      }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>Manager Roles</h3>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', marginBottom: '20px', lineHeight: '1.5' }}>
-          Users with these roles can access this dashboard and configure Orbit, even if they don't have Administrator permissions in Discord.
-        </p>
+      {/* Manager Roles Card */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-white">Dashboard Manager Roles</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">
+            Users with these roles can view and configure Orbit on this web dashboard without full Discord Administrator rights.
+          </p>
+        </div>
         
         <div>
           <CustomSelect 
@@ -263,19 +266,17 @@ export default function ({ guildId, serverData, setServerData }) {
         </div>
       </div>
 
-      <div style={{ 
-        background: 'rgba(255,255,255,0.02)', 
-        border: '1px solid rgba(255,255,255,0.05)', 
-        borderRadius: '8px', 
-        padding: '24px', 
-        marginBottom: '24px' 
-      }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '24px' }}>General Features</h3>
+      {/* General Features Card */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-white">General Bot Features</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">Toggle optional AI behaviors and background services.</p>
+        </div>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="flex items-center justify-between py-2 border-b border-neutral-800/60">
           <div>
-            <label style={{ margin: 0, color: '#fff', display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>AI Chatbot Responses</label>
-            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>Allow the bot to use AI to respond to mentions and replies.</span>
+            <label className="text-xs font-semibold text-white block">AI Chatbot Responses</label>
+            <span className="text-[11px] text-neutral-400">Allow Orbit to respond conversationally when mentioned in chat.</span>
           </div>
           <Toggle 
             checked={extraSettings.ai_enabled} 
@@ -283,10 +284,10 @@ export default function ({ guildId, serverData, setServerData }) {
           />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="flex items-center justify-between py-2 border-b border-neutral-800/60">
           <div>
-            <label style={{ margin: 0, color: '#fff', display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>Autoresponder Module</label>
-            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>Enable or disable the custom autoresponder system.</span>
+            <label className="text-xs font-semibold text-white block">Autoresponder Module</label>
+            <span className="text-[11px] text-neutral-400">Enable or disable custom keyword trigger responses.</span>
           </div>
           <Toggle 
             checked={settings.autoresponder_enabled} 
@@ -294,10 +295,10 @@ export default function ({ guildId, serverData, setServerData }) {
           />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="flex items-center justify-between py-2">
           <div>
-            <label style={{ margin: 0, color: '#fff', display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>Messages Tracking</label>
-            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}>Should Orbit track and log message counts for statistics?</span>
+            <label className="text-xs font-semibold text-white block">Message Tracking</label>
+            <span className="text-[11px] text-neutral-400">Track and index message counts for leaderboards and analytics.</span>
           </div>
           <Toggle 
             checked={settings.messages_enabled} 
@@ -307,6 +308,6 @@ export default function ({ guildId, serverData, setServerData }) {
       </div>
 
       <SaveBar show={isDirty} onReset={handleReset} onSave={saveSettings} saving={saving} />
-    </div>
+    </main>
   );
 }

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Toggle from '../../ui/Toggle';
 import CustomSelect from '../../ui/CustomSelect';
+import SaveBar from '../../ui/SaveBar';
 import { parseDiscordMarkdown, replaceVariables } from '../../ui/DiscordPreview';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -120,19 +121,11 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
 
   const [savedStateStr, setSavedStateStr] = React.useState(() => JSON.stringify(getPayload()));
   const currentPayloadStr = JSON.stringify(getPayload());
-  const isDirty = savedStateStr && currentPayloadStr !== savedStateStr;
-
-  React.useEffect(() => {
-    if (!savedStateStr || !isDirty) return;
-    const timeoutId = setTimeout(() => {
-      onSave(getPayload(), true);
-      setSavedStateStr(currentPayloadStr);
-    }, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [currentPayloadStr, savedStateStr, isDirty, onSave]);
+  const isDirty = Boolean(savedStateStr && currentPayloadStr !== savedStateStr);
 
   const handleSave = () => {
-    onSave(getPayload());
+    onSave(getPayload(), true);
+    setSavedStateStr(currentPayloadStr);
   };
 
   const replaceLevelVars = (text) => {
@@ -738,6 +731,7 @@ export default function LevelingSystemSettings({ config, channels, roles, onSave
         </div>
 
       </div>
+      <SaveBar show={isDirty} onReset={onReset} onSave={handleSave} saving={saving} />
     </main>
   );
 }
