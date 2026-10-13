@@ -367,7 +367,7 @@ class PollCommand(commands.Cog):
     @poll.error
     async def poll_error(self, interaction: discord.Interaction, error):
         ctx = InteractionContext(interaction)
-        if isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
+        if isinstance(error, (commands.MissingRequiredArgument, app_commands.CommandSignatureMismatch)):
             await ctx.send(embed=make_embed("Usage: `/poll <question> <options> [duration_in_minutes]`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

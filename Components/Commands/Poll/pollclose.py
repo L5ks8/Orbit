@@ -47,7 +47,7 @@ class PollCloseCommand(commands.Cog):
     @pollclose.error
     async def pollclose_error(self, interaction: discord.Interaction, error):
         ctx = InteractionContext(interaction)
-        if isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
+        if isinstance(error, (commands.MissingRequiredArgument, app_commands.CommandSignatureMismatch)):
             await ctx.send(embed=make_embed("Usage: `/pollclose <poll_id>`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

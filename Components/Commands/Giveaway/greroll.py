@@ -109,7 +109,7 @@ class GiveawayRerollCommand(commands.Cog):
         ctx = InteractionContext(interaction)
         if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             await ctx.send(embed=make_embed("You need Manage Server permission to reroll giveaways.", discord.Color.red()), ephemeral=True)
-        elif isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
+        elif isinstance(error, (commands.MissingRequiredArgument, app_commands.CommandSignatureMismatch)):
             await ctx.send(embed=make_embed("Usage: `/greroll <giveaway_id>`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)

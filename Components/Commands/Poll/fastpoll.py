@@ -59,7 +59,7 @@ class FastPollCommand(commands.Cog):
     @fastpoll.error
     async def fastpoll_error(self, interaction: discord.Interaction, error):
         ctx = InteractionContext(interaction)
-        if isinstance(error, (app_commands.AppCommandError, commands.MissingRequiredArgument)):
+        if isinstance(error, (commands.MissingRequiredArgument, app_commands.CommandSignatureMismatch)):
             await ctx.send(embed=make_embed("Usage: `/fastpoll <question> [duration_in_minutes]`", discord.Color.red()), ephemeral=True)
         else:
             await ctx.send(embed=make_embed(f"An error occurred: {error}", discord.Color.red()), ephemeral=True)
