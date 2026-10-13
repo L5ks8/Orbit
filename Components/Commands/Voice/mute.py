@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Voice.voice import voice_group
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 

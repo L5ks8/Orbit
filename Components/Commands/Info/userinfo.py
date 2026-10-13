@@ -1,7 +1,8 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 from typing import Union
-from Components.Commands._utils import ORBIT_COLOR, make_v2_card, InteractionContext
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_user_info(ctx: commands.Context, user: Union[discord.Member, discord.User, None]):

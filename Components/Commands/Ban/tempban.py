@@ -6,7 +6,7 @@ import time
 from Components.Commands.Cases._storage import create_case
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Database.mongodb import get_db
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 def parse_duration(duration_str: str) -> int:

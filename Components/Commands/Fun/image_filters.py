@@ -5,7 +5,7 @@ import aiohttp
 from io import BytesIO
 from PIL import Image, ImageOps, ImageEnhance, ImageDraw, ImageFilter
 import random
-from Components.Commands._utils import make_embed, InteractionContext
+from Components.Commands._utils import make_embed, InteractionContext
 from Components.emojis import Emojis
 
 class ImageFilters(commands.Cog):

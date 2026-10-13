@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from Components.Commands.Whitelist._views import WhitelistListLayout
-from Components.Commands._utils import make_embed, InteractionContext
+from Components.Commands._utils import make_embed, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_wl_list(ctx: commands.Context):

@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 from Components.Systems.Automoderation.log_storage import log_event
 

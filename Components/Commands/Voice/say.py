@@ -12,7 +12,7 @@ except ImportError:
     HAS_EDGE_TTS = False
 
 from Components.Commands.Voice.voice import voice_group
-from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 VOICE = "de-DE-ConradNeural"

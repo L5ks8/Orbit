@@ -1,6 +1,7 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
-from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card, InteractionContext
+from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 

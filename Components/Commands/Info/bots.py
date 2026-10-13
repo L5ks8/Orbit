@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card, InteractionContext
+from Components.Commands._utils import make_embed, ORBIT_COLOR, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 class BotsListCommand(commands.Cog):

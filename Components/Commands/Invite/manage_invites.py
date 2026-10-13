@@ -1,11 +1,12 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Invite._storage import (
     add_fake_invites, remove_fake_invites,
     add_bonus_invites, remove_bonus_invites,
     reset_invites
 )
-from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 

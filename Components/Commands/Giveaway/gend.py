@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Giveaway._storage import get_giveaway
 from Components.Commands.Giveaway.giveaway import end_giveaway_logic
-from Components.Commands._utils import make_embed, make_v2_card, InteractionContext
+from Components.Commands._utils import make_embed, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 class GiveawayEndCommand(commands.Cog):

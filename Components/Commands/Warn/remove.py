@@ -1,9 +1,10 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Warn._storage import delete_warning, get_user_warnings
 from Components.Systems.Automoderation.log_storage import log_event
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 

@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from deep_translator import GoogleTranslator
-from Components.Commands._utils import ORBIT_COLOR, make_v2_card, make_embed, InteractionContext
+from Components.Commands._utils import ORBIT_COLOR, make_v2_card, make_embed, InteractionContext
 from Components.emojis import Emojis
 
 class Translate(commands.Cog):

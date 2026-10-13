@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import datetime
 from Components.Database.mongodb import get_db
-from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 
 class Birthday(commands.Cog):

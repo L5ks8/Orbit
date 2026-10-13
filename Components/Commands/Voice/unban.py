@@ -1,5 +1,5 @@
 import discord
-from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
+from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, InteractionContext
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Voice._storage import remove_from_vcban

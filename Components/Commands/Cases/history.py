@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from Components.Commands.Cases._storage import get_user_cases
-from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import format_usage, make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class HistoryPagination(discord.ui.View):
