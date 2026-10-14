@@ -43,25 +43,33 @@ class LevelAdminCog(commands.Cog):
     async def level_add(self, interaction: discord.Interaction, user: discord.Member, levels: int):
         if levels <= 0:
             return await interaction.response.send_message(embed=make_embed("Please provide a valid number of levels (> 0).", discord.Color.red()), ephemeral=True)
+        if levels > 1000000:
+            return await interaction.response.send_message(embed=make_embed("Cannot add more than 1,000,000 levels at once.", discord.Color.red()), ephemeral=True)
             
+        await interaction.response.defer(ephemeral=True)
         data = get_user_xp(interaction.guild.id, user.id)
         current_xp = data.get("total_xp", 0)
         current_level = level_from_xp(current_xp)
         
         new_level = current_level + levels
+        if new_level > 1000000:
+            return await interaction.followup.send(embed=make_embed("Maximum level limit is 1,000,000.", discord.Color.red()), ephemeral=True)
         new_xp = total_xp_for_level(new_level)
         
         data["total_xp"] = new_xp
         set_user_xp(interaction.guild.id, user.id, data)
         
-        await interaction.response.send_message(embed=make_embed(f"Successfully added **{levels}** levels to {user.mention}. They are now **Level {new_level}**.", discord.Color.green()), ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Successfully added **{levels:,}** levels to {user.mention}. They are now **Level {new_level:,}**.", discord.Color.green()), ephemeral=True)
 
     @level.command(name="remove", description="Remove levels from someone.")
     @app_commands.describe(user="The user to modify", levels="Amount of levels to remove")
     async def level_remove(self, interaction: discord.Interaction, user: discord.Member, levels: int):
         if levels <= 0:
             return await interaction.response.send_message(embed=make_embed("Please provide a valid number of levels (> 0).", discord.Color.red()), ephemeral=True)
+        if levels > 1000000:
+            return await interaction.response.send_message(embed=make_embed("Cannot remove more than 1,000,000 levels at once.", discord.Color.red()), ephemeral=True)
             
+        await interaction.response.defer(ephemeral=True)
         data = get_user_xp(interaction.guild.id, user.id)
         current_xp = data.get("total_xp", 0)
         current_level = level_from_xp(current_xp)
@@ -72,20 +80,23 @@ class LevelAdminCog(commands.Cog):
         data["total_xp"] = new_xp
         set_user_xp(interaction.guild.id, user.id, data)
         
-        await interaction.response.send_message(embed=make_embed(f"Successfully removed **{levels}** levels from {user.mention}. They are now **Level {new_level}**.", discord.Color.green()), ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Successfully removed **{levels:,}** levels from {user.mention}. They are now **Level {new_level:,}**.", discord.Color.green()), ephemeral=True)
 
     @level.command(name="set", description="Set the exact level of someone.")
     @app_commands.describe(user="The user to modify", level="The level to set them to")
     async def level_set(self, interaction: discord.Interaction, user: discord.Member, level: int):
         if level < 0:
             return await interaction.response.send_message(embed=make_embed("Level cannot be negative.", discord.Color.red()), ephemeral=True)
+        if level > 1000000:
+            return await interaction.response.send_message(embed=make_embed("Maximum level limit is 1,000,000.", discord.Color.red()), ephemeral=True)
             
+        await interaction.response.defer(ephemeral=True)
         data = get_user_xp(interaction.guild.id, user.id)
         new_xp = total_xp_for_level(level)
         data["total_xp"] = new_xp
         set_user_xp(interaction.guild.id, user.id, data)
         
-        await interaction.response.send_message(embed=make_embed(f"Successfully set {user.mention} to **Level {level}**.", discord.Color.green()), ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Successfully set {user.mention} to **Level {level:,}**.", discord.Color.green()), ephemeral=True)
 
     @level.command(name="transfer", description="Transfer levels from one user to another.")
     @app_commands.describe(from_user="The user to take levels from", to_user="The user to give levels to")

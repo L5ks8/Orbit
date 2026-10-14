@@ -1,4 +1,4 @@
-﻿from Components.Database.mongodb import get_config, set_config, get_db
+from Components.Database.mongodb import get_config, set_config, get_db
 import math
 import threading
 from typing import Dict, Any, List, Optional
@@ -67,32 +67,38 @@ def xp_for_level(level: int) -> int:
     return 5 * (level ** 2) + (50 * level) + 100
 
 def total_xp_for_level(level: int) -> int:
-    total = 0
-    for lvl in range(1, level + 1):
-        total += xp_for_level(lvl)
-    return total
+    if level <= 0:
+        return 0
+    n = level
+    return (5 * n * (n + 1) * (2 * n + 1)) // 6 + 25 * n * (n + 1) + 100 * n
 
 def level_from_xp(total_xp: int) -> int:
-    level = 0
-    remaining = total_xp
-    while True:
-        needed = xp_for_level(level + 1)
-        if remaining < needed:
-            break
-        remaining -= needed
-        level += 1
-    return level
+    if total_xp <= 0:
+        return 0
+    low = 0
+    high = 1
+    while total_xp_for_level(high) <= total_xp:
+        low = high
+        high *= 2
+
+    ans = low
+    while low <= high:
+        mid = (low + high) // 2
+        if total_xp_for_level(mid) <= total_xp:
+            ans = mid
+            low = mid + 1
+        else:
+            high = mid - 1
+    return ans
 
 def xp_progress(total_xp: int) -> tuple:
-    level = 0
-    remaining = total_xp
-    while True:
-        needed = xp_for_level(level + 1)
-        if remaining < needed:
-            break
-        remaining -= needed
-        level += 1
-    return level, remaining, xp_for_level(level + 1)
+    if total_xp <= 0:
+        return 0, 0, xp_for_level(1)
+    level = level_from_xp(total_xp)
+    base_xp = total_xp_for_level(level)
+    remaining = total_xp - base_xp
+    needed = xp_for_level(level + 1)
+    return level, remaining, needed
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 def load_level_config(guild_id: int) -> Dict[str, Any]:
