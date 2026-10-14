@@ -900,6 +900,62 @@ class ActionsMixin:
         from Components.Systems.Roles.reaction_panels import load_reaction_roles
         return web.json_response(load_reaction_roles(guild_id))
 
+    def _resolve_discord_emoji(self, guild: discord.Guild, emoji_val: str):
+        if not emoji_val or not isinstance(emoji_val, str):
+            return None
+        emoji_str = emoji_val.strip()
+        if not emoji_str:
+            return None
+
+        import re
+        # Custom emoji <:name:id> or <a:name:id>
+        match = re.match(r"^<(a?):([a-zA-Z0-9_]+):(\d+)>$", emoji_str)
+        if match:
+            is_anim = bool(match.group(1))
+            e_name = match.group(2)
+            e_id = int(match.group(3))
+            return discord.PartialEmoji(name=e_name, id=e_id, animated=is_anim)
+
+        # Pure emoji ID
+        if emoji_str.isdigit():
+            e_id = int(emoji_str)
+            return self.bot.get_emoji(e_id) or discord.PartialEmoji(name="emoji", id=e_id)
+
+        # Shortcodes like :moyai:
+        if emoji_str.startswith(":") and emoji_str.endswith(":") and len(emoji_str) > 2:
+            raw_name = emoji_str[1:-1].lower()
+            if guild:
+                custom_e = discord.utils.find(lambda e: e.name.lower() == raw_name, guild.emojis)
+                if custom_e:
+                    return custom_e
+            global_e = discord.utils.find(lambda e: e.name.lower() == raw_name, self.bot.emojis)
+            if global_e:
+                return global_e
+
+            SHORTCODES = {
+                "moyai": "🗿", "skull": "💀", "fire": "🔥", "heart": "❤️", "star": "⭐",
+                "check": "✅", "white_check_mark": "✅", "x": "❌", "warning": "⚠️",
+                "tada": "🎉", "sparkles": "✨", "wave": "👋", "thumbsup": "👍", "+1": "👍",
+                "thumbsdown": "👎", "-1": "👎", "eyes": "👀", "100": "💯", "rocket": "🚀",
+                "bell": "🔔", "video_game": "🎮", "game": "🎮", "shield": "🛡️", "crown": "👑",
+                "gem": "💎", "gift": "🎁", "loudspeaker": "📢", "mega": "📣", "question": "❓",
+                "red_circle": "🔴", "blue_circle": "🔵", "green_circle": "🟢", "yellow_circle": "🟡",
+                "purple_circle": "🟣", "white_circle": "⚪", "black_circle": "⚫"
+            }
+            if raw_name in SHORTCODES:
+                return SHORTCODES[raw_name]
+
+            import unicodedata
+            try:
+                char = unicodedata.lookup(raw_name.replace("_", " ").upper())
+                return char
+            except Exception:
+                pass
+            return None
+
+        # Unicode character
+        return emoji_str
+
     async def api_save_reactionrole(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -964,12 +1020,14 @@ class ActionsMixin:
                             data["msg_id"] = msg_sent_id
 
                             for comp in components:
-                                emoji = comp.get("emoji")
-                                if emoji:
-                                    try:
-                                        await msg.add_reaction(emoji)
-                                    except Exception:
-                                        pass
+                                emoji_raw = comp.get("emoji")
+                                if emoji_raw:
+                                    resolved = self._resolve_discord_emoji(guild, emoji_raw)
+                                    if resolved:
+                                        try:
+                                            await msg.add_reaction(resolved)
+                                        except Exception:
+                                            pass
                         except discord.Forbidden:
                             return web.json_response({"error": "Bot does not have permission to send messages or add reactions in that channel."}, status=403)
                         except Exception as e:
@@ -998,7 +1056,9 @@ class ActionsMixin:
                                 "row": min(idx // 5, 4)
                             }
                             if comp.get("emoji"):
-                                btn_kwargs["emoji"] = comp.get("emoji")
+                                resolved_e = self._resolve_discord_emoji(guild, comp.get("emoji"))
+                                if resolved_e:
+                                    btn_kwargs["emoji"] = resolved_e
 
                             view.add_item(discord.ui.Button(**btn_kwargs))
 
@@ -1091,19 +1151,20 @@ class ActionsMixin:
                 msg = await channel.send(**msg_kwargs)
 
                 for comp in components:
-                    emoji = comp.get("emoji")
-                    if emoji:
-                        try:
-                            await msg.add_reaction(emoji)
-                        except Exception:
-                            pass
+                    emoji_raw = comp.get("emoji")
+                    if emoji_raw:
+                        resolved = self._resolve_discord_emoji(guild, emoji_raw)
+                        if resolved:
+                            try:
+                                await msg.add_reaction(resolved)
+                            except Exception:
+                                pass
             else:
                 view = discord.ui.View(timeout=None)
                 for idx, btn in enumerate(components):
                     role_id = btn.get("role_id")
                     if not role_id: continue
                     label = btn.get("label", "Role")
-                    emoji = btn.get("emoji")
                     color_str = btn.get("color", "blue")
                     
                     style = discord.ButtonStyle.primary
@@ -1118,7 +1179,10 @@ class ActionsMixin:
                         "custom_id": custom_id,
                         "row": min(idx // 5, 4)
                     }
-                    if emoji: kwargs["emoji"] = emoji
+                    if btn.get("emoji"):
+                        resolved_e = self._resolve_discord_emoji(guild, btn.get("emoji"))
+                        if resolved_e:
+                            kwargs["emoji"] = resolved_e
                     view.add_item(discord.ui.Button(**kwargs))
 
                 msg_kwargs = {}

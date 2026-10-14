@@ -22,6 +22,108 @@ const BUTTON_STYLES = [
   { id: "red", label: "Danger", bg: "bg-[#da373c]", text: "text-white" },
 ];
 
+const SHORTCODE_UNICODE_MAP = {
+  moyai: "🗿",
+  skull: "💀",
+  fire: "🔥",
+  star: "⭐",
+  sparkles: "✨",
+  tada: "🎉",
+  heart: "❤️",
+  thumbsup: "👍",
+  thumbsdown: "👎",
+  check: "✅",
+  white_check_mark: "✅",
+  x: "❌",
+  smile: "😄",
+  laughing: "😆",
+  joy: "😂",
+  rofl: "🤣",
+  eyes: "👀",
+  rocket: "🚀",
+  crown: "👑",
+  gem: "💎",
+  100: "💯",
+  clown: "🤡",
+  wave: "👋",
+  pray: "🙏",
+  muscle: "💪",
+  robot: "🤖",
+  ghost: "👻",
+  alien: "👽",
+  video_game: "🎮",
+  dart: "🎯",
+  trophy: "🏆",
+  medal: "🏅",
+  bell: "🔔",
+  warning: "⚠️",
+};
+
+export const EmojiDisplay = ({ emoji, serverEmojis = [], className = "w-5 h-5", fallback = null }) => {
+  if (!emoji) return fallback;
+
+  // Custom Discord emoji format: <:name:id> or <a:name:id>
+  const customMatch = emoji.match(/^<a?:([a-zA-Z0-9_]+):(\d+)>$/);
+  if (customMatch) {
+    const isAnim = emoji.startsWith("<a:");
+    const emojiId = customMatch[2];
+    const name = customMatch[1];
+    return (
+      <img
+        src={`https://cdn.discordapp.com/emojis/${emojiId}.${isAnim ? "gif" : "webp"}?size=48&quality=lossless`}
+        alt={name}
+        title={`:${name}:`}
+        className={`inline-block object-contain align-middle ${className}`}
+        onError={(e) => {
+          e.target.style.display = "none";
+        }}
+      />
+    );
+  }
+
+  // Pure snowflake ID
+  if (/^\d{17,20}$/.test(String(emoji).trim())) {
+    const emojiId = String(emoji).trim();
+    return (
+      <img
+        src={`https://cdn.discordapp.com/emojis/${emojiId}.webp?size=48&quality=lossless`}
+        alt="emoji"
+        className={`inline-block object-contain align-middle ${className}`}
+        onError={(e) => {
+          e.target.style.display = "none";
+        }}
+      />
+    );
+  }
+
+  // Shortcode format: :name:
+  const shortcodeMatch = emoji.match(/^:([a-zA-Z0-9_]+):$/);
+  if (shortcodeMatch) {
+    const cleanName = shortcodeMatch[1].toLowerCase();
+    if (serverEmojis && serverEmojis.length > 0) {
+      const found = serverEmojis.find(
+        (se) => se.name && se.name.toLowerCase() === cleanName
+      );
+      if (found) {
+        return (
+          <img
+            src={`https://cdn.discordapp.com/emojis/${found.id}.${found.animated ? "gif" : "webp"}?size=48&quality=lossless`}
+            alt={found.name}
+            title={`:${found.name}:`}
+            className={`inline-block object-contain align-middle ${className}`}
+          />
+        );
+      }
+    }
+    if (SHORTCODE_UNICODE_MAP[cleanName]) {
+      return <span>{SHORTCODE_UNICODE_MAP[cleanName]}</span>;
+    }
+  }
+
+  return <span>{emoji}</span>;
+};
+
+
 const PREDEFINED_TEMPLATES = {
   "Normal": {
     title: "Role Selection",
@@ -200,7 +302,7 @@ export default function ReactionRoleBuilder({
         },
         components: components.map((c) => ({
           label: c.label || "Role",
-          emoji: c.emoji || "❓",
+          emoji: c.emoji || "",
           role_id: c.role_id,
           color: c.color || "blue",
         })),
@@ -242,7 +344,7 @@ export default function ReactionRoleBuilder({
       {
         _id: Math.random().toString(36).substr(2, 9),
         label: "New Role",
-        emoji: "▫️",
+        emoji: "",
         role_id: "",
         color: "blue",
       },
@@ -734,10 +836,34 @@ export default function ReactionRoleBuilder({
                           className="flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 text-lg hover:bg-neutral-700 hover:border-neutral-600 transition-colors"
                           title="Pick emoji"
                         >
-                          {comp.emoji || "▫️"}
+                          <EmojiDisplay
+                            emoji={comp.emoji}
+                            serverEmojis={serverData?.emojis}
+                            className="w-5 h-5"
+                            fallback={
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={18}
+                                height={18}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={1.8}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-neutral-500"
+                              >
+                                <circle cx={12} cy={12} r={10} />
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                                <line x1={9} y1={9} x2={9.01} y2={9} />
+                                <line x1={15} y1={9} x2={15.01} y2={9} />
+                              </svg>
+                            }
+                          />
                         </button>
                         {emojiPickerIndex === idx && (
                           <EmojiPicker
+                            serverEmojis={serverData?.emojis}
                             onSelect={(emoji) => {
                               updateComponent(idx, "emoji", emoji);
                               setEmojiPickerIndex(null);
@@ -960,7 +1086,11 @@ export default function ReactionRoleBuilder({
                                     "Role";
                                   return (
                                     <div key={comp._id} className="flex items-center gap-1.5">
-                                      <span>{comp.emoji || "▫️"}</span>
+                                      <EmojiDisplay
+                                        emoji={comp.emoji}
+                                        serverEmojis={serverData?.emojis}
+                                        className="w-4 h-4"
+                                      />
                                       <span className="font-semibold text-sky-400">@{rName}</span>
                                     </div>
                                   );
@@ -994,7 +1124,13 @@ export default function ReactionRoleBuilder({
                                   type="button"
                                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-medium text-white shadow-sm transition-colors cursor-pointer ${btnClass}`}
                                 >
-                                  {comp.emoji && <span>{comp.emoji}</span>}
+                                  {comp.emoji && (
+                                    <EmojiDisplay
+                                      emoji={comp.emoji}
+                                      serverEmojis={serverData?.emojis}
+                                      className="w-4 h-4"
+                                    />
+                                  )}
                                   <span className="truncate max-w-[120px]">
                                     {comp.label || "Role"}
                                   </span>
@@ -1012,7 +1148,13 @@ export default function ReactionRoleBuilder({
                                 key={comp._id}
                                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#2b2d31] hover:bg-[#35373c] border border-transparent hover:border-[#3b3e45] text-white text-xs cursor-pointer transition-colors"
                               >
-                                <span>{comp.emoji || "▫️"}</span>
+                                {comp.emoji && (
+                                  <EmojiDisplay
+                                    emoji={comp.emoji}
+                                    serverEmojis={serverData?.emojis}
+                                    className="w-4 h-4"
+                                  />
+                                )}
                                 <span className="text-[11px] font-semibold text-[#949ba4]">1</span>
                               </div>
                             ))}

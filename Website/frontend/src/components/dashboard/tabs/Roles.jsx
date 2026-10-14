@@ -6,6 +6,7 @@ import DeleteConfirmation from "../../ui/DeleteConfirmation";
 import ReactionRoleBuilder from "../modules/ReactionRoleBuilder";
 import SaveBar from "../../ui/SaveBar";
 import CustomSelect from "../../ui/CustomSelect";
+import Toggle from "../../ui/Toggle";
 
 const AutoRolesDropdown = ({ selectedRoles, availableRoles, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -628,23 +629,10 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                     <span className="text-sm font-semibold text-white">Auto roles</span>
                   </div>
 
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={autoRolesEnabled}
-                    onClick={() => setAutoRolesEnabled(!autoRolesEnabled)}
-                    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                      autoRolesEnabled ? "bg-white" : "bg-neutral-700"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full transition-transform duration-200 ease-in-out ${
-                        autoRolesEnabled
-                          ? "translate-x-[21px] bg-black"
-                          : "translate-x-[3px] bg-white"
-                      }`}
-                    />
-                  </button>
+                  <Toggle
+                    checked={autoRolesEnabled}
+                    onChange={setAutoRolesEnabled}
+                  />
                 </div>
 
                 <div className="p-4 flex flex-col">
@@ -695,23 +683,10 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                     <span className="text-sm font-semibold text-white truncate">Sticky roles</span>
                   </div>
 
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={stickyEnabled}
-                    onClick={() => setStickyEnabled(!stickyEnabled)}
-                    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                      stickyEnabled ? "bg-white" : "bg-neutral-700"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full transition-transform duration-200 ease-in-out ${
-                        stickyEnabled
-                          ? "translate-x-[21px] bg-black"
-                          : "translate-x-[3px] bg-white"
-                      }`}
-                    />
-                  </button>
+                  <Toggle
+                    checked={stickyEnabled}
+                    onChange={setStickyEnabled}
+                  />
                 </div>
 
                 <div className="p-4 sm:p-5 flex-1 space-y-3">
@@ -721,23 +696,10 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
 
                   <div className="flex items-center justify-between gap-3 py-2 px-3 rounded-xl bg-neutral-800/40 border border-neutral-800">
                     <span className="text-[13px] text-neutral-200 font-medium">Restore all roles</span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={stickyRestoreAll}
-                      onClick={() => setStickyRestoreAll(!stickyRestoreAll)}
-                      className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                        stickyRestoreAll ? "bg-white" : "bg-neutral-700"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full transition-transform duration-200 ease-in-out ${
-                          stickyRestoreAll
-                            ? "translate-x-[21px] bg-black"
-                            : "translate-x-[3px] bg-white"
-                        }`}
-                      />
-                    </button>
+                    <Toggle
+                      checked={stickyRestoreAll}
+                      onChange={setStickyRestoreAll}
+                    />
                   </div>
                 </div>
               </div>
@@ -767,23 +729,10 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                     <span className="text-sm font-semibold text-white truncate">Booster role</span>
                   </div>
 
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={boosterEnabled}
-                    onClick={() => setBoosterEnabled(!boosterEnabled)}
-                    className={`relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                      boosterEnabled ? "bg-white" : "bg-neutral-700"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full transition-transform duration-200 ease-in-out ${
-                        boosterEnabled
-                          ? "translate-x-[21px] bg-black"
-                          : "translate-x-[3px] bg-white"
-                      }`}
-                    />
-                  </button>
+                  <Toggle
+                    checked={boosterEnabled}
+                    onChange={setBoosterEnabled}
+                  />
                 </div>
 
                 <div className="p-4 sm:p-5 flex-1 space-y-3">
@@ -840,7 +789,7 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                   </p>
 
                   {/* List of current tenure roles */}
-                  {tenureRoles.length > 0 && (
+                  {tenureRoles.length > 0 ? (
                     <div className="space-y-1.5 max-h-36 overflow-y-auto">
                       {tenureRoles.map((item, idx) => {
                         const roleObj = availableRoles.find((r) => String(r.id) === String(item.role_id));
@@ -849,15 +798,15 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                             key={idx}
                             className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-neutral-800/60 border border-neutral-700/60 text-xs text-neutral-200"
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               <span
                                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                 style={{ backgroundColor: roleObj?.color || "#b9bbbe" }}
                               />
-                              <span className="font-medium text-white">{roleObj?.name || item.role_id}</span>
+                              <span className="font-medium text-white truncate">{roleObj?.name || item.role_id}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] text-neutral-400 bg-neutral-700/60 px-2 py-0.5 rounded-md">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-[11px] text-neutral-400 bg-neutral-700/60 px-2 py-0.5 rounded-md font-medium">
                                 {item.days} days
                               </span>
                               <button
@@ -865,7 +814,8 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                                 onClick={() =>
                                   setTenureRoles(tenureRoles.filter((_, i) => i !== idx))
                                 }
-                                className="text-neutral-400 hover:text-red-400 transition-colors"
+                                className="text-neutral-400 hover:text-red-400 transition-colors p-0.5"
+                                title="Remove"
                               >
                                 ×
                               </button>
@@ -874,11 +824,15 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                         );
                       })}
                     </div>
+                  ) : (
+                    <div className="py-2.5 px-3 rounded-xl border border-dashed border-neutral-800 text-center">
+                      <p className="text-[11px] text-neutral-500">No tenure roles configured yet</p>
+                    </div>
                   )}
 
                   {/* Add row */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 pt-1">
+                    <div className="flex-1 min-w-[150px]">
                       <CustomSelect
                         options={rolesOptions}
                         value={newTenureRoleId}
@@ -886,20 +840,22 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                         placeholder="Pick role…"
                       />
                     </div>
-                    <input
-                      min={1}
-                      type="number"
-                      value={newTenureDays}
-                      onChange={(e) => setNewTenureDays(e.target.value)}
-                      className="w-16 h-10 px-2 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white text-center focus:outline-none focus:border-neutral-500"
-                      title="Days in server"
-                    />
-                    <span className="text-[11px] text-neutral-400 whitespace-nowrap">days</span>
+                    <div className="flex items-center h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl flex-shrink-0 focus-within:border-neutral-500 transition-colors">
+                      <input
+                        min={1}
+                        type="number"
+                        value={newTenureDays}
+                        onChange={(e) => setNewTenureDays(e.target.value)}
+                        className="!w-12 bg-transparent text-center text-xs font-semibold text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        title="Days in server"
+                      />
+                      <span className="text-[11px] text-neutral-400 font-medium select-none ml-1">days</span>
+                    </div>
                     <button
                       type="button"
                       onClick={addTenureRole}
-                      className="h-10 px-3 inline-flex items-center justify-center rounded-xl bg-white text-black text-sm font-semibold hover:bg-neutral-200 transition-all active:scale-[0.96]"
-                      title="Add rule"
+                      className="h-10 px-3.5 flex-shrink-0 inline-flex items-center justify-center rounded-xl bg-white text-black text-sm font-semibold hover:bg-neutral-200 transition-all active:scale-[0.96]"
+                      title="Add tenure role"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -953,7 +909,7 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                   </p>
 
                   {/* List of current activity roles */}
-                  {activityRoles.length > 0 && (
+                  {activityRoles.length > 0 ? (
                     <div className="space-y-1.5 max-h-36 overflow-y-auto">
                       {activityRoles.map((item, idx) => {
                         const roleObj = availableRoles.find((r) => String(r.id) === String(item.role_id));
@@ -962,15 +918,15 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                             key={idx}
                             className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-neutral-800/60 border border-neutral-700/60 text-xs text-neutral-200"
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               <span
                                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                 style={{ backgroundColor: roleObj?.color || "#b9bbbe" }}
                               />
-                              <span className="font-medium text-white">{roleObj?.name || item.role_id}</span>
+                              <span className="font-medium text-white truncate">{roleObj?.name || item.role_id}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] text-neutral-400 bg-neutral-700/60 px-2 py-0.5 rounded-md">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-[11px] text-neutral-400 bg-neutral-700/60 px-2 py-0.5 rounded-md font-medium">
                                 {item.days} days active
                               </span>
                               <button
@@ -978,7 +934,8 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                                 onClick={() =>
                                   setActivityRoles(activityRoles.filter((_, i) => i !== idx))
                                 }
-                                className="text-neutral-400 hover:text-red-400 transition-colors"
+                                className="text-neutral-400 hover:text-red-400 transition-colors p-0.5"
+                                title="Remove"
                               >
                                 ×
                               </button>
@@ -987,11 +944,15 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                         );
                       })}
                     </div>
+                  ) : (
+                    <div className="py-2.5 px-3 rounded-xl border border-dashed border-neutral-800 text-center">
+                      <p className="text-[11px] text-neutral-500">No activity roles configured yet</p>
+                    </div>
                   )}
 
                   {/* Add row */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 pt-1">
+                    <div className="flex-1 min-w-[150px]">
                       <CustomSelect
                         options={rolesOptions}
                         value={newActivityRoleId}
@@ -999,20 +960,22 @@ export default function RolesTab({ guildId, serverData, setServerData }) {
                         placeholder="Pick role…"
                       />
                     </div>
-                    <input
-                      min={1}
-                      type="number"
-                      value={newActivityDays}
-                      onChange={(e) => setNewActivityDays(e.target.value)}
-                      className="w-16 h-10 px-2 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white text-center focus:outline-none focus:border-neutral-500"
-                      title="Days active"
-                    />
-                    <span className="text-[11px] text-neutral-400 whitespace-nowrap">days</span>
+                    <div className="flex items-center h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl flex-shrink-0 focus-within:border-neutral-500 transition-colors">
+                      <input
+                        min={1}
+                        type="number"
+                        value={newActivityDays}
+                        onChange={(e) => setNewActivityDays(e.target.value)}
+                        className="!w-12 bg-transparent text-center text-xs font-semibold text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        title="Days active"
+                      />
+                      <span className="text-[11px] text-neutral-400 font-medium select-none ml-1">days</span>
+                    </div>
                     <button
                       type="button"
                       onClick={addActivityRole}
-                      className="h-10 px-3 inline-flex items-center justify-center rounded-xl bg-white text-black text-sm font-semibold hover:bg-neutral-200 transition-all active:scale-[0.96]"
-                      title="Add rule"
+                      className="h-10 px-3.5 flex-shrink-0 inline-flex items-center justify-center rounded-xl bg-white text-black text-sm font-semibold hover:bg-neutral-200 transition-all active:scale-[0.96]"
+                      title="Add activity role"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
