@@ -206,7 +206,7 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
 
       {/* Search Input Container */}
       <div className="bg-neutral-900 rounded-2xl border border-neutral-800 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-        <div className="relative">
+        <div className="relative flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -217,7 +217,7 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            className="w-4 h-4 text-neutral-500 absolute left-3.5 pointer-events-none z-10"
           >
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
@@ -227,8 +227,18 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
             placeholder="Search saved messages..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-800 border border-neutral-700/80 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none focus:ring-1 focus:ring-white/10 transition-all"
+            style={{ paddingLeft: '2.75rem' }}
+            className="w-full h-10 pr-9 !pl-11 bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-800 border border-neutral-700/80 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none focus:ring-1 focus:ring-white/10 transition-all"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-3.5 text-neutral-500 hover:text-white transition-colors text-xs"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
