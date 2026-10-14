@@ -1098,7 +1098,38 @@ export default function ReactionRoleBuilder({
                               </div>
                             ) : null}
 
-                            <div className="mt-2 pt-1.5 border-t border-[#35373c] flex items-center justify-between text-[10px] text-[#949ba4]">
+                            {/* Buttons Grid Preview INSIDE Container (Components V2 style) */}
+                            {panelType === "buttons" && components.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-3 pt-2.5 border-t border-[#35373c]/60">
+                                {components.map((comp) => {
+                                  let btnClass = "bg-[#5865F2] hover:bg-[#4752c4]";
+                                  if (comp.color === "gray") btnClass = "bg-[#4e5058] hover:bg-[#6d6f78]";
+                                  else if (comp.color === "green") btnClass = "bg-[#248046] hover:bg-[#1a6334]";
+                                  else if (comp.color === "red") btnClass = "bg-[#da373c] hover:bg-[#a1282c]";
+
+                                  return (
+                                    <button
+                                      key={comp._id}
+                                      type="button"
+                                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-medium text-white shadow-sm transition-colors cursor-pointer ${btnClass}`}
+                                    >
+                                      {comp.emoji && (
+                                        <EmojiDisplay
+                                          emoji={comp.emoji}
+                                          serverEmojis={serverData?.emojis}
+                                          className="w-4 h-4"
+                                        />
+                                      )}
+                                      <span className="truncate max-w-[120px]">
+                                        {comp.label || "Role"}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            <div className="mt-2.5 pt-1.5 border-t border-[#35373c] flex items-center justify-between text-[10px] text-[#949ba4]">
                               <span>
                                 Mode:{" "}
                                 <strong className="text-white capitalize">
@@ -1109,38 +1140,7 @@ export default function ReactionRoleBuilder({
                           </div>
                         </div>
 
-                        {/* Buttons Grid Preview */}
-                        {panelType === "buttons" && (
-                          <div className="flex flex-wrap gap-1.5 mt-2.5 max-w-sm">
-                            {components.map((comp) => {
-                              let btnClass = "bg-[#5865F2] hover:bg-[#4752c4]";
-                              if (comp.color === "gray") btnClass = "bg-[#4e5058] hover:bg-[#6d6f78]";
-                              else if (comp.color === "green") btnClass = "bg-[#248046] hover:bg-[#1a6334]";
-                              else if (comp.color === "red") btnClass = "bg-[#da373c] hover:bg-[#a1282c]";
-
-                              return (
-                                <button
-                                  key={comp._id}
-                                  type="button"
-                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-medium text-white shadow-sm transition-colors cursor-pointer ${btnClass}`}
-                                >
-                                  {comp.emoji && (
-                                    <EmojiDisplay
-                                      emoji={comp.emoji}
-                                      serverEmojis={serverData?.emojis}
-                                      className="w-4 h-4"
-                                    />
-                                  )}
-                                  <span className="truncate max-w-[120px]">
-                                    {comp.label || "Role"}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {/* Reactions Badges Preview */}
+                        {/* Reactions Badges Preview (below message if reactions mode) */}
                         {panelType === "reactions" && (
                           <div className="flex flex-wrap gap-1.5 mt-2 max-w-sm">
                             {components.map((comp) => (

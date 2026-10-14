@@ -99,7 +99,7 @@ def build_poll_embed(entry: dict, ended: bool = False, closed_by: int | None = N
     if ended:
         embed.set_footer(text=f"Poll ID: #{poll_id} · Voting has concluded.")
     else:
-        embed.set_footer(text=f"Poll ID: #{poll_id} · Click a button below to cast or toggle your vote.")
+        embed.set_footer(text=f"Poll ID: #{poll_id} · Click a button below to cast your vote.")
 
     return embed
 
@@ -131,13 +131,6 @@ def build_poll_view(entry: dict, ended: bool = False) -> discord.ui.View:
             custom_id=f"orbit:poll_vote:{poll_id}:{idx}"
         )
         view.add_item(btn)
-
-    # Clean withdraw button
-    view.add_item(Button(
-        label="Remove Vote",
-        style=discord.ButtonStyle.secondary,
-        custom_id=f"orbit:poll_leave:{poll_id}"
-    ))
 
     return view
 
@@ -231,12 +224,6 @@ def build_poll_v2_view(entry: dict, ended: bool = False):
                 rows.append(ActionRow(*current_buttons))
                 current_buttons = []
 
-        btn_leave = Button(
-            label="Remove Vote",
-            style=discord.ButtonStyle.secondary,
-            custom_id=f"orbit:poll_leave:{poll_id}"
-        )
-        current_buttons.append(btn_leave)
         if current_buttons:
             rows.append(ActionRow(*current_buttons))
 
@@ -246,7 +233,7 @@ def build_poll_v2_view(entry: dict, ended: bool = False):
         accent_color=ORBIT_COLOR if not ended else discord.Color(0x2B2D31)
     )
     view.add_item(container)
-    footer_text = f"Poll ID: #{poll_id} · Voting has concluded." if ended else f"Poll ID: #{poll_id} · Click a button above to cast or toggle your vote."
+    footer_text = f"Poll ID: #{poll_id} · Voting has concluded." if ended else f"Poll ID: #{poll_id} · Click a button above to cast your vote."
     view.add_item(TextDisplay(content=f"-# {footer_text}"))
     return view
 

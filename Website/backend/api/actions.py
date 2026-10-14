@@ -19,6 +19,13 @@ from Components.Systems.Level._storage import load_level_config, save_level_conf
 from Components.Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
 
 from Components.Systems.EmbedBuilder._storage import load_embeds_config, save_embeds_config
+from Components.Commands._utils import (
+    HAS_V2,
+    Container,
+    TextDisplay,
+    ActionRow,
+    LayoutView
+)
 
 class ActionsMixin:
     async def api_action_get_saved_embeds(self, request: web.Request):
@@ -956,6 +963,58 @@ class ActionsMixin:
         # Unicode character
         return emoji_str
 
+    def _build_reactionrole_v2_view(self, guild, panel_id: str, title: str, description: str, emb_color: discord.Color, components: list, mode: str):
+        if not HAS_V2:
+            return None
+        view = LayoutView(timeout=None)
+
+        action_rows = []
+        current_buttons = []
+
+        for idx, comp in enumerate(components):
+            role_id = comp.get("role_id")
+            if not role_id:
+                continue
+            color_str = comp.get("color", "blue")
+            style = discord.ButtonStyle.primary
+            if color_str in ("gray", "grey", "secondary"):
+                style = discord.ButtonStyle.secondary
+            elif color_str in ("green", "success"):
+                style = discord.ButtonStyle.success
+            elif color_str in ("red", "danger"):
+                style = discord.ButtonStyle.danger
+
+            custom_id = f"rr_{panel_id}_{role_id}_{mode}"
+            btn_kwargs = {
+                "style": style,
+                "label": comp.get("label") or "Role",
+                "custom_id": custom_id
+            }
+            if comp.get("emoji"):
+                resolved_e = self._resolve_discord_emoji(guild, comp.get("emoji"))
+                if resolved_e:
+                    btn_kwargs["emoji"] = resolved_e
+
+            btn = discord.ui.Button(**btn_kwargs)
+            current_buttons.append(btn)
+            if len(current_buttons) == 5:
+                action_rows.append(ActionRow(*current_buttons))
+                current_buttons = []
+
+        if current_buttons:
+            action_rows.append(ActionRow(*current_buttons))
+
+        card_title = f"# {title}" if title else "# Role Selection"
+        card_body = f"{card_title}\n\n{description}".strip() if description else card_title
+
+        container = Container(
+            TextDisplay(content=card_body),
+            *action_rows,
+            accent_color=emb_color
+        )
+        view.add_item(container)
+        return view
+
     async def api_save_reactionrole(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -1034,43 +1093,54 @@ class ActionsMixin:
                             return web.json_response({"error": f"Failed to send to Discord: {str(e)}"}, status=400)
 
                     else:
-                        # Buttons mode
-                        view = discord.ui.View(timeout=None)
-                        for idx, comp in enumerate(components):
-                            role_id = comp.get("role_id")
-                            if not role_id: continue
-                            color_str = comp.get("color", "blue")
-                            style = discord.ButtonStyle.primary
-                            if color_str in ("gray", "grey", "secondary"):
-                                style = discord.ButtonStyle.secondary
-                            elif color_str in ("green", "success"):
-                                style = discord.ButtonStyle.success
-                            elif color_str in ("red", "danger"):
-                                style = discord.ButtonStyle.danger
+                        # Buttons mode - components v2 container (like calculator, giveaway, poll) with fallback
+                        msg = None
+                        if HAS_V2:
+                            try:
+                                v2_view = self._build_reactionrole_v2_view(guild, msg_id, title, description, emb_color, components, mode)
+                                if v2_view:
+                                    msg = await channel.send(view=v2_view)
+                            except Exception as v2_err:
+                                print(f"[ReactionRoles] Components V2 send failed: {v2_err}, falling back to standard embed.")
 
-                            custom_id = f"rr_{msg_id}_{role_id}_{mode}"
-                            btn_kwargs = {
-                                "style": style,
-                                "label": comp.get("label") or "Role",
-                                "custom_id": custom_id,
-                                "row": min(idx // 5, 4)
-                            }
-                            if comp.get("emoji"):
-                                resolved_e = self._resolve_discord_emoji(guild, comp.get("emoji"))
-                                if resolved_e:
-                                    btn_kwargs["emoji"] = resolved_e
+                        if not msg:
+                            view = discord.ui.View(timeout=None)
+                            for idx, comp in enumerate(components):
+                                role_id = comp.get("role_id")
+                                if not role_id: continue
+                                color_str = comp.get("color", "blue")
+                                style = discord.ButtonStyle.primary
+                                if color_str in ("gray", "grey", "secondary"):
+                                    style = discord.ButtonStyle.secondary
+                                elif color_str in ("green", "success"):
+                                    style = discord.ButtonStyle.success
+                                elif color_str in ("red", "danger"):
+                                    style = discord.ButtonStyle.danger
 
-                            view.add_item(discord.ui.Button(**btn_kwargs))
+                                custom_id = f"rr_{msg_id}_{role_id}_{mode}"
+                                btn_kwargs = {
+                                    "style": style,
+                                    "label": comp.get("label") or "Role",
+                                    "custom_id": custom_id,
+                                    "row": min(idx // 5, 4)
+                                }
+                                if comp.get("emoji"):
+                                    resolved_e = self._resolve_discord_emoji(guild, comp.get("emoji"))
+                                    if resolved_e:
+                                        btn_kwargs["emoji"] = resolved_e
 
-                        try:
-                            msg = await channel.send(embed=embed, view=view if len(view.children) > 0 else None)
-                            msg_sent_id = str(msg.id)
-                            data["message_id"] = msg_sent_id
-                            data["msg_id"] = msg_sent_id
-                        except discord.Forbidden:
-                            return web.json_response({"error": "Bot does not have permission to send messages in that channel."}, status=403)
-                        except Exception as e:
-                            return web.json_response({"error": f"Failed to send to Discord: {str(e)}"}, status=400)
+                                view.add_item(discord.ui.Button(**btn_kwargs))
+
+                            try:
+                                msg = await channel.send(embed=embed, view=view if len(view.children) > 0 else None)
+                            except discord.Forbidden:
+                                return web.json_response({"error": "Bot does not have permission to send messages in that channel."}, status=403)
+                            except Exception as e:
+                                return web.json_response({"error": f"Failed to send to Discord: {str(e)}"}, status=400)
+
+                        msg_sent_id = str(msg.id)
+                        data["message_id"] = msg_sent_id
+                        data["msg_id"] = msg_sent_id
 
             save_reaction_role(guild_id, data)
             return web.json_response({"success": True, "id": msg_id, "msg_id": msg_sent_id, "message_id": msg_sent_id})
@@ -1160,40 +1230,51 @@ class ActionsMixin:
                             except Exception:
                                 pass
             else:
-                view = discord.ui.View(timeout=None)
-                for idx, btn in enumerate(components):
-                    role_id = btn.get("role_id")
-                    if not role_id: continue
-                    label = btn.get("label", "Role")
-                    color_str = btn.get("color", "blue")
-                    
-                    style = discord.ButtonStyle.primary
-                    if color_str in ("gray", "grey", "secondary"): style = discord.ButtonStyle.secondary
-                    elif color_str in ("green", "success"): style = discord.ButtonStyle.success
-                    elif color_str in ("red", "danger"): style = discord.ButtonStyle.danger
-                    
-                    custom_id = f"rr_{panel_id}_{role_id}_{mode}"
-                    kwargs = {
-                        "style": style,
-                        "label": label,
-                        "custom_id": custom_id,
-                        "row": min(idx // 5, 4)
-                    }
-                    if btn.get("emoji"):
-                        resolved_e = self._resolve_discord_emoji(guild, btn.get("emoji"))
-                        if resolved_e:
-                            kwargs["emoji"] = resolved_e
-                    view.add_item(discord.ui.Button(**kwargs))
+                msg = None
+                if HAS_V2:
+                    try:
+                        emb_color = getattr(embed, "color", discord.Color(0x5865F2)) or discord.Color(0x5865F2)
+                        v2_view = self._build_reactionrole_v2_view(guild, panel_id, title, desc, emb_color, components, mode)
+                        if v2_view:
+                            msg = await channel.send(view=v2_view)
+                    except Exception as v2_err:
+                        print(f"[ReactionRoles] Components V2 post failed: {v2_err}, falling back to standard embed.")
 
-                msg_kwargs = {}
-                if embed.title or embed.description: msg_kwargs["embed"] = embed
-                if content: msg_kwargs["content"] = content
-                if len(view.children) > 0:
-                    msg_kwargs["view"] = view
-                if not msg_kwargs:
-                    return web.json_response({"error": "Message cannot be empty"}, status=400)
-                    
-                msg = await channel.send(**msg_kwargs)
+                if not msg:
+                    view = discord.ui.View(timeout=None)
+                    for idx, btn in enumerate(components):
+                        role_id = btn.get("role_id")
+                        if not role_id: continue
+                        label = btn.get("label", "Role")
+                        color_str = btn.get("color", "blue")
+                        
+                        style = discord.ButtonStyle.primary
+                        if color_str in ("gray", "grey", "secondary"): style = discord.ButtonStyle.secondary
+                        elif color_str in ("green", "success"): style = discord.ButtonStyle.success
+                        elif color_str in ("red", "danger"): style = discord.ButtonStyle.danger
+                        
+                        custom_id = f"rr_{panel_id}_{role_id}_{mode}"
+                        kwargs = {
+                            "style": style,
+                            "label": label,
+                            "custom_id": custom_id,
+                            "row": min(idx // 5, 4)
+                        }
+                        if btn.get("emoji"):
+                            resolved_e = self._resolve_discord_emoji(guild, btn.get("emoji"))
+                            if resolved_e:
+                                kwargs["emoji"] = resolved_e
+                        view.add_item(discord.ui.Button(**kwargs))
+
+                    msg_kwargs = {}
+                    if embed.title or embed.description: msg_kwargs["embed"] = embed
+                    if content: msg_kwargs["content"] = content
+                    if len(view.children) > 0:
+                        msg_kwargs["view"] = view
+                    if not msg_kwargs:
+                        return web.json_response({"error": "Message cannot be empty"}, status=400)
+                        
+                    msg = await channel.send(**msg_kwargs)
             
             rr["message_id"] = str(msg.id)
             rr["msg_id"] = str(msg.id)
