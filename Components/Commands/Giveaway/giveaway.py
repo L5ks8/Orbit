@@ -350,14 +350,21 @@ class GiveawayCommand(commands.Cog):
     async def cog_load(self):
         self.bot.add_view(PersistentGiveawayView())
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(seconds=3)
     async def giveaway_check_loop(self):
         try:
             active_list = get_all_active_giveaways()
             now = int(time.time())
             for item in active_list:
-                guild_id = item["guild_id"]
-                entry = item["entry"]
+                if isinstance(item, (list, tuple)):
+                    guild_id, entry = item[0], item[1]
+                elif isinstance(item, dict):
+                    guild_id = item.get("guild_id")
+                    entry = item.get("entry", item)
+                else:
+                    continue
+                if not entry or not isinstance(entry, dict):
+                    continue
                 if entry.get("end_timestamp", 0) <= now and not entry.get("ended"):
                     await end_giveaway_logic(self.bot, guild_id, entry)
         except Exception as e:

@@ -195,6 +195,7 @@ def close_poll_entry(guild_id: int, poll_id: str, closed_by: int | None = None) 
     return entry
 
 def get_all_active_polls() -> List[tuple[int, Dict[str, Any]]]:
+    seen_polls = set()
     active = []
     try:
         from Components.Database.mongodb import get_db
@@ -207,18 +208,26 @@ def get_all_active_polls() -> List[tuple[int, Dict[str, Any]]]:
                     gid = int(gid_str)
                     for k, v in doc.items():
                         if k != "_id" and isinstance(v, dict) and not v.get("closed"):
-                            active.append((gid, v))
-            if active:
-                return active
-    except Exception:
-        pass
+                            pid = v.get("poll_id", k)
+                            if pid not in seen_polls:
+                                seen_polls.add(pid)
+                                active.append((gid, v))
+    except Exception as e:
+        print(f"[PollStorage] Mongo error: {e}")
 
-    if STORAGE_ROOT.exists():
-        for guild_folder in STORAGE_ROOT.iterdir():
-            if guild_folder.is_dir() and guild_folder.name.isdigit():
-                gid = int(guild_folder.name)
-                data = load_polls(gid)
-                for entry in data.values():
-                    if not entry.get("closed"):
-                        active.append((gid, entry))
+    try:
+        if STORAGE_ROOT.exists():
+            for guild_folder in STORAGE_ROOT.iterdir():
+                if guild_folder.is_dir() and guild_folder.name.isdigit():
+                    gid = int(guild_folder.name)
+                    data = load_polls(gid)
+                    for k, entry in data.items():
+                        if isinstance(entry, dict) and not entry.get("closed"):
+                            pid = entry.get("poll_id", k)
+                            if pid not in seen_polls:
+                                seen_polls.add(pid)
+                                active.append((gid, entry))
+    except Exception as e:
+        print(f"[PollStorage] File error: {e}")
+
     return active

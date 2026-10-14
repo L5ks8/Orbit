@@ -88,6 +88,7 @@ def update_giveaway_entry(guild_id: int, entry: Dict[str, Any]) -> None:
     save_giveaways(guild_id, data)
 
 def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
+    seen_giveaways = set()
     active = []
     try:
         from Components.Database.mongodb import get_db
@@ -100,19 +101,27 @@ def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
                     gid = int(gid_str)
                     for k, v in doc.items():
                         if k != "_id" and isinstance(v, dict) and not v.get("ended"):
-                            active.append((gid, v))
-            if active:
-                return active
-    except Exception:
-        pass
+                            gw_id = v.get("giveaway_id", k)
+                            if gw_id not in seen_giveaways:
+                                seen_giveaways.add(gw_id)
+                                active.append((gid, v))
+    except Exception as e:
+        print(f"[GiveawayStorage] Mongo error: {e}")
 
-    if STORAGE_ROOT.exists():
-        for guild_folder in STORAGE_ROOT.iterdir():
-            if guild_folder.is_dir() and guild_folder.name.isdigit():
-                gid = int(guild_folder.name)
-                data = load_giveaways(gid)
-                for entry in data.values():
-                    if not entry.get("ended"):
-                        active.append((gid, entry))
+    try:
+        if STORAGE_ROOT.exists():
+            for guild_folder in STORAGE_ROOT.iterdir():
+                if guild_folder.is_dir() and guild_folder.name.isdigit():
+                    gid = int(guild_folder.name)
+                    data = load_giveaways(gid)
+                    for k, entry in data.items():
+                        if isinstance(entry, dict) and not entry.get("ended"):
+                            gw_id = entry.get("giveaway_id", k)
+                            if gw_id not in seen_giveaways:
+                                seen_giveaways.add(gw_id)
+                                active.append((gid, entry))
+    except Exception as e:
+        print(f"[GiveawayStorage] File error: {e}")
+
     return active
 

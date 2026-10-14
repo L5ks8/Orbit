@@ -242,7 +242,7 @@ def build_poll_kwargs(entry: dict, ended: bool = False, closed_by: int | None = 
         try:
             v2_view = build_poll_v2_view(entry, ended=ended)
             if v2_view:
-                return {"embed": None, "view": v2_view}
+                return {"view": v2_view}
         except Exception as e:
             print(f"[Poll] V2 view build failed ({e}), falling back to embed.")
 
@@ -273,6 +273,7 @@ async def end_poll_logic(bot: commands.Bot, guild_id: int, entry: dict, closed_b
         except Exception:
             return False
 
+    msg = None
     try:
         msg = await channel.fetch_message(entry.get("message_id"))
         if msg:
@@ -280,6 +281,49 @@ async def end_poll_logic(bot: commands.Bot, guild_id: int, entry: dict, closed_b
             await msg.edit(**kwargs)
     except Exception as e:
         print(f"[Poll] Failed to edit expired poll message: {e}")
+
+    # Send conclusion announcement message in the channel
+    try:
+        options = entry.get("options", [])
+        raw_votes = entry.get("votes", {})
+        counts = []
+        total_votes = 0
+        for idx in range(len(options)):
+            uids = raw_votes.get(str(idx), [])
+            if not isinstance(uids, list):
+                uids = []
+            counts.append(len(uids))
+            total_votes += len(uids)
+
+        max_votes = max(counts) if counts else 0
+        winner_indices = [i for i, c in enumerate(counts) if c == max_votes and max_votes > 0]
+
+        jump_url = msg.jump_url if msg else None
+        question = entry.get("question", "Community Poll")
+
+        if winner_indices:
+            if len(winner_indices) == 1:
+                result_text = f"🏆 **Winner:** **{options[winner_indices[0]]}** with **{max_votes}** vote{'s' if max_votes != 1 else ''}!"
+            else:
+                win_names = ", ".join(f"**{options[i]}**" for i in winner_indices)
+                result_text = f"🤝 **Tie:** {win_names} with **{max_votes}** votes each!"
+        else:
+            result_text = "*No votes were cast.*"
+
+        desc = f"The poll **{question}** has concluded!\n\n{result_text}"
+        if jump_url:
+            desc += f"\n\n[Jump to Poll]({jump_url})"
+
+        embed = discord.Embed(
+            title="📊 Poll Ended",
+            description=desc,
+            color=ORBIT_COLOR
+        )
+        embed.add_field(name="Total Votes", value=str(total_votes), inline=True)
+        embed.set_footer(text=f"Poll ID: #{entry.get('poll_id', '')}")
+        await channel.send(embed=embed)
+    except Exception as e:
+        print(f"[Poll] Failed to send poll conclusion announcement: {e}")
 
     return True
 
@@ -291,16 +335,25 @@ class PollCommand(commands.Cog):
     def cog_unload(self):
         self.poll_check_loop.cancel()
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(seconds=3)
     async def poll_check_loop(self):
         try:
             active = get_all_active_polls()
             now = int(time.time())
-            for gid, entry in active:
-                if now >= entry.get("end_timestamp", 0):
+            for item in active:
+                if isinstance(item, (list, tuple)):
+                    gid, entry = item[0], item[1]
+                elif isinstance(item, dict):
+                    gid = item.get("guild_id")
+                    entry = item.get("entry", item)
+                else:
+                    continue
+                if not entry or not isinstance(entry, dict):
+                    continue
+                if now >= entry.get("end_timestamp", 0) and not entry.get("closed"):
                     await end_poll_logic(self.bot, gid, entry)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[PollLoop] Error: {e}")
 
     @poll_check_loop.before_loop
     async def before_poll_loop(self):
