@@ -197,20 +197,21 @@ export default function Leaderboard() {
           </div>
 
           {/* Search Bar */}
-          <div className="relative w-full lg:w-72">
-            <Search className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative flex items-center w-full lg:w-72">
+            <Search className="w-4 h-4 text-neutral-500 absolute left-3.5 pointer-events-none z-10" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search member or rank..."
-              className="w-full h-10 pl-9 pr-9 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 focus:border-neutral-600 focus:outline-none text-sm text-white placeholder-neutral-500 transition-colors shadow-sm"
+              style={{ paddingLeft: '2.75rem', paddingRight: '2.5rem' }}
+              className="w-full h-10 !pl-11 pr-9 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 focus:border-neutral-600 focus:outline-none text-sm text-white placeholder-neutral-500 transition-colors shadow-sm"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white p-1 rounded-md transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white p-1 rounded-md transition-colors z-10"
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
