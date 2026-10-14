@@ -83,7 +83,16 @@ def get_giveaway_by_message_id(guild_id: int, message_id: int) -> Dict[str, Any]
 
 def update_giveaway_entry(guild_id: int, entry: Dict[str, Any]) -> None:
     data = load_giveaways(guild_id)
-    gid = entry["giveaway_id"]
+    gid = entry.get("giveaway_id") or entry.get("id")
+    if not gid:
+        msg_id = entry.get("message_id")
+        for k, v in data.items():
+            if msg_id and isinstance(v, dict) and v.get("message_id") == msg_id:
+                gid = k
+                break
+    if not gid:
+        return
+    entry["giveaway_id"] = gid
     data[gid] = entry
     save_giveaways(guild_id, data)
 
@@ -101,7 +110,8 @@ def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
                     gid = int(gid_str)
                     for k, v in doc.items():
                         if k != "_id" and isinstance(v, dict) and not v.get("ended"):
-                            gw_id = v.get("giveaway_id", k)
+                            gw_id = v.get("giveaway_id") or k
+                            v["giveaway_id"] = gw_id
                             if gw_id not in seen_giveaways:
                                 seen_giveaways.add(gw_id)
                                 active.append((gid, v))
@@ -116,7 +126,8 @@ def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
                     data = load_giveaways(gid)
                     for k, entry in data.items():
                         if isinstance(entry, dict) and not entry.get("ended"):
-                            gw_id = entry.get("giveaway_id", k)
+                            gw_id = entry.get("giveaway_id") or k
+                            entry["giveaway_id"] = gw_id
                             if gw_id not in seen_giveaways:
                                 seen_giveaways.add(gw_id)
                                 active.append((gid, entry))

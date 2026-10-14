@@ -266,21 +266,27 @@ async def end_poll_logic(bot: commands.Bot, guild_id: int, entry: dict, closed_b
         except Exception:
             return False
 
-    channel = guild.get_channel(entry.get("channel_id"))
+    channel_id = entry.get("channel_id")
+    if not channel_id:
+        return False
+
+    channel = guild.get_channel(channel_id)
     if not channel:
         try:
-            channel = await guild.fetch_channel(entry.get("channel_id"))
+            channel = await guild.fetch_channel(channel_id)
         except Exception:
             return False
 
     msg = None
-    try:
-        msg = await channel.fetch_message(entry.get("message_id"))
-        if msg:
-            kwargs = build_poll_kwargs(entry, ended=True, closed_by=closed_by)
-            await msg.edit(**kwargs)
-    except Exception as e:
-        print(f"[Poll] Failed to edit expired poll message: {e}")
+    msg_id = entry.get("message_id")
+    if msg_id:
+        try:
+            msg = await channel.fetch_message(msg_id)
+            if msg:
+                kwargs = build_poll_kwargs(entry, ended=True, closed_by=closed_by)
+                await msg.edit(**kwargs)
+        except Exception as e:
+            print(f"[Poll] Failed to edit expired poll message: {e}")
 
     # Send conclusion announcement message in the channel
     try:
@@ -341,17 +347,20 @@ class PollCommand(commands.Cog):
             active = get_all_active_polls()
             now = int(time.time())
             for item in active:
-                if isinstance(item, (list, tuple)):
-                    gid, entry = item[0], item[1]
-                elif isinstance(item, dict):
-                    gid = item.get("guild_id")
-                    entry = item.get("entry", item)
-                else:
-                    continue
-                if not entry or not isinstance(entry, dict):
-                    continue
-                if now >= entry.get("end_timestamp", 0) and not entry.get("closed"):
-                    await end_poll_logic(self.bot, gid, entry)
+                try:
+                    if isinstance(item, (list, tuple)):
+                        gid, entry = item[0], item[1]
+                    elif isinstance(item, dict):
+                        gid = item.get("guild_id")
+                        entry = item.get("entry", item)
+                    else:
+                        continue
+                    if not entry or not isinstance(entry, dict):
+                        continue
+                    if now >= entry.get("end_timestamp", 0) and not entry.get("closed"):
+                        await end_poll_logic(self.bot, gid, entry)
+                except Exception as inner_e:
+                    print(f"[PollLoop] Error ending poll: {inner_e}")
         except Exception as e:
             print(f"[PollLoop] Error: {e}")
 

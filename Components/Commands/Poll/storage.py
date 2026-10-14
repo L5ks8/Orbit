@@ -99,7 +99,16 @@ def get_poll_by_message_id(guild_id: int, message_id: int) -> Dict[str, Any] | N
 
 def update_poll_entry(guild_id: int, entry: Dict[str, Any]) -> None:
     data = load_polls(guild_id)
-    pid = entry["poll_id"]
+    pid = entry.get("poll_id") or entry.get("id")
+    if not pid:
+        msg_id = entry.get("message_id")
+        for k, v in data.items():
+            if msg_id and isinstance(v, dict) and v.get("message_id") == msg_id:
+                pid = k
+                break
+    if not pid:
+        return
+    entry["poll_id"] = pid
     data[pid] = entry
     save_polls(guild_id, data)
 
@@ -208,7 +217,8 @@ def get_all_active_polls() -> List[tuple[int, Dict[str, Any]]]:
                     gid = int(gid_str)
                     for k, v in doc.items():
                         if k != "_id" and isinstance(v, dict) and not v.get("closed"):
-                            pid = v.get("poll_id", k)
+                            pid = v.get("poll_id") or k
+                            v["poll_id"] = pid
                             if pid not in seen_polls:
                                 seen_polls.add(pid)
                                 active.append((gid, v))
@@ -223,7 +233,8 @@ def get_all_active_polls() -> List[tuple[int, Dict[str, Any]]]:
                     data = load_polls(gid)
                     for k, entry in data.items():
                         if isinstance(entry, dict) and not entry.get("closed"):
-                            pid = entry.get("poll_id", k)
+                            pid = entry.get("poll_id") or k
+                            entry["poll_id"] = pid
                             if pid not in seen_polls:
                                 seen_polls.add(pid)
                                 active.append((gid, entry))
