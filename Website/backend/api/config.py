@@ -312,7 +312,24 @@ class ConfigMixin:
                 "bot_roles_enabled": joinroles_cfg.get("bot_roles_enabled", False),
                 "bot_roles": [str(r) for r in joinroles_cfg.get("bot_roles", [])],
                 "tag_roles_enabled": joinroles_cfg.get("tag_roles_enabled", False),
-                "tag_role": str(joinroles_cfg.get("tag_role", "")) if joinroles_cfg.get("tag_role") else ""
+                "tag_role": str(joinroles_cfg.get("tag_role", "")) if joinroles_cfg.get("tag_role") else "",
+                "sticky_roles": {
+                    "enabled": joinroles_cfg.get("sticky_roles", {}).get("enabled", False),
+                    "restore_all": joinroles_cfg.get("sticky_roles", {}).get("restore_all", True),
+                    "roles": [str(r) for r in joinroles_cfg.get("sticky_roles", {}).get("roles", [])]
+                },
+                "booster_role": {
+                    "enabled": joinroles_cfg.get("booster_role", {}).get("enabled", False),
+                    "role_id": str(joinroles_cfg.get("booster_role", {}).get("role_id", "")) if joinroles_cfg.get("booster_role", {}).get("role_id") else ""
+                },
+                "tenure_roles": [
+                    {"role_id": str(t.get("role_id", "")), "days": int(t.get("days", 7))}
+                    for t in joinroles_cfg.get("tenure_roles", []) if t.get("role_id")
+                ],
+                "activity_roles": [
+                    {"role_id": str(a.get("role_id", "")), "days": int(a.get("days", 7))}
+                    for a in joinroles_cfg.get("activity_roles", []) if a.get("role_id")
+                ]
             },
             "ticket": {
                 "enabled": ticket_cfg.get("enabled", False),
@@ -698,6 +715,8 @@ class ConfigMixin:
             if user_perms.get("can_roles") and "joinroles" in data:
                 from Components.Systems.Roles._storage import save_join_roles
                 jr_data = data["joinroles"]
+                sticky_data = jr_data.get("sticky_roles", {})
+                booster_data = jr_data.get("booster_role", {})
                 save_join_roles(guild_id, {
                     "enabled": bool(jr_data.get("enabled", False)),
                     "user_roles_enabled": bool(jr_data.get("user_roles_enabled", False)),
@@ -705,7 +724,24 @@ class ConfigMixin:
                     "bot_roles_enabled": bool(jr_data.get("bot_roles_enabled", False)),
                     "bot_roles": [int(r) for r in jr_data.get("bot_roles", []) if r],
                     "tag_roles_enabled": bool(jr_data.get("tag_roles_enabled", False)),
-                    "tag_role": int(jr_data.get("tag_role")) if jr_data.get("tag_role") else None
+                    "tag_role": int(jr_data.get("tag_role")) if jr_data.get("tag_role") else None,
+                    "sticky_roles": {
+                        "enabled": bool(sticky_data.get("enabled", False)),
+                        "restore_all": bool(sticky_data.get("restore_all", True)),
+                        "roles": [int(r) for r in sticky_data.get("roles", []) if r]
+                    },
+                    "booster_role": {
+                        "enabled": bool(booster_data.get("enabled", False)),
+                        "role_id": int(booster_data.get("role_id")) if booster_data.get("role_id") else None
+                    },
+                    "tenure_roles": [
+                        {"role_id": int(t["role_id"]), "days": int(t.get("days", 7))}
+                        for t in jr_data.get("tenure_roles", []) if t.get("role_id")
+                    ],
+                    "activity_roles": [
+                        {"role_id": int(a["role_id"]), "days": int(a.get("days", 7))}
+                        for a in jr_data.get("activity_roles", []) if a.get("role_id")
+                    ]
                 })
 
             if user_perms.get("can_channels") and "ticket" in data:

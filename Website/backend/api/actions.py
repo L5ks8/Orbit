@@ -917,44 +917,106 @@ class ActionsMixin:
             if not data.get("name"): data["name"] = "Untitled Reaction Role"
             from Components.Systems.Roles.reaction_panels import save_reaction_role
 
+            panel_type = data.get("panel_type", "buttons")
+            mode = data.get("mode", "multi")
             post_to_discord = data.get("post_to_discord", False)
             channel_id_str = data.get("channel_id")
             msg_sent_id = None
+
             if post_to_discord and channel_id_str:
                 channel = self.bot.get_channel(int(channel_id_str))
                 if channel:
                     import discord
                     embed_data = data.get("embed", {})
-                    embed = discord.Embed(
-                        title=embed_data.get("title") or "Reaction Role",
-                        description=embed_data.get("description") or "",
-                        color=discord.Color.from_str(embed_data.get("color", "#5865F2") or "#5865F2")
-                    )
-                    view = discord.ui.View(timeout=None)
-                    for comp in data.get("components", []):
-                        role_id = comp.get("role_id")
-                        if not role_id: continue
-                        custom_id = f"rr_{role_id}_{data.get('mode', 'toggle')}"
-                        btn = discord.ui.Button(
-                            style=discord.ButtonStyle.secondary,
-                            label=comp.get("label") or "Role",
-                            emoji=comp.get("emoji") or "❓",
-                            custom_id=custom_id
-                        )
-                        view.add_item(btn)
-                    
+                    color_hex = embed_data.get("color", "#5865F2") or "#5865F2"
                     try:
-                        msg = await channel.send(embed=embed, view=view)
-                        msg_sent_id = str(msg.id)
-                        data["msg_id"] = msg_sent_id
-                    except discord.Forbidden:
-                        return web.json_response({"error": "Bot does not have permission to send messages in that channel."}, status=403)
-                    except Exception as e:
-                        return web.json_response({"error": f"Failed to send to Discord: {str(e)}"}, status=400)
+                        emb_color = discord.Color.from_str(color_hex)
+                    except Exception:
+                        emb_color = discord.Color(0x5865F2)
+
+                    title = embed_data.get("title") or "Reaction Role"
+                    description = embed_data.get("description") or ""
+
+                    embed = discord.Embed(
+                        title=title,
+                        description=description,
+                        color=emb_color
+                    )
+
+                    components = data.get("components", [])
+
+                    if panel_type == "reactions":
+                        if not description:
+                            role_lines = []
+                            for comp in components:
+                                rid = comp.get("role_id")
+                                if rid:
+                                    em = comp.get("emoji") or "▫️"
+                                    lbl = comp.get("label") or ""
+                                    lbl_str = f" - **{lbl}**" if lbl and lbl != "Role" and lbl != "New Role" else ""
+                                    role_lines.append(f"{em}  <@&{rid}>{lbl_str}")
+                            embed.description = "\n".join(role_lines)
+
+                        try:
+                            msg = await channel.send(embed=embed)
+                            msg_sent_id = str(msg.id)
+                            data["message_id"] = msg_sent_id
+                            data["msg_id"] = msg_sent_id
+
+                            for comp in components:
+                                emoji = comp.get("emoji")
+                                if emoji:
+                                    try:
+                                        await msg.add_reaction(emoji)
+                                    except Exception:
+                                        pass
+                        except discord.Forbidden:
+                            return web.json_response({"error": "Bot does not have permission to send messages or add reactions in that channel."}, status=403)
+                        except Exception as e:
+                            return web.json_response({"error": f"Failed to send to Discord: {str(e)}"}, status=400)
+
+                    else:
+                        # Buttons mode
+                        view = discord.ui.View(timeout=None)
+                        for idx, comp in enumerate(components):
+                            role_id = comp.get("role_id")
+                            if not role_id: continue
+                            color_str = comp.get("color", "blue")
+                            style = discord.ButtonStyle.primary
+                            if color_str in ("gray", "grey", "secondary"):
+                                style = discord.ButtonStyle.secondary
+                            elif color_str in ("green", "success"):
+                                style = discord.ButtonStyle.success
+                            elif color_str in ("red", "danger"):
+                                style = discord.ButtonStyle.danger
+
+                            custom_id = f"rr_{msg_id}_{role_id}_{mode}"
+                            btn_kwargs = {
+                                "style": style,
+                                "label": comp.get("label") or "Role",
+                                "custom_id": custom_id,
+                                "row": min(idx // 5, 4)
+                            }
+                            if comp.get("emoji"):
+                                btn_kwargs["emoji"] = comp.get("emoji")
+
+                            view.add_item(discord.ui.Button(**btn_kwargs))
+
+                        try:
+                            msg = await channel.send(embed=embed, view=view if len(view.children) > 0 else None)
+                            msg_sent_id = str(msg.id)
+                            data["message_id"] = msg_sent_id
+                            data["msg_id"] = msg_sent_id
+                        except discord.Forbidden:
+                            return web.json_response({"error": "Bot does not have permission to send messages in that channel."}, status=403)
+                        except Exception as e:
+                            return web.json_response({"error": f"Failed to send to Discord: {str(e)}"}, status=400)
 
             save_reaction_role(guild_id, data)
-            return web.json_response({"success": True, "id": msg_id, "msg_id": msg_sent_id})
+            return web.json_response({"success": True, "id": msg_id, "msg_id": msg_sent_id, "message_id": msg_sent_id})
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return web.json_response({"error": str(e)}, status=400)
 
     async def api_delete_reactionrole(self, request: web.Request):
@@ -977,7 +1039,7 @@ class ActionsMixin:
             return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
         try:
             req_data = await request.json()
-            msg_id = req_data.get("id")
+            panel_id = req_data.get("id")
             channel_id = req_data.get("channel_id")
             if not channel_id: return web.json_response({"error": "No channel_id provided"}, status=400)
             channel = guild.get_channel(int(channel_id))
@@ -985,7 +1047,7 @@ class ActionsMixin:
             
             from Components.Systems.Roles.reaction_panels import load_reaction_roles
             rrs = load_reaction_roles(guild_id)
-            rr = next((r for r in rrs if r.get("id") == msg_id), None)
+            rr = next((r for r in rrs if r.get("id") == panel_id), None)
             if not rr: return web.json_response({"error": "Reaction Role not found in database"}, status=404)
             
             import discord
@@ -994,79 +1056,93 @@ class ActionsMixin:
             title = embed_data.get("title", "")
             desc = embed_data.get("description", "")
             url = embed_data.get("url", "")
-            color = embed_data.get("color", "")
-            author_name = embed_data.get("author_name", "")
-            author_icon = embed_data.get("author_icon_url", "")
-            image = embed_data.get("image_url", "")
-            thumbnail = embed_data.get("thumbnail_url", "")
-            footer_text = embed_data.get("footer_text", "")
-            footer_icon = embed_data.get("footer_icon_url", "")
-            fields = embed_data.get("fields", [])
+            color = embed_data.get("color", "#5865F2")
             
             embed = discord.Embed()
             if title: embed.title = title
             if desc: embed.description = desc
             if url: embed.url = url
             if color:
-                try: embed.color = discord.Color(int(color.replace("#", ""), 16))
-                except: pass
-            if author_name:
-                kwargs = {"name": author_name}
-                if author_icon: kwargs["icon_url"] = author_icon
-                embed.set_author(**kwargs)
-            if image: embed.set_image(url=image)
-            if thumbnail: embed.set_thumbnail(url=thumbnail)
-            if footer_text:
-                kwargs = {"text": footer_text}
-                if footer_icon: kwargs["icon_url"] = footer_icon
-                embed.set_footer(**kwargs)
-            for f in fields:
-                embed.add_field(name=f.get("name","​") or "​", value=f.get("value","​") or "​", inline=f.get("inline",False))
-                
-            msg_kwargs = {}
-            if embed.title or embed.description or embed.author or embed.image or embed.footer or embed.fields:
-                msg_kwargs["embed"] = embed
-            if content: msg_kwargs["content"] = content
-            
-            button_mode = rr.get("button_type", "toggle")
-            buttons_data = rr.get("components", [])
-            
-            view = discord.ui.View(timeout=None)
-            for btn in buttons_data:
-                label = btn.get("label", "Role")
-                emoji = btn.get("emoji")
-                color_str = btn.get("color", "blue")
-                role_id = btn.get("role_id")
-                if not role_id: continue
-                
-                style = discord.ButtonStyle.primary
-                if color_str == "gray": style = discord.ButtonStyle.secondary
-                elif color_str == "green": style = discord.ButtonStyle.success
-                elif color_str == "red": style = discord.ButtonStyle.danger
-                
-                custom_id = f"rr_{role_id}_{button_mode}"
-                kwargs = {"style": style, "label": label, "custom_id": custom_id}
-                if emoji: kwargs["emoji"] = emoji
-                
-                view.add_item(discord.ui.Button(**kwargs))
-            
-            if len(view.children) > 0:
-                msg_kwargs["view"] = view
-            
-            if not msg_kwargs:
-                return web.json_response({"error": "Message cannot be empty"}, status=400)
-                
-            msg = await channel.send(**msg_kwargs)
+                try: embed.color = discord.Color.from_str(color)
+                except Exception: pass
+
+            components = rr.get("components", [])
+            panel_type = rr.get("panel_type", "buttons")
+            mode = rr.get("mode", "multi")
+
+            if panel_type == "reactions":
+                if not desc:
+                    role_lines = []
+                    for comp in components:
+                        rid = comp.get("role_id")
+                        if rid:
+                            em = comp.get("emoji") or "▫️"
+                            lbl = comp.get("label") or ""
+                            lbl_str = f" - **{lbl}**" if lbl and lbl != "Role" and lbl != "New Role" else ""
+                            role_lines.append(f"{em}  <@&{rid}>{lbl_str}")
+                    embed.description = "\n".join(role_lines)
+
+                msg_kwargs = {}
+                if embed.title or embed.description: msg_kwargs["embed"] = embed
+                if content: msg_kwargs["content"] = content
+                if not msg_kwargs:
+                    return web.json_response({"error": "Message cannot be empty"}, status=400)
+
+                msg = await channel.send(**msg_kwargs)
+
+                for comp in components:
+                    emoji = comp.get("emoji")
+                    if emoji:
+                        try:
+                            await msg.add_reaction(emoji)
+                        except Exception:
+                            pass
+            else:
+                view = discord.ui.View(timeout=None)
+                for idx, btn in enumerate(components):
+                    role_id = btn.get("role_id")
+                    if not role_id: continue
+                    label = btn.get("label", "Role")
+                    emoji = btn.get("emoji")
+                    color_str = btn.get("color", "blue")
+                    
+                    style = discord.ButtonStyle.primary
+                    if color_str in ("gray", "grey", "secondary"): style = discord.ButtonStyle.secondary
+                    elif color_str in ("green", "success"): style = discord.ButtonStyle.success
+                    elif color_str in ("red", "danger"): style = discord.ButtonStyle.danger
+                    
+                    custom_id = f"rr_{panel_id}_{role_id}_{mode}"
+                    kwargs = {
+                        "style": style,
+                        "label": label,
+                        "custom_id": custom_id,
+                        "row": min(idx // 5, 4)
+                    }
+                    if emoji: kwargs["emoji"] = emoji
+                    view.add_item(discord.ui.Button(**kwargs))
+
+                msg_kwargs = {}
+                if embed.title or embed.description: msg_kwargs["embed"] = embed
+                if content: msg_kwargs["content"] = content
+                if len(view.children) > 0:
+                    msg_kwargs["view"] = view
+                if not msg_kwargs:
+                    return web.json_response({"error": "Message cannot be empty"}, status=400)
+                    
+                msg = await channel.send(**msg_kwargs)
             
             rr["message_id"] = str(msg.id)
+            rr["msg_id"] = str(msg.id)
             rr["channel_id"] = str(channel_id)
             from Components.Systems.Roles.reaction_panels import save_reaction_role
             save_reaction_role(guild_id, rr)
             
-            return web.json_response({"success": True, "message_id": str(msg.id)})
+            return web.json_response({"success": True, "message_id": str(msg.id), "msg_id": str(msg.id)})
         except discord.Forbidden:
             return web.json_response({"error": "Bot missing permissions to send message in that channel"}, status=403)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return web.json_response({"error": str(e)}, status=500)
 
     async def api_upload_image(self, request: web.Request):
