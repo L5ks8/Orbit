@@ -99,7 +99,7 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
         }
       });
       setEmbeds(prev => prev.filter(emb => emb.id !== embedToDelete.id));
-      setToastMsg('Message deleted successfully!');
+      setToastMsg('Message deleted successfully.');
       setTimeout(() => setToastMsg(''), 4000);
     } catch (e) {
       console.error(e);
@@ -138,13 +138,14 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
 
   const filteredEmbeds = embeds.filter(e => e.name?.toLowerCase().includes(search.toLowerCase()));
 
-  if (loading) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', background: '#09090b', color: '#949ba4' }}>
-      <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#5865F2', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
-      <div style={{ fontSize: '15px', fontWeight: 500 }}>Loading messages...</div>
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+  if (loading) {
+    return (
+      <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col items-center justify-center min-h-[400px]">
+        <div className="w-9 h-9 border-2 border-neutral-800 border-t-white rounded-full animate-spin mb-3" />
+        <p className="text-sm font-medium text-neutral-400">Loading messages...</p>
+      </main>
+    );
+  }
 
   if (activeEmbed !== null) {
     return (
@@ -158,207 +159,225 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
   }
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.2s ease-out' }}>
-      <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#f2f3f5', marginBottom: '32px' }}>Messages</h1>
-      
-      <div style={{ marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#f2f3f5', marginBottom: '12px' }}>Search Messages</h3>
-        <input 
-          type="text" 
-          placeholder="Search for a message..." 
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ 
-            width: '100%', 
-            padding: '14px 16px', 
-            background: 'rgba(0,0,0,0.2)', 
-            border: '1px solid rgba(255,255,255,0.05)', 
-            borderRadius: '8px', 
-            color: '#dbdee1',
-            fontSize: '15px'
-          }}
-        />
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto flex flex-col gap-6 font-sans">
+      {/* Header bar matching dashboard tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="flex items-center justify-center text-neutral-500 flex-shrink-0">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="3" y1="9" x2="21" y2="9" />
+              <line x1="9" y1="21" x2="9" y2="9" />
+            </svg>
+          </span>
+          <div>
+            <h1 className="text-base font-semibold text-white tracking-tight">
+              Message Builder
+            </h1>
+            <p className="text-xs text-neutral-500">
+              Create, design and send rich custom embeds directly to your Discord server.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleCreateNew}
+          className="px-3.5 py-1.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all active:scale-[0.98] shadow-sm flex items-center gap-1.5"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          New Message
+        </button>
       </div>
 
-      <div>
-        <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#f2f3f5', marginBottom: '16px' }}>Messages</h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-          
-          {/* Create New Card */}
-          <div 
-            onClick={handleCreateNew}
-            style={{ 
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '8px',
-              padding: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              cursor: 'pointer',
-              color: '#dbdee1',
-              fontWeight: 500,
-              transition: 'background 0.2s',
-              minHeight: '80px'
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+      {/* Search Input Container */}
+      <div className="bg-neutral-900 rounded-2xl border border-neutral-800 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+        <div className="relative">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Create a message
-          </div>
-
-          {/* Saved Messages Cards */}
-          {loading ? (
-            <div style={{ color: '#949ba4', display: 'flex', alignItems: 'center' }}>Loading messages...</div>
-          ) : (
-            filteredEmbeds.map(emb => (
-              <div 
-                key={emb.id}
-                onClick={() => setActiveEmbed(emb)}
-                style={{ 
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                  borderRadius: '8px',
-                  padding: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.2s',
-                  minHeight: '80px'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#949ba4' }}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                  <span style={{ color: '#f2f3f5', fontWeight: 500 }}>{emb.name || 'Unnamed message'}</span>
-                </div>
-                
-                {/* 3-dots Menu */}
-                <div 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpenId(menuOpenId === emb.id ? null : emb.id);
-                  }}
-                  style={{ padding: '8px', cursor: 'pointer', color: '#949ba4', borderRadius: '4px' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                  
-                  {menuOpenId === emb.id && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '60px',
-                      right: '20px',
-                      background: '#2b2d31',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '4px',
-                      padding: '8px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px',
-                      zIndex: 10,
-                      minWidth: '150px',
-                      boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-                    }}>
-                      <div 
-                        onClick={() => setActiveEmbed(emb)}
-                        style={{ padding: '8px 12px', color: '#dbdee1', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#383a40'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        Edit
-                      </div>
-                      <div 
-                        onClick={(e) => handleRenameClick(e, emb)}
-                        style={{ padding: '8px 12px', color: '#dbdee1', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#383a40'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                        Rename
-                      </div>
-                      <div 
-                        onClick={(e) => handleDeleteClick(e, emb)}
-                        style={{ padding: '8px 12px', color: '#ef4444', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        Delete
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-          
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search saved messages..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full h-10 pl-10 pr-4 bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-800 border border-neutral-700/80 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none focus:ring-1 focus:ring-white/10 transition-all"
+          />
         </div>
       </div>
-      
+
+      {/* Messages Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Create Card */}
+        <div
+          onClick={handleCreateNew}
+          className="group rounded-2xl border border-dashed border-neutral-800 hover:border-neutral-600 bg-neutral-900/40 hover:bg-neutral-800/40 p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all gap-2.5 min-h-[110px]"
+        >
+          <div className="w-9 h-9 rounded-xl bg-neutral-800 border border-neutral-700 group-hover:border-neutral-600 flex items-center justify-center text-neutral-400 group-hover:text-white transition-all shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </div>
+          <span className="text-xs font-semibold text-neutral-300 group-hover:text-white transition-colors">
+            Create a new message
+          </span>
+        </div>
+
+        {/* Saved Cards */}
+        {filteredEmbeds.map(emb => (
+          <div
+            key={emb.id}
+            onClick={() => setActiveEmbed(emb)}
+            className="group relative rounded-2xl border border-neutral-800 hover:border-neutral-700 bg-neutral-900 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] p-5 flex items-center justify-between cursor-pointer transition-all min-h-[110px]"
+          >
+            <div className="flex items-center gap-3.5 min-w-0 pr-3">
+              <div 
+                className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center border border-neutral-800 shadow-sm"
+                style={{ backgroundColor: emb.color || '#262626' }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-white drop-shadow"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="9" y1="21" x2="9" y2="9" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-white truncate group-hover:text-neutral-100 transition-colors">
+                  {emb.name || 'Unnamed message'}
+                </h3>
+                <p className="text-xs text-neutral-500 truncate mt-0.5">
+                  {emb.title ? emb.title : (emb.description ? emb.description.slice(0, 35) + '...' : 'Custom Embed')}
+                </p>
+              </div>
+            </div>
+
+            {/* 3-dots Menu Button */}
+            <div className="relative flex-shrink-0">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpenId(menuOpenId === emb.id ? null : emb.id);
+                }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="12" cy="5" r="1" />
+                  <circle cx="12" cy="19" r="1" />
+                </svg>
+              </button>
+
+              {menuOpenId === emb.id && (
+                <div
+                  onClick={e => e.stopPropagation()}
+                  className="absolute right-0 top-9 z-30 min-w-[150px] p-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_18px_40px_-20px_rgba(0,0,0,0.9)] flex flex-col gap-1"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveEmbed(emb)}
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 flex items-center gap-2 transition-all"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleRenameClick(e, emb)}
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 flex items-center gap-2 transition-all"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                    </svg>
+                    Rename
+                  </button>
+                  <div className="h-px bg-neutral-800 my-0.5" />
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteClick(e, emb)}
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 hover:bg-rose-500/10 flex items-center gap-2 transition-all"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Rename Modal */}
       {renameModalOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, animation: 'fadeIn 0.2s ease-out'
-        }}>
-          <div style={{
-            background: '#2b2d31',
-            borderRadius: '12px',
-            padding: '24px',
-            width: '400px',
-            maxWidth: '90%',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
-          }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#f2f3f5', marginBottom: '16px' }}>Rename Message</h2>
-            <input 
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-neutral-900 border border-neutral-800 p-6 shadow-2xl space-y-4">
+            <h2 className="text-base font-semibold text-white">Rename Message</h2>
+            <input
               autoFocus
-              type="text" 
+              type="text"
               value={renameInput}
               onChange={e => setRenameInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && confirmRename()}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                background: '#1e1f22',
-                border: '1px solid rgba(255,255,255,0.05)',
-                borderRadius: '6px',
-                color: '#dbdee1',
-                fontSize: '15px',
-                marginBottom: '24px',
-                outline: 'none'
-              }}
-              onFocus={e => e.target.style.borderColor = '#5865F2'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
+              placeholder="Message name..."
+              className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none focus:ring-1 focus:ring-white/10"
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button 
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
                 onClick={() => setRenameModalOpen(false)}
-                style={{
-                  background: 'transparent', color: '#dbdee1', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 500
-                }}
-                onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-medium text-xs transition-all active:scale-[0.98]"
               >
                 Cancel
               </button>
-              <button 
+              <button
+                type="button"
                 onClick={confirmRename}
-                style={{
-                  background: '#5865F2', color: '#fff', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 500, transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#4752c4'}
-                onMouseLeave={e => e.currentTarget.style.background = '#5865F2'}
+                className="px-4 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all active:scale-[0.98]"
               >
                 Save
               </button>
@@ -366,46 +385,27 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
           </div>
         </div>
       )}
-      
+
       {/* Delete Modal */}
       {deleteModalOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, animation: 'fadeIn 0.2s ease-out'
-        }}>
-          <div style={{
-            background: '#2b2d31',
-            borderRadius: '12px',
-            padding: '24px',
-            width: '400px',
-            maxWidth: '90%',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
-          }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#f2f3f5', marginBottom: '8px' }}>Delete Message</h2>
-            <p style={{ color: '#dbdee1', fontSize: '15px', marginBottom: '24px', lineHeight: '1.4' }}>
-              Are you sure you want to delete the message <strong>{embedToDelete?.name || 'Unnamed message'}</strong>?<br/>
-              This action cannot be undone.
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-neutral-900 border border-neutral-800 p-6 shadow-2xl space-y-4">
+            <h2 className="text-base font-semibold text-white">Delete Message</h2>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Are you sure you want to delete <strong className="text-white">{embedToDelete?.name || 'Unnamed message'}</strong>? This action cannot be undone.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button 
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
                 onClick={() => setDeleteModalOpen(false)}
-                style={{
-                  background: 'transparent', color: '#dbdee1', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 500
-                }}
-                onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-medium text-xs transition-all active:scale-[0.98]"
               >
                 Cancel
               </button>
-              <button 
+              <button
+                type="button"
                 onClick={confirmDelete}
-                style={{
-                  background: '#ef4444', color: '#fff', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 500, transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
-                onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
+                className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs transition-all active:scale-[0.98]"
               >
                 Delete
               </button>
@@ -416,45 +416,17 @@ export default function EmbedBuilder({ setSidebarOpen, sidebarOpen }) {
 
       {/* Toast Notification */}
       {toastMsg && (
-        <div style={{
-          position: 'fixed',
-          bottom: '40px',
-          right: '40px',
-          background: toastMsg.startsWith('Error') ? '#ef4444' : '#10b981',
-          color: '#fff',
-          padding: '16px 24px',
-          borderRadius: '8px',
-          boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          zIndex: 9999,
-          animation: 'slideInUp 0.3s ease-out, fadeOut 0.3s ease-in 3.7s forwards'
-        }}>
-          {toastMsg.startsWith('Error') ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-          )}
-          <span style={{ fontWeight: 600, fontSize: '15px' }}>{toastMsg}</span>
-          <button 
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-800 text-white text-xs font-semibold shadow-2xl flex items-center gap-2">
+          <span>{toastMsg}</span>
+          <button
+            type="button"
             onClick={() => setToastMsg('')}
-            style={{ background: 'transparent', border: 'none', color: '#fff', marginLeft: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className="text-neutral-500 hover:text-white ml-2"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            ✕
           </button>
         </div>
       )}
-      
-      <style>{`
-        @keyframes slideInUp {
-          from { transform: translateY(100%); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-          to { opacity: 0; visibility: hidden; }
-        }
-      `}</style>
-    </div>
+    </main>
   );
 }

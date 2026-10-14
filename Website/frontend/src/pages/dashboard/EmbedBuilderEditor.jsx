@@ -1,42 +1,41 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
-function Accordion({ title, isOpen, onToggle, children }) {
+function Accordion({ title, count, isOpen, onToggle, children }) {
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.02)', 
-      borderRadius: '8px', 
-      border: '1px solid rgba(255,255,255,0.05)',
-      marginBottom: '12px',
-      overflow: 'hidden'
-    }}>
+    <div className="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden transition-all mb-3.5">
       <div 
         onClick={onToggle}
-        style={{ 
-          padding: '16px', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          cursor: 'pointer',
-          background: isOpen ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
-          transition: 'background 0.2s'
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = isOpen ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.04)'}
-        onMouseLeave={e => e.currentTarget.style.background = isOpen ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'}
+        className={`px-4 sm:px-5 py-3.5 flex items-center justify-between cursor-pointer select-none transition-colors hover:bg-white/[0.02] ${isOpen ? 'border-b border-neutral-800' : ''}`}
       >
-        <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '13px', color: 'var(--text-primary)' }}>{title}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider">
+            {title}
+          </span>
+          {count !== undefined && (
+            <span className="text-[11px] font-semibold text-neutral-500 px-2 py-0.5 rounded-md bg-neutral-800">
+              {count}
+            </span>
+          )}
+        </div>
         <svg 
-          xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
-          style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', color: 'var(--text-secondary)' }}
+          xmlns="http://www.w3.org/2000/svg" 
+          width="16" 
+          height="16" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          className={`text-neutral-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         >
-          <polyline points="6 9 12 15 18 9"></polyline>
+          <polyline points="6 9 12 15 18 9" />
         </svg>
       </div>
       {isOpen && (
-        <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ marginTop: '16px' }}>
-            {children}
-          </div>
+        <div className="p-4 sm:p-5 space-y-4">
+          {children}
         </div>
       )}
     </div>
@@ -78,12 +77,13 @@ export default function EmbedBuilderEditor({
   const [statusMsg, setStatusMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [config, setConfig] = useState(null);
+  const [savedStatus, setSavedStatus] = useState('All changes saved');
   
-  const [openSection, setOpenSection] = useState('description');
+  const [openSection, setOpenSection] = useState('settings');
   
   const stateRef = useRef({
     id: initialEmbed?.id,
-    name: initialEmbed?.name || 'Neue Nachricht',
+    name: initialEmbed?.name || 'New Message',
     channel_id: channelId,
     content: content,
     title: embedTitle,
@@ -103,7 +103,7 @@ export default function EmbedBuilderEditor({
   useEffect(() => {
     stateRef.current = {
       id: initialEmbed?.id,
-      name: initialEmbed?.name || 'Neue Nachricht',
+      name: initialEmbed?.name || 'New Message',
       channel_id: channelId,
       content, title: embedTitle, url: embedUrl, description: embedDescription, color: embedColor,
       author_name: authorName, author_url: authorUrl, author_icon: authorIcon,
@@ -112,13 +112,15 @@ export default function EmbedBuilderEditor({
   }, [
     channelId, content, embedTitle, embedUrl, embedDescription, embedColor,
     authorName, authorUrl, authorIcon, fields, embedImage, embedThumbnail,
-    footerText, footerIcon
+    footerText, footerIcon, initialEmbed
   ]);
 
   useEffect(() => {
+    setSavedStatus('Saving changes...');
     const timer = setTimeout(() => {
       onSave(stateRef.current, false);
-    }, 3000);
+      setSavedStatus('All changes saved');
+    }, 2000);
     return () => clearTimeout(timer);
   }, [
     channelId, content, embedTitle, embedUrl, embedDescription, embedColor,
@@ -144,12 +146,12 @@ export default function EmbedBuilderEditor({
 
   const handleSend = async () => {
     if (!channelId) {
-      setStatusMsg('Please select a channel first.');
+      setStatusMsg('Please select a target channel first.');
       return;
     }
     
     setIsSubmitting(true);
-    setStatusMsg('Sending...');
+    setStatusMsg('Sending message...');
     
     await onSave(stateRef.current, false);
     
@@ -166,17 +168,16 @@ export default function EmbedBuilderEditor({
       
       const data = await res.json();
       if (res.ok) {
-        setStatusMsg('Embed sent successfully!');
+        setStatusMsg('Message sent successfully!');
       } else {
         setStatusMsg(`Error: ${data.error || 'Failed to send'}`);
       }
       
-      if (res.ok) {
-        setTimeout(() => setStatusMsg(''), 4000);
-      }
+      setTimeout(() => setStatusMsg(''), 4000);
     } catch (err) {
       console.error(err);
       setStatusMsg('Error: Network error occurred.');
+      setTimeout(() => setStatusMsg(''), 4000);
     } finally {
       setIsSubmitting(false);
     }
@@ -208,342 +209,529 @@ export default function EmbedBuilderEditor({
   };
 
   return (
-    <div style={{ padding: '24px', animation: 'fadeIn 0.2s ease-out', maxWidth: '1600px', margin: '0 auto' }}>
-      
-      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <button 
-          onClick={handleBack}
-          style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    <main className="p-4 lg:p-6 xl:p-8 max-w-[1400px] mx-auto flex flex-col gap-6 font-sans">
+      {/* Top action header bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-neutral-800">
+        <div className="flex items-center gap-3">
+          <button 
+            type="button"
+            onClick={handleBack}
+            className="px-3.5 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white text-xs font-semibold flex items-center gap-2 transition-all active:scale-[0.98]"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Back
+          </button>
+          <div>
+            <h1 className="text-sm font-semibold text-white">
+              {initialEmbed?.name || 'New Message'}
+            </h1>
+            <p className="text-[11px] text-neutral-500">
+              {savedStatus}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={isSubmitting}
+          className="px-5 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all active:scale-[0.98] shadow-sm disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          Back to Messages
+          {isSubmitting ? (
+            <>
+              <svg className="w-3.5 h-3.5 animate-spin text-black" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Sending...
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+              Send to Channel
+            </>
+          )}
         </button>
-        <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-          {initialEmbed?.name || 'New Message'}
-        </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 1fr) minmax(500px, 1fr)', gap: '32px', alignItems: 'start' }}>
+      {/* Editor & Preview 2-Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] xl:grid-cols-[1fr_540px] gap-6 items-start">
         
-        {/* LEFT PANEL: Editor */}
+        {/* LEFT COLUMN: Controls */}
         <div 
           onClick={() => {
             if (setSidebarOpen) setSidebarOpen(false);
           }}
-          style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}
+          className="flex flex-col min-w-0"
         >
-          
+          {/* Section: Settings */}
           <Accordion 
-            title="SETTINGS" 
+            title="Target & Color" 
             isOpen={openSection === 'settings'} 
             onToggle={() => setOpenSection(openSection === 'settings' ? '' : 'settings')}
           >
-            <div className="dash-form-group">
-              <label style={{ fontWeight: 500 }}>Target Channel</label>
-              <select 
-                value={channelId} 
-                onChange={e => setChannelId(e.target.value)}
-                className="dash-input"
-                style={{ padding: '10px 12px', cursor: 'pointer' }}
-              >
-                <option value="">-- Select a Channel --</option>
-                {channels.map(c => (
-                  <option key={c.id} value={c.id}>#{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="dash-form-group" style={{ marginTop: '16px' }}>
-              <label style={{ fontWeight: 500 }}>Embed Color</label>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <input 
-                  type="color" 
-                  value={embedColor} 
-                  onChange={e => setEmbedColor(e.target.value)}
-                  style={{ width: '44px', height: '44px', padding: '0', border: 'none', borderRadius: '8px', cursor: 'pointer', background: 'transparent' }}
-                />
-                <input 
-                  type="text" 
-                  value={embedColor} 
-                  onChange={e => setEmbedColor(e.target.value)}
-                  className="dash-input"
-                  style={{ flexGrow: 1, padding: '10px 12px', fontFamily: 'monospace', fontSize: '14px' }}
-                />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Target Channel <span className="text-neutral-500">*</span>
+                </label>
+                <select 
+                  value={channelId} 
+                  onChange={e => setChannelId(e.target.value)}
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white outline-none transition-all cursor-pointer"
+                >
+                  <option value="">-- Select Channel --</option>
+                  {channels.map(c => (
+                    <option key={c.id} value={c.id}>#{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Embed Accent Color
+                </label>
+                <div className="flex gap-2.5 items-center">
+                  <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-neutral-700 flex-shrink-0">
+                    <input 
+                      type="color" 
+                      value={embedColor} 
+                      onChange={e => setEmbedColor(e.target.value)}
+                      className="absolute -top-2 -left-2 w-14 h-14 cursor-pointer border-0 bg-transparent"
+                    />
+                  </div>
+                  <input 
+                    type="text" 
+                    value={embedColor} 
+                    onChange={e => setEmbedColor(e.target.value)}
+                    placeholder="#5865F2"
+                    className="flex-1 h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white font-mono placeholder-neutral-500 outline-none transition-all"
+                  />
+                </div>
               </div>
             </div>
           </Accordion>
 
+          {/* Section: Message Content */}
           <Accordion 
-            title="MESSAGE CONTENT" 
+            title="Message Text (Outside Embed)" 
             isOpen={openSection === 'content'} 
             onToggle={() => setOpenSection(openSection === 'content' ? '' : 'content')}
           >
-            <div className="dash-form-group">
+            <div>
+              <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                Plain Text
+              </label>
               <textarea 
                 value={content} 
                 onChange={e => setContent(e.target.value)}
-                className="dash-input"
-                rows="3"
-                placeholder="Message outside the embed..."
-                style={{ resize: 'vertical', padding: '12px' }}
+                rows={3}
+                placeholder="Mention roles (@everyone) or write introductory text outside the card..."
+                className="w-full bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl p-3 text-sm text-white placeholder-neutral-500 outline-none focus:ring-1 focus:ring-white/10 transition-all resize-y min-h-[80px]"
               />
             </div>
           </Accordion>
 
+          {/* Section: Author */}
           <Accordion 
-            title="AUTHOR" 
+            title="Author" 
             isOpen={openSection === 'author'} 
             onToggle={() => setOpenSection(openSection === 'author' ? '' : 'author')}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="dash-form-group">
-                <label>Author Name</label>
-                <input type="text" value={authorName} onChange={e => setAuthorName(e.target.value)} className="dash-input" />
+            <div className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Author Name
+                </label>
+                <input 
+                  type="text" 
+                  value={authorName} 
+                  onChange={e => setAuthorName(e.target.value)} 
+                  placeholder="e.g. Server Announcements"
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
-              <div className="dash-form-group">
-                <label>Author URL</label>
-                <input type="text" value={authorUrl} onChange={e => setAuthorUrl(e.target.value)} className="dash-input" />
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Author URL
+                </label>
+                <input 
+                  type="text" 
+                  value={authorUrl} 
+                  onChange={e => setAuthorUrl(e.target.value)} 
+                  placeholder="https://..."
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
-              <div className="dash-form-group">
-                <label>Author Icon URL</label>
-                <input type="text" value={authorIcon} onChange={e => setAuthorIcon(e.target.value)} className="dash-input" />
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Author Icon URL
+                </label>
+                <input 
+                  type="text" 
+                  value={authorIcon} 
+                  onChange={e => setAuthorIcon(e.target.value)} 
+                  placeholder="https://... (image url)"
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
             </div>
           </Accordion>
 
+          {/* Section: Title */}
           <Accordion 
-            title="TITLE" 
+            title="Title" 
             isOpen={openSection === 'title'} 
             onToggle={() => setOpenSection(openSection === 'title' ? '' : 'title')}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="dash-form-group">
-                <label>Title</label>
-                <input type="text" value={embedTitle} onChange={e => setEmbedTitle(e.target.value)} className="dash-input" />
+            <div className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Embed Title
+                </label>
+                <input 
+                  type="text" 
+                  value={embedTitle} 
+                  onChange={e => setEmbedTitle(e.target.value)} 
+                  placeholder="Header title..."
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
-              <div className="dash-form-group">
-                <label>Title URL</label>
-                <input type="text" value={embedUrl} onChange={e => setEmbedUrl(e.target.value)} className="dash-input" />
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Title Link URL
+                </label>
+                <input 
+                  type="text" 
+                  value={embedUrl} 
+                  onChange={e => setEmbedUrl(e.target.value)} 
+                  placeholder="https://..."
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
             </div>
           </Accordion>
 
+          {/* Section: Description */}
           <Accordion 
-            title="DESCRIPTION" 
+            title="Description" 
             isOpen={openSection === 'description'} 
             onToggle={() => setOpenSection(openSection === 'description' ? '' : 'description')}
           >
-            <div className="dash-form-group">
+            <div className="space-y-3.5">
               <textarea 
                 value={embedDescription} 
-                onChange={e => setEmbedDescription(e.target.value)}
-                className="dash-input"
-                rows="6"
-                placeholder="Type your message here..."
-                style={{ resize: 'vertical', padding: '12px' }}
+                onChange={e => setEmbedDescription(e.target.value)} 
+                rows={5}
+                placeholder="Type your embed body text here... (supports Discord Markdown)"
+                className="w-full bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl p-3.5 text-sm text-white placeholder-neutral-500 outline-none focus:ring-1 focus:ring-white/10 transition-all resize-y min-h-[120px]"
               />
-            </div>
-            
-            <div className="dash-form-group" style={{ marginTop: '20px', background: 'rgba(0,0,0,0.15)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Variables</p>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button onClick={() => insertText(setEmbedDescription, '{user}')} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer' }}>{"{user}"}</button>
-                <button onClick={() => insertText(setEmbedDescription, '{server}')} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer' }}>{"{server}"}</button>
-                <button onClick={() => insertText(setEmbedDescription, '{membercount}')} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer' }}>{"{membercount}"}</button>
-                <button onClick={() => insertText(setEmbedDescription, '<#123456>')} style={{ background: 'rgba(88, 101, 242, 0.2)', color: '#c9cdfb', border: 'none', padding: '6px 12px', borderRadius: '16px', fontSize: '13px', cursor: 'pointer' }}>Channel Mention</button>
-              </div>
               
-              {emojis.length > 0 && (
-                <>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '16px 0 12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Server Emojis</p>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', maxHeight: '120px', overflowY: 'auto', padding: '4px' }}>
-                    {emojis.map(e => (
-                      <div 
-                        key={e.id}
-                        title={`:${e.name}:`}
-                        onClick={() => insertText(setEmbedDescription, `<${e.animated ? 'a' : ''}:${e.name}:${e.id}>`)}
-                        style={{ width: '32px', height: '32px', cursor: 'pointer', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)' }}
-                      >
-                        <img src={`https://cdn.discordapp.com/emojis/${e.id}.${e.animated ? 'gif' : 'png'}`} alt={e.name} style={{ width: '24px', height: '24px' }} />
-                      </div>
-                    ))}
+              {/* Variable Pills */}
+              <div className="p-3.5 rounded-xl bg-neutral-800/40 border border-neutral-800 space-y-2.5">
+                <span className="block text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+                  Insert Variables
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { label: '{user}', val: '{user}' },
+                    { label: '{server}', val: '{server}' },
+                    { label: '{membercount}', val: '{membercount}' },
+                    { label: '#channel', val: '<#channel_id>' }
+                  ].map(v => (
+                    <button
+                      key={v.label}
+                      type="button"
+                      onClick={() => insertText(setEmbedDescription, v.val)}
+                      className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300 hover:text-white text-xs font-mono transition-all active:scale-95"
+                    >
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
+
+                {emojis.length > 0 && (
+                  <div className="pt-2 border-t border-neutral-800/80">
+                    <span className="block text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">
+                      Server Emojis
+                    </span>
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                      {emojis.map(e => (
+                        <button
+                          key={e.id}
+                          type="button"
+                          title={`:${e.name}:`}
+                          onClick={() => insertText(setEmbedDescription, `<${e.animated ? 'a' : ''}:${e.name}:${e.id}>`)}
+                          className="w-7 h-7 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/80 flex items-center justify-center transition-all active:scale-90"
+                        >
+                          <img
+                            src={`https://cdn.discordapp.com/emojis/${e.id}.${e.animated ? 'gif' : 'png'}`}
+                            alt={e.name}
+                            className="w-5 h-5 object-contain"
+                          />
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
           </Accordion>
 
+          {/* Section: Fields */}
           <Accordion 
-            title={`FIELDS (${fields.length})`} 
+            title="Fields" 
+            count={fields.length}
             isOpen={openSection === 'fields'} 
             onToggle={() => setOpenSection(openSection === 'fields' ? '' : 'fields')}
           >
-            {fields.map((field, idx) => (
-              <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
-                <button 
-                  onClick={() => removeField(idx)}
-                  style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                  title="Remove Field"
+            <div className="space-y-3.5">
+              {fields.map((field, idx) => (
+                <div 
+                  key={idx} 
+                  className="p-4 rounded-xl bg-neutral-800/40 border border-neutral-800 relative space-y-3"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div className="dash-form-group">
-                    <label>Name</label>
-                    <input type="text" value={field.name} onChange={e => updateField(idx, 'name', e.target.value)} className="dash-input" />
+                  <button 
+                    type="button"
+                    onClick={() => removeField(idx)}
+                    className="absolute top-3 right-3 text-neutral-500 hover:text-rose-400 transition-colors"
+                    title="Remove Field"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">
+                      Field Title
+                    </label>
+                    <input 
+                      type="text" 
+                      value={field.name} 
+                      onChange={e => updateField(idx, 'name', e.target.value)} 
+                      className="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-lg text-xs text-white placeholder-neutral-500 outline-none transition-all"
+                    />
                   </div>
-                  <div className="dash-form-group">
-                    <label>Value</label>
-                    <textarea value={field.value} onChange={e => updateField(idx, 'value', e.target.value)} className="dash-input" rows="2" style={{ resize: 'vertical' }} />
+
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">
+                      Field Value
+                    </label>
+                    <textarea 
+                      value={field.value} 
+                      onChange={e => updateField(idx, 'value', e.target.value)} 
+                      rows={2} 
+                      className="w-full bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-lg p-2.5 text-xs text-white placeholder-neutral-500 outline-none transition-all resize-y"
+                    />
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <input type="checkbox" checked={field.inline} onChange={e => updateField(idx, 'inline', e.target.checked)} id={`inline-${idx}`} />
-                    <label htmlFor={`inline-${idx}`} style={{ margin: 0, cursor: 'pointer' }}>Inline</label>
-                  </div>
+
+                  <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      checked={field.inline} 
+                      onChange={e => updateField(idx, 'inline', e.target.checked)} 
+                      className="w-4 h-4 rounded border-neutral-700 bg-neutral-800 text-white focus:ring-0 cursor-pointer accent-neutral-300"
+                    />
+                    <span className="text-xs text-neutral-400 font-medium">Display Inline (side-by-side)</span>
+                  </label>
                 </div>
-              </div>
-            ))}
-            <button onClick={addField} className="dash-btn" style={{ width: '100%', padding: '12px', borderStyle: 'dashed' }}>
-              + Add Field
-            </button>
+              ))}
+
+              <button 
+                type="button"
+                onClick={addField}
+                className="w-full py-2.5 rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 text-xs font-semibold text-neutral-300 hover:text-white flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Field
+              </button>
+            </div>
           </Accordion>
 
+          {/* Section: Images */}
           <Accordion 
-            title="IMAGES" 
+            title="Images & Thumbnails" 
             isOpen={openSection === 'images'} 
             onToggle={() => setOpenSection(openSection === 'images' ? '' : 'images')}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="dash-form-group">
-                <label>Image URL</label>
-                <input type="text" value={embedImage} onChange={e => setEmbedImage(e.target.value)} className="dash-input" />
+            <div className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Main Big Image URL
+                </label>
+                <input 
+                  type="text" 
+                  value={embedImage} 
+                  onChange={e => setEmbedImage(e.target.value)} 
+                  placeholder="https://... (banner or graphic image)"
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
-              <div className="dash-form-group">
-                <label>Thumbnail URL</label>
-                <input type="text" value={embedThumbnail} onChange={e => setEmbedThumbnail(e.target.value)} className="dash-input" />
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Small Thumbnail URL
+                </label>
+                <input 
+                  type="text" 
+                  value={embedThumbnail} 
+                  onChange={e => setEmbedThumbnail(e.target.value)} 
+                  placeholder="https://... (top-right corner icon)"
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
             </div>
           </Accordion>
 
+          {/* Section: Footer */}
           <Accordion 
-            title="FOOTER" 
+            title="Footer" 
             isOpen={openSection === 'footer'} 
             onToggle={() => setOpenSection(openSection === 'footer' ? '' : 'footer')}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="dash-form-group">
-                <label>Footer Text</label>
-                <input type="text" value={footerText} onChange={e => setFooterText(e.target.value)} className="dash-input" />
+            <div className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Footer Text
+                </label>
+                <input 
+                  type="text" 
+                  value={footerText} 
+                  onChange={e => setFooterText(e.target.value)} 
+                  placeholder="Footer note..."
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
-              <div className="dash-form-group">
-                <label>Footer Icon URL</label>
-                <input type="text" value={footerIcon} onChange={e => setFooterIcon(e.target.value)} className="dash-input" />
+              <div>
+                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Footer Icon URL
+                </label>
+                <input 
+                  type="text" 
+                  value={footerIcon} 
+                  onChange={e => setFooterIcon(e.target.value)} 
+                  placeholder="https://..."
+                  className="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 rounded-xl text-sm text-white placeholder-neutral-500 outline-none transition-all"
+                />
               </div>
             </div>
           </Accordion>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '16px' }}>
-            <button 
-              className="dash-btn primary" 
-              onClick={handleSend}
-              disabled={isSubmitting}
-              style={{ width: '100%', padding: '14px', fontSize: '16px', fontWeight: 600, borderRadius: '8px', background: '#5865F2', color: '#fff', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
-              onMouseEnter={e => !isSubmitting && (e.currentTarget.style.background = '#4752c4')}
-              onMouseLeave={e => !isSubmitting && (e.currentTarget.style.background = '#5865F2')}
-            >
-              {isSubmitting ? 'Sending...' : 'Send to Channel'}
-            </button>
-          </div>
         </div>
 
-        {/* RIGHT PANEL: Live Preview */}
-        <div>
-          <div style={{ position: 'sticky', top: '24px' }}>
-            
-            <div style={{
-              background: '#313338',
-              borderRadius: '8px',
-              padding: '16px',
-              fontFamily: '"gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif',
-              color: '#dbdee1',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)'
-            }}>
-              <div style={{ display: 'flex', gap: '16px', marginBottom: '8px' }}>
+        {/* RIGHT COLUMN: Live Discord Preview */}
+        <div className="sticky top-6">
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
+              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                Live Discord Preview
+              </span>
+              <span className="w-2 h-2 rounded-full bg-neutral-400" />
+            </div>
+
+            {/* Authentic Discord Message Box */}
+            <div className="bg-[#313338] rounded-xl p-4 text-[#dbdee1] font-sans border border-neutral-800/80 shadow-md">
+              <div className="flex gap-3.5 mb-2">
                 <img 
                   src="/img/logo.png" 
-                  style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', marginTop: '4px' }} 
                   alt="Bot Avatar"
+                  className="w-10 h-10 rounded-full object-cover mt-0.5 flex-shrink-0"
                   onError={(e) => { e.target.src = 'https://cdn.discordapp.com/embed/avatars/0.png' }}
                 />
-                <div style={{ flexGrow: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 500, color: '#f2f3f5', fontSize: '16px' }}>Orbit</span>
-                    <span style={{ background: '#5865F2', color: '#fff', fontSize: '10px', padding: '0 4px', borderRadius: '4px', height: '15px', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>APP</span>
-                    <span style={{ color: '#949ba4', fontSize: '12px' }}>Today at 12:00 PM</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-white text-sm">Orbit</span>
+                    <span className="bg-[#5865F2] text-white text-[10px] px-1 py-0.5 rounded font-bold uppercase tracking-wider leading-none">
+                      APP
+                    </span>
+                    <span className="text-[11px] text-[#949ba4]">Today at 12:00 PM</span>
                   </div>
                   
-                  {/* Message Content */}
+                  {/* Outside Message Content */}
                   {content && (
-                    <div style={{ color: '#dbdee1', fontSize: '15px', lineHeight: '1.375', marginBottom: '8px', whiteSpace: 'pre-wrap' }}>
+                    <div className="text-[#dbdee1] text-sm leading-relaxed mb-2.5 whitespace-pre-wrap break-words">
                       {content}
                     </div>
                   )}
 
+                  {/* Empty embed state notice */}
                   {(!embedTitle && !embedDescription && !embedImage && !embedThumbnail && !authorName && fields.length === 0 && !footerText) ? (
-                    <div style={{ color: '#949ba4', fontStyle: 'italic', fontSize: '14px', marginTop: '4px' }}>
-                      Start typing to see your embed preview...
+                    <div className="text-xs text-[#949ba4] italic py-1">
+                      Start filling out the sections on the left to see your embed preview...
                     </div>
                   ) : (
-                    <div style={{ 
-                      background: '#2b2d31', 
-                      borderRadius: '4px', 
-                      borderLeft: `4px solid ${embedColor || '#202225'}`,
-                      padding: '16px',
-                      maxWidth: '520px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px'
-                    }}>
-                      
-                      <div style={{ display: 'flex', gap: '16px' }}>
-                        <div style={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          
+                    /* The Embed Box */
+                    <div 
+                      className="bg-[#2b2d31] rounded p-4 max-w-[500px] flex flex-col gap-2 border-l-4"
+                      style={{ borderLeftColor: embedColor || '#202225' }}
+                    >
+                      <div className="flex gap-4">
+                        <div className="flex-1 min-w-0 flex flex-col gap-2">
                           {/* Author */}
                           {authorName && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              {authorIcon && <img src={authorIcon} alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} onError={e => e.target.style.display='none'} />}
-                              <span style={{ color: '#f2f3f5', fontWeight: 600, fontSize: '14px' }}>
-                                {authorUrl ? <a href={authorUrl} style={{ color: '#f2f3f5', textDecoration: 'none' }} target="_blank" rel="noreferrer">{authorName}</a> : authorName}
+                            <div className="flex items-center gap-2">
+                              {authorIcon && (
+                                <img 
+                                  src={authorIcon} 
+                                  alt="" 
+                                  className="w-5 h-5 rounded-full object-cover flex-shrink-0" 
+                                  onError={e => e.target.style.display='none'} 
+                                />
+                              )}
+                              <span className="text-white font-semibold text-xs truncate">
+                                {authorUrl ? (
+                                  <a href={authorUrl} target="_blank" rel="noreferrer" className="text-white hover:underline">
+                                    {authorName}
+                                  </a>
+                                ) : authorName}
                               </span>
                             </div>
                           )}
 
                           {/* Title */}
                           {embedTitle && (
-                            <div style={{ color: embedUrl ? '#00a8fc' : '#f2f3f5', fontWeight: 600, fontSize: '16px' }}>
-                              {embedUrl ? <a href={embedUrl} style={{ color: '#00a8fc', textDecoration: 'none' }} target="_blank" rel="noreferrer">{embedTitle}</a> : embedTitle}
+                            <div className="font-semibold text-sm">
+                              {embedUrl ? (
+                                <a href={embedUrl} target="_blank" rel="noreferrer" className="text-[#00a8fc] hover:underline">
+                                  {embedTitle}
+                                </a>
+                              ) : (
+                                <span className="text-white">{embedTitle}</span>
+                              )}
                             </div>
                           )}
                           
                           {/* Description */}
                           {embedDescription && (
-                            <div style={{ 
-                              color: '#dbdee1', 
-                              fontSize: '14px', 
-                              lineHeight: '1.375',
-                              whiteSpace: 'pre-wrap',
-                              wordBreak: 'break-word'
-                            }}>
+                            <div className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap break-words">
                               {embedDescription.split(/(<@[!&]?\d+>|<#\d+>)/g).map((part, i) => {
                                 if (part.startsWith('<#') || part.startsWith('<@')) {
-                                  return <span key={i} style={{ background: 'rgba(88, 101, 242, 0.3)', color: '#c9cdfb', padding: '0 2px', borderRadius: '3px' }}>{part}</span>;
+                                  return (
+                                    <span key={i} className="bg-[#5865f2]/30 text-[#c9cdfb] px-1 rounded text-xs">
+                                      {part}
+                                    </span>
+                                  );
                                 }
                                 return part.split(/(<a?:[a-zA-Z0-9_]+:\d+>)/g).map((subpart, j) => {
                                   const emojiMatch = subpart.match(/<a?:([a-zA-Z0-9_]+):(\d+)>/);
                                   if (emojiMatch) {
                                     const isAnim = subpart.startsWith('<a:');
-                                    return <img key={`${i}-${j}`} src={`https://cdn.discordapp.com/emojis/${emojiMatch[2]}.${isAnim ? 'gif' : 'png'}`} alt={emojiMatch[1]} style={{ width: '22px', height: '22px', verticalAlign: 'middle', display: 'inline-block', margin: '0 1px' }} />;
+                                    return (
+                                      <img 
+                                        key={`${i}-${j}`} 
+                                        src={`https://cdn.discordapp.com/emojis/${emojiMatch[2]}.${isAnim ? 'gif' : 'png'}`} 
+                                        alt={emojiMatch[1]} 
+                                        className="w-5 h-5 inline-block align-middle mx-0.5" 
+                                      />
+                                    );
                                   }
                                   return <span key={`${i}-${j}`}>{subpart}</span>;
                                 });
@@ -551,42 +739,67 @@ export default function EmbedBuilderEditor({
                             </div>
                           )}
 
-                          {/* Fields */}
+                          {/* Fields Grid */}
                           {fields.length > 0 && (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                            <div className="flex flex-wrap gap-2.5 mt-1">
                               {fields.map((f, i) => (
-                                <div key={i} style={{ minWidth: f.inline ? '150px' : '100%', flex: f.inline ? '1 1 calc(33% - 8px)' : '1 1 100%' }}>
-                                  <div style={{ color: '#f2f3f5', fontSize: '14px', fontWeight: 600, marginBottom: '2px', wordBreak: 'break-word' }}>{f.name || '​'}</div>
-                                  <div style={{ color: '#dbdee1', fontSize: '14px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{f.value || '​'}</div>
+                                <div 
+                                  key={i} 
+                                  className={f.inline ? "min-w-[120px] flex-1" : "w-full"}
+                                >
+                                  <div className="text-white text-xs font-semibold break-words">
+                                    {f.name || '\u200B'}
+                                  </div>
+                                  <div className="text-[#dbdee1] text-xs whitespace-pre-wrap break-words">
+                                    {f.value || '\u200B'}
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           )}
 
-                          {/* Image */}
+                          {/* Big Image */}
                           {embedImage && (
-                            <div style={{ marginTop: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-                              <img src={embedImage} alt="Embed" style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+                            <div className="mt-2 rounded overflow-hidden max-h-72">
+                              <img 
+                                src={embedImage} 
+                                alt="Embed" 
+                                className="w-full object-contain max-h-72" 
+                                onError={(e) => e.target.style.display = 'none'} 
+                              />
                             </div>
                           )}
                         </div>
                         
                         {/* Thumbnail */}
                         {embedThumbnail && (
-                          <div style={{ flexShrink: 0 }}>
-                            <img src={embedThumbnail} alt="Thumbnail" style={{ width: '80px', height: '80px', borderRadius: '4px', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+                          <div className="flex-shrink-0">
+                            <img 
+                              src={embedThumbnail} 
+                              alt="Thumbnail" 
+                              className="w-16 h-16 rounded object-cover" 
+                              onError={(e) => e.target.style.display = 'none'} 
+                            />
                           </div>
                         )}
                       </div>
 
                       {/* Footer */}
                       {footerText && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                          {footerIcon && <img src={footerIcon} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%' }} onError={e => e.target.style.display='none'} />}
-                          <span style={{ color: '#f2f3f5', fontSize: '12px', fontWeight: 500 }}>{footerText}</span>
+                        <div className="flex items-center gap-2 mt-2 pt-1">
+                          {footerIcon && (
+                            <img 
+                              src={footerIcon} 
+                              alt="" 
+                              className="w-4 h-4 rounded-full object-cover flex-shrink-0" 
+                              onError={e => e.target.style.display='none'} 
+                            />
+                          )}
+                          <span className="text-[#949ba4] text-[11px] font-medium">
+                            {footerText}
+                          </span>
                         </div>
                       )}
-                      
                     </div>
                   )}
                 </div>
@@ -596,46 +809,23 @@ export default function EmbedBuilderEditor({
         </div>
       </div>
 
-      {/* Toast Notification */}
+      {/* Floating Status Notification */}
       {statusMsg && (
-        <div style={{
-          position: 'fixed',
-          bottom: '40px',
-          right: '40px',
-          background: statusMsg.startsWith('Error') ? '#ef4444' : '#10b981',
-          color: '#fff',
-          padding: '16px 24px',
-          borderRadius: '8px',
-          boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          zIndex: 9999,
-          animation: 'slideInUp 0.3s ease-out, fadeOut 0.3s ease-in 3.7s forwards'
-        }}>
-          {statusMsg.startsWith('Error') ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-          )}
-          <span style={{ fontWeight: 600, fontSize: '15px' }}>{statusMsg}</span>
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl border text-xs font-semibold shadow-2xl flex items-center gap-2 ${
+          statusMsg.startsWith('Error') 
+            ? 'bg-rose-950/90 border-rose-800 text-rose-200' 
+            : 'bg-neutral-900 border-neutral-800 text-white'
+        }`}>
+          <span>{statusMsg}</span>
           <button 
+            type="button"
             onClick={() => setStatusMsg('')}
-            style={{ background: 'transparent', border: 'none', color: '#fff', marginLeft: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className="text-neutral-500 hover:text-white ml-2"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            ✕
           </button>
         </div>
       )}
-      <style>{`
-        @keyframes slideInUp {
-          from { transform: translateY(100%); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-          to { opacity: 0; visibility: hidden; }
-        }
-      `}</style>
-    </div>
+    </main>
   );
 }
