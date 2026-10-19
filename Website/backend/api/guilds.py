@@ -155,15 +155,34 @@ class GuildsMixin:
             return web.json_response(cached['data'])
 
         headers = {"Authorization": f"Bearer {user['access_token']}"}
+        user_guilds = None
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://discord.com/api/users/@me/guilds", headers=headers) as resp:
-                if resp.status != 200:
+            for attempt in range(2):
+                async with session.get("https://discord.com/api/users/@me/guilds", headers=headers) as resp:
+                    if resp.status == 200:
+                        user_guilds = await resp.json()
+                        break
                     err_text = await resp.text()
-                    print(f"[api_guilds] Discord API error {resp.status}: {err_text}", flush=True)
+                    print(f"[api_guilds] Discord API error {resp.status} (attempt {attempt + 1}): {err_text}", flush=True)
+                    if resp.status == 429 and attempt == 0:
+                        try:
+                            err_data = json.loads(err_text)
+                            retry_after = float(err_data.get("retry_after", 1.0))
+                        except Exception:
+                            retry_after = 1.0
+                        if retry_after <= 3.0:
+                            await asyncio.sleep(retry_after + 0.1)
+                            continue
                     if cached:
                         return web.json_response(cached['data'])
-                    return web.json_response({"error": "Failed to fetch guilds"}, status=400)
-                user_guilds = await resp.json()
+                    status_code = resp.status if resp.status in (401, 429) else 400
+                    return web.json_response({"error": "Failed to fetch guilds"}, status=status_code)
+
+        if user_guilds is None:
+            if cached:
+                return web.json_response(cached['data'])
+            return web.json_response({"error": "Failed to fetch guilds"}, status=400)
+
         
         print(f"[api_guilds] User {user.get('username')} has {len(user_guilds)} total guilds, bot is in {len(self.bot.guilds)} guilds", flush=True)
                 

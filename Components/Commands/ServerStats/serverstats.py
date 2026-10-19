@@ -2,12 +2,16 @@ import re
 import discord
 from discord.ext import commands, tasks
 import asyncio
+import time
 from typing import Optional
 from Components.Commands.ServerStats._storage import load_serverstats_config, save_serverstats_config
+
+CHANNEL_RENAME_COOLDOWN = 600  # Discord allows max 2 channel renames per 10 minutes
 
 class ServerStats(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self._channel_last_renamed = {}
         self.update_loop.start()
 
     def cog_unload(self):
@@ -94,11 +98,20 @@ class ServerStats(commands.Cog):
                     try:
                         edits = {}
                         if channel.name != target_name:
-                            edits["name"] = target_name
+                            last_rename = self._channel_last_renamed.get(channel.id, 0)
+                            if (time.time() - last_rename) >= CHANNEL_RENAME_COOLDOWN:
+                                edits["name"] = target_name
                         if category and channel.category_id != category.id:
                             edits["category"] = category
                         if edits:
                             await channel.edit(**edits)
+                            if "name" in edits:
+                                self._channel_last_renamed[channel.id] = time.time()
+                    except discord.HTTPException as e:
+                        if e.status == 429:
+                            # Back off for 10 minutes on rate limit
+                            self._channel_last_renamed[channel.id] = time.time() + CHANNEL_RENAME_COOLDOWN
+                        print(f"Failed to update {key} stat channel in {guild.id}: {e}")
                     except Exception as e:
                         print(f"Failed to update {key} stat channel in {guild.id}: {e}")
             else:
@@ -122,32 +135,11 @@ class ServerStats(commands.Cog):
                 await self.sync_guild_stats(guild)
             except Exception as e:
                 print(f"Error in ServerStats update loop for guild {guild.id}: {e}")
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
 
     @update_loop.before_loop
     async def before_update_loop(self):
         await self.bot.wait_until_ready()
-
-    @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
-        try:
-            await self.sync_guild_stats(member.guild)
-        except Exception:
-            pass
-
-    @commands.Cog.listener()
-    async def on_member_remove(self, member: discord.Member):
-        try:
-            await self.sync_guild_stats(member.guild)
-        except Exception:
-            pass
-
-    @commands.Cog.listener()
-    async def on_guild_update(self, before: discord.Guild, after: discord.Guild):
-        try:
-            await self.sync_guild_stats(after)
-        except Exception:
-            pass
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ServerStats(bot))

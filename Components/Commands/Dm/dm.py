@@ -34,7 +34,11 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
             except Exception:
                 pass
         
-        await interaction.response.defer(ephemeral=True)
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+        except (discord.NotFound, discord.HTTPException):
+            return
 
         if self.target_type == 'role':
             matched_role = self.target_obj
@@ -112,6 +116,12 @@ class ComposeDMModal(discord.ui.Modal, title="Compose Anonymous DM"):
                 f"**Target:** {user_target.mention} (`{user_target.id}`)\n**Moderator:** {self.author.mention} (`{self.author.id}`)\n**Message:** {message[:500]}"
             )
 
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        if isinstance(error, discord.NotFound) or (isinstance(error, discord.HTTPException) and error.code in (10062, 10015)):
+            return
+        import logging
+        logging.getLogger(__name__).warning("ComposeDMModal error: %s", error)
+
 class ComposeDMView(discord.ui.View):
     def __init__(self, target_type, target_obj, guild, author, original_message=""):
         super().__init__(timeout=300)
@@ -124,7 +134,10 @@ class ComposeDMView(discord.ui.View):
     @discord.ui.button(label="Compose DM", style=discord.ButtonStyle.primary)
     async def compose_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.author.id:
-            return await interaction.response.send_message(embed=make_embed("Only the command executor can use this."), ephemeral=True)
+            try:
+                return await interaction.response.send_message(embed=make_embed("Only the command executor can use this."), ephemeral=True)
+            except (discord.NotFound, discord.HTTPException):
+                return
         modal = ComposeDMModal(
             target_type=self.target_type,
             target_obj=self.target_obj,
@@ -133,7 +146,17 @@ class ComposeDMView(discord.ui.View):
             author=self.author,
             original_message=self.original_message
         )
-        await interaction.response.send_modal(modal)
+        try:
+            await interaction.response.send_modal(modal)
+        except (discord.NotFound, discord.HTTPException):
+            pass
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
+        if isinstance(error, discord.NotFound) or (isinstance(error, discord.HTTPException) and error.code in (10062, 10015)):
+            return
+        import logging
+        logging.getLogger(__name__).warning("ComposeDMView error: %s", error)
+
 
 
 class DMCommand(commands.Cog):

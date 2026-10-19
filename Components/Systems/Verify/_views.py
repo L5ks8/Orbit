@@ -73,6 +73,11 @@ class CaptchaInteractionLayout(View):
         self.role_id = int(role_id) if role_id else None
         self.remove_role_id = int(remove_role_id) if remove_role_id else None
 
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
+        if isinstance(error, discord.NotFound) and getattr(error, "code", None) in (10062, 10015):
+            return
+        await super().on_error(interaction, error, item)
+
     @discord.ui.button(label="Enter CAPTCHA Code", style=discord.ButtonStyle.primary)
     async def enter_code(self, interaction: discord.Interaction, button: Button):
         if not interaction.guild or not isinstance(interaction.user, discord.Member):
@@ -113,6 +118,15 @@ class CaptchaInteractionLayout(View):
 
 ACTIVE_INTERACTIONS = set()
 
+async def _send_safe(interaction: discord.Interaction, **kwargs):
+    try:
+        if not interaction.response.is_done():
+            await interaction.response.send_message(**kwargs)
+        else:
+            await interaction.followup.send(**kwargs)
+    except (discord.NotFound, discord.HTTPException):
+        pass
+
 async def handle_verify_interaction(interaction: discord.Interaction):
     """Central, resilient handler for the verify button click."""
     if interaction.id in ACTIVE_INTERACTIONS:
@@ -126,37 +140,40 @@ async def handle_verify_interaction(interaction: discord.Interaction):
                 pass
 
         if not interaction.guild:
-            return await interaction.followup.send(embed=make_embed("Verification must be completed inside a server.", discord.Color.red()), ephemeral=True)
+            return await _send_safe(interaction, embed=make_embed("Verification must be completed inside a server.", discord.Color.red()), ephemeral=True)
 
         member = interaction.user if isinstance(interaction.user, discord.Member) else interaction.guild.get_member(interaction.user.id)
         if not member:
             try:
                 member = await interaction.guild.fetch_member(interaction.user.id)
             except Exception:
-                member = interaction.user
+                member = None
+
+        if not isinstance(member, discord.Member):
+            return await _send_safe(interaction, embed=make_embed("Could not resolve your server member details. Please try again.", discord.Color.red()), ephemeral=True)
 
         config = load_verify_config(interaction.guild.id)
         if not config.get("enabled", True):
-            return await interaction.followup.send(embed=make_embed("Server verification is currently disabled.", discord.Color.red()), ephemeral=True)
+            return await _send_safe(interaction, embed=make_embed("Server verification is currently disabled.", discord.Color.red()), ephemeral=True)
 
         raw_role_id = config.get("role_id")
         if not raw_role_id:
-            return await interaction.followup.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please contact an administrator.", discord.Color.red()), ephemeral=True)
+            return await _send_safe(interaction, embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please contact an administrator.", discord.Color.red()), ephemeral=True)
 
         try:
             role_id = int(raw_role_id)
         except (ValueError, TypeError):
-            return await interaction.followup.send(embed=make_embed("Server verification has an invalid role configured. Please contact an administrator.", discord.Color.red()), ephemeral=True)
+            return await _send_safe(interaction, embed=make_embed("Server verification has an invalid role configured. Please contact an administrator.", discord.Color.red()), ephemeral=True)
 
         role = interaction.guild.get_role(role_id)
         if not role:
-            return await interaction.followup.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not found in server`).", discord.Color.red()), ephemeral=True)
+            return await _send_safe(interaction, embed=make_embed("Server verification is currently misconfigured (`Verified role not found in server`).", discord.Color.red()), ephemeral=True)
 
-        if isinstance(member, discord.Member) and any(r.id == role_id for r in member.roles):
-            return await interaction.followup.send(embed=make_embed("You are already verified on this server!", discord.Color.green()), ephemeral=True)
+        if any(r.id == role_id for r in member.roles):
+            return await _send_safe(interaction, embed=make_embed("You are already verified on this server!", discord.Color.green()), ephemeral=True)
 
         if interaction.guild.me.top_role <= role:
-            return await interaction.followup.send(embed=make_embed(f"I cannot assign {role.mention} because my bot role is lower in the hierarchy. Please ask a server admin to move my role above the verified role in Server Settings -> Roles.", discord.Color.red()), ephemeral=True)
+            return await _send_safe(interaction, embed=make_embed(f"I cannot assign {role.mention} because my bot role is lower in the hierarchy. Please ask a server admin to move my role above the verified role in Server Settings -> Roles.", discord.Color.red()), ephemeral=True)
 
         raw_rem_role_id = config.get("remove_role_id")
         remove_role_id = None
@@ -173,18 +190,18 @@ async def handle_verify_interaction(interaction: discord.Interaction):
             remove_role = interaction.guild.get_role(remove_role_id) if remove_role_id else None
             try:
                 await member.add_roles(role, reason="Completed automated One-Click verification")
-                if remove_role and isinstance(member, discord.Member) and remove_role in member.roles:
+                if remove_role and remove_role in member.roles:
                     try:
                         await member.remove_roles(remove_role, reason="Removed after One-Click verification")
                     except Exception:
                         pass
 
                 remove_pending_kick(interaction.guild.id, member.id)
-                await interaction.followup.send(embed=make_embed(" You are now successfully verified on this server!", discord.Color.green()), ephemeral=True)
+                await _send_safe(interaction, embed=make_embed(" You are now successfully verified on this server!", discord.Color.green()), ephemeral=True)
             except discord.Forbidden:
-                await interaction.followup.send(embed=make_embed(f"I do not have permission to modify roles for {role.mention}. Please check my role hierarchy.", discord.Color.red()), ephemeral=True)
+                await _send_safe(interaction, embed=make_embed(f"I do not have permission to modify roles for {role.mention}. Please check my role hierarchy.", discord.Color.red()), ephemeral=True)
             except Exception as e:
-                await interaction.followup.send(embed=make_embed(f"An error occurred assigning the verified role: {e}", discord.Color.red()), ephemeral=True)
+                await _send_safe(interaction, embed=make_embed(f"An error occurred assigning the verified role: {e}", discord.Color.red()), ephemeral=True)
             return
 
         # WEB CAPTCHA
@@ -212,9 +229,9 @@ async def handle_verify_interaction(interaction: discord.Interaction):
                     description=f"Please click the button below to solve the CAPTCHA in your browser.\n*This link is unique to you and will expire in 10 minutes.*\n\n[Privacy Policy]({base_url}/privacy) · [Support Server](https://discord.gg/wekuhwCsUg)",
                     color=ORBIT_COLOR
                 )
-                await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+                await _send_safe(interaction, embed=embed, view=view, ephemeral=True)
             except Exception as e:
-                await interaction.followup.send(embed=make_embed(f"Failed to generate verification panel: {e}", discord.Color.red()), ephemeral=True)
+                await _send_safe(interaction, embed=make_embed(f"Failed to generate verification panel: {e}", discord.Color.red()), ephemeral=True)
             return
 
         else:
@@ -233,9 +250,9 @@ async def handle_verify_interaction(interaction: discord.Interaction):
                 )
                 embed.set_image(url=f"attachment://{filename}")
 
-                await interaction.followup.send(embed=embed, file=file, view=view, ephemeral=True)
+                await _send_safe(interaction, embed=embed, file=file, view=view, ephemeral=True)
             except Exception as e:
-                await interaction.followup.send(embed=make_embed(f"Failed to generate verification panel: {e}", discord.Color.red()), ephemeral=True)
+                await _send_safe(interaction, embed=make_embed(f"Failed to generate verification panel: {e}", discord.Color.red()), ephemeral=True)
     finally:
         ACTIVE_INTERACTIONS.discard(interaction.id)
 
@@ -243,6 +260,11 @@ async def handle_verify_interaction(interaction: discord.Interaction):
 class PersistentVerifyLayout(View):
     def __init__(self):
         super().__init__(timeout=None)
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
+        if isinstance(error, discord.NotFound) and getattr(error, "code", None) in (10062, 10015):
+            return
+        await super().on_error(interaction, error, item)
 
     @discord.ui.button(label="Verify", style=discord.ButtonStyle.success, custom_id="orbit:verify_start")
     async def verify_button(self, interaction: discord.Interaction, button: Button):

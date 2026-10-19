@@ -125,10 +125,12 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
         return False
 
     async def on_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        error_val = getattr(error, "original", error)
+        if isinstance(error_val, discord.NotFound) or (isinstance(error_val, discord.HTTPException) and error_val.code in (10062, 10015)):
+            return
         try:
             from Components.Commands.OwnerOnly._monitor import record_error
             cmd_name = interaction.command.name if interaction.command else "Component/Modal"
-            error_val = getattr(error, "original", error)
             record_error(f"AppCommand/UI Error [{cmd_name}]", error_val)
             await send_dev_error(interaction.client, f"AppCommand/UI Error [{cmd_name}]", error_val)
         except Exception:
@@ -138,6 +140,7 @@ class OrbitCommandTree(discord.app_commands.CommandTree):
                 await interaction.response.send_message(embed=make_embed(f"An error occurred: `{error}`", discord.Color.red()), ephemeral=True)
         except Exception:
             pass
+
 
 
 _old_send = commands.Context.send

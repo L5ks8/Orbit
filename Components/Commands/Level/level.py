@@ -62,18 +62,36 @@ class LeaderboardSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         chosen = self.values[0]
-        await interaction.response.defer()
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer()
+        except (discord.NotFound, discord.HTTPException):
+            return
+
         embed, file = await self.cog._build_leaderboard_data(self.guild, chosen)
         if embed is None:
-            return await interaction.followup.send(embed=make_embed("No data available.", discord.Color.red()), ephemeral=True)
+            try:
+                return await interaction.followup.send(embed=make_embed("No data available.", discord.Color.red()), ephemeral=True)
+            except (discord.NotFound, discord.HTTPException):
+                return
         view = LeaderboardView(self.cog, self.guild, chosen)
-        await interaction.edit_original_response(embed=embed, attachments=[file], view=view)
+        try:
+            await interaction.edit_original_response(embed=embed, attachments=[file], view=view)
+        except (discord.NotFound, discord.HTTPException):
+            pass
 
 
 class LeaderboardView(discord.ui.View):
     def __init__(self, cog, guild, current_key="total_xp"):
         super().__init__(timeout=120)
         self.add_item(LeaderboardSelect(cog, guild, current_key))
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
+        if isinstance(error, discord.NotFound) or (isinstance(error, discord.HTTPException) and error.code in (10062, 10015)):
+            return
+        import logging
+        logging.getLogger(__name__).warning("LeaderboardView error: %s", error)
+
 
 
 class LevelCommandsCog(commands.Cog):

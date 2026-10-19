@@ -227,14 +227,14 @@ def build_poll_v2_view(entry: dict, ended: bool = False):
         if current_buttons:
             rows.append(ActionRow(*current_buttons))
 
+    footer_text = f"Poll ID: #{poll_id} · Voting has concluded." if ended else f"Poll ID: #{poll_id} · Click a button above to cast your vote."
     container = Container(
         TextDisplay(content=f"# Community Poll\n\n{body_text}"),
         *rows,
+        TextDisplay(content=f"-# {footer_text}"),
         accent_color=ORBIT_COLOR if not ended else discord.Color(0x2B2D31)
     )
     view.add_item(container)
-    footer_text = f"Poll ID: #{poll_id} · Voting has concluded." if ended else f"Poll ID: #{poll_id} · Click a button above to cast your vote."
-    view.add_item(TextDisplay(content=f"-# {footer_text}"))
     return view
 
 def build_poll_kwargs(entry: dict, ended: bool = False, closed_by: int | None = None) -> dict:
@@ -282,9 +282,13 @@ async def end_poll_logic(bot: commands.Bot, guild_id: int, entry: dict, closed_b
     if msg_id:
         try:
             msg = await channel.fetch_message(msg_id)
-            if msg:
                 kwargs = build_poll_kwargs(entry, ended=True, closed_by=closed_by)
-                await msg.edit(**kwargs)
+                try:
+                    await msg.edit(**kwargs)
+                except discord.HTTPException:
+                    fallback_embed = build_poll_embed(entry, ended=True, closed_by=closed_by)
+                    fallback_view = build_poll_view(entry, ended=True)
+                    await msg.edit(content=None, embed=fallback_embed, view=fallback_view)
         except Exception as e:
             print(f"[Poll] Failed to edit expired poll message: {e}")
 

@@ -319,46 +319,54 @@ class LevelListenerCog(commands.Cog):
     @tasks.loop(seconds=60)
     async def voice_xp_loop(self):
         for guild in self.bot.guilds:
-            config = load_level_config(guild.id)
-            if not config.get("enabled", False) or not config.get("voice_xp_enabled", False):
-                continue
+            try:
+                config = load_level_config(guild.id)
+                if not config.get("enabled", False) or not config.get("voice_xp_enabled", False):
+                    continue
 
-            ignore_muted = config.get("voice_xp_ignore_muted", True)
-            ignore_solo = config.get("voice_xp_ignore_solo", False)
-            amount = config.get("voice_xp_amount", 6)
+                ignore_muted = config.get("voice_xp_ignore_muted", True)
+                ignore_solo = config.get("voice_xp_ignore_solo", False)
+                amount = config.get("voice_xp_amount", 6)
 
-            for vc in guild.voice_channels:
-                human_members = [m for m in vc.members if not m.bot]
+                for vc in guild.voice_channels:
+                    human_members = [m for m in vc.members if not m.bot]
 
-                for member in human_members:
-                    if ignore_muted and (member.voice.self_mute or member.voice.self_deaf or member.voice.mute or member.voice.deaf):
-                        continue
-                    if ignore_solo and len(human_members) < 2:
-                        continue
-                    if self._is_blocked(config, vc.id, member):
-                        continue
+                    for member in human_members:
+                        try:
+                            if not member.voice:
+                                continue
+                            if ignore_muted and (member.voice.self_mute or member.voice.self_deaf or member.voice.mute or member.voice.deaf):
+                                continue
+                            if ignore_solo and len(human_members) < 2:
+                                continue
+                            if self._is_blocked(config, vc.id, member):
+                                continue
 
-                    multiplier = self._calculate_multiplier(config, member, vc.id)
-                    xp_earned = int(amount * multiplier)
+                            multiplier = self._calculate_multiplier(config, member, vc.id)
+                            xp_earned = int(amount * multiplier)
 
-                    old_level, new_level, _ = add_xp(guild.id, member.id, xp_earned)
-                    increment_stat(guild.id, member.id, "voice_minutes")
+                            old_level, new_level, _ = add_xp(guild.id, member.id, xp_earned)
+                            increment_stat(guild.id, member.id, "voice_minutes")
 
-                    if new_level > old_level:
-                        ch_setting = config.get("levelup_channel", "current")
-                        target_ch = guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
-                        if ch_setting != "current":
-                            try:
-                                ch = guild.get_channel(int(ch_setting))
-                                if ch:
-                                    target_ch = ch
-                            except (ValueError, TypeError):
-                                pass
-                        if target_ch:
-                            await self._handle_level_up(member, target_ch, old_level, new_level, config)
+                            if new_level > old_level:
+                                ch_setting = config.get("levelup_channel", "current")
+                                target_ch = guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
+                                if ch_setting != "current":
+                                    try:
+                                        ch = guild.get_channel(int(ch_setting))
+                                        if ch:
+                                            target_ch = ch
+                                    except (ValueError, TypeError):
+                                        pass
+                                if target_ch:
+                                    await self._handle_level_up(member, target_ch, old_level, new_level, config)
 
-                    data = get_user_xp(guild.id, member.id)
-                    await self._check_stat_roles(member, "voice", data.get("voice_minutes", 0), config)
+                            data = get_user_xp(guild.id, member.id)
+                            await self._check_stat_roles(member, "voice", data.get("voice_minutes", 0), config)
+                        except Exception as member_e:
+                            pass
+            except Exception as guild_e:
+                pass
 
     @voice_xp_loop.before_loop
     async def before_voice_xp_loop(self):

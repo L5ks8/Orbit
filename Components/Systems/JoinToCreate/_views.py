@@ -71,17 +71,24 @@ class PersistentJTCControlLayout(discord.ui.View):
         super().__init__(timeout=None)
         self.guild_id = guild_id
         self.data = data or {}
+        self._build_items()
 
-    def get_kwargs(self):
-        btn_lock = discord.ui.Button(label="Lock", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_lock")
-        btn_hide = discord.ui.Button(label="Hide", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_hide")
-        btn_rename = discord.ui.Button(label="Rename", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_rename")
-        btn_limit = discord.ui.Button(label="Limit", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_limit")
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
+        if isinstance(error, discord.NotFound) and getattr(error, "code", None) in (10062, 10015):
+            return
+        await super().on_error(interaction, error, item)
 
-        btn_kick = discord.ui.Button(label="Kick", style=discord.ButtonStyle.danger, custom_id="orbit:jtc_kick")
-        btn_trust = discord.ui.Button(label="Trust", style=discord.ButtonStyle.success, custom_id="orbit:jtc_trust")
-        btn_claim = discord.ui.Button(label="Claim", style=discord.ButtonStyle.primary, custom_id="orbit:jtc_claim")
-        btn_delete = discord.ui.Button(label="Delete", style=discord.ButtonStyle.danger, custom_id="orbit:jtc_delete")
+    def _build_items(self):
+        self.clear_items()
+        btn_lock = discord.ui.Button(label="Lock", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_lock", row=0)
+        btn_hide = discord.ui.Button(label="Hide", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_hide", row=0)
+        btn_rename = discord.ui.Button(label="Rename", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_rename", row=0)
+        btn_limit = discord.ui.Button(label="Limit", style=discord.ButtonStyle.secondary, custom_id="orbit:jtc_limit", row=0)
+
+        btn_kick = discord.ui.Button(label="Kick", style=discord.ButtonStyle.danger, custom_id="orbit:jtc_kick", row=1)
+        btn_trust = discord.ui.Button(label="Trust", style=discord.ButtonStyle.success, custom_id="orbit:jtc_trust", row=1)
+        btn_claim = discord.ui.Button(label="Claim", style=discord.ButtonStyle.primary, custom_id="orbit:jtc_claim", row=1)
+        btn_delete = discord.ui.Button(label="Delete", style=discord.ButtonStyle.danger, custom_id="orbit:jtc_delete", row=1)
 
         btn_lock.callback = self.on_lock
         btn_hide.callback = self.on_hide
@@ -92,10 +99,11 @@ class PersistentJTCControlLayout(discord.ui.View):
         btn_claim.callback = self.on_claim
         btn_delete.callback = self.on_delete
 
-        row1 = [btn_lock, btn_hide, btn_rename, btn_limit]
-        row2 = [btn_kick, btn_trust, btn_claim, btn_delete]
-        
-        components = row1 + row2
+        for comp in [btn_lock, btn_hide, btn_rename, btn_limit, btn_kick, btn_trust, btn_claim, btn_delete]:
+            self.add_item(comp)
+
+    def get_kwargs(self):
+        self._build_items()
 
         owner_id = self.data.get("owner_id", "Unknown")
         owner_mention = f"<@{owner_id}>" if owner_id != "Unknown" else "Unknown"
@@ -114,12 +122,6 @@ class PersistentJTCControlLayout(discord.ui.View):
         embed.add_field(name="Channel Status", value=f"{status_lock} | {status_vis}", inline=False)
         embed.add_field(name="Trusted Users", value=trusted_display, inline=False)
         embed.set_footer(text="Use the buttons below to manage your channel.")
-        
-        self.clear_items()
-        for i, comp in enumerate(components):
-            comp.row = i // 4
-            self.add_item(comp)
-            
         return {"embed": embed, "view": self}
 
     async def _get_context(self, interaction: discord.Interaction) -> tuple[discord.VoiceChannel | None, dict | None]:
@@ -214,11 +216,18 @@ class PersistentJTCControlLayout(discord.ui.View):
         select = Select(placeholder="Select a member to kick from the voice channel...", options=options)
 
         async def kick_cb(inter: discord.Interaction):
-            await inter.response.defer(ephemeral=True)
+            try:
+                if not inter.response.is_done():
+                    await inter.response.defer(ephemeral=True)
+            except (discord.NotFound, discord.HTTPException):
+                return
             val = inter.data.get("values", ["none"])[0]
             target = inter.guild.get_member(int(val))
             if not target:
-                return await inter.followup.send(embed=make_embed("Member not found.", discord.Color.red()), ephemeral=True)
+                try:
+                    return await inter.followup.send(embed=make_embed("Member not found.", discord.Color.red()), ephemeral=True)
+                except Exception:
+                    return
             try:
                 if target.voice and target.voice.channel and target.voice.channel.id == channel.id:
                     await target.move_to(None, reason=f"Kicked from temp voice channel by owner {inter.user}")
@@ -227,11 +236,20 @@ class PersistentJTCControlLayout(discord.ui.View):
                     await inter.followup.send(embed=make_embed(f"**{target.display_name}** is no longer in this voice channel."), ephemeral=True)
             except discord.Forbidden:
                 await inter.followup.send(embed=make_embed("I do not have permission to disconnect this member.", discord.Color.red()), ephemeral=True)
+            except Exception:
+                pass
 
         select.callback = kick_cb
         kick_view = discord.ui.View(timeout=60)
+        async def on_kick_err(inter, err, item):
+            if isinstance(err, discord.NotFound) and getattr(err, "code", None) in (10062, 10015):
+                return
+        kick_view.on_error = on_kick_err
         kick_view.add_item(select)
-        await interaction.response.send_message(embed=make_embed("Select a member to kick:"), view=kick_view, ephemeral=True)
+        try:
+            await interaction.response.send_message(embed=make_embed("Select a member to kick:"), view=kick_view, ephemeral=True)
+        except (discord.NotFound, discord.HTTPException):
+            pass
 
     async def on_trust(self, interaction: discord.Interaction):
         channel, data = await self._get_context(interaction)
@@ -241,7 +259,11 @@ class PersistentJTCControlLayout(discord.ui.View):
         user_select = UserSelect(placeholder="Select user(s) to trust in your voice channel...", min_values=1, max_values=5)
 
         async def trust_cb(inter: discord.Interaction):
-            await inter.response.defer(ephemeral=True)
+            try:
+                if not inter.response.is_done():
+                    await inter.response.defer(ephemeral=True)
+            except (discord.NotFound, discord.HTTPException):
+                return
             selected_users = inter.data.get("values", [])
             trusted_list = data.get("trusted_users", [])
             added = []
@@ -278,15 +300,25 @@ class PersistentJTCControlLayout(discord.ui.View):
                 except Exception:
                     pass
 
-            if added:
-                await inter.followup.send(embed=make_embed(f"Trusted users added: {','.join(added)}", discord.Color.green()), ephemeral=True)
-            else:
-                await inter.followup.send(embed=make_embed("No new users were trusted."), ephemeral=True)
+            try:
+                if added:
+                    await inter.followup.send(embed=make_embed(f"Trusted users added: {','.join(added)}", discord.Color.green()), ephemeral=True)
+                else:
+                    await inter.followup.send(embed=make_embed("No new users were trusted."), ephemeral=True)
+            except (discord.NotFound, discord.HTTPException):
+                pass
 
         user_select.callback = trust_cb
         trust_view = discord.ui.View(timeout=60)
+        async def on_trust_err(inter, err, item):
+            if isinstance(err, discord.NotFound) and getattr(err, "code", None) in (10062, 10015):
+                return
+        trust_view.on_error = on_trust_err
         trust_view.add_item(user_select)
-        await interaction.response.send_message(embed=make_embed("Select user(s) to trust:"), view=trust_view, ephemeral=True)
+        try:
+            await interaction.response.send_message(embed=make_embed("Select user(s) to trust:"), view=trust_view, ephemeral=True)
+        except (discord.NotFound, discord.HTTPException):
+            pass
 
     async def on_claim(self, interaction: discord.Interaction):
         channel, data = await self._get_context(interaction)

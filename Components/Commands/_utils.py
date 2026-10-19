@@ -36,10 +36,10 @@ def make_v2_card(body: str, *components, color: discord.Color = ORBIT_COLOR, foo
             items.append(ActionRow(*comp))
         elif comp is not None:
             items.append(comp)
+    if footer:
+        items.append(TextDisplay(content=f"-# {footer}"))
     container = Container(*items, accent_color=color)
     view.add_item(container)
-    if footer:
-        view.add_item(TextDisplay(content=f"-# {footer}"))
     return view
 
 class InteractionContext:

@@ -425,7 +425,10 @@ class TicketControlLayout(discord.ui.View):
             ticket_data = config.get("active_tickets", {}).get(str(interaction.channel.id))
 
             if not ticket_data:
-                return await interaction.response.send_message(embed=make_embed("This channel is not recognized as an active ticket.", discord.Color.red()), ephemeral=True)
+                try:
+                    return await interaction.response.send_message(embed=make_embed("This channel is not recognized as an active ticket.", discord.Color.red()), ephemeral=True)
+                except Exception:
+                    return
 
             is_staff = interaction.user.guild_permissions.manage_guild
             if isinstance(interaction.user, discord.Member) and support_role_id:
@@ -433,10 +436,16 @@ class TicketControlLayout(discord.ui.View):
                     is_staff = True
 
             if not is_staff:
-                return await interaction.response.send_message(embed=make_embed("Only support staff can claim tickets.", discord.Color.red()), ephemeral=True)
+                try:
+                    return await interaction.response.send_message(embed=make_embed("Only support staff can claim tickets.", discord.Color.red()), ephemeral=True)
+                except Exception:
+                    return
 
             if ticket_data.get("claimed_by"):
-                return await interaction.response.send_message(embed=make_embed(f"This ticket has already been claimed by <@{ticket_data['claimed_by']}>.", discord.Color.red()), ephemeral=True)
+                try:
+                    return await interaction.response.send_message(embed=make_embed(f"This ticket has already been claimed by <@{ticket_data['claimed_by']}>.", discord.Color.red()), ephemeral=True)
+                except Exception:
+                    return
 
             claim_ticket(interaction.guild.id, interaction.channel.id, interaction.user.id)
 
@@ -458,7 +467,10 @@ class TicketControlLayout(discord.ui.View):
             claim_embed.add_field(name="Assigned Staff", value=interaction.user.mention, inline=False)
             claim_embed.add_field(name="Subject", value=ticket_data.get('subject', 'Unknown'), inline=False)
             claim_kwargs = {"embed": claim_embed}
-            await interaction.response.send_message(**claim_kwargs, allowed_mentions=discord.AllowedMentions.none())
+            try:
+                await interaction.response.send_message(**claim_kwargs, allowed_mentions=discord.AllowedMentions.none())
+            except (discord.NotFound, discord.HTTPException):
+                pass
 
         async def close_cb(interaction: discord.Interaction):
             config = load_ticket_config(interaction.guild.id)
@@ -466,7 +478,10 @@ class TicketControlLayout(discord.ui.View):
             ticket_data = config.get("active_tickets", {}).get(str(interaction.channel.id))
 
             if not ticket_data:
-                return await interaction.response.send_message(embed=make_embed("This channel is not an active ticket.", discord.Color.red()), ephemeral=True)
+                try:
+                    return await interaction.response.send_message(embed=make_embed("This channel is not an active ticket.", discord.Color.red()), ephemeral=True)
+                except Exception:
+                    return
 
             creator_id = ticket_data.get("creator_id")
             is_authorized = interaction.user.id == creator_id or interaction.user.guild_permissions.manage_guild
@@ -475,9 +490,15 @@ class TicketControlLayout(discord.ui.View):
                     is_authorized = True
 
             if not is_authorized:
-                return await interaction.response.send_message(embed=make_embed("You do not have permission to close this ticket (`Creator or Support Staff only`).", discord.Color.red()), ephemeral=True)
+                try:
+                    return await interaction.response.send_message(embed=make_embed("You do not have permission to close this ticket (`Creator or Support Staff only`).", discord.Color.red()), ephemeral=True)
+                except Exception:
+                    return
 
-            await interaction.response.send_message(embed=make_embed("Initiating ticket closure..."), ephemeral=True)
+            try:
+                await interaction.response.send_message(embed=make_embed("Initiating ticket closure..."), ephemeral=True)
+            except (discord.NotFound, discord.HTTPException):
+                pass
             asyncio.create_task(close_ticket_flow(interaction.guild, interaction.channel, interaction.user, reason="Closed via ticket button"))
 
         self.btn_claim.callback = claim_cb
@@ -485,6 +506,13 @@ class TicketControlLayout(discord.ui.View):
 
         self.add_item(self.btn_claim)
         self.add_item(self.btn_close)
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
+        if isinstance(error, discord.NotFound) and getattr(error, "code", None) in (10062, 10015):
+            return
+        if isinstance(error, discord.HTTPException) and error.status == 429:
+            return
+        await super().on_error(interaction, error, item)
 
 
 class PersistentTicketPanelLayout(discord.ui.View):

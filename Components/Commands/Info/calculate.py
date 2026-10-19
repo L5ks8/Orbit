@@ -55,6 +55,10 @@ def safe_eval(expr: str):
     else:
         test_expr = clean_expr
 
+    # Handle implicit multiplication like 5(2) -> 5*(2) and (2)5 -> (2)*5
+    test_expr = re.sub(r'(\d)\(', r'\1*(', test_expr)
+    test_expr = re.sub(r'\)(\d)', r')*\1', test_expr)
+
     allowed_operators = {
         ast.Add: operator.add,
         ast.Sub: operator.sub,
@@ -102,7 +106,7 @@ def safe_eval(expr: str):
         return str(result)
     except ZeroDivisionError:
         return "Cannot divide by 0"
-    except SyntaxError:
+    except (SyntaxError, TypeError):
         return "Waiting..."
     except Exception as e:
         print(f"[Calculator] Evaluation error for '{expr}': {e}")
@@ -174,13 +178,14 @@ class CalculatorLayoutView(LayoutView):
         accent = self.color if not disabled else discord.Color.dark_gray()
         body = build_calculator_body(self.expression, self.result, timed_out=disabled)
 
+        footer = TextDisplay(content=f"-# Requested by {self.user.display_name} • Interactive Calculator")
         container = Container(
             TextDisplay(content=body),
             r0, r1, r2, r3,
+            footer,
             accent_color=accent
         )
         self.add_item(container)
-        self.add_item(TextDisplay(content=f"-# Requested by {self.user.display_name} • Interactive Calculator"))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.user.id:
@@ -190,6 +195,11 @@ class CalculatorLayoutView(LayoutView):
             )
             return False
         return True
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
+        if isinstance(error, discord.NotFound) and getattr(error, "code", None) in (10062, 10015):
+            return
+        await super().on_error(interaction, error, item)
 
     async def handle_button_press(self, interaction: discord.Interaction, label: str):
         if interaction.user.id != self.user.id:
@@ -226,6 +236,8 @@ class CalculatorLayoutView(LayoutView):
         self.build_ui(disabled=False)
         try:
             await interaction.response.edit_message(view=self)
+        except (discord.NotFound, discord.HTTPException):
+            pass
         except Exception as e:
             print(f"[Calculator] LayoutView update error: {e}")
 

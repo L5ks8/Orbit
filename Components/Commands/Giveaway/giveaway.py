@@ -210,13 +210,14 @@ def build_giveaway_v2_view(entry: dict, guild_id: int, ended: bool = False, winn
         btn_leave = Button(label="Leave", style=discord.ButtonStyle.secondary, custom_id="orbit:giveaway_leave")
         rows = [ActionRow(btn_enter, btn_leave)]
 
+    footer = TextDisplay(content="-# One entry per Discord account. Winners are selected at random.")
     container = Container(
         TextDisplay(content=f"# Giveaway!\n\n{body_text}"),
         *rows,
+        footer,
         accent_color=color
     )
     view.add_item(container)
-    view.add_item(TextDisplay(content="-# One entry per Discord account. Winners are selected at random."))
     return view
 
 PersistentGiveawayLayout = PersistentGiveawayView
@@ -356,17 +357,20 @@ class GiveawayCommand(commands.Cog):
             active_list = get_all_active_giveaways()
             now = int(time.time())
             for item in active_list:
-                if isinstance(item, (list, tuple)):
-                    guild_id, entry = item[0], item[1]
-                elif isinstance(item, dict):
-                    guild_id = item.get("guild_id")
-                    entry = item.get("entry", item)
-                else:
-                    continue
-                if not entry or not isinstance(entry, dict):
-                    continue
-                if entry.get("end_timestamp", 0) <= now and not entry.get("ended"):
-                    await end_giveaway_logic(self.bot, guild_id, entry)
+                try:
+                    if isinstance(item, (list, tuple)):
+                        guild_id, entry = item[0], item[1]
+                    elif isinstance(item, dict):
+                        guild_id = item.get("guild_id")
+                        entry = item.get("entry", item)
+                    else:
+                        continue
+                    if not entry or not isinstance(entry, dict):
+                        continue
+                    if entry.get("end_timestamp", 0) <= now and not entry.get("ended"):
+                        await end_giveaway_logic(self.bot, guild_id, entry)
+                except Exception as inner_e:
+                    print(f"[GiveawayLoop] Error processing entry: {inner_e}")
         except Exception as e:
             print(f"[GiveawayLoop] Error: {e}")
 
