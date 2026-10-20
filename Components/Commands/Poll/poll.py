@@ -282,13 +282,13 @@ async def end_poll_logic(bot: commands.Bot, guild_id: int, entry: dict, closed_b
     if msg_id:
         try:
             msg = await channel.fetch_message(msg_id)
-                kwargs = build_poll_kwargs(entry, ended=True, closed_by=closed_by)
-                try:
-                    await msg.edit(**kwargs)
-                except discord.HTTPException:
-                    fallback_embed = build_poll_embed(entry, ended=True, closed_by=closed_by)
-                    fallback_view = build_poll_view(entry, ended=True)
-                    await msg.edit(content=None, embed=fallback_embed, view=fallback_view)
+            kwargs = build_poll_kwargs(entry, ended=True, closed_by=closed_by)
+            try:
+                await msg.edit(**kwargs)
+            except discord.HTTPException:
+                fallback_embed = build_poll_embed(entry, ended=True, closed_by=closed_by)
+                fallback_view = build_poll_view(entry, ended=True)
+                await msg.edit(content=None, embed=fallback_embed, view=fallback_view)
         except Exception as e:
             print(f"[Poll] Failed to edit expired poll message: {e}")
 
