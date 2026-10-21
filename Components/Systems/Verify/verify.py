@@ -108,7 +108,7 @@ class VerificationCog(commands.Cog, name="Verification"):
             save_verify_config(ctx.guild.id, verify_cfg)
 
             await ctx.send(
-                embed=make_embed(f" Verification panel successfully deployed to {target_channel.mention}!", discord.Color.green()),
+                embed=make_embed(f" Verification panel successfully deployed to {target_channel.mention}!", ORBIT_COLOR),
                 ephemeral=True
             )
         except discord.Forbidden:
@@ -167,7 +167,7 @@ class VerificationCog(commands.Cog, name="Verification"):
             f"• **Mode:** `{mode}`\n\n"
             f"Deploy the panel anytime with `/verify panel`."
         )
-        await ctx.send(embed=make_embed(msg, discord.Color.green()), ephemeral=True)
+        await ctx.send(embed=make_embed(msg, ORBIT_COLOR), ephemeral=True)
 
     @verify_group.command(name="status", description="Check current verification settings.")
     @app_commands.checks.has_permissions(manage_guild=True)
@@ -315,7 +315,7 @@ class VerificationCog(commands.Cog, name="Verification"):
 
         members_to_verify = [m for m in ctx.guild.members if not m.bot and role not in m.roles]
         if not members_to_verify:
-            return await ctx.send(embed=make_embed("All non-bot members in this server are already verified!", discord.Color.green()), ephemeral=True)
+            return await ctx.send(embed=make_embed("All non-bot members in this server are already verified!", ORBIT_COLOR), ephemeral=True)
 
         total_members = len(members_to_verify)
         if total_members > 15:
@@ -350,7 +350,7 @@ class VerificationCog(commands.Cog, name="Verification"):
             if total_members > 10:
                 await asyncio.sleep(0.25)
 
-        embed = discord.Embed(title="Mass Verification Complete", color=discord.Color.green())
+        embed = discord.Embed(title="Mass Verification Complete", color=ORBIT_COLOR)
         embed.add_field(name="Newly Verified", value=f"`{verified_count}` members", inline=True)
         if failed_count:
             embed.add_field(name="Failed (Permissions)", value=f"`{failed_count}` members", inline=True)
