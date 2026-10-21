@@ -199,19 +199,24 @@ class WelcomeListener(commands.Cog):
                                 inline=bool(f.get("inline", False))
                             )
 
-            content_text = fmt_text(config.get("message", ""))
-            try:
-                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=allowed)
-                return True, f"Welcome embed sent to #{channel.name}"
-            except discord.Forbidden:
-                fallback_msg = content_text or desc or f"Welcome to **{guild.name}**, {member.mention}!"
+            for attempt in range(3):
                 try:
-                    await channel.send(content=fallback_msg, allowed_mentions=allowed)
-                    return True, f"Welcome sent as text fallback (bot missing Embed Links in #{channel.name})"
+                    await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=allowed)
+                    return True, f"Welcome embed sent to #{channel.name}"
+                except discord.Forbidden:
+                    fallback_msg = content_text or desc or f"Welcome to **{guild.name}**, {member.mention}!"
+                    try:
+                        await channel.send(content=fallback_msg, allowed_mentions=allowed)
+                        return True, f"Welcome sent as text fallback (bot missing Embed Links in #{channel.name})"
+                    except Exception as e:
+                        return False, f"Missing permissions in #{channel.name}: {e}"
+                except (BrokenPipeError, ConnectionResetError, OSError) as e:
+                    if attempt < 2:
+                        await asyncio.sleep(0.5)
+                        continue
+                    return False, f"Failed to send welcome embed: {e}"
                 except Exception as e:
-                    return False, f"Missing permissions in #{channel.name}: {e}"
-            except Exception as e:
-                return False, f"Failed to send welcome embed: {e}"
+                    return False, f"Failed to send welcome embed: {e}"
 
         # 3. IMAGE CARD MODE (Default)
         raw_msg = config.get("message", "")

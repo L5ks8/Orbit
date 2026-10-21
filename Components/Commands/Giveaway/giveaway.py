@@ -351,10 +351,10 @@ class GiveawayCommand(commands.Cog):
     async def cog_load(self):
         self.bot.add_view(PersistentGiveawayView())
 
-    @tasks.loop(seconds=3)
+    @tasks.loop(seconds=15)
     async def giveaway_check_loop(self):
         try:
-            active_list = get_all_active_giveaways()
+            active_list = await asyncio.to_thread(get_all_active_giveaways)
             now = int(time.time())
             for item in active_list:
                 try:

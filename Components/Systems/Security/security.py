@@ -343,13 +343,26 @@ class SecurityModule(commands.Cog):
                                 icon_url=guild.icon.url if guild.icon else None
                             )
 
-                            perms = channel.permissions_for(guild.me) if guild.me else None
-                            if perms and not perms.embed_links:
-                                await channel.send(
-                                    f"**Suspicious Account Joined:** {member.mention} (`{member.id}`). Age: {account_age_days} days. Action: {action_display}"
-                                )
-                            else:
-                                await channel.send(embed=embed)
+                            for attempt in range(3):
+                                try:
+                                    perms = channel.permissions_for(guild.me) if guild.me else None
+                                    if perms and not perms.embed_links:
+                                        await channel.send(
+                                            f"**Suspicious Account Joined:** {member.mention} (`{member.id}`). Age: {account_age_days} days. Action: {action_display}"
+                                        )
+                                    else:
+                                        await channel.send(embed=embed)
+                                    break
+                                except (discord.Forbidden, discord.NotFound):
+                                    break
+                                except (BrokenPipeError, ConnectionResetError, OSError) as err:
+                                    if attempt < 2:
+                                        await asyncio.sleep(0.5)
+                                        continue
+                                    print(f"[Security] Failed to send suspicious account alert: {err}")
+                                except Exception as err:
+                                    print(f"[Security] Failed to send suspicious account alert: {err}")
+                                    break
                     except Exception as e:
                         print(f"[Security] Failed to send suspicious account alert: {e}")
 

@@ -345,10 +345,10 @@ class PollCommand(commands.Cog):
     def cog_unload(self):
         self.poll_check_loop.cancel()
 
-    @tasks.loop(seconds=3)
+    @tasks.loop(seconds=15)
     async def poll_check_loop(self):
         try:
-            active = get_all_active_polls()
+            active = await asyncio.to_thread(get_all_active_polls)
             now = int(time.time())
             for item in active:
                 try:

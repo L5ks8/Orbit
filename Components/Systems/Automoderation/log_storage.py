@@ -181,10 +181,18 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
         timestamp=discord.utils.utcnow()
     )
 
-    try:
-        await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions.none())
-    except (discord.Forbidden, discord.NotFound):
-        pass
-    except Exception as e:
-        print(f"[AutoMod Log] Send error in guild {guild.id} channel {channel.id}: {e}")
+    for attempt in range(3):
+        try:
+            await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            break
+        except (discord.Forbidden, discord.NotFound):
+            break
+        except (BrokenPipeError, ConnectionResetError, OSError) as e:
+            if attempt < 2:
+                await asyncio.sleep(0.5)
+                continue
+            print(f"[AutoMod Log] Send error in guild {guild.id} channel {channel.id}: {e}")
+        except Exception as e:
+            print(f"[AutoMod Log] Send error in guild {guild.id} channel {channel.id}: {e}")
+            break
 

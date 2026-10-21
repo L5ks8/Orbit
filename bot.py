@@ -43,6 +43,31 @@ commands.has_permissions = custom_has_permissions
 core.has_permissions = custom_has_permissions
 commands.bot_has_permissions = custom_bot_has_permissions
 core.bot_has_permissions = custom_bot_has_permissions
+
+import aiohttp
+import discord.http
+
+_orig_http_request = discord.http.HTTPClient.request
+
+async def _resilient_http_request(self, *args, **kwargs):
+    for attempt in range(4):
+        try:
+            return await _orig_http_request(self, *args, **kwargs)
+        except (aiohttp.ClientOSError, BrokenPipeError, ConnectionResetError, aiohttp.ServerDisconnectedError) as err:
+            if attempt < 3:
+                files = kwargs.get("files")
+                if files:
+                    for f in files:
+                        try:
+                            f.reset()
+                        except Exception:
+                            pass
+                await asyncio.sleep(0.5 * (attempt + 1))
+                continue
+            raise
+
+discord.http.HTTPClient.request = _resilient_http_request
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -239,28 +264,30 @@ class OrbitBot(commands.Bot):
     @tasks.loop(minutes=5)
     async def uptime_loop(self):
         try:
-            from Components.Database.mongodb import get_db
-            import datetime
-            db = get_db()
-            if db is not None:
-                today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
-                today_dt = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-                
-                db_up = 1 if db is not None else 0
-                api_up = 1 if not self.is_closed() else 0
-                
-                db["UptimeStats"].update_one(
-                    {"_id": today_str},
-                    {
-                        "$inc": {
-                            "bot_pings": 1,
-                            "db_pings": db_up,
-                            "api_pings": api_up
+            def _sync_uptime():
+                from Components.Database.mongodb import get_db
+                import datetime
+                db = get_db()
+                if db is not None:
+                    today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+                    today_dt = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+                    
+                    db_up = 1 if db is not None else 0
+                    api_up = 1 if not self.is_closed() else 0
+                    
+                    db["UptimeStats"].update_one(
+                        {"_id": today_str},
+                        {
+                            "$inc": {
+                                "bot_pings": 1,
+                                "db_pings": db_up,
+                                "api_pings": api_up
+                            },
+                            "$setOnInsert": {"date": today_dt}
                         },
-                        "$setOnInsert": {"date": today_dt}
-                    },
-                    upsert=True
-                )
+                        upsert=True
+                    )
+            await asyncio.to_thread(_sync_uptime)
         except Exception as e:
             print(f"Uptime loop error: {e}")
 
