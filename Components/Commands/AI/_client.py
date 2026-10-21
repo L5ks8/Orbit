@@ -6,9 +6,14 @@ import asyncio
 import aiohttp
 from typing import List, Dict, Optional
 
+# Fixed production open-source models for Groq
+GROQ_MODELS = [
+    "llama-3.3-70b-versatile",  # Primary: Meta Llama 3.3 70B (State-of-the-art open source LLM)
+    "llama-3.1-8b-instant",     # Fallback: Meta Llama 3.1 8B (Ultra-fast, lowest latency)
+]
+
 def _random_ip() -> str:
     """Generates a random public IPv4 to prevent single-IP rate-limiting on reverse-proxy gateways."""
-    # Use common public IP ranges (avoiding private/reserved subnets)
     first_octet = random.choice([45, 82, 85, 91, 109, 141, 151, 178, 185, 194, 212])
     return f"{first_octet}.{random.randint(10, 240)}.{random.randint(10, 240)}.{random.randint(10, 240)}"
 
@@ -45,7 +50,7 @@ def _is_valid_answer(text: Optional[str]) -> bool:
 
 def _clean_response(text: str) -> str:
     """Strips thinking blocks, leading bot-name prefixes, or citations from AI outputs."""
-    # Remove reasoning/thinking tags (e.g. from deepseek or ovh-reasoning)
+    # Remove reasoning/thinking tags (e.g. from reasoning models)
     text = re.sub(r"<think>[\s\S]*?</think>", "", text, flags=re.DOTALL).strip()
     # Remove bot name prefix if present
     text = re.sub(r"^(Orbit|Assistant|Bot):\s*", "", text, flags=re.IGNORECASE).strip()
@@ -54,42 +59,50 @@ def _clean_response(text: str) -> str:
 
 async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: float = 14.0) -> str:
     """
-    Non-blocking, multi-tier AI generator that protects the Discord event loop from freezing.
-    Tier 0: Direct API Keys (Groq, Gemini, OpenAI) if configured in environment
-    Tier 1: Pollinations POST with rotating client IP headers
-    Tier 2: Pollinations /openai OpenAI-compatible chat endpoint with rotating IP headers
-    Tier 3: Pollinations GET endpoint with model parameter
+    Non-blocking, multi-tier AI generator.
+    Tier 0: Groq Open-Source Inference (Meta Llama 3.3 70B & Llama 3.1 8B)
+    Tier 1: Gemini / OpenAI (if configured in environment)
+    Tier 2: Pollinations POST with rotating client IP headers
+    Tier 3: Pollinations /openai OpenAI-compatible chat endpoint
     Tier 4: G4F fallback in a worker thread
     """
 
-    # ── Tier 0: Direct API Keys if configured in environment ─────────────────
+    # ── Tier 0: Groq Open-Source Inference (Meta Llama 3.3 / 3.1) ───────────
     groq_key = os.environ.get("GROQ_API_KEY")
     if groq_key:
-        try:
-            async with aiohttp.ClientSession() as session:
-                payload = {
-                    "model": "llama-3.3-70b-versatile",
-                    "messages": messages,
-                    "temperature": 0.7,
-                }
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {groq_key}",
-                }
-                async with session.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    json=payload,
-                    headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=8.0),
-                ) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                        if _is_valid_answer(content):
-                            return _clean_response(content)
-        except Exception:
-            pass
+        groq_key = groq_key.strip()
+        for model in GROQ_MODELS:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    payload = {
+                        "model": model,
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 1024,
+                    }
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {groq_key}",
+                    }
+                    async with session.post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        json=payload,
+                        headers=headers,
+                        timeout=aiohttp.ClientTimeout(total=8.0),
+                    ) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                            if _is_valid_answer(content):
+                                return _clean_response(content)
+                        else:
+                            err_body = await resp.text()
+                            print(f"[Orbit AI] Groq ({model}) status {resp.status}: {err_body[:200]}")
+            except Exception as e:
+                print(f"[Orbit AI] Groq ({model}) request error: {e}")
+                continue
 
+    # ── Optional: Google Gemini / OpenAI Direct API Keys ────────────────────
     gemini_key = os.environ.get("GEMINI_API_KEY")
     if gemini_key:
         try:
@@ -100,7 +113,7 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
                 }
                 headers = {
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {gemini_key}",
+                    "Authorization": f"Bearer {gemini_key.strip()}",
                 }
                 async with session.post(
                     "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
@@ -126,7 +139,7 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
                 }
                 headers = {
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {openai_key}",
+                    "Authorization": f"Bearer {openai_key.strip()}",
                 }
                 async with session.post(
                     "https://api.openai.com/v1/chat/completions",
@@ -142,14 +155,14 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
         except Exception:
             pass
 
-    # ── Tier 1: Pollinations POST with rotating IP headers (2 attempts) ───────
+    # ── Fallback Tier 1: Pollinations POST with rotating IP headers (2 attempts)
     api_key = os.environ.get("POLLINATIONS_API_KEY")
     for _ in range(2):
         try:
             async with aiohttp.ClientSession() as session:
                 headers = _get_headers()
                 if api_key:
-                    headers["Authorization"] = f"Bearer {api_key}"
+                    headers["Authorization"] = f"Bearer {api_key.strip()}"
 
                 payload = {
                     "messages": messages,
@@ -171,12 +184,12 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
         except Exception:
             pass
 
-    # ── Tier 2: Pollinations /openai endpoint with rotating IP headers ────────
+    # ── Fallback Tier 2: Pollinations /openai endpoint with rotating IP headers
     try:
         async with aiohttp.ClientSession() as session:
             headers = _get_headers()
             if api_key:
-                headers["Authorization"] = f"Bearer {api_key}"
+                headers["Authorization"] = f"Bearer {api_key.strip()}"
 
             payload = {
                 "messages": messages,
@@ -197,39 +210,7 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
     except Exception:
         pass
 
-    # ── Tier 3: Pollinations GET endpoint with rotating IP headers ────────────
-    try:
-        user_content = ""
-        system_content = ""
-        for m in messages:
-            if m.get("role") == "system":
-                system_content = m.get("content", "")
-            elif m.get("role") == "user":
-                user_content = m.get("content", "")
-
-        if user_content:
-            async with aiohttp.ClientSession() as session:
-                headers = _get_headers()
-                headers.pop("Content-Type", None)
-                encoded_user = urllib.parse.quote(user_content[:500])
-                encoded_sys = urllib.parse.quote(system_content[:500]) if system_content else ""
-                url = f"https://text.pollinations.ai/{encoded_user}?model=openai-fast"
-                if encoded_sys:
-                    url += f"&system={encoded_sys}"
-
-                async with session.get(
-                    url,
-                    headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=6.5),
-                ) as resp:
-                    if resp.status == 200:
-                        text = await resp.text()
-                        if _is_valid_answer(text):
-                            return _clean_response(text)
-    except Exception:
-        pass
-
-    # ── Tier 4: Off-thread G4F with auto-routing ──────────────────────────────
+    # ── Fallback Tier 3: Off-thread G4F with auto-routing ──────────────────────
     try:
         def _call_g4f_sync():
             import g4f
