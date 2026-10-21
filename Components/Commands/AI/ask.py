@@ -46,13 +46,13 @@ class AskVoice(commands.Cog):
         )
         return build_orbit_system_prompt(guild=guild, extra_context=tts_note)
 
-    async def _generate_response(self, question: str, guild: discord.Guild | None) -> str:
+    async def _generate_response(self, question: str, guild: discord.Guild | None, image_url: str | None = None) -> str:
         messages_payload = [
             {"role": "system", "content": self._build_system_prompt(guild)},
             {"role": "user", "content": question},
         ]
         from Components.Commands.AI._client import generate_ai_response
-        return await generate_ai_response(messages_payload)
+        return await generate_ai_response(messages_payload, image_url=image_url)
 
     async def _text_to_speech(self, text: str) -> bytes | None:
 
@@ -70,9 +70,9 @@ class AskVoice(commands.Cog):
         return audio_buffer.read()
 
 
-    async def _handle_ask(self, question: str, guild, user, voice_client, send, send_ephemeral):
+    async def _handle_ask(self, question: str, guild, user, voice_client, send, send_ephemeral, image_url: str | None = None):
         try:
-            answer = await self._generate_response(question, guild)
+            answer = await self._generate_response(question, guild, image_url=image_url)
         except Exception as e:
             return await send_ephemeral(f"Could not generate an AI response: `{e}`")
 
@@ -182,11 +182,15 @@ class AskVoice(commands.Cog):
                 except OSError:
                     pass
 
-    @app_commands.command(name="ask", description="Ask Orbit a question – the answer is spoken in the voice channel.")
-    @app_commands.describe(question="The question you want to ask Orbit")
-    async def ask_cmd(self, interaction: discord.Interaction, question: str):
+    @app_commands.command(name="ask", description="Ask Orbit a question (with optional image/GIF analysis & voice playback).")
+    @app_commands.describe(
+        question="The question you want to ask Orbit",
+        image="Optional: Upload an image or GIF for Orbit to analyze"
+    )
+    async def ask_cmd(self, interaction: discord.Interaction, question: str, image: discord.Attachment | None = None):
         await interaction.response.defer()
         voice_client = interaction.guild.voice_client if interaction.guild else None
+        image_url = image.url if image else None
         await self._handle_ask(
             question=question,
             guild=interaction.guild,
@@ -194,6 +198,7 @@ class AskVoice(commands.Cog):
             voice_client=voice_client,
             send=interaction.followup.send,
             send_ephemeral=lambda msg: interaction.followup.send(embed=make_embed(msg, discord.Color.red()), ephemeral=True),
+            image_url=image_url,
         )
 
 

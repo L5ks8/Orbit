@@ -121,9 +121,20 @@ Invites (Einladungen):
 - `/inviteleaderboard` - Rangliste der fleißigsten Einlader.
 - `/inviter <user>` - Zeigt, wer einen bestimmten Nutzer eingeladen hat.
 
-Spass & KI:
-- `/ask <frage>` - Stellt Orbit eine Frage (wird mit Sprachausgabe im Voice-Channel und Text beantwortet).
-- `@Orbit` oder Antworten auf den Bot - Direkter KI-Chat im Chatkanal.
+Bildbearbeitung & Memes:
+- `/meme <top_text> [bottom_text] [image] [user]` - Erstellt ein klassisches Meme mit fettem Text und Umrandung auf einem Bild oder Avatar.
+- `/editimage <effect> [image] [user]` - Wendet künstlerische Effekte an (Deepfry, Grayscale, Pixelate, Invert, Blur, Sepia, Mirror, Sketch).
+- `/caption <caption> [image] [user]` - Erstellt ein modernes Meme mit weißem Beschriftungs-Banner oben.
+- `/jail [user] [image]` - Setzt einen Avatar oder ein Bild hinter Gefängnisgitter.
+- `/wasted [user] [image]` - GTA Wasted-Schwarz-Weiß-Effekt.
+- `/triggered [user] [image]` - Animiertes rotes Wackel-GIF.
+- `/rip [user] [image]` - Grabstein-Effekt.
+
+Multimodale KI & Sehen (Vision):
+- Du besitzt multimodale Bild- und GIF-Erkennung! Wenn Nutzer dir Bilder (PNG, JPG, WebP) oder animierte GIFs anhängen oder auf ein Bild antworten und dich fragen, KANNST DU DAS BILD VOLLSTÄNDIG SEHEN UND ANALYSIEREN!
+- Du kannst Screenshots analysieren, Text auf Bildern lesen (OCR), Memes erklären, Fehler finden und Fragen zum Bildinhalt beantworten.
+- `/ask <frage> [image]` - Stellt Orbit eine Frage (auch mit optionalem Bild/GIF, mit Sprachausgabe im Voice-Channel und Text).
+- `@Orbit` oder Antworten auf den Bot - Direkter KI-Chat im Kanal (unterstützt ebenfalls Bild- und GIF-Anhänge).
 - `/ai_reset_memory` - Setzt den Gesprächsverlauf im aktuellen Kanal zurück.
 """
 

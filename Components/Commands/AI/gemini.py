@@ -115,8 +115,27 @@ class GeminiChatbot(commands.Cog):
 
                 messages_payload.append({"role": "user", "content": f"{message.author.display_name}: {message.clean_content}"})
 
+                image_url = None
+                # Check current message attachments
+                for att in message.attachments:
+                    ct = (att.content_type or "").lower()
+                    fn = att.filename.lower()
+                    if ct.startswith("image/") or ct.startswith("video/") or fn.endswith((".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov")):
+                        image_url = att.url
+                        break
+
+                # If none found and user replied to a message, check referenced message
+                if not image_url and message.reference and isinstance(message.reference.resolved, discord.Message):
+                    ref_msg = message.reference.resolved
+                    for att in ref_msg.attachments:
+                        ct = (att.content_type or "").lower()
+                        fn = att.filename.lower()
+                        if ct.startswith("image/") or ct.startswith("video/") or fn.endswith((".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov")):
+                            image_url = att.url
+                            break
+
                 from Components.Commands.AI._client import generate_ai_response
-                text_response = await generate_ai_response(messages_payload)
+                text_response = await generate_ai_response(messages_payload, image_url=image_url)
                             
                 if text_response:
                     if "[CONFIG_UPDATE:" in text_response and is_admin:

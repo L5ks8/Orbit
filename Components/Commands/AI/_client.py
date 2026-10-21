@@ -1,13 +1,20 @@
 import os
 import re
+import io
+import base64
 import random
 import urllib.parse
 import asyncio
 import aiohttp
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 # Cache of active models available on the user's Groq key
 _GROQ_RESOLVED_MODELS: List[str] = []
+
+GROQ_VISION_MODELS = [
+    "llama-3.2-11b-vision-preview",
+    "llama-3.2-90b-vision-preview",
+]
 
 def _random_ip() -> str:
     """Generates a random public IPv4 to prevent single-IP rate-limiting on reverse-proxy gateways."""
@@ -52,6 +59,26 @@ def _clean_response(text: str) -> str:
     # Remove bot name prefix if present
     text = re.sub(r"^(Orbit|Assistant|Bot):\s*", "", text, flags=re.IGNORECASE).strip()
     return text
+
+
+def _prepare_image_bytes(raw_bytes: bytes) -> bytes:
+    """Extracts a high quality frame from GIFs or converts images to standard JPEG for vision APIs."""
+    try:
+        from PIL import Image
+        im = Image.open(io.BytesIO(raw_bytes))
+        if getattr(im, "is_animated", False):
+            # Extract keyframe from animated GIF / WebP
+            im.seek(im.n_frames // 2)
+        rgb_im = im.convert("RGB")
+        # Resize if overly massive to save bandwidth
+        max_dim = 1600
+        if rgb_im.width > max_dim or rgb_im.height > max_dim:
+            rgb_im.thumbnail((max_dim, max_dim))
+        buf = io.BytesIO()
+        rgb_im.save(buf, format="JPEG", quality=85)
+        return buf.getvalue()
+    except Exception:
+        return raw_bytes
 
 
 async def _get_groq_models(session: aiohttp.ClientSession, groq_key: str) -> List[str]:
@@ -103,28 +130,151 @@ async def _get_groq_models(session: aiohttp.ClientSession, groq_key: str) -> Lis
 
     # Standard fallback IDs
     return [
+        "openai/gpt-oss-120b",
         "llama-3.3-70b-versatile",
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-20b",
         "llama-3.1-8b-instant",
-        "llama3-70b-8192",
-        "llama3-8b-8192",
-        "mixtral-8x7b-32768",
     ]
 
 
-async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: float = 14.0) -> str:
+async def generate_ai_response(
+    messages: List[Dict[str, Any]],
+    timeout_sec: float = 14.0,
+    image_bytes: Optional[bytes] = None,
+    image_url: Optional[str] = None
+) -> str:
     """
-    Non-blocking, multi-tier AI generator.
-    Tier 0: Groq Open-Source Inference (Meta Llama 3.3 / 3.1)
-    Tier 1: Gemini / OpenAI (if configured in environment)
-    Tier 2: Pollinations POST with rotating client IP headers
-    Tier 3: Pollinations /openai OpenAI-compatible chat endpoint
-    Tier 4: G4F fallback in a worker thread
+    Non-blocking, multi-tier multimodal AI generator.
+    Supports text, images (PNG, JPG, WebP), and animated GIFs.
     """
 
-    # ── Tier 0: Groq Open-Source Inference ───────────────────────────────────
+    # ── Fetch Image Data if URL provided ─────────────────────────────────────
+    if image_url and not image_bytes:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(image_url, timeout=aiohttp.ClientTimeout(total=6.0)) as r:
+                    if r.status == 200:
+                        image_bytes = await r.read()
+        except Exception as e:
+            print(f"[Orbit AI] Failed to download image attachment: {e}")
+
+    # ── Process Image for Multimodal Vision ──────────────────────────────────
+    vision_messages = None
+    if image_bytes:
+        try:
+            processed_bytes = _prepare_image_bytes(image_bytes)
+            b64_img = base64.b64encode(processed_bytes).decode("utf-8")
+            data_url = f"data:image/jpeg;base64,{b64_img}"
+
+            # Clone messages and inject multimodal structure on the last user message
+            vision_messages = []
+            for m in messages:
+                if m.get("role") == "user" and m is messages[-1]:
+                    user_text = m.get("content", "")
+                    if isinstance(user_text, list):
+                        vision_messages.append(m)
+                    else:
+                        vision_messages.append({
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": user_text or "Was ist auf diesem Bild oder GIF zu sehen? Bitte beschreibe es genau."},
+                                {"type": "image_url", "image_url": {"url": data_url}}
+                            ]
+                        })
+                else:
+                    vision_messages.append(m)
+        except Exception as e:
+            print(f"[Orbit AI] Error preparing vision payload: {e}")
+
+    # ── Multimodal Tier A: Groq Vision Models ────────────────────────────────
     groq_key = os.environ.get("GROQ_API_KEY")
     if groq_key:
         groq_key = groq_key.strip()
+        if vision_messages:
+            for v_model in GROQ_VISION_MODELS:
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        payload = {
+                            "model": v_model,
+                            "messages": vision_messages,
+                            "temperature": 0.7,
+                            "max_tokens": 1024,
+                        }
+                        headers = {
+                            "Content-Type": "application/json",
+                            "Authorization": f"Bearer {groq_key}",
+                        }
+                        async with session.post(
+                            "https://api.groq.com/openai/v1/chat/completions",
+                            json=payload,
+                            headers=headers,
+                            timeout=aiohttp.ClientTimeout(total=9.0),
+                        ) as resp:
+                            if resp.status == 200:
+                                data = await resp.json()
+                                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                                if _is_valid_answer(content):
+                                    return _clean_response(content)
+                            else:
+                                err_text = await resp.text()
+                                print(f"[Orbit AI] Groq vision ({v_model}) status {resp.status}: {err_text[:200]}")
+                except Exception as err:
+                    print(f"[Orbit AI] Groq vision error: {err}")
+
+    # ── Multimodal Tier B: Google Gemini Vision ──────────────────────────────
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            async with aiohttp.ClientSession() as session:
+                payload = {
+                    "model": "gemini-1.5-flash",
+                    "messages": vision_messages if vision_messages else messages,
+                }
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {gemini_key.strip()}",
+                }
+                async with session.post(
+                    "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+                    json=payload,
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=8.0),
+                ) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                        if _is_valid_answer(content):
+                            return _clean_response(content)
+        except Exception:
+            pass
+
+    # ── Multimodal Tier C: Free HuggingFace BLIP Image Captioning Fallback ────
+    # If the user supplied an image but primary vision models couldn't process it,
+    # extract a description via BLIP serverless and enrich the text conversation!
+    if image_bytes and not vision_messages:
+        pass
+    elif image_bytes and vision_messages:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large",
+                    data=image_bytes,
+                    timeout=aiohttp.ClientTimeout(total=5.0)
+                ) as hf_resp:
+                    if hf_resp.status == 200:
+                        hf_data = await hf_resp.json()
+                        if isinstance(hf_data, list) and len(hf_data) > 0:
+                            caption = hf_data[0].get("generated_text", "")
+                            if caption:
+                                # Append visual details to regular text prompt
+                                last_user = messages[-1]["content"]
+                                messages[-1]["content"] = f"{last_user}\n\n[Angehängtes Bild/GIF Erkennung: {caption}]"
+        except Exception:
+            pass
+
+    # ── Text Engine: Groq High-Performance Models ────────────────────────────
+    if groq_key:
         try:
             async with aiohttp.ClientSession() as session:
                 models_to_try = await _get_groq_models(session, groq_key)
@@ -159,59 +309,6 @@ async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: floa
                         continue
         except Exception as e:
             print(f"[Orbit AI] Groq session error: {e}")
-
-    # ── Optional: Google Gemini / OpenAI Direct API Keys ────────────────────
-    gemini_key = os.environ.get("GEMINI_API_KEY")
-    if gemini_key:
-        try:
-            async with aiohttp.ClientSession() as session:
-                payload = {
-                    "model": "gemini-1.5-flash",
-                    "messages": messages,
-                }
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {gemini_key.strip()}",
-                }
-                async with session.post(
-                    "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-                    json=payload,
-                    headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=8.0),
-                ) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                        if _is_valid_answer(content):
-                            return _clean_response(content)
-        except Exception:
-            pass
-
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    if openai_key:
-        try:
-            async with aiohttp.ClientSession() as session:
-                payload = {
-                    "model": "gpt-4o-mini",
-                    "messages": messages,
-                }
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {openai_key.strip()}",
-                }
-                async with session.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    json=payload,
-                    headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=8.0),
-                ) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                        if _is_valid_answer(content):
-                            return _clean_response(content)
-        except Exception:
-            pass
 
     # ── Fallback Tier 1: Pollinations POST with rotating IP headers (2 attempts)
     api_key = os.environ.get("POLLINATIONS_API_KEY")
