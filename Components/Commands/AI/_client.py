@@ -6,11 +6,8 @@ import asyncio
 import aiohttp
 from typing import List, Dict, Optional
 
-# Fixed production open-source models for Groq
-GROQ_MODELS = [
-    "llama-3.3-70b-versatile",  # Primary: Meta Llama 3.3 70B (State-of-the-art open source LLM)
-    "llama-3.1-8b-instant",     # Fallback: Meta Llama 3.1 8B (Ultra-fast, lowest latency)
-]
+# Cache of active models available on the user's Groq key
+_GROQ_RESOLVED_MODELS: List[str] = []
 
 def _random_ip() -> str:
     """Generates a random public IPv4 to prevent single-IP rate-limiting on reverse-proxy gateways."""
@@ -57,50 +54,111 @@ def _clean_response(text: str) -> str:
     return text
 
 
+async def _get_groq_models(session: aiohttp.ClientSession, groq_key: str) -> List[str]:
+    """Fetches the exact active models available on the user's Groq key and sorts by quality."""
+    global _GROQ_RESOLVED_MODELS
+    if _GROQ_RESOLVED_MODELS:
+        return _GROQ_RESOLVED_MODELS
+
+    headers = {"Authorization": f"Bearer {groq_key}"}
+    try:
+        async with session.get(
+            "https://api.groq.com/openai/v1/models",
+            headers=headers,
+            timeout=aiohttp.ClientTimeout(total=4.0),
+        ) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                raw_models = [
+                    m["id"] for m in data.get("data", [])
+                    if "whisper" not in m.get("id", "").lower()
+                    and "guard" not in m.get("id", "").lower()
+                ]
+                print(f"[Orbit AI] Groq models available on this key: {raw_models}")
+                
+                def _sort_preference(m_id: str) -> int:
+                    m_lower = m_id.lower()
+                    if "llama-3.3" in m_lower:
+                        return 0
+                    if "llama-3.1-70b" in m_lower:
+                        return 1
+                    if "llama-3.1-8b" in m_lower:
+                        return 2
+                    if "llama3-70b" in m_lower:
+                        return 3
+                    if "llama3-8b" in m_lower:
+                        return 4
+                    if "mixtral" in m_lower:
+                        return 5
+                    if "gemma" in m_lower:
+                        return 6
+                    return 7
+
+                sorted_models = sorted(raw_models, key=_sort_preference)
+                if sorted_models:
+                    _GROQ_RESOLVED_MODELS = sorted_models
+                    return _GROQ_RESOLVED_MODELS
+    except Exception as e:
+        print(f"[Orbit AI] Groq model discovery fallback notice: {e}")
+
+    # Standard fallback IDs
+    return [
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "llama3-70b-8192",
+        "llama3-8b-8192",
+        "mixtral-8x7b-32768",
+    ]
+
+
 async def generate_ai_response(messages: List[Dict[str, str]], timeout_sec: float = 14.0) -> str:
     """
     Non-blocking, multi-tier AI generator.
-    Tier 0: Groq Open-Source Inference (Meta Llama 3.3 70B & Llama 3.1 8B)
+    Tier 0: Groq Open-Source Inference (Meta Llama 3.3 / 3.1)
     Tier 1: Gemini / OpenAI (if configured in environment)
     Tier 2: Pollinations POST with rotating client IP headers
     Tier 3: Pollinations /openai OpenAI-compatible chat endpoint
     Tier 4: G4F fallback in a worker thread
     """
 
-    # ── Tier 0: Groq Open-Source Inference (Meta Llama 3.3 / 3.1) ───────────
+    # ── Tier 0: Groq Open-Source Inference ───────────────────────────────────
     groq_key = os.environ.get("GROQ_API_KEY")
     if groq_key:
         groq_key = groq_key.strip()
-        for model in GROQ_MODELS:
-            try:
-                async with aiohttp.ClientSession() as session:
-                    payload = {
-                        "model": model,
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 1024,
-                    }
-                    headers = {
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {groq_key}",
-                    }
-                    async with session.post(
-                        "https://api.groq.com/openai/v1/chat/completions",
-                        json=payload,
-                        headers=headers,
-                        timeout=aiohttp.ClientTimeout(total=8.0),
-                    ) as resp:
-                        if resp.status == 200:
-                            data = await resp.json()
-                            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                            if _is_valid_answer(content):
-                                return _clean_response(content)
-                        else:
-                            err_body = await resp.text()
-                            print(f"[Orbit AI] Groq ({model}) status {resp.status}: {err_body[:200]}")
-            except Exception as e:
-                print(f"[Orbit AI] Groq ({model}) request error: {e}")
-                continue
+        try:
+            async with aiohttp.ClientSession() as session:
+                models_to_try = await _get_groq_models(session, groq_key)
+                for model in models_to_try:
+                    try:
+                        payload = {
+                            "model": model,
+                            "messages": messages,
+                            "temperature": 0.7,
+                            "max_tokens": 1024,
+                        }
+                        headers = {
+                            "Content-Type": "application/json",
+                            "Authorization": f"Bearer {groq_key}",
+                        }
+                        async with session.post(
+                            "https://api.groq.com/openai/v1/chat/completions",
+                            json=payload,
+                            headers=headers,
+                            timeout=aiohttp.ClientTimeout(total=8.0),
+                        ) as resp:
+                            if resp.status == 200:
+                                data = await resp.json()
+                                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                                if _is_valid_answer(content):
+                                    return _clean_response(content)
+                            else:
+                                err_body = await resp.text()
+                                print(f"[Orbit AI] Groq ({model}) status {resp.status}: {err_body[:200]}")
+                    except Exception as err:
+                        print(f"[Orbit AI] Groq ({model}) request error: {err}")
+                        continue
+        except Exception as e:
+            print(f"[Orbit AI] Groq session error: {e}")
 
     # ── Optional: Google Gemini / OpenAI Direct API Keys ────────────────────
     gemini_key = os.environ.get("GEMINI_API_KEY")
