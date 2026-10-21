@@ -36,14 +36,17 @@ class VerificationCog(commands.Cog, name="Verification"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    verification = app_commands.Group(name="verification", description="Manage and deploy server verification.", default_permissions=discord.Permissions(manage_guild=True))
+    verify_group = app_commands.Group(name="verify", description="Verify members manually or configure server verification.")
 
-    @verification.command(name="panel", description="Deploy the verification panel with the standard banner and button.")
+    @verify_group.command(name="panel", description="Deploy the verification panel with the standard banner and button.")
     @app_commands.describe(channel="The channel where the verification embed should be sent (defaults to current channel).")
+    @app_commands.checks.has_permissions(manage_guild=True)
     async def panel(self, interaction: discord.Interaction, channel: Optional[discord.TextChannel] = None):
         """Sends the verification panel to the designated channel."""
         ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.guild_permissions.administrator or ctx.author.id == ctx.guild.owner_id):
+            return await ctx.send(embed=make_embed("You need `Manage Server` permission to deploy the verification panel.", discord.Color.red()), ephemeral=True)
         target_channel = channel or ctx.channel
 
         if not isinstance(target_channel, discord.TextChannel):
@@ -55,7 +58,7 @@ class VerificationCog(commands.Cog, name="Verification"):
             return await ctx.send(
                 embed=make_embed(
                     f"**Verified Role Not Configured!**\n"
-                    "Please configure a verified role first with `/verification setup` or via the web dashboard.",
+                    "Please configure a verified role first with `/verify setup` or via the web dashboard.",
                     discord.Color.gold()
                 ),
                 ephemeral=True
@@ -119,12 +122,13 @@ class VerificationCog(commands.Cog, name="Verification"):
                 ephemeral=True
             )
 
-    @verification.command(name="setup", description="Configure the verified role, optional unverified role, and mode.")
+    @verify_group.command(name="setup", description="Configure the verified role, optional unverified role, and mode.")
     @app_commands.describe(
         role="The role granted to users once verified.",
         remove_role="Optional unverified role to remove upon verification.",
         mode="Verification security type (captcha, oneclick, web_captcha)."
     )
+    @app_commands.checks.has_permissions(manage_guild=True)
     async def setup_cmd(
         self,
         interaction: discord.Interaction,
@@ -135,6 +139,9 @@ class VerificationCog(commands.Cog, name="Verification"):
         """Configures verification roles and verification type."""
         ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
+
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.guild_permissions.administrator or ctx.author.id == ctx.guild.owner_id):
+            return await ctx.send(embed=make_embed("You need `Manage Server` permission to configure verification.", discord.Color.red()), ephemeral=True)
 
         if ctx.guild.me.top_role <= role:
             return await ctx.send(
@@ -158,15 +165,20 @@ class VerificationCog(commands.Cog, name="Verification"):
             f"• **Verified Role:** {role.mention}\n"
             f"• **Remove Role:** {remove_role.mention if remove_role else 'None'}\n"
             f"• **Mode:** `{mode}`\n\n"
-            f"Deploy the panel anytime with `/verification panel`."
+            f"Deploy the panel anytime with `/verify panel`."
         )
         await ctx.send(embed=make_embed(msg, discord.Color.green()), ephemeral=True)
 
-    @verification.command(name="status", description="Check current verification settings.")
+    @verify_group.command(name="status", description="Check current verification settings.")
+    @app_commands.checks.has_permissions(manage_guild=True)
     async def status_cmd(self, interaction: discord.Interaction):
         """Displays current verification configuration."""
         ctx = InteractionContext(interaction)
         await ctx.defer(ephemeral=True)
+
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.guild_permissions.administrator or ctx.author.id == ctx.guild.owner_id):
+            return await ctx.send(embed=make_embed("You need `Manage Server` permission to view verification status.", discord.Color.red()), ephemeral=True)
+
         cfg = load_verify_config(ctx.guild.id)
 
         role = ctx.guild.get_role(cfg.get("role_id")) if cfg.get("role_id") else None
@@ -186,8 +198,6 @@ class VerificationCog(commands.Cog, name="Verification"):
 
         await ctx.send(embed=embed, ephemeral=True)
 
-    verify_group = app_commands.Group(name="verify", description="Verify members manually or start server verification.")
-
     @verify_group.command(name="user", description="Manually verify a server member.")
     @app_commands.describe(member="The member to manually verify")
     async def verify_user_cmd(self, interaction: discord.Interaction, member: discord.Member):
@@ -205,7 +215,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         raw_remove_role_id = config.get("remove_role_id")
 
         if not raw_role_id:
-            return await ctx.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please configure it with `/verification setup` first.", discord.Color.red()), ephemeral=True)
+            return await ctx.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please configure it with `/verify setup` first.", discord.Color.red()), ephemeral=True)
 
         try:
             role = ctx.guild.get_role(int(raw_role_id))
@@ -274,7 +284,7 @@ class VerificationCog(commands.Cog, name="Verification"):
         raw_remove_role_id = config.get("remove_role_id")
 
         if not raw_role_id:
-            return await ctx.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please configure it with `/verification setup` first.", discord.Color.red()), ephemeral=True)
+            return await ctx.send(embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please configure it with `/verify setup` first.", discord.Color.red()), ephemeral=True)
 
         try:
             role = ctx.guild.get_role(int(raw_role_id))
@@ -358,15 +368,6 @@ class VerificationCog(commands.Cog, name="Verification"):
     async def verify_me_cmd(self, interaction: discord.Interaction):
         """Direct verify command for users."""
         await handle_verify_interaction(interaction)
-
-    @verification.command(name="user", description="Manually verify a server member.")
-    @app_commands.describe(member="The member to manually verify")
-    async def verification_user(self, interaction: discord.Interaction, member: discord.Member):
-        await self.verify_user_cmd(interaction, member)
-
-    @verification.command(name="all", description="Manually verify all unverified members in the server.")
-    async def verification_all(self, interaction: discord.Interaction):
-        await self.verify_all_cmd(interaction)
 
 
 async def setup(bot: commands.Bot):
