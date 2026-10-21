@@ -78,21 +78,21 @@ async def _get_groq_models(session: aiohttp.ClientSession, groq_key: str) -> Lis
                 
                 def _sort_preference(m_id: str) -> int:
                     m_lower = m_id.lower()
-                    if "llama-3.3" in m_lower:
+                    if "120b" in m_lower:
                         return 0
-                    if "llama-3.1-70b" in m_lower:
+                    if "70b" in m_lower or "llama-3.3" in m_lower:
                         return 1
-                    if "llama-3.1-8b" in m_lower:
+                    if "qwen" in m_lower:
                         return 2
-                    if "llama3-70b" in m_lower:
+                    if "20b" in m_lower:
                         return 3
-                    if "llama3-8b" in m_lower:
+                    if "8b" in m_lower:
                         return 4
-                    if "mixtral" in m_lower:
+                    if "llama" in m_lower:
                         return 5
-                    if "gemma" in m_lower:
+                    if "mixtral" in m_lower:
                         return 6
-                    return 7
+                    return 10
 
                 sorted_models = sorted(raw_models, key=_sort_preference)
                 if sorted_models:
