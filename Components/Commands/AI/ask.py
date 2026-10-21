@@ -200,6 +200,20 @@ class AskVoice(commands.Cog):
         await interaction.response.defer()
         voice_client = interaction.guild.voice_client if interaction.guild else None
         image_url = image.url if image else None
+        # If user didn't attach an image in the option, check recent channel messages for an image/GIF
+        if not image_url and interaction.channel:
+            try:
+                async for prev_msg in interaction.channel.history(limit=5):
+                    for att in prev_msg.attachments:
+                        ct = (att.content_type or "").lower()
+                        fn = att.filename.lower()
+                        if ct.startswith("image/") or ct.startswith("video/") or fn.endswith((".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov")):
+                            image_url = att.url
+                            break
+                    if image_url:
+                        break
+            except Exception:
+                pass
         await self._handle_ask(
             question=question,
             guild=interaction.guild,

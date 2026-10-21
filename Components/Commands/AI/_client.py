@@ -12,6 +12,8 @@ from typing import List, Dict, Optional, Any
 _GROQ_RESOLVED_MODELS: List[str] = []
 
 GROQ_VISION_MODELS = [
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
     "llama-3.2-11b-vision-preview",
     "llama-3.2-90b-vision-preview",
 ]
@@ -169,117 +171,147 @@ async def generate_ai_response(
 
     # ── Process Image for Multimodal Vision ──────────────────────────────────
     vision_messages = None
+    vision_messages_url = None
     if image_bytes:
         try:
             processed_bytes = _prepare_image_bytes(image_bytes)
             b64_img = base64.b64encode(processed_bytes).decode("utf-8")
             data_url = f"data:image/jpeg;base64,{b64_img}"
 
-            # Clone messages and inject multimodal structure on the last user message
-            vision_messages = []
-            for m in messages:
-                if m.get("role") == "user" and m is messages[-1]:
-                    user_text = m.get("content", "")
-                    if isinstance(user_text, list):
-                        vision_messages.append(m)
+            def _build_v_msgs(img_link: str) -> List[Dict[str, Any]]:
+                out = []
+                for m in messages:
+                    if m.get("role") == "user" and m is messages[-1]:
+                        user_text = m.get("content", "")
+                        if isinstance(user_text, list):
+                            out.append(m)
+                        else:
+                            out.append({
+                                "role": "user",
+                                "content": [
+                                    {"type": "text", "text": user_text or "Was ist auf diesem Bild oder GIF zu sehen? Bitte beschreibe es genau."},
+                                    {"type": "image_url", "image_url": {"url": img_link}}
+                                ]
+                            })
                     else:
-                        vision_messages.append({
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": user_text or "Was ist auf diesem Bild oder GIF zu sehen? Bitte beschreibe es genau."},
-                                {"type": "image_url", "image_url": {"url": data_url}}
-                            ]
-                        })
-                else:
-                    vision_messages.append(m)
+                        out.append(m)
+                return out
+
+            vision_messages = _build_v_msgs(data_url)
+            if image_url and image_url.startswith("http"):
+                vision_messages_url = _build_v_msgs(image_url)
+            else:
+                vision_messages_url = vision_messages
         except Exception as e:
             print(f"[Orbit AI] Error preparing vision payload: {e}")
 
     # ── Multimodal Tier A: Groq Vision Models ────────────────────────────────
     groq_key = os.environ.get("GROQ_API_KEY")
-    if groq_key:
+    if groq_key and vision_messages:
         groq_key = groq_key.strip()
-        if vision_messages:
-            for v_model in GROQ_VISION_MODELS:
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        payload = {
-                            "model": v_model,
-                            "messages": vision_messages,
-                            "temperature": 0.7,
-                            "max_tokens": 1024,
-                        }
-                        headers = {
-                            "Content-Type": "application/json",
-                            "Authorization": f"Bearer {groq_key}",
-                        }
-                        async with session.post(
-                            "https://api.groq.com/openai/v1/chat/completions",
-                            json=payload,
-                            headers=headers,
-                            timeout=aiohttp.ClientTimeout(total=9.0),
-                        ) as resp:
-                            if resp.status == 200:
-                                data = await resp.json()
-                                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                                if _is_valid_answer(content):
-                                    return _clean_response(content)
-                            else:
-                                err_text = await resp.text()
-                                print(f"[Orbit AI] Groq vision ({v_model}) status {resp.status}: {err_text[:200]}")
-                except Exception as err:
-                    print(f"[Orbit AI] Groq vision error: {err}")
+        for v_model in GROQ_VISION_MODELS:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    payload = {
+                        "model": v_model,
+                        "messages": vision_messages,
+                        "temperature": 0.7,
+                        "max_tokens": 1024,
+                    }
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {groq_key}",
+                    }
+                    async with session.post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        json=payload,
+                        headers=headers,
+                        timeout=aiohttp.ClientTimeout(total=8.0),
+                    ) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                            if _is_valid_answer(content):
+                                return _clean_response(content)
+                        else:
+                            err_text = await resp.text()
+                            print(f"[Orbit AI] Groq vision ({v_model}) status {resp.status}: {err_text[:150]}")
+            except Exception as err:
+                print(f"[Orbit AI] Groq vision error: {err}")
 
     # ── Multimodal Tier B: Google Gemini Vision ──────────────────────────────
-    gemini_key = os.environ.get("GEMINI_API_KEY")
-    if gemini_key:
-        try:
-            async with aiohttp.ClientSession() as session:
-                payload = {
-                    "model": "gemini-1.5-flash",
-                    "messages": vision_messages if vision_messages else messages,
-                }
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {gemini_key.strip()}",
-                }
-                async with session.post(
-                    "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-                    json=payload,
-                    headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=8.0),
-                ) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                        if _is_valid_answer(content):
-                            return _clean_response(content)
-        except Exception:
-            pass
+    gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if gemini_key and vision_messages:
+        for g_model in ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    payload = {
+                        "model": g_model,
+                        "messages": vision_messages,
+                    }
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {gemini_key.strip()}",
+                    }
+                    async with session.post(
+                        "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+                        json=payload,
+                        headers=headers,
+                        timeout=aiohttp.ClientTimeout(total=8.0),
+                    ) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                            if _is_valid_answer(content):
+                                return _clean_response(content)
+            except Exception as e:
+                print(f"[Orbit AI] Gemini vision error: {e}")
 
-    # ── Multimodal Tier C: Free HuggingFace BLIP Image Captioning Fallback ────
-    # If the user supplied an image but primary vision models couldn't process it,
-    # extract a description via BLIP serverless and enrich the text conversation!
-    if image_bytes and not vision_messages:
-        pass
-    elif image_bytes and vision_messages:
+    # ── Multimodal Tier C: G4F Multimodal Engine (GPT-4o / GPT-4o-mini) ─────
+    if vision_messages:
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large",
-                    data=image_bytes,
-                    timeout=aiohttp.ClientTimeout(total=5.0)
-                ) as hf_resp:
-                    if hf_resp.status == 200:
-                        hf_data = await hf_resp.json()
-                        if isinstance(hf_data, list) and len(hf_data) > 0:
-                            caption = hf_data[0].get("generated_text", "")
-                            if caption:
-                                # Append visual details to regular text prompt
-                                last_user = messages[-1]["content"]
-                                messages[-1]["content"] = f"{last_user}\n\n[Angehängtes Bild/GIF Erkennung: {caption}]"
-        except Exception:
-            pass
+            def _call_g4f_vision():
+                import g4f
+                from g4f.client import Client
+                client = Client()
+                payloads = []
+                if vision_messages_url and vision_messages_url != vision_messages:
+                    payloads.append(vision_messages_url)
+                payloads.append(vision_messages)
+
+                for p_msgs in payloads:
+                    for v_model in ["gpt-4o", "gpt-4o-mini", "gemini-1.5-flash"]:
+                        try:
+                            res = client.chat.completions.create(
+                                model=v_model,
+                                messages=p_msgs,
+                            )
+                            content = res.choices[0].message.content
+                            if _is_valid_answer(content):
+                                return content.strip()
+                        except Exception as err:
+                            print(f"[Orbit AI] G4F vision ({v_model}) error: {err}")
+                            continue
+                return None
+
+            g4f_res = await asyncio.wait_for(
+                asyncio.to_thread(_call_g4f_vision),
+                timeout=9.0
+            )
+            if _is_valid_answer(g4f_res):
+                return _clean_response(g4f_res)
+        except Exception as e:
+            print(f"[Orbit AI] G4F vision thread exception: {e}")
+
+    # ── Multimodal Safeguard ─────────────────────────────────────────────────
+    # If the user uploaded an image but all vision models are temporarily unavailable,
+    # DO NOT pass the text query to a text-only LLM, as it will claim "no image attached".
+    if image_bytes or image_url:
+        print("[Orbit AI] Notice: Image provided but all multimodal vision providers are currently busy.")
+        return _clean_response(
+            "Ich habe dein Bild empfangen, allerdings sind die Bildanalyse-Engines im Moment ausgelastet. "
+            "Bitte versuche es in wenigen Augenblicken noch einmal!"
+        )
 
     # ── Text Engine: Groq High-Performance Models ────────────────────────────
     if groq_key:

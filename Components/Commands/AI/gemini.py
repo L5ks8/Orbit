@@ -134,6 +134,21 @@ class GeminiChatbot(commands.Cog):
                             image_url = att.url
                             break
 
+                # If still none found, check immediate preceding messages in the channel
+                if not image_url and message.channel:
+                    try:
+                        async for prev_msg in message.channel.history(limit=4, before=message):
+                            for att in prev_msg.attachments:
+                                ct = (att.content_type or "").lower()
+                                fn = att.filename.lower()
+                                if ct.startswith("image/") or ct.startswith("video/") or fn.endswith((".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mov")):
+                                    image_url = att.url
+                                    break
+                            if image_url:
+                                break
+                    except Exception:
+                        pass
+
                 from Components.Commands.AI._client import generate_ai_response
                 text_response = await generate_ai_response(messages_payload, image_url=image_url)
                             
