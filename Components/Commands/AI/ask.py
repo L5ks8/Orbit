@@ -70,9 +70,18 @@ class AskVoice(commands.Cog):
         return audio_buffer.read()
 
 
-    async def _handle_ask(self, question: str, guild, user, voice_client, send, send_ephemeral, image_url: str | None = None):
+    async def _handle_ask(self, question: str, guild, user, voice_client, raw_send, send_ephemeral, image_url: str | None = None):
+        async def send(*args, **kwargs):
+            kwargs.setdefault("allowed_mentions", discord.AllowedMentions.none())
+            return await raw_send(*args, **kwargs)
+
         try:
             answer = await self._generate_response(question, guild, image_url=image_url)
+            # Defang mentions in case LLM outputs @everyone, @here, or role tags
+            import re
+            answer = re.sub(r"@(?=everyone\b|here\b)", "@\u200b", answer, flags=re.IGNORECASE)
+            answer = re.sub(r"<@&(?=\d+>)", "<@&\u200b", answer)
+            answer = re.sub(r"<@!?(\d+)>", r"<@\u200b\1>", answer)
         except Exception as e:
             return await send_ephemeral(f"Could not generate an AI response: `{e}`")
 

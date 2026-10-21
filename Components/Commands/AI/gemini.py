@@ -278,13 +278,29 @@ class GeminiChatbot(commands.Cog):
                     pass
             except Exception as e:
                 print(f"[Orbit AI] Generation error: {e}")
-                await message.reply("I am currently experiencing technical difficulties connecting to my AI providers. Please try again in a moment!")
+                await message.reply(
+                    "I am currently experiencing technical difficulties connecting to my AI providers. Please try again in a moment!",
+                    allowed_mentions=discord.AllowedMentions.none()
+                )
 
     async def _send_chunked(self, message: discord.Message, text: str):
+        # Neutralize any mention badges just in case
+        text = re.sub(r"@(?=everyone\b|here\b)", "@\u200b", text, flags=re.IGNORECASE)
+        text = re.sub(r"<@&(?=\d+>)", "<@&\u200b", text)
+        text = re.sub(r"<@!?(\d+)>", r"<@\u200b\1>", text)
+
         chunks = [text[i:i+1950] for i in range(0, len(text), 1950)]
         reply_to = message
-        for chunk in chunks:
-            reply_to = await reply_to.reply(chunk, suppress_embeds=True)
+        # Strict allowed_mentions prevents pinging @everyone, @here, or any role
+        safe_mentions = discord.AllowedMentions(
+            everyone=False,
+            roles=False,
+            users=False,
+            replied_user=True,
+        )
+        for idx, chunk in enumerate(chunks):
+            chunk_mentions = safe_mentions if idx == 0 else discord.AllowedMentions.none()
+            reply_to = await reply_to.reply(chunk, suppress_embeds=True, allowed_mentions=chunk_mentions)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GeminiChatbot(bot))

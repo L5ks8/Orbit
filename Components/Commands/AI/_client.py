@@ -53,11 +53,19 @@ def _is_valid_answer(text: Optional[str]) -> bool:
 
 
 def _clean_response(text: str) -> str:
-    """Strips thinking blocks, leading bot-name prefixes, or citations from AI outputs."""
+    """Strips thinking blocks, leading bot-name prefixes, and defangs Discord mentions/pings."""
+    if not text:
+        return ""
     # Remove reasoning/thinking tags (e.g. from reasoning models)
     text = re.sub(r"<think>[\s\S]*?</think>", "", text, flags=re.DOTALL).strip()
     # Remove bot name prefix if present
     text = re.sub(r"^(Orbit|Assistant|Bot):\s*", "", text, flags=re.IGNORECASE).strip()
+    # Defang @everyone and @here so Discord client never triggers a mention badge or notification
+    text = re.sub(r"@(?=everyone\b|here\b)", "@\u200b", text, flags=re.IGNORECASE)
+    # Defang role mentions: <@&123456> -> <@&\u200b123456>
+    text = re.sub(r"<@&(?=\d+>)", "<@&\u200b", text)
+    # Defang user mentions: <@123456> or <@!123456> -> <@\u200b123456>
+    text = re.sub(r"<@!?(\d+)>", r"<@\u200b\1>", text)
     return text
 
 
