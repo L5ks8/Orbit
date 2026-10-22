@@ -10,6 +10,7 @@ import pathlib
 import tempfile
 import asyncio
 import aiohttp
+from typing import Optional
 
 def format_boost_string(text: str, member: discord.Member | discord.User, guild: discord.Guild) -> str:
     if not text:
@@ -86,18 +87,36 @@ def format_boost_string(text: str, member: discord.Member | discord.User, guild:
 class BoostListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self._recent_boosts: dict[tuple[int, int], float] = {}
+        self._recent_boost_times: dict[tuple[int, int], float] = {}
+        self._handled_message_ids: set[int] = set()
 
-    async def _handle_boost(self, guild: discord.Guild, member: discord.Member | discord.User):
+    async def _handle_boost(
+        self,
+        guild: discord.Guild,
+        member: discord.Member | discord.User,
+        count: int = 1,
+        from_message: bool = False,
+        message_id: Optional[int] = None
+    ):
         if not guild or not member:
             return
 
         now = time.time()
-        self._recent_boosts = {k: v for k, v in self._recent_boosts.items() if now - v < 60}
-        dedup_key = (guild.id, member.id)
-        if dedup_key in self._recent_boosts and (now - self._recent_boosts[dedup_key]) < 25:
-            return
-        self._recent_boosts[dedup_key] = now
+        self._recent_boost_times = {k: v for k, v in self._recent_boost_times.items() if now - v < 30}
+
+        if message_id is not None:
+            if message_id in self._handled_message_ids:
+                return
+            self._handled_message_ids.add(message_id)
+            if len(self._handled_message_ids) > 1000:
+                self._handled_message_ids.clear()
+        elif not from_message:
+            # Dedup only if triggered simultaneously by on_member_update and on_message (within 2s)
+            dedup_key = (guild.id, member.id)
+            if dedup_key in self._recent_boost_times and (now - self._recent_boost_times[dedup_key]) < 2.0:
+                return
+
+        self._recent_boost_times[(guild.id, member.id)] = now
 
         if not isinstance(member, discord.Member):
             cached = guild.get_member(member.id)
@@ -142,6 +161,18 @@ class BoostListener(commands.Cog):
         if not channel:
             return
 
+        for idx in range(max(1, count)):
+            await self._send_boost_message(guild, member, config, channel)
+            if count > 1 and idx < count - 1:
+                await asyncio.sleep(1.0)
+
+    async def _send_boost_message(
+        self,
+        guild: discord.Guild,
+        member: discord.Member | discord.User,
+        config: dict,
+        channel: discord.TextChannel
+    ):
         allowed = discord.AllowedMentions(users=True, roles=False, everyone=False)
         msg_mode = config.get("msg_mode", "image")
 
@@ -281,7 +312,7 @@ class BoostListener(commands.Cog):
         if (before.premium_since is None and after.premium_since is not None) or (
             before.premium_since is not None and after.premium_since is not None and before.premium_since != after.premium_since
         ):
-            await self._handle_boost(after.guild, after)
+            await self._handle_boost(after.guild, after, count=1, from_message=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -295,7 +326,16 @@ class BoostListener(commands.Cog):
             discord.MessageType.premium_guild_tier_3,
         )
         if message.type in boost_types:
-            await self._handle_boost(message.guild, message.author)
+            content_to_check = f"{message.content or ''} {getattr(message, 'system_content', '') or ''}"
+            match = re.search(r'boosted the server\s+(\d+)\s+times', content_to_check, re.IGNORECASE)
+            boost_count = int(match.group(1)) if match else 1
+            await self._handle_boost(
+                message.guild,
+                message.author,
+                count=boost_count,
+                from_message=True,
+                message_id=message.id
+            )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BoostListener(bot))
