@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import os
+from typing import Optional
 
 ORBIT_COLOR = discord.Color(0x5865F2)
 
@@ -17,8 +18,8 @@ except (ImportError, AttributeError) as e:
     Separator = None
     print(f"[V2] Discord Components V2 is not available: {e}", flush=True)
 
-def make_embed(description: str, color: discord.Color = ORBIT_COLOR, title: str = None) -> discord.Embed:
-    actual_color = ORBIT_COLOR if color is None or color in (discord.Color.red(), discord.Color.green(), discord.Color.orange(), discord.Color.dark_gray()) else color
+def make_embed(description: str, color: discord.Color = None, title: str = None) -> discord.Embed:
+    actual_color = ORBIT_COLOR if color is None else color
     embed = discord.Embed(description=description, color=actual_color)
     if title:
         embed.title = title
@@ -38,9 +39,63 @@ def make_v2_card(body: str, *components, color: discord.Color = ORBIT_COLOR, foo
             items.append(comp)
     if footer:
         items.append(TextDisplay(content=f"-# {footer}"))
-    container = Container(*items, accent_color=color)
+    
+    actual_color = color
+    if isinstance(actual_color, int):
+        actual_color = discord.Color(actual_color)
+    container = Container(*items, accent_color=actual_color)
     view.add_item(container)
     return view
+
+def embed_to_v2_card(embed: discord.Embed) -> Optional[LayoutView]:
+    if not HAS_V2 or not embed:
+        return None
+
+    # Don't convert embeds that rely on attachment:// images, since Components V2 TextDisplay cannot render them
+    if embed.image and embed.image.url and embed.image.url.startswith("attachment://"):
+        return None
+    if embed.thumbnail and embed.thumbnail.url and embed.thumbnail.url.startswith("attachment://"):
+        return None
+
+    parts = []
+    title = embed.title
+    if not title and embed.author and embed.author.name:
+        title = embed.author.name
+
+    if title:
+        clean_title = title.lstrip("#").strip()
+        parts.append(f"# {clean_title}")
+
+    if embed.description:
+        parts.append(str(embed.description))
+
+    for field in embed.fields:
+        if field.name and field.name != "\u200b":
+            parts.append(f"**{field.name}**\n{field.value}")
+        elif field.value and field.value != "\u200b":
+            parts.append(str(field.value))
+
+    # Append web image link if present
+    if embed.image and embed.image.url and not embed.image.url.startswith("attachment://"):
+        parts.append(f"[Image]({embed.image.url})")
+
+    body = "\n\n".join(parts).strip()
+    if not body:
+        return None
+
+    if len(body) > 3900:
+        body = body[:3890] + "..."
+
+    footer_parts = []
+    if embed.footer and embed.footer.text:
+        footer_parts.append(embed.footer.text)
+    if embed.timestamp:
+        footer_parts.append(f"<t:{int(embed.timestamp.timestamp())}:R>")
+
+    footer = " • ".join(footer_parts) if footer_parts else None
+    color = embed.color if embed.color is not None else ORBIT_COLOR
+
+    return make_v2_card(body, color=color, footer=footer)
 
 class InteractionContext:
     def __init__(self, interaction: discord.Interaction):
@@ -63,6 +118,21 @@ class InteractionContext:
 
     async def send(self, *args, **kwargs):
         delete_after = kwargs.pop("delete_after", None)
+        if HAS_V2 and "view" not in kwargs:
+            target_embed = None
+            if "embed" in kwargs and kwargs["embed"]:
+                target_embed = kwargs["embed"]
+            elif "embeds" in kwargs and kwargs["embeds"] and len(kwargs["embeds"]) == 1:
+                target_embed = kwargs["embeds"][0]
+
+            if target_embed:
+                card = embed_to_v2_card(target_embed)
+                if card:
+                    kwargs.pop("embed", None)
+                    kwargs.pop("embeds", None)
+                    kwargs["view"] = card
+                    if "allowed_mentions" not in kwargs:
+                        kwargs["allowed_mentions"] = discord.AllowedMentions.none()
         if self.interaction.response.is_done():
             msg = await self.interaction.followup.send(*args, **kwargs)
         else:

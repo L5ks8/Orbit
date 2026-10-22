@@ -181,9 +181,15 @@ async def log_event(guild: discord.Guild, category: str, title: str, description
         timestamp=discord.utils.utcnow()
     )
 
+    from Components.Commands._utils import embed_to_v2_card
+    card = embed_to_v2_card(embed)
+
     for attempt in range(3):
         try:
-            await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            if card:
+                await channel.send(content=role_ping, view=card, allowed_mentions=discord.AllowedMentions.none())
+            else:
+                await channel.send(content=role_ping, embed=embed, allowed_mentions=discord.AllowedMentions.none())
             break
         except (discord.Forbidden, discord.NotFound):
             break

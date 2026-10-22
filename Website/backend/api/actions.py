@@ -24,7 +24,8 @@ from Components.Commands._utils import (
     Container,
     TextDisplay,
     ActionRow,
-    LayoutView
+    LayoutView,
+    ORBIT_COLOR
 )
 
 class ActionsMixin:
@@ -303,7 +304,7 @@ class ActionsMixin:
             embed = discord.Embed(
                 title=view.panel_title,
                 description=f"{view.panel_desc}\n\n{view.panel_instructions}",
-                color=discord.Color.teal()
+                color=ORBIT_COLOR
             )
             msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 

@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import CustomSelect from '../../ui/CustomSelect';
 import Toggle from '../../ui/Toggle';
 import SaveBar from '../../ui/SaveBar';
+import { useToast } from '../../ui/Toast';
 
-export default function TicketSettings({ config, channels, roles, categories, onSave, saving, onReset }) {
+export default function TicketSettings({ guildId, config, channels, roles, categories, onSave, saving, onReset }) {
+  const toast = useToast();
+  const [isSendingPanel, setIsSendingPanel] = useState(false);
   const tCfg = config?.ticket || {};
   const stats = tCfg.stats || { open: 0, claimed: 0, resolved: 0, avg_resolution: '0h' };
 
@@ -84,6 +87,36 @@ export default function TicketSettings({ config, channels, roles, categories, on
   const handleSave = () => {
     onSave(getPayload(), true);
     setSavedStateStr(currentPayloadStr);
+  };
+
+  const handleSendPanel = async () => {
+    if (!panelChannel || isSendingPanel) return;
+    setIsSendingPanel(true);
+    if (isDirty) {
+      onSave(getPayload(), true);
+      setSavedStateStr(currentPayloadStr);
+    }
+    const sendToastId = toast.loading('Sending ticket panel...');
+    try {
+      const res = await fetch(`/api/action/${guildId}/send_ticket_panel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ channel_id: panelChannel })
+      });
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.error, { id: sendToastId });
+      } else {
+        toast.success('Ticket panel sent successfully!', { id: sendToastId });
+      }
+    } catch (err) {
+      toast.error('Failed to send ticket panel', { id: sendToastId });
+    } finally {
+      setIsSendingPanel(false);
+    }
   };
 
   const parseDiscordMarkdown = (text) => {
@@ -211,9 +244,23 @@ export default function TicketSettings({ config, channels, roles, categories, on
 
             <div className="flex flex-col gap-2 relative z-50">
               <label className="text-[13px] font-medium text-neutral-300">Panel Channel</label>
-              <span className="text-xs text-neutral-500">The channel where the panel embed will be sent.</span>
-              <div className="w-full">
-                <CustomSelect options={channelOptions} value={panelChannel} onChange={setPanelChannel} placeholder="Select Channel..." />
+              <span className="text-xs text-neutral-500">The channel where the ticket panel embed will be sent.</span>
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                <div className="flex-1 w-full">
+                  <CustomSelect options={channelOptions} value={panelChannel} onChange={setPanelChannel} placeholder="Select Channel..." />
+                </div>
+                <button
+                  type="button"
+                  disabled={!panelChannel || isSendingPanel}
+                  onClick={handleSendPanel}
+                  className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-white text-black text-sm font-medium hover:bg-neutral-200 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+                    <path d="m21.854 2.147-10.94 10.939" />
+                  </svg>
+                  {isSendingPanel ? 'Sending...' : 'Send Ticket Panel'}
+                </button>
               </div>
             </div>
 

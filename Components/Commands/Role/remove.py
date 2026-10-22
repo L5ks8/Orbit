@@ -23,6 +23,9 @@ async def _do_removerole(ctx: InteractionContext, target: discord.Member, role: 
             f"**Moderator:** {ctx.author.mention}"
         )
         
+        card = make_v2_card(body, color=ORBIT_COLOR)
+        if card:
+            return await ctx.send(view=card, allowed_mentions=discord.AllowedMentions.none())
         embed = discord.Embed(title="Role Removed", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)

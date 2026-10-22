@@ -138,14 +138,19 @@ class AutoModListener(commands.Cog):
             action = cfg.get("action", "warn")
             timeout_min = cfg.get("timeout_duration_min", 5)
             escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
-            embed = discord.Embed(title="Orbit AutoMod Triggered", color=ORBIT_COLOR)
+            embed = discord.Embed(title="Orbit AutoMod Triggered", color=0x2b2d31)
             embed.add_field(name="Target", value=f"{message.author.mention} (`{message.author.id}`)", inline=False)
             embed.add_field(name="Reason", value=reason, inline=True)
             embed.add_field(name="Action Taken", value=f"`{action.upper()}` (Total Warnings: {warn_count})", inline=True)
             if escalation_str:
                 embed.add_field(name="Escalation", value=f"`{escalation_str}`", inline=False)
             try:
-                await message.channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                from Components.Commands._utils import embed_to_v2_card
+                card = embed_to_v2_card(embed)
+                if card:
+                    await message.channel.send(view=card, allowed_mentions=discord.AllowedMentions.none())
+                else:
+                    await message.channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             except Exception:
                 pass
             try:
