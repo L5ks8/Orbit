@@ -1,11 +1,4 @@
 // Orbit Floating Music Widget (G-Eazy - Lady Killers II)
-// State logic:
-// 1. Initially OPEN (expanded pill card, no hover-collapse).
-// 2. Click "-" -> minimizes into a small rounded square showing only the album image.
-// 3. When minimized: Hover unfolds smoothly to the left; unhover folds back to square.
-// 4. Click while minimized: permanently expands and stays open until "-" is clicked.
-// 5. Volume: Speaker icon button with smooth vertical popup rolling upwards.
-
 (function() {
   const VIDEO_ID = 'QN0wVGckijc'; // Official Audio
   const FALLBACK_VIDEO_ID = 'i9L_Ew4t1xg'; // Alternate video
@@ -13,13 +6,14 @@
   let ytPlayer = null;
   let isPlaying = false;
   let isPlayerReady = false;
+  let pendingPlay = false;
   let currentVolume = 50;
   let isMinimized = false; // Starts OPEN by default!
 
   function initMusicPlayer() {
     if (document.getElementById('orbit-music-widget')) return;
 
-    // Inject custom CSS
+    // 1. Inject fully self-contained CSS rules
     if (!document.getElementById('orbit-music-styles')) {
       const style = document.createElement('style');
       style.id = 'orbit-music-styles';
@@ -31,37 +25,73 @@
         .orbit-eq-bar-2 { animation: orbitEq2 0.7s ease-in-out infinite; }
         .orbit-eq-bar-3 { animation: orbitEq3 0.9s ease-in-out infinite; }
 
+        /* Card Container Transitions */
         #orbit-music-box {
+          width: 335px;
+          height: 54px;
           transition: width 340ms cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 250ms ease, border-color 250ms ease;
         }
+        #orbit-music-box.orbit-collapsed {
+          width: 54px !important;
+        }
+
+        /* Details inner flex */
         #orbit-music-details {
-          transition: opacity 220ms ease, max-width 340ms cubic-bezier(0.2, 0.9, 0.3, 1);
+          max-width: 280px;
+          opacity: 1;
+          pointer-events: auto;
+          transition: max-width 320ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease;
         }
+        #orbit-music-details.orbit-hidden {
+          max-width: 0 !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          overflow: hidden !important;
+        }
+
+        /* Upward Volume Popup */
         #orbit-vol-popup {
-          transition: opacity 220ms ease, transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1);
+          position: absolute;
+          bottom: calc(100% + 12px);
+          left: 50%;
+          transform: translateX(-50%) translateY(8px);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 200ms ease, transform 200ms cubic-bezier(0.2, 0.9, 0.3, 1);
+          z-index: 99;
         }
-        /* Custom vertical range slider styling */
-        input[type=range][orient=vertical] {
+        #orbit-vol-group:hover #orbit-vol-popup,
+        #orbit-vol-group.is-open #orbit-vol-popup {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+          pointer-events: auto;
+        }
+
+        /* Vertical range slider across browsers */
+        #orbit-vol-slider {
+          -webkit-appearance: slider-vertical;
           writing-mode: vertical-lr;
           direction: rtl;
-          appearance: slider-vertical;
-          width: 6px;
-          vertical-align: bottom;
+          width: 8px;
+          height: 75px;
+          padding: 0;
+          cursor: pointer;
         }
       `;
       document.head.appendChild(style);
     }
 
-    // Main widget fixed bottom-right
+    // 2. Create Widget element anchored at bottom-right
     const widget = document.createElement('div');
     widget.id = 'orbit-music-widget';
     widget.className = 'fixed bottom-4 right-4 z-[85] select-none flex items-center justify-end';
 
-    // Initial state: w-[335px] (fully open)
     widget.innerHTML = `
-      <div id="orbit-music-box" class="relative flex items-center rounded-2xl border border-neutral-800 bg-neutral-900/95 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] overflow-visible w-[335px] h-[54px] p-1.5 transition-all duration-300 ease-out cursor-pointer hover:border-neutral-700/80">
+      <div id="orbit-music-box" class="relative flex items-center rounded-2xl border border-neutral-800 bg-neutral-900/95 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] overflow-visible p-1.5 cursor-pointer hover:border-neutral-700/80">
         
-        <!-- Album Art Square (Always visible) -->
+        <!-- Album Art Square (Always 42x42 inside 54x54 box) -->
         <div id="orbit-music-cover-btn" class="relative w-[42px] h-[42px] flex-shrink-0 overflow-hidden rounded-xl bg-neutral-950 flex items-center justify-center border border-neutral-700/60 shadow-sm" title="Lady Killers II - G-Eazy">
           <img src="https://img.youtube.com/vi/${VIDEO_ID}/hqdefault.jpg" alt="Lady Killers II" class="w-full h-full object-cover">
           
@@ -76,8 +106,8 @@
           <span id="orbit-music-pulse" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-neutral-600 border border-neutral-900 transition-colors"></span>
         </div>
 
-        <!-- Controls container (Full Pill details) -->
-        <div id="orbit-music-details" class="flex items-center gap-2.5 pl-2.5 pr-2 w-full max-w-[280px] opacity-100 overflow-hidden whitespace-nowrap pointer-events-auto">
+        <!-- Controls container (Full Details) -->
+        <div id="orbit-music-details" class="flex items-center gap-2.5 pl-2.5 pr-2 w-full overflow-hidden whitespace-nowrap">
           
           <!-- Track Info -->
           <div class="flex flex-col min-w-0 flex-1 pr-1">
@@ -100,18 +130,18 @@
             </svg>
           </button>
 
-          <!-- Volume Button with vertical upward popup -->
-          <div class="relative group/vol flex items-center flex-shrink-0">
+          <!-- Volume Group with upward rollout -->
+          <div id="orbit-vol-group" class="relative flex items-center flex-shrink-0">
             <button type="button" id="orbit-vol-btn" aria-label="Volume" class="w-7 h-7 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.08] flex items-center justify-center transition-colors cursor-pointer">
               <svg id="orbit-vol-icon-svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
               </svg>
             </button>
             
-            <!-- Upward rollout volume slider -->
-            <div id="orbit-vol-popup" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-2.5 py-3 rounded-2xl bg-neutral-900/95 border border-neutral-800 shadow-[0_8px_32px_rgba(0,0,0,0.65)] backdrop-blur-md flex flex-col items-center gap-2 opacity-0 translate-y-2 pointer-events-none group-hover/vol:opacity-100 group-hover/vol:translate-y-0 group-hover/vol:pointer-events-auto z-30">
+            <!-- Upward rollout popup -->
+            <div id="orbit-vol-popup" class="px-2.5 py-3 rounded-2xl bg-neutral-900/95 border border-neutral-800 shadow-[0_8px_32px_rgba(0,0,0,0.65)] backdrop-blur-md flex flex-col items-center gap-2">
               <span id="orbit-vol-label" class="text-[10px] font-semibold text-neutral-300">50%</span>
-              <input type="range" id="orbit-vol-slider" min="0" max="100" value="50" orient="vertical" class="h-20 w-1.5 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-[#5865F2]">
+              <input type="range" id="orbit-vol-slider" min="0" max="100" value="50" orient="vertical" class="accent-[#5865F2]">
             </div>
           </div>
 
@@ -126,8 +156,8 @@
 
       </div>
 
-      <!-- Hidden YouTube Player host -->
-      <div id="yt-player-host" style="position:fixed; bottom:0; right:0; width:1px; height:1px; opacity:0.01; pointer-events:none; z-index:-1;"></div>
+      <!-- Offscreen 200x200 YouTube host so Chrome never blocks playback -->
+      <div id="yt-player-host" style="position:fixed; bottom:0; left:-9999px; width:200px; height:200px; opacity:0.01; pointer-events:none; z-index:-10;"></div>
     `;
 
     document.body.appendChild(widget);
@@ -136,42 +166,38 @@
     const details = document.getElementById('orbit-music-details');
     const playBtn = document.getElementById('orbit-music-play-btn');
     const minBtn = document.getElementById('orbit-music-min-btn');
-    const coverBtn = document.getElementById('orbit-music-cover-btn');
+    const volGroup = document.getElementById('orbit-vol-group');
+    const volBtn = document.getElementById('orbit-vol-btn');
     const volSlider = document.getElementById('orbit-vol-slider');
     const volLabel = document.getElementById('orbit-vol-label');
-    const volBtn = document.getElementById('orbit-vol-btn');
 
-    function applyExpandedUI() {
-      box.classList.remove('w-[54px]');
-      box.classList.add('w-[335px]');
-      details.classList.remove('max-w-0', 'opacity-0', 'pointer-events-none');
-      details.classList.add('max-w-[280px]', 'opacity-100', 'pointer-events-auto');
+    function expandUI() {
+      box.classList.remove('orbit-collapsed');
+      details.classList.remove('orbit-hidden');
     }
 
-    function applyCollapsedUI() {
-      box.classList.remove('w-[335px]');
-      box.classList.add('w-[54px]');
-      details.classList.remove('max-w-[280px]', 'opacity-100', 'pointer-events-auto');
-      details.classList.add('max-w-0', 'opacity-0', 'pointer-events-none');
+    function collapseUI() {
+      box.classList.add('orbit-collapsed');
+      details.classList.add('orbit-hidden');
+      volGroup.classList.remove('is-open');
     }
 
-    // 1. Hover behavior: ONLY active when minimized!
+    // 1. Hover on widget: ONLY active when minimized!
     widget.addEventListener('mouseenter', () => {
       if (isMinimized) {
-        applyExpandedUI();
+        expandUI();
       }
     });
 
     widget.addEventListener('mouseleave', () => {
-      // If minimized and not locked open, collapse back to square
       if (isMinimized) {
-        applyCollapsedUI();
+        collapseUI();
       }
     });
 
-    // 2. Click on the widget while minimized -> EXPANDS & STAYS EXPANDED
+    // 2. Click on the widget while minimized -> Expands and locks open!
     box.addEventListener('click', (e) => {
-      // Ignore clicks on inner controls (play, volume, minus)
+      // Don't toggle if clicking on interactive controls
       if (e.target.closest('#orbit-music-play-btn') || 
           e.target.closest('#orbit-vol-btn') || 
           e.target.closest('#orbit-vol-popup') || 
@@ -179,36 +205,44 @@
         return;
       }
 
-      // If it was minimized, clicking expands it and locks it open permanently!
       if (isMinimized) {
         isMinimized = false;
-        applyExpandedUI();
+        expandUI();
       }
     });
 
-    // 3. Click "-" (minus button) -> MINIMIZES into square
+    // 3. Click "-" -> minimizes to square
     minBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       isMinimized = true;
-      applyCollapsedUI();
+      collapseUI();
     });
 
-    // 4. Play / Pause logic
+    // 4. Play / Pause Button with FIRST-CLICK GUARANTEE
     playBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+
       if (!isPlayerReady || !ytPlayer) {
-        loadYouTubePlayer(true);
+        pendingPlay = true;
+        updateUIState(true);
+        loadYouTubePlayer();
         return;
       }
 
-      if (isPlaying) {
-        ytPlayer.pauseVideo();
-      } else {
-        ytPlayer.playVideo();
+      try {
+        if (isPlaying) {
+          ytPlayer.pauseVideo();
+          updateUIState(false);
+        } else {
+          ytPlayer.playVideo();
+          updateUIState(true);
+        }
+      } catch (err) {
+        console.warn('Error toggling playback:', err);
       }
     });
 
-    // 5. Volume Slider logic
+    // 5. Volume controls
     volSlider.addEventListener('input', (e) => {
       e.stopPropagation();
       currentVolume = parseInt(e.target.value, 10);
@@ -218,22 +252,13 @@
       }
     });
 
-    // Volume icon button (click to mute/unmute)
+    // Toggle mute or toggle popup on mobile
     volBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!ytPlayer) return;
-      if (ytPlayer.isMuted && ytPlayer.isMuted()) {
-        ytPlayer.unMute();
-        volSlider.value = currentVolume || 50;
-        if (volLabel) volLabel.textContent = `${volSlider.value}%`;
-      } else if (ytPlayer.mute) {
-        ytPlayer.mute();
-        volSlider.value = 0;
-        if (volLabel) volLabel.textContent = `0%`;
-      }
+      volGroup.classList.toggle('is-open');
     });
 
-    // Load YouTube API
+    // Initialize YouTube Player immediately in background
     loadYouTubeAPI();
   }
 
@@ -269,51 +294,69 @@
 
   function loadYouTubeAPI() {
     if (window.YT && window.YT.Player) {
-      loadYouTubePlayer(false);
+      loadYouTubePlayer();
       return;
     }
 
     const prevCallback = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = function() {
       if (typeof prevCallback === 'function') prevCallback();
-      loadYouTubePlayer(false);
+      loadYouTubePlayer();
     };
 
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    const firstScript = document.getElementsByTagName('script')[0];
-    if (firstScript && firstScript.parentNode) {
-      firstScript.parentNode.insertBefore(tag, firstScript);
-    } else {
-      document.head.appendChild(tag);
+    // If tag doesn't exist, inject it
+    if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScript = document.getElementsByTagName('script')[0];
+      if (firstScript && firstScript.parentNode) {
+        firstScript.parentNode.insertBefore(tag, firstScript);
+      } else {
+        document.head.appendChild(tag);
+      }
     }
   }
 
-  function loadYouTubePlayer(autoPlayOnReady) {
-    if (ytPlayer) return;
+  function loadYouTubePlayer() {
+    if (ytPlayer) {
+      if (pendingPlay && isPlayerReady) {
+        try {
+          ytPlayer.playVideo();
+          pendingPlay = false;
+        } catch (e) {}
+      }
+      return;
+    }
+
+    if (!window.YT || !window.YT.Player) {
+      return;
+    }
 
     try {
       ytPlayer = new window.YT.Player('yt-player-host', {
-        height: '180',
-        width: '320',
+        height: '200',
+        width: '200',
         videoId: VIDEO_ID,
         playerVars: {
-          autoplay: autoPlayOnReady ? 1 : 0,
+          autoplay: 0,
           controls: 0,
           disablekb: 1,
           fs: 0,
           rel: 0,
           modestbranding: 1,
-          playsinline: 1,
-          origin: window.location.origin
+          playsinline: 1
         },
         events: {
           onReady: function(event) {
             isPlayerReady = true;
-            event.target.setVolume(currentVolume);
-            if (autoPlayOnReady) {
-              event.target.playVideo();
-            }
+            try {
+              event.target.setVolume(currentVolume);
+              if (pendingPlay) {
+                event.target.playVideo();
+                pendingPlay = false;
+                updateUIState(true);
+              }
+            } catch (err) {}
           },
           onStateChange: function(event) {
             if (event.data === 1) { // PLAYING
