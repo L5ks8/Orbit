@@ -65,12 +65,12 @@ Pages.Landing = function(container) {
         </div>
         
         <div class="flex items-center justify-center gap-3 animate-fade-in-up delay-300">
-          <div class="flex -space-x-2">
-            <img alt="Community server" loading="lazy" width="32" height="32" decoding="async" class="w-8 h-8 rounded-full object-cover" src="/server-icon-1.png"/>
-            <img alt="Community server" loading="lazy" width="32" height="32" decoding="async" class="w-8 h-8 rounded-full object-cover" src="/server-icon-2.png"/>
-            <img alt="Community server" loading="lazy" width="32" height="32" decoding="async" class="w-8 h-8 rounded-full object-cover" src="/server-icon-3.png"/>
+          <div id="hero-server-avatars" class="flex -space-x-2">
+            <img alt="Community server" loading="lazy" width="32" height="32" decoding="async" class="w-8 h-8 rounded-full object-cover ring-2 ring-neutral-900 bg-neutral-800" src="/server-icon-1.png"/>
+            <img alt="Community server" loading="lazy" width="32" height="32" decoding="async" class="w-8 h-8 rounded-full object-cover ring-2 ring-neutral-900 bg-neutral-800" src="/server-icon-2.png"/>
+            <img alt="Community server" loading="lazy" width="32" height="32" decoding="async" class="w-8 h-8 rounded-full object-cover ring-2 ring-neutral-900 bg-neutral-800" src="/server-icon-3.png"/>
           </div>
-          <p class="text-sm text-neutral-400">Ersetzt bis zu <span class="text-white font-semibold">6 Bots</span> auf deinem Server</p>
+          <p class="text-sm text-neutral-400">Trusted by <span id="hero-server-count" class="text-white font-semibold tabular-nums">10+</span> communities</p>
         </div>
       </div>
       
@@ -731,7 +731,34 @@ Pages.Landing = function(container) {
     };
   }
 
-  // 6. Ensure all feature cards and items are immediately visible
+  // 6. Dynamic Server Count & Real Server Profile Pictures (GIF & Non-Default)
+  const heroCountSpan = container.querySelector('#hero-server-count');
+  const heroAvatars = container.querySelector('#hero-server-avatars');
+
+  if (window.API && typeof API.getStats === 'function') {
+    API.getStats().then(stats => {
+      if (stats && typeof stats.servers === 'number') {
+        if (heroCountSpan) {
+          heroCountSpan.textContent = stats.servers + (stats.servers >= 10 ? '+' : '');
+        }
+      }
+      if (stats && Array.isArray(stats.server_icons) && stats.server_icons.length > 0 && heroAvatars) {
+        heroAvatars.innerHTML = stats.server_icons.map((item, idx) => `
+          <img alt="${(item.name || 'Discord Server').replace(/"/g, '&quot;')}" 
+               title="${(item.name || 'Discord Server').replace(/"/g, '&quot;')}" 
+               src="${item.icon}" 
+               width="32" 
+               height="32" 
+               class="w-8 h-8 rounded-full object-cover ring-2 ring-neutral-900 bg-neutral-800 transition-transform duration-200 hover:scale-125 hover:z-20 hover:ring-white/40 cursor-pointer" 
+               onerror="this.src='/server-icon-${(idx % 3) + 1}.png'" />
+        `).join('');
+      }
+    }).catch(err => {
+      console.warn('Could not load live server stats:', err);
+    });
+  }
+
+  // 7. Ensure all feature cards and items are immediately visible
   const animatedElements = container.querySelectorAll('.scroll-animate');
   animatedElements.forEach(el => el.classList.add('is-visible'));
 };

@@ -101,7 +101,27 @@ class GuildsMixin:
         servers = len(self.bot.guilds)
         users = sum(g.member_count for g in self.bot.guilds if hasattr(g, "member_count") and g.member_count)
         import math
+        import random
         ping = round(self.bot.latency * 1000) if not math.isnan(self.bot.latency) else 0
+
+        # Sample up to 3 random servers that have a custom (non-default) icon, preserving animated GIF if available
+        guilds_with_icon = [g for g in self.bot.guilds if getattr(g, "icon", None) is not None]
+        sample_count = min(3, len(guilds_with_icon))
+        sampled = random.sample(guilds_with_icon, sample_count) if sample_count > 0 else []
+
+        server_icons = []
+        for g in sampled:
+            try:
+                if hasattr(g.icon, "is_animated") and g.icon.is_animated():
+                    icon_url = str(g.icon.with_format("gif").with_size(64).url)
+                else:
+                    icon_url = str(g.icon.with_format("png").with_size(64).url)
+            except Exception:
+                icon_url = str(g.icon.url)
+            server_icons.append({
+                "name": g.name,
+                "icon": icon_url
+            })
 
         return web.json_response({
             "history": list(history),
@@ -109,7 +129,8 @@ class GuildsMixin:
             "devmode_reason": reason,
             "servers": servers,
             "users": users,
-            "ping": ping
+            "ping": ping,
+            "server_icons": server_icons
         })
 
     async def api_uptime(self, request: web.Request):
