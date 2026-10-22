@@ -43,6 +43,10 @@
   <link rel="stylesheet" href="/css/orbit.css" />
   <link rel="stylesheet" href="/css/orbit-extra.css" />
   <link rel="stylesheet" href="/css/peakbot.css" />
+
+  <!-- Lenis Smooth Inertial Scroll (Peak Bot scroll delay) -->
+  <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.20/dist/lenis.css">
+  <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
 </head>
 <body class="antialiased bg-neutral-950 text-neutral-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500/30 selection:text-white">
 
@@ -155,6 +159,38 @@
 
       // Start Router
       Router.init();
+
+      // Peak Bot Smooth Inertial Scroll Delay (Lenis)
+      if (typeof Lenis !== 'undefined') {
+        const lenis = new Lenis({
+          duration: 1.2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+          touchMultiplier: 1.2,
+        });
+        window.__lenis = lenis;
+
+        function raf(time) {
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // Smooth glide on navbar/footer anchor clicks
+        document.addEventListener('click', (e) => {
+          const anchor = e.target.closest('a[href^="#"]');
+          if (anchor) {
+            const hash = anchor.getAttribute('href');
+            if (hash && hash.length > 1) {
+              const target = document.querySelector(hash);
+              if (target) {
+                e.preventDefault();
+                lenis.scrollTo(target, { offset: -90 });
+              }
+            }
+          }
+        });
+      }
     });
   </script>
 </body>
