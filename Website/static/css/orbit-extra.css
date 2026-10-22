@@ -3033,7 +3033,19 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .btn-edit-rule:hover { border-color: var(--border-hover); background: var(--card-hover); }
 
 /* ===== MISC ===== */
-.hidden { display: none !important; }
+.hidden { display: none; }
+@media (min-width: 768px) {
+  #main-navbar .md\:flex,
+  #nav-center-links,
+  #nav-user-slot,
+  .md\:flex {
+    display: flex !important;
+  }
+}
+.scroll-animate, .scroll-animate.is-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
 .image-dropzone {
     border: 1px dashed var(--border-color);
     border-radius: var(--radius-md);
