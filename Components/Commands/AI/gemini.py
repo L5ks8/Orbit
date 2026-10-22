@@ -1,4 +1,5 @@
 import os
+import re
 import discord
 from discord.ext import commands
 from g4f.client import AsyncClient
@@ -300,9 +301,10 @@ class GeminiChatbot(commands.Cog):
 
     async def _send_chunked(self, message: discord.Message, text: str):
         # Neutralize any mention badges just in case
-        text = re.sub(r"@(?=everyone\b|here\b)", "@\u200b", text, flags=re.IGNORECASE)
-        text = re.sub(r"<@&(?=\d+>)", "<@&\u200b", text)
-        text = re.sub(r"<@!?(\d+)>", r"<@\u200b\1>", text)
+        zwsp = "\u200b"
+        text = re.sub(r"@(?=everyone\b|here\b)", f"@{zwsp}", text, flags=re.IGNORECASE)
+        text = re.sub(r"<@&(\d+)>", lambda m: f"<@&{zwsp}{m.group(1)}>", text)
+        text = re.sub(r"<@!?(\d+)>", lambda m: f"<@{zwsp}{m.group(1)}>", text)
 
         chunks = [text[i:i+1950] for i in range(0, len(text), 1950)]
         reply_to = message
