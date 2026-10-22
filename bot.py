@@ -207,6 +207,19 @@ class OrbitBot(commands.Bot):
             except Exception:
                 pass
             
+        proxy_url = os.environ.get("DISCORD_PROXY")
+        proxy = None
+        proxy_auth = None
+        if proxy_url:
+            import urllib.parse
+            parsed = urllib.parse.urlparse(proxy_url)
+            if parsed.username and parsed.password:
+                proxy_auth = aiohttp.BasicAuth(parsed.username, parsed.password)
+                proxy = f"{parsed.scheme}://{parsed.hostname}:{parsed.port}"
+            else:
+                proxy = proxy_url
+            print(f"[Proxy] Discord traffic routed through: {proxy}")
+
         super().__init__(
             command_prefix="-",
             intents=intents,
@@ -214,7 +227,9 @@ class OrbitBot(commands.Bot):
             tree_cls=OrbitCommandTree,
             activity=act,
             status=discord_status,
-            owner_ids=owner_ids or None
+            owner_ids=owner_ids or None,
+            proxy=proxy,
+            proxy_auth=proxy_auth
         )
 
     async def is_true_owner(self, user: discord.User | discord.Member) -> bool:
