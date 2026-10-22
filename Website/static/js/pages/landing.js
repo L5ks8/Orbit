@@ -6,6 +6,8 @@
  */
 
 Pages.Landing = function(container) {
+  const botInviteUrl = 'https://discord.com/oauth2/authorize?client_id=1411032158406541353&permissions=8&scope=bot%20applications.commands';
+
   // Check cookie consent
   const hasConsent = localStorage.getItem('orbit_cookie_consent');
   const cookieHtml = hasConsent ? '' : `
@@ -735,8 +737,8 @@ Pages.Landing = function(container) {
   const heroCountSpan = container.querySelector('#hero-server-count');
   const heroAvatars = container.querySelector('#hero-server-avatars');
 
-  if (window.API && typeof API.getStats === 'function') {
-    API.getStats().then(stats => {
+  if (typeof window !== 'undefined' && window.API && typeof window.API.getStats === 'function') {
+    window.API.getStats().then(stats => {
       if (stats && typeof stats.servers === 'number') {
         if (heroCountSpan) {
           heroCountSpan.textContent = stats.servers + (stats.servers >= 10 ? '+' : '');
