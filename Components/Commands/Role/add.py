@@ -23,7 +23,7 @@ async def _do_addrole(ctx: InteractionContext, target: discord.Member, role: dis
             f"**Moderator:** {ctx.author.mention}"
         )
         
-        embed = discord.Embed(title="Role Added", color=role.color)
+        embed = discord.Embed(title="Role Added", color=ORBIT_COLOR)
         embed.add_field(name="Target", value=f"{target.mention} (`{target.id}`)", inline=False)
         embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
         embed.add_field(name="Reason", value=reason, inline=False)

@@ -29,7 +29,7 @@ async def _do_rolerall(ctx: InteractionContext, role: discord.Role, reason: str)
         f"**Moderator:** {ctx.author.mention}"
     )
     
-    embed = discord.Embed(title="Role Removed from All", color=role.color)
+    embed = discord.Embed(title="Role Removed from All", color=ORBIT_COLOR)
     embed.add_field(name="Role", value=f"{role.mention} (`{role.id}`)", inline=False)
     embed.add_field(name="Affected", value=f"`{updated_count}` members", inline=False)
     embed.add_field(name="Moderator", value=ctx.author.mention, inline=False)
