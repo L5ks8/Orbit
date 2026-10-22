@@ -4765,3 +4765,61 @@ input:checked + .toggle-slider:before {
     grid-template-columns: 1fr 360px !important;
   }
 }
+
+/* --- LANDING HERO, MARQUEE & GLOW EFFECTS --- */
+.marquee-viewport {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-slide 60s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+@keyframes marquee-slide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ai-input-glow {
+  box-shadow: 0 0 50px -10px rgba(99, 102, 241, 0.28), 0 0 80px -20px rgba(139, 92, 246, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ai-input-glow:focus-within {
+  box-shadow: 0 0 60px -5px rgba(99, 102, 241, 0.45), 0 0 100px -10px rgba(139, 92, 246, 0.28);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.btn-glow {
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.22);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-glow:hover {
+  box-shadow: 0 0 38px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes hero-bob-anim {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+.hero-bob {
+  animation: hero-bob-anim 2s ease-in-out infinite;
+}
+
+.section-padding {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+@media (min-width: 1024px) {
+  .section-padding {
+    padding-top: 7rem;
+    padding-bottom: 7rem;
+  }
+}
