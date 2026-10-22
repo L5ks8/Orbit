@@ -232,6 +232,8 @@ class ActionsMixin:
             file_to_send = None
             import pathlib
             file_candidates = [
+                pathlib.Path("Website/static/img/default_verify.png"),
+                pathlib.Path(__file__).resolve().parent.parent.parent / "static" / "img" / "default_verify.png",
                 pathlib.Path("Website/frontend/public/img/default_verify.png"),
                 pathlib.Path("Website/frontend/dist/img/default_verify.png"),
                 pathlib.Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "img" / "default_verify.png",

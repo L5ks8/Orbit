@@ -106,7 +106,9 @@ class ImageFilters(commands.Cog):
             avatar = Image.open(BytesIO(raw_bytes)).convert("RGBA")
             width, height = avatar.size
 
-            jail_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "Website", "frontend", "public", "img", "jailbars.png")
+            jail_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "Website", "static", "img", "jailbars.png")
+            if not os.path.exists(jail_img_path):
+                jail_img_path = os.path.join(os.path.dirname(__file__), "..", "..", "Website", "frontend", "public", "img", "jailbars.png")
             if os.path.exists(jail_img_path):
                 jail_overlay = Image.open(jail_img_path).convert("RGBA").resize((width, height))
                 avatar.paste(jail_overlay, (0, 0), jail_overlay)

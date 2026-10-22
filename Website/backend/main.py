@@ -28,15 +28,15 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         if path.startswith("api/") or path.startswith("auth/"):
             return web.Response(text="Not Found", status=404)
             
-        dist_dir = os.path.join("Website", "frontend", "dist")
-        file_path = os.path.join(dist_dir, path)
+        static_dir = os.path.join("Website", "static")
+        file_path = os.path.join(static_dir, path)
         if path and os.path.exists(file_path) and os.path.isfile(file_path):
             if path == "index.html":
                 pass
             else:
                 return web.FileResponse(file_path)
             
-        index_path = os.path.join(dist_dir, "index.html")
+        index_path = os.path.join(static_dir, "index.html")
         if os.path.exists(index_path):
             with open(index_path, "r", encoding="utf-8") as f:
                 html = f.read()
@@ -45,7 +45,7 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
                 html = html.replace("%VITE_BASE_URL%", base_url)
             return web.Response(text=html, content_type="text/html")
             
-        return web.Response(text="React Build Not Found. Run npm run build in Website/frontend", status=404)
+        return web.Response(text="Orbit Static Files Not Found in Website/static", status=404)
 
     async def _check_guild_access(self, request: web.Request, guild_id: int):
         user = await self.get_user_session(request)

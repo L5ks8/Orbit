@@ -24,6 +24,8 @@ from Components.Systems.Verify._views import (
 
 def _get_default_verify_image_path() -> Optional[pathlib.Path]:
     candidates = [
+        pathlib.Path("Website/static/img/default_verify.png"),
+        pathlib.Path(__file__).resolve().parent.parent.parent.parent / "Website" / "static" / "img" / "default_verify.png",
         pathlib.Path("Website/frontend/public/img/default_verify.png"),
         pathlib.Path("Website/frontend/dist/img/default_verify.png"),
         pathlib.Path(__file__).resolve().parent.parent.parent.parent / "Website" / "frontend" / "public" / "img" / "default_verify.png",
