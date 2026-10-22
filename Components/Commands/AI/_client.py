@@ -63,11 +63,12 @@ def _clean_response(text: str) -> str:
     # Remove bot name prefix if present
     text = re.sub(r"^(Orbit|Assistant|Bot):\s*", "", text, flags=re.IGNORECASE).strip()
     # Defang @everyone and @here so Discord client never triggers a mention badge or notification
-    text = re.sub(r"@(?=everyone\b|here\b)", "@\u200b", text, flags=re.IGNORECASE)
+    zwsp = "\u200b"
+    text = re.sub(r"@(?=everyone\b|here\b)", f"@{zwsp}", text, flags=re.IGNORECASE)
     # Defang role mentions: <@&123456> -> <@&\u200b123456>
-    text = re.sub(r"<@&(?=\d+>)", "<@&\u200b", text)
+    text = re.sub(r"<@&(\d+)>", lambda m: f"<@&{zwsp}{m.group(1)}>", text)
     # Defang user mentions: <@123456> or <@!123456> -> <@\u200b123456>
-    text = re.sub(r"<@!?(\d+)>", r"<@\u200b\1>", text)
+    text = re.sub(r"<@!?(\d+)>", lambda m: f"<@{zwsp}{m.group(1)}>", text)
     return text
 
 
@@ -110,6 +111,9 @@ async def _get_groq_models(session: aiohttp.ClientSession, groq_key: str) -> Lis
                     m["id"] for m in data.get("data", [])
                     if "whisper" not in m.get("id", "").lower()
                     and "guard" not in m.get("id", "").lower()
+                    and "orpheus" not in m.get("id", "").lower()
+                    and "allam" not in m.get("id", "").lower()
+                    and "tts" not in m.get("id", "").lower()
                 ]
                 print(f"[Orbit AI] Groq models available on this key: {raw_models}")
                 
