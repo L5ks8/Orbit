@@ -40,6 +40,7 @@
           max-width: 280px;
           opacity: 1;
           pointer-events: auto;
+          overflow: visible !important;
           transition: max-width 320ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease;
         }
         #orbit-music-details.orbit-hidden {
@@ -54,19 +55,29 @@
         /* Upward Volume Popup */
         #orbit-vol-popup {
           position: absolute;
-          bottom: calc(100% + 12px);
+          bottom: calc(100% + 14px);
           left: 50%;
           transform: translateX(-50%) translateY(8px);
           opacity: 0;
           pointer-events: none;
           transition: opacity 200ms ease, transform 200ms cubic-bezier(0.2, 0.9, 0.3, 1);
-          z-index: 99;
+          z-index: 99999;
+          background: #18181b;
+          border: 1px solid #3f3f46;
+          border-radius: 16px;
+          box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 10px 8px;
+          gap: 8px;
         }
         #orbit-vol-group:hover #orbit-vol-popup,
-        #orbit-vol-group.is-open #orbit-vol-popup {
-          opacity: 1;
-          transform: translateX(-50%) translateY(0);
-          pointer-events: auto;
+        #orbit-vol-group.is-open #orbit-vol-popup,
+        #orbit-vol-popup:hover {
+          opacity: 1 !important;
+          transform: translateX(-50%) translateY(0) !important;
+          pointer-events: auto !important;
         }
 
         /* Vertical range slider across browsers */
@@ -107,7 +118,7 @@
         </div>
 
         <!-- Controls container (Full Details) -->
-        <div id="orbit-music-details" class="flex items-center gap-2.5 pl-2.5 pr-2 w-full overflow-hidden whitespace-nowrap">
+        <div id="orbit-music-details" class="flex items-center gap-2.5 pl-2.5 pr-2 w-full whitespace-nowrap">
           
           <!-- Track Info -->
           <div class="flex flex-col min-w-0 flex-1 pr-1">
@@ -257,6 +268,12 @@
       e.stopPropagation();
       volGroup.classList.toggle('is-open');
     });
+
+    // Prevent click on popup from propagating to box
+    const volPopup = document.getElementById('orbit-vol-popup');
+    if (volPopup) {
+      volPopup.addEventListener('click', (e) => e.stopPropagation());
+    }
 
     // Initialize YouTube Player immediately in background
     loadYouTubeAPI();

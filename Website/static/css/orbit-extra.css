@@ -1,5 +1,14 @@
 /* Dashboard Layout & Utilities */
 
+/* 3D Dark Floating Tiles Pattern for Support Banner (Matches Screenshot) */
+.orbit-pattern-tile {
+  background: linear-gradient(145deg, rgba(46, 46, 54, 0.95) 0%, rgba(20, 20, 24, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 1px 1px 1px 0 rgba(255, 255, 255, 0.15), 0 10px 30px -4px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+  backdrop-blur-sm: blur(4px);
+}
+
 /* Auto-growing textareas: no resize handle, grows with content */
 textarea {
   resize: none !important;
