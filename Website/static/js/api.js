@@ -261,6 +261,20 @@ const API = {
     });
   },
 
+  async testWelcome(guildId, payload) {
+    return await this.request(`/api/server/${guildId}/test-welcome`, {
+      method: 'POST',
+      body: payload
+    });
+  },
+
+  async testDm(guildId, payload) {
+    return await this.request(`/api/server/${guildId}/test-dm`, {
+      method: 'POST',
+      body: payload
+    });
+  },
+
   // Public & Appeals
   async getStats() {
     return await this.request('/api/stats');

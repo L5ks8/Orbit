@@ -167,7 +167,9 @@ class ConfigMixin:
                 "message": welcome_cfg.get("message", ""),
                 "image_url": welcome_cfg.get("image_url", ""),
                 "embed_image": welcome_cfg.get("embed_image", ""),
-                "msg_mode": welcome_cfg.get("msg_mode", "image"),
+                "msg_mode": welcome_cfg.get("msg_mode", "embed"),
+                "show_avatar": welcome_cfg.get("show_avatar", True),
+                "invite_vars": welcome_cfg.get("invite_vars", False),
                 "embed_color": welcome_cfg.get("embed_color", "#5865F2"),
                 "embed_title": welcome_cfg.get("embed_title", ""),
                 "embed_description": welcome_cfg.get("embed_description", ""),
@@ -186,8 +188,8 @@ class ConfigMixin:
                 "message": goodbye_cfg.get("message", ""),
                 "image_url": goodbye_cfg.get("image_url", ""),
                 "embed_image": goodbye_cfg.get("embed_image", ""),
-                "msg_mode": goodbye_cfg.get("msg_mode", "image"),
-                "embed_color": goodbye_cfg.get("embed_color", "#ED4245"),
+                "msg_mode": goodbye_cfg.get("msg_mode", "embed"),
+                "embed_color": goodbye_cfg.get("embed_color", "#5865F2"),
                 "embed_title": goodbye_cfg.get("embed_title", ""),
                 "embed_description": goodbye_cfg.get("embed_description", ""),
                 "embed_thumbnail": goodbye_cfg.get("embed_thumbnail", ""),
@@ -538,7 +540,11 @@ class ConfigMixin:
                 cid = w_data.get("channel_id")
                 welcome_cfg["channel_id"] = int(cid) if (cid and str(cid).isdigit()) else None
                 welcome_cfg["message"] = w_data.get("message", "")
-                welcome_cfg["msg_mode"] = w_data.get("msg_mode", "image")
+                welcome_cfg["msg_mode"] = w_data.get("msg_mode", "embed")
+                if "show_avatar" in w_data:
+                    welcome_cfg["show_avatar"] = bool(w_data.get("show_avatar"))
+                if "invite_vars" in w_data:
+                    welcome_cfg["invite_vars"] = bool(w_data.get("invite_vars"))
                 welcome_cfg["image_url"] = w_data.get("image_url", "")
                 welcome_cfg["embed_image"] = w_data.get("embed_image", "")
                 welcome_cfg["embed_color"] = w_data.get("embed_color", "#5865F2")
@@ -569,10 +575,10 @@ class ConfigMixin:
                 cid = g_data.get("channel_id")
                 goodbye_cfg["channel_id"] = int(cid) if (cid and str(cid).isdigit()) else None
                 goodbye_cfg["message"] = g_data.get("message", "")
-                goodbye_cfg["msg_mode"] = g_data.get("msg_mode", "image")
+                goodbye_cfg["msg_mode"] = g_data.get("msg_mode", "embed")
                 goodbye_cfg["image_url"] = g_data.get("image_url", "")
                 goodbye_cfg["embed_image"] = g_data.get("embed_image", "")
-                goodbye_cfg["embed_color"] = g_data.get("embed_color", "#ED4245")
+                goodbye_cfg["embed_color"] = g_data.get("embed_color", "#5865F2")
                 goodbye_cfg["embed_title"] = g_data.get("embed_title", "")
                 goodbye_cfg["embed_description"] = g_data.get("embed_description", "")
                 goodbye_cfg["embed_thumbnail"] = g_data.get("embed_thumbnail", "")

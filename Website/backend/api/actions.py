@@ -543,24 +543,24 @@ class ActionsMixin:
             if dm_type == "welcome":
                 from Components.Systems.WelcomeGoodbye._storage import load_welcome_config
                 config = load_welcome_config(guild_id)
-                msg = config.get("dm_message", "")
-                if msg:
-                    formatted = format_welcome_string(msg, member)
-                    formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
-                    await member.send(formatted)
-                else:
-                    return web.json_response({"error": "No DM message configured for Welcome."}, status=400)
+                msg = (data.get("dm_message") if "dm_message" in data else config.get("dm_message", "")) or ""
+                msg = msg.strip() or "👋 Welcome to {server}"
+                formatted = format_welcome_string(msg, member)
+                formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
+                if f"-# Sent from {guild.name}" not in formatted:
+                    formatted = f"{formatted}\n-# Sent from {guild.name}"
+                await member.send(formatted)
                     
             elif dm_type == "goodbye":
                 from Components.Systems.WelcomeGoodbye._storage import load_goodbye_config
                 config = load_goodbye_config(guild_id)
-                msg = config.get("dm_message", "")
-                if msg:
-                    formatted = format_goodbye_string(msg, member)
-                    formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
-                    await member.send(formatted)
-                else:
-                    return web.json_response({"error": "No DM message configured for Goodbye."}, status=400)
+                msg = (data.get("dm_message") if "dm_message" in data else config.get("dm_message", "")) or ""
+                msg = msg.strip() or "👋 You left {server}"
+                formatted = format_goodbye_string(msg, member)
+                formatted = re.sub(r'<a?:(\d+)>|(?<!<):([a-zA-Z0-9_-]+):(?![\d>])', replace_emoji, formatted)
+                if f"-# Sent from {guild.name}" not in formatted:
+                    formatted = f"{formatted}\n-# Sent from {guild.name}"
+                await member.send(formatted)
                     
             return web.json_response({"success": True})
         except discord.Forbidden:
@@ -582,9 +582,13 @@ class ActionsMixin:
             data = await request.json()
             test_type = data.get("type", "welcome")
             
-            member = guild.me or (guild.get_member(self.bot.user.id) if self.bot.user else None)
+            user = await self.get_user_session(request)
+            user_id = user["id"] if user else None
+            member = guild.get_member(int(user_id)) if user_id else None
             if not member:
-                return web.json_response({"error": "Bot member not found in server."}, status=500)
+                member = guild.me or (guild.get_member(self.bot.user.id) if self.bot.user else None)
+            if not member:
+                return web.json_response({"error": "Member not found in server."}, status=500)
 
             from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, load_goodbye_config
             import asyncio

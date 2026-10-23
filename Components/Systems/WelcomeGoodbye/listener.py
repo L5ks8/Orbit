@@ -121,21 +121,24 @@ class WelcomeListener(commands.Cog):
             raw = format_welcome_string(text, member)
             return _parse_channel_and_emoji(raw, guild)
 
-        if not force_test and config.get("dm_enabled") and config.get("dm_message"):
-            dm_text = fmt_text(config.get("dm_message"))
+        if not force_test and config.get("dm_enabled"):
+            raw_dm = (config.get("dm_message") or "").strip() or "👋 Welcome to {server}"
+            dm_text = fmt_text(raw_dm)
             if dm_text:
+                if f"-# Sent from {guild.name}" not in dm_text:
+                    dm_text = f"{dm_text}\n-# Sent from {guild.name}"
                 try:
                     await member.send(dm_text)
                 except Exception as e:
                     print(f"[Welcome] Could not DM new member {member}: {e}")
 
-        msg_mode = config.get("msg_mode", "image")
+        msg_mode = config.get("msg_mode", "embed")
         allowed = discord.AllowedMentions(users=True, roles=False, everyone=False)
 
         # 1. TEXT MODE
         if msg_mode == "text":
-            raw_msg = config.get("message", "")
-            content_text = fmt_text(raw_msg) or f"Welcome to **{guild.name}**, {member.mention}!"
+            raw_msg = (config.get("embed_description") or config.get("message") or "").strip()
+            content_text = fmt_text(raw_msg) or fmt_text("Welcome {user} to {server}!")
             try:
                 await channel.send(content=content_text, allowed_mentions=allowed)
                 return True, f"Welcome text sent to #{channel.name}"
@@ -152,23 +155,34 @@ class WelcomeListener(commands.Cog):
 
             embed = discord.Embed(color=discord.Color(color_val))
 
-            title = fmt_text(config.get("embed_title", ""))
+            raw_title = (config.get("embed_title") or "").strip()
+            title = fmt_text(raw_title if raw_title else "Welcome!")
             if title:
                 embed.title = title
 
-            desc = fmt_text(config.get("embed_description", ""))
+            raw_desc = (config.get("embed_description") or config.get("message") or "").strip()
+            desc = fmt_text(raw_desc if raw_desc else "Welcome {user} to {server}!")
             if desc:
                 embed.description = desc
 
+            show_avatar = config.get("show_avatar", True)
             thumb_url = _resolve_url(config.get("embed_thumbnail", ""), member, guild)
-            if not thumb_url and not config.get("embed_thumbnail") and getattr(member, "display_avatar", None):
+            if show_avatar and not thumb_url and getattr(member, "display_avatar", None):
                 thumb_url = member.display_avatar.url
-            if thumb_url:
+            if show_avatar and thumb_url:
                 embed.set_thumbnail(url=thumb_url)
 
-            img_url = _resolve_url(config.get("embed_image", ""), member, guild)
+            raw_img = (config.get("embed_image") or config.get("image_url") or "").strip()
+            img_url = _resolve_url(raw_img, member, guild)
+            file_attachment = None
             if img_url:
                 embed.set_image(url=img_url)
+            elif raw_img.startswith("/api/uploads/"):
+                fname = raw_img.split("/")[-1]
+                local_p = pathlib.Path("Storage/uploads") / fname
+                if local_p.exists():
+                    file_attachment = discord.File(fp=str(local_p), filename=fname)
+                    embed.set_image(url=f"attachment://{fname}")
 
             footer = fmt_text(config.get("embed_footer", ""))
             f_icon = _resolve_url(config.get("embed_footer_icon", ""), member, guild)
@@ -202,11 +216,14 @@ class WelcomeListener(commands.Cog):
             if not embed.title and not embed.description and not embed.fields and not embed.image and not embed.thumbnail:
                 embed.description = f"Welcome to **{guild.name}**, {member.mention}!"
 
-            content_text = fmt_text(config.get("message", ""))
+            content_text = ""
 
             for attempt in range(3):
                 try:
-                    await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=allowed)
+                    send_kwargs = {"content": content_text if content_text else None, "embed": embed, "allowed_mentions": allowed}
+                    if file_attachment:
+                        send_kwargs["file"] = file_attachment
+                    await channel.send(**send_kwargs)
                     return True, f"Welcome embed sent to #{channel.name}"
                 except discord.Forbidden:
                     fallback_msg = content_text or desc or f"Welcome to **{guild.name}**, {member.mention}!"
@@ -354,21 +371,24 @@ class GoodbyeListener(commands.Cog):
             raw = format_goodbye_string(text, member)
             return _parse_channel_and_emoji(raw, guild)
 
-        if not force_test and config.get("dm_enabled") and config.get("dm_message"):
-            dm_text = fmt_text(config.get("dm_message"))
+        if not force_test and config.get("dm_enabled"):
+            raw_dm = (config.get("dm_message") or "").strip() or "👋 You left {server}"
+            dm_text = fmt_text(raw_dm)
             if dm_text:
+                if f"-# Sent from {guild.name}" not in dm_text:
+                    dm_text = f"{dm_text}\n-# Sent from {guild.name}"
                 try:
                     await member.send(dm_text)
                 except Exception as e:
                     print(f"[Goodbye] Could not DM departing member {member}: {e}")
 
-        msg_mode = config.get("msg_mode", "image")
+        msg_mode = config.get("msg_mode", "embed")
         allowed = discord.AllowedMentions(users=True, roles=False, everyone=False)
 
         # 1. TEXT MODE
         if msg_mode == "text":
-            raw_msg = config.get("message", "")
-            content_text = fmt_text(raw_msg) or f"**{member.name}** left {guild.name}."
+            raw_msg = (config.get("embed_description") or config.get("message") or "").strip()
+            content_text = fmt_text(raw_msg) or fmt_text("{user} left {server}.")
             try:
                 await channel.send(content=content_text, allowed_mentions=allowed)
                 return True, f"Goodbye text sent to #{channel.name}"
@@ -377,11 +397,11 @@ class GoodbyeListener(commands.Cog):
 
         # 2. EMBED MODE
         if msg_mode == "embed":
-            embed_color_hex = config.get("embed_color", "#ED4245")
+            embed_color_hex = config.get("embed_color", "#5865F2")
             try:
                 color_val = int(embed_color_hex.replace("#", ""), 16)
             except Exception:
-                color_val = 0xED4245
+                color_val = 0x5865F2
 
             embed = discord.Embed(color=discord.Color(color_val))
 
@@ -399,9 +419,17 @@ class GoodbyeListener(commands.Cog):
             if thumb_url:
                 embed.set_thumbnail(url=thumb_url)
 
-            img_url = _resolve_url(config.get("embed_image", ""), member, guild)
+            raw_img = (config.get("embed_image") or config.get("image_url") or "").strip()
+            img_url = _resolve_url(raw_img, member, guild)
+            file_attachment = None
             if img_url:
                 embed.set_image(url=img_url)
+            elif raw_img.startswith("/api/uploads/"):
+                fname = raw_img.split("/")[-1]
+                local_p = pathlib.Path("Storage/uploads") / fname
+                if local_p.exists():
+                    file_attachment = discord.File(fp=str(local_p), filename=fname)
+                    embed.set_image(url=f"attachment://{fname}")
 
             footer = fmt_text(config.get("embed_footer", ""))
             f_icon = _resolve_url(config.get("embed_footer_icon", ""), member, guild)
@@ -432,9 +460,12 @@ class GoodbyeListener(commands.Cog):
                                 inline=bool(f.get("inline", False))
                             )
 
-            content_text = fmt_text(config.get("message", ""))
+            content_text = ""
             try:
-                await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=allowed)
+                send_kwargs = {"content": content_text if content_text else None, "embed": embed, "allowed_mentions": allowed}
+                if file_attachment:
+                    send_kwargs["file"] = file_attachment
+                await channel.send(**send_kwargs)
                 return True, f"Goodbye embed sent to #{channel.name}"
             except discord.Forbidden:
                 fallback_msg = content_text or desc or f"**{member.name}** left {guild.name}."
