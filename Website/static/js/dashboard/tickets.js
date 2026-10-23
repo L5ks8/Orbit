@@ -426,11 +426,25 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <p class="text-sm font-medium text-white min-w-0 truncate">Pingen Sie eine Rolle für ein neues Ticket</p>
                   </div>
                   <div class="flex items-center gap-2.5 flex-shrink-0">
-                    <div id="ping-custom-role-wrap" class="${state.ping_custom_role_enabled ? '' : 'hidden'}">
-                      <select id="tkt-select-ping-role" class="h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
-                        <option value="">Rolle wählen...</option>
-                        ${allRoles.map(r => `<option value="${escapeHtml(r.id)}" ${String(r.id) === state.ping_custom_role_id ? 'selected' : ''}>@${escapeHtml(r.name)}</option>`).join('')}
-                      </select>
+                    <div id="ping-custom-role-wrap" class="relative ${state.ping_custom_role_enabled ? '' : 'hidden'}">
+                      <button type="button" id="tkt-dd-ping-role-btn" class="h-9 px-3 min-w-[160px] bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
+                        <span id="tkt-dd-ping-role-label" class="truncate">
+                          ${(() => {
+                            const pr = allRoles.find(r => String(r.id) === String(state.ping_custom_role_id));
+                            return pr ? `@${escapeHtml(pr.name)}` : 'Rolle wählen...';
+                          })()}
+                        </span>
+                        <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                      </button>
+                      <div id="tkt-dd-ping-role-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute right-0 top-full mt-1.5 w-52 max-h-48 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40">
+                        <button type="button" data-tkt-ping-role-opt="" class="w-full px-3 py-2 text-left text-xs text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors">Keine Rolle</button>
+                        ${allRoles.map(r => `
+                          <button type="button" data-tkt-ping-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 transition-colors">
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                            <span class="truncate">@${escapeHtml(r.name)}</span>
+                          </button>
+                        `).join('')}
+                      </div>
                     </div>
                     <div class="flex items-center gap-3">
                       ${renderSwitchButton('tkt-switch-ping-custom', state.ping_custom_role_enabled)}
@@ -791,9 +805,22 @@ DashboardTabs.Tickets = async function (container, guildId) {
         saveTicketConfig();
       });
 
-      document.getElementById('tkt-select-ping-role')?.addEventListener('change', (e) => {
-        state.ping_custom_role_id = e.target.value;
-        saveTicketConfig();
+      document.getElementById('tkt-dd-ping-role-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('tkt-dd-ping-role-menu')?.classList.toggle('hidden');
+      });
+
+      container.querySelectorAll('[data-tkt-ping-role-opt]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rid = btn.getAttribute('data-tkt-ping-role-opt') || '';
+          state.ping_custom_role_id = rid;
+          const pr = allRoles.find(r => String(r.id) === String(rid));
+          const lbl = document.getElementById('tkt-dd-ping-role-label');
+          if (lbl) lbl.textContent = pr ? `@${pr.name}` : 'Rolle wählen...';
+          document.getElementById('tkt-dd-ping-role-menu')?.classList.add('hidden');
+          saveTicketConfig();
+        });
       });
 
       document.getElementById('tkt-switch-claiming')?.addEventListener('click', () => {
@@ -1246,10 +1273,16 @@ DashboardTabs.Tickets = async function (container, guildId) {
                       </div>
                       <div>
                         <label class="block text-[11px] text-neutral-500 mb-1">Antwort-Typ</label>
-                        <select data-q-style="${qIdx}" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none">
-                          <option value="short" ${q.style !== 'paragraph' ? 'selected' : ''}>Kurztext (1 Zeile)</option>
-                          <option value="paragraph" ${q.style === 'paragraph' ? 'selected' : ''}>Absatz (Mehrzeilig)</option>
-                        </select>
+                        <div class="relative">
+                          <button type="button" data-q-style-btn="${qIdx}" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
+                            <span>${q.style === 'paragraph' ? 'Absatz (Mehrzeilig)' : 'Kurztext (1 Zeile)'}</span>
+                            <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                          </button>
+                          <div data-q-style-menu="${qIdx}" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40">
+                            <button type="button" data-q-style-opt="short" data-q-idx="${qIdx}" class="w-full px-3 py-2 text-left text-xs ${q.style !== 'paragraph' ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors">Kurztext (1 Zeile)</button>
+                            <button type="button" data-q-style-opt="paragraph" data-q-idx="${qIdx}" class="w-full px-3 py-2 text-left text-xs ${q.style === 'paragraph' ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors">Absatz (Mehrzeilig)</button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1480,9 +1513,26 @@ DashboardTabs.Tickets = async function (container, guildId) {
             draft.questions[parseInt(inp.getAttribute('data-q-ph'), 10)].placeholder = inp.value;
           });
         });
-        modalRoot.querySelectorAll('[data-q-style]').forEach(sel => {
-          sel.addEventListener('change', () => {
-            draft.questions[parseInt(sel.getAttribute('data-q-style'), 10)].style = sel.value;
+        modalRoot.querySelectorAll('[data-q-style-btn]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = btn.getAttribute('data-q-style-btn');
+            const menu = modalRoot.querySelector(`[data-q-style-menu="${idx}"]`);
+            modalRoot.querySelectorAll('[data-q-style-menu]').forEach(m => {
+              if (m !== menu) m.classList.add('hidden');
+            });
+            menu?.classList.toggle('hidden');
+          });
+        });
+        modalRoot.querySelectorAll('[data-q-style-opt]').forEach(optBtn => {
+          optBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(optBtn.getAttribute('data-q-idx'), 10);
+            const val = optBtn.getAttribute('data-q-style-opt') || 'short';
+            if (draft.questions[idx]) {
+              draft.questions[idx].style = val;
+              renderModalContent();
+            }
           });
         });
         modalRoot.querySelectorAll('[data-q-req]').forEach(chk => {

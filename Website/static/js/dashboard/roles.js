@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Orbit Dashboard - Roles Tab (/dashboard/:guildId/roles)
  * 1:1 PeakBot Roles UI with Reaction Panels, Auto Roles, Custom Rules, Sticky Roles, Booster Role, Tenure Roles & Activity Roles
  */
@@ -1775,10 +1775,30 @@ DashboardTabs.Roles = async function (container, guildId) {
         dm_message: existingRule?.dm_message || 'Welcome to {server}, {user}!'
       };
 
+      const TRIGGER_OPTIONS = [
+        { value: 'member_join', label: 'Member joins the server' },
+        { value: 'member_verify', label: 'Member completes verification' },
+        { value: 'member_boost', label: 'Member boosts the server' },
+        { value: 'message_sent', label: 'Member sends a message' },
+        { value: 'reaction_add', label: 'Member reacts to a message' },
+        { value: 'has_role', label: 'Member receives a specific role' }
+      ];
+
+      const ACTION_OPTIONS = [
+        { value: 'add_role', label: 'Add Role' },
+        { value: 'remove_role', label: 'Remove Role' },
+        { value: 'send_dm', label: 'Send Direct Message (DM)' }
+      ];
+
       const renderRuleModal = () => {
+        const currentTriggerObj = TRIGGER_OPTIONS.find(t => t.value === draft.trigger) || TRIGGER_OPTIONS[0];
+        const currentActionObj = ACTION_OPTIONS.find(a => a.value === draft.action) || ACTION_OPTIONS[0];
+        const currentCondRole = allRoles.find(r => String(r.id) === String(draft.condition_role_id));
+        const currentTargetRole = allRoles.find(r => String(r.id) === String(draft.role_id)) || allRoles[0];
+
         modalRoot.innerHTML = `
           <div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden">
+            <div id="rule-modal-dialog" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md flex flex-col shadow-2xl">
               <div class="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <div class="w-6 h-6 rounded-md bg-violet-500/10 flex items-center justify-center">
@@ -1797,39 +1817,82 @@ DashboardTabs.Roles = async function (container, guildId) {
                   <input type="text" id="rule-modal-name" value="${escapeHtml(draft.name)}" placeholder="e.g. Promote on verification" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
                 </div>
 
+                <!-- IF (Trigger) -->
                 <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800 space-y-2.5">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-violet-400">IF (Trigger)</span>
-                  <select id="rule-modal-trigger" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
-                    <option value="member_join" ${draft.trigger === 'member_join' ? 'selected' : ''}>Member joins the server</option>
-                    <option value="member_verify" ${draft.trigger === 'member_verify' ? 'selected' : ''}>Member completes verification</option>
-                    <option value="member_boost" ${draft.trigger === 'member_boost' ? 'selected' : ''}>Member boosts the server</option>
-                    <option value="message_sent" ${draft.trigger === 'message_sent' ? 'selected' : ''}>Member sends a message</option>
-                    <option value="reaction_add" ${draft.trigger === 'reaction_add' ? 'selected' : ''}>Member reacts to a message</option>
-                    <option value="has_role" ${draft.trigger === 'has_role' ? 'selected' : ''}>Member receives a specific role</option>
-                  </select>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-violet-400 block">IF (Trigger)</span>
+                  <div class="relative" data-rule-dd-wrap="trigger">
+                    <button type="button" id="rule-dd-trigger-btn" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
+                      <span id="rule-dd-trigger-label" class="truncate">${escapeHtml(currentTriggerObj.label)}</span>
+                      <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0 transition-transform duration-150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div id="rule-dd-trigger-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40 max-h-56 overflow-y-auto">
+                      ${TRIGGER_OPTIONS.map(t => `
+                        <button type="button" data-rule-trigger-opt="${t.value}" class="w-full px-3 py-2 text-left text-xs ${draft.trigger === t.value ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'} flex items-center justify-between transition-colors">
+                          <span>${escapeHtml(t.label)}</span>
+                          ${draft.trigger === t.value ? '<svg class="w-3.5 h-3.5 text-violet-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
 
                   <div id="rule-modal-cond-wrap" class="${draft.trigger === 'has_role' ? '' : 'hidden'} pt-1">
                     <label class="block text-[11px] text-neutral-400 mb-1">Required Condition Role</label>
-                    <select id="rule-modal-cond-role" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white">
-                      <option value="">Any role</option>
-                      ${allRoles.map(r => `<option value="${escapeHtml(r.id)}" ${String(r.id) === String(draft.condition_role_id) ? 'selected' : ''}>@${escapeHtml(r.name)}</option>`).join('')}
-                    </select>
+                    <div class="relative" data-rule-dd-wrap="cond-role">
+                      <button type="button" id="rule-dd-cond-role-btn" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
+                        <span id="rule-dd-cond-role-label" class="flex items-center gap-2 min-w-0 truncate">
+                          ${currentCondRole ? `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(currentCondRole.color || '#99aab5')}"></span><span class="truncate">@${escapeHtml(currentCondRole.name)}</span>` : '<span class="text-neutral-400">Any role</span>'}
+                        </span>
+                        <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                      </button>
+                      <div id="rule-dd-cond-role-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40 max-h-48 overflow-y-auto">
+                        <button type="button" data-rule-cond-role-opt="" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors">Any role</button>
+                        ${allRoles.map(r => `
+                          <button type="button" data-rule-cond-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 transition-colors">
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                            <span class="truncate">@${escapeHtml(r.name)}</span>
+                          </button>
+                        `).join('')}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
+                <!-- THEN (Action) -->
                 <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800 space-y-2.5">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">THEN (Action)</span>
-                  <select id="rule-modal-action" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
-                    <option value="add_role" ${draft.action === 'add_role' ? 'selected' : ''}>Add Role</option>
-                    <option value="remove_role" ${draft.action === 'remove_role' ? 'selected' : ''}>Remove Role</option>
-                    <option value="send_dm" ${draft.action === 'send_dm' ? 'selected' : ''}>Send Direct Message (DM)</option>
-                  </select>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">THEN (Action)</span>
+                  <div class="relative" data-rule-dd-wrap="action">
+                    <button type="button" id="rule-dd-action-btn" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
+                      <span id="rule-dd-action-label" class="truncate">${escapeHtml(currentActionObj.label)}</span>
+                      <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div id="rule-dd-action-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40">
+                      ${ACTION_OPTIONS.map(a => `
+                        <button type="button" data-rule-action-opt="${a.value}" class="w-full px-3 py-2 text-left text-xs ${draft.action === a.value ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'} flex items-center justify-between transition-colors">
+                          <span>${escapeHtml(a.label)}</span>
+                          ${draft.action === a.value ? '<svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
 
                   <div id="rule-modal-role-wrap" class="${draft.action === 'send_dm' ? 'hidden' : ''}">
                     <label class="block text-[11px] text-neutral-400 mb-1">Target Role</label>
-                    <select id="rule-modal-role" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white">
-                      ${allRoles.map(r => `<option value="${escapeHtml(r.id)}" ${String(r.id) === String(draft.role_id) ? 'selected' : ''}>@${escapeHtml(r.name)}</option>`).join('')}
-                    </select>
+                    <div class="relative" data-rule-dd-wrap="target-role">
+                      <button type="button" id="rule-dd-target-role-btn" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
+                        <span id="rule-dd-target-role-label" class="flex items-center gap-2 min-w-0 truncate">
+                          ${currentTargetRole ? `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(currentTargetRole.color || '#99aab5')}"></span><span class="truncate">@${escapeHtml(currentTargetRole.name)}</span>` : '<span class="text-neutral-400">Select role...</span>'}
+                        </span>
+                        <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                      </button>
+                      <div id="rule-dd-target-role-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40 max-h-48 overflow-y-auto">
+                        ${allRoles.map(r => `
+                          <button type="button" data-rule-target-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 transition-colors">
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                            <span class="truncate">@${escapeHtml(r.name)}</span>
+                          </button>
+                        `).join('')}
+                      </div>
+                    </div>
                   </div>
 
                   <div id="rule-modal-dm-wrap" class="${draft.action === 'send_dm' ? '' : 'hidden'}">
@@ -1839,7 +1902,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                 </div>
               </div>
 
-              <div class="px-5 py-3.5 border-t border-neutral-800 flex items-center justify-end gap-2 bg-neutral-950/60">
+              <div class="px-5 py-3.5 border-t border-neutral-800 flex items-center justify-end gap-2 bg-neutral-950/60 rounded-b-2xl">
                 <button type="button" id="rule-modal-cancel" class="h-9 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-300">Cancel</button>
                 <button type="button" id="rule-modal-save" class="h-9 px-4 rounded-xl bg-white hover:bg-neutral-200 text-xs font-semibold text-black">Save Rule</button>
               </div>
@@ -1847,15 +1910,86 @@ DashboardTabs.Roles = async function (container, guildId) {
           </div>
         `;
 
-        document.getElementById('rule-modal-trigger')?.addEventListener('change', (e) => {
-          draft.trigger = e.target.value;
-          document.getElementById('rule-modal-cond-wrap')?.classList.toggle('hidden', draft.trigger !== 'has_role');
+        const closeRuleDropdowns = (exceptMenuId = null) => {
+          ['rule-dd-trigger-menu', 'rule-dd-cond-role-menu', 'rule-dd-action-menu', 'rule-dd-target-role-menu'].forEach(mid => {
+            if (mid !== exceptMenuId) {
+              document.getElementById(mid)?.classList.add('hidden');
+            }
+          });
+        };
+
+        document.getElementById('rule-modal-dialog')?.addEventListener('click', (e) => {
+          if (!e.target.closest('[data-rule-dd-wrap]')) {
+            closeRuleDropdowns();
+          }
         });
 
-        document.getElementById('rule-modal-action')?.addEventListener('change', (e) => {
-          draft.action = e.target.value;
-          document.getElementById('rule-modal-role-wrap')?.classList.toggle('hidden', draft.action === 'send_dm');
-          document.getElementById('rule-modal-dm-wrap')?.classList.toggle('hidden', draft.action !== 'send_dm');
+        // Trigger dropdown
+        document.getElementById('rule-dd-trigger-btn')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const menu = document.getElementById('rule-dd-trigger-menu');
+          closeRuleDropdowns('rule-dd-trigger-menu');
+          menu?.classList.toggle('hidden');
+        });
+        modalRoot.querySelectorAll('[data-rule-trigger-opt]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            draft.name = document.getElementById('rule-modal-name')?.value ?? draft.name;
+            draft.dm_message = document.getElementById('rule-modal-dm')?.value ?? draft.dm_message;
+            draft.trigger = btn.getAttribute('data-rule-trigger-opt') || 'member_join';
+            renderRuleModal();
+          });
+        });
+
+        // Condition role dropdown
+        document.getElementById('rule-dd-cond-role-btn')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const menu = document.getElementById('rule-dd-cond-role-menu');
+          closeRuleDropdowns('rule-dd-cond-role-menu');
+          menu?.classList.toggle('hidden');
+        });
+        modalRoot.querySelectorAll('[data-rule-cond-role-opt]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            draft.name = document.getElementById('rule-modal-name')?.value ?? draft.name;
+            draft.dm_message = document.getElementById('rule-modal-dm')?.value ?? draft.dm_message;
+            draft.condition_role_id = btn.getAttribute('data-rule-cond-role-opt') || '';
+            renderRuleModal();
+          });
+        });
+
+        // Action dropdown
+        document.getElementById('rule-dd-action-btn')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const menu = document.getElementById('rule-dd-action-menu');
+          closeRuleDropdowns('rule-dd-action-menu');
+          menu?.classList.toggle('hidden');
+        });
+        modalRoot.querySelectorAll('[data-rule-action-opt]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            draft.name = document.getElementById('rule-modal-name')?.value ?? draft.name;
+            draft.dm_message = document.getElementById('rule-modal-dm')?.value ?? draft.dm_message;
+            draft.action = btn.getAttribute('data-rule-action-opt') || 'add_role';
+            renderRuleModal();
+          });
+        });
+
+        // Target role dropdown
+        document.getElementById('rule-dd-target-role-btn')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const menu = document.getElementById('rule-dd-target-role-menu');
+          closeRuleDropdowns('rule-dd-target-role-menu');
+          menu?.classList.toggle('hidden');
+        });
+        modalRoot.querySelectorAll('[data-rule-target-role-opt]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            draft.name = document.getElementById('rule-modal-name')?.value ?? draft.name;
+            draft.dm_message = document.getElementById('rule-modal-dm')?.value ?? draft.dm_message;
+            draft.role_id = btn.getAttribute('data-rule-target-role-opt') || '';
+            renderRuleModal();
+          });
         });
 
         const closeRuleModal = () => { modalRoot.innerHTML = ''; };
@@ -1864,11 +1998,7 @@ DashboardTabs.Roles = async function (container, guildId) {
 
         document.getElementById('rule-modal-save')?.addEventListener('click', () => {
           draft.name = document.getElementById('rule-modal-name')?.value?.trim() || 'Custom Rule';
-          draft.trigger = document.getElementById('rule-modal-trigger')?.value || 'member_join';
-          draft.condition_role_id = document.getElementById('rule-modal-cond-role')?.value || '';
-          draft.action = document.getElementById('rule-modal-action')?.value || 'add_role';
-          draft.role_id = document.getElementById('rule-modal-role')?.value || '';
-          draft.dm_message = document.getElementById('rule-modal-dm')?.value || '';
+          draft.dm_message = document.getElementById('rule-modal-dm')?.value ?? draft.dm_message;
 
           const existingIdx = state.customRules.findIndex(r => r.id === draft.id);
           if (existingIdx >= 0) {
