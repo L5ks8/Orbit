@@ -48,7 +48,7 @@ Pages.Landing = function(container) {
         </p>
         
         <form class="w-full max-w-2xl lg:max-w-3xl mx-auto mb-5 sm:mb-7 lg:mb-10 animate-fade-in-up delay-200">
-          <div class="ai-input-glow relative rounded-[28px] bg-neutral-900/95 text-left">
+          <div class="orbit-input-glow relative rounded-[28px] bg-neutral-900/95 text-left">
             <div class="relative px-4 sm:px-7 py-4 sm:py-6 pr-12 sm:pr-[4.5rem]">
               <div class="min-h-[48px] sm:min-h-[60px] relative">
                 <p class="absolute top-0 left-0 right-0 text-neutral-500 text-sm sm:text-lg pointer-events-none select-none transition-opacity duration-200 opacity-100">
@@ -251,7 +251,7 @@ Pages.Landing = function(container) {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
             </button>
             <div class="overflow-hidden transition-[max-height,padding] duration-200 max-h-0">
-              <p class="px-4 sm:px-6 text-sm text-neutral-400 leading-relaxed">Our upcoming roadmap includes an AI assistant chatbot, a rich server economy and shop system with mini-games, 24/7 high-fidelity music streaming, custom webhooks, and an open REST API.</p>
+              <p class="px-4 sm:px-6 text-sm text-neutral-400 leading-relaxed">Our upcoming roadmap includes a rich server economy and shop system with mini-games, 24/7 high-fidelity music streaming, advanced automated moderation, custom webhooks, and an open REST API.</p>
             </div>
           </div>
         </div>
@@ -388,10 +388,10 @@ Pages.Landing = function(container) {
   }
 
   // 2. Interactive Typewriter Prompts (in English)
-  const promptSpan = container.querySelector('.ai-input-glow p span:first-child');
-  const textarea = container.querySelector('.ai-input-glow textarea');
-  const placeholder = container.querySelector('.ai-input-glow p');
-  const submitBtn = container.querySelector('.ai-input-glow button');
+  const promptSpan = container.querySelector('.orbit-input-glow p span:first-child');
+  const textarea = container.querySelector('.orbit-input-glow textarea');
+  const placeholder = container.querySelector('.orbit-input-glow p');
+  const submitBtn = container.querySelector('.orbit-input-glow button');
   const form = container.querySelector('form');
 
   if (promptSpan && form) {
@@ -565,17 +565,17 @@ Pages.Landing = function(container) {
 
   const plannedFeaturesData = [
     {
-      title: "AI Assistant & Chat",
+      title: "Automated Workflows",
       status: "Planned",
       sub: "Coming Soon",
       btnText: "Suggest Feature",
       items: [
-        "Discord AI chatbot for server members",
-        "AI server analysis & optimization tips",
-        "On-demand channel summary recaps",
-        "Intelligent ticket first-response AI",
-        "Automated community FAQ detection",
-        "Context-aware moderation assistant"
+        "Scheduled server announcements & recurring events",
+        "Auto-publishing in announcement channels",
+        "Custom event triggers & action automations",
+        "Server milestone badges & celebrations",
+        "Temporary dynamic voice & text channels",
+        "Full web dashboard workflow manager"
       ]
     },
     {
