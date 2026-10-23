@@ -220,17 +220,17 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       am.anti_bot?.enabled ||
       am.ai_automod?.enabled ||
       am.ai_image?.enabled ||
-      am.anti_zalgo?.enabled ||
-      sec.anti_nuke?.enabled ||
-      sec.anti_raid?.enabled ||
-      sec.webhook_protection?.enabled
+      am.anti_zalgo?.enabled
     );
 
-    const isWelcomeRolesActive = Boolean(
+    const isWelcomeActive = Boolean(
       cfg.welcome?.enabled ||
       cfg.welcome?.dm_enabled ||
       cfg.goodbye?.enabled ||
-      cfg.goodbye?.dm_enabled ||
+      cfg.goodbye?.dm_enabled
+    );
+
+    const isReactionRolesActive = Boolean(
       cfg.joinroles?.enabled ||
       cfg.joinroles?.user_roles_enabled ||
       cfg.joinroles?.bot_roles_enabled ||
@@ -243,7 +243,8 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     const isTicketsActive = Boolean(cfg.ticket?.enabled || openTicketsCount > 0);
     const isInvitesActive = Boolean(cfg.invites?.enabled);
     const isVerifyActive = Boolean(cfg.verify?.enabled);
-    const isAutoResponderActive = Boolean(
+    const isMessagesActive = Boolean(
+      cfg.messages_enabled ||
       cfg.autoresponder_enabled ||
       cfg.settings?.autoresponder_enabled ||
       (Array.isArray(cfg.autoresponder) && cfg.autoresponder.length > 0) ||
@@ -253,16 +254,111 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       cfg.tempvoice?.enabled ||
       (Array.isArray(cfg.tempvoice?.hubs) && cfg.tempvoice.hubs.length > 0)
     );
+    const isSecurityActive = Boolean(
+      sec.anti_nuke?.enabled ||
+      sec.anti_raid?.enabled ||
+      sec.webhook_protection?.enabled
+    );
+    const isModerationActive = Boolean(
+      (cfg.logs?.channels && Object.values(cfg.logs.channels).some(Boolean)) ||
+      cfg.appeals?.enabled
+    );
+    const isPollsActive = Boolean(cfg.polls?.enabled);
+    const isGiveawaysActive = Boolean(cfg.giveaways?.enabled);
+    const isInactiveKickActive = Boolean(cfg.inactive_kick?.enabled || cfg.settings?.inactive_kick_enabled);
+    const isBotProfileActive = Boolean(cfg.botprofile?.nickname || cfg.botprofile?.avatar || cfg.botprofile?.banner);
 
     return [
-      { name: 'Auto-Moderation', active: isAutomodActive, tab: 'automod' },
-      { name: 'Welcome & Roles', active: isWelcomeRolesActive, tab: 'welcome' },
-      { name: 'Leveling & XP', active: isLevelActive, tab: 'level' },
-      { name: 'Support Tickets', active: isTicketsActive, tab: 'tickets' },
-      { name: 'Invite Tracker', active: isInvitesActive, tab: 'invites' },
-      { name: 'Verification', active: isVerifyActive, tab: 'verify' },
-      { name: 'Auto-Responder', active: isAutoResponderActive, tab: 'messages' },
-      { name: 'Temp Voice', active: isTempVoiceActive, tab: 'tempvoice' }
+      {
+        name: 'Welcome',
+        active: isWelcomeActive,
+        tab: 'welcome',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`
+      },
+      {
+        name: 'XP System',
+        active: isLevelActive,
+        tab: 'level',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star w-3.5 h-3.5 transition-colors __ICON_COLOR__"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
+      },
+      {
+        name: 'Ticket System',
+        active: isTicketsActive,
+        tab: 'tickets',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ticket w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>`
+      },
+      {
+        name: 'Auto-Mod',
+        active: isAutomodActive,
+        tab: 'automod',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>`
+      },
+      {
+        name: 'Voice Channels',
+        active: isTempVoiceActive,
+        tab: 'tempvoice',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>`
+      },
+      {
+        name: 'Moderation',
+        active: isModerationActive,
+        tab: 'automod',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>`
+      },
+      {
+        name: 'Invites',
+        active: isInvitesActive,
+        tab: 'invites',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-plus w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>`
+      },
+      {
+        name: 'Polls',
+        active: isPollsActive,
+        tab: 'polls',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-vote w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="m9 12 2 2 4-4"></path><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"></path><path d="M22 19H2"></path></svg>`
+      },
+      {
+        name: 'Reaction Roles',
+        active: isReactionRolesActive,
+        tab: 'roles',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
+      },
+      {
+        name: 'Verification',
+        active: isVerifyActive,
+        tab: 'verify',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>`
+      },
+      {
+        name: 'Giveaways',
+        active: isGiveawaysActive,
+        tab: 'giveaways',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gift w-3.5 h-3.5 transition-colors __ICON_COLOR__"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>`
+      },
+      {
+        name: 'Inactive Kick',
+        active: isInactiveKickActive,
+        tab: 'inactive-kick',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-minus w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>`
+      },
+      {
+        name: 'Messages',
+        active: isMessagesActive,
+        tab: 'messages',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg>`
+      },
+      {
+        name: 'Security',
+        active: isSecurityActive,
+        tab: 'security',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>`
+      },
+      {
+        name: 'Bot Profile',
+        active: isBotProfileActive,
+        tab: 'bot-profile',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-3.5 h-3.5 transition-colors __ICON_COLOR__"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>`
+      }
     ];
   }
 
@@ -589,26 +685,27 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             <div class="flex items-center gap-2.5">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-4 h-4 text-neutral-500"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               <span class="text-sm font-semibold text-white">Features</span>
+              <span id="features-active-count" class="text-[10px] px-1.5 py-0.5 rounded-md font-semibold tabular-nums ${activeFeaturesCount > 0 ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-400'}">${activeFeaturesCount}/${featuresList.length}</span>
             </div>
-            <span id="features-active-count" class="text-[11px] font-medium text-neutral-500 tabular-nums">${activeFeaturesCount}/${featuresList.length} active</span>
           </div>
           <div id="features-list-body" class="flex flex-col flex-1 divide-y divide-neutral-800/60"></div>
         </div>
 
         <!-- Recent Mod Activity -->
         <div class="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-800 gap-2 flex-wrap">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
             <div class="flex items-center gap-2.5">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert w-4 h-4 text-neutral-500"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
               <span class="text-sm font-semibold text-white">Recent mod activity</span>
-              <div id="mod-activity-summary-pills" class="flex items-center gap-1.5 flex-wrap"></div>
+              <span id="mod-activity-count-badge" class="text-[10px] px-1.5 py-0.5 rounded-md bg-neutral-800 text-neutral-400 font-medium tabular-nums">${modLogs.length}</span>
             </div>
-            <a class="relative -my-2 py-2 text-xs text-neutral-500 hover:text-neutral-300 transition-colors inline-flex items-center gap-1 group" href="/dashboard/${guildId}/automod">
+            <a class="relative -my-2 py-2 text-xs text-neutral-500 hover:text-neutral-300 transition-[transform,color] duration-150 ease-out active:scale-[0.96] inline-flex items-center gap-1 group focus-visible:outline-none focus-visible:text-neutral-200" href="/dashboard/${guildId}/automod">
               View all
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-3 h-3 group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
             </a>
           </div>
-          <div id="mod-activity-body" class="flex-1 flex flex-col"></div>
+          <div id="mod-activity-summary-pills" class="hidden flex-wrap gap-1.5 px-4 py-2.5 border-b border-neutral-800/60 bg-neutral-900/50"></div>
+          <div id="mod-activity-body" class="flex flex-col flex-1 min-h-0"></div>
         </div>
 
       </div>
@@ -663,19 +760,25 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       const countEl = document.getElementById('features-active-count');
       if (!body) return;
       const activeCnt = list.filter(f => f.active).length;
-      if (countEl) countEl.textContent = `${activeCnt}/${list.length} active`;
-      body.innerHTML = list.map(f => `
-        <a href="/dashboard/${guildId}/${f.tab}" class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-800/40 transition-colors group">
-          <div class="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center text-xs font-semibold text-neutral-400">
-            <span class="w-2 h-2 rounded-full ${f.active ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.5)]' : 'bg-neutral-600'}"></span>
-          </div>
-          <div class="text-xs font-medium text-neutral-300 group-hover:text-white transition-colors">${escapeHtml(f.name)}</div>
-          <div class="ml-auto flex items-center gap-2">
-            <span class="px-2 py-0.5 text-[10px] font-medium rounded ${f.active ? 'bg-green-500/10 text-green-400' : 'bg-neutral-800 text-neutral-500'}">${f.active ? 'Active' : 'Inactive'}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-600 group-hover:text-neutral-400 transition-colors"><path d="m9 18 6-6-6-6"/></svg>
-          </div>
-        </a>
-      `).join('');
+      if (countEl) {
+        countEl.textContent = `${activeCnt}/${list.length}`;
+        countEl.className = `text-[10px] px-1.5 py-0.5 rounded-md font-semibold tabular-nums ${activeCnt > 0 ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-400'}`;
+      }
+      body.innerHTML = list.map(f => {
+        const iconColor = f.active ? 'text-green-400' : 'text-neutral-500';
+        const iconBoxBg = f.active ? 'bg-green-500/10' : 'bg-neutral-800';
+        const dotClass = f.active ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.5)]' : 'bg-neutral-700';
+        const svgHtml = (f.svg || '').replace('__ICON_COLOR__', iconColor);
+        return `
+          <a class="group flex items-center gap-2.5 px-4 py-2 hover:bg-neutral-800/40 transition-colors focus-visible:outline-none focus-visible:bg-neutral-800/40" href="/dashboard/${guildId}/${f.tab}">
+            <div class="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${iconBoxBg}">
+              ${svgHtml}
+            </div>
+            <span class="text-[13px] font-medium text-white truncate flex-1">${escapeHtml(f.name)}</span>
+            <span title="${f.active ? 'Active' : 'Inactive'}" class="flex-shrink-0 w-2 h-2 rounded-full ${dotClass}"></span>
+          </a>
+        `;
+      }).join('');
     }
 
     function renderLiveChart() {
@@ -1148,10 +1251,20 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     function renderModActivity(logs) {
       const body = document.getElementById('mod-activity-body');
       const pillsEl = document.getElementById('mod-activity-summary-pills');
+      const countBadgeEl = document.getElementById('mod-activity-count-badge');
       if (!body) return;
 
-      if (!Array.isArray(logs) || logs.length === 0) {
-        if (pillsEl) pillsEl.innerHTML = '';
+      const list = Array.isArray(logs) ? logs : [];
+      if (countBadgeEl) {
+        countBadgeEl.textContent = String(list.length);
+      }
+
+      if (list.length === 0) {
+        if (pillsEl) {
+          pillsEl.innerHTML = '';
+          pillsEl.classList.add('hidden');
+          pillsEl.classList.remove('flex');
+        }
         body.innerHTML = `
           <div class="flex-1 flex flex-col items-center justify-center py-10 gap-2">
             <div class="w-12 h-12 rounded-xl bg-neutral-800/80 flex items-center justify-center">
@@ -1164,65 +1277,111 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         return;
       }
 
-      const counts = {};
-      logs.forEach(item => {
-        const act = String(item.action || 'mod').toLowerCase();
-        counts[act] = (counts[act] || 0) + 1;
-      });
-
       function getActionStyle(actionRaw) {
         const a = String(actionRaw || '').toLowerCase();
         if (a.includes('unban')) {
-          return { badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', dot: 'bg-emerald-400', label: 'Unban' };
+          return {
+            key: 'unban',
+            bg: 'bg-emerald-500/10',
+            text: 'text-emerald-400',
+            label: 'Unbanned',
+            summaryLabel: 'unbanned',
+            iconSm: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-2.5 h-2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>`,
+            iconMd: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-3.5 h-3.5 text-emerald-400"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>`
+          };
         }
         if (a.includes('ban')) {
-          return { badge: 'bg-red-500/10 text-red-400 border-red-500/20', dot: 'bg-red-400', label: a.includes('temp') ? 'Tempban' : (a.includes('soft') ? 'Softban' : 'Ban') };
+          return {
+            key: 'ban',
+            bg: 'bg-red-500/10',
+            text: 'text-red-400',
+            label: a.includes('temp') ? 'Tempbanned' : (a.includes('soft') ? 'Softbanned' : 'Banned'),
+            summaryLabel: 'banned',
+            iconSm: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ban w-2.5 h-2.5"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>`,
+            iconMd: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ban w-3.5 h-3.5 text-red-400"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>`
+          };
         }
         if (a.includes('kick')) {
-          return { badge: 'bg-orange-500/10 text-orange-400 border-orange-500/20', dot: 'bg-orange-400', label: 'Kick' };
+          return {
+            key: 'kick',
+            bg: 'bg-orange-500/10',
+            text: 'text-orange-400',
+            label: 'Kicked',
+            summaryLabel: 'kicked',
+            iconSm: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-minus w-2.5 h-2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>`,
+            iconMd: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-minus w-3.5 h-3.5 text-orange-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>`
+          };
         }
         if (a.includes('warn')) {
-          return { badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20', dot: 'bg-amber-400', label: 'Warn' };
-        }
-        if (a.includes('unmute') || a.includes('untimeout')) {
-          return { badge: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', dot: 'bg-cyan-400', label: 'Unmute' };
+          return {
+            key: 'warn',
+            bg: 'bg-yellow-500/10',
+            text: 'text-yellow-400',
+            label: 'Warned',
+            summaryLabel: 'warned',
+            iconSm: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle w-2.5 h-2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`,
+            iconMd: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle w-3.5 h-3.5 text-yellow-400"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`
+          };
         }
         if (a.includes('timeout') || a.includes('mute')) {
-          return { badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20', dot: 'bg-purple-400', label: 'Timeout' };
+          return {
+            key: 'timeout',
+            bg: 'bg-purple-500/10',
+            text: 'text-purple-400',
+            label: 'Muted',
+            summaryLabel: 'muted',
+            iconSm: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock w-2.5 h-2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
+            iconMd: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock w-3.5 h-3.5 text-purple-400"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
+          };
         }
         return {
-          badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-          dot: 'bg-blue-400',
-          label: String(actionRaw || 'Action').replace(/_/g, ' ')
+          key: a || 'mod',
+          bg: 'bg-blue-500/10',
+          text: 'text-blue-400',
+          label: String(actionRaw || 'Action').replace(/_/g, ' '),
+          summaryLabel: String(actionRaw || 'action').toLowerCase().replace(/_/g, ' '),
+          iconSm: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-2.5 h-2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>`,
+          iconMd: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-3.5 h-3.5 text-blue-400"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>`
         };
       }
 
+      const grouped = {};
+      list.forEach(item => {
+        const st = getActionStyle(item.action);
+        if (!grouped[st.key]) grouped[st.key] = { count: 0, style: st };
+        grouped[st.key].count += 1;
+      });
+
       if (pillsEl) {
-        pillsEl.innerHTML = Object.entries(counts).slice(0, 4).map(([act, cnt]) => {
-          const st = getActionStyle(act);
-          return `<span class="px-1.5 py-0.5 text-[10px] font-medium rounded border ${st.badge} capitalize tabular-nums">${cnt} ${escapeHtml(st.label.toLowerCase())}${cnt > 1 ? 's' : ''}</span>`;
-        }).join('');
+        pillsEl.classList.remove('hidden');
+        pillsEl.classList.add('flex');
+        pillsEl.innerHTML = Object.values(grouped).map(({ count, style }) => `
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${style.bg} ${style.text}">
+            ${style.iconSm}
+            <span class="tabular-nums">${count}</span>
+            <span class="opacity-80">${escapeHtml(style.summaryLabel)}</span>
+          </span>
+        `).join('');
       }
 
       body.innerHTML = `
-        <div class="divide-y divide-neutral-800/60 max-h-[380px] overflow-y-auto">
-          ${logs.slice(0, 10).map(item => {
+        <div class="flex flex-col flex-1 min-h-0 divide-y divide-neutral-800/60 overflow-y-auto scrollbar-thin">
+          ${list.slice(0, 15).map(item => {
             const st = getActionStyle(item.action);
             const relTime = formatRelativeTime(item.timestamp);
+            const reasonText = item.reason || 'No reason provided';
+            const titleText = `${st.label} · ${reasonText} · by ${item.mod_name || 'Moderator'}`;
             return `
-              <div class="flex items-start gap-3 px-4 py-3 hover:bg-neutral-800/30 transition-colors">
-                <div class="w-8 h-8 rounded-lg bg-neutral-800/90 flex items-center justify-center shrink-0 mt-0.5">
-                  <span class="w-2 h-2 rounded-full ${st.dot}"></span>
+              <div class="flex items-center gap-2.5 px-4 py-2 hover:bg-neutral-800/30 transition-colors group" title="${escapeHtml(titleText)}">
+                <div class="w-6 h-6 rounded-md ${st.bg} flex items-center justify-center flex-shrink-0">
+                  ${st.iconMd}
                 </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-xs font-semibold text-white truncate">${escapeHtml(item.target_name || 'Unknown User')}</span>
-                    <span class="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded border ${st.badge}">${escapeHtml(st.label)}</span>
-                    <span class="text-[11px] text-neutral-500 truncate">by <span class="text-neutral-400">${escapeHtml(item.mod_name || 'Moderator')}</span></span>
-                  </div>
-                  <p class="text-xs text-neutral-400 mt-0.5 line-clamp-1 break-all">${escapeHtml(item.reason || 'No reason provided')}</p>
+                <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                  <span class="text-[13px] font-medium text-white truncate flex-shrink-0 max-w-[96px] sm:max-w-[140px]">${escapeHtml(item.target_name || 'Unknown User')}</span>
+                  <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${st.bg} ${st.text} flex-shrink-0">${escapeHtml(st.label)}</span>
+                  <span class="text-[11px] text-neutral-500 truncate">${escapeHtml(reasonText)}</span>
                 </div>
-                <span class="text-[11px] text-neutral-500 shrink-0 tabular-nums mt-0.5">${escapeHtml(relTime)}</span>
+                <span class="text-[10px] text-neutral-500 tabular-nums flex-shrink-0">${escapeHtml(relTime)}</span>
               </div>
             `;
           }).join('')}
