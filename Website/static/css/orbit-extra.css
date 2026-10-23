@@ -4869,7 +4869,7 @@ input:checked + .toggle-slider:before {
   background-color: #ffffff !important;
 }
 
-/* 2. Universal Dashboard Switch / Toggle Styling (role="switch") */
+/* 2. Universal Dashboard Switch / Toggle Styling (role="switch") with Clean Spring Animation */
 button[role="switch"] {
   position: relative !important;
   display: inline-flex !important;
@@ -4877,12 +4877,26 @@ button[role="switch"] {
   flex-shrink: 0 !important;
   border-radius: 9999px !important;
   cursor: pointer !important;
-  transition: background-color 180ms cubic-bezier(0.4, 0, 0.2, 1), border-color 180ms cubic-bezier(0.4, 0, 0.2, 1) !important;
   box-sizing: border-box !important;
+  -webkit-tap-highlight-color: transparent !important;
+  transition:
+    background-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+button[role="switch"]:hover {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06) !important;
+}
+
+button[role="switch"]:active {
+  transform: scale(0.97) !important;
 }
 
 button[role="switch"][aria-checked="true"] {
   background-color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.18) !important;
 }
 
 button[role="switch"][aria-checked="false"] {
@@ -4898,18 +4912,31 @@ button[role="switch"] > span {
   border-radius: 9999px !important;
   pointer-events: none !important;
   translate: none !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45) !important;
-  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background-color 180ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  will-change: transform, width, background-color !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 1px rgba(0, 0, 0, 0.3) !important;
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 button[role="switch"][aria-checked="true"] > span {
   background-color: #0a0a0a !important;
-  transform: translate(21px, -50%) !important;
+  transform: translate3d(21px, -50%, 0) !important;
 }
 
 button[role="switch"][aria-checked="false"] > span {
   background-color: #171717 !important;
-  transform: translate(3px, -50%) !important;
+  transform: translate3d(3px, -50%, 0) !important;
+}
+
+/* Tactile thumb stretch on active press */
+button[role="switch"]:active > span {
+  width: 19px !important;
+}
+button[role="switch"][aria-checked="true"]:active > span {
+  transform: translate3d(18px, -50%, 0) !important;
 }
 
 /* Compact w-9 h-5 switches (e.g. Sticky Roles / Booster Role) */
@@ -4918,10 +4945,16 @@ button[role="switch"].w-9 > span {
   height: 14px !important;
 }
 button[role="switch"].w-9[aria-checked="true"] > span {
-  transform: translate(19px, -50%) !important;
+  transform: translate3d(19px, -50%, 0) !important;
 }
 button[role="switch"].w-9[aria-checked="false"] > span {
-  transform: translate(3px, -50%) !important;
+  transform: translate3d(3px, -50%, 0) !important;
+}
+button[role="switch"].w-9:active > span {
+  width: 17px !important;
+}
+button[role="switch"].w-9[aria-checked="true"]:active > span {
+  transform: translate3d(16px, -50%, 0) !important;
 }
 
 /* Larger w-11 h-6 switches */
@@ -4930,10 +4963,16 @@ button[role="switch"].w-11 > span {
   height: 18px !important;
 }
 button[role="switch"].w-11[aria-checked="true"] > span {
-  transform: translate(22px, -50%) !important;
+  transform: translate3d(22px, -50%, 0) !important;
 }
 button[role="switch"].w-11[aria-checked="false"] > span {
-  transform: translate(3px, -50%) !important;
+  transform: translate3d(3px, -50%, 0) !important;
+}
+button[role="switch"].w-11:active > span {
+  width: 21px !important;
+}
+button[role="switch"].w-11[aria-checked="true"]:active > span {
+  transform: translate3d(19px, -50%, 0) !important;
 }
 
 /* 3. Left Sidebar Navigation (#dash-sidebar) Independent Scrolling */

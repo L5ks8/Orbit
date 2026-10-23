@@ -155,30 +155,34 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
     if (!trigger || !menu) return;
 
     const toggle = (show) => {
-      if (show) {
+      const currentlyHidden = menu.classList.contains('hidden');
+      if (show && currentlyHidden) {
         menu.classList.remove('hidden');
         if (searchInput) {
           searchInput.focus();
           searchInput.value = '';
           filter('');
         }
-      } else {
+        if (window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
+      } else if (!show && !currentlyHidden) {
         menu.classList.add('hidden');
+        if (window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
       }
-      if (window.OrbitDropdownManager) window.OrbitDropdownManager.sync();
     };
 
     trigger.onclick = (e) => {
       e.stopPropagation();
       const isHidden = menu.classList.contains('hidden');
       document.querySelectorAll('.custom-select-menu').forEach(m => {
-        if (m !== menu) m.classList.add('hidden');
+        if (m !== menu && !m.classList.contains('hidden')) m.classList.add('hidden');
       });
       toggle(isHidden);
     };
 
     document.addEventListener('click', (e) => {
-      if (!document.getElementById(containerId)?.contains(e.target)) {
+      if (menu.classList.contains('hidden')) return;
+      const wrapper = document.getElementById(containerId);
+      if (!wrapper || !wrapper.contains(e.target)) {
         toggle(false);
       }
     });
@@ -357,61 +361,99 @@ const OrbitDropdownManager = {
   selector: '.custom-select-menu, .orbit-dropdown-menu, [id$="-menu"].absolute, [id$="-dropdown"].absolute, [id$="-popover"].absolute',
   elevatedAncestors: new Set(),
   unclippedAncestors: new Set(),
+  activeOpenMenus: [],
+  _rafId: null,
 
   getOpenDropdowns() {
     const candidates = document.querySelectorAll(this.selector);
     const openList = [];
     candidates.forEach(el => {
       if (el.classList.contains('hidden')) return;
-      const style = window.getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return;
+      if (el.offsetParent === null && window.getComputedStyle(el).position !== 'fixed') return;
       openList.push(el);
     });
     return openList;
   },
 
-  sync() {
-    // Clean up previous ancestor classes
-    this.elevatedAncestors.forEach(anc => anc.classList.remove('orbit-dropdown-ancestor-active'));
-    this.elevatedAncestors.clear();
-    this.unclippedAncestors.forEach(anc => anc.classList.remove('orbit-dropdown-card-unclip'));
-    this.unclippedAncestors.clear();
+  scheduleSync() {
+    if (this._rafId) cancelAnimationFrame(this._rafId);
+    this._rafId = requestAnimationFrame(() => {
+      this._rafId = null;
+      this.sync();
+    });
+  },
 
+  sync() {
     const openMenus = this.getOpenDropdowns();
+    this.activeOpenMenus = openMenus;
+
+    const nextElevated = new Set();
+    const nextUnclipped = new Set();
 
     openMenus.forEach(menu => {
-      menu.classList.add('orbit-dropdown-active-menu');
-      menu.setAttribute('data-lenis-prevent', 'true');
-      menu.style.zIndex = '99999';
+      if (!menu.classList.contains('orbit-dropdown-active-menu')) {
+        menu.classList.add('orbit-dropdown-active-menu');
+      }
+      if (menu.getAttribute('data-lenis-prevent') !== 'true') {
+        menu.setAttribute('data-lenis-prevent', 'true');
+      }
+      if (menu.style.zIndex !== '99999') {
+        menu.style.zIndex = '99999';
+      }
 
       // Ensure inner scroll containers have data-lenis-prevent
       menu.querySelectorAll('.overflow-y-auto').forEach(sc => {
-        sc.setAttribute('data-lenis-prevent', 'true');
+        if (sc.getAttribute('data-lenis-prevent') !== 'true') {
+          sc.setAttribute('data-lenis-prevent', 'true');
+        }
       });
 
       // Elevate ancestor stacking contexts so sibling cards below never cover the open dropdown
       let curr = menu.parentElement;
       const stopRoot = document.getElementById('dash-tab-content') || document.body;
       while (curr && curr !== stopRoot && curr !== document.body) {
-        curr.classList.add('orbit-dropdown-ancestor-active');
-        this.elevatedAncestors.add(curr);
+        nextElevated.add(curr);
+        if (!curr.classList.contains('orbit-dropdown-ancestor-active')) {
+          curr.classList.add('orbit-dropdown-ancestor-active');
+        }
         if (curr.classList.contains('overflow-hidden') && !curr.classList.contains('overflow-y-auto')) {
-          curr.classList.add('orbit-dropdown-card-unclip');
-          this.unclippedAncestors.add(curr);
+          nextUnclipped.add(curr);
+          if (!curr.classList.contains('orbit-dropdown-card-unclip')) {
+            curr.classList.add('orbit-dropdown-card-unclip');
+          }
         }
         curr = curr.parentElement;
       }
     });
 
+    // Remove classes from ancestors that are no longer active
+    this.elevatedAncestors.forEach(anc => {
+      if (!nextElevated.has(anc)) {
+        anc.classList.remove('orbit-dropdown-ancestor-active');
+      }
+    });
+    this.elevatedAncestors = nextElevated;
+
+    this.unclippedAncestors.forEach(anc => {
+      if (!nextUnclipped.has(anc)) {
+        anc.classList.remove('orbit-dropdown-card-unclip');
+      }
+    });
+    this.unclippedAncestors = nextUnclipped;
+
     if (openMenus.length > 0) {
-      window.__orbitDropdownOpen = true;
-      if (window.__lenis && typeof window.__lenis.stop === 'function') {
-        window.__lenis.stop();
+      if (!window.__orbitDropdownOpen) {
+        window.__orbitDropdownOpen = true;
+        if (window.__lenis && typeof window.__lenis.stop === 'function') {
+          window.__lenis.stop();
+        }
       }
     } else {
-      window.__orbitDropdownOpen = false;
-      if (window.__lenis && typeof window.__lenis.start === 'function') {
-        window.__lenis.start();
+      if (window.__orbitDropdownOpen) {
+        window.__orbitDropdownOpen = false;
+        if (window.__lenis && typeof window.__lenis.start === 'function') {
+          window.__lenis.start();
+        }
       }
     }
   },
@@ -436,53 +478,53 @@ const OrbitDropdownManager = {
   },
 
   init() {
-    // Observe class & DOM changes to detect dropdown open/close immediately
-    const observer = new MutationObserver(() => {
-      this.sync();
-    });
-    if (document.body) {
-      observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ['class', 'style'],
-        childList: true,
-        subtree: true
-      });
-    }
+    // Sync on user interactions (no MutationObserver to avoid DOM mutation feedback loops)
+    const onInteraction = () => this.scheduleSync();
+    document.addEventListener('click', onInteraction, true);
+    document.addEventListener('click', onInteraction, false);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+        this.scheduleSync();
+      }
+    }, false);
 
     // Lock wheel scrolling outside open dropdowns, and allow smooth scrolling inside open dropdowns & sidebar
     window.addEventListener('wheel', (e) => {
-      const openMenus = this.getOpenDropdowns();
-      if (openMenus.length > 0) {
-        const activeMenu = openMenus.find(m => m.contains(e.target));
-        if (!activeMenu) {
-          // User scrolled outside the open dropdown -> block scrolling completely!
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        // User is scrolling inside the open dropdown
-        const scroller = this.findScrollableInMenu(activeMenu, e.target);
-        if (!scroller) {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        const atTop = scroller.scrollTop <= 0 && e.deltaY < 0;
-        const atBottom = (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1) && e.deltaY > 0;
-        if (atTop || atBottom) {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        // Allow native scroll inside the dropdown scroller, stop Lenis from hijacking
+      if (!window.__orbitDropdownOpen && this.activeOpenMenus.length === 0) return;
+      const openMenus = this.activeOpenMenus.filter(m => document.body.contains(m) && !m.classList.contains('hidden'));
+      if (openMenus.length === 0) {
+        this.scheduleSync();
+        return;
+      }
+      const activeMenu = openMenus.find(m => m.contains(e.target));
+      if (!activeMenu) {
+        // User scrolled outside the open dropdown -> block scrolling completely!
+        e.preventDefault();
         e.stopPropagation();
         return;
       }
+      // User is scrolling inside the open dropdown
+      const scroller = this.findScrollableInMenu(activeMenu, e.target);
+      if (!scroller) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      const atTop = scroller.scrollTop <= 0 && e.deltaY < 0;
+      const atBottom = (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1) && e.deltaY > 0;
+      if (atTop || atBottom) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      // Allow native scroll inside the dropdown scroller, stop Lenis from hijacking
+      e.stopPropagation();
     }, { passive: false, capture: true });
 
     // Also lock touchmove outside open dropdowns on touch devices
     window.addEventListener('touchmove', (e) => {
-      const openMenus = this.getOpenDropdowns();
+      if (!window.__orbitDropdownOpen && this.activeOpenMenus.length === 0) return;
+      const openMenus = this.activeOpenMenus.filter(m => document.body.contains(m) && !m.classList.contains('hidden'));
       if (openMenus.length > 0) {
         const activeMenu = openMenus.find(m => m.contains(e.target));
         if (!activeMenu) {

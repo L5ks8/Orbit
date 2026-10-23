@@ -717,7 +717,13 @@ DashboardTabs.Roles = async function (container, guildId) {
           const found = state.customRules.find(r => r.id === rid);
           if (found) {
             found.enabled = !found.enabled;
-            renderCustomRules();
+            btn.setAttribute('aria-checked', String(found.enabled));
+            btn.classList.toggle('bg-white', found.enabled);
+            btn.classList.toggle('bg-neutral-700', !found.enabled);
+            const thumb = btn.querySelector('span');
+            if (thumb) {
+              thumb.className = `pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${found.enabled ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}`;
+            }
             saveRolesConfig();
           }
         });
@@ -734,6 +740,18 @@ DashboardTabs.Roles = async function (container, guildId) {
       });
     };
 
+    const syncCompactSwitch = (btn, checked) => {
+      if (!btn) return;
+      btn.setAttribute('aria-checked', String(checked));
+      btn.className = `relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${checked ? 'bg-white' : 'bg-neutral-700'}`;
+      let thumb = btn.querySelector('span');
+      if (!thumb) {
+        thumb = document.createElement('span');
+        btn.appendChild(thumb);
+      }
+      thumb.className = `pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${checked ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}`;
+    };
+
     // 4. Sticky Roles Renderer
     const renderStickyRoles = () => {
       const enabledBtn = document.getElementById('sticky-enabled-switch');
@@ -742,17 +760,8 @@ DashboardTabs.Roles = async function (container, guildId) {
       const pillsWrap = document.getElementById('sticky-roles-pills');
       const menuWrap = document.getElementById('sticky-roles-menu');
 
-      if (enabledBtn) {
-        enabledBtn.setAttribute('aria-checked', String(state.stickyRoles.enabled));
-        enabledBtn.className = `relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.stickyRoles.enabled ? 'bg-white' : 'bg-neutral-700'}`;
-        enabledBtn.innerHTML = `<span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.stickyRoles.enabled ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>`;
-      }
-
-      if (restoreAllBtn) {
-        restoreAllBtn.setAttribute('aria-checked', String(state.stickyRoles.restore_all));
-        restoreAllBtn.className = `relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.stickyRoles.restore_all ? 'bg-white' : 'bg-neutral-700'}`;
-        restoreAllBtn.innerHTML = `<span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.stickyRoles.restore_all ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>`;
-      }
+      syncCompactSwitch(enabledBtn, state.stickyRoles.enabled);
+      syncCompactSwitch(restoreAllBtn, state.stickyRoles.restore_all);
 
       if (specificWrap) {
         specificWrap.className = state.stickyRoles.restore_all ? 'hidden' : 'pt-1';
@@ -810,11 +819,7 @@ DashboardTabs.Roles = async function (container, guildId) {
       const labelEl = document.getElementById('booster-role-label');
       const menuEl = document.getElementById('booster-role-menu');
 
-      if (switchBtn) {
-        switchBtn.setAttribute('aria-checked', String(state.boosterRole.enabled));
-        switchBtn.className = `relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.boosterRole.enabled ? 'bg-white' : 'bg-neutral-700'}`;
-        switchBtn.innerHTML = `<span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.boosterRole.enabled ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>`;
-      }
+      syncCompactSwitch(switchBtn, state.boosterRole.enabled);
 
       const selectedRole = getRoleById(state.boosterRole.role_id);
       if (labelEl) {

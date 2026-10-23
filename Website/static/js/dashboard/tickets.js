@@ -212,6 +212,18 @@ DashboardTabs.Tickets = async function (container, guildId) {
       </button>
     `;
 
+    const updateSwitchVisual = (id, checked) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.setAttribute('aria-checked', String(checked));
+      btn.classList.toggle('bg-white', checked);
+      btn.classList.toggle('bg-neutral-700', !checked);
+      const thumb = btn.querySelector('span');
+      if (thumb) {
+        thumb.className = `pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-900'}`;
+      }
+    };
+
     const computeLiveStats = () => {
       const openCount = state.activeTickets.filter(t => !t.claimed_by && t.status !== 'claimed').length;
       const claimedCount = state.activeTickets.filter(t => Boolean(t.claimed_by) || t.status === 'claimed').length;
@@ -740,7 +752,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
       // Settings switches & inputs
       document.getElementById('tkt-switch-autoclose')?.addEventListener('click', () => {
         state.auto_close_time_enabled = !state.auto_close_time_enabled;
-        renderMain();
+        updateSwitchVisual('tkt-switch-autoclose', state.auto_close_time_enabled);
+        document.getElementById('autoclose-hours-wrap')?.classList.toggle('hidden', !state.auto_close_time_enabled);
         saveTicketConfig();
       });
 
@@ -761,19 +774,20 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
       document.getElementById('tkt-switch-staff-close')?.addEventListener('click', () => {
         state.staff_only_close = !state.staff_only_close;
-        renderMain();
+        updateSwitchVisual('tkt-switch-staff-close', state.staff_only_close);
         saveTicketConfig();
       });
 
       document.getElementById('tkt-switch-ping-support')?.addEventListener('click', () => {
         state.ping_support_roles = !state.ping_support_roles;
-        renderMain();
+        updateSwitchVisual('tkt-switch-ping-support', state.ping_support_roles);
         saveTicketConfig();
       });
 
       document.getElementById('tkt-switch-ping-custom')?.addEventListener('click', () => {
         state.ping_custom_role_enabled = !state.ping_custom_role_enabled;
-        renderMain();
+        updateSwitchVisual('tkt-switch-ping-custom', state.ping_custom_role_enabled);
+        document.getElementById('ping-custom-role-wrap')?.classList.toggle('hidden', !state.ping_custom_role_enabled);
         saveTicketConfig();
       });
 
@@ -784,7 +798,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
       document.getElementById('tkt-switch-claiming')?.addEventListener('click', () => {
         state.claiming_enabled = !state.claiming_enabled;
-        renderMain();
+        updateSwitchVisual('tkt-switch-claiming', state.claiming_enabled);
         saveTicketConfig();
       });
     };
@@ -1446,7 +1460,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
         document.getElementById('wiz-switch-proof')?.addEventListener('click', () => {
           draft.require_proof = !draft.require_proof;
-          renderModalContent();
+          updateSwitchVisual('wiz-switch-proof', draft.require_proof);
         });
 
         // Step 3 bindings
@@ -1486,7 +1500,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         // Step 4 bindings
         document.getElementById('wiz-switch-post-now')?.addEventListener('click', () => {
           draft.post_immediately = draft.post_immediately === false ? true : false;
-          renderModalContent();
+          updateSwitchVisual('wiz-switch-post-now', draft.post_immediately);
         });
 
         // Prev / Next footer buttons
