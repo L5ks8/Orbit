@@ -96,6 +96,7 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_get("/auth/login", dashboard.handle_login)
     app.router.add_get("/auth/callback", dashboard.handle_callback)
     app.router.add_get("/auth/logout", dashboard.handle_logout)
+    app.router.add_post("/api/auth/session", dashboard.api_create_session)
     
     app.router.add_get("/api/captcha/{token}", dashboard.handle_api_captcha)
     app.router.add_post("/api/verify/{token}", dashboard.handle_api_verify)

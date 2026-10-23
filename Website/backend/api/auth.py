@@ -27,130 +27,17 @@ class AuthMixin:
         state = urllib.parse.quote(state_val)
             
         redirect_uri = self.get_redirect_uri(request)
+        # Using response_type=token (Implicit Grant) completely prevents Discord/Cloudflare Error 1015 on token exchange
         discord_login_url = (
-            f"https://discord.com/api/oauth2/authorize?client_id={self.client_id}"
-            f"&redirect_uri={redirect_uri}&response_type=code&scope=identify%20guilds"
+            f"https://discord.com/oauth2/authorize?client_id={self.client_id}"
+            f"&redirect_uri={redirect_uri}&response_type=token&scope=identify%20guilds"
             f"&state={state}"
         )
         raise web.HTTPFound(discord_login_url)
 
     async def handle_callback(self, request: web.Request):
-        code = request.query.get("code")
-        state = request.query.get("state", "/dashboard")
-        import urllib.parse
-        try:
-            next_url = urllib.parse.unquote(state)
-            if not next_url.startswith("/") or next_url == "/":
-                next_url = "/dashboard"
-        except:
-            next_url = "/dashboard"
-            
-        if not code:
-            error_html = self._render_auth_error("Fehlender Autorisierungscode von Discord.")
-            return web.Response(text=error_html, content_type="text/html", status=400)
-            
-        redirect_uri = self.get_redirect_uri(request)
-        
-        data = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": redirect_uri
-        }
-        
-        discord_headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 (compatible; OrbitBot/2.0)",
-            "Accept": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-
-        user_info = None
-        access_token = None
-        last_error = ""
-
-        timeout = aiohttp.ClientTimeout(total=20)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            for attempt in range(2):
-                try:
-                    async with session.post(
-                        "https://discord.com/api/oauth2/token",
-                        data=data,
-                        headers=discord_headers
-                    ) as resp:
-                        if resp.status == 200:
-                            token_info = await resp.json()
-                            access_token = token_info.get("access_token")
-                            break
-                        else:
-                            last_error = await resp.text()
-                            if resp.status in (429, 500, 502, 503) or "1015" in last_error:
-                                await asyncio.sleep(1.2)
-                                continue
-                            break
-                except Exception as e:
-                    last_error = str(e)
-                    await asyncio.sleep(1.0)
-
-            if access_token:
-                user_headers = {
-                    "Authorization": f"Bearer {access_token}",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 (compatible; OrbitBot/2.0)",
-                    "Accept": "application/json"
-                }
-                for attempt in range(2):
-                    try:
-                        async with session.get("https://discord.com/api/users/@me", headers=user_headers) as resp:
-                            if resp.status == 200:
-                                user_info = await resp.json()
-                                break
-                            else:
-                                last_error = await resp.text()
-                                if resp.status in (429, 500, 502, 503):
-                                    await asyncio.sleep(1.0)
-                                    continue
-                                break
-                    except Exception as e:
-                        last_error = str(e)
-                        await asyncio.sleep(1.0)
-
-        if not user_info:
-            print(f"[Auth Error] Failed to exchange Discord OAuth token: {last_error}")
-            error_html = self._render_auth_error("Die Discord-Anmeldung ist abgelaufen oder wurde abgebrochen. Bitte versuchen Sie es erneut.")
-            return web.Response(text=error_html, content_type="text/html", status=400)
-
-        session_id = secrets.token_urlsafe(32)
-        self.sessions[session_id] = {
-            "id": user_info["id"],
-            "username": user_info["username"],
-            "avatar": user_info.get("avatar"),
-            "access_token": access_token
-        }
-        
-        try:
-            import sys
-            import os
-            import time
-            sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-            from Components.Database.mongodb import get_db
-            db = get_db()
-            ip = request.headers.get("X-Forwarded-For", request.remote)
-            if ip and "," in ip:
-                ip = ip.split(",")[0].strip()
-            user_agent = request.headers.get("User-Agent", "Unknown")
-            login_entry = {
-                "timestamp": int(time.time()),
-                "ip": ip,
-                "user_agent": user_agent
-            }
-            db["Users"].update_one(
-                {"_id": str(user_info["id"])},
-                {"$push": {"login_history": {"$each": [login_entry], "$slice": -10}}},
-                upsert=True
-            )
-        except Exception as e:
-            print(f"Failed to save login history: {e}")
-        
+        # Serves the exact confirmation screen matching PeakBot design (Screenshots 2 & 3).
+        # Handles both implicit grant (#access_token=...) and code grant (?code=...) client-side.
         confirmation_html = """<!DOCTYPE html>
 <html lang="de" class="dark">
 <head>
@@ -244,6 +131,17 @@ class AuthMixin:
     color: #ffffff;
     text-decoration: underline;
   }
+  .error-btn {
+    display: none;
+    margin-top: 22px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: #5865F2;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+  }
 
   /* Success State matching PeakBot */
   .success .icon-wrap {
@@ -256,6 +154,17 @@ class AuthMixin:
     display: block;
   }
   .success .redirect-link {
+    display: inline-block;
+  }
+
+  /* Error State */
+  .is-error .icon-wrap {
+    background: rgba(239, 68, 68, 0.15);
+  }
+  .is-error .spinner {
+    display: none;
+  }
+  .is-error .error-btn {
     display: inline-block;
   }
 </style>
@@ -274,6 +183,7 @@ class AuthMixin:
   <p id="desc">Bitte warten Sie, während wir Ihre Anmeldung abschließen.</p>
   <div>
     <a href="/dashboard" id="redirect-link" class="redirect-link" onclick="handleRedirect(event)">Not redirecting? Click here</a>
+    <a href="/auth/login?popup=1" id="retry-btn" class="error-btn">Erneut versuchen</a>
   </div>
 </div>
 <script>
@@ -307,8 +217,7 @@ class AuthMixin:
     }
   }
 
-  // Show "Authentifizierung..." first (Image 2), then switch to "Success!" (Image 3)
-  setTimeout(function() {
+  function showSuccess() {
     var card = document.getElementById('card');
     if (card) card.classList.add('success');
     var title = document.getElementById('title');
@@ -331,86 +240,182 @@ class AuthMixin:
         window.location.href = '/dashboard';
       }
     }, 1300);
-  }, 700);
+  }
+
+  function showError(msg) {
+    var card = document.getElementById('card');
+    if (card) {
+      card.classList.remove('success');
+      card.classList.add('is-error');
+    }
+    var title = document.getElementById('title');
+    if (title) title.textContent = 'Authentifizierung fehlgeschlagen';
+    var desc = document.getElementById('desc');
+    if (desc) desc.textContent = msg || 'Die Discord-Anmeldung ist abgelaufen oder wurde abgebrochen. Bitte versuchen Sie es erneut.';
+  }
+
+  async function processAuth() {
+    try {
+      var hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      var queryParams = new URLSearchParams(window.location.search);
+      
+      var accessToken = hashParams.get('access_token');
+      var code = queryParams.get('code');
+      var error = hashParams.get('error') || queryParams.get('error');
+
+      if (error) {
+        showError('Die Anmeldung wurde in Discord abgebrochen.');
+        return;
+      }
+
+      if (accessToken) {
+        // Fetch user from Discord directly via client home IP to bypass any server Cloudflare blocks
+        var userInfo = null;
+        try {
+          var userRes = await fetch('https://discord.com/api/users/@me', {
+            headers: { 'Authorization': 'Bearer ' + accessToken }
+          });
+          if (userRes.ok) {
+            userInfo = await userRes.json();
+          }
+        } catch (_) {}
+
+        // Send to backend session endpoint
+        var sessionRes = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: accessToken, user_info: userInfo })
+        });
+
+        if (!sessionRes.ok) {
+          throw new Error('Session creation failed');
+        }
+
+        setTimeout(showSuccess, 400);
+        return;
+      }
+
+      if (code) {
+        // Legacy code exchange fallback
+        var sessionRes = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code })
+        });
+
+        if (sessionRes.ok) {
+          setTimeout(showSuccess, 400);
+        } else {
+          // If code grant fails due to Cloudflare 1015 on server, automatically upgrade to token flow
+          window.location.href = '/auth/login?popup=1';
+        }
+        return;
+      }
+
+      // No token or code, redirect to login
+      window.location.href = '/auth/login?popup=1';
+    } catch (err) {
+      showError('Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.');
+    }
+  }
+
+  processAuth();
 </script>
 </body>
 </html>"""
-        response = web.Response(text=confirmation_html, content_type="text/html")
-        response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
-        return response
+        return web.Response(text=confirmation_html, content_type="text/html")
 
-    def _render_auth_error(self, message: str) -> str:
-        return f"""<!DOCTYPE html>
-<html lang="de" class="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fehler - Orbit</title>
-<style>
-  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{
-    background: #0a0a0a;
-    color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 16px;
-  }}
-  .card {{
-    background: #121212;
-    border: 1px solid #262626;
-    border-radius: 24px;
-    padding: 44px 32px 36px;
-    text-align: center;
-    max-width: 400px;
-    width: 100%;
-    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
-  }}
-  .icon-wrap {{
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(239, 68, 68, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 22px;
-  }}
-  h2 {{ font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }}
-  p {{ font-size: 14px; color: #8e8e93; line-height: 1.5; margin-bottom: 24px; }}
-  .btn {{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 24px;
-    border-radius: 12px;
-    background: #5865F2;
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 14px;
-    text-decoration: none;
-    transition: background 0.15s ease;
-  }}
-  .btn:hover {{ background: #4752C4; }}
-</style>
-</head>
-<body>
-<div class="card">
-  <div class="icon-wrap">
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="12" y1="8" x2="12" y2="12"></line>
-      <line x1="12" y1="16" x2="12.01" y2="16"></line>
-    </svg>
-  </div>
-  <h2>Authentifizierung fehlgeschlagen</h2>
-  <p>{message}</p>
-  <a href="/auth/login?next=/dashboard&popup=1" class="btn">Erneut versuchen</a>
-</div>
-</body>
-</html>"""
+    async def api_create_session(self, request: web.Request):
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "Invalid JSON"}, status=400)
+
+        access_token = body.get("access_token")
+        user_info = body.get("user_info")
+        code = body.get("code")
+
+        # Code grant exchange fallback if code was supplied
+        if code and not access_token:
+            redirect_uri = self.get_redirect_uri(request)
+            data = {
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": redirect_uri
+            }
+            discord_headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 (compatible; OrbitBot/2.0)",
+                "Accept": "application/json",
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+            try:
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+                    async with session.post("https://discord.com/api/oauth2/token", data=data, headers=discord_headers) as resp:
+                        if resp.status == 200:
+                            tok = await resp.json()
+                            access_token = tok.get("access_token")
+            except Exception:
+                pass
+
+        if not access_token:
+            return web.json_response({"error": "Missing access_token"}, status=400)
+
+        # If user_info was not provided by the client, fetch it
+        if not user_info or "id" not in user_info:
+            user_headers = {
+                "Authorization": f"Bearer {access_token}",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 (compatible; OrbitBot/2.0)",
+                "Accept": "application/json"
+            }
+            try:
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+                    async with session.get("https://discord.com/api/users/@me", headers=user_headers) as resp:
+                        if resp.status == 200:
+                            user_info = await resp.json()
+            except Exception:
+                pass
+
+        if not user_info or "id" not in user_info:
+            return web.json_response({"error": "Failed to verify user info"}, status=400)
+
+        session_id = secrets.token_urlsafe(32)
+        self.sessions[session_id] = {
+            "id": user_info["id"],
+            "username": user_info.get("username", "User"),
+            "avatar": user_info.get("avatar"),
+            "access_token": access_token
+        }
+
+        # Save login history
+        try:
+            import sys
+            import os
+            import time
+            sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+            from Components.Database.mongodb import get_db
+            db = get_db()
+            ip = request.headers.get("X-Forwarded-For", request.remote)
+            if ip and "," in ip:
+                ip = ip.split(",")[0].strip()
+            user_agent = request.headers.get("User-Agent", "Unknown")
+            login_entry = {
+                "timestamp": int(time.time()),
+                "ip": ip,
+                "user_agent": user_agent
+            }
+            db["Users"].update_one(
+                {"_id": str(user_info["id"])},
+                {"$push": {"login_history": {"$each": [login_entry], "$slice": -10}}},
+                upsert=True
+            )
+        except Exception as e:
+            print(f"Failed to save login history: {e}")
+
+        response = web.json_response({"ok": True, "user": user_info})
+        response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True, path="/")
+        return response
 
     async def handle_logout(self, request: web.Request):
         session_id = request.cookies.get("orbit_session")
