@@ -8,8 +8,9 @@ class StatsTracker(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.voice_join_times = {}
+        self.voice_join_channels = {}
 
-    def _increment_stat(self, guild_id: int, stat_name: str, amount: int = 1, user_id: int = None, channel_id: int = None):
+    def _increment_stat(self, guild_id: int, stat_name: str, amount: int = 1, user_id: int = None, channel_id: int = None, extra_incs: dict = None):
         db = get_db()
         if db is None:
             return
@@ -29,9 +30,21 @@ class StatsTracker(commands.Cog):
         if stat_name == "messages":
             hour_key = now_utc.strftime("%H")
             update_data["$inc"][f"hours.{hour_key}"] = amount
+            if user_id:
+                update_data["$inc"][f"user_messages.{user_id}"] = amount
 
         if channel_id:
-            update_data["$inc"][f"channels.{channel_id}"] = amount
+            if stat_name == "voice_minutes":
+                update_data["$inc"][f"voice_channels.{channel_id}"] = amount
+            else:
+                update_data["$inc"][f"channels.{channel_id}"] = amount
+
+        if stat_name == "voice_minutes" and user_id:
+            update_data["$inc"][f"user_voice.{user_id}"] = amount
+
+        if extra_incs:
+            for k, v in extra_incs.items():
+                update_data["$inc"][k] = update_data["$inc"].get(k, 0) + v
             
         if user_id:
             update_data["$addToSet"] = {"active_users": user_id}
@@ -51,7 +64,13 @@ class StatsTracker(commands.Cog):
             return
             
         guild_id = message.guild.id
-        self._increment_stat(guild_id, "messages", 1, message.author.id, message.channel.id)
+        extra_incs = {}
+        if message.mentions:
+            for m in message.mentions:
+                if not m.bot:
+                    extra_incs[f"mentioned_users.{m.id}"] = extra_incs.get(f"mentioned_users.{m.id}", 0) + 1
+
+        self._increment_stat(guild_id, "messages", 1, message.author.id, message.channel.id, extra_incs=extra_incs)
         
         if not hasattr(self.bot, 'recent_messages'):
             self.bot.recent_messages = {}
@@ -64,6 +83,35 @@ class StatsTracker(commands.Cog):
         
         cutoff = now - 3900
         self.bot.recent_messages[guild_id] = [ts for ts in self.bot.recent_messages[guild_id] if ts > cutoff]
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        if not payload.guild_id or (payload.member and payload.member.bot):
+            return
+        db = get_db()
+        if db is None:
+            return
+        now_utc = datetime.now(timezone.utc)
+        today_str = now_utc.strftime("%Y-%m-%d")
+        doc_id = f"{payload.guild_id}_{today_str}"
+        inc_fields = {
+            "reactions": 1,
+            f"reaction_channels.{payload.channel_id}": 1
+        }
+        target_uid = getattr(payload, "message_author_id", None) or payload.user_id
+        if target_uid:
+            inc_fields[f"reacted_users.{target_uid}"] = 1
+        try:
+            db["GuildStats"].update_one(
+                {"_id": doc_id},
+                {
+                    "$inc": inc_fields,
+                    "$setOnInsert": {"guild_id": payload.guild_id, "date": today_str}
+                },
+                upsert=True
+            )
+        except Exception:
+            pass
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -96,24 +144,35 @@ class StatsTracker(commands.Cog):
         if before.channel is None and after.channel is not None:
             if not after.afk and not after.self_deaf and not after.deaf:
                 self.voice_join_times[uid] = time.time()
+                self.voice_join_channels[uid] = after.channel.id
                 
         elif before.channel is not None and after.channel is None:
             join_time = self.voice_join_times.pop(uid, None)
+            ch_id = self.voice_join_channels.pop(uid, before.channel.id)
             if join_time:
                 elapsed_minutes = int((time.time() - join_time) / 60)
                 if elapsed_minutes > 0:
-                    self._increment_stat(member.guild.id, "voice_minutes", elapsed_minutes)
+                    self._increment_stat(member.guild.id, "voice_minutes", elapsed_minutes, user_id=member.id, channel_id=ch_id)
                     
         elif before.channel is not None and after.channel is not None:
             if after.afk or after.self_deaf or after.deaf:
                 join_time = self.voice_join_times.pop(uid, None)
+                ch_id = self.voice_join_channels.pop(uid, before.channel.id)
                 if join_time:
                     elapsed_minutes = int((time.time() - join_time) / 60)
                     if elapsed_minutes > 0:
-                        self._increment_stat(member.guild.id, "voice_minutes", elapsed_minutes)
+                        self._increment_stat(member.guild.id, "voice_minutes", elapsed_minutes, user_id=member.id, channel_id=ch_id)
             else:
-                if uid not in self.voice_join_times:
+                if before.channel.id != after.channel.id and uid in self.voice_join_times:
+                    join_time = self.voice_join_times[uid]
+                    elapsed_minutes = int((time.time() - join_time) / 60)
+                    if elapsed_minutes > 0:
+                        self._increment_stat(member.guild.id, "voice_minutes", elapsed_minutes, user_id=member.id, channel_id=before.channel.id)
                     self.voice_join_times[uid] = time.time()
+                    self.voice_join_channels[uid] = after.channel.id
+                elif uid not in self.voice_join_times:
+                    self.voice_join_times[uid] = time.time()
+                    self.voice_join_channels[uid] = after.channel.id
 
 async def setup(bot):
     await bot.add_cog(StatsTracker(bot))

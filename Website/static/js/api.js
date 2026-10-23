@@ -188,6 +188,10 @@ const API = {
     return await this.request(`/api/guild_stats_live/${guildId}`);
   },
 
+  async getGuildAnalytics(guildId, days = 7) {
+    return await this.request(`/api/guild_analytics/${guildId}?days=${encodeURIComponent(days)}`);
+  },
+
   // Actions
   async sendTicketPanel(guildId, channelId) {
     return await this.request(`/api/action/${guildId}/send_ticket_panel`, {
