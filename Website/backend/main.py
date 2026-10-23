@@ -17,9 +17,36 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         
     async def get_user_session(self, request: web.Request) -> Optional[Dict[str, Any]]:
         session_id = request.cookies.get("orbit_session")
-        if not session_id or session_id not in self.sessions:
+        if not session_id:
+            auth_header = request.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                session_id = auth_header[7:].strip()
+                
+        if not session_id:
             return None
-        return self.sessions[session_id]
+
+        if session_id in self.sessions:
+            return self.sessions[session_id]
+
+        try:
+            from Components.Database.mongodb import get_db
+            db = get_db()
+            sess = db["WebSessions"].find_one({"_id": session_id})
+            if sess and "user" in sess:
+                u = sess["user"]
+                sess_data = {
+                    "id": str(u.get("id")),
+                    "username": u.get("username", "User"),
+                    "global_name": u.get("global_name") or u.get("username"),
+                    "avatar": u.get("avatar"),
+                    "access_token": sess.get("access_token")
+                }
+                self.sessions[session_id] = sess_data
+                return sess_data
+        except Exception:
+            pass
+
+        return None
 
     async def handle_spa(self, request: web.Request):
         import os

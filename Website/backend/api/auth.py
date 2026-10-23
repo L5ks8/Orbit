@@ -291,6 +291,18 @@ class AuthMixin:
           throw new Error('Session creation failed');
         }
 
+        try {
+          var sessionData = await sessionRes.json();
+          if (sessionData.session_id) localStorage.setItem('token', sessionData.session_id);
+          if (userInfo) localStorage.setItem('orbit_user', JSON.stringify(userInfo));
+          if (window.opener) {
+            try {
+              if (sessionData.session_id) window.opener.localStorage.setItem('token', sessionData.session_id);
+              if (userInfo) window.opener.localStorage.setItem('orbit_user', JSON.stringify(userInfo));
+            } catch (_) {}
+          }
+        } catch (_) {}
+
         setTimeout(showSuccess, 400);
         return;
       }
@@ -381,14 +393,16 @@ class AuthMixin:
             return web.json_response({"error": "Failed to verify user info"}, status=400)
 
         session_id = secrets.token_urlsafe(32)
-        self.sessions[session_id] = {
-            "id": user_info["id"],
+        sess_data = {
+            "id": str(user_info["id"]),
             "username": user_info.get("username", "User"),
+            "global_name": user_info.get("global_name") or user_info.get("username"),
             "avatar": user_info.get("avatar"),
             "access_token": access_token
         }
+        self.sessions[session_id] = sess_data
 
-        # Save login history
+        # Save login history & web session to MongoDB
         try:
             import sys
             import os
@@ -410,11 +424,16 @@ class AuthMixin:
                 {"$push": {"login_history": {"$each": [login_entry], "$slice": -10}}},
                 upsert=True
             )
+            db["WebSessions"].update_one(
+                {"_id": session_id},
+                {"$set": {"user": user_info, "access_token": access_token, "updated_at": time.time()}},
+                upsert=True
+            )
         except Exception as e:
-            print(f"Failed to save login history: {e}")
+            print(f"Failed to save login history / session: {e}")
 
-        response = web.json_response({"ok": True, "user": user_info})
-        response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True, path="/")
+        response = web.json_response({"ok": True, "user": user_info, "session_id": session_id})
+        response.set_cookie("orbit_session", session_id, max_age=86400 * 30, httponly=True, samesite="Lax", path="/")
         return response
 
     async def handle_logout(self, request: web.Request):

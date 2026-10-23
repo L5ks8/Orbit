@@ -62,10 +62,22 @@ const API = {
   // Auth & User
   async getUser() {
     try {
-      return await this.request('/api/user');
-    } catch (err) {
-      return null;
-    }
+      const u = await this.request('/api/user');
+      if (u && u.id) {
+        localStorage.setItem('orbit_user', JSON.stringify(u));
+        return u;
+      }
+    } catch (err) {}
+
+    try {
+      const cached = localStorage.getItem('orbit_user');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.id) return parsed;
+      }
+    } catch (_) {}
+
+    return null;
   },
 
   login(nextUrl = '/dashboard') {
@@ -104,6 +116,7 @@ const API = {
       await fetch('/auth/logout');
     } catch (_) {}
     this.setToken(null);
+    try { localStorage.removeItem('orbit_user'); } catch (_) {}
     window.location.href = '/';
   },
 
