@@ -14,7 +14,6 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
     return folder / "ticket.json"
 
 def load_ticket_config(guild_id: int) -> Dict[str, Any]:
-    path = _get_file_path(guild_id)
     default_cfg = {
         "enabled": False,
         "panel_channel_id": None,
@@ -23,6 +22,7 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         "log_channel_id": None,
         "panel_title": "Support Ticket Desk",
         "panel_description": "Click the button below to open a direct support channel with our team.",
+        "panel_instructions": "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket**.",
         "options": [],
         "options_slots": [],
         "ticket_counter": 0,
@@ -31,7 +31,13 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
         "blacklist": {},
         "auto_close_time_enabled": False,
         "auto_close_time_hours": 24,
-        "max_open_tickets": 3
+        "max_open_tickets": 3,
+        "naming_format": "",
+        "staff_only_close": False,
+        "ping_support_roles": True,
+        "ping_custom_role_enabled": False,
+        "ping_custom_role_id": None,
+        "claiming_enabled": False
     }
     
     try:
@@ -44,31 +50,29 @@ def load_ticket_config(guild_id: int) -> Dict[str, Any]:
     if not isinstance(data, dict):
         data = default_cfg.copy()
 
-    if "active_tickets" not in data:
+    for k, v in default_cfg.items():
+        if k not in data:
+            data[k] = v
+
+    if not isinstance(data.get("active_tickets"), dict):
         data["active_tickets"] = {}
-    if "closed_tickets" not in data or not isinstance(data["closed_tickets"], list):
+    if not isinstance(data.get("closed_tickets"), list):
         data["closed_tickets"] = []
         
     now = time.time()
     thirty_days = 30 * 24 * 60 * 60
-    data["closed_tickets"] = [t for t in data["closed_tickets"] if now - t.get("closed_at", 0) < thirty_days]
+    data["closed_tickets"] = [t for t in data["closed_tickets"] if isinstance(t, dict) and now - t.get("closed_at", now) < thirty_days]
 
-    if "blacklist" not in data:
+    if not isinstance(data.get("blacklist"), dict):
         data["blacklist"] = {}
-    if "ticket_counter" not in data:
-        data["ticket_counter"] = 0
-    if "log_channel_id" not in data:
-        data["log_channel_id"] = None
-    if "options" not in data or not isinstance(data["options"], list):
+    if not isinstance(data.get("options"), list):
         data["options"] = []
-    if "options_slots" not in data or not isinstance(data["options_slots"], list):
+    if not isinstance(data.get("options_slots"), list):
         data["options_slots"] = []
     return data
 
 def save_ticket_config(guild_id: int, config: Dict[str, Any]) -> None:
-    path = _get_file_path(guild_id)
-    if True:
-        set_config("Ticket", guild_id, config)
+    set_config("Ticket", guild_id, config)
 
 def setup_ticket_config(
     guild_id: int,
@@ -96,18 +100,29 @@ def setup_ticket_config(
     save_ticket_config(guild_id, config)
     return config
 
-def create_active_ticket(guild_id: int, channel_id: int, creator_id: int, subject: str, description: str, category_option: str = "General Support") -> int:
+def create_active_ticket(
+    guild_id: int,
+    channel_id: int,
+    creator_id: int,
+    subject: str,
+    description: str,
+    category_option: str = "General Support",
+    status: str = "open"
+) -> int:
     config = load_ticket_config(guild_id)
     counter = config.get("ticket_counter", 0) + 1
     config["ticket_counter"] = counter
     config["active_tickets"][str(channel_id)] = {
+        "id": str(channel_id),
+        "channel_id": str(channel_id),
         "creator_id": creator_id,
         "claimed_by": None,
         "created_at": time.time(),
         "subject": subject,
         "description": description,
         "category_option": category_option,
-        "number": counter
+        "number": counter,
+        "status": status
     }
     save_ticket_config(guild_id, config)
     return counter
@@ -118,15 +133,17 @@ def claim_ticket(guild_id: int, channel_id: int, claimer_id: int) -> Optional[Di
     if not ticket_data:
         return None
     ticket_data["claimed_by"] = claimer_id
+    ticket_data["status"] = "claimed"
     config["active_tickets"][str(channel_id)] = ticket_data
     save_ticket_config(guild_id, config)
     return ticket_data
 
-def close_active_ticket(guild_id: int, channel_id: int) -> Optional[Dict[str, Any]]:
+def close_active_ticket(guild_id: int, channel_id: int, final_status: str = "resolved") -> Optional[Dict[str, Any]]:
     config = load_ticket_config(guild_id)
     ticket_data = config.get("active_tickets", {}).pop(str(channel_id), None)
     if ticket_data:
         ticket_data["closed_at"] = time.time()
+        ticket_data["status"] = final_status
         if "closed_tickets" not in config:
             config["closed_tickets"] = []
         config["closed_tickets"].append(ticket_data)
@@ -134,24 +151,9 @@ def close_active_ticket(guild_id: int, channel_id: int) -> Optional[Dict[str, An
     return ticket_data
 
 def reset_ticket_config(guild_id: int) -> Dict[str, Any]:
-    default_config = {
-        "enabled": False,
-        "panel_channel_id": None,
-        "category_id": None,
-        "support_role_id": None,
-        "log_channel_id": None,
-        "panel_title": "Support Ticket Desk",
-        "panel_description": "Click the button below to open a direct support channel with our team.",
-        "options": ["General Support", "Billing & Payments", "Bug Report"],
-        "ticket_counter": 0,
-        "active_tickets": {},
-        "auto_close_time_enabled": False,
-        "auto_close_time_hours": 24,
-        "max_open_tickets": 3
-    }
+    default_config = load_ticket_config(0)
     save_ticket_config(guild_id, default_config)
     return default_config
-
 
 def is_blacklisted(guild_id: int, user_id: int) -> bool:
     config = load_ticket_config(guild_id)

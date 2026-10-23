@@ -362,13 +362,32 @@ class ConfigMixin:
                 "panel_instructions": ticket_cfg.get("panel_instructions", ""),
                 "panel_channel_id": str(ticket_cfg.get("panel_channel_id")) if ticket_cfg.get("panel_channel_id") else "",
                 "log_channel_id": str(ticket_cfg.get("log_channel_id")) if ticket_cfg.get("log_channel_id") else "",
+                "auto_close_time_enabled": bool(ticket_cfg.get("auto_close_time_enabled", False)),
+                "auto_close_time_hours": int(ticket_cfg.get("auto_close_time_hours", 24) or 24),
+                "max_open_tickets": int(ticket_cfg.get("max_open_tickets", 3) or 3),
+                "naming_format": str(ticket_cfg.get("naming_format", "") or ""),
+                "staff_only_close": bool(ticket_cfg.get("staff_only_close", False)),
+                "ping_support_roles": bool(ticket_cfg.get("ping_support_roles", True)),
+                "ping_custom_role_enabled": bool(ticket_cfg.get("ping_custom_role_enabled", False)),
+                "ping_custom_role_id": str(ticket_cfg.get("ping_custom_role_id")) if ticket_cfg.get("ping_custom_role_id") else "",
+                "claiming_enabled": bool(ticket_cfg.get("claiming_enabled", False)),
                 "options_slots": [
                     {
+                        "id": str(slot.get("id") or f"type_{idx}"),
                         "name": slot.get("name", ""),
+                        "mode": slot.get("mode", "channel"),
+                        "template_key": slot.get("template_key", ""),
+                        "color": slot.get("color", "rgb(88, 101, 242)"),
+                        "description": slot.get("description", ""),
+                        "button_label": slot.get("button_label", ""),
+                        "panel_channel_id": str(slot.get("panel_channel_id")) if slot.get("panel_channel_id") else "",
+                        "log_channel_id": str(slot.get("log_channel_id")) if slot.get("log_channel_id") else "",
                         "role_id": str(slot.get("role_id")) if slot.get("role_id") else "",
-                        "category_id": str(slot.get("category_id")) if slot.get("category_id") else ""
+                        "category_id": str(slot.get("category_id")) if slot.get("category_id") else "",
+                        "require_proof": bool(slot.get("require_proof", False)),
+                        "questions": slot.get("questions", []) if isinstance(slot.get("questions"), list) else []
                     }
-                    for slot in ticket_cfg.get("options_slots", []) if isinstance(slot, dict)
+                    for idx, slot in enumerate(ticket_cfg.get("options_slots", [])) if isinstance(slot, dict)
                 ],
                 "stats": {
                     "open": open_count,
@@ -378,6 +397,7 @@ class ConfigMixin:
                 },
                 "active_tickets_list": [
                     {
+                        "id": str(k),
                         "channel_id": str(k),
                         "creator_id": str(v.get("creator_id", "")),
                         "claimed_by": str(v.get("claimed_by", "")) if v.get("claimed_by") else None,
@@ -385,9 +405,26 @@ class ConfigMixin:
                         "subject": v.get("subject", ""),
                         "description": v.get("description", ""),
                         "category_option": v.get("category_option", ""),
-                        "number": v.get("number", 0)
+                        "number": v.get("number", 0),
+                        "status": v.get("status") or ("claimed" if v.get("claimed_by") else "open")
                     }
-                    for k, v in active_tickets.items()
+                    for k, v in active_tickets.items() if isinstance(v, dict)
+                ],
+                "closed_tickets_list": [
+                    {
+                        "id": str(t.get("id") or t.get("channel_id") or f"closed_{idx}"),
+                        "channel_id": str(t.get("channel_id", "")),
+                        "creator_id": str(t.get("creator_id", "")),
+                        "claimed_by": str(t.get("claimed_by", "")) if t.get("claimed_by") else None,
+                        "created_at": t.get("created_at", 0),
+                        "closed_at": t.get("closed_at", 0),
+                        "subject": t.get("subject", ""),
+                        "description": t.get("description", ""),
+                        "category_option": t.get("category_option", ""),
+                        "number": t.get("number", 0),
+                        "status": t.get("status", "resolved")
+                    }
+                    for idx, t in enumerate(closed_tickets) if isinstance(t, dict)
                 ]
             },
             "logs": logs_cfg,
@@ -802,37 +839,123 @@ class ConfigMixin:
             if user_perms.get("can_channels") and "ticket" in data:
                 from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
                 ticket_cfg = load_ticket_config(guild_id)
-                ticket_cfg["enabled"] = bool(data["ticket"].get("enabled"))
+                t_in = data["ticket"]
+                if "enabled" in t_in:
+                    ticket_cfg["enabled"] = bool(t_in.get("enabled"))
                 
-                title = data["ticket"].get("panel_title", "").strip()
+                title = (t_in.get("panel_title") or "").strip()
                 if title:
                     ticket_cfg["panel_title"] = title
-                desc = data["ticket"].get("panel_description", "").strip()
+                desc = (t_in.get("panel_description") or "").strip()
                 if desc:
                     ticket_cfg["panel_description"] = desc
-                instr = data["ticket"].get("panel_instructions", "").strip()
+                instr = (t_in.get("panel_instructions") or "").strip()
                 if instr:
                     ticket_cfg["panel_instructions"] = instr
                 
-                tid = data["ticket"].get("panel_channel_id")
-                ticket_cfg["panel_channel_id"] = int(tid) if tid else None
+                if "panel_channel_id" in t_in:
+                    tid = t_in.get("panel_channel_id")
+                    ticket_cfg["panel_channel_id"] = int(tid) if (tid and str(tid).isdigit()) else None
                 
-                tlid = data["ticket"].get("log_channel_id")
-                ticket_cfg["log_channel_id"] = int(tlid) if tlid else None
+                if "log_channel_id" in t_in:
+                    tlid = t_in.get("log_channel_id")
+                    ticket_cfg["log_channel_id"] = int(tlid) if (tlid and str(tlid).isdigit()) else None
+
+                if "auto_close_time_enabled" in t_in:
+                    ticket_cfg["auto_close_time_enabled"] = bool(t_in.get("auto_close_time_enabled"))
+                if "auto_close_time_hours" in t_in:
+                    try:
+                        ticket_cfg["auto_close_time_hours"] = max(1, int(t_in.get("auto_close_time_hours", 24)))
+                    except Exception:
+                        pass
+                if "max_open_tickets" in t_in:
+                    try:
+                        ticket_cfg["max_open_tickets"] = max(1, min(25, int(t_in.get("max_open_tickets", 3))))
+                    except Exception:
+                        pass
+                if "naming_format" in t_in:
+                    ticket_cfg["naming_format"] = str(t_in.get("naming_format") or "").strip()
+                if "staff_only_close" in t_in:
+                    ticket_cfg["staff_only_close"] = bool(t_in.get("staff_only_close"))
+                if "ping_support_roles" in t_in:
+                    ticket_cfg["ping_support_roles"] = bool(t_in.get("ping_support_roles"))
+                if "ping_custom_role_enabled" in t_in:
+                    ticket_cfg["ping_custom_role_enabled"] = bool(t_in.get("ping_custom_role_enabled"))
+                if "ping_custom_role_id" in t_in:
+                    pcr = t_in.get("ping_custom_role_id")
+                    ticket_cfg["ping_custom_role_id"] = int(pcr) if (pcr and str(pcr).isdigit()) else None
+                if "claiming_enabled" in t_in:
+                    ticket_cfg["claiming_enabled"] = bool(t_in.get("claiming_enabled"))
                 
-                if "options_slots" in data["ticket"]:
+                if "options_slots" in t_in and isinstance(t_in["options_slots"], list):
                     parsed_slots = []
-                    for slot in data["ticket"]["options_slots"]:
+                    for idx, slot in enumerate(t_in["options_slots"]):
+                        if not isinstance(slot, dict):
+                            continue
                         rid = slot.get("role_id")
                         cid = slot.get("category_id")
+                        pcid = slot.get("panel_channel_id")
+                        lcid = slot.get("log_channel_id")
+                        raw_q = slot.get("questions", [])
+                        clean_questions = []
+                        if isinstance(raw_q, list):
+                            for q in raw_q[:5]:
+                                if isinstance(q, dict) and q.get("label"):
+                                    clean_questions.append({
+                                        "label": str(q.get("label"))[:45],
+                                        "placeholder": str(q.get("placeholder", ""))[:100],
+                                        "style": "paragraph" if q.get("style") == "paragraph" else "short",
+                                        "required": bool(q.get("required", True))
+                                    })
                         parsed_slots.append({
-                            "name": slot.get("name", "Option"),
-                            "role_id": int(rid) if rid else None,
-                            "category_id": int(cid) if cid else None
+                            "id": str(slot.get("id") or f"type_{idx}"),
+                            "name": str(slot.get("name") or "Ticket").strip(),
+                            "mode": str(slot.get("mode") or "channel"),
+                            "template_key": str(slot.get("template_key") or ""),
+                            "color": str(slot.get("color") or "rgb(88, 101, 242)"),
+                            "description": str(slot.get("description") or ""),
+                            "button_label": str(slot.get("button_label") or ""),
+                            "panel_channel_id": int(pcid) if (pcid and str(pcid).isdigit()) else None,
+                            "log_channel_id": int(lcid) if (lcid and str(lcid).isdigit()) else None,
+                            "role_id": int(rid) if (rid and str(rid).isdigit()) else None,
+                            "category_id": int(cid) if (cid and str(cid).isdigit()) else None,
+                            "require_proof": bool(slot.get("require_proof", False)),
+                            "questions": clean_questions
                         })
                     ticket_cfg["options_slots"] = parsed_slots
-                    
                     ticket_cfg["options"] = [s.get("name", "Option") for s in parsed_slots]
+                    if parsed_slots:
+                        ticket_cfg["enabled"] = True
+                        if not ticket_cfg.get("panel_channel_id") and parsed_slots[0].get("panel_channel_id"):
+                            ticket_cfg["panel_channel_id"] = parsed_slots[0]["panel_channel_id"]
+                        if not ticket_cfg.get("log_channel_id") and parsed_slots[0].get("log_channel_id"):
+                            ticket_cfg["log_channel_id"] = parsed_slots[0]["log_channel_id"]
+
+                # Support updating submission status from dashboard (claim / resolve / reject)
+                if "submission_action" in t_in and isinstance(t_in["submission_action"], dict):
+                    act = t_in["submission_action"]
+                    sub_id = str(act.get("id", ""))
+                    new_status = str(act.get("status", ""))
+                    if sub_id and new_status:
+                        import time as _t
+                        if sub_id in ticket_cfg.get("active_tickets", {}):
+                            item = ticket_cfg["active_tickets"][sub_id]
+                            if new_status in ("resolved", "rejected"):
+                                ticket_cfg["active_tickets"].pop(sub_id, None)
+                                item["status"] = new_status
+                                item["closed_at"] = _t.time()
+                                ticket_cfg.setdefault("closed_tickets", []).append(item)
+                            else:
+                                item["status"] = new_status
+                                if new_status == "claimed":
+                                    session = await self.get_user_session(request)
+                                    if session and session.get("id"):
+                                        item["claimed_by"] = int(session["id"])
+                        else:
+                            for ct in ticket_cfg.get("closed_tickets", []):
+                                if isinstance(ct, dict) and str(ct.get("id") or ct.get("channel_id")) == sub_id:
+                                    ct["status"] = new_status
+                                    break
                 
                 save_ticket_config(guild_id, ticket_cfg)
 

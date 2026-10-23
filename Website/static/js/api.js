@@ -193,10 +193,13 @@ const API = {
   },
 
   // Actions
-  async sendTicketPanel(guildId, channelId) {
+  async sendTicketPanel(guildId, channelIdOrPayload) {
+    const body = (typeof channelIdOrPayload === 'object' && channelIdOrPayload !== null)
+      ? channelIdOrPayload
+      : { channel_id: channelIdOrPayload };
     return await this.request(`/api/action/${guildId}/send_ticket_panel`, {
       method: 'POST',
-      body: { channel_id: channelId }
+      body
     });
   },
 

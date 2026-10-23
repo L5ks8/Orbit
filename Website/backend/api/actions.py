@@ -296,25 +296,51 @@ class ActionsMixin:
             from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
             
             ticket_cfg = load_ticket_config(guild_id)
-            view = PersistentTicketPanelLayout(
-                title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
-                description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
-                instructions=ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."),
-                options_slots=ticket_cfg.get("options_slots", [])
-            )
-            
-            embed = discord.Embed(
-                title=view.panel_title,
-                description=f"{view.panel_desc}\n\n{view.panel_instructions}",
-                color=ORBIT_COLOR
-            )
-            msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
+            ticket_cfg["enabled"] = True
+            slot_id = data.get("slot_id")
+            slot_name = data.get("slot_name")
+            matched_slot = None
+            if slot_id or slot_name:
+                for s in ticket_cfg.get("options_slots", []):
+                    if isinstance(s, dict) and (str(s.get("id")) == str(slot_id) or s.get("name") == slot_name):
+                        matched_slot = s
+                        break
+
+            if matched_slot and matched_slot.get("mode") != "panel":
+                s_name = matched_slot.get("name") or "Support Ticket"
+                s_desc = matched_slot.get("description") or "Klicken Sie auf den Button unten, um ein Ticket oder Formular zu öffnen."
+                btn_lbl = matched_slot.get("button_label") or s_name
+                embed = discord.Embed(
+                    title=s_name,
+                    description=s_desc,
+                    color=ORBIT_COLOR
+                )
+                view = discord.ui.View(timeout=None)
+                view.add_item(discord.ui.Button(
+                    label=btn_lbl[:80],
+                    style=discord.ButtonStyle.primary,
+                    custom_id=f"orbit:ticket_opt:{s_name}"[:100]
+                ))
+                msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
+            else:
+                view = PersistentTicketPanelLayout(
+                    title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
+                    description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
+                    instructions=ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."),
+                    options_slots=ticket_cfg.get("options_slots", [])
+                )
+                embed = discord.Embed(
+                    title=view.panel_title,
+                    description=f"{view.panel_desc}\n\n{view.panel_instructions}",
+                    color=ORBIT_COLOR
+                )
+                msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
             ticket_cfg["panel_channel_id"] = channel.id
             ticket_cfg["panel_message_id"] = msg.id
             save_ticket_config(guild_id, ticket_cfg)
             
-            return web.json_response({"success": True})
+            return web.json_response({"success": True, "message_id": str(msg.id)})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 

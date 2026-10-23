@@ -275,77 +275,168 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
     except Exception:
         pass
 
-class TicketOpenModal(Modal, title="Open Support Ticket"):
-    subject_input = TextInput(
-        label="Ticket Subject",
-        placeholder="Brief summary of your inquiry...",
-        min_length=3,
-        max_length=100,
-        required=True
-    )
-    description_input = TextInput(
-        label="Detailed Description",
-        placeholder="Please explain your situation or question in full detail...",
-        style=discord.TextStyle.paragraph,
-        min_length=10,
-        max_length=1000,
-        required=True
-    )
-
-    def __init__(self, category_option: str = "General Support"):
-        super().__init__()
+class TicketOpenModal(Modal):
+    def __init__(self, category_option: str = "General Support", slot_config: dict | None = None):
+        modal_title = (slot_config.get("name") if isinstance(slot_config, dict) else category_option) or "Open Support Ticket"
+        super().__init__(title=str(modal_title)[:45])
         self.category_option = category_option
+        self.slot_config = slot_config if isinstance(slot_config, dict) else {}
+        self.custom_inputs: list[tuple[str, TextInput]] = []
+
+        questions = self.slot_config.get("questions", [])
+        if isinstance(questions, list) and len(questions) > 0:
+            for q in questions[:5]:
+                if not isinstance(q, dict):
+                    continue
+                lbl = str(q.get("label") or "Question")[:45]
+                ph = str(q.get("placeholder") or "")[:100]
+                is_para = q.get("style") == "paragraph"
+                is_req = q.get("required", True) is not False
+                ti = TextInput(
+                    label=lbl,
+                    placeholder=ph or None,
+                    style=discord.TextStyle.paragraph if is_para else discord.TextStyle.short,
+                    min_length=1 if is_req else 0,
+                    max_length=1000 if is_para else 200,
+                    required=is_req
+                )
+                self.add_item(ti)
+                self.custom_inputs.append((lbl, ti))
+        else:
+            ti_subj = TextInput(
+                label="Ticket Subject",
+                placeholder="Brief summary of your inquiry...",
+                min_length=2,
+                max_length=100,
+                required=True
+            )
+            ti_desc = TextInput(
+                label="Detailed Description",
+                placeholder="Please explain your situation or question in full detail...",
+                style=discord.TextStyle.paragraph,
+                min_length=3,
+                max_length=1000,
+                required=True
+            )
+            self.add_item(ti_subj)
+            self.add_item(ti_desc)
+            self.custom_inputs.append(("Ticket Subject", ti_subj))
+            self.custom_inputs.append(("Detailed Description", ti_desc))
+
+        if self.slot_config.get("require_proof") and len(self.custom_inputs) < 5:
+            has_proof_q = any("beweis" in lbl.lower() or "proof" in lbl.lower() for lbl, _ in self.custom_inputs)
+            if not has_proof_q:
+                ti_proof = TextInput(
+                    label="Proof / Evidence (Links or Info)",
+                    placeholder="Paste screenshot/video links or proof details...",
+                    style=discord.TextStyle.short,
+                    min_length=3,
+                    max_length=300,
+                    required=True
+                )
+                self.add_item(ti_proof)
+                self.custom_inputs.append(("Proof / Evidence", ti_proof))
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        from Components.Systems.Tickets._storage import is_blacklisted
+        from Components.Systems.Tickets._storage import is_blacklisted, save_ticket_config
         if is_blacklisted(interaction.guild.id, interaction.user.id):
             return await interaction.followup.send(embed=make_embed("You are blacklisted from opening support tickets on this server.", discord.Color.red()), ephemeral=True)
 
         config = load_ticket_config(interaction.guild.id)
-        if not config.get("enabled", False):
-            return await interaction.followup.send(embed=make_embed("Support tickets are currently disabled on this server.", discord.Color.red()), ephemeral=True)
 
         category_id = config.get("category_id")
         support_role_id = config.get("support_role_id")
 
         category = None
         support_role = None
-        for slot in config.get("options_slots", []):
-            if isinstance(slot, dict) and slot.get("name") == self.category_option:
-                if slot.get("category_id"):
-                    category = interaction.guild.get_channel(int(slot["category_id"]))
-                if slot.get("role_id"):
-                    support_role = interaction.guild.get_role(int(slot["role_id"]))
-                break
+        matched_slot = self.slot_config or {}
+        if not matched_slot:
+            for slot in config.get("options_slots", []):
+                if isinstance(slot, dict) and slot.get("name") == self.category_option:
+                    matched_slot = slot
+                    break
 
-        if not category and category_id:
-            category = interaction.guild.get_channel(category_id)
-        if not category or not isinstance(category, discord.CategoryChannel):
-            return await interaction.followup.send(embed=make_embed("Ticket system misconfigured (`Configured ticket category not found for this option`).", discord.Color.red()), ephemeral=True)
+        if matched_slot.get("category_id") and str(matched_slot["category_id"]).isdigit():
+            category = interaction.guild.get_channel(int(matched_slot["category_id"]))
+        if matched_slot.get("role_id") and str(matched_slot["role_id"]).isdigit():
+            support_role = interaction.guild.get_role(int(matched_slot["role_id"]))
 
-        if not support_role and support_role_id:
-            support_role = interaction.guild.get_role(support_role_id)
-        if not support_role:
-            return await interaction.followup.send(embed=make_embed("Ticket system misconfigured (`Configured support role not found for this option`).", discord.Color.red()), ephemeral=True)
+        if not category and category_id and str(category_id).isdigit():
+            category = interaction.guild.get_channel(int(category_id))
+        if not category and interaction.channel and getattr(interaction.channel, "category", None):
+            category = interaction.channel.category
 
-        subject = self.subject_input.value.strip()
-        description = self.description_input.value.strip()
+        if not support_role and support_role_id and str(support_role_id).isdigit():
+            support_role = interaction.guild.get_role(int(support_role_id))
+
+        subject = self.custom_inputs[0][1].value.strip() if self.custom_inputs else self.category_option
+        if len(self.custom_inputs) > 1:
+            desc_lines = [f"**{lbl}:**\n{inp.value.strip()}" for lbl, inp in self.custom_inputs if inp.value.strip()]
+            description = "\n\n".join(desc_lines)
+        else:
+            description = subject
 
         active_tickets = config.get("active_tickets", {})
-        max_open_tickets = config.get("max_open_tickets", 3)
+        max_open_tickets = int(config.get("max_open_tickets", 3) or 3)
         user_open_count = sum(1 for t in active_tickets.values() if t.get("creator_id") == interaction.user.id)
         if user_open_count >= max_open_tickets:
             return await interaction.followup.send(embed=make_embed(f"You already have {max_open_tickets} open tickets! Please close an existing ticket before opening a new one.", discord.Color.red()), ephemeral=True)
 
+        slot_mode = matched_slot.get("mode", "channel")
+
+        # Form-only mode: record submission and post to log/staff channel without creating a channel
+        if slot_mode == "form":
+            sub_id = f"sub_{int(time.time() * 1000)}"
+            counter = create_active_ticket(
+                interaction.guild.id,
+                sub_id,
+                interaction.user.id,
+                subject,
+                description,
+                self.category_option
+            )
+            log_ch_id = matched_slot.get("log_channel_id") or config.get("log_channel_id") or matched_slot.get("panel_channel_id") or config.get("panel_channel_id")
+            if log_ch_id and str(log_ch_id).isdigit():
+                log_ch = interaction.guild.get_channel(int(log_ch_id))
+                if log_ch:
+                    sub_embed = discord.Embed(
+                        title=f"Form Submission #{counter}: {self.category_option}",
+                        color=ORBIT_COLOR
+                    )
+                    sub_embed.add_field(name="Submitted By", value=f"{interaction.user.mention} (`{interaction.user.id}`)", inline=True)
+                    sub_embed.add_field(name="Type", value=self.category_option, inline=True)
+                    for lbl, inp in self.custom_inputs:
+                        val = inp.value.strip() or "—"
+                        sub_embed.add_field(name=lbl[:256], value=val[:1024], inline=False)
+                    try:
+                        await log_ch.send(embed=sub_embed)
+                    except Exception:
+                        pass
+            return await interaction.followup.send(
+                embed=make_embed(f"Your **{self.category_option}** submission (`#{counter}`) has been sent to the staff team!", discord.Color.green()),
+                ephemeral=True
+            )
+
         counter = config.get("ticket_counter", 0) + 1
-        clean_name = "".join(c for c in interaction.user.name.lower().replace(" ", "-") if c.isalnum() or c in "-_")[:15]
-        if not clean_name:
-            clean_name = "user"
-        clean_option = "".join(c for c in self.category_option.lower().replace(" ", "-") if c.isalnum() or c in "-_")[:20]
-        if not clean_option:
-            clean_option = "ticket"
-        base_channel_name = f"{clean_option}-{clean_name}"
+        clean_name = "".join(c for c in interaction.user.name.lower().replace(" ", "-") if c.isalnum() or c in "-_")[:15] or "user"
+        clean_option = "".join(c for c in self.category_option.lower().replace(" ", "-") if c.isalnum() or c in "-_")[:20] or "ticket"
+
+        naming_fmt = (config.get("naming_format") or "").strip()
+        if naming_fmt:
+            formatted_raw = (
+                naming_fmt
+                .replace("{Typ}", clean_option)
+                .replace("{type}", clean_option)
+                .replace("{Nummer}", str(counter))
+                .replace("{number}", str(counter))
+                .replace("{Benutzer}", clean_name)
+                .replace("{user}", clean_name)
+            )
+            base_channel_name = "".join(c for c in formatted_raw.lower().replace(" ", "-") if c.isalnum() or c in "-_·")[:90] or f"{clean_option}-{counter}"
+        else:
+            base_channel_name = f"{clean_option}-{clean_name}"
+
         channel_name = base_channel_name
         existing_names = [ch.name.lower() for ch in interaction.guild.channels]
         suffix_count = 1
@@ -356,38 +447,51 @@ class TicketOpenModal(Modal, title="Open Support Ticket"):
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
             interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, read_message_history=True),
-            support_role: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, read_message_history=True, manage_messages=True),
             interaction.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, read_message_history=True, manage_channels=True)
         }
+        if support_role:
+            overwrites[support_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, read_message_history=True, manage_messages=True)
 
         try:
-            ticket_channel = await interaction.guild.create_text_channel(
-                name=channel_name,
-                category=category,
-                overwrites=overwrites,
-                reason=f"Support ticket opened by {interaction.user}"
-            )
+            create_kwargs = {
+                "name": channel_name,
+                "overwrites": overwrites,
+                "reason": f"Support ticket opened by {interaction.user}"
+            }
+            if isinstance(category, discord.CategoryChannel):
+                create_kwargs["category"] = category
+            ticket_channel = await interaction.guild.create_text_channel(**create_kwargs)
         except discord.Forbidden:
-            return await interaction.followup.send(embed=make_embed("I do not have permission to create channels inside the configured ticket category.", discord.Color.red()), ephemeral=True)
+            return await interaction.followup.send(embed=make_embed("I do not have permission to create channels on this server.", discord.Color.red()), ephemeral=True)
         except Exception as e:
             return await interaction.followup.send(embed=make_embed(f"Failed to create ticket channel: {e}", discord.Color.red()), ephemeral=True)
 
         create_active_ticket(interaction.guild.id, ticket_channel.id, interaction.user.id, subject, description, self.category_option)
 
         embed = discord.Embed(title=f"Ticket Opened: #{ticket_channel.name}", color=ORBIT_COLOR)
-        embed.add_field(name="Category", value=self.category_option, inline=False)
+        embed.add_field(name="Category", value=self.category_option, inline=True)
         embed.add_field(name="Creator", value=interaction.user.mention, inline=True)
-        embed.add_field(name="Assigned Team", value=support_role.mention, inline=True)
-        embed.add_field(name="Subject", value=subject, inline=False)
-        embed.add_field(name="Description", value=f"```\n{description}\n```", inline=False)
-        
+        if support_role:
+            embed.add_field(name="Assigned Team", value=support_role.mention, inline=True)
+        for lbl, inp in self.custom_inputs:
+            val = inp.value.strip() or "—"
+            embed.add_field(name=lbl[:256], value=f"```\n{val[:950]}\n```", inline=False)
+
         control_view = TicketControlLayout()
         kwargs = {"embed": embed, "view": control_view}
 
         try:
+            pings = [interaction.user.mention]
+            if config.get("ping_support_roles", True) and support_role:
+                pings.append(support_role.mention)
+            if config.get("ping_custom_role_enabled", False) and config.get("ping_custom_role_id"):
+                c_rid = config.get("ping_custom_role_id")
+                if str(c_rid).isdigit():
+                    pings.append(f"<@&{c_rid}>")
+
             allowed_mentions = discord.AllowedMentions(users=True, roles=True)
             await ticket_channel.send(
-                content=f"{interaction.user.mention} {support_role.mention}",
+                content=" ".join(pings),
                 allowed_mentions=allowed_mentions
             )
             await ticket_channel.send(
@@ -484,14 +588,21 @@ class TicketControlLayout(discord.ui.View):
                     return
 
             creator_id = ticket_data.get("creator_id")
-            is_authorized = interaction.user.id == creator_id or interaction.user.guild_permissions.manage_guild
-            if isinstance(interaction.user, discord.Member) and support_role_id:
-                if any(r.id == support_role_id for r in getattr(interaction.user, 'roles', [])):
-                    is_authorized = True
+            staff_only = bool(config.get("staff_only_close", False))
+            is_staff = interaction.user.guild_permissions.manage_guild or interaction.user.guild_permissions.manage_channels
+            if isinstance(interaction.user, discord.Member):
+                slot_roles = [int(s["role_id"]) for s in config.get("options_slots", []) if isinstance(s, dict) and s.get("role_id") and str(s.get("role_id")).isdigit()]
+                if support_role_id and str(support_role_id).isdigit():
+                    slot_roles.append(int(support_role_id))
+                if any(r.id in slot_roles for r in getattr(interaction.user, 'roles', [])):
+                    is_staff = True
+
+            is_authorized = is_staff or (not staff_only and interaction.user.id == creator_id)
 
             if not is_authorized:
                 try:
-                    return await interaction.response.send_message(embed=make_embed("You do not have permission to close this ticket (`Creator or Support Staff only`).", discord.Color.red()), ephemeral=True)
+                    msg_err = "Only support staff can close tickets on this server." if staff_only else "You do not have permission to close this ticket (`Creator or Support Staff only`)."
+                    return await interaction.response.send_message(embed=make_embed(msg_err, discord.Color.red()), ephemeral=True)
                 except Exception:
                     return
 
@@ -564,7 +675,8 @@ class PersistentTicketPanelLayout(discord.ui.View):
                     return await interaction.response.send_message(embed=make_embed("Please choose a category option from the dropdown menu above first!"), ephemeral=True)
             if not selected_opt:
                 selected_opt = "General Support"
-            modal = TicketOpenModal(category_option=selected_opt)
+            matched_slot = next((s for s in slots if isinstance(s, dict) and s.get("name") == selected_opt), None)
+            modal = TicketOpenModal(category_option=selected_opt, slot_config=matched_slot)
             await interaction.response.send_modal(modal)
 
         btn_create.callback = _btn_create_cb

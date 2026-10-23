@@ -57,11 +57,16 @@ class TicketListenerCog(commands.Cog):
         if custom_id.startswith("orbit:ticket_opt:"):
             opt_name = custom_id.split("orbit:ticket_opt:", 1)[1]
             from Components.Systems.Tickets._views import TicketOpenModal
-            modal = TicketOpenModal(category_option=opt_name)
+            cfg = load_ticket_config(interaction.guild.id) if interaction.guild else {}
+            matched_slot = next((s for s in cfg.get("options_slots", []) if isinstance(s, dict) and s.get("name") == opt_name), None)
+            modal = TicketOpenModal(category_option=opt_name, slot_config=matched_slot)
             await interaction.response.send_modal(modal)
         elif custom_id == "orbit:ticket_open":
             from Components.Systems.Tickets._views import TicketOpenModal
-            modal = TicketOpenModal(category_option="General Support")
+            cfg = load_ticket_config(interaction.guild.id) if interaction.guild else {}
+            slots = cfg.get("options_slots", [])
+            first_slot = slots[0] if slots and isinstance(slots[0], dict) else None
+            modal = TicketOpenModal(category_option=(first_slot.get("name") if first_slot else "General Support"), slot_config=first_slot)
             await interaction.response.send_modal(modal)
 
 async def setup(bot: commands.Bot):
