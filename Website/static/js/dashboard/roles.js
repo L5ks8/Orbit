@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Orbit Dashboard - Roles Tab (/dashboard/:guildId/roles)
  * 1:1 PeakBot Roles UI with Reaction Panels, Auto Roles, Custom Rules, Sticky Roles, Booster Role, Tenure Roles & Activity Roles
  */
@@ -1025,235 +1025,734 @@ DashboardTabs.Roles = async function (container, guildId) {
       }
     };
 
-    // Reaction Panel Builder Modal
+    // Reaction Panel Builder Modal (1:1 PeakBot "Neues Reaktionspanel")
     const openReactionPanelModal = (existingPanel = null) => {
       const modalRoot = document.getElementById('roles-modal-root');
       if (!modalRoot) return;
 
+      const isEditing = Boolean(existingPanel && existingPanel.id);
+      let channelDropdownOpen = false;
+      let openRoleDropdownIdx = null;
+      let openEmojiPickerIdx = null;
+      let messageBuilderExpanded = false;
+
       const draft = {
         id: existingPanel?.id || '',
         name: existingPanel?.name || existingPanel?.embed?.title || 'Role Selection',
-        channel_id: existingPanel?.channel_id ? String(existingPanel.channel_id) : (allChannels[0] ? String(allChannels[0].id) : ''),
+        channel_id: existingPanel?.channel_id ? String(existingPanel.channel_id) : '',
         panel_type: existingPanel?.panel_type || 'buttons',
         mode: existingPanel?.mode || 'multi',
+        post_on_save: true,
         embed: {
-          title: existingPanel?.embed?.title || existingPanel?.name || 'Pick Your Roles',
-          description: existingPanel?.embed?.description || 'Click the buttons below to toggle roles on your profile.',
-          color: existingPanel?.embed?.color || '#5865F2'
+          title: existingPanel?.embed?.title || existingPanel?.name || 'Role Selection',
+          description: existingPanel?.embed?.description || '',
+          color: existingPanel?.embed?.color || 'rgb(88, 101, 242)'
         },
         components: Array.isArray(existingPanel?.components) && existingPanel.components.length > 0
           ? existingPanel.components.map(c => ({
               role_id: String(c.role_id || ''),
               label: String(c.label || ''),
-              emoji: String(c.emoji || '🎭'),
+              emoji: String(c.emoji || '✨'),
               color: String(c.color || 'blue')
             }))
-          : [
-              {
-                role_id: allRoles[0] ? String(allRoles[0].id) : '',
-                label: allRoles[0] ? allRoles[0].name : 'Member',
-                emoji: '✨',
-                color: 'blue'
-              }
-            ]
+          : []
+      };
+
+      const MODE_META = {
+        multi: {
+          label: 'Mehrfachauswahl',
+          desc: 'Klicken Sie zum Hinzufügen oder Entfernen. Stapeln Sie so viele, wie Sie möchten.',
+          previewText: 'Mehrfachauswahl Modus',
+          previewColor: 'text-emerald-300',
+          icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-checks relative z-10 w-3.5 h-3.5"><path d="m3 17 2 2 4-4"></path><path d="m3 7 2 2 4-4"></path><path d="M13 6h8"></path><path d="M13 12h8"></path><path d="M13 18h8"></path></svg>`
+        },
+        pick_one: {
+          label: 'Wählen Sie eine aus',
+          desc: 'Mitglieder können jeweils nur eine Rolle aus diesem Panel auswählen.',
+          previewText: 'Einzelauswahl Modus',
+          previewColor: 'text-sky-300',
+          icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target relative z-10 w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>`
+        },
+        verify: {
+          label: 'Verifizieren',
+          desc: 'Tippen vergibt die Rolle dauerhaft (ideal für Verifizierungs-Gates).',
+          previewText: 'Verifizieren Modus',
+          previewColor: 'text-emerald-300',
+          icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check relative z-10 w-3.5 h-3.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>`
+        },
+        opt_out: {
+          label: 'Opt-out',
+          desc: 'Tippen entfernt die Rolle dauerhaft von Ihrem Profil.',
+          previewText: 'Opt-out Modus',
+          previewColor: 'text-amber-300',
+          icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ban relative z-10 w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>`
+        },
+        reversed: {
+          label: 'Umgedreht',
+          desc: 'Reagieren entfernt die Rolle, Entfernen der Reaktion gibt sie zurück.',
+          previewText: 'Umgedreht Modus',
+          previewColor: 'text-rose-300',
+          icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-circle relative z-10 w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg>`
+        }
+      };
+
+      const QUICK_EMOJIS = ['✨', '🎨', '🎮', '🔔', '✅', '🛡️', '🌍', '💬', '🔥', '💎', '👑', '💜', '💙', '💚', '❤️', '🧡'];
+
+      const applyTemplate = (tplKey) => {
+        const pickRole = (idx) => allRoles[idx % Math.max(1, allRoles.length)];
+        if (tplKey === 'color') {
+          draft.embed.title = 'Farbrollen';
+          draft.embed.description = 'Wähle deine Lieblingsfarbe für deinen Namen auf dem Server!';
+          draft.embed.color = 'rgb(235, 69, 158)';
+          draft.mode = 'pick_one';
+          const emojis = ['❤️', '💙', '💚', '💜'];
+          draft.components = emojis.slice(0, Math.min(4, Math.max(1, allRoles.length))).map((em, i) => {
+            const r = pickRole(i);
+            return { role_id: r ? String(r.id) : '', label: r ? r.name : `Farbe ${i + 1}`, emoji: em, color: 'blue' };
+          });
+        } else if (tplKey === 'pronouns') {
+          draft.embed.title = 'Pronomen';
+          draft.embed.description = 'Wähle deine Pronomen aus, damit andere wissen, wie sie dich ansprechen können.';
+          draft.embed.color = 'rgb(88, 101, 242)';
+          draft.mode = 'multi';
+          const emojis = ['💙', '💖', '✨'];
+          draft.components = emojis.slice(0, Math.min(3, Math.max(1, allRoles.length))).map((em, i) => {
+            const r = pickRole(i);
+            return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Pronomen', emoji: em, color: 'gray' };
+          });
+        } else if (tplKey === 'region') {
+          draft.embed.title = 'Region';
+          draft.embed.description = 'Wähle deine Region aus, um Mitglieder aus deiner Zeitzone zu finden.';
+          draft.embed.color = 'rgb(59, 165, 92)';
+          draft.mode = 'pick_one';
+          const emojis = ['🌍', '🌎', '🌏'];
+          draft.components = emojis.slice(0, Math.min(3, Math.max(1, allRoles.length))).map((em, i) => {
+            const r = pickRole(i);
+            return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Region', emoji: em, color: 'blue' };
+          });
+        } else if (tplKey === 'games') {
+          draft.embed.title = 'Spiel-Pings';
+          draft.embed.description = 'Klicke auf deine Lieblingsspiele, um bei Mitspieler-Suchen benachrichtigt zu werden.';
+          draft.embed.color = 'rgb(250, 166, 26)';
+          draft.mode = 'multi';
+          const emojis = ['🎮', '🕹️', '🏆'];
+          draft.components = emojis.slice(0, Math.min(3, Math.max(1, allRoles.length))).map((em, i) => {
+            const r = pickRole(i);
+            return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Gamer', emoji: em, color: 'blue' };
+          });
+        } else if (tplKey === 'notifications') {
+          draft.embed.title = 'Benachrichtigungen';
+          draft.embed.description = 'Wähle aus, für welche Ankündigungen, Events oder Updates du gepingt werden möchtest.';
+          draft.embed.color = 'rgb(155, 89, 182)';
+          draft.mode = 'multi';
+          const emojis = ['🔔', '📢', '🎁'];
+          draft.components = emojis.slice(0, Math.min(3, Math.max(1, allRoles.length))).map((em, i) => {
+            const r = pickRole(i);
+            return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Updates', emoji: em, color: 'blue' };
+          });
+        } else if (tplKey === 'verify') {
+          draft.embed.title = 'Verifizierung';
+          draft.embed.description = 'Klicke unten auf das Häkchen, um die Regeln zu akzeptieren und Zugriff auf den Server zu erhalten.';
+          draft.embed.color = 'rgb(87, 242, 135)';
+          draft.mode = 'verify';
+          const r = pickRole(0);
+          draft.components = [
+            { role_id: r ? String(r.id) : '', label: r ? r.name : 'Verifiziert', emoji: '✅', color: 'green' }
+          ];
+        }
+        draft.name = draft.embed.title;
+        renderModal();
+      };
+
+      const renderPreviewCardHtml = () => {
+        const modeInfo = MODE_META[draft.mode] || MODE_META.multi;
+        const selectedChannel = getChannelById(draft.channel_id);
+        const channelName = selectedChannel ? selectedChannel.name : 'Reaktionsrollen';
+        const displayTitle = (!draft.embed.title || draft.embed.title === 'Role Selection')
+          ? 'Rollenauswahl'
+          : draft.embed.title;
+        const hasDesc = Boolean(draft.embed.description && draft.embed.description.trim());
+
+        return `
+          <div class="rounded-xl overflow-hidden border border-neutral-800 lg:sticky lg:top-0">
+            <div class="flex items-center gap-2 px-3 py-2 bg-[#2f3136] border-b border-neutral-900/50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-3.5 h-3.5 text-neutral-500"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
+              <span class="text-[12px] font-medium text-neutral-300 truncate">${escapeHtml(channelName)}</span>
+            </div>
+            <div class="bg-[#313338] p-3">
+              <div class="flex gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-[#5865F2] flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  <img src="/img/logo.png" alt="PeakBot" class="w-full h-full object-cover outline outline-1 -outline-offset-1 outline-white/10">
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5 mb-1">
+                    <span class="text-[12px] font-semibold text-white">PeakBot</span>
+                    <span class="inline-flex items-center gap-[0.15em] px-1 py-px bg-[#5865F2] rounded text-[8.5px] font-bold text-white leading-tight">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="h-[0.85em] w-[0.85em]"><path d="M20 6 9 17l-5-5"></path></svg>BOT
+                    </span>
+                  </div>
+                  <div class="flex rounded overflow-hidden max-w-sm">
+                    <div class="w-1 flex-shrink-0" style="background-color: ${escapeHtml(draft.embed.color || 'rgb(88, 101, 242)')};"></div>
+                    <div class="bg-[#2b2d31] py-2 px-2.5 flex-1 min-w-0">
+                      <p class="text-[11.5px] font-semibold text-white mb-0.5 break-words leading-snug">${escapeHtml(displayTitle)}</p>
+                      ${hasDesc ? `
+                        <p class="text-[10.5px] text-neutral-300 whitespace-pre-wrap break-words leading-snug">${escapeHtml(draft.embed.description)}</p>
+                      ` : `
+                        <p class="text-[10.5px] text-neutral-500 italic leading-snug">Beschreibung erscheint hier.</p>
+                      `}
+                      <p class="text-[9.5px] mt-1.5 ${modeInfo.previewColor}">${escapeHtml(modeInfo.previewText)}</p>
+                    </div>
+                  </div>
+                  ${draft.components.length === 0 ? `
+                    <p class="text-[10.5px] text-neutral-500 italic mt-1.5 text-pretty">Sobald Sie Rollen hinzufügen, werden hier Schaltflächen angezeigt.</p>
+                  ` : `
+                    <div class="flex flex-wrap gap-1.5 mt-2">
+                      ${draft.components.map(comp => {
+                        const r = getRoleById(comp.role_id);
+                        const lbl = comp.label || (r ? r.name : 'Rolle');
+                        const dot = r ? getRoleDotColor(r) : '#99aab5';
+                        if (draft.panel_type === 'reactions') {
+                          return `
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#2b2d31] border border-[#5865F2]/60 text-[11px] text-neutral-200">
+                              <span>${escapeHtml(comp.emoji || '✨')}</span>
+                              <span class="text-[10px] font-semibold text-indigo-300">1</span>
+                            </span>
+                          `;
+                        }
+                        return `
+                          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#4e5058] hover:bg-[#6d6f78] text-[11px] font-medium text-white">
+                            <span>${escapeHtml(comp.emoji || '✨')}</span>
+                            <span class="w-2 h-2 rounded-full shrink-0" style="background:${dot}"></span>
+                            <span class="truncate max-w-[130px]">${escapeHtml(lbl)}</span>
+                          </span>
+                        `;
+                      }).join('')}
+                    </div>
+                  `}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      };
+
+      const renderFooterStatusAndBtnHtml = () => {
+        const validComps = draft.components.filter(c => c.role_id);
+        const canSubmit = validComps.length > 0 && (!draft.post_on_save || Boolean(draft.channel_id));
+        const btnLabel = (draft.post_on_save && draft.channel_id)
+          ? 'Speichern & auf Discord posten'
+          : 'Als Entwurf speichern';
+
+        let hintText = 'Fügen Sie mindestens eine Rolle hinzu';
+        if (validComps.length > 0 && draft.post_on_save && !draft.channel_id) {
+          hintText = 'Wählen Sie einen Kanal zum Posten aus';
+        } else if (validComps.length > 0) {
+          hintText = `${validComps.length} Rolle${validComps.length === 1 ? '' : 'n'} bereit`;
+        }
+
+        return `
+          <span class="flex items-center gap-1.5 text-[11px] text-neutral-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-3 h-3"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
+            ${escapeHtml(hintText)}
+          </span>
+          <button type="button" id="rr-modal-submit" ${canSubmit ? '' : 'disabled=""'} class="flex items-center gap-1.5 bg-white text-black font-semibold text-sm rounded-xl h-10 px-4 hover:bg-neutral-200 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-30 disabled:cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-3.5 h-3.5"><path d="M20 6 9 17l-5-5"></path></svg> ${escapeHtml(btnLabel)}
+          </button>
+        `;
+      };
+
+      const refreshLivePreviewAndFooter = () => {
+        const prevContainer = document.getElementById('rr-preview-container');
+        if (prevContainer) prevContainer.innerHTML = renderPreviewCardHtml();
+        const footerRight = document.getElementById('rr-footer-right');
+        if (footerRight) {
+          footerRight.innerHTML = renderFooterStatusAndBtnHtml();
+          document.getElementById('rr-modal-submit')?.addEventListener('click', handleSubmit);
+        }
+      };
+
+      const handleSubmit = async () => {
+        const validComps = draft.components.filter(c => c.role_id);
+        if (validComps.length === 0) {
+          if (window.Notifications) Notifications.show('Fügen Sie mindestens eine Rolle hinzu', 'error');
+          return;
+        }
+        const postToDiscord = Boolean(draft.post_on_save && draft.channel_id);
+        const payload = {
+          ...draft,
+          name: draft.embed.title || 'Rollenauswahl',
+          components: validComps,
+          post_to_discord: postToDiscord
+        };
+        const submitBtn = document.getElementById('rr-modal-submit');
+        if (submitBtn) submitBtn.disabled = true;
+        try {
+          const res = await API.saveReactionRole(guildId, payload);
+          payload.id = res.id || payload.id || `rr_${Date.now()}`;
+          if (res.message_id || res.msg_id) {
+            payload.message_id = res.message_id || res.msg_id;
+          }
+          const existingIdx = state.reactionPanels.findIndex(p => String(p.id) === String(payload.id));
+          if (existingIdx >= 0) {
+            state.reactionPanels[existingIdx] = payload;
+          } else {
+            state.reactionPanels.push(payload);
+          }
+          modalRoot.innerHTML = '';
+          renderReactionPanelsGrid();
+          if (window.Notifications) {
+            Notifications.show(postToDiscord ? 'Reaktionspanel gespeichert & auf Discord gepostet!' : 'Reaktionspanel als Entwurf gespeichert!', 'success');
+          }
+        } catch (err) {
+          if (submitBtn) submitBtn.disabled = false;
+          if (window.Notifications) Notifications.show(err.message || 'Fehler beim Speichern des Reaktionspanels', 'error');
+        }
       };
 
       const renderModal = () => {
+        const modeInfo = MODE_META[draft.mode] || MODE_META.multi;
+        const selectedChannel = getChannelById(draft.channel_id);
+        const needsChannelWarning = draft.post_on_save && !draft.channel_id;
+
         modalRoot.innerHTML = `
-          <div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-              <div class="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-rose-400"><path d="M22 11v1a10 10 0 1 1-9-10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/><path d="M16 5h6"/><path d="M19 2v6"/></svg>
-                  <h3 class="text-sm font-semibold text-white">${draft.id ? 'Edit Reaction Panel' : 'Create Reaction Panel'}</h3>
+          <div id="rr-modal-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+            <div class="w-full max-w-5xl max-h-[90vh] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col" style="opacity: 1; transform: none;">
+              <!-- Modal Header -->
+              <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-800 flex-shrink-0">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-8 h-8 rounded-lg bg-rose-500/10 ring-1 ring-rose-500/15 flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile-plus w-4 h-4 text-rose-400"><path d="M22 11v1a10 10 0 1 1-9-10"></path><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line><path d="M16 5h6"></path><path d="M19 2v6"></path></svg>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-white truncate">${isEditing ? 'Reaktionspanel bearbeiten' : 'Neues Reaktionspanel'}</p>
+                    <p class="text-[11px] text-neutral-500">Mitglieder tippen auf ein Emoji, um eine Rolle zu übernehmen</p>
+                  </div>
                 </div>
-                <button type="button" id="rr-modal-close" class="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <button type="button" id="rr-modal-close" class="p-1 text-neutral-500 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                 </button>
               </div>
 
-              <div class="p-5 overflow-y-auto space-y-4 flex-1">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Channel</label>
-                    <select id="rr-modal-channel" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
-                      ${allChannels.map(c => `<option value="${escapeHtml(c.id)}" ${String(c.id) === draft.channel_id ? 'selected' : ''}>#${escapeHtml(c.name)}</option>`).join('')}
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Interaction Type</label>
-                    <select id="rr-modal-type" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
-                      <option value="buttons" ${draft.panel_type === 'buttons' ? 'selected' : ''}>Discord Buttons</option>
-                      <option value="reactions" ${draft.panel_type === 'reactions' ? 'selected' : ''}>Emoji Reactions</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Selection Mode</label>
-                    <select id="rr-modal-mode" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
-                      <option value="multi" ${draft.mode === 'multi' ? 'selected' : ''}>Toggle (Multiple Roles)</option>
-                      <option value="pick_one" ${draft.mode === 'pick_one' ? 'selected' : ''}>Unique (Pick One Only)</option>
-                      <option value="verify" ${draft.mode === 'verify' ? 'selected' : ''}>Verify (Add Only)</option>
-                      <option value="opt_out" ${draft.mode === 'opt_out' ? 'selected' : ''}>Opt-Out (Remove Only)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-[1fr,110px] gap-3">
-                  <div>
-                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Panel Title</label>
-                    <input type="text" id="rr-modal-title" value="${escapeHtml(draft.embed.title)}" placeholder="Pick Your Roles" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
-                  </div>
-                  <div>
-                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Accent Color</label>
-                    <input type="color" id="rr-modal-color" value="${escapeHtml(draft.embed.color || '#5865F2')}" class="w-full h-9 p-1 bg-neutral-800 border border-neutral-700 rounded-xl cursor-pointer">
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-[11px] font-medium text-neutral-400 mb-1">Description</label>
-                  <textarea id="rr-modal-desc" rows="2" placeholder="Click below to get your roles..." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">${escapeHtml(draft.embed.description)}</textarea>
-                </div>
-
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between">
-                    <label class="text-xs font-semibold text-white">Role Options (${draft.components.length})</label>
-                    <button type="button" id="rr-modal-add-row" class="text-xs px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                      Add Role
-                    </button>
-                  </div>
-
-                  <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                    ${draft.components.map((comp, idx) => `
-                      <div class="grid grid-cols-1 sm:grid-cols-[70px,1fr,1fr,100px,32px] gap-2 items-center p-2.5 rounded-xl bg-neutral-800/60 border border-neutral-800">
-                        <input type="text" data-comp-emoji="${idx}" value="${escapeHtml(comp.emoji)}" placeholder="✨" class="h-8 px-2 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-center text-white" title="Emoji">
-                        <select data-comp-role="${idx}" class="h-8 px-2 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white">
-                          <option value="">Select role...</option>
-                          ${allRoles.map(r => `<option value="${escapeHtml(r.id)}" ${String(r.id) === String(comp.role_id) ? 'selected' : ''}>@${escapeHtml(r.name)}</option>`).join('')}
-                        </select>
-                        <input type="text" data-comp-label="${idx}" value="${escapeHtml(comp.label)}" placeholder="Button label" class="h-8 px-2.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white">
-                        <select data-comp-color="${idx}" class="h-8 px-2 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white">
-                          <option value="blue" ${comp.color === 'blue' ? 'selected' : ''}>Blurple</option>
-                          <option value="gray" ${comp.color === 'gray' ? 'selected' : ''}>Gray</option>
-                          <option value="green" ${comp.color === 'green' ? 'selected' : ''}>Green</option>
-                          <option value="red" ${comp.color === 'red' ? 'selected' : ''}>Red</option>
-                        </select>
-                        <button type="button" data-comp-del="${idx}" class="h-8 w-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-red-400 hover:bg-red-500/10">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <!-- Scrollable 2-Column Body -->
+              <div class="flex-1 min-h-0 overflow-y-auto" data-lenis-prevent="true">
+                <div class="grid grid-cols-1 lg:grid-cols-[1fr,360px] min-h-full">
+                  <!-- Left Column -->
+                  <div class="divide-y divide-neutral-800/60">
+                    <!-- 1. Beginnen Sie mit einer Vorlage -->
+                    <div class="px-5 py-4">
+                      <p class="text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-2">Beginnen Sie mit einer Vorlage</p>
+                      <div class="flex flex-wrap gap-1.5">
+                        <button type="button" data-rr-tpl="color" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-palette w-3.5 h-3.5"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>Farbe
+                        </button>
+                        <button type="button" data-rr-tpl="pronouns" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-type w-3.5 h-3.5"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" x2="15" y1="20" y2="20"></line><line x1="12" x2="12" y1="4" y2="20"></line></svg>Pronomen
+                        </button>
+                        <button type="button" data-rr-tpl="region" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>Region
+                        </button>
+                        <button type="button" data-rr-tpl="games" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gamepad2 w-3.5 h-3.5"><line x1="6" x2="10" y1="11" y2="11"></line><line x1="8" x2="8" y1="9" y2="13"></line><line x1="15" x2="15.01" y1="12" y2="12"></line><line x1="18" x2="18.01" y1="10" y2="10"></line><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"></path></svg>Spiel-Pings
+                        </button>
+                        <button type="button" data-rr-tpl="notifications" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell w-3.5 h-3.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>Benachrichtigungen
+                        </button>
+                        <button type="button" data-rr-tpl="verify" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-3.5 h-3.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Tor überprüfen
                         </button>
                       </div>
-                    `).join('')}
+                    </div>
+
+                    <!-- 2. Verhalten -->
+                    <div class="px-5 py-4">
+                      <p class="text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-2">Verhalten</p>
+                      <div class="grid grid-cols-2 sm:grid-cols-5 gap-1 p-1 rounded-xl bg-neutral-800/50 border border-neutral-800">
+                        ${Object.entries(MODE_META).map(([mKey, mObj]) => {
+                          const isActive = draft.mode === mKey;
+                          return `
+                            <button type="button" data-rr-mode="${mKey}" class="relative flex flex-col items-center gap-1 px-2 py-2 rounded-lg text-[11px] font-medium transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${isActive ? 'text-black' : 'text-neutral-400 hover:text-white'}">
+                              ${isActive ? '<span class="absolute inset-0 bg-white rounded-lg shadow-sm" style="opacity: 1;"></span>' : ''}
+                              ${mObj.icon}
+                              <span class="relative z-10">${escapeHtml(mObj.label)}</span>
+                            </button>
+                          `;
+                        }).join('')}
+                      </div>
+                      <p class="text-[11px] text-neutral-500 mt-2 leading-relaxed">${escapeHtml(modeInfo.desc)}</p>
+                    </div>
+
+                    <!-- 3. Titel & Beschreibung -->
+                    <div class="px-5 py-4 space-y-3">
+                      <div>
+                        <label class="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">Titel</label>
+                        <input id="rr-modal-title" maxlength="256" placeholder="Wählen Sie Ihre Rollen" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl h-10 px-3 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-colors" type="text" value="${escapeHtml(draft.embed.title)}">
+                      </div>
+                      <div>
+                        <label class="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">Beschreibung</label>
+                        <textarea id="rr-modal-desc" maxlength="1024" rows="2" placeholder="Optional" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 resize-none transition-colors">${escapeHtml(draft.embed.description)}</textarea>
+                      </div>
+                    </div>
+
+                    <!-- 4. Nachricht -->
+                    <div class="px-5 py-4">
+                      <p class="text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-2">Nachricht</p>
+                      <button type="button" id="rr-toggle-msg-builder" class="group w-full flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-800/40 hover:bg-neutral-800/70 hover:border-neutral-700 px-3.5 py-3 text-left transition-[transform,background-color,border-color] duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40">
+                        <span class="grid place-items-center w-9 h-9 flex-shrink-0 rounded-lg bg-indigo-500/15 text-indigo-300 group-hover:bg-indigo-500/25 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil w-4 h-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>
+                        </span>
+                        <span class="min-w-0 flex-1 text-sm font-medium text-white">Im Nachrichten-Builder bearbeiten</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-4 h-4 flex-shrink-0 text-neutral-500 group-hover:text-white group-hover:translate-x-0.5 transition-[transform,color] duration-150"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                      </button>
+                      ${messageBuilderExpanded ? `
+                        <div class="mt-3 p-3.5 rounded-xl bg-neutral-800/40 border border-neutral-800 space-y-3">
+                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label class="block text-[11px] font-medium text-neutral-400 mb-1">Embed-Farbe</label>
+                              <div class="flex items-center gap-1.5">
+                                ${['rgb(88, 101, 242)', 'rgb(87, 242, 135)', 'rgb(235, 69, 158)', 'rgb(250, 166, 26)', 'rgb(237, 66, 69)', 'rgb(155, 89, 182)'].map(col => `
+                                  <button type="button" data-rr-embed-col="${col}" class="w-6 h-6 rounded-full border-2 ${draft.embed.color === col ? 'border-white scale-110' : 'border-transparent opacity-75 hover:opacity-100'} transition-all" style="background-color: ${col};"></button>
+                                `).join('')}
+                              </div>
+                            </div>
+                            <div>
+                              <label class="block text-[11px] font-medium text-neutral-400 mb-1">Interaktions-Stil</label>
+                              <div class="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-neutral-900 border border-neutral-800">
+                                <button type="button" data-rr-ptype="buttons" class="py-1 rounded-md text-[11px] font-medium ${draft.panel_type === 'buttons' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}">Schaltflächen</button>
+                                <button type="button" data-rr-ptype="reactions" class="py-1 rounded-md text-[11px] font-medium ${draft.panel_type === 'reactions' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}">Reaktionen</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ` : ''}
+                    </div>
+
+                    <!-- 5. Kanal & Beim Speichern auf Discord posten -->
+                    <div class="px-5 py-4 space-y-3">
+                      <div>
+                        <label class="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">
+                          Kanal${needsChannelWarning ? `<span class="ml-2 text-amber-400 normal-case tracking-normal font-normal">· zum Posten erforderlich</span>` : ''}
+                        </label>
+                        <div class="rounded-xl transition-shadow ${needsChannelWarning ? 'ring-1 ring-amber-500/40' : ''}">
+                          <div class="w-full">
+                            <div class="relative">
+                              <button type="button" id="rr-channel-trigger" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                                ${selectedChannel ? `
+                                  <span class="min-w-0 truncate text-sm text-white font-medium flex items-center gap-1.5">
+                                    <span class="text-neutral-400">#</span>${escapeHtml(selectedChannel.name)}
+                                  </span>
+                                ` : `
+                                  <span class="min-w-0 truncate text-sm text-neutral-500">Wählen Sie einen Kanal…</span>
+                                `}
+                                <div class="flex items-center gap-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 ${channelDropdownOpen ? 'rotate-180' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
+                                </div>
+                              </button>
+                              <div id="rr-channel-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${channelDropdownOpen ? '' : 'hidden'} absolute left-0 right-0 top-11 z-[99999] bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl p-1 max-h-52 overflow-y-auto overscroll-contain scrollbar-thin space-y-0.5">
+                                ${allChannels.length === 0 ? `
+                                  <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle verfügbar</div>
+                                ` : allChannels.map(ch => {
+                                  const isSel = String(ch.id) === String(draft.channel_id);
+                                  return `
+                                    <button type="button" data-rr-select-channel="${escapeHtml(ch.id)}" class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs text-left transition-colors ${isSel ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800/70'}">
+                                      <span class="truncate"><span class="text-neutral-500 mr-1">#</span>${escapeHtml(ch.name)}</span>
+                                      ${isSel ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-400 shrink-0"><path d="M20 6 9 17l-5-5"/></svg>` : ''}
+                                    </button>
+                                  `;
+                                }).join('')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-neutral-800/40 border border-neutral-800">
+                        <div class="min-w-0">
+                          <p class="text-[12.5px] font-medium text-white">Beim Speichern auf Discord posten</p>
+                          <p class="text-[11px] text-neutral-500 mt-0.5">${selectedChannel ? `Wird beim Speichern direkt in #${escapeHtml(selectedChannel.name)} gepostet.` : 'Wählen Sie oben einen Kanal zum Posten aus.'}</p>
+                        </div>
+                        <button type="button" id="rr-post-switch" class="w-10 h-5 rounded-full transition-[transform,background-color] duration-200 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 relative flex-shrink-0 ${draft.post_on_save ? 'bg-emerald-500' : 'bg-neutral-700'}">
+                          <span class="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-out ${draft.post_on_save ? 'left-[22px]' : 'left-0.5'}"></span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- 6. Rollen (0/25) -->
+                    <div class="px-5 py-4 space-y-2.5">
+                      <div class="flex items-center justify-between">
+                        <p class="text-[11px] uppercase tracking-wider font-medium text-neutral-500">Rollen</p>
+                        <span class="text-[10.5px] text-neutral-600 tabular-nums">${draft.components.length}/25</span>
+                      </div>
+
+                      <div class="space-y-2">
+                        ${draft.components.map((comp, idx) => {
+                          const r = getRoleById(comp.role_id);
+                          const dot = getRoleDotColor(r);
+                          const isRoleMenuOpen = openRoleDropdownIdx === idx;
+                          const isEmojiOpen = openEmojiPickerIdx === idx;
+                          return `
+                            <div class="flex items-center gap-2 p-2 rounded-xl bg-neutral-800/50 border border-neutral-800">
+                              <!-- Emoji Picker Button -->
+                              <div class="relative flex-shrink-0">
+                                <button type="button" data-rr-emoji-btn="${idx}" class="h-9 w-11 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-neutral-600 flex items-center justify-center text-base transition-colors" title="Emoji wählen">
+                                  ${escapeHtml(comp.emoji || '✨')}
+                                </button>
+                                <div data-lenis-prevent="true" class="orbit-dropdown-menu ${isEmojiOpen ? '' : 'hidden'} absolute left-0 bottom-11 z-[99999] w-56 p-2 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl space-y-2">
+                                  <div class="grid grid-cols-8 gap-1">
+                                    ${QUICK_EMOJIS.map(em => `
+                                      <button type="button" data-rr-pick-emoji="${idx}" data-emoji-val="${em}" class="h-6 w-6 rounded hover:bg-neutral-800 flex items-center justify-center text-sm">${em}</button>
+                                    `).join('')}
+                                  </div>
+                                  <input type="text" data-rr-custom-emoji="${idx}" value="${escapeHtml(comp.emoji || '')}" placeholder="Eigenes Emoji eingeben…" class="w-full h-7 px-2 rounded-lg bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none">
+                                </div>
+                              </div>
+
+                              <!-- Custom Role Selector -->
+                              <div class="relative flex-1 min-w-0">
+                                <button type="button" data-rr-role-btn="${idx}" class="w-full h-9 px-3 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-neutral-600 flex items-center justify-between gap-2 text-xs text-left transition-colors">
+                                  ${r ? `
+                                    <span class="flex items-center gap-2 min-w-0 truncate text-white font-medium">
+                                      <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span>
+                                      <span class="truncate">${escapeHtml(r.name)}</span>
+                                    </span>
+                                  ` : `
+                                    <span class="text-neutral-500 truncate">Rolle auswählen…</span>
+                                  `}
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-400 shrink-0"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <div data-lenis-prevent="true" class="orbit-dropdown-menu ${isRoleMenuOpen ? '' : 'hidden'} absolute left-0 right-0 top-10 z-[99999] bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl p-1 max-h-48 overflow-y-auto overscroll-contain scrollbar-thin space-y-0.5">
+                                  ${allRoles.length === 0 ? `
+                                    <div class="px-2.5 py-2 text-xs text-neutral-500">Keine Rollen verfügbar</div>
+                                  ` : allRoles.map(roleItem => {
+                                    const rSel = String(roleItem.id) === String(comp.role_id);
+                                    const rDot = getRoleDotColor(roleItem);
+                                    return `
+                                      <button type="button" data-rr-select-role="${idx}" data-role-val="${escapeHtml(roleItem.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between gap-2 text-xs transition-colors ${rSel ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                                        <span class="flex items-center gap-2 min-w-0 truncate">
+                                          <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${rDot}"></span>
+                                          <span class="truncate">${escapeHtml(roleItem.name)}</span>
+                                        </span>
+                                        ${rSel ? `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-400 shrink-0"><path d="M20 6 9 17l-5-5"/></svg>` : ''}
+                                      </button>
+                                    `;
+                                  }).join('')}
+                                </div>
+                              </div>
+
+                              <!-- Optional Label Input -->
+                              <input type="text" data-rr-comp-label="${idx}" value="${escapeHtml(comp.label || '')}" placeholder="Beschriftung (optional)" class="hidden sm:block w-36 h-9 px-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500">
+
+                              <!-- Delete Row -->
+                              <button type="button" data-rr-del-comp="${idx}" class="h-9 w-9 rounded-lg flex items-center justify-center text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0" title="Entfernen">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                              </button>
+                            </div>
+                          `;
+                        }).join('')}
+
+                        ${draft.components.length < 25 ? `
+                          <button type="button" id="rr-add-role-btn" class="flex items-center justify-center gap-1.5 w-full h-10 border border-dashed border-neutral-700 rounded-xl text-xs text-neutral-400 hover:text-white hover:border-neutral-500 hover:bg-neutral-800/30 transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3.5 h-3.5"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>${draft.components.length === 0 ? 'Fügen Sie Ihre erste Rolle hinzu' : 'Rolle hinzufügen'}
+                          </button>
+                        ` : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Right Column: Live Discord Preview -->
+                  <div class="flex flex-col border-t lg:border-t-0 lg:border-l border-neutral-800/60 bg-neutral-900/40">
+                    <div class="px-4 py-2.5 border-b border-neutral-800/60 flex items-center gap-2 flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye w-3.5 h-3.5 text-neutral-500"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Vorschau</span>
+                    </div>
+                    <div id="rr-preview-container" class="flex-1 p-4 overflow-y-auto">
+                      ${renderPreviewCardHtml()}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div class="px-5 py-3.5 border-t border-neutral-800 flex items-center justify-end gap-2 bg-neutral-950/60">
-                <button type="button" id="rr-modal-cancel" class="h-9 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-300">Cancel</button>
-                <button type="button" id="rr-modal-save-only" class="h-9 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs font-medium text-white">Save Draft</button>
-                <button type="button" id="rr-modal-save-post" class="h-9 px-4 rounded-xl bg-white hover:bg-neutral-200 text-xs font-semibold text-black">Save & Publish to Discord</button>
+              <!-- Modal Footer -->
+              <div class="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 border-t border-neutral-800 flex-shrink-0">
+                <button type="button" id="rr-modal-cancel" class="text-xs text-neutral-500 hover:text-white transition-[transform,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md px-1">Stornieren</button>
+                <div id="rr-footer-right" class="flex items-center gap-3">
+                  ${renderFooterStatusAndBtnHtml()}
+                </div>
               </div>
             </div>
           </div>
         `;
 
-        const syncInputs = () => {
-          draft.channel_id = document.getElementById('rr-modal-channel')?.value || '';
-          draft.panel_type = document.getElementById('rr-modal-type')?.value || 'buttons';
-          draft.mode = document.getElementById('rr-modal-mode')?.value || 'multi';
-          draft.embed.title = document.getElementById('rr-modal-title')?.value || 'Role Selection';
-          draft.name = draft.embed.title;
-          draft.embed.color = document.getElementById('rr-modal-color')?.value || '#5865F2';
-          draft.embed.description = document.getElementById('rr-modal-desc')?.value || '';
-        };
+        // Bind events inside the modal
+        const closeModal = () => { modalRoot.innerHTML = ''; };
+        document.getElementById('rr-modal-close')?.addEventListener('click', closeModal);
+        document.getElementById('rr-modal-cancel')?.addEventListener('click', closeModal);
+        document.getElementById('rr-modal-backdrop')?.addEventListener('click', (e) => {
+          if (e.target.id === 'rr-modal-backdrop') closeModal();
+        });
 
-        modalRoot.querySelectorAll('[data-comp-emoji]').forEach(inp => {
-          inp.addEventListener('input', () => {
-            draft.components[parseInt(inp.getAttribute('data-comp-emoji'), 10)].emoji = inp.value;
-          });
-        });
-        modalRoot.querySelectorAll('[data-comp-role]').forEach(sel => {
-          sel.addEventListener('change', () => {
-            const idx = parseInt(sel.getAttribute('data-comp-role'), 10);
-            draft.components[idx].role_id = sel.value;
-            const r = getRoleById(sel.value);
-            if (r && (!draft.components[idx].label || draft.components[idx].label === 'Role')) {
-              draft.components[idx].label = r.name;
-              const lblInput = modalRoot.querySelector(`[data-comp-label="${idx}"]`);
-              if (lblInput) lblInput.value = r.name;
-            }
-          });
-        });
-        modalRoot.querySelectorAll('[data-comp-label]').forEach(inp => {
-          inp.addEventListener('input', () => {
-            draft.components[parseInt(inp.getAttribute('data-comp-label'), 10)].label = inp.value;
-          });
-        });
-        modalRoot.querySelectorAll('[data-comp-color]').forEach(sel => {
-          sel.addEventListener('change', () => {
-            draft.components[parseInt(sel.getAttribute('data-comp-color'), 10)].color = sel.value;
-          });
-        });
-        modalRoot.querySelectorAll('[data-comp-del]').forEach(btn => {
+        // Template pills
+        modalRoot.querySelectorAll('[data-rr-tpl]').forEach(btn => {
           btn.addEventListener('click', () => {
-            syncInputs();
-            const idx = parseInt(btn.getAttribute('data-comp-del'), 10);
+            applyTemplate(btn.getAttribute('data-rr-tpl'));
+          });
+        });
+
+        // Behavior mode selector
+        modalRoot.querySelectorAll('[data-rr-mode]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            draft.mode = btn.getAttribute('data-rr-mode') || 'multi';
+            renderModal();
+          });
+        });
+
+        // Live Title & Description inputs
+        const titleInput = document.getElementById('rr-modal-title');
+        const descInput = document.getElementById('rr-modal-desc');
+        titleInput?.addEventListener('input', () => {
+          draft.embed.title = titleInput.value;
+          draft.name = titleInput.value || 'Role Selection';
+          refreshLivePreviewAndFooter();
+        });
+        descInput?.addEventListener('input', () => {
+          draft.embed.description = descInput.value;
+          refreshLivePreviewAndFooter();
+        });
+
+        // Message builder toggle & options
+        document.getElementById('rr-toggle-msg-builder')?.addEventListener('click', () => {
+          messageBuilderExpanded = !messageBuilderExpanded;
+          renderModal();
+        });
+        modalRoot.querySelectorAll('[data-rr-embed-col]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            draft.embed.color = btn.getAttribute('data-rr-embed-col') || 'rgb(88, 101, 242)';
+            renderModal();
+          });
+        });
+        modalRoot.querySelectorAll('[data-rr-ptype]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            draft.panel_type = btn.getAttribute('data-rr-ptype') || 'buttons';
+            renderModal();
+          });
+        });
+
+        // Channel dropdown
+        document.getElementById('rr-channel-trigger')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          channelDropdownOpen = !channelDropdownOpen;
+          openRoleDropdownIdx = null;
+          openEmojiPickerIdx = null;
+          renderModal();
+        });
+        modalRoot.querySelectorAll('[data-rr-select-channel]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            draft.channel_id = btn.getAttribute('data-rr-select-channel') || '';
+            channelDropdownOpen = false;
+            renderModal();
+          });
+        });
+
+        // Post on save switch (in-place smooth transition)
+        const postSwitch = document.getElementById('rr-post-switch');
+        postSwitch?.addEventListener('click', () => {
+          draft.post_on_save = !draft.post_on_save;
+          postSwitch.classList.toggle('bg-emerald-500', draft.post_on_save);
+          postSwitch.classList.toggle('bg-neutral-700', !draft.post_on_save);
+          const thumb = postSwitch.querySelector('span');
+          if (thumb) {
+            thumb.classList.toggle('left-[22px]', draft.post_on_save);
+            thumb.classList.toggle('left-0.5', !draft.post_on_save);
+          }
+          refreshLivePreviewAndFooter();
+        });
+
+        // Add Role button
+        document.getElementById('rr-add-role-btn')?.addEventListener('click', () => {
+          if (draft.components.length >= 25) return;
+          const nextRole = allRoles[draft.components.length % Math.max(1, allRoles.length)];
+          const nextEmoji = QUICK_EMOJIS[draft.components.length % QUICK_EMOJIS.length];
+          draft.components.push({
+            role_id: nextRole ? String(nextRole.id) : '',
+            label: nextRole ? nextRole.name : '',
+            emoji: nextEmoji,
+            color: 'blue'
+          });
+          channelDropdownOpen = false;
+          openRoleDropdownIdx = null;
+          openEmojiPickerIdx = null;
+          renderModal();
+        });
+
+        // Role rows bindings
+        modalRoot.querySelectorAll('[data-rr-emoji-btn]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-rr-emoji-btn'), 10);
+            openEmojiPickerIdx = openEmojiPickerIdx === idx ? null : idx;
+            openRoleDropdownIdx = null;
+            channelDropdownOpen = false;
+            renderModal();
+          });
+        });
+        modalRoot.querySelectorAll('[data-rr-pick-emoji]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-rr-pick-emoji'), 10);
+            draft.components[idx].emoji = btn.getAttribute('data-emoji-val') || '✨';
+            openEmojiPickerIdx = null;
+            renderModal();
+          });
+        });
+        modalRoot.querySelectorAll('[data-rr-custom-emoji]').forEach(inp => {
+          inp.addEventListener('click', (e) => e.stopPropagation());
+          inp.addEventListener('input', () => {
+            const idx = parseInt(inp.getAttribute('data-rr-custom-emoji'), 10);
+            draft.components[idx].emoji = inp.value || '✨';
+            refreshLivePreviewAndFooter();
+          });
+        });
+
+        modalRoot.querySelectorAll('[data-rr-role-btn]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-rr-role-btn'), 10);
+            openRoleDropdownIdx = openRoleDropdownIdx === idx ? null : idx;
+            openEmojiPickerIdx = null;
+            channelDropdownOpen = false;
+            renderModal();
+          });
+        });
+        modalRoot.querySelectorAll('[data-rr-select-role]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-rr-select-role'), 10);
+            const rid = btn.getAttribute('data-role-val') || '';
+            draft.components[idx].role_id = rid;
+            const r = getRoleById(rid);
+            if (r) draft.components[idx].label = r.name;
+            openRoleDropdownIdx = null;
+            renderModal();
+          });
+        });
+
+        modalRoot.querySelectorAll('[data-rr-comp-label]').forEach(inp => {
+          inp.addEventListener('input', () => {
+            const idx = parseInt(inp.getAttribute('data-rr-comp-label'), 10);
+            draft.components[idx].label = inp.value;
+            refreshLivePreviewAndFooter();
+          });
+        });
+
+        modalRoot.querySelectorAll('[data-rr-del-comp]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-rr-del-comp'), 10);
             draft.components.splice(idx, 1);
             renderModal();
           });
         });
 
-        document.getElementById('rr-modal-add-row')?.addEventListener('click', () => {
-          syncInputs();
-          const nextRole = allRoles[draft.components.length % Math.max(1, allRoles.length)];
-          draft.components.push({
-            role_id: nextRole ? String(nextRole.id) : '',
-            label: nextRole ? nextRole.name : 'Role',
-            emoji: '🎭',
-            color: 'blue'
-          });
-          renderModal();
-        });
-
-        const closeModal = () => { modalRoot.innerHTML = ''; };
-        document.getElementById('rr-modal-close')?.addEventListener('click', closeModal);
-        document.getElementById('rr-modal-cancel')?.addEventListener('click', closeModal);
-
-        const submitPanel = async (postToDiscord) => {
-          syncInputs();
-          const validComps = draft.components.filter(c => c.role_id);
-          if (validComps.length === 0) {
-            if (window.Notifications) Notifications.show('Please select at least one role for the panel', 'error');
-            return;
-          }
-          const payload = {
-            ...draft,
-            components: validComps,
-            post_to_discord: postToDiscord
-          };
-          try {
-            const res = await API.saveReactionRole(guildId, payload);
-            payload.id = res.id || payload.id;
-            if (res.message_id || res.msg_id) {
-              payload.message_id = res.message_id || res.msg_id;
-            }
-            const existingIdx = state.reactionPanels.findIndex(p => String(p.id) === String(payload.id));
-            if (existingIdx >= 0) {
-              state.reactionPanels[existingIdx] = payload;
-            } else {
-              state.reactionPanels.push(payload);
-            }
-            closeModal();
-            renderReactionPanelsGrid();
-            if (window.Notifications) {
-              Notifications.show(postToDiscord ? 'Reaction panel saved & published to Discord!' : 'Reaction panel saved!', 'success');
-            }
-          } catch (err) {
-            if (window.Notifications) Notifications.show(err.message || 'Failed to save reaction panel', 'error');
-          }
-        };
-
-        document.getElementById('rr-modal-save-only')?.addEventListener('click', () => submitPanel(false));
-        document.getElementById('rr-modal-save-post')?.addEventListener('click', () => submitPanel(true));
+        document.getElementById('rr-modal-submit')?.addEventListener('click', handleSubmit);
       };
 
       renderModal();
