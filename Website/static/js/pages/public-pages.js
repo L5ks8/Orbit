@@ -288,8 +288,242 @@ Pages.UserSettings = async function(container) {
   }
 
   const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const autoTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+  function getTimezoneDetails(timeZoneId) {
+    try {
+      const d = new Date();
+      const timeFormatted = d.toLocaleTimeString('en-US', { timeZone: timeZoneId, hour: 'numeric', minute: '2-digit' });
+      const parts = new Intl.DateTimeFormat('en-US', { timeZone: timeZoneId, timeZoneName: 'shortOffset' }).formatToParts(d);
+      let offset = parts.find(p => p.type === 'timeZoneName')?.value || 'UTC';
+      offset = offset.replace('GMT', 'UTC');
+      if (offset === 'UTC') offset = 'UTC+0';
+      return { time: timeFormatted, offset };
+    } catch (e) {
+      return { time: '--:--', offset: 'UTC' };
+    }
+  }
+
+  const autoDetails = getTimezoneDetails(autoTz);
+  const selectedTimezone = localStorage.getItem('orbit_timezone') || 'auto';
+  const isAuto = selectedTimezone === 'auto';
+  const activeTimezone = isAuto ? autoTz : selectedTimezone;
+  const activeDetails = getTimezoneDetails(activeTimezone);
+
+  const timezoneGroups = [
+    {
+      name: 'Pacific',
+      zones: [
+        { name: 'Midway', zone: 'Pacific/Midway' },
+        { name: 'Hawaii', zone: 'Pacific/Honolulu' },
+        { name: 'Guam', zone: 'Pacific/Guam' },
+        { name: 'Tahiti', zone: 'Pacific/Tahiti' }
+      ]
+    },
+    {
+      name: 'Americas',
+      zones: [
+        { name: 'Alaska', zone: 'America/Anchorage' },
+        { name: 'Los Angeles', zone: 'America/Los_Angeles' },
+        { name: 'Vancouver', zone: 'America/Vancouver' },
+        { name: 'Phoenix', zone: 'America/Phoenix' },
+        { name: 'Denver', zone: 'America/Denver' },
+        { name: 'Chicago', zone: 'America/Chicago' },
+        { name: 'Mexico City', zone: 'America/Mexico_City' },
+        { name: 'New York', zone: 'America/New_York' },
+        { name: 'Toronto', zone: 'America/Toronto' },
+        { name: 'Halifax', zone: 'America/Halifax' },
+        { name: 'São Paulo', zone: 'America/Sao_Paulo' },
+        { name: 'Buenos Aires', zone: 'America/Argentina/Buenos_Aires' },
+        { name: 'Edmonton', zone: 'America/Edmonton' },
+        { name: 'Winnipeg', zone: 'America/Winnipeg' },
+        { name: 'Bogotá', zone: 'America/Bogota' },
+        { name: 'Lima', zone: 'America/Lima' },
+        { name: 'Caracas', zone: 'America/Caracas' },
+        { name: 'Santiago', zone: 'America/Santiago' },
+        { name: 'Montevideo', zone: 'America/Montevideo' }
+      ]
+    },
+    {
+      name: 'Atlantic',
+      zones: [
+        { name: 'Azores', zone: 'Atlantic/Azores' }
+      ]
+    },
+    {
+      name: 'Global',
+      zones: [
+        { name: 'UTC', zone: 'UTC' }
+      ]
+    },
+    {
+      name: 'Europe',
+      zones: [
+        { name: 'London', zone: 'Europe/London' },
+        { name: 'Lisbon', zone: 'Europe/Lisbon' },
+        { name: 'Paris', zone: 'Europe/Paris' },
+        { name: 'Berlin', zone: 'Europe/Berlin' },
+        { name: 'Madrid', zone: 'Europe/Madrid' },
+        { name: 'Amsterdam', zone: 'Europe/Amsterdam' },
+        { name: 'Rome', zone: 'Europe/Rome' },
+        { name: 'Stockholm', zone: 'Europe/Stockholm' },
+        { name: 'Warsaw', zone: 'Europe/Warsaw' },
+        { name: 'Athens', zone: 'Europe/Athens' },
+        { name: 'Helsinki', zone: 'Europe/Helsinki' },
+        { name: 'Istanbul', zone: 'Europe/Istanbul' },
+        { name: 'Moscow', zone: 'Europe/Moscow' },
+        { name: 'Dublin', zone: 'Europe/Dublin' },
+        { name: 'Brussels', zone: 'Europe/Brussels' },
+        { name: 'Vienna', zone: 'Europe/Vienna' },
+        { name: 'Zurich', zone: 'Europe/Zurich' },
+        { name: 'Prague', zone: 'Europe/Prague' },
+        { name: 'Bucharest', zone: 'Europe/Bucharest' },
+        { name: 'Kyiv', zone: 'Europe/Kyiv' }
+      ]
+    },
+    {
+      name: 'Africa',
+      zones: [
+        { name: 'Lagos', zone: 'Africa/Lagos' },
+        { name: 'Cairo', zone: 'Africa/Cairo' },
+        { name: 'Johannesburg', zone: 'Africa/Johannesburg' },
+        { name: 'Nairobi', zone: 'Africa/Nairobi' },
+        { name: 'Casablanca', zone: 'Africa/Casablanca' }
+      ]
+    },
+    {
+      name: 'Asia',
+      zones: [
+        { name: 'Riyadh', zone: 'Asia/Riyadh' },
+        { name: 'Dubai', zone: 'Asia/Dubai' },
+        { name: 'Karachi', zone: 'Asia/Karachi' },
+        { name: 'Mumbai/Kolkata', zone: 'Asia/Kolkata' },
+        { name: 'Dhaka', zone: 'Asia/Dhaka' },
+        { name: 'Bangkok', zone: 'Asia/Bangkok' },
+        { name: 'Jakarta', zone: 'Asia/Jakarta' },
+        { name: 'Singapore', zone: 'Asia/Singapore' },
+        { name: 'Hong Kong', zone: 'Asia/Hong_Kong' },
+        { name: 'Shanghai', zone: 'Asia/Shanghai' },
+        { name: 'Taipei', zone: 'Asia/Taipei' },
+        { name: 'Tokyo', zone: 'Asia/Tokyo' },
+        { name: 'Seoul', zone: 'Asia/Seoul' },
+        { name: 'Tehran', zone: 'Asia/Tehran' },
+        { name: 'Baku', zone: 'Asia/Baku' },
+        { name: 'Tashkent', zone: 'Asia/Tashkent' },
+        { name: 'Almaty', zone: 'Asia/Almaty' },
+        { name: 'Yangon', zone: 'Asia/Yangon' },
+        { name: 'Ho Chi Minh', zone: 'Asia/Ho_Chi_Minh' },
+        { name: 'Manila', zone: 'Asia/Manila' },
+        { name: 'Kuala Lumpur', zone: 'Asia/Kuala_Lumpur' }
+      ]
+    },
+    {
+      name: 'Oceania',
+      zones: [
+        { name: 'Perth', zone: 'Australia/Perth' },
+        { name: 'Adelaide', zone: 'Australia/Adelaide' },
+        { name: 'Sydney', zone: 'Australia/Sydney' },
+        { name: 'Brisbane', zone: 'Australia/Brisbane' },
+        { name: 'Auckland', zone: 'Pacific/Auckland' },
+        { name: 'Fiji', zone: 'Pacific/Fiji' },
+        { name: 'Darwin', zone: 'Australia/Darwin' },
+        { name: 'Melbourne', zone: 'Australia/Melbourne' },
+        { name: 'Hobart', zone: 'Australia/Hobart' },
+        { name: 'Port Moresby', zone: 'Pacific/Port_Moresby' }
+      ]
+    }
+  ];
+
+  const allZones = timezoneGroups.flatMap(g => g.zones);
+  const selectedZoneObj = allZones.find(z => z.zone === selectedTimezone);
+
+  const tzButtonLabel = isAuto 
+    ? `Automatic detection (${autoTz})` 
+    : `${selectedZoneObj ? selectedZoneObj.name : selectedTimezone} (${activeDetails.offset})`;
+
+  window.toggleTimezoneDropdown = function(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('tz-dropdown-menu');
+    const chevron = document.getElementById('tz-dropdown-chevron');
+    if (menu) {
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chevron) chevron.classList.add('rotate-180');
+        const input = document.getElementById('tz-search-input');
+        if (input) {
+          input.value = '';
+          if (window.filterTimezones) window.filterTimezones('');
+          setTimeout(() => input.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chevron) chevron.classList.remove('rotate-180');
+      }
+    }
+  };
+
+  window.filterTimezones = function(query) {
+    const q = (query || '').toLowerCase().trim();
+    const groups = document.querySelectorAll('.tz-group');
+    const autoBtn = document.getElementById('tz-autodetect-btn');
+    
+    if (autoBtn) {
+      if (!q || 'auto-detect match my device'.includes(q) || autoTz.toLowerCase().includes(q)) {
+        autoBtn.style.display = 'flex';
+      } else {
+        autoBtn.style.display = 'none';
+      }
+    }
+
+    groups.forEach(group => {
+      let hasVisible = false;
+      const region = (group.dataset.region || '').toLowerCase();
+      const items = group.querySelectorAll('.tz-item');
+      items.forEach(item => {
+        const name = item.dataset.name || '';
+        const zone = item.dataset.zone || '';
+        if (!q || name.includes(q) || zone.includes(q) || region.includes(q)) {
+          item.style.display = 'flex';
+          hasVisible = true;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      group.style.display = hasVisible ? 'block' : 'none';
+    });
+  };
+
+  window.selectTimezone = function(zoneId, name) {
+    if (zoneId === 'auto') {
+      localStorage.removeItem('orbit_timezone');
+      if (typeof Toast !== 'undefined' && Toast.success) {
+        Toast.success('Timezone set to Auto-detect');
+      }
+    } else {
+      localStorage.setItem('orbit_timezone', zoneId);
+      if (typeof Toast !== 'undefined' && Toast.success) {
+        Toast.success(`Timezone updated to ${name}`);
+      }
+    }
+    const app = document.getElementById('app');
+    if (app && Pages.UserSettings) {
+      Pages.UserSettings(app);
+    }
+  };
+
+  if (!window._tzClickListenerAttached) {
+    window._tzClickListenerAttached = true;
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('tz-dropdown-menu');
+      const btn = document.getElementById('tz-dropdown-btn');
+      if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.add('hidden');
+        const chevron = document.getElementById('tz-dropdown-chevron');
+        if (chevron) chevron.classList.remove('rotate-180');
+      }
+    });
+  }
 
   // Available languages
   const languages = [
@@ -417,19 +651,80 @@ Pages.UserSettings = async function(container) {
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe w-4 h-4 text-neutral-400"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
                     </div>
                     <div>
-                      <p class="text-sm font-medium text-white tabular-nums">${timeStr} <span class="text-neutral-400 font-normal">UTC</span></p>
-                      <p class="text-[11px] text-neutral-400 mt-0.5">${tz}<span class="ml-1.5 text-neutral-500">· Automatically detected</span></p>
+                      <p class="text-sm font-medium text-white tabular-nums">${activeDetails.time} <span class="text-neutral-400 font-normal">${activeDetails.offset}</span></p>
+                      <p class="text-[11px] text-neutral-400 mt-0.5">${activeTimezone}<span class="ml-1.5 text-neutral-500">· ${isAuto ? 'Automatically detected' : 'Selected'}</span></p>
                     </div>
                   </div>
                 </div>
-                <div class="p-5 space-y-3">
-                  <button type="button" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-950 border border-neutral-800 rounded-xl text-sm text-left text-white hover:border-neutral-700 transition-colors cursor-pointer">
+                <div class="p-5 space-y-3 relative">
+                  <button id="tz-dropdown-btn" type="button" onclick="toggleTimezoneDropdown(event)" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-950 border border-neutral-800 rounded-xl text-sm text-left text-white hover:border-neutral-700 transition-colors cursor-pointer">
                     <span class="flex items-center gap-2 min-w-0 truncate">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-3.5 h-3.5 text-neutral-400 flex-shrink-0"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
-                      <span class="truncate">Automatic detection (${tz})</span>
+                      <span class="truncate">${tzButtonLabel}</span>
                     </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
+                    <svg id="tz-dropdown-chevron" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
                   </button>
+
+                  <!-- Timezone Dropdown Menu -->
+                  <div id="tz-dropdown-menu" class="hidden absolute left-5 right-5 top-[56px] z-50">
+                    <div class="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[420px]">
+                      <div class="p-2 border-b border-neutral-200 dark:border-neutral-800">
+                        <div class="relative">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                          <input id="tz-search-input" placeholder="Search city or zone…" class="w-full pl-8 pr-3 h-8 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-600" value="" oninput="filterTimezones(this.value)">
+                        </div>
+                      </div>
+
+                      <button id="tz-autodetect-btn" type="button" onclick="selectTimezone('auto', 'Auto-detect')" class="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b border-neutral-200/60 dark:border-neutral-800/60 ${isAuto ? 'bg-emerald-500/[0.06] hover:bg-emerald-500/[0.08]' : 'hover:bg-neutral-100 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300'} cursor-pointer">
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-500/15 text-emerald-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-3.5 h-3.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-[13px] font-medium text-black dark:text-white">Auto-detect</p>
+                          <p class="text-[11px] text-neutral-500 truncate">Match my device · ${autoTz} · ${autoDetails.time}</p>
+                        </div>
+                        ${isAuto ? `
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-4 h-4 text-emerald-400 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                        ` : ''}
+                      </button>
+
+                      <div id="tz-zones-list" class="flex-1 overflow-y-auto">
+                        ${timezoneGroups.map(group => `
+                          <div class="tz-group" data-region="${group.name.toLowerCase()}">
+                            <div class="sticky top-0 bg-neutral-50/90 dark:bg-neutral-950/90 backdrop-blur-sm px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500 border-y border-neutral-200/60 dark:border-neutral-800/60">
+                              ${group.name}
+                            </div>
+                            ${group.zones.map(z => {
+                              const isSelected = !isAuto && selectedTimezone === z.zone;
+                              const details = getTimezoneDetails(z.zone);
+                              return `
+                                <button 
+                                  type="button" 
+                                  onclick="selectTimezone('${z.zone}', '${z.name}')" 
+                                  class="tz-item w-full flex items-center gap-3 px-3 py-2 text-left transition-colors cursor-pointer ${
+                                    isSelected 
+                                      ? 'bg-emerald-500/[0.06] text-white font-medium' 
+                                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 hover:text-black dark:hover:text-white'
+                                  }" 
+                                  data-name="${z.name.toLowerCase()}" 
+                                  data-zone="${z.zone.toLowerCase()}"
+                                >
+                                  <div class="flex-1 min-w-0">
+                                    <p class="text-[13px] truncate">${z.name}</p>
+                                    <p class="text-[10.5px] text-neutral-500 tabular-nums">${details.offset}<span class="ml-1.5 text-neutral-400">· ${details.time}</span></p>
+                                  </div>
+                                  ${isSelected ? `
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-4 h-4 text-emerald-400 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                                  ` : ''}
+                                </button>
+                              `;
+                            }).join('')}
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  </div>
+
                   <p class="text-[11px] text-neutral-500">All dates and times across the dashboard are displayed in this timezone.</p>
                 </div>
               </div>
