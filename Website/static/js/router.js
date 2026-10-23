@@ -51,8 +51,8 @@ const Router = {
     const app = document.getElementById('app');
     if (!app) return;
 
-    // If accessing dashboard while not logged in, prompt login popup and redirect
-    if (path.startsWith('/dashboard') && !this.currentUser) {
+    // If accessing dashboard or settings while not logged in, prompt login popup and redirect
+    if ((path.startsWith('/dashboard') || path === '/settings') && !this.currentUser) {
       this.replace('/');
       API.login(path).then(() => {
         this.checkAuth().then(() => {
@@ -64,8 +64,8 @@ const Router = {
       return;
     }
 
-    // Show top navbar for public pages
-    const isDashboard = path.startsWith('/dashboard');
+    // Show top navbar for public pages (hide on dashboard and settings)
+    const isDashboard = path.startsWith('/dashboard') || path === '/settings';
     const navbar = document.getElementById('main-navbar');
     if (navbar) {
       navbar.style.display = isDashboard ? 'none' : 'flex';

@@ -330,10 +330,30 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
               </div>
 
               <div class="flex items-center gap-1.5 sm:gap-3">
+                <!-- Notifications with popup dropdown -->
                 <div class="relative">
-                  <button class="relative p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" aria-label="Notifications" aria-expanded="false">
+                  <button id="dash-notif-btn" class="relative p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="Benachrichtigungen" aria-expanded="false">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell w-5 h-5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
                   </button>
+
+                  <!-- Notification UI matching PeakBot -->
+                  <div id="dash-notif-dropdown" class="hidden absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[384px] max-w-[384px] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-neutral-800">
+                      <h2 class="text-sm font-semibold text-white">Notifications</h2>
+                      <button disabled="" class="ml-auto flex items-center gap-1 text-[12px] text-cyan-400 hover:text-cyan-300 disabled:text-neutral-600 disabled:cursor-default transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-check w-3.5 h-3.5"><path d="M18 6 7 17l-5-5"></path><path d="m22 10-7.5 7.5L13 16"></path></svg> Clear all
+                      </button>
+                    </div>
+                    <div class="max-h-[60vh] sm:max-h-[460px] overflow-y-auto">
+                      <div class="flex flex-col items-center justify-center py-12 px-6 text-center">
+                        <div class="w-11 h-11 rounded-2xl bg-neutral-800 flex items-center justify-center mb-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-inbox w-5 h-5 text-neutral-500"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                        </div>
+                        <p class="text-sm font-medium text-neutral-300">You're all caught up</p>
+                        <p class="text-xs text-neutral-500 mt-1">Milestones, recaps and alerts will show up here.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 <!-- User dropdown -->
@@ -346,15 +366,29 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                     </div>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
                   </button>
-                  <div id="dash-user-dropdown" class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-2xl p-1.5 z-30">
-                    <a href="/dashboard" class="flex items-center gap-2 px-3 py-2 text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>
-                      Server wechseln
-                    </a>
-                    <button onclick="API.logout()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded-xl transition-colors text-left cursor-pointer">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
-                      Abmelden
-                    </button>
+                  
+                  <!-- User Dropdown Menu matching PeakBot -->
+                  <div id="dash-user-dropdown" class="hidden absolute right-0 mt-2 w-56 py-2 bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl z-[60]">
+                    <div class="px-4 py-3 border-b border-neutral-800">
+                      <p class="text-sm font-semibold text-white truncate">${escapeHtml(userName)}</p>
+                      <p class="text-xs text-neutral-500 truncate">ID: ${user.id}</p>
+                    </div>
+                    <div class="py-1">
+                      <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home w-4 h-4"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Start
+                      </a>
+                      <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/dashboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-server w-4 h-4"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg> Meine Server
+                      </a>
+                      <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg> Einstellungen
+                      </a>
+                    </div>
+                    <div class="border-t border-neutral-800 pt-1 mt-1">
+                      <button onclick="API.logout()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer text-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Abmelden
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -382,16 +416,32 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     sb.classList.toggle('-translate-x-full');
   };
 
-  // User menu toggle
+  // Toggle user menu & notifications in dashboard
   const dashUserBtn = document.getElementById('dash-user-menu-btn');
   const dashDropdown = document.getElementById('dash-user-dropdown');
+  const dashNotifBtn = document.getElementById('dash-notif-btn');
+  const dashNotifDropdown = document.getElementById('dash-notif-dropdown');
+
   if (dashUserBtn && dashDropdown) {
     dashUserBtn.onclick = (e) => {
       e.stopPropagation();
       dashDropdown.classList.toggle('hidden');
+      if (dashNotifDropdown) dashNotifDropdown.classList.add('hidden');
     };
-    document.addEventListener('click', () => dashDropdown.classList.add('hidden'));
   }
+
+  if (dashNotifBtn && dashNotifDropdown) {
+    dashNotifBtn.onclick = (e) => {
+      e.stopPropagation();
+      dashNotifDropdown.classList.toggle('hidden');
+      if (dashDropdown) dashDropdown.classList.add('hidden');
+    };
+  }
+
+  document.addEventListener('click', () => {
+    if (dashDropdown) dashDropdown.classList.add('hidden');
+    if (dashNotifDropdown) dashNotifDropdown.classList.add('hidden');
+  });
 
   const tabContainer = document.getElementById('dash-tab-content');
   if (!tabContainer) return;
