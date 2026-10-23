@@ -26,7 +26,7 @@ Pages.ServerSelector = async function(container) {
   const userName = user.global_name || user.username || 'Benutzer';
 
   container.innerHTML = `
-    <div class="min-h-screen bg-neutral-950">
+    <div class="min-h-screen bg-neutral-950 text-neutral-100 font-sans">
       <!-- Header matching Gipfel/PeakBot layout -->
       <header class="sticky top-0 z-20 h-16 bg-neutral-900/90 backdrop-blur-sm border-b border-neutral-800">
         <div class="flex items-center justify-between h-full px-4 lg:px-8">
@@ -73,54 +73,32 @@ Pages.ServerSelector = async function(container) {
       </header>
 
       <!-- Main Content -->
-      <main class="min-h-[calc(100vh-80px)] bg-neutral-50 dark:bg-neutral-950">
-        <div class="max-w-6xl mx-auto px-4 py-8">
+      <main class="min-h-[calc(100vh-64px)] bg-neutral-950">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           
           <!-- Top Row: Title + Refresh Button -->
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 class="text-2xl font-bold text-black dark:text-white">Ihre Server</h1>
-              <p id="server-count-label" class="text-sm text-neutral-400 dark:text-neutral-500 mt-1">0 aktive Server</p>
+              <h1 class="text-2xl font-bold text-white tracking-tight">Deine Server</h1>
+              <p id="server-count-label" class="text-xs text-neutral-500 mt-1">Lade Server...</p>
             </div>
-            <button id="refresh-guilds-btn" onclick="loadGuildsList(true)" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 rounded-lg transition-all disabled:opacity-50 cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-4 h-4"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
-              Aktualisieren
+            <button id="refresh-guilds-btn" onclick="loadGuildsList(true)" class="flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-neutral-400 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 rounded-xl transition-all disabled:opacity-50 cursor-pointer">
+              <svg id="refresh-spinner" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-3.5 h-3.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+              <span>Aktualisieren</span>
             </button>
           </div>
 
           <!-- Search Input -->
           <div class="relative mb-8">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input id="guild-search-input" placeholder="Suchserver..." class="w-full pl-12 pr-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-neutral-400 dark:focus:border-white transition-all text-sm" type="text" value="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input id="guild-search-input" placeholder="Server suchen..." class="w-full pl-11 pr-4 py-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-neutral-700 transition-colors" type="text" value="">
           </div>
 
-          <!-- Add Bot Banner -->
-          <div class="mb-8 rounded-2xl border border-neutral-800 bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 p-6 sm:p-8 relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] via-transparent to-purple-500/[0.03]"></div>
-            <div class="relative flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              <div class="w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-7 h-7 text-white"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <h2 class="text-lg font-semibold text-white mb-1">Orbit zu einem Server hinzufügen</h2>
-                <p class="text-sm text-neutral-400">Wählen Sie unten einen Server aus, um Orbit hinzuzufügen und Moderation, Leveling, Tickets und mehr freizuschalten.</p>
-              </div>
-              <a href="https://discord.com/oauth2/authorize?client_id=1411032158406541353&permissions=8&scope=bot%20applications.commands" target="_blank" class="flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-neutral-200 text-black text-sm font-semibold rounded-xl transition-colors shrink-0 cursor-pointer">
-                Zum Server hinzufügen
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-4 h-4"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- Guilds Grid Container -->
-          <div class="space-y-6">
-            <div>
-              <div id="guilds-content">
-                <div class="flex items-center justify-center p-12 text-neutral-500 text-sm">
-                  <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  Lade Ihre Server...
-                </div>
-              </div>
+          <!-- Guilds Sections Container -->
+          <div id="guilds-content">
+            <div class="flex items-center justify-center p-12 text-neutral-500 text-sm">
+              <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              Lade deine Server...
             </div>
           </div>
 
@@ -145,16 +123,14 @@ Pages.ServerSelector = async function(container) {
   window.loadGuildsList = async (force = false) => {
     const content = document.getElementById('guilds-content');
     const refreshBtn = document.getElementById('refresh-guilds-btn');
-    const countLabel = document.getElementById('server-count-label');
-    if (refreshBtn) refreshBtn.classList.add('opacity-50');
+    const refreshSpinner = document.getElementById('refresh-spinner');
+    if (refreshBtn) refreshBtn.disabled = true;
+    if (refreshSpinner) refreshSpinner.classList.add('animate-spin');
 
     try {
       const data = await API.getGuilds(force);
       allGuilds = Array.isArray(data) ? data : (data?.guilds || []);
-      if (countLabel) {
-        countLabel.textContent = `${allGuilds.length} aktive Server`;
-      }
-      renderGuildCards();
+      renderGuildSections();
     } catch (err) {
       if (content) {
         content.innerHTML = `
@@ -164,16 +140,27 @@ Pages.ServerSelector = async function(container) {
         `;
       }
     } finally {
-      if (refreshBtn) refreshBtn.classList.remove('opacity-50');
+      if (refreshBtn) refreshBtn.disabled = false;
+      if (refreshSpinner) refreshSpinner.classList.remove('animate-spin');
     }
   };
 
-  const renderGuildCards = () => {
+  const renderGuildSections = () => {
     const content = document.getElementById('guilds-content');
+    const countLabel = document.getElementById('server-count-label');
     if (!content) return;
-    const query = (document.getElementById('guild-search-input')?.value || '').toLowerCase().trim();
 
+    const query = (document.getElementById('guild-search-input')?.value || '').toLowerCase().trim();
     const filtered = allGuilds.filter(g => (g.name || '').toLowerCase().includes(query));
+
+    // Active servers where bot is present
+    const activeGuilds = filtered.filter(g => Boolean(g.bot_in_server || g.has_bot));
+    // Inactive servers where bot is not present
+    const inactiveGuilds = filtered.filter(g => !Boolean(g.bot_in_server || g.has_bot));
+
+    if (countLabel) {
+      countLabel.textContent = `${activeGuilds.length} ${activeGuilds.length === 1 ? 'Server aktivieren' : 'Server aktiv'}`;
+    }
 
     if (filtered.length === 0) {
       content.innerHTML = `
@@ -184,92 +171,152 @@ Pages.ServerSelector = async function(container) {
       return;
     }
 
-    content.innerHTML = `
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        ${filtered.map(g => renderGuildCard(g)).join('')}
-      </div>
-    `;
+    let html = '';
+
+    // 1. Active Servers (matches Screenshot 2 top section)
+    if (activeGuilds.length > 0) {
+      html += `
+        <div class="mb-8">
+          <div class="flex items-center gap-1.5 mb-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
+            <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+            <span>Inhaber</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${activeGuilds.map(g => renderActiveGuildCard(g)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. Divider Line (matches Screenshot 2 middle divider)
+    if (inactiveGuilds.length > 0) {
+      if (activeGuilds.length > 0) {
+        html += `
+          <div class="relative my-8 flex items-center justify-center">
+            <div class="w-full border-t border-neutral-800"></div>
+            <span class="absolute px-4 bg-neutral-950 text-xs font-medium text-neutral-500">+ Noch nicht hinzugefügt</span>
+          </div>
+        `;
+      }
+
+      // 3. Inactive Servers (matches Screenshot 2 3-column grid)
+      html += `
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${inactiveGuilds.map(g => renderInactiveGuildCard(g)).join('')}
+        </div>
+      `;
+    }
+
+    content.innerHTML = html;
   };
 
-  const renderGuildCard = (g) => {
+  const getGuildInitials = (name) => {
+    const words = (name || '').trim().split(/\s+/);
+    if (words.length >= 2) {
+      return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+    }
+    return (name || 'S').slice(0, 2).toUpperCase();
+  };
+
+  const renderActiveGuildCard = (g) => {
     const isOwner = Boolean(g.owner);
-    const hasBot = Boolean(g.has_bot);
-    
-    // Build icon URL (GIF or PNG)
+    const initials = getGuildInitials(g.name);
     let iconUrl = null;
     if (g.icon) {
       const ext = g.icon.startsWith('a_') ? 'gif' : 'png';
       iconUrl = `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${ext}?size=128`;
     }
 
-    // Two-letter initials fallback
-    const words = (g.name || '').trim().split(/\s+/);
-    let initials = '';
-    if (words.length >= 2) {
-      initials = (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
-    } else {
-      initials = (g.name || 'S').slice(0, 2).toUpperCase();
-    }
-
-    const manageUrl = `/dashboard/${g.id}/overview`;
-    const inviteUrl = `https://discord.com/oauth2/authorize?client_id=1411032158406541353&permissions=8&scope=bot%20applications.commands&guild_id=${g.id}`;
-    const targetUrl = hasBot ? manageUrl : inviteUrl;
-    const isExternal = !hasBot;
-
     return `
-      <${isExternal ? 'a' : 'button'} 
-        href="${targetUrl}" 
-        ${isExternal ? 'target="_blank"' : `onclick="Router.navigate('${manageUrl}')"`}
-        class="group relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400/30 dark:hover:border-white/30 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg overflow-hidden text-left w-full cursor-pointer block"
-      >
-        <div class="absolute inset-0 bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-        <div class="relative flex items-center gap-4">
-          
-          <!-- Server Icon -->
-          <div class="relative flex-shrink-0">
-            ${iconUrl ? `
-              <img src="${iconUrl}" alt="${escapeHtml(g.name)}" class="w-14 h-14 rounded-xl ${hasBot ? '' : 'grayscale group-hover:grayscale-0'} transition-all duration-200 group-hover:scale-105 object-cover">
-            ` : `
-              <div class="w-14 h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700 transition-colors">
-                <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">${escapeHtml(initials)}</span>
-              </div>
-            `}
-            <div class="absolute -inset-1 border-2 border-dashed border-neutral-300 dark:border-neutral-700 group-hover:border-neutral-400/30 dark:group-hover:border-white/30 rounded-xl transition-colors pointer-events-none"></div>
+      <div onclick="Router.navigate('/dashboard/${g.id}')" class="group relative bg-neutral-900 hover:bg-neutral-800/90 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-4 sm:p-5 flex items-center justify-between transition-all duration-150 cursor-pointer shadow-lg select-none">
+        <div class="flex items-center gap-4 min-w-0">
+          <!-- Server Avatar with dashed ring and status dot -->
+          <div class="relative shrink-0">
+            <div class="w-14 h-14 rounded-2xl p-0.5 border border-dashed border-neutral-700 overflow-hidden bg-neutral-800 flex items-center justify-center">
+              ${iconUrl 
+                ? `<img src="${iconUrl}" class="w-full h-full object-cover rounded-xl" alt="${escapeHtml(g.name)}">`
+                : `<span class="text-base font-bold text-neutral-300">${escapeHtml(initials)}</span>`
+              }
+            </div>
+            <!-- Green active dot badge -->
+            <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-neutral-900 flex items-center justify-center shadow-[0_0_8px_rgba(34,197,94,0.6)]">
+              <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+            </div>
           </div>
 
-          <!-- Server Name & Status -->
-          <div class="flex-1 min-w-0">
-            <h3 class="font-semibold text-black dark:text-white text-base truncate group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">${escapeHtml(g.name)}</h3>
-            <p class="text-sm ${hasBot ? 'text-emerald-400 dark:text-emerald-400 font-medium' : 'text-neutral-400 dark:text-neutral-500'} mt-0.5">
-              ${hasBot ? 'Bot installiert' : 'Bot nicht installiert'}
-            </p>
-            <div class="flex items-center gap-2 mt-2">
+          <!-- Server Name, Status & Badges -->
+          <div class="min-w-0">
+            <h3 class="text-base font-semibold text-white truncate group-hover:text-neutral-100">${escapeHtml(g.name)}</h3>
+            <div class="flex items-center gap-1.5 mt-0.5 text-xs text-green-400 font-medium">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+              <span>Aktiv</span>
+            </div>
+            <div class="flex items-center gap-1.5 mt-2">
+              <span class="px-2 py-0.5 text-[10px] font-medium bg-neutral-800 text-neutral-400 rounded-md border border-neutral-700/60">Kostenlos</span>
               ${isOwner ? `
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3 h-3"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>
-                  Eigentümer
+                <span class="px-2 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 inline-flex items-center gap-1">
+                  <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+                  Inhaber
                 </span>
               ` : `
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-white/[0.08] text-neutral-600 dark:text-neutral-400 rounded-full">
-                  Admin
-                </span>
+                <span class="px-2 py-0.5 text-[10px] font-medium bg-neutral-800 text-neutral-400 rounded-md border border-neutral-700/60">Admin</span>
               `}
             </div>
           </div>
-
-          <!-- Action Button -->
-          <div class="flex-shrink-0">
-            <div class="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 group-hover:bg-neutral-800 dark:group-hover:bg-white text-black dark:text-white group-hover:text-white dark:group-hover:text-black text-sm font-medium rounded-xl transition-all duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-4 h-4"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
-              <span class="hidden sm:inline">${hasBot ? 'Verwalten' : 'Bot hinzufügen'}</span>
-            </div>
-          </div>
-
         </div>
-      </${isExternal ? 'a' : 'button'}>
+
+        <!-- Arrow Action Button -->
+        <div class="shrink-0 pl-3">
+          <div class="w-9 h-9 rounded-xl bg-neutral-800 group-hover:bg-neutral-700 group-hover:text-white flex items-center justify-center text-neutral-400 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-4 h-4"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
     `;
   };
 
-  document.getElementById('guild-search-input')?.addEventListener('input', renderGuildCards);
+  const renderInactiveGuildCard = (g) => {
+    const isOwner = Boolean(g.owner);
+    const initials = getGuildInitials(g.name);
+    let iconUrl = null;
+    if (g.icon) {
+      const ext = g.icon.startsWith('a_') ? 'gif' : 'png';
+      iconUrl = `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${ext}?size=128`;
+    }
+    const inviteUrl = `https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=8&scope=bot%20applications.commands&guild_id=${g.id}`;
+
+    return `
+      <div class="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-4 flex items-center justify-between gap-3 transition-colors">
+        <div class="flex items-center gap-3.5 min-w-0">
+          <div class="w-12 h-12 rounded-xl p-0.5 border border-dashed border-neutral-700/80 overflow-hidden bg-neutral-800 flex items-center justify-center shrink-0">
+            ${iconUrl 
+              ? `<img src="${iconUrl}" class="w-full h-full object-cover rounded-lg grayscale opacity-70" alt="${escapeHtml(g.name)}">`
+              : `<span class="text-sm font-semibold text-neutral-400">${escapeHtml(initials)}</span>`
+            }
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-sm font-semibold text-white truncate">${escapeHtml(g.name)}</h4>
+            <p class="text-xs text-neutral-500 mt-0.5">Bot nicht installiert</p>
+            <div class="mt-1.5">
+              ${isOwner ? `
+                <span class="px-2 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 inline-flex items-center gap-1">
+                  <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+                  Inhaber
+                </span>
+              ` : `
+                <span class="px-2 py-0.5 text-[10px] font-medium bg-neutral-800 text-neutral-400 rounded-md border border-neutral-700/60">Admin</span>
+              `}
+            </div>
+          </div>
+        </div>
+        <a href="${inviteUrl}" target="_blank" class="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-medium rounded-xl border border-neutral-700 transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-3.5 h-3.5"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          <span>Bot hinzufügen</span>
+        </a>
+      </div>
+    `;
+  };
+
+  document.getElementById('guild-search-input')?.addEventListener('input', renderGuildSections);
   loadGuildsList();
 };

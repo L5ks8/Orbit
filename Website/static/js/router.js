@@ -117,7 +117,13 @@ const Router = {
     const dashMatch = path.match(/^\/dashboard\/([0-9]+)(?:\/(.*))?$/);
     if (dashMatch) {
       const guildId = dashMatch[1];
-      const tab = dashMatch[2] || 'overview';
+      let tab = (dashMatch[2] || 'overview').replace(/\/$/, '');
+      if (tab === 'welcome') tab = 'welcomegoodbye';
+      if (tab === 'xp') tab = 'level';
+      if (tab === 'jtc') tab = 'tempvoice';
+      if (tab === 'moderation') tab = 'automod';
+      if (tab === 'verification') tab = 'verify';
+      if (tab === 'server-settings') tab = 'settings';
       return Pages.Dashboard(app, guildId, tab);
     }
 

@@ -224,6 +224,11 @@ class GuildsMixin:
                 continue
                 
             bot_guild = self.bot.get_guild(int(g["id"]))
+            if not bot_guild:
+                try:
+                    bot_guild = discord.utils.get(self.bot.guilds, id=int(g["id"]))
+                except Exception:
+                    pass
             bot_in_server = bot_guild is not None
                 
             if not (is_admin or manage_guild):
@@ -243,6 +248,7 @@ class GuildsMixin:
                 "name": g["name"],
                 "icon": g.get("icon"),
                 "owner": is_owner,
+                "has_bot": bot_in_server,
                 "bot_in_server": bot_in_server
             })
         
