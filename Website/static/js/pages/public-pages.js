@@ -224,6 +224,11 @@ Pages.Leaderboard = async function(container, guildId) {
 // USER SETTINGS PAGE (PeakBot Layout)
 // ==========================================
 Pages.UserSettings = async function(container) {
+  const escapeHtml = window.escapeHtml || function(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  };
+
   let user = null;
   try {
     user = await API.getUser();
