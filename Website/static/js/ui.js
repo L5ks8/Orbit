@@ -416,7 +416,13 @@ const OrbitDropdownManager = {
         if (!curr.classList.contains('orbit-dropdown-ancestor-active')) {
           curr.classList.add('orbit-dropdown-ancestor-active');
         }
-        if (curr.classList.contains('overflow-hidden') && !curr.classList.contains('overflow-y-auto')) {
+        if (
+          curr.classList.contains('overflow-hidden') &&
+          !curr.classList.contains('overflow-y-auto') &&
+          !curr.classList.contains('h-full') &&
+          !curr.classList.contains('flex-1') &&
+          !curr.hasAttribute('data-tour')
+        ) {
           nextUnclipped.add(curr);
           if (!curr.classList.contains('orbit-dropdown-card-unclip')) {
             curr.classList.add('orbit-dropdown-card-unclip');

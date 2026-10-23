@@ -62,7 +62,10 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMi
             if path == "index.html":
                 pass
             else:
-                return web.FileResponse(file_path)
+                headers = {}
+                if path.endswith((".js", ".css", ".html")):
+                    headers["Cache-Control"] = "no-cache, must-revalidate"
+                return web.FileResponse(file_path, headers=headers)
             
         index_path = os.path.join(static_dir, "index.html")
         if os.path.exists(index_path):
@@ -71,7 +74,11 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMi
             base_url = os.environ.get("BASE_URL", "")
             if base_url:
                 html = html.replace("%VITE_BASE_URL%", base_url)
-            return web.Response(text=html, content_type="text/html")
+            return web.Response(
+                text=html,
+                content_type="text/html",
+                headers={"Cache-Control": "no-cache, must-revalidate"}
+            )
             
         return web.Response(text="Orbit Static Files Not Found in Website/static", status=404)
 

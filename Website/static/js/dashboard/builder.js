@@ -133,7 +133,19 @@ DashboardTabs.Builder = async function(container, guildId) {
   let historyDropdownOpen = false;
   let quickAddDropdownOpen = false;
   let openChatOptionsId = null;
+  let editingChatId = null;
   let isSending = false;
+
+  function closeAllPopupsDom() {
+    modelDropdownOpen = false;
+    historyDropdownOpen = false;
+    quickAddDropdownOpen = false;
+    openChatOptionsId = null;
+    document.getElementById('ai-quick-add-menu')?.classList.add('hidden');
+    document.getElementById('ai-model-picker-menu')?.classList.add('hidden');
+    document.getElementById('ai-history-menu')?.classList.add('hidden');
+    container.querySelectorAll('[data-chat-options-menu]').forEach(el => el.classList.add('hidden'));
+  }
   let isApplying = false;
   let pendingActions = [];
   let pendingAttachments = [];
@@ -473,6 +485,7 @@ DashboardTabs.Builder = async function(container, guildId) {
         ${groupChats.map(c => {
           const isCurrent = c.id === activeChatId;
           const isMenuOpen = openChatOptionsId === c.id;
+          const isEditing = editingChatId === c.id;
           return `
             <div class="px-1.5" style="opacity: 1;">
               <div class="group/row relative flex items-center rounded-lg cursor-pointer h-[38px] pl-3 pr-1 transition-colors duration-150 ${
@@ -480,12 +493,16 @@ DashboardTabs.Builder = async function(container, guildId) {
                   ? 'bg-white/[0.08] text-white'
                   : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]'
               }" data-select-chat="${escapeHtml(c.id)}">
-                <span class="flex-1 min-w-0 truncate text-[13.5px] font-medium pr-1">${escapeHtml(c.title || 'Neuer Chat')}</span>
+                ${isEditing ? `
+                  <input type="text" data-rename-input="${escapeHtml(c.id)}" value="${escapeHtml(c.title || 'Neuer Chat')}" class="flex-1 min-w-0 bg-neutral-950 border border-white/20 rounded-md px-2 py-0.5 text-[13px] font-medium text-white focus:outline-none mr-1" />
+                ` : `
+                  <span class="flex-1 min-w-0 truncate text-[13.5px] font-medium pr-1">${escapeHtml(c.title || 'Neuer Chat')}</span>
+                `}
                 <div class="relative flex-shrink-0">
                   <button type="button" data-chat-options="${escapeHtml(c.id)}" class="relative grid place-items-center h-7 w-7 flex-shrink-0 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.1] transition-[opacity,color,background-color,transform] duration-150 active:scale-[0.94] before:absolute before:inset-[-6px] before:content-[''] ${isMobile || isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100'}" title="Optionen" aria-label="Chat-Optionen">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal w-4 h-4"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
                   </button>
-                  <div class="orbit-dropdown-menu ${isMenuOpen ? '' : 'hidden'} absolute right-0 top-8 w-36 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1 z-[99999]">
+                  <div data-chat-options-menu="${escapeHtml(c.id)}" class="orbit-dropdown-menu ${isMenuOpen ? '' : 'hidden'} absolute right-0 top-8 w-36 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1 z-[99999]">
                     <button type="button" data-rename-chat="${escapeHtml(c.id)}" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-neutral-200 hover:bg-white/[0.08] text-left">
                       Umbenennen
                     </button>
@@ -1379,10 +1396,11 @@ DashboardTabs.Builder = async function(container, guildId) {
 
     container.querySelectorAll('[data-select-chat]').forEach(el => {
       el.addEventListener('click', (e) => {
-        if (e.target.closest('[data-chat-options]') || e.target.closest('[data-delete-chat]') || e.target.closest('[data-rename-chat]')) return;
+        if (e.target.closest('[data-chat-options]') || e.target.closest('[data-delete-chat]') || e.target.closest('[data-rename-chat]') || e.target.closest('[data-rename-input]')) return;
         activeChatId = el.getAttribute('data-select-chat');
         mobileChatDrawerOpen = false;
         openChatOptionsId = null;
+        editingChatId = null;
         saveLocalChats(chats, activeChatId);
         render();
       });
@@ -1392,8 +1410,12 @@ DashboardTabs.Builder = async function(container, guildId) {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const cid = btn.getAttribute('data-chat-options');
-        openChatOptionsId = (openChatOptionsId === cid) ? null : cid;
-        render();
+        const willOpen = openChatOptionsId !== cid;
+        closeAllPopupsDom();
+        if (willOpen) {
+          openChatOptionsId = cid;
+          container.querySelectorAll(`[data-chat-options-menu="${CSS.escape ? CSS.escape(cid) : cid}"]`).forEach(m => m.classList.remove('hidden'));
+        }
       });
     });
 
@@ -1401,17 +1423,43 @@ DashboardTabs.Builder = async function(container, guildId) {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const cid = btn.getAttribute('data-rename-chat');
-        const target = chats.find(c => c.id === cid);
         openChatOptionsId = null;
-        if (target) {
-          const nextTitle = window.prompt('Chat umbenennen:', target.title || 'Neuer Chat');
-          if (nextTitle && nextTitle.trim()) {
-            target.title = nextTitle.trim();
-            saveLocalChats(chats, activeChatId);
-          }
-        }
+        editingChatId = cid;
         render();
+        setTimeout(() => {
+          const inp = container.querySelector(`[data-rename-input="${CSS.escape ? CSS.escape(cid) : cid}"]`);
+          if (inp) {
+            inp.focus();
+            inp.select();
+          }
+        }, 10);
       });
+    });
+
+    container.querySelectorAll('[data-rename-input]').forEach(inp => {
+      const cid = inp.getAttribute('data-rename-input');
+      const commitRename = () => {
+        if (editingChatId !== cid) return;
+        const target = chats.find(c => c.id === cid);
+        if (target && inp.value.trim()) {
+          target.title = inp.value.trim();
+          saveLocalChats(chats, activeChatId);
+        }
+        editingChatId = null;
+        render();
+      };
+      inp.addEventListener('click', (e) => e.stopPropagation());
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          commitRename();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          editingChatId = null;
+          render();
+        }
+      });
+      inp.addEventListener('blur', commitRename);
     });
 
     container.querySelectorAll('[data-delete-chat]').forEach(btn => {
@@ -1556,11 +1604,12 @@ DashboardTabs.Builder = async function(container, guildId) {
     if (quickAddBtn) {
       quickAddBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        quickAddDropdownOpen = !quickAddDropdownOpen;
-        modelDropdownOpen = false;
-        historyDropdownOpen = false;
-        openChatOptionsId = null;
-        render();
+        const willOpen = !quickAddDropdownOpen;
+        closeAllPopupsDom();
+        if (willOpen) {
+          quickAddDropdownOpen = true;
+          document.getElementById('ai-quick-add-menu')?.classList.remove('hidden');
+        }
       });
     }
 
@@ -1568,11 +1617,12 @@ DashboardTabs.Builder = async function(container, guildId) {
     if (modelPickerBtn) {
       modelPickerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        modelDropdownOpen = !modelDropdownOpen;
-        quickAddDropdownOpen = false;
-        historyDropdownOpen = false;
-        openChatOptionsId = null;
-        render();
+        const willOpen = !modelDropdownOpen;
+        closeAllPopupsDom();
+        if (willOpen) {
+          modelDropdownOpen = true;
+          document.getElementById('ai-model-picker-menu')?.classList.remove('hidden');
+        }
       });
     }
 
@@ -1581,7 +1631,7 @@ DashboardTabs.Builder = async function(container, guildId) {
         e.stopPropagation();
         selectedModel = btn.getAttribute('data-select-model') || 'openai/gpt-oss-120b';
         selectedModelLabel = btn.getAttribute('data-select-model-label') || 'Onyx V1';
-        modelDropdownOpen = false;
+        closeAllPopupsDom();
         render();
       });
     });
@@ -1590,11 +1640,12 @@ DashboardTabs.Builder = async function(container, guildId) {
     if (historyBtn) {
       historyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        historyDropdownOpen = !historyDropdownOpen;
-        modelDropdownOpen = false;
-        quickAddDropdownOpen = false;
-        openChatOptionsId = null;
-        render();
+        const willOpen = !historyDropdownOpen;
+        closeAllPopupsDom();
+        if (willOpen) {
+          historyDropdownOpen = true;
+          document.getElementById('ai-history-menu')?.classList.remove('hidden');
+        }
       });
     }
 
@@ -1695,15 +1746,15 @@ DashboardTabs.Builder = async function(container, guildId) {
     }
   }
 
-  document.addEventListener('click', () => {
+  if (window.__aiHelperOutsideClick) {
+    document.removeEventListener('click', window.__aiHelperOutsideClick);
+  }
+  window.__aiHelperOutsideClick = () => {
     if (modelDropdownOpen || historyDropdownOpen || quickAddDropdownOpen || openChatOptionsId) {
-      modelDropdownOpen = false;
-      historyDropdownOpen = false;
-      quickAddDropdownOpen = false;
-      openChatOptionsId = null;
-      render();
+      closeAllPopupsDom();
     }
-  });
+  };
+  document.addEventListener('click', window.__aiHelperOutsideClick);
 
   render();
 };
