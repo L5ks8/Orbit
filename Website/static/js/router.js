@@ -51,6 +51,11 @@ const Router = {
     const app = document.getElementById('app');
     if (!app) return;
 
+    // If accessing dashboard while not logged in, always redirect to home screen immediately
+    if (path.startsWith('/dashboard') && !this.currentUser) {
+      return this.replace('/');
+    }
+
     // Show top navbar for public pages
     const isDashboard = path.startsWith('/dashboard');
     const navbar = document.getElementById('main-navbar');
