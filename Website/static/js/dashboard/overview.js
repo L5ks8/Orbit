@@ -266,7 +266,14 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     const isPollsActive = Boolean(cfg.polls?.enabled);
     const isGiveawaysActive = Boolean(cfg.giveaways?.enabled);
     const isInactiveKickActive = Boolean(cfg.inactive_kick?.enabled || cfg.settings?.inactive_kick_enabled);
-    const isBotProfileActive = Boolean(cfg.botprofile?.nickname || cfg.botprofile?.avatar || cfg.botprofile?.banner);
+    const isBotProfileActive = Boolean(
+      cfg.botprofile?.nickname ||
+      cfg.botprofile?.avatar_url ||
+      cfg.botprofile?.banner_url ||
+      cfg.botprofile?.bio ||
+      cfg.botprofile?.avatar ||
+      cfg.botprofile?.banner
+    );
 
     return [
       {

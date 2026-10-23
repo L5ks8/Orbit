@@ -157,6 +157,24 @@ const API = {
     });
   },
 
+  async uploadImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers = {};
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch('/api/upload/image', {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error || `HTTP ${res.status}`);
+    }
+    return data;
+  },
+
   async getModActivity(guildId) {
     return await this.request(`/api/mod_activity/${guildId}`);
   },

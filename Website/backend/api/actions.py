@@ -1324,7 +1324,10 @@ class ActionsMixin:
             if url:
                 return web.json_response({"success": True, "url": url})
             else:
-                return web.json_response({"error": "Upload failed"}, status=500)
+                import base64
+                b64 = base64.b64encode(file_bytes).decode("ascii")
+                data_url = f"data:{content_type};base64,{b64}"
+                return web.json_response({"success": True, "url": data_url})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 

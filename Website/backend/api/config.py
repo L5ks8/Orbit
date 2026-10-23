@@ -411,7 +411,8 @@ class ConfigMixin:
                 "leaderboard": resolved_lb
             },
             "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
-            "messages_enabled": settings_cfg.get("messages_enabled", False)
+            "messages_enabled": settings_cfg.get("messages_enabled", False),
+            "botprofile": load_botprofile_config(guild_id)
         }
 
         if "channels" in logs_cfg and isinstance(logs_cfg["channels"], dict):
@@ -996,10 +997,23 @@ class ConfigMixin:
         guild_id = int(guild_id_str)
         
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild:
             return web.json_response({"error": "Unauthorized"}, status=403)
             
         data = load_botprofile_config(guild_id)
+        bot_user = self.bot.user
+        default_name = bot_user.name if bot_user else "Orbit"
+        default_avatar = str(bot_user.display_avatar.url) if (bot_user and getattr(bot_user, "display_avatar", None)) else "/img/logo.png"
+
+        # If nickname not set in DB but bot has a server nickname in Discord, reflect it
+        if not data.get("nickname") and guild.me and getattr(guild.me, "nick", None):
+            data["nickname"] = guild.me.nick
+
+        if not data.get("avatar_url") and guild.me and getattr(guild.me, "guild_avatar", None):
+            data["avatar_url"] = str(guild.me.guild_avatar.url)
+
+        data["default_name"] = default_name
+        data["default_avatar"] = default_avatar
         return web.json_response(data)
 
     async def api_post_botprofile(self, request: web.Request):
@@ -1009,10 +1023,11 @@ class ConfigMixin:
         guild_id = int(guild_id_str)
         
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild:
             return web.json_response({"error": "Unauthorized"}, status=403)
             
         try:
+            import base64
             data = await request.json()
             old_config = load_botprofile_config(guild_id)
             
@@ -1021,46 +1036,78 @@ class ConfigMixin:
                     from Components.Database.cloudinary_storage import delete_image_by_url
                     asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
             
-            new_avatar = data.get("avatar_url", "")
-            new_banner = data.get("banner_url", "")
+            nickname = str(data.get("nickname", old_config.get("nickname", "")) or "")[:32]
+            bio = str(data.get("bio", old_config.get("bio", "")) or "")[:190]
+            new_avatar = str(data.get("avatar_url", data.get("avatar", old_config.get("avatar_url", ""))) or "").strip()
+            new_banner = str(data.get("banner_url", data.get("banner", old_config.get("banner_url", ""))) or "").strip()
             
-            _clean_cloudinary(old_config.get("avatar_url", ""), new_avatar)
-            _clean_cloudinary(old_config.get("banner_url", ""), new_banner)
+            old_avatar = str(old_config.get("avatar_url", "") or "").strip()
+            old_banner = str(old_config.get("banner_url", "") or "").strip()
+
+            _clean_cloudinary(old_avatar, new_avatar)
+            _clean_cloudinary(old_banner, new_banner)
             
-            save_botprofile_config(guild_id, data)
+            clean_data = {
+                "nickname": nickname,
+                "avatar_url": new_avatar,
+                "banner_url": new_banner,
+                "bio": bio
+            }
+            save_botprofile_config(guild_id, clean_data)
             
-            nickname = data.get("nickname", "")
-            bio = data.get("bio", "")
-            
-            async def _fetch_bytes(url):
+            async def _to_data_uri(url: str):
                 if not url:
                     return None
+                if url.startswith("data:image/"):
+                    return url
                 try:
                     async with aiohttp.ClientSession() as session:
                         async with session.get(url) as resp:
                             if resp.status == 200:
-                                return await resp.read()
-                except Exception:
-                    pass
+                                raw_bytes = await resp.read()
+                                ctype = resp.headers.get("Content-Type", "image/png").split(";")[0].strip()
+                                if not ctype.startswith("image/"):
+                                    ctype = "image/png"
+                                b64 = base64.b64encode(raw_bytes).decode("ascii")
+                                return f"data:{ctype};base64,{b64}"
+                except Exception as fetch_err:
+                    print(f"[BotProfile] Error fetching image URL {url}: {fetch_err}")
                 return None
-                
-            avatar_bytes = await _fetch_bytes(new_avatar)
-            banner_bytes = await _fetch_bytes(new_banner)
-            
+
+            patch_payload: Dict[str, Any] = {
+                "nick": nickname if nickname else None,
+                "bio": bio if bio else ""
+            }
+
+            if new_avatar != old_avatar:
+                if new_avatar:
+                    av_uri = await _to_data_uri(new_avatar)
+                    if av_uri:
+                        patch_payload["avatar"] = av_uri
+                else:
+                    patch_payload["avatar"] = None
+
+            if new_banner != old_banner:
+                if new_banner:
+                    bn_uri = await _to_data_uri(new_banner)
+                    if bn_uri:
+                        patch_payload["banner"] = bn_uri
+                else:
+                    patch_payload["banner"] = None
+
             try:
-                edit_kwargs = {"nick": nickname if nickname else None}
-                if avatar_bytes is not None or not new_avatar:
-                    edit_kwargs["avatar"] = avatar_bytes if new_avatar else None
-                if banner_bytes is not None or not new_banner:
-                    edit_kwargs["banner"] = banner_bytes if new_banner else None
-                if bio is not None:
-                    edit_kwargs["bio"] = bio
-                
-                await guild.me.edit(**edit_kwargs)
+                from discord.http import Route
+                route = Route("PATCH", "/guilds/{guild_id}/members/@me", guild_id=guild_id)
+                await self.bot.http.request(route, json=patch_payload)
             except Exception as e:
-                print(f"Failed to edit bot profile on guild {guild_id}: {e}")
+                print(f"[BotProfile] Full PATCH /members/@me notice on guild {guild_id}: {e}")
+                try:
+                    if guild.me:
+                        await guild.me.edit(nick=nickname if nickname else None)
+                except Exception as e2:
+                    print(f"[BotProfile] Fallback nick edit failed on guild {guild_id}: {e2}")
                 
-            return web.json_response({"success": True})
+            return web.json_response({"success": True, "profile": clean_data})
         except Exception as e:
             import traceback
             traceback.print_exc()
