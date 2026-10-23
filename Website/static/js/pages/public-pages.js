@@ -442,7 +442,10 @@ Pages.UserSettings = async function(container) {
     : `${selectedZoneObj ? selectedZoneObj.name : selectedTimezone} (${activeDetails.offset})`;
 
   window.toggleTimezoneDropdown = function(e) {
-    if (e) e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     const menu = document.getElementById('tz-dropdown-menu');
     const chevron = document.getElementById('tz-dropdown-chevron');
     if (menu) {
@@ -454,8 +457,10 @@ Pages.UserSettings = async function(container) {
         if (input) {
           input.value = '';
           if (window.filterTimezones) window.filterTimezones('');
-          setTimeout(() => input.focus(), 50);
+          setTimeout(() => input.focus(), 60);
         }
+        const list = document.getElementById('tz-zones-list');
+        if (list) list.scrollTop = 0;
       } else {
         menu.classList.add('hidden');
         if (chevron) chevron.classList.remove('rotate-180');
@@ -467,31 +472,46 @@ Pages.UserSettings = async function(container) {
     const q = (query || '').toLowerCase().trim();
     const groups = document.querySelectorAll('.tz-group');
     const autoBtn = document.getElementById('tz-autodetect-btn');
+    const noResults = document.getElementById('tz-no-results');
+    const clearBtn = document.getElementById('tz-search-clear');
     
+    if (clearBtn) {
+      if (q) clearBtn.classList.remove('hidden');
+      else clearBtn.classList.add('hidden');
+    }
+
+    let anyVisible = false;
+
     if (autoBtn) {
       if (!q || 'auto-detect match my device'.includes(q) || autoTz.toLowerCase().includes(q)) {
         autoBtn.style.display = 'flex';
+        anyVisible = true;
       } else {
         autoBtn.style.display = 'none';
       }
     }
 
     groups.forEach(group => {
-      let hasVisible = false;
+      let groupHasVisible = false;
       const region = (group.dataset.region || '').toLowerCase();
       const items = group.querySelectorAll('.tz-item');
       items.forEach(item => {
-        const name = item.dataset.name || '';
-        const zone = item.dataset.zone || '';
+        const name = (item.dataset.name || '').toLowerCase();
+        const zone = (item.dataset.zone || '').toLowerCase();
         if (!q || name.includes(q) || zone.includes(q) || region.includes(q)) {
           item.style.display = 'flex';
-          hasVisible = true;
+          groupHasVisible = true;
+          anyVisible = true;
         } else {
           item.style.display = 'none';
         }
       });
-      group.style.display = hasVisible ? 'block' : 'none';
+      group.style.display = groupHasVisible ? 'block' : 'none';
     });
+
+    if (noResults) {
+      noResults.style.display = anyVisible ? 'none' : 'block';
+    }
   };
 
   window.selectTimezone = function(zoneId, name) {
@@ -656,71 +676,98 @@ Pages.UserSettings = async function(container) {
                     </div>
                   </div>
                 </div>
-                <div class="p-5 space-y-3 relative">
-                  <button id="tz-dropdown-btn" type="button" onclick="toggleTimezoneDropdown(event)" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-950 border border-neutral-800 rounded-xl text-sm text-left text-white hover:border-neutral-700 transition-colors cursor-pointer">
-                    <span class="flex items-center gap-2 min-w-0 truncate">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-3.5 h-3.5 text-neutral-400 flex-shrink-0"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
-                      <span class="truncate">${tzButtonLabel}</span>
-                    </span>
-                    <svg id="tz-dropdown-chevron" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
-                  </button>
+                <div class="p-5 space-y-3">
+                  <div class="relative">
+                    <button id="tz-dropdown-btn" type="button" onclick="toggleTimezoneDropdown(event)" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-950 border border-neutral-800 rounded-xl text-sm text-left text-white hover:border-neutral-700 transition-colors cursor-pointer">
+                      <span class="flex items-center gap-2 min-w-0 truncate">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-3.5 h-3.5 text-neutral-400 flex-shrink-0"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
+                        <span class="truncate">${tzButtonLabel}</span>
+                      </span>
+                      <svg id="tz-dropdown-chevron" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
+                    </button>
 
-                  <!-- Timezone Dropdown Menu -->
-                  <div id="tz-dropdown-menu" class="hidden absolute left-5 right-5 top-[56px] z-50">
-                    <div class="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[420px]">
-                      <div class="p-2 border-b border-neutral-200 dark:border-neutral-800">
-                        <div class="relative">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                          <input id="tz-search-input" placeholder="Search city or zone…" class="w-full pl-8 pr-3 h-8 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-600" value="" oninput="filterTimezones(this.value)">
-                        </div>
-                      </div>
-
-                      <button id="tz-autodetect-btn" type="button" onclick="selectTimezone('auto', 'Auto-detect')" class="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b border-neutral-200/60 dark:border-neutral-800/60 ${isAuto ? 'bg-emerald-500/[0.06] hover:bg-emerald-500/[0.08]' : 'hover:bg-neutral-100 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300'} cursor-pointer">
-                        <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-500/15 text-emerald-400">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-3.5 h-3.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                          <p class="text-[13px] font-medium text-black dark:text-white">Auto-detect</p>
-                          <p class="text-[11px] text-neutral-500 truncate">Match my device · ${autoTz} · ${autoDetails.time}</p>
-                        </div>
-                        ${isAuto ? `
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-4 h-4 text-emerald-400 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                        ` : ''}
-                      </button>
-
-                      <div id="tz-zones-list" class="flex-1 overflow-y-auto">
-                        ${timezoneGroups.map(group => `
-                          <div class="tz-group" data-region="${group.name.toLowerCase()}">
-                            <div class="sticky top-0 bg-neutral-50/90 dark:bg-neutral-950/90 backdrop-blur-sm px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500 border-y border-neutral-200/60 dark:border-neutral-800/60">
-                              ${group.name}
-                            </div>
-                            ${group.zones.map(z => {
-                              const isSelected = !isAuto && selectedTimezone === z.zone;
-                              const details = getTimezoneDetails(z.zone);
-                              return `
-                                <button 
-                                  type="button" 
-                                  onclick="selectTimezone('${z.zone}', '${z.name}')" 
-                                  class="tz-item w-full flex items-center gap-3 px-3 py-2 text-left transition-colors cursor-pointer ${
-                                    isSelected 
-                                      ? 'bg-emerald-500/[0.06] text-white font-medium' 
-                                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 hover:text-black dark:hover:text-white'
-                                  }" 
-                                  data-name="${z.name.toLowerCase()}" 
-                                  data-zone="${z.zone.toLowerCase()}"
-                                >
-                                  <div class="flex-1 min-w-0">
-                                    <p class="text-[13px] truncate">${z.name}</p>
-                                    <p class="text-[10.5px] text-neutral-500 tabular-nums">${details.offset}<span class="ml-1.5 text-neutral-400">· ${details.time}</span></p>
-                                  </div>
-                                  ${isSelected ? `
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-4 h-4 text-emerald-400 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
-                                  ` : ''}
-                                </button>
-                              `;
-                            }).join('')}
+                    <!-- Timezone Dropdown Menu -->
+                    <div id="tz-dropdown-menu" class="hidden absolute left-0 right-0 top-full mt-2 z-50">
+                      <div class="bg-neutral-950 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+                        <!-- Search Bar -->
+                        <div class="p-2.5 border-b border-neutral-800 bg-neutral-950">
+                          <div class="relative flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 w-4 h-4 text-neutral-400 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                            <input 
+                              id="tz-search-input" 
+                              type="text" 
+                              placeholder="Search city or zone…" 
+                              autocomplete="off" 
+                              spellcheck="false" 
+                              class="w-full h-9 pl-9 pr-8 bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none transition-colors" 
+                              value="" 
+                              oninput="window.filterTimezones ? window.filterTimezones(this.value) : null" 
+                              onclick="event.stopPropagation()" 
+                              onkeydown="if(event.key==='Escape'){toggleTimezoneDropdown(event);}"
+                            >
+                            <button 
+                              id="tz-search-clear" 
+                              type="button" 
+                              onclick="event.stopPropagation(); document.getElementById('tz-search-input').value=''; window.filterTimezones(''); this.classList.add('hidden');" 
+                              class="hidden absolute right-2.5 text-neutral-500 hover:text-white p-1 cursor-pointer"
+                            >
+                              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
                           </div>
-                        `).join('')}
+                        </div>
+
+                        <!-- Auto Detect Button -->
+                        <button id="tz-autodetect-btn" type="button" onclick="selectTimezone('auto', 'Auto-detect')" class="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b border-neutral-800/60 ${isAuto ? 'bg-emerald-500/[0.06] hover:bg-emerald-500/[0.08]' : 'hover:bg-neutral-900 text-neutral-300'} cursor-pointer">
+                          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-500/15 text-emerald-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-3.5 h-3.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-[13px] font-medium text-white">Auto-detect</p>
+                            <p class="text-[11px] text-neutral-500 truncate">Match my device · ${autoTz} · ${autoDetails.time}</p>
+                          </div>
+                          ${isAuto ? `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-4 h-4 text-emerald-400 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                          ` : ''}
+                        </button>
+
+                        <!-- Zones Scrollable List -->
+                        <div id="tz-zones-list" class="overflow-y-auto max-h-[300px] sm:max-h-[340px] divide-y divide-neutral-900/50 overscroll-contain" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;">
+                          ${timezoneGroups.map(group => `
+                            <div class="tz-group" data-region="${group.name.toLowerCase()}">
+                              <div class="sticky top-0 z-10 bg-neutral-950/95 backdrop-blur-sm px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-400 border-y border-neutral-800/80">
+                                ${group.name}
+                              </div>
+                              ${group.zones.map(z => {
+                                const isSelected = !isAuto && selectedTimezone === z.zone;
+                                const details = getTimezoneDetails(z.zone);
+                                return `
+                                  <button 
+                                    type="button" 
+                                    onclick="selectTimezone('${z.zone}', '${z.name}')" 
+                                    class="tz-item w-full flex items-center gap-3 px-3 py-2 text-left transition-colors cursor-pointer ${
+                                      isSelected 
+                                        ? 'bg-emerald-500/[0.06] text-white font-medium' 
+                                        : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
+                                    }" 
+                                    data-name="${z.name.toLowerCase()}" 
+                                    data-zone="${z.zone.toLowerCase()}"
+                                  >
+                                    <div class="flex-1 min-w-0">
+                                      <p class="text-[13px] truncate">${z.name}</p>
+                                      <p class="text-[10.5px] text-neutral-500 tabular-nums">${details.offset}<span class="ml-1.5 text-neutral-400">· ${details.time}</span></p>
+                                    </div>
+                                    ${isSelected ? `
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-4 h-4 text-emerald-400 flex-shrink-0"><path d="M20 6 9 17l-5-5"></path></svg>
+                                    ` : ''}
+                                  </button>
+                                `;
+                              }).join('')}
+                            </div>
+                          `).join('')}
+                          <div id="tz-no-results" class="hidden p-8 text-center text-xs text-neutral-500">
+                            No matching timezones found
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

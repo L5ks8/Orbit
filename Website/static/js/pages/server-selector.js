@@ -125,7 +125,7 @@ Pages.ServerSelector = async function(container) {
             <div class="absolute left-4 flex items-center justify-center pointer-events-none text-neutral-500">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search w-4 h-4"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
             </div>
-            <input id="guild-search-input" placeholder="Search servers..." class="w-full h-11 pl-11 pr-4 bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-neutral-700 transition-colors" type="text" value="">
+            <input id="guild-search-input" oninput="window.filterGuilds ? window.filterGuilds() : null" placeholder="Search servers..." class="w-full h-11 pl-11 pr-4 bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-neutral-700 transition-colors" type="text" value="">
           </div>
 
           <!-- Guilds Sections Container -->
@@ -259,6 +259,12 @@ Pages.ServerSelector = async function(container) {
     html += '</div>';
     content.innerHTML = html;
   };
+
+  window.filterGuilds = renderGuildSections;
+  const guildSearchInput = document.getElementById('guild-search-input');
+  if (guildSearchInput) {
+    guildSearchInput.oninput = () => renderGuildSections();
+  }
 
   const getGuildInitials = (name) => {
     const words = (name || '').trim().split(/\s+/);
