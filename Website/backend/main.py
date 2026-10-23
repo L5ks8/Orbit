@@ -193,6 +193,9 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/ai_helper/{id}/redo", dashboard.api_ai_helper_redo)
     app.router.add_delete("/api/ai_helper/{id}/chats/{chat_id}", dashboard.api_ai_helper_delete_chat)
     app.router.add_post("/api/ai_helper/{id}/chats/{chat_id}/rename", dashboard.api_ai_helper_rename_chat)
+    app.router.add_post("/api/action/{id}/post_invite_leaderboard", dashboard.api_action_post_invite_leaderboard)
+    app.router.add_post("/api/action/{id}/invite_sources", dashboard.api_action_create_invite_source)
+    app.router.add_delete("/api/action/{id}/invite_sources/{source_id}", dashboard.api_action_delete_invite_source)
 
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)
 

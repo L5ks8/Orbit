@@ -156,23 +156,26 @@ class ConfigMixin:
         ai_enabled = global_settings.get("ai_enabled", True) if global_settings else True
 
         invites_cfg = get_config("InviteConfig", guild_id) or {}
-        from Components.Commands.Invite._storage import get_leaderboard
-        invite_lb = get_leaderboard(guild_id, limit=10)
+        from Components.Commands.Invite._storage import get_leaderboard, _collection
+        invite_lb = get_leaderboard(guild_id, limit=25)
         resolved_lb = []
         for entry in invite_lb:
             uid = entry.get("user_id")
-            user_name = "Unknown"
+            user_name = "Vanity URL" if str(uid) == "0" else "Unknown"
             avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
             try:
-                mem = guild.get_member(int(uid)) if uid else None
-                if mem:
-                    user_name = mem.display_name
-                    avatar_url = mem.display_avatar.with_format("png").with_size(64).url
-                else:
-                    u = self.bot.get_user(int(uid)) if uid else None
-                    if u:
-                        user_name = u.name
-                        avatar_url = u.display_avatar.with_format("png").with_size(64).url
+                if uid and str(uid).isdigit() and str(uid) != "0":
+                    mem = guild.get_member(int(uid))
+                    if mem:
+                        user_name = mem.display_name
+                        avatar_url = mem.display_avatar.with_format("png").with_size(64).url
+                    else:
+                        u = self.bot.get_user(int(uid))
+                        if u:
+                            user_name = u.name
+                            avatar_url = u.display_avatar.with_format("png").with_size(64).url
+                elif str(uid) == "0" and guild.icon:
+                    avatar_url = guild.icon.with_size(64).url
             except Exception:
                 pass
             resolved_lb.append({
@@ -185,6 +188,57 @@ class ConfigMixin:
                 "bonus": entry.get("bonus", 0),
                 "fake": entry.get("fake", 0)
             })
+
+        live_invites_by_code = {}
+        try:
+            guild_invites = await guild.invites()
+            for ginv in guild_invites:
+                live_invites_by_code[ginv.code] = ginv
+        except Exception:
+            pass
+
+        # Enrich tracked sources with live Discord invite metrics + InviteTracker records
+        raw_sources = invites_cfg.get("sources", [])
+        resolved_sources = []
+        inv_col = _collection()
+        if isinstance(raw_sources, list):
+            for src in raw_sources:
+                if not isinstance(src, dict):
+                    continue
+                code = str(src.get("code", "")).strip()
+                live_inv = live_invites_by_code.get(code)
+                live_uses = (live_inv.uses or 0) if live_inv else int(src.get("uses", 0) or 0)
+                active_cnt = 0
+                left_cnt = 0
+                if code:
+                    try:
+                        docs = list(inv_col.find({"guild_id": str(guild_id), "code": code}))
+                        for d in docs:
+                            if d.get("left", False):
+                                left_cnt += 1
+                            else:
+                                active_cnt += 1
+                    except Exception:
+                        pass
+                total_joins = max(live_uses, active_cnt + left_cnt, int(src.get("uses", 0) or 0))
+                if active_cnt == 0 and total_joins > left_cnt:
+                    active_cnt = total_joins - left_cnt
+                ch_id = str(src.get("channel_id", "") or (live_inv.channel.id if (live_inv and live_inv.channel) else ""))
+                ch_obj = guild.get_channel(int(ch_id)) if (ch_id and ch_id.isdigit()) else None
+                ch_name = ch_obj.name if ch_obj else str(src.get("channel_name", "general"))
+                resolved_sources.append({
+                    "id": str(src.get("id") or code or secrets.token_hex(4)),
+                    "name": str(src.get("name") or "Quelle"),
+                    "color": str(src.get("color") or "rgb(59, 130, 246)"),
+                    "channel_id": ch_id,
+                    "channel_name": ch_name,
+                    "code": code,
+                    "url": f"https://discord.gg/{code}" if code else str(src.get("url", "")),
+                    "uses": total_joins,
+                    "active": active_cnt,
+                    "left": left_cnt,
+                    "created_at": src.get("created_at", 0)
+                })
 
         config_data = {
             "settings": settings_cfg,
@@ -496,14 +550,25 @@ class ConfigMixin:
                 "count_rejoins": bool(invites_cfg.get("count_rejoins", False)),
                 "show_inviter_count": bool(invites_cfg.get("show_inviter_count", True)),
                 "count_vanity": bool(invites_cfg.get("count_vanity", False)),
-                "rewards": invites_cfg.get("rewards", []),
+                "rewards": [
+                    {
+                        "invites": max(1, int(r.get("invites", 1) or 1)),
+                        "role_id": str(r.get("role_id", ""))
+                    }
+                    for r in invites_cfg.get("rewards", [])
+                    if isinstance(r, dict) and r.get("role_id")
+                ],
                 "auto_post": {
                     "enabled": bool(invites_cfg.get("auto_post", {}).get("enabled", False)),
                     "channel_id": str(invites_cfg.get("auto_post", {}).get("channel_id", "") or ""),
-                    "title": str(invites_cfg.get("auto_post", {}).get("title", "Invite Leaderboard")),
-                    "color": str(invites_cfg.get("auto_post", {}).get("color", "#5865F2")),
-                    "interval": str(invites_cfg.get("auto_post", {}).get("interval", "1h"))
+                    "title": str(invites_cfg.get("auto_post", {}).get("title", "Invite Leaderboard") or "Invite Leaderboard"),
+                    "color": str(invites_cfg.get("auto_post", {}).get("color", "rgb(88, 101, 242)") or "rgb(88, 101, 242)"),
+                    "interval": str(invites_cfg.get("auto_post", {}).get("interval", "1h") or "1h"),
+                    "top_limit": int(invites_cfg.get("auto_post", {}).get("top_limit", 10) or 10),
+                    "show_podium": bool(invites_cfg.get("auto_post", {}).get("show_podium", True)),
+                    "show_numbers": bool(invites_cfg.get("auto_post", {}).get("show_numbers", True))
                 },
+                "sources": resolved_sources,
                 "leaderboard": resolved_lb
             },
             "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
@@ -1186,12 +1251,12 @@ class ConfigMixin:
                     s_cfg["messages_enabled"] = bool(data["messages_enabled"])
                 save_settings_config(guild_id, s_cfg)
 
-            if user_perms.get("can_channels") and "invites" in data:
+            if (user_perms.get("can_channels") or user_perms.get("can_roles") or user_perms.get("is_admin")) and "invites" in data:
                 from Components.Database.mongodb import get_config, set_config
                 inv_data = data["invites"]
                 inv_cfg = get_config("InviteConfig", guild_id) or {}
                 if isinstance(inv_data, dict):
-                    for k in ["enabled", "track_leaves", "count_rejoins", "show_inviter_count", "count_vanity", "rewards", "auto_post"]:
+                    for k in ["enabled", "track_leaves", "count_rejoins", "show_inviter_count", "count_vanity", "rewards", "auto_post", "sources"]:
                         if k in inv_data:
                             inv_cfg[k] = inv_data[k]
                     set_config("InviteConfig", guild_id, inv_cfg)

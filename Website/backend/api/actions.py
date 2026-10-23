@@ -801,6 +801,160 @@ class ActionsMixin:
         else:
             return web.json_response({"error": msg}, status=400)
 
+    async def api_action_post_invite_leaderboard(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            import time
+            from Components.Database.mongodb import get_config, set_config
+            from Components.Commands.Invite.invitelistener import build_invite_leaderboard_embed
+
+            data = await request.json()
+            inv_cfg = get_config("InviteConfig", guild_id) or {}
+            auto_post = inv_cfg.get("auto_post") or {}
+            if isinstance(data, dict):
+                for k in ["enabled", "channel_id", "title", "color", "interval", "top_limit", "show_podium", "show_numbers"]:
+                    if k in data:
+                        auto_post[k] = data[k]
+
+            cid = auto_post.get("channel_id")
+            if not cid or not str(cid).isdigit():
+                return web.json_response({"error": "Bitte wähle zuerst einen Kanal aus."}, status=400)
+
+            channel = guild.get_channel(int(cid))
+            if not channel:
+                return web.json_response({"error": "Kanal wurde auf dem Server nicht gefunden."}, status=404)
+
+            embed = build_invite_leaderboard_embed(
+                guild,
+                self.bot,
+                auto_post,
+                show_inviter_count=bool(inv_cfg.get("show_inviter_count", True))
+            )
+            msg = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+
+            auto_post["last_posted_at"] = time.time()
+            auto_post["last_message_id"] = str(msg.id)
+            inv_cfg["auto_post"] = auto_post
+            set_config("InviteConfig", guild_id, inv_cfg)
+
+            return web.json_response({"success": True, "message_id": str(msg.id)})
+        except discord.Forbidden:
+            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen, um in diesem Kanal Nachrichten zu senden."}, status=403)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_action_create_invite_source(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            import time
+            from Components.Database.mongodb import get_config, set_config
+            from Components.Commands.Invite._storage import refresh_invite_cache
+
+            data = await request.json()
+            name = str(data.get("name") or "YouTube").strip()[:40]
+            color = str(data.get("color") or "rgb(239, 68, 68)").strip()
+            channel_id = str(data.get("channel_id") or "").strip()
+            custom_code = str(data.get("code") or "").strip()
+
+            target_channel = None
+            if channel_id and channel_id.isdigit():
+                target_channel = guild.get_channel(int(channel_id))
+            if not target_channel and guild.text_channels:
+                target_channel = guild.text_channels[0]
+
+            if not target_channel:
+                return web.json_response({"error": "Kein gültiger Textkanal für den Einladungslink gefunden."}, status=400)
+
+            invite_code = custom_code
+            if not invite_code:
+                try:
+                    inv = await target_channel.create_invite(
+                        max_age=0,
+                        max_uses=0,
+                        unique=True,
+                        reason=f"Orbit Quellen-Tracker: {name}"
+                    )
+                    invite_code = inv.code
+                    await refresh_invite_cache(guild)
+                except discord.Forbidden:
+                    return web.json_response({"error": "Dem Bot fehlt die Berechtigung 'Einladung erstellen' in diesem Kanal."}, status=403)
+                except Exception as e:
+                    return web.json_response({"error": f"Fehler beim Erstellen der Discord-Einladung: {e}"}, status=400)
+
+            source_obj = {
+                "id": secrets.token_hex(6),
+                "name": name,
+                "color": color,
+                "channel_id": str(target_channel.id),
+                "channel_name": target_channel.name,
+                "code": invite_code,
+                "url": f"https://discord.gg/{invite_code}",
+                "uses": 0,
+                "active": 0,
+                "left": 0,
+                "created_at": time.time()
+            }
+
+            inv_cfg = get_config("InviteConfig", guild_id) or {}
+            sources = inv_cfg.get("sources", [])
+            if not isinstance(sources, list):
+                sources = []
+            sources.append(source_obj)
+            inv_cfg["sources"] = sources
+            set_config("InviteConfig", guild_id, inv_cfg)
+
+            return web.json_response({"success": True, "source": source_obj})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_action_delete_invite_source(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        source_id = request.match_info.get("source_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not source_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Database.mongodb import get_config, set_config
+            inv_cfg = get_config("InviteConfig", guild_id) or {}
+            sources = inv_cfg.get("sources", [])
+            if isinstance(sources, list):
+                removed = next((s for s in sources if isinstance(s, dict) and str(s.get("id")) == str(source_id)), None)
+                inv_cfg["sources"] = [s for s in sources if isinstance(s, dict) and str(s.get("id")) != str(source_id)]
+                set_config("InviteConfig", guild_id, inv_cfg)
+                if removed and removed.get("code"):
+                    try:
+                        guild_invites = await guild.invites()
+                        for ginv in guild_invites:
+                            if ginv.code == removed["code"]:
+                                await ginv.delete(reason="Orbit Quellen-Tracker Quelle gelöscht")
+                                break
+                    except Exception:
+                        pass
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     
     async def api_get_messages(self, request: web.Request):
         user = await self.get_user_session(request)
@@ -1573,3 +1727,157 @@ class ActionsMixin:
             return web.json_response({"success": True, "message": msg})
         else:
             return web.json_response({"error": msg}, status=400)
+
+    async def api_action_post_invite_leaderboard(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            import time
+            from Components.Database.mongodb import get_config, set_config
+            from Components.Commands.Invite.invitelistener import build_invite_leaderboard_embed
+
+            data = await request.json()
+            inv_cfg = get_config("InviteConfig", guild_id) or {}
+            auto_post = inv_cfg.get("auto_post") or {}
+            if isinstance(data, dict):
+                for k in ["enabled", "channel_id", "title", "color", "interval", "top_limit", "show_podium", "show_numbers"]:
+                    if k in data:
+                        auto_post[k] = data[k]
+
+            cid = auto_post.get("channel_id")
+            if not cid or not str(cid).isdigit():
+                return web.json_response({"error": "Bitte wähle zuerst einen Kanal aus."}, status=400)
+
+            channel = guild.get_channel(int(cid))
+            if not channel:
+                return web.json_response({"error": "Kanal wurde auf dem Server nicht gefunden."}, status=404)
+
+            embed = build_invite_leaderboard_embed(
+                guild,
+                self.bot,
+                auto_post,
+                show_inviter_count=bool(inv_cfg.get("show_inviter_count", True))
+            )
+            msg = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+
+            auto_post["last_posted_at"] = time.time()
+            auto_post["last_message_id"] = str(msg.id)
+            inv_cfg["auto_post"] = auto_post
+            set_config("InviteConfig", guild_id, inv_cfg)
+
+            return web.json_response({"success": True, "message_id": str(msg.id)})
+        except discord.Forbidden:
+            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen, um in diesem Kanal Nachrichten zu senden."}, status=403)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_action_create_invite_source(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            import time
+            from Components.Database.mongodb import get_config, set_config
+            from Components.Commands.Invite._storage import refresh_invite_cache
+
+            data = await request.json()
+            name = str(data.get("name") or "YouTube").strip()[:40]
+            color = str(data.get("color") or "rgb(239, 68, 68)").strip()
+            channel_id = str(data.get("channel_id") or "").strip()
+            custom_code = str(data.get("code") or "").strip()
+
+            target_channel = None
+            if channel_id and channel_id.isdigit():
+                target_channel = guild.get_channel(int(channel_id))
+            if not target_channel and guild.text_channels:
+                target_channel = guild.text_channels[0]
+
+            if not target_channel:
+                return web.json_response({"error": "Kein gültiger Textkanal für den Einladungslink gefunden."}, status=400)
+
+            invite_code = custom_code
+            if not invite_code:
+                try:
+                    inv = await target_channel.create_invite(
+                        max_age=0,
+                        max_uses=0,
+                        unique=True,
+                        reason=f"Orbit Quellen-Tracker: {name}"
+                    )
+                    invite_code = inv.code
+                    await refresh_invite_cache(guild)
+                except discord.Forbidden:
+                    return web.json_response({"error": "Dem Bot fehlt die Berechtigung 'Einladung erstellen' in diesem Kanal."}, status=403)
+                except Exception as e:
+                    return web.json_response({"error": f"Fehler beim Erstellen der Discord-Einladung: {e}"}, status=400)
+
+            source_obj = {
+                "id": secrets.token_hex(6),
+                "name": name,
+                "color": color,
+                "channel_id": str(target_channel.id),
+                "channel_name": target_channel.name,
+                "code": invite_code,
+                "url": f"https://discord.gg/{invite_code}",
+                "uses": 0,
+                "active": 0,
+                "left": 0,
+                "created_at": time.time()
+            }
+
+            inv_cfg = get_config("InviteConfig", guild_id) or {}
+            sources = inv_cfg.get("sources", [])
+            if not isinstance(sources, list):
+                sources = []
+            sources.append(source_obj)
+            inv_cfg["sources"] = sources
+            set_config("InviteConfig", guild_id, inv_cfg)
+
+            return web.json_response({"success": True, "source": source_obj})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_action_delete_invite_source(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        source_id = request.match_info.get("source_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not source_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Database.mongodb import get_config, set_config
+            inv_cfg = get_config("InviteConfig", guild_id) or {}
+            sources = inv_cfg.get("sources", [])
+            if isinstance(sources, list):
+                removed = next((s for s in sources if isinstance(s, dict) and str(s.get("id")) == str(source_id)), None)
+                inv_cfg["sources"] = [s for s in sources if isinstance(s, dict) and str(s.get("id")) != str(source_id)]
+                set_config("InviteConfig", guild_id, inv_cfg)
+                if removed and removed.get("code"):
+                    try:
+                        guild_invites = await guild.invites()
+                        for ginv in guild_invites:
+                            if ginv.code == removed["code"]:
+                                await ginv.delete(reason="Orbit Quellen-Tracker Quelle gelöscht")
+                                break
+                    except Exception:
+                        pass
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)

@@ -366,6 +366,27 @@ const API = {
       method: 'POST',
       body: { title }
     });
+  },
+
+  // Invite Tracker Actions
+  async postInviteLeaderboard(guildId, payload) {
+    return await this.request(`/api/action/${guildId}/post_invite_leaderboard`, {
+      method: 'POST',
+      body: payload
+    });
+  },
+
+  async createInviteSource(guildId, payload) {
+    return await this.request(`/api/action/${guildId}/invite_sources`, {
+      method: 'POST',
+      body: payload
+    });
+  },
+
+  async deleteInviteSource(guildId, sourceId) {
+    return await this.request(`/api/action/${guildId}/invite_sources/${encodeURIComponent(sourceId)}`, {
+      method: 'DELETE'
+    });
   }
 };
 
