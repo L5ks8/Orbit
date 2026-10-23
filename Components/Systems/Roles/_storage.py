@@ -23,7 +23,8 @@ DEFAULT_JOINROLE_CONFIG = {
         "role_id": None
     },
     "tenure_roles": [],
-    "activity_roles": []
+    "activity_roles": [],
+    "custom_rules": []
 }
 
 
@@ -49,7 +50,8 @@ def load_join_roles(guild_id: int) -> Dict[str, Any]:
                     "sticky_roles": data.get("sticky_roles", {"enabled": False, "restore_all": True, "roles": []}),
                     "booster_role": data.get("booster_role", {"enabled": False, "role_id": None}),
                     "tenure_roles": data.get("tenure_roles", []),
-                    "activity_roles": data.get("activity_roles", [])
+                    "activity_roles": data.get("activity_roles", []),
+                    "custom_rules": data.get("custom_rules", [])
                 }
                 _joinrole_cache[guild_id] = migrated
                 return migrated
@@ -65,7 +67,8 @@ def load_join_roles(guild_id: int) -> Dict[str, Any]:
                 "sticky_roles": data.get("sticky_roles", {"enabled": False, "restore_all": True, "roles": []}),
                 "booster_role": data.get("booster_role", {"enabled": False, "role_id": None}),
                 "tenure_roles": data.get("tenure_roles", []),
-                "activity_roles": data.get("activity_roles", [])
+                "activity_roles": data.get("activity_roles", []),
+                "custom_rules": data.get("custom_rules", [])
             }
             _joinrole_cache[guild_id] = cfg
             return cfg

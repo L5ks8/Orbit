@@ -1,41 +1,1507 @@
 /**
  * Orbit Dashboard - Roles Tab (/dashboard/:guildId/roles)
+ * 1:1 PeakBot Roles UI with Reaction Panels, Auto Roles, Custom Rules, Sticky Roles, Booster Role, Tenure Roles & Activity Roles
  */
 
-DashboardTabs.Roles = async function(container, guildId) {
+DashboardTabs.Roles = async function (container, guildId) {
   container.innerHTML = `
-    <div class="flex flex-col gap-6 max-w-5xl mx-auto animate-fade-in">
-      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
-        <div>
-          <h1 class="text-xl font-bold text-white">Server Roles</h1>
-          <p class="text-xs text-neutral-400 mt-1">Overview of role hierarchy and membership in this server.</p>
+    <div class="flex flex-col w-full">
+      <div class="flex items-center justify-between gap-4 pb-4 border-b border-neutral-800">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tags w-5 h-5 text-neutral-400 shrink-0"><path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"></path><path d="M9.586 5.586A2 2 0 0 0 8.172 5H3a1 1 0 0 0-1 1v5.172a2 2 0 0 0 .586 1.414L8.29 18.29a2.426 2.426 0 0 0 3.42 0l3.58-3.58a2.426 2.426 0 0 0 0-3.42z"></path><circle cx="6.5" cy="9.5" r=".5" fill="currentColor"></circle></svg>
+          <h1 class="text-base font-medium text-white truncate">Roles</h1>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span id="roles-save-status" class="text-[11px] font-medium text-neutral-500 transition-colors">Auto-saved</span>
         </div>
       </div>
-      <div id="roles-list-content" class="flex flex-col gap-3">
-        <div class="text-center py-12 text-neutral-500 text-sm">Loading roles...</div>
-      </div>
+      <div class="py-16 text-center text-neutral-500 text-xs">Loading roles configuration...</div>
     </div>
   `;
 
   try {
-    const roles = await API.getRoles(guildId);
-    const content = document.getElementById('roles-list-content');
-    if (!content) return;
+    const [configRes, reactionPanelsRes] = await Promise.all([
+      API.getConfig(guildId),
+      API.getReactionRoles(guildId).catch(() => [])
+    ]);
 
-    content.innerHTML = `
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        ${roles.map(r => `
-          <div class="p-4 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2.5 truncate">
-              <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${r.color || '#99aab5'}"></span>
-              <span class="text-xs font-semibold text-white truncate">@${r.name}</span>
+    const allRoles = (configRes.roles || []).filter(r => r.name !== '@everyone');
+    const allChannels = (configRes.channels || []).filter(c => c.type === 0 || c.type === 5 || c.type === undefined);
+    const jr = (configRes.config && configRes.config.joinroles) || {};
+
+    const state = {
+      reactionPanels: Array.isArray(reactionPanelsRes) ? reactionPanelsRes : [],
+      autoRoles: Array.isArray(jr.user_roles) ? jr.user_roles.map(String) : [],
+      botRolesEnabled: Boolean(jr.bot_roles_enabled),
+      botRoles: Array.isArray(jr.bot_roles) ? jr.bot_roles.map(String) : [],
+      tagRolesEnabled: Boolean(jr.tag_roles_enabled),
+      tagRole: jr.tag_role ? String(jr.tag_role) : '',
+      customRules: Array.isArray(jr.custom_rules) ? jr.custom_rules.map((r, i) => ({
+        id: String(r.id || `rule_${Date.now()}_${i}`),
+        name: String(r.name || 'Custom Rule'),
+        enabled: r.enabled !== false,
+        trigger: String(r.trigger || 'member_join'),
+        condition_role_id: String(r.condition_role_id || ''),
+        action: String(r.action || 'add_role'),
+        role_id: String(r.role_id || ''),
+        dm_message: String(r.dm_message || '')
+      })) : [],
+      stickyRoles: {
+        enabled: Boolean(jr.sticky_roles && jr.sticky_roles.enabled),
+        restore_all: jr.sticky_roles && jr.sticky_roles.restore_all !== undefined ? Boolean(jr.sticky_roles.restore_all) : true,
+        roles: Array.isArray(jr.sticky_roles && jr.sticky_roles.roles) ? jr.sticky_roles.roles.map(String) : []
+      },
+      boosterRole: {
+        enabled: Boolean(jr.booster_role && jr.booster_role.enabled),
+        role_id: (jr.booster_role && jr.booster_role.role_id) ? String(jr.booster_role.role_id) : ''
+      },
+      tenureRoles: Array.isArray(jr.tenure_roles) ? jr.tenure_roles.map(t => ({
+        role_id: String(t.role_id),
+        days: Math.max(1, parseInt(t.days, 10) || 7)
+      })) : [],
+      activityRoles: Array.isArray(jr.activity_roles) ? jr.activity_roles.map(a => ({
+        role_id: String(a.role_id),
+        days: Math.max(1, parseInt(a.days, 10) || 7)
+      })) : [],
+      pendingTenureRoleId: '',
+      pendingTenureDays: 7,
+      pendingActivityRoleId: '',
+      pendingActivityDays: 7
+    };
+
+    const escapeHtml = (str) => String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+    const getRoleById = (id) => allRoles.find(r => String(r.id) === String(id));
+    const getChannelById = (id) => allChannels.find(c => String(c.id) === String(id));
+
+    const getRoleDotColor = (role) => {
+      if (!role || !role.color || role.color === '#000000' || role.color === '#99aab5') return '#a3a3a3';
+      return role.color;
+    };
+
+    let saveTimeout = null;
+    const setSaveIndicator = (text, tone = 'neutral') => {
+      const el = document.getElementById('roles-save-status');
+      if (!el) return;
+      el.textContent = text;
+      el.className = 'text-[11px] font-medium transition-colors ' + (
+        tone === 'saving' ? 'text-amber-400' :
+        tone === 'saved' ? 'text-emerald-400' :
+        tone === 'error' ? 'text-red-400' : 'text-neutral-500'
+      );
+    };
+
+    const saveRolesConfig = (immediate = false) => {
+      setSaveIndicator('Saving...', 'saving');
+      if (saveTimeout) clearTimeout(saveTimeout);
+      const runSave = async () => {
+        try {
+          await API.saveConfig(guildId, {
+            joinroles: {
+              enabled: state.autoRoles.length > 0 || state.botRolesEnabled || state.tagRolesEnabled,
+              user_roles_enabled: state.autoRoles.length > 0,
+              user_roles: state.autoRoles,
+              bot_roles_enabled: state.botRolesEnabled,
+              bot_roles: state.botRoles,
+              tag_roles_enabled: state.tagRolesEnabled,
+              tag_role: state.tagRole || null,
+              sticky_roles: {
+                enabled: state.stickyRoles.enabled,
+                restore_all: state.stickyRoles.restore_all,
+                roles: state.stickyRoles.roles
+              },
+              booster_role: {
+                enabled: state.boosterRole.enabled,
+                role_id: state.boosterRole.role_id || null
+              },
+              tenure_roles: state.tenureRoles,
+              activity_roles: state.activityRoles,
+              custom_rules: state.customRules
+            }
+          });
+          setSaveIndicator('Saved', 'saved');
+          setTimeout(() => setSaveIndicator('Auto-saved', 'neutral'), 1800);
+        } catch (err) {
+          setSaveIndicator('Save failed', 'error');
+          if (window.Notifications) Notifications.show(err.message || 'Failed to save roles config', 'error');
+        }
+      };
+
+      if (immediate) {
+        runSave();
+      } else {
+        saveTimeout = setTimeout(runSave, 450);
+      }
+    };
+
+    // Main Render
+    const renderMainShell = () => {
+      container.innerHTML = `
+        <div class="flex flex-col w-full">
+          <!-- Feature Header -->
+          <div class="flex items-center justify-between gap-4 pb-4 border-b border-neutral-800">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tags w-5 h-5 text-neutral-400 shrink-0"><path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"></path><path d="M9.586 5.586A2 2 0 0 0 8.172 5H3a1 1 0 0 0-1 1v5.172a2 2 0 0 0 .586 1.414L8.29 18.29a2.426 2.426 0 0 0 3.42 0l3.58-3.58a2.426 2.426 0 0 0 0-3.42z"></path><circle cx="6.5" cy="9.5" r=".5" fill="currentColor"></circle></svg>
+              <h1 class="text-base font-medium text-white truncate">Roles</h1>
             </div>
-            <span class="text-[10px] text-neutral-500 font-mono shrink-0">${r.id}</span>
+            <div class="flex items-center gap-2 shrink-0">
+              <span id="roles-save-status" class="text-[11px] font-medium text-neutral-500 transition-colors">Auto-saved</span>
+            </div>
           </div>
-        `).join('')}
-      </div>
-    `;
+
+          <!-- Top Grid: Reaction Panels + Auto Roles / Custom Rules -->
+          <div class="mt-6">
+            <div>
+              <div class="grid grid-cols-1 lg:grid-cols-[1fr,300px] gap-6 min-w-0 items-stretch">
+                <!-- Left: Reaction Panels -->
+                <div class="flex flex-col min-w-0">
+                  <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col flex-1 min-h-0">
+                    <div class="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-neutral-800">
+                      <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile-plus w-4 h-4 text-rose-400 flex-shrink-0"><path d="M22 11v1a10 10 0 1 1-9-10"></path><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line><path d="M16 5h6"></path><path d="M19 2v6"></path></svg>
+                        <h2 class="text-sm font-semibold text-white">Reaction Panels</h2>
+                        <span id="rr-panels-count" class="text-[11px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 tabular-nums">0</span>
+                      </div>
+                    </div>
+                    <div class="p-4 sm:p-5 flex-1 min-h-0">
+                      <div id="rr-panels-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 auto-rows-fr h-full"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right: Auto Roles & Custom Rules -->
+                <div class="flex flex-col gap-5 flex-1">
+                  <!-- Auto Roles -->
+                  <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+                    <div class="px-4 py-3 border-b border-neutral-800 flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-md bg-sky-500/10 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-plus w-3.5 h-3.5 text-sky-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-white">Auto Roles</h3>
+                      </div>
+                      <span id="autoroles-count-badge" class="text-[11px] tabular-nums text-neutral-500">0 assigned</span>
+                    </div>
+                    <div class="p-4 space-y-2.5">
+                      <p class="text-[11px] text-neutral-500 leading-relaxed">Given to every member the moment they join, before they do anything.</p>
+                      <div class="relative" id="autoroles-dropdown-wrap">
+                        <div id="autoroles-trigger" class="min-h-[40px] px-3 py-1.5 bg-neutral-800 border rounded-xl cursor-pointer flex items-center justify-between gap-2 transition border-neutral-700 hover:border-neutral-600">
+                          <div id="autoroles-selected-pills" class="flex flex-wrap gap-1 flex-1 min-w-0"></div>
+                          <div class="flex items-center gap-1 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
+                          </div>
+                        </div>
+                        <div id="autoroles-menu" class="hidden absolute z-40 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden">
+                          <div class="p-2 border-b border-neutral-800">
+                            <input type="text" id="autoroles-search" placeholder="Search roles..." class="w-full h-8 px-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500">
+                          </div>
+                          <div id="autoroles-options" class="max-h-52 overflow-y-auto p-1 space-y-0.5"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Custom Rules -->
+                  <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col flex-1 min-h-[280px]">
+                    <div class="px-4 py-3 border-b border-neutral-800 flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-md bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-workflow w-3.5 h-3.5 text-violet-400"><rect width="8" height="8" x="3" y="3" rx="2"></rect><path d="M7 11v4a2 2 0 0 0 2 2h4"></path><rect width="8" height="8" x="13" y="13" rx="2"></rect></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-white">Custom Rules</h3>
+                        <span id="custom-rules-count" class="text-[11px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 tabular-nums">0</span>
+                      </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between min-h-0">
+                      <div id="custom-rules-body" class="flex-1 flex flex-col justify-center"></div>
+                      <div class="mt-4 pt-3 border-t border-neutral-800/50">
+                        <button type="button" id="btn-open-rule-modal" class="w-full h-9 rounded-xl bg-white text-black text-sm font-medium hover:bg-neutral-200 transition-colors flex items-center justify-center gap-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                          Create Rule
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Section: Role Automations -->
+              <div class="mt-6 pt-6 border-t border-neutral-800">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-semibold text-white text-balance">Role Automations</h3>
+                    <span class="text-[11px] text-emerald-400 px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">Live</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+                  <!-- Card 1: Sticky Roles -->
+                  <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+                    <div class="px-4 py-3 border-b border-neutral-800 flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pin w-3.5 h-3.5 text-amber-400"><line x1="12" x2="12" y1="17" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-white truncate text-balance">Sticky Roles</h3>
+                      </div>
+                      <button type="button" id="sticky-enabled-switch" role="switch" aria-checked="${state.stickyRoles.enabled}" class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.stickyRoles.enabled ? 'bg-white' : 'bg-neutral-700'}">
+                        <span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.stickyRoles.enabled ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>
+                      </button>
+                    </div>
+                    <div class="p-4 space-y-3">
+                      <p class="text-[11px] text-neutral-500 leading-relaxed text-pretty">A member who leaves and comes back gets their roles back automatically instead of starting over.</p>
+                      <div class="flex items-center justify-between gap-2 py-2 px-3 rounded-lg bg-neutral-800/40 border border-neutral-800">
+                        <span class="text-xs text-neutral-300">Restore all roles</span>
+                        <button type="button" id="sticky-restore-all-switch" role="switch" aria-checked="${state.stickyRoles.restore_all}" class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.stickyRoles.restore_all ? 'bg-white' : 'bg-neutral-700'}">
+                          <span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.stickyRoles.restore_all ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>
+                        </button>
+                      </div>
+                      <div id="sticky-specific-roles-wrap" class="${state.stickyRoles.restore_all ? 'hidden' : 'pt-1'}">
+                        <p class="text-[11px] text-neutral-400 mb-1.5">Specific roles to restore:</p>
+                        <div class="relative" id="sticky-roles-dropdown-wrap">
+                          <div id="sticky-roles-trigger" class="min-h-[38px] px-3 py-1.5 bg-neutral-800 border rounded-xl cursor-pointer flex items-center justify-between gap-2 transition border-neutral-700 hover:border-neutral-600">
+                            <div id="sticky-roles-pills" class="flex flex-wrap gap-1 flex-1 min-w-0"></div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 shrink-0"><path d="m6 9 6 6 6-6"></path></svg>
+                          </div>
+                          <div id="sticky-roles-menu" class="hidden absolute z-40 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto p-1 space-y-0.5"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card 2: Booster Role -->
+                  <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+                    <div class="px-4 py-3 border-b border-neutral-800 flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-6 h-6 rounded-md bg-pink-500/10 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gem w-3.5 h-3.5 text-pink-400"><path d="M6 3h12l4 6-10 13L2 9Z"></path><path d="M11 3 8 9l4 13 4-13-3-6"></path><path d="M2 9h20"></path></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-white truncate text-balance">Booster Role</h3>
+                      </div>
+                      <button type="button" id="booster-enabled-switch" role="switch" aria-checked="${state.boosterRole.enabled}" class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.boosterRole.enabled ? 'bg-white' : 'bg-neutral-700'}">
+                        <span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.boosterRole.enabled ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>
+                      </button>
+                    </div>
+                    <div class="p-4 space-y-3">
+                      <p class="text-[11px] text-neutral-500 leading-relaxed text-pretty">Anyone boosting the server keeps this role for as long as the boost lasts, and loses it when they stop.</p>
+                      <div class="relative" id="booster-role-dropdown-wrap">
+                        <button type="button" id="booster-role-trigger" class="w-full h-10 px-3.5 bg-neutral-800 border rounded-xl text-left flex items-center justify-between gap-2 transition text-sm border-neutral-700 hover:border-neutral-600">
+                          <span id="booster-role-label" class="truncate text-neutral-500">Select booster role...</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
+                        </button>
+                        <div id="booster-role-menu" class="hidden absolute z-40 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto p-1 space-y-0.5"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card 3: Tenure Roles -->
+                  <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+                    <div class="px-4 py-3 border-b border-neutral-800 flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-6 h-6 rounded-md bg-sky-500/10 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-clock w-3.5 h-3.5 text-sky-400"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"></path><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h5"></path><path d="M17.5 17.5 16 16.3V14"></path><circle cx="16" cy="16" r="6"></circle></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-white truncate text-balance">Tenure Roles</h3>
+                        <span id="tenure-roles-count" class="text-[11px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 tabular-nums">0</span>
+                      </div>
+                    </div>
+                    <div class="p-4 space-y-3">
+                      <p class="text-[11px] text-neutral-500 leading-relaxed text-pretty">Rewards sticking around. A member who's been in the server long enough gets the role once.</p>
+                      <div id="tenure-roles-list" class="space-y-1.5 empty:hidden"></div>
+                      <div class="flex items-end gap-2">
+                        <div class="flex-1 min-w-0">
+                          <div class="relative" id="tenure-role-dropdown-wrap">
+                            <button type="button" id="tenure-role-trigger" class="w-full h-10 px-3.5 bg-neutral-800 border rounded-xl text-left flex items-center justify-between gap-2 transition text-sm border-neutral-700 hover:border-neutral-600">
+                              <span id="tenure-role-label" class="truncate text-neutral-500">Role…</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
+                            </button>
+                            <div id="tenure-role-menu" class="hidden absolute z-40 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto p-1 space-y-0.5"></div>
+                          </div>
+                        </div>
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                          <input id="tenure-days-input" class="w-20 h-10 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-xs tabular-nums focus:outline-none focus:border-white/40" min="1" max="3650" type="number" value="7">
+                          <span class="text-[11px] text-neutral-500">days in server</span>
+                        </div>
+                        <button type="button" id="btn-add-tenure-role" aria-label="Add tenure role" disabled class="h-10 px-3 rounded-xl bg-white text-black text-xs font-medium hover:bg-neutral-200 disabled:opacity-40 transition-colors flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3.5 h-3.5"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card 4: Activity Roles -->
+                  <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+                    <div class="px-4 py-3 border-b border-neutral-800 flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity w-3.5 h-3.5 text-emerald-400"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-white truncate text-balance">Activity Roles</h3>
+                        <span id="activity-roles-count" class="text-[11px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 tabular-nums">0</span>
+                      </div>
+                    </div>
+                    <div class="p-4 space-y-3">
+                      <p class="text-[11px] text-neutral-500 leading-relaxed text-pretty">Rewards showing up. Members active recently keep the role and lose it if they go quiet.</p>
+                      <div id="activity-roles-list" class="space-y-1.5 empty:hidden"></div>
+                      <div class="flex items-end gap-2">
+                        <div class="flex-1 min-w-0">
+                          <div class="relative" id="activity-role-dropdown-wrap">
+                            <button type="button" id="activity-role-trigger" class="w-full h-10 px-3.5 bg-neutral-800 border rounded-xl text-left flex items-center justify-between gap-2 transition text-sm border-neutral-700 hover:border-neutral-600">
+                              <span id="activity-role-label" class="truncate text-neutral-500">Role…</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
+                            </button>
+                            <div id="activity-role-menu" class="hidden absolute z-40 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto p-1 space-y-0.5"></div>
+                          </div>
+                        </div>
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                          <input id="activity-days-input" class="w-20 h-10 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-xs tabular-nums focus:outline-none focus:border-white/40" min="1" max="3650" type="number" value="7">
+                          <span class="text-[11px] text-neutral-500">days active</span>
+                        </div>
+                        <button type="button" id="btn-add-activity-role" aria-label="Add activity role" disabled class="h-10 px-3 rounded-xl bg-white text-black text-xs font-medium hover:bg-neutral-200 disabled:opacity-40 transition-colors flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3.5 h-3.5"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Mount Point -->
+        <div id="roles-modal-root"></div>
+      `;
+    };
+
+    // 1. Reaction Panels Grid Renderer (3x3 slots like PeakBot)
+    const renderReactionPanelsGrid = () => {
+      const grid = document.getElementById('rr-panels-grid');
+      const countEl = document.getElementById('rr-panels-count');
+      if (!grid) return;
+
+      const panels = state.reactionPanels || [];
+      if (countEl) countEl.textContent = String(panels.length);
+
+      const cardsHtml = panels.map((panel) => {
+        const title = panel.embed?.title || panel.name || 'Role Selection';
+        const comps = Array.isArray(panel.components) ? panel.components : [];
+        const ch = getChannelById(panel.channel_id);
+        const panelTypeLabel = panel.panel_type === 'reactions' ? 'Reactions' : 'Buttons';
+        const isLive = Boolean(panel.message_id || panel.msg_id);
+
+        return `
+          <div class="group relative rounded-xl border border-neutral-800 hover:border-neutral-600 bg-neutral-950/60 hover:bg-neutral-800/40 p-3.5 flex flex-col justify-between gap-2.5 transition-all min-h-[116px] cursor-pointer" data-edit-panel="${escapeHtml(panel.id)}">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <h4 class="text-xs font-semibold text-white truncate">${escapeHtml(title)}</h4>
+                  <p class="text-[11px] text-neutral-500 truncate mt-0.5">
+                    ${ch ? `#${escapeHtml(ch.name)}` : 'No channel set'} · ${panelTypeLabel}
+                  </p>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${isLive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-neutral-800 text-neutral-400'}">
+                  ${isLive ? 'Published' : 'Draft'}
+                </span>
+              </div>
+              <div class="flex flex-wrap gap-1 mt-2.5">
+                ${comps.slice(0, 3).map(c => {
+                  const r = getRoleById(c.role_id);
+                  const dot = getRoleDotColor(r);
+                  const label = c.label || (r ? r.name : 'Role');
+                  return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-neutral-800/90 border border-neutral-700/60 text-[10px] text-neutral-200 max-w-[110px] truncate">
+                    ${c.emoji ? `<span>${escapeHtml(c.emoji)}</span>` : `<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:${dot}"></span>`}
+                    <span class="truncate">${escapeHtml(label)}</span>
+                  </span>`;
+                }).join('')}
+                ${comps.length > 3 ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400">+${comps.length - 3}</span>` : ''}
+                ${comps.length === 0 ? `<span class="text-[10px] text-neutral-600">No roles added</span>` : ''}
+              </div>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-neutral-800/70">
+              <span class="text-[10px] text-neutral-500 tabular-nums">${comps.length} ${comps.length === 1 ? 'role' : 'roles'}</span>
+              <div class="flex items-center gap-1">
+                <button type="button" data-send-panel="${escapeHtml(panel.id)}" title="Publish / Resend to Discord" class="px-2 py-0.5 rounded bg-neutral-800 hover:bg-white hover:text-black text-[10px] font-medium text-neutral-300 transition-colors">
+                  Send
+                </button>
+                <button type="button" data-delete-panel="${escapeHtml(panel.id)}" title="Delete panel" class="p-1 rounded hover:bg-red-500/15 text-neutral-500 hover:text-red-400 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      // Primary "New Panel" card
+      cardsHtml.push(`
+        <button type="button" data-create-panel="primary" class="group rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 bg-transparent hover:bg-neutral-800/30 p-3 flex flex-col items-center justify-center gap-1.5 text-neutral-400 hover:text-white transition-colors min-h-[116px]">
+          <div class="w-8 h-8 rounded-full bg-neutral-800/80 group-hover:bg-neutral-700/80 flex items-center justify-center transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          </div>
+          <span class="text-xs font-medium">New Panel</span>
+        </button>
+      `);
+
+      // Fill remaining slots up to 9 total cells in the 3x3 grid
+      const totalSlots = Math.max(9, cardsHtml.length);
+      while (cardsHtml.length < totalSlots) {
+        cardsHtml.push(`
+          <button type="button" data-create-panel="slot" class="rounded-xl border border-dashed border-neutral-800/70 hover:border-neutral-600 bg-transparent hover:bg-neutral-800/20 p-3 flex items-center justify-center text-neutral-700 hover:text-neutral-400 transition-colors min-h-[116px]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          </button>
+        `);
+      }
+
+      grid.innerHTML = cardsHtml.join('');
+
+      grid.querySelectorAll('[data-create-panel]').forEach(btn => {
+        btn.addEventListener('click', () => openReactionPanelModal(null));
+      });
+
+      grid.querySelectorAll('[data-edit-panel]').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('[data-send-panel]') || e.target.closest('[data-delete-panel]')) return;
+          const pid = card.getAttribute('data-edit-panel');
+          const found = state.reactionPanels.find(p => String(p.id) === String(pid));
+          if (found) openReactionPanelModal(found);
+        });
+      });
+
+      grid.querySelectorAll('[data-send-panel]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const pid = btn.getAttribute('data-send-panel');
+          const found = state.reactionPanels.find(p => String(p.id) === String(pid));
+          if (!found) return;
+          if (!found.channel_id) {
+            openReactionPanelModal(found);
+            if (window.Notifications) Notifications.show('Please select a channel to post this panel', 'info');
+            return;
+          }
+          const origText = btn.textContent;
+          btn.textContent = '...';
+          btn.disabled = true;
+          try {
+            const res = await API.sendReactionRole(guildId, { id: found.id, channel_id: found.channel_id });
+            found.message_id = res.message_id || res.msg_id || 'sent';
+            renderReactionPanelsGrid();
+            if (window.Notifications) Notifications.show('Reaction panel sent to Discord!', 'success');
+          } catch (err) {
+            if (window.Notifications) Notifications.show(err.message || 'Failed to send panel', 'error');
+            btn.textContent = origText;
+            btn.disabled = false;
+          }
+        });
+      });
+
+      grid.querySelectorAll('[data-delete-panel]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const pid = btn.getAttribute('data-delete-panel');
+          try {
+            await API.deleteReactionRole(guildId, pid);
+            state.reactionPanels = state.reactionPanels.filter(p => String(p.id) !== String(pid));
+            renderReactionPanelsGrid();
+            if (window.Notifications) Notifications.show('Reaction panel deleted', 'success');
+          } catch (err) {
+            if (window.Notifications) Notifications.show(err.message || 'Failed to delete panel', 'error');
+          }
+        });
+      });
+    };
+
+    // 2. Auto Roles Multi-Select Renderer
+    const renderAutoRoles = (filterText = '') => {
+      const pillsWrap = document.getElementById('autoroles-selected-pills');
+      const countBadge = document.getElementById('autoroles-count-badge');
+      const optionsWrap = document.getElementById('autoroles-options');
+      if (!pillsWrap || !optionsWrap) return;
+
+      if (countBadge) {
+        countBadge.textContent = `${state.autoRoles.length} assigned`;
+      }
+
+      if (state.autoRoles.length === 0) {
+        pillsWrap.innerHTML = `<span class="text-sm text-neutral-500 py-0.5">Select roles…</span>`;
+      } else {
+        pillsWrap.innerHTML = state.autoRoles.map(rid => {
+          const role = getRoleById(rid);
+          const name = role ? role.name : `Role ${rid}`;
+          const dot = getRoleDotColor(role);
+          return `
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-white">
+              <span class="w-2 h-2 rounded-full shrink-0" style="background:${dot}"></span>
+              <span class="truncate max-w-[130px]">${escapeHtml(name)}</span>
+              <button type="button" data-remove-autorole="${escapeHtml(rid)}" class="text-neutral-400 hover:text-white ml-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </span>
+          `;
+        }).join('');
+      }
+
+      pillsWrap.querySelectorAll('[data-remove-autorole]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rid = btn.getAttribute('data-remove-autorole');
+          state.autoRoles = state.autoRoles.filter(id => id !== rid);
+          renderAutoRoles(document.getElementById('autoroles-search')?.value || '');
+          saveRolesConfig();
+        });
+      });
+
+      const q = filterText.trim().toLowerCase();
+      const filteredRoles = allRoles.filter(r => !q || r.name.toLowerCase().includes(q));
+
+      if (filteredRoles.length === 0) {
+        optionsWrap.innerHTML = `<div class="px-3 py-2 text-xs text-neutral-500">No roles found</div>`;
+      } else {
+        optionsWrap.innerHTML = filteredRoles.map(r => {
+          const selected = state.autoRoles.includes(String(r.id));
+          const dot = getRoleDotColor(r);
+          return `
+            <button type="button" data-toggle-autorole="${escapeHtml(r.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between gap-2 text-xs transition-colors ${selected ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span>
+                <span class="truncate">${escapeHtml(r.name)}</span>
+              </div>
+              ${selected ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-white shrink-0"><path d="M20 6 9 17l-5-5"/></svg>` : ''}
+            </button>
+          `;
+        }).join('');
+      }
+
+      optionsWrap.querySelectorAll('[data-toggle-autorole]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rid = String(btn.getAttribute('data-toggle-autorole'));
+          if (state.autoRoles.includes(rid)) {
+            state.autoRoles = state.autoRoles.filter(id => id !== rid);
+          } else {
+            state.autoRoles.push(rid);
+          }
+          renderAutoRoles(document.getElementById('autoroles-search')?.value || '');
+          saveRolesConfig();
+        });
+      });
+    };
+
+    // 3. Custom Rules Renderer
+    const TRIGGER_LABELS = {
+      member_join: 'When a member joins',
+      member_verify: 'When a member verifies',
+      member_boost: 'When a member boosts',
+      message_sent: 'When a member sends a message',
+      reaction_add: 'When a member adds a reaction',
+      has_role: 'When a member receives a role'
+    };
+
+    const ACTION_LABELS = {
+      add_role: 'Add role',
+      remove_role: 'Remove role',
+      send_dm: 'Send welcome DM'
+    };
+
+    const renderCustomRules = () => {
+      const body = document.getElementById('custom-rules-body');
+      const countEl = document.getElementById('custom-rules-count');
+      if (!body) return;
+
+      if (countEl) countEl.textContent = String(state.customRules.length);
+
+      if (state.customRules.length === 0) {
+        body.innerHTML = `
+          <div class="text-center py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-workflow w-6 h-6 text-neutral-700 mx-auto mb-1.5"><rect width="8" height="8" x="3" y="3" rx="2"></rect><path d="M7 11v4a2 2 0 0 0 2 2h4"></path><rect width="8" height="8" x="13" y="13" rx="2"></rect></svg>
+            <p class="text-xs font-medium text-neutral-300">Build if/then role logic</p>
+            <p class="text-[11px] text-neutral-500 mt-0.5 leading-relaxed">When something happens, automatically add or remove a role.</p>
+            <div class="flex flex-wrap justify-center gap-1.5 mt-3">
+              <button type="button" data-preset-rule="default_role" class="text-[11px] px-2.5 py-1 rounded-full bg-neutral-800/80 border border-neutral-700/60 text-neutral-300 hover:border-violet-500/40 hover:text-white transition-colors">Auto-assign default role</button>
+              <button type="button" data-preset-rule="verify_promote" class="text-[11px] px-2.5 py-1 rounded-full bg-neutral-800/80 border border-neutral-700/60 text-neutral-300 hover:border-violet-500/40 hover:text-white transition-colors">Promote on verification</button>
+              <button type="button" data-preset-rule="welcome_dm" class="text-[11px] px-2.5 py-1 rounded-full bg-neutral-800/80 border border-neutral-700/60 text-neutral-300 hover:border-violet-500/40 hover:text-white transition-colors">Welcome DM on join</button>
+            </div>
+          </div>
+        `;
+
+        body.querySelectorAll('[data-preset-rule]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const preset = btn.getAttribute('data-preset-rule');
+            const firstRole = allRoles[0] ? String(allRoles[0].id) : '';
+            if (preset === 'default_role') {
+              openCustomRuleModal({
+                id: '',
+                name: 'Auto-assign default role',
+                enabled: true,
+                trigger: 'member_join',
+                condition_role_id: '',
+                action: 'add_role',
+                role_id: firstRole,
+                dm_message: ''
+              });
+            } else if (preset === 'verify_promote') {
+              openCustomRuleModal({
+                id: '',
+                name: 'Promote on verification',
+                enabled: true,
+                trigger: 'member_verify',
+                condition_role_id: '',
+                action: 'add_role',
+                role_id: firstRole,
+                dm_message: ''
+              });
+            } else if (preset === 'welcome_dm') {
+              openCustomRuleModal({
+                id: '',
+                name: 'Welcome DM on join',
+                enabled: true,
+                trigger: 'member_join',
+                condition_role_id: '',
+                action: 'send_dm',
+                role_id: '',
+                dm_message: 'Hey {user}, welcome to **{server}**!'
+              });
+            }
+          });
+        });
+        return;
+      }
+
+      body.innerHTML = `
+        <div class="space-y-2 max-h-[220px] overflow-y-auto pr-0.5">
+          ${state.customRules.map((rule) => {
+            const targetRole = getRoleById(rule.role_id);
+            const trigText = TRIGGER_LABELS[rule.trigger] || rule.trigger;
+            const actText = rule.action === 'send_dm'
+              ? 'Send DM'
+              : `${ACTION_LABELS[rule.action] || 'Add role'} ${targetRole ? `@${targetRole.name}` : ''}`;
+            return `
+              <div class="p-2.5 rounded-xl bg-neutral-800/50 border border-neutral-800 hover:border-neutral-700 transition-colors flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-1 cursor-pointer" data-edit-rule="${escapeHtml(rule.id)}">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full ${rule.enabled ? 'bg-violet-400' : 'bg-neutral-600'}"></span>
+                    <p class="text-xs font-medium text-white truncate">${escapeHtml(rule.name)}</p>
+                  </div>
+                  <p class="text-[11px] text-neutral-400 truncate mt-0.5">${escapeHtml(trigText)} → ${escapeHtml(actText)}</p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button type="button" data-toggle-rule="${escapeHtml(rule.id)}" role="switch" aria-checked="${rule.enabled}" class="relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors ${rule.enabled ? 'bg-white' : 'bg-neutral-700'}">
+                    <span class="pointer-events-none block h-3 w-3 rounded-full transition-transform ${rule.enabled ? 'translate-x-3 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>
+                  </button>
+                  <button type="button" data-delete-rule="${escapeHtml(rule.id)}" class="p-1 rounded hover:bg-red-500/15 text-neutral-500 hover:text-red-400 transition-colors" title="Delete rule">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      body.querySelectorAll('[data-edit-rule]').forEach(el => {
+        el.addEventListener('click', () => {
+          const rid = el.getAttribute('data-edit-rule');
+          const found = state.customRules.find(r => r.id === rid);
+          if (found) openCustomRuleModal(found);
+        });
+      });
+
+      body.querySelectorAll('[data-toggle-rule]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rid = btn.getAttribute('data-toggle-rule');
+          const found = state.customRules.find(r => r.id === rid);
+          if (found) {
+            found.enabled = !found.enabled;
+            renderCustomRules();
+            saveRolesConfig();
+          }
+        });
+      });
+
+      body.querySelectorAll('[data-delete-rule]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rid = btn.getAttribute('data-delete-rule');
+          state.customRules = state.customRules.filter(r => r.id !== rid);
+          renderCustomRules();
+          saveRolesConfig();
+        });
+      });
+    };
+
+    // 4. Sticky Roles Renderer
+    const renderStickyRoles = () => {
+      const enabledBtn = document.getElementById('sticky-enabled-switch');
+      const restoreAllBtn = document.getElementById('sticky-restore-all-switch');
+      const specificWrap = document.getElementById('sticky-specific-roles-wrap');
+      const pillsWrap = document.getElementById('sticky-roles-pills');
+      const menuWrap = document.getElementById('sticky-roles-menu');
+
+      if (enabledBtn) {
+        enabledBtn.setAttribute('aria-checked', String(state.stickyRoles.enabled));
+        enabledBtn.className = `relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.stickyRoles.enabled ? 'bg-white' : 'bg-neutral-700'}`;
+        enabledBtn.innerHTML = `<span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.stickyRoles.enabled ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>`;
+      }
+
+      if (restoreAllBtn) {
+        restoreAllBtn.setAttribute('aria-checked', String(state.stickyRoles.restore_all));
+        restoreAllBtn.className = `relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.stickyRoles.restore_all ? 'bg-white' : 'bg-neutral-700'}`;
+        restoreAllBtn.innerHTML = `<span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.stickyRoles.restore_all ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>`;
+      }
+
+      if (specificWrap) {
+        specificWrap.className = state.stickyRoles.restore_all ? 'hidden' : 'pt-1';
+      }
+
+      if (pillsWrap && menuWrap) {
+        if (state.stickyRoles.roles.length === 0) {
+          pillsWrap.innerHTML = `<span class="text-xs text-neutral-500">Select sticky roles…</span>`;
+        } else {
+          pillsWrap.innerHTML = state.stickyRoles.roles.map(rid => {
+            const role = getRoleById(rid);
+            const dot = getRoleDotColor(role);
+            return `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-white">
+                <span class="w-2 h-2 rounded-full shrink-0" style="background:${dot}"></span>
+                <span class="truncate max-w-[120px]">${escapeHtml(role ? role.name : rid)}</span>
+              </span>
+            `;
+          }).join('');
+        }
+
+        menuWrap.innerHTML = allRoles.map(r => {
+          const selected = state.stickyRoles.roles.includes(String(r.id));
+          const dot = getRoleDotColor(r);
+          return `
+            <button type="button" data-toggle-sticky-role="${escapeHtml(r.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between gap-2 text-xs transition-colors ${selected ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span>
+                <span class="truncate">${escapeHtml(r.name)}</span>
+              </div>
+              ${selected ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-white shrink-0"><path d="M20 6 9 17l-5-5"/></svg>` : ''}
+            </button>
+          `;
+        }).join('');
+
+        menuWrap.querySelectorAll('[data-toggle-sticky-role]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rid = String(btn.getAttribute('data-toggle-sticky-role'));
+            if (state.stickyRoles.roles.includes(rid)) {
+              state.stickyRoles.roles = state.stickyRoles.roles.filter(id => id !== rid);
+            } else {
+              state.stickyRoles.roles.push(rid);
+            }
+            renderStickyRoles();
+            saveRolesConfig();
+          });
+        });
+      }
+    };
+
+    // 5. Booster Role Renderer
+    const renderBoosterRole = () => {
+      const switchBtn = document.getElementById('booster-enabled-switch');
+      const labelEl = document.getElementById('booster-role-label');
+      const menuEl = document.getElementById('booster-role-menu');
+
+      if (switchBtn) {
+        switchBtn.setAttribute('aria-checked', String(state.boosterRole.enabled));
+        switchBtn.className = `relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${state.boosterRole.enabled ? 'bg-white' : 'bg-neutral-700'}`;
+        switchBtn.innerHTML = `<span class="pointer-events-none block h-4 w-4 rounded-full shadow-sm transition-transform duration-200 ${state.boosterRole.enabled ? 'translate-x-4 bg-neutral-950' : 'translate-x-0 bg-white'}"></span>`;
+      }
+
+      const selectedRole = getRoleById(state.boosterRole.role_id);
+      if (labelEl) {
+        if (selectedRole) {
+          const dot = getRoleDotColor(selectedRole);
+          labelEl.className = 'truncate text-white flex items-center gap-2';
+          labelEl.innerHTML = `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span><span class="truncate">${escapeHtml(selectedRole.name)}</span>`;
+        } else {
+          labelEl.className = 'truncate text-neutral-500';
+          labelEl.textContent = 'Select booster role...';
+        }
+      }
+
+      if (menuEl) {
+        menuEl.innerHTML = `
+          <button type="button" data-select-booster-role="" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">None</button>
+          ${allRoles.map(r => {
+            const isSel = String(r.id) === String(state.boosterRole.role_id);
+            const dot = getRoleDotColor(r);
+            return `
+              <button type="button" data-select-booster-role="${escapeHtml(r.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between gap-2 text-xs transition-colors ${isSel ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span>
+                  <span class="truncate">${escapeHtml(r.name)}</span>
+                </div>
+                ${isSel ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-white shrink-0"><path d="M20 6 9 17l-5-5"/></svg>` : ''}
+              </button>
+            `;
+          }).join('')}
+        `;
+
+        menuEl.querySelectorAll('[data-select-booster-role]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rid = btn.getAttribute('data-select-booster-role') || '';
+            state.boosterRole.role_id = rid;
+            if (rid && !state.boosterRole.enabled) {
+              state.boosterRole.enabled = true;
+            }
+            menuEl.classList.add('hidden');
+            renderBoosterRole();
+            saveRolesConfig();
+          });
+        });
+      }
+    };
+
+    // 6. Tenure Roles Renderer
+    const renderTenureRoles = () => {
+      const countEl = document.getElementById('tenure-roles-count');
+      const listEl = document.getElementById('tenure-roles-list');
+      const labelEl = document.getElementById('tenure-role-label');
+      const menuEl = document.getElementById('tenure-role-menu');
+      const addBtn = document.getElementById('btn-add-tenure-role');
+
+      if (countEl) countEl.textContent = String(state.tenureRoles.length);
+
+      if (listEl) {
+        listEl.innerHTML = state.tenureRoles.map((item, idx) => {
+          const r = getRoleById(item.role_id);
+          const dot = getRoleDotColor(r);
+          return `
+            <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-neutral-800/60 border border-neutral-800">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span>
+                <span class="text-xs font-medium text-white truncate">${escapeHtml(r ? r.name : `Role ${item.role_id}`)}</span>
+                <span class="text-[11px] text-neutral-400 shrink-0">· after ${item.days} ${item.days === 1 ? 'day' : 'days'}</span>
+              </div>
+              <button type="button" data-remove-tenure="${idx}" class="p-1 rounded hover:bg-red-500/15 text-neutral-500 hover:text-red-400 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+          `;
+        }).join('');
+
+        listEl.querySelectorAll('[data-remove-tenure]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-remove-tenure'), 10);
+            state.tenureRoles.splice(idx, 1);
+            renderTenureRoles();
+            saveRolesConfig();
+          });
+        });
+      }
+
+      const pendingRole = getRoleById(state.pendingTenureRoleId);
+      if (labelEl) {
+        if (pendingRole) {
+          const dot = getRoleDotColor(pendingRole);
+          labelEl.className = 'truncate text-white flex items-center gap-2';
+          labelEl.innerHTML = `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span><span class="truncate">${escapeHtml(pendingRole.name)}</span>`;
+        } else {
+          labelEl.className = 'truncate text-neutral-500';
+          labelEl.textContent = 'Role…';
+        }
+      }
+
+      if (addBtn) {
+        addBtn.disabled = !state.pendingTenureRoleId;
+      }
+
+      if (menuEl) {
+        menuEl.innerHTML = allRoles.map(r => {
+          const isSel = String(r.id) === String(state.pendingTenureRoleId);
+          const dot = getRoleDotColor(r);
+          return `
+            <button type="button" data-select-tenure-role="${escapeHtml(r.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between gap-2 text-xs transition-colors ${isSel ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span>
+                <span class="truncate">${escapeHtml(r.name)}</span>
+              </div>
+            </button>
+          `;
+        }).join('');
+
+        menuEl.querySelectorAll('[data-select-tenure-role]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.pendingTenureRoleId = String(btn.getAttribute('data-select-tenure-role'));
+            menuEl.classList.add('hidden');
+            renderTenureRoles();
+          });
+        });
+      }
+    };
+
+    // 7. Activity Roles Renderer
+    const renderActivityRoles = () => {
+      const countEl = document.getElementById('activity-roles-count');
+      const listEl = document.getElementById('activity-roles-list');
+      const labelEl = document.getElementById('activity-role-label');
+      const menuEl = document.getElementById('activity-role-menu');
+      const addBtn = document.getElementById('btn-add-activity-role');
+
+      if (countEl) countEl.textContent = String(state.activityRoles.length);
+
+      if (listEl) {
+        listEl.innerHTML = state.activityRoles.map((item, idx) => {
+          const r = getRoleById(item.role_id);
+          const dot = getRoleDotColor(r);
+          return `
+            <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-neutral-800/60 border border-neutral-800">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span>
+                <span class="text-xs font-medium text-white truncate">${escapeHtml(r ? r.name : `Role ${item.role_id}`)}</span>
+                <span class="text-[11px] text-neutral-400 shrink-0">· active within ${item.days} ${item.days === 1 ? 'day' : 'days'}</span>
+              </div>
+              <button type="button" data-remove-activity="${idx}" class="p-1 rounded hover:bg-red-500/15 text-neutral-500 hover:text-red-400 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+          `;
+        }).join('');
+
+        listEl.querySelectorAll('[data-remove-activity]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-remove-activity'), 10);
+            state.activityRoles.splice(idx, 1);
+            renderActivityRoles();
+            saveRolesConfig();
+          });
+        });
+      }
+
+      const pendingRole = getRoleById(state.pendingActivityRoleId);
+      if (labelEl) {
+        if (pendingRole) {
+          const dot = getRoleDotColor(pendingRole);
+          labelEl.className = 'truncate text-white flex items-center gap-2';
+          labelEl.innerHTML = `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span><span class="truncate">${escapeHtml(pendingRole.name)}</span>`;
+        } else {
+          labelEl.className = 'truncate text-neutral-500';
+          labelEl.textContent = 'Role…';
+        }
+      }
+
+      if (addBtn) {
+        addBtn.disabled = !state.pendingActivityRoleId;
+      }
+
+      if (menuEl) {
+        menuEl.innerHTML = allRoles.map(r => {
+          const isSel = String(r.id) === String(state.pendingActivityRoleId);
+          const dot = getRoleDotColor(r);
+          return `
+            <button type="button" data-select-activity-role="${escapeHtml(r.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between gap-2 text-xs transition-colors ${isSel ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${dot}"></span>
+                <span class="truncate">${escapeHtml(r.name)}</span>
+              </div>
+            </button>
+          `;
+        }).join('');
+
+        menuEl.querySelectorAll('[data-select-activity-role]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.pendingActivityRoleId = String(btn.getAttribute('data-select-activity-role'));
+            menuEl.classList.add('hidden');
+            renderActivityRoles();
+          });
+        });
+      }
+    };
+
+    // Reaction Panel Builder Modal
+    const openReactionPanelModal = (existingPanel = null) => {
+      const modalRoot = document.getElementById('roles-modal-root');
+      if (!modalRoot) return;
+
+      const draft = {
+        id: existingPanel?.id || '',
+        name: existingPanel?.name || existingPanel?.embed?.title || 'Role Selection',
+        channel_id: existingPanel?.channel_id ? String(existingPanel.channel_id) : (allChannels[0] ? String(allChannels[0].id) : ''),
+        panel_type: existingPanel?.panel_type || 'buttons',
+        mode: existingPanel?.mode || 'multi',
+        embed: {
+          title: existingPanel?.embed?.title || existingPanel?.name || 'Pick Your Roles',
+          description: existingPanel?.embed?.description || 'Click the buttons below to toggle roles on your profile.',
+          color: existingPanel?.embed?.color || '#5865F2'
+        },
+        components: Array.isArray(existingPanel?.components) && existingPanel.components.length > 0
+          ? existingPanel.components.map(c => ({
+              role_id: String(c.role_id || ''),
+              label: String(c.label || ''),
+              emoji: String(c.emoji || '🎭'),
+              color: String(c.color || 'blue')
+            }))
+          : [
+              {
+                role_id: allRoles[0] ? String(allRoles[0].id) : '',
+                label: allRoles[0] ? allRoles[0].name : 'Member',
+                emoji: '✨',
+                color: 'blue'
+              }
+            ]
+      };
+
+      const renderModal = () => {
+        modalRoot.innerHTML = `
+          <div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+              <div class="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-rose-400"><path d="M22 11v1a10 10 0 1 1-9-10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/><path d="M16 5h6"/><path d="M19 2v6"/></svg>
+                  <h3 class="text-sm font-semibold text-white">${draft.id ? 'Edit Reaction Panel' : 'Create Reaction Panel'}</h3>
+                </div>
+                <button type="button" id="rr-modal-close" class="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+              </div>
+
+              <div class="p-5 overflow-y-auto space-y-4 flex-1">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Channel</label>
+                    <select id="rr-modal-channel" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
+                      ${allChannels.map(c => `<option value="${escapeHtml(c.id)}" ${String(c.id) === draft.channel_id ? 'selected' : ''}>#${escapeHtml(c.name)}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Interaction Type</label>
+                    <select id="rr-modal-type" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
+                      <option value="buttons" ${draft.panel_type === 'buttons' ? 'selected' : ''}>Discord Buttons</option>
+                      <option value="reactions" ${draft.panel_type === 'reactions' ? 'selected' : ''}>Emoji Reactions</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Selection Mode</label>
+                    <select id="rr-modal-mode" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
+                      <option value="multi" ${draft.mode === 'multi' ? 'selected' : ''}>Toggle (Multiple Roles)</option>
+                      <option value="pick_one" ${draft.mode === 'pick_one' ? 'selected' : ''}>Unique (Pick One Only)</option>
+                      <option value="verify" ${draft.mode === 'verify' ? 'selected' : ''}>Verify (Add Only)</option>
+                      <option value="opt_out" ${draft.mode === 'opt_out' ? 'selected' : ''}>Opt-Out (Remove Only)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-[1fr,110px] gap-3">
+                  <div>
+                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Panel Title</label>
+                    <input type="text" id="rr-modal-title" value="${escapeHtml(draft.embed.title)}" placeholder="Pick Your Roles" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-medium text-neutral-400 mb-1">Accent Color</label>
+                    <input type="color" id="rr-modal-color" value="${escapeHtml(draft.embed.color || '#5865F2')}" class="w-full h-9 p-1 bg-neutral-800 border border-neutral-700 rounded-xl cursor-pointer">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-medium text-neutral-400 mb-1">Description</label>
+                  <textarea id="rr-modal-desc" rows="2" placeholder="Click below to get your roles..." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">${escapeHtml(draft.embed.description)}</textarea>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-semibold text-white">Role Options (${draft.components.length})</label>
+                    <button type="button" id="rr-modal-add-row" class="text-xs px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                      Add Role
+                    </button>
+                  </div>
+
+                  <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    ${draft.components.map((comp, idx) => `
+                      <div class="grid grid-cols-1 sm:grid-cols-[70px,1fr,1fr,100px,32px] gap-2 items-center p-2.5 rounded-xl bg-neutral-800/60 border border-neutral-800">
+                        <input type="text" data-comp-emoji="${idx}" value="${escapeHtml(comp.emoji)}" placeholder="✨" class="h-8 px-2 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-center text-white" title="Emoji">
+                        <select data-comp-role="${idx}" class="h-8 px-2 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white">
+                          <option value="">Select role...</option>
+                          ${allRoles.map(r => `<option value="${escapeHtml(r.id)}" ${String(r.id) === String(comp.role_id) ? 'selected' : ''}>@${escapeHtml(r.name)}</option>`).join('')}
+                        </select>
+                        <input type="text" data-comp-label="${idx}" value="${escapeHtml(comp.label)}" placeholder="Button label" class="h-8 px-2.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white">
+                        <select data-comp-color="${idx}" class="h-8 px-2 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white">
+                          <option value="blue" ${comp.color === 'blue' ? 'selected' : ''}>Blurple</option>
+                          <option value="gray" ${comp.color === 'gray' ? 'selected' : ''}>Gray</option>
+                          <option value="green" ${comp.color === 'green' ? 'selected' : ''}>Green</option>
+                          <option value="red" ${comp.color === 'red' ? 'selected' : ''}>Red</option>
+                        </select>
+                        <button type="button" data-comp-del="${idx}" class="h-8 w-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-red-400 hover:bg-red-500/10">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-5 py-3.5 border-t border-neutral-800 flex items-center justify-end gap-2 bg-neutral-950/60">
+                <button type="button" id="rr-modal-cancel" class="h-9 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-300">Cancel</button>
+                <button type="button" id="rr-modal-save-only" class="h-9 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs font-medium text-white">Save Draft</button>
+                <button type="button" id="rr-modal-save-post" class="h-9 px-4 rounded-xl bg-white hover:bg-neutral-200 text-xs font-semibold text-black">Save & Publish to Discord</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const syncInputs = () => {
+          draft.channel_id = document.getElementById('rr-modal-channel')?.value || '';
+          draft.panel_type = document.getElementById('rr-modal-type')?.value || 'buttons';
+          draft.mode = document.getElementById('rr-modal-mode')?.value || 'multi';
+          draft.embed.title = document.getElementById('rr-modal-title')?.value || 'Role Selection';
+          draft.name = draft.embed.title;
+          draft.embed.color = document.getElementById('rr-modal-color')?.value || '#5865F2';
+          draft.embed.description = document.getElementById('rr-modal-desc')?.value || '';
+        };
+
+        modalRoot.querySelectorAll('[data-comp-emoji]').forEach(inp => {
+          inp.addEventListener('input', () => {
+            draft.components[parseInt(inp.getAttribute('data-comp-emoji'), 10)].emoji = inp.value;
+          });
+        });
+        modalRoot.querySelectorAll('[data-comp-role]').forEach(sel => {
+          sel.addEventListener('change', () => {
+            const idx = parseInt(sel.getAttribute('data-comp-role'), 10);
+            draft.components[idx].role_id = sel.value;
+            const r = getRoleById(sel.value);
+            if (r && (!draft.components[idx].label || draft.components[idx].label === 'Role')) {
+              draft.components[idx].label = r.name;
+              const lblInput = modalRoot.querySelector(`[data-comp-label="${idx}"]`);
+              if (lblInput) lblInput.value = r.name;
+            }
+          });
+        });
+        modalRoot.querySelectorAll('[data-comp-label]').forEach(inp => {
+          inp.addEventListener('input', () => {
+            draft.components[parseInt(inp.getAttribute('data-comp-label'), 10)].label = inp.value;
+          });
+        });
+        modalRoot.querySelectorAll('[data-comp-color]').forEach(sel => {
+          sel.addEventListener('change', () => {
+            draft.components[parseInt(sel.getAttribute('data-comp-color'), 10)].color = sel.value;
+          });
+        });
+        modalRoot.querySelectorAll('[data-comp-del]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            syncInputs();
+            const idx = parseInt(btn.getAttribute('data-comp-del'), 10);
+            draft.components.splice(idx, 1);
+            renderModal();
+          });
+        });
+
+        document.getElementById('rr-modal-add-row')?.addEventListener('click', () => {
+          syncInputs();
+          const nextRole = allRoles[draft.components.length % Math.max(1, allRoles.length)];
+          draft.components.push({
+            role_id: nextRole ? String(nextRole.id) : '',
+            label: nextRole ? nextRole.name : 'Role',
+            emoji: '🎭',
+            color: 'blue'
+          });
+          renderModal();
+        });
+
+        const closeModal = () => { modalRoot.innerHTML = ''; };
+        document.getElementById('rr-modal-close')?.addEventListener('click', closeModal);
+        document.getElementById('rr-modal-cancel')?.addEventListener('click', closeModal);
+
+        const submitPanel = async (postToDiscord) => {
+          syncInputs();
+          const validComps = draft.components.filter(c => c.role_id);
+          if (validComps.length === 0) {
+            if (window.Notifications) Notifications.show('Please select at least one role for the panel', 'error');
+            return;
+          }
+          const payload = {
+            ...draft,
+            components: validComps,
+            post_to_discord: postToDiscord
+          };
+          try {
+            const res = await API.saveReactionRole(guildId, payload);
+            payload.id = res.id || payload.id;
+            if (res.message_id || res.msg_id) {
+              payload.message_id = res.message_id || res.msg_id;
+            }
+            const existingIdx = state.reactionPanels.findIndex(p => String(p.id) === String(payload.id));
+            if (existingIdx >= 0) {
+              state.reactionPanels[existingIdx] = payload;
+            } else {
+              state.reactionPanels.push(payload);
+            }
+            closeModal();
+            renderReactionPanelsGrid();
+            if (window.Notifications) {
+              Notifications.show(postToDiscord ? 'Reaction panel saved & published to Discord!' : 'Reaction panel saved!', 'success');
+            }
+          } catch (err) {
+            if (window.Notifications) Notifications.show(err.message || 'Failed to save reaction panel', 'error');
+          }
+        };
+
+        document.getElementById('rr-modal-save-only')?.addEventListener('click', () => submitPanel(false));
+        document.getElementById('rr-modal-save-post')?.addEventListener('click', () => submitPanel(true));
+      };
+
+      renderModal();
+    };
+
+    // Custom Rule Builder Modal
+    const openCustomRuleModal = (existingRule = null) => {
+      const modalRoot = document.getElementById('roles-modal-root');
+      if (!modalRoot) return;
+
+      const isEdit = Boolean(existingRule && existingRule.id);
+      const draft = {
+        id: existingRule?.id || `rule_${Date.now()}`,
+        name: existingRule?.name || 'New Role Rule',
+        enabled: existingRule?.enabled !== false,
+        trigger: existingRule?.trigger || 'member_join',
+        condition_role_id: existingRule?.condition_role_id || '',
+        action: existingRule?.action || 'add_role',
+        role_id: existingRule?.role_id || (allRoles[0] ? String(allRoles[0].id) : ''),
+        dm_message: existingRule?.dm_message || 'Welcome to {server}, {user}!'
+      };
+
+      const renderRuleModal = () => {
+        modalRoot.innerHTML = `
+          <div class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden">
+              <div class="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-md bg-violet-500/10 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-violet-400"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>
+                  </div>
+                  <h3 class="text-sm font-semibold text-white">${isEdit ? 'Edit Custom Rule' : 'Create Custom Rule'}</h3>
+                </div>
+                <button type="button" id="rule-modal-close" class="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+              </div>
+
+              <div class="p-5 space-y-4">
+                <div>
+                  <label class="block text-[11px] font-medium text-neutral-400 mb-1">Rule Name</label>
+                  <input type="text" id="rule-modal-name" value="${escapeHtml(draft.name)}" placeholder="e.g. Promote on verification" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
+                </div>
+
+                <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800 space-y-2.5">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-violet-400">IF (Trigger)</span>
+                  <select id="rule-modal-trigger" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
+                    <option value="member_join" ${draft.trigger === 'member_join' ? 'selected' : ''}>Member joins the server</option>
+                    <option value="member_verify" ${draft.trigger === 'member_verify' ? 'selected' : ''}>Member completes verification</option>
+                    <option value="member_boost" ${draft.trigger === 'member_boost' ? 'selected' : ''}>Member boosts the server</option>
+                    <option value="message_sent" ${draft.trigger === 'message_sent' ? 'selected' : ''}>Member sends a message</option>
+                    <option value="reaction_add" ${draft.trigger === 'reaction_add' ? 'selected' : ''}>Member reacts to a message</option>
+                    <option value="has_role" ${draft.trigger === 'has_role' ? 'selected' : ''}>Member receives a specific role</option>
+                  </select>
+
+                  <div id="rule-modal-cond-wrap" class="${draft.trigger === 'has_role' ? '' : 'hidden'} pt-1">
+                    <label class="block text-[11px] text-neutral-400 mb-1">Required Condition Role</label>
+                    <select id="rule-modal-cond-role" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white">
+                      <option value="">Any role</option>
+                      ${allRoles.map(r => `<option value="${escapeHtml(r.id)}" ${String(r.id) === String(draft.condition_role_id) ? 'selected' : ''}>@${escapeHtml(r.name)}</option>`).join('')}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800 space-y-2.5">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">THEN (Action)</span>
+                  <select id="rule-modal-action" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-white/40">
+                    <option value="add_role" ${draft.action === 'add_role' ? 'selected' : ''}>Add Role</option>
+                    <option value="remove_role" ${draft.action === 'remove_role' ? 'selected' : ''}>Remove Role</option>
+                    <option value="send_dm" ${draft.action === 'send_dm' ? 'selected' : ''}>Send Direct Message (DM)</option>
+                  </select>
+
+                  <div id="rule-modal-role-wrap" class="${draft.action === 'send_dm' ? 'hidden' : ''}">
+                    <label class="block text-[11px] text-neutral-400 mb-1">Target Role</label>
+                    <select id="rule-modal-role" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white">
+                      ${allRoles.map(r => `<option value="${escapeHtml(r.id)}" ${String(r.id) === String(draft.role_id) ? 'selected' : ''}>@${escapeHtml(r.name)}</option>`).join('')}
+                    </select>
+                  </div>
+
+                  <div id="rule-modal-dm-wrap" class="${draft.action === 'send_dm' ? '' : 'hidden'}">
+                    <label class="block text-[11px] text-neutral-400 mb-1">DM Message ({user}, {server}, {memberCount})</label>
+                    <textarea id="rule-modal-dm" rows="2" class="w-full p-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white">${escapeHtml(draft.dm_message)}</textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-5 py-3.5 border-t border-neutral-800 flex items-center justify-end gap-2 bg-neutral-950/60">
+                <button type="button" id="rule-modal-cancel" class="h-9 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-300">Cancel</button>
+                <button type="button" id="rule-modal-save" class="h-9 px-4 rounded-xl bg-white hover:bg-neutral-200 text-xs font-semibold text-black">Save Rule</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('rule-modal-trigger')?.addEventListener('change', (e) => {
+          draft.trigger = e.target.value;
+          document.getElementById('rule-modal-cond-wrap')?.classList.toggle('hidden', draft.trigger !== 'has_role');
+        });
+
+        document.getElementById('rule-modal-action')?.addEventListener('change', (e) => {
+          draft.action = e.target.value;
+          document.getElementById('rule-modal-role-wrap')?.classList.toggle('hidden', draft.action === 'send_dm');
+          document.getElementById('rule-modal-dm-wrap')?.classList.toggle('hidden', draft.action !== 'send_dm');
+        });
+
+        const closeRuleModal = () => { modalRoot.innerHTML = ''; };
+        document.getElementById('rule-modal-close')?.addEventListener('click', closeRuleModal);
+        document.getElementById('rule-modal-cancel')?.addEventListener('click', closeRuleModal);
+
+        document.getElementById('rule-modal-save')?.addEventListener('click', () => {
+          draft.name = document.getElementById('rule-modal-name')?.value?.trim() || 'Custom Rule';
+          draft.trigger = document.getElementById('rule-modal-trigger')?.value || 'member_join';
+          draft.condition_role_id = document.getElementById('rule-modal-cond-role')?.value || '';
+          draft.action = document.getElementById('rule-modal-action')?.value || 'add_role';
+          draft.role_id = document.getElementById('rule-modal-role')?.value || '';
+          draft.dm_message = document.getElementById('rule-modal-dm')?.value || '';
+
+          const existingIdx = state.customRules.findIndex(r => r.id === draft.id);
+          if (existingIdx >= 0) {
+            state.customRules[existingIdx] = draft;
+          } else {
+            state.customRules.push(draft);
+          }
+
+          closeRuleModal();
+          renderCustomRules();
+          saveRolesConfig(true);
+        });
+      };
+
+      renderRuleModal();
+    };
+
+    // Mount & Bind Event Listeners
+    renderMainShell();
+    renderReactionPanelsGrid();
+    renderAutoRoles();
+    renderCustomRules();
+    renderStickyRoles();
+    renderBoosterRole();
+    renderTenureRoles();
+    renderActivityRoles();
+
+    // Dropdown open/close management
+    const closeAllMenus = (exceptId = null) => {
+      ['autoroles-menu', 'sticky-roles-menu', 'booster-role-menu', 'tenure-role-menu', 'activity-role-menu'].forEach(id => {
+        if (id !== exceptId) {
+          document.getElementById(id)?.classList.add('hidden');
+        }
+      });
+    };
+
+    document.getElementById('autoroles-trigger')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById('autoroles-menu');
+      const willOpen = menu?.classList.contains('hidden');
+      closeAllMenus('autoroles-menu');
+      if (menu) {
+        menu.classList.toggle('hidden');
+        if (willOpen) document.getElementById('autoroles-search')?.focus();
+      }
+    });
+
+    document.getElementById('autoroles-search')?.addEventListener('click', (e) => e.stopPropagation());
+    document.getElementById('autoroles-search')?.addEventListener('input', (e) => {
+      renderAutoRoles(e.target.value);
+    });
+
+    document.getElementById('btn-open-rule-modal')?.addEventListener('click', () => {
+      openCustomRuleModal(null);
+    });
+
+    // Sticky Roles switches & dropdown
+    document.getElementById('sticky-enabled-switch')?.addEventListener('click', () => {
+      state.stickyRoles.enabled = !state.stickyRoles.enabled;
+      renderStickyRoles();
+      saveRolesConfig();
+    });
+
+    document.getElementById('sticky-restore-all-switch')?.addEventListener('click', () => {
+      state.stickyRoles.restore_all = !state.stickyRoles.restore_all;
+      renderStickyRoles();
+      saveRolesConfig();
+    });
+
+    document.getElementById('sticky-roles-trigger')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById('sticky-roles-menu');
+      closeAllMenus('sticky-roles-menu');
+      menu?.classList.toggle('hidden');
+    });
+
+    // Booster Role switch & dropdown
+    document.getElementById('booster-enabled-switch')?.addEventListener('click', () => {
+      state.boosterRole.enabled = !state.boosterRole.enabled;
+      renderBoosterRole();
+      saveRolesConfig();
+    });
+
+    document.getElementById('booster-role-trigger')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById('booster-role-menu');
+      closeAllMenus('booster-role-menu');
+      menu?.classList.toggle('hidden');
+    });
+
+    // Tenure Roles dropdown & add button
+    document.getElementById('tenure-role-trigger')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById('tenure-role-menu');
+      closeAllMenus('tenure-role-menu');
+      menu?.classList.toggle('hidden');
+    });
+
+    document.getElementById('btn-add-tenure-role')?.addEventListener('click', () => {
+      if (!state.pendingTenureRoleId) return;
+      const daysVal = Math.max(1, Math.min(3650, parseInt(document.getElementById('tenure-days-input')?.value, 10) || 7));
+      const existing = state.tenureRoles.find(t => String(t.role_id) === String(state.pendingTenureRoleId));
+      if (existing) {
+        existing.days = daysVal;
+      } else {
+        state.tenureRoles.push({ role_id: state.pendingTenureRoleId, days: daysVal });
+      }
+      state.pendingTenureRoleId = '';
+      renderTenureRoles();
+      saveRolesConfig();
+    });
+
+    // Activity Roles dropdown & add button
+    document.getElementById('activity-role-trigger')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById('activity-role-menu');
+      closeAllMenus('activity-role-menu');
+      menu?.classList.toggle('hidden');
+    });
+
+    document.getElementById('btn-add-activity-role')?.addEventListener('click', () => {
+      if (!state.pendingActivityRoleId) return;
+      const daysVal = Math.max(1, Math.min(3650, parseInt(document.getElementById('activity-days-input')?.value, 10) || 7));
+      const existing = state.activityRoles.find(a => String(a.role_id) === String(state.pendingActivityRoleId));
+      if (existing) {
+        existing.days = daysVal;
+      } else {
+        state.activityRoles.push({ role_id: state.pendingActivityRoleId, days: daysVal });
+      }
+      state.pendingActivityRoleId = '';
+      renderActivityRoles();
+      saveRolesConfig();
+    });
+
+    // Global click outside to close dropdown menus
+    document.addEventListener('click', () => closeAllMenus(null));
   } catch (err) {
-    container.innerHTML = `<div class="p-8 text-red-400 text-center">Error: ${err.message}</div>`;
+    container.innerHTML = `<div class="p-8 text-red-400 text-center text-sm">Failed to load Roles configuration: ${err.message}</div>`;
   }
 };

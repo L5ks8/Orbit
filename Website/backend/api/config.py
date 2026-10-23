@@ -340,6 +340,19 @@ class ConfigMixin:
                 "activity_roles": [
                     {"role_id": str(a.get("role_id", "")), "days": int(a.get("days", 7))}
                     for a in joinroles_cfg.get("activity_roles", []) if a.get("role_id")
+                ],
+                "custom_rules": [
+                    {
+                        "id": str(r.get("id", "")),
+                        "name": str(r.get("name", "Custom Rule")),
+                        "enabled": bool(r.get("enabled", True)),
+                        "trigger": str(r.get("trigger", "member_join")),
+                        "condition_role_id": str(r.get("condition_role_id", "")) if r.get("condition_role_id") else "",
+                        "action": str(r.get("action", "add_role")),
+                        "role_id": str(r.get("role_id", "")) if r.get("role_id") else "",
+                        "dm_message": str(r.get("dm_message", ""))
+                    }
+                    for r in joinroles_cfg.get("custom_rules", []) if isinstance(r, dict)
                 ]
             },
             "ticket": {
@@ -744,30 +757,45 @@ class ConfigMixin:
                 jr_data = data["joinroles"]
                 sticky_data = jr_data.get("sticky_roles", {})
                 booster_data = jr_data.get("booster_role", {})
+                user_roles_list = [int(r) for r in jr_data.get("user_roles", []) if r and str(r).isdigit()]
+                has_user_roles = len(user_roles_list) > 0
                 save_join_roles(guild_id, {
-                    "enabled": bool(jr_data.get("enabled", False)),
-                    "user_roles_enabled": bool(jr_data.get("user_roles_enabled", False)),
-                    "user_roles": [int(r) for r in jr_data.get("user_roles", []) if r],
+                    "enabled": bool(jr_data.get("enabled", has_user_roles)),
+                    "user_roles_enabled": bool(jr_data.get("user_roles_enabled", has_user_roles)),
+                    "user_roles": user_roles_list,
                     "bot_roles_enabled": bool(jr_data.get("bot_roles_enabled", False)),
-                    "bot_roles": [int(r) for r in jr_data.get("bot_roles", []) if r],
+                    "bot_roles": [int(r) for r in jr_data.get("bot_roles", []) if r and str(r).isdigit()],
                     "tag_roles_enabled": bool(jr_data.get("tag_roles_enabled", False)),
-                    "tag_role": int(jr_data.get("tag_role")) if jr_data.get("tag_role") else None,
+                    "tag_role": int(jr_data.get("tag_role")) if jr_data.get("tag_role") and str(jr_data.get("tag_role")).isdigit() else None,
                     "sticky_roles": {
                         "enabled": bool(sticky_data.get("enabled", False)),
                         "restore_all": bool(sticky_data.get("restore_all", True)),
-                        "roles": [int(r) for r in sticky_data.get("roles", []) if r]
+                        "roles": [int(r) for r in sticky_data.get("roles", []) if r and str(r).isdigit()]
                     },
                     "booster_role": {
                         "enabled": bool(booster_data.get("enabled", False)),
-                        "role_id": int(booster_data.get("role_id")) if booster_data.get("role_id") else None
+                        "role_id": int(booster_data.get("role_id")) if booster_data.get("role_id") and str(booster_data.get("role_id")).isdigit() else None
                     },
                     "tenure_roles": [
-                        {"role_id": int(t["role_id"]), "days": int(t.get("days", 7))}
-                        for t in jr_data.get("tenure_roles", []) if t.get("role_id")
+                        {"role_id": int(t["role_id"]), "days": max(1, int(t.get("days", 7)))}
+                        for t in jr_data.get("tenure_roles", []) if isinstance(t, dict) and t.get("role_id") and str(t.get("role_id")).isdigit()
                     ],
                     "activity_roles": [
-                        {"role_id": int(a["role_id"]), "days": int(a.get("days", 7))}
-                        for a in jr_data.get("activity_roles", []) if a.get("role_id")
+                        {"role_id": int(a["role_id"]), "days": max(1, int(a.get("days", 7)))}
+                        for a in jr_data.get("activity_roles", []) if isinstance(a, dict) and a.get("role_id") and str(a.get("role_id")).isdigit()
+                    ],
+                    "custom_rules": [
+                        {
+                            "id": str(cr.get("id") or f"rule_{idx}"),
+                            "name": str(cr.get("name") or "Custom Rule"),
+                            "enabled": bool(cr.get("enabled", True)),
+                            "trigger": str(cr.get("trigger") or "member_join"),
+                            "condition_role_id": str(cr.get("condition_role_id") or ""),
+                            "action": str(cr.get("action") or "add_role"),
+                            "role_id": str(cr.get("role_id") or ""),
+                            "dm_message": str(cr.get("dm_message") or "")
+                        }
+                        for idx, cr in enumerate(jr_data.get("custom_rules", [])) if isinstance(cr, dict)
                     ]
                 })
 
