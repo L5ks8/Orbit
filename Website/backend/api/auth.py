@@ -17,7 +17,9 @@ class AuthMixin:
             return web.Response(text="OAuth2 is not configured. Missing DISCORD_CLIENT_ID.", status=500)
             
         import urllib.parse
-        next_url = request.query.get("next", "/")
+        next_url = request.query.get("next", "/dashboard")
+        if not next_url or next_url == "/":
+            next_url = "/dashboard"
         popup = request.query.get("popup", "")
         state_val = next_url
         if popup == "1":
@@ -34,14 +36,14 @@ class AuthMixin:
 
     async def handle_callback(self, request: web.Request):
         code = request.query.get("code")
-        state = request.query.get("state", "/")
+        state = request.query.get("state", "/dashboard")
         import urllib.parse
         try:
             next_url = urllib.parse.unquote(state)
-            if not next_url.startswith("/"):
-                next_url = "/"
+            if not next_url.startswith("/") or next_url == "/":
+                next_url = "/dashboard"
         except:
-            next_url = "/"
+            next_url = "/dashboard"
             
         if not code:
             return web.Response(text="Missing code", status=400)
@@ -106,8 +108,8 @@ class AuthMixin:
         is_popup = "popup=1" in state or "&popup=1" in next_url
         if is_popup:
             next_url = next_url.replace("&popup=1", "").replace("?popup=1", "").replace("popup=1", "")
-            if not next_url or next_url == "?":
-                next_url = "/"
+            if not next_url or next_url == "?" or next_url == "/":
+                next_url = "/dashboard"
             html = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -190,9 +192,20 @@ class AuthMixin:
   setTimeout(function() {
     document.getElementById('card').classList.add('success');
     document.getElementById('title').textContent = 'Login successful!';
-    document.getElementById('desc').textContent = 'You can now close this window.';
-    setTimeout(function() { window.close(); }, 1500);
-  }, 800);
+    document.getElementById('desc').textContent = 'Redirecting to dashboard...';
+    try {
+      if (window.opener && !window.opener.closed) {
+        if (window.opener.Router && typeof window.opener.Router.navigate === 'function') {
+          window.opener.Router.checkAuth().then(function() {
+            window.opener.Router.navigate('/dashboard');
+          });
+        } else {
+          window.opener.location.href = '/dashboard';
+        }
+      }
+    } catch (e) {}
+    setTimeout(function() { window.close(); }, 800);
+  }, 600);
 </script>
 </body>
 </html>"""
@@ -200,6 +213,8 @@ class AuthMixin:
             response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
             return response
         
+        if not next_url or next_url == "/":
+            next_url = "/dashboard"
         response = web.HTTPFound(next_url)
         response.set_cookie("orbit_session", session_id, max_age=86400 * 7, httponly=True)
         return response

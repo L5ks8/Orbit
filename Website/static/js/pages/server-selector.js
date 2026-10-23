@@ -4,6 +4,11 @@
  */
 
 Pages.ServerSelector = async function(container) {
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   const user = await API.getUser();
 
   if (!user) {
@@ -14,7 +19,7 @@ Pages.ServerSelector = async function(container) {
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           </div>
           <h2 class="text-xl font-bold text-white mb-2">Anmeldung erforderlich</h2>
-          <p class="text-neutral-400 text-sm mb-6 leading-relaxed">Melde dich mit Discord an, um deine Server zu verwalten.</p>
+          <p class="text-neutral-400 text-sm mb-6 leading-relaxed">Melden Sie sich mit Discord an, um Ihre Server zu verwalten.</p>
           <button 
             type="button" 
             onclick="API.login('/dashboard').then(() => Router.checkAuth().then(() => Router.handleRoute()))" 
@@ -32,7 +37,7 @@ Pages.ServerSelector = async function(container) {
   const userAvatar = user.avatar 
     ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64` 
     : '/img/logo.png';
-  const userName = user.global_name || user.username || 'User';
+  const userName = user.global_name || user.username || 'Benutzer';
 
   container.innerHTML = `
     <div class="min-h-screen bg-neutral-950">
@@ -40,7 +45,7 @@ Pages.ServerSelector = async function(container) {
       <header class="sticky top-0 z-20 h-16 bg-neutral-900/90 backdrop-blur-sm border-b border-neutral-800">
         <div class="flex items-center justify-between h-full px-4 lg:px-8">
           <div class="flex items-center gap-2 sm:gap-4">
-            <a class="p-1.5 rounded-xl hover:bg-neutral-800 transition-colors group" title="Zurück zur Startseite" href="/">
+            <a class="p-1.5 rounded-xl hover:bg-neutral-800 transition-colors group" title="Zurück nach Hause" href="/">
               <img src="/img/logo.png" alt="Orbit" width="28" height="28" class="rounded-xl group-hover:shadow-lg transition-shadow sm:w-8 sm:h-8">
             </a>
             <div class="w-px h-8 bg-neutral-700 hidden sm:block"></div>
@@ -56,9 +61,9 @@ Pages.ServerSelector = async function(container) {
             <!-- User Menu with dropdown toggle -->
             <div class="relative">
               <button id="user-menu-btn" class="flex items-center gap-1.5 sm:gap-3 p-1 sm:p-1.5 pr-1.5 sm:pr-3 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="Benutzermenü" aria-expanded="false">
-                <img src="${userAvatar}" alt="${userName}" class="w-8 h-8 rounded-xl ring-2 ring-neutral-700 object-cover">
+                <img src="${userAvatar}" alt="${escapeHtml(userName)}" class="w-8 h-8 rounded-xl ring-2 ring-neutral-700 object-cover">
                 <div class="hidden sm:block text-left">
-                  <p class="text-sm font-medium text-white">${userName}</p>
+                  <p class="text-sm font-medium text-white">${escapeHtml(userName)}</p>
                   <p class="text-[10px] text-neutral-500">Mitglied</p>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
@@ -68,7 +73,7 @@ Pages.ServerSelector = async function(container) {
               <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-2xl p-1.5 z-30">
                 <a href="/" class="flex items-center gap-2 px-3 py-2 text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                  Startseite
+                  Zurück nach Hause
                 </a>
                 <button onclick="API.logout()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded-xl transition-colors text-left cursor-pointer">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
@@ -82,16 +87,16 @@ Pages.ServerSelector = async function(container) {
       </header>
 
       <!-- Main Content -->
-      <main class="min-h-[calc(100vh-80px)] bg-neutral-950">
+      <main class="min-h-[calc(100vh-80px)] bg-neutral-50 dark:bg-neutral-950">
         <div class="max-w-6xl mx-auto px-4 py-8">
           
           <!-- Top Row: Title + Refresh Button -->
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 class="text-2xl font-bold text-white">Deine Server</h1>
-              <p id="server-count-label" class="text-sm text-neutral-400 mt-1">Lade Server...</p>
+              <h1 class="text-2xl font-bold text-black dark:text-white">Ihre Server</h1>
+              <p id="server-count-label" class="text-sm text-neutral-400 dark:text-neutral-500 mt-1">0 aktive Server</p>
             </div>
-            <button id="refresh-guilds-btn" onclick="loadGuildsList(true)" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-neutral-400 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 rounded-lg transition-all disabled:opacity-50 cursor-pointer">
+            <button id="refresh-guilds-btn" onclick="loadGuildsList(true)" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 rounded-lg transition-all disabled:opacity-50 cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-4 h-4"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
               Aktualisieren
             </button>
@@ -99,8 +104,8 @@ Pages.ServerSelector = async function(container) {
 
           <!-- Search Input -->
           <div class="relative mb-8">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input id="guild-search-input" placeholder="Server suchen..." class="w-full pl-12 pr-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600 transition-all text-sm" type="text" value="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input id="guild-search-input" placeholder="Suchserver..." class="w-full pl-12 pr-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-neutral-400 dark:focus:border-white transition-all text-sm" type="text" value="">
           </div>
 
           <!-- Add Bot Banner -->
@@ -112,7 +117,7 @@ Pages.ServerSelector = async function(container) {
               </div>
               <div class="flex-1 min-w-0">
                 <h2 class="text-lg font-semibold text-white mb-1">Orbit zu einem Server hinzufügen</h2>
-                <p class="text-sm text-neutral-400">Wähle unten einen Server, um Orbit hinzuzufügen und Moderation, Leveling, Tickets und mehr freizuschalten.</p>
+                <p class="text-sm text-neutral-400">Wählen Sie unten einen Server aus, um Orbit hinzuzufügen und Moderation, Leveling, Tickets und mehr freizuschalten.</p>
               </div>
               <a href="https://discord.com/oauth2/authorize?client_id=1411032158406541353&permissions=8&scope=bot%20applications.commands" target="_blank" class="flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-neutral-200 text-black text-sm font-semibold rounded-xl transition-colors shrink-0 cursor-pointer">
                 Zum Server hinzufügen
@@ -122,10 +127,14 @@ Pages.ServerSelector = async function(container) {
           </div>
 
           <!-- Guilds Grid Container -->
-          <div id="guilds-content" class="space-y-6">
-            <div class="flex items-center justify-center p-12 text-neutral-500 text-sm">
-              <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              Lade deine Discord Server...
+          <div class="space-y-6">
+            <div>
+              <div id="guilds-content">
+                <div class="flex items-center justify-center p-12 text-neutral-500 text-sm">
+                  <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  Lade Ihre Server...
+                </div>
+              </div>
             </div>
           </div>
 
@@ -164,7 +173,7 @@ Pages.ServerSelector = async function(container) {
       if (content) {
         content.innerHTML = `
           <div class="p-8 rounded-2xl bg-red-950/20 border border-red-900/30 text-red-400 text-center">
-            Fehler beim Laden der Server. Bitte melde dich erneut an.
+            Fehler beim Laden der Server. Bitte melden Sie sich erneut an.
           </div>
         `;
       }
@@ -183,7 +192,7 @@ Pages.ServerSelector = async function(container) {
     if (filtered.length === 0) {
       content.innerHTML = `
         <div class="text-center py-16 text-neutral-500">
-          <p class="text-sm">Keine Server gefunden für "${query}".</p>
+          <p class="text-sm">Keine Server gefunden für "${escapeHtml(query)}".</p>
         </div>
       `;
       return;
@@ -225,37 +234,37 @@ Pages.ServerSelector = async function(container) {
       <${isExternal ? 'a' : 'button'} 
         href="${targetUrl}" 
         ${isExternal ? 'target="_blank"' : `onclick="Router.navigate('${manageUrl}')"`}
-        class="group relative bg-neutral-900 border border-neutral-800 hover:border-white/30 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg overflow-hidden text-left w-full cursor-pointer block"
+        class="group relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400/30 dark:hover:border-white/30 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg overflow-hidden text-left w-full cursor-pointer block"
       >
-        <div class="absolute inset-0 bg-gradient-to-br from-neutral-950 to-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
         <div class="relative flex items-center gap-4">
           
           <!-- Server Icon -->
           <div class="relative flex-shrink-0">
             ${iconUrl ? `
-              <img src="${iconUrl}" alt="${g.name}" class="w-14 h-14 rounded-xl ${hasBot ? '' : 'grayscale group-hover:grayscale-0'} transition-all duration-200 group-hover:scale-105 object-cover">
+              <img src="${iconUrl}" alt="${escapeHtml(g.name)}" class="w-14 h-14 rounded-xl ${hasBot ? '' : 'grayscale group-hover:grayscale-0'} transition-all duration-200 group-hover:scale-105 object-cover">
             ` : `
-              <div class="w-14 h-14 rounded-xl bg-neutral-800 flex items-center justify-center group-hover:bg-neutral-700 transition-colors">
-                <span class="text-lg font-semibold text-neutral-400 group-hover:text-neutral-200">${initials}</span>
+              <div class="w-14 h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700 transition-colors">
+                <span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">${escapeHtml(initials)}</span>
               </div>
             `}
-            <div class="absolute -inset-1 border-2 border-dashed border-neutral-700 group-hover:border-white/30 rounded-xl transition-colors pointer-events-none"></div>
+            <div class="absolute -inset-1 border-2 border-dashed border-neutral-300 dark:border-neutral-700 group-hover:border-neutral-400/30 dark:group-hover:border-white/30 rounded-xl transition-colors pointer-events-none"></div>
           </div>
 
           <!-- Server Name & Status -->
           <div class="flex-1 min-w-0">
-            <h3 class="font-semibold text-white text-base truncate group-hover:text-neutral-200 transition-colors">${g.name}</h3>
-            <p class="text-sm ${hasBot ? 'text-emerald-400 font-medium' : 'text-neutral-500'} mt-0.5">
+            <h3 class="font-semibold text-black dark:text-white text-base truncate group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">${escapeHtml(g.name)}</h3>
+            <p class="text-sm ${hasBot ? 'text-emerald-400 dark:text-emerald-400 font-medium' : 'text-neutral-400 dark:text-neutral-500'} mt-0.5">
               ${hasBot ? 'Bot installiert' : 'Bot nicht installiert'}
             </p>
             <div class="flex items-center gap-2 mt-2">
               ${isOwner ? `
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3 h-3"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>
-                  Inhaber
+                  Eigentümer
                 </span>
               ` : `
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-white/[0.08] text-neutral-400 rounded-full">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-white/[0.08] text-neutral-600 dark:text-neutral-400 rounded-full">
                   Admin
                 </span>
               `}
@@ -264,7 +273,7 @@ Pages.ServerSelector = async function(container) {
 
           <!-- Action Button -->
           <div class="flex-shrink-0">
-            <div class="flex items-center gap-2 px-4 py-2 bg-neutral-800 group-hover:bg-white text-white group-hover:text-black text-sm font-medium rounded-xl transition-all duration-200">
+            <div class="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 group-hover:bg-neutral-800 dark:group-hover:bg-white text-black dark:text-white group-hover:text-white dark:group-hover:text-black text-sm font-medium rounded-xl transition-all duration-200">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-4 h-4"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
               <span class="hidden sm:inline">${hasBot ? 'Verwalten' : 'Bot hinzufügen'}</span>
             </div>

@@ -68,7 +68,7 @@ const API = {
     }
   },
 
-  login(nextUrl = '/') {
+  login(nextUrl = '/dashboard') {
     const popup = 1;
     const loginUrl = `/auth/login?next=${encodeURIComponent(nextUrl)}&popup=${popup}`;
     const w = 500, h = 700;
@@ -80,9 +80,19 @@ const API = {
         window.location.href = `/auth/login?next=${encodeURIComponent(nextUrl)}`;
         return;
       }
-      const timer = setInterval(() => {
+      const timer = setInterval(async () => {
         if (win.closed) {
           clearInterval(timer);
+          try {
+            if (window.Router) {
+              await window.Router.checkAuth();
+              window.Router.navigate(nextUrl || '/dashboard');
+            } else {
+              window.location.href = nextUrl || '/dashboard';
+            }
+          } catch (_) {
+            window.location.href = nextUrl || '/dashboard';
+          }
           resolve();
         }
       }, 500);
