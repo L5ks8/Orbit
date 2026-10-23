@@ -121,9 +121,11 @@ Pages.ServerSelector = async function(container) {
           </div>
 
           <!-- Search Input -->
-          <div class="relative mb-8">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input id="guild-search-input" placeholder="Server suchen..." class="w-full pl-11 pr-4 py-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-neutral-700 transition-colors" type="text" value="">
+          <div class="relative flex items-center mb-8">
+            <div class="absolute left-4 flex items-center justify-center pointer-events-none text-neutral-500">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search w-4 h-4"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            </div>
+            <input id="guild-search-input" placeholder="Server suchen..." class="w-full h-11 pl-11 pr-4 bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-neutral-700 transition-colors" type="text" value="">
           </div>
 
           <!-- Guilds Sections Container -->
@@ -219,42 +221,42 @@ Pages.ServerSelector = async function(container) {
       return;
     }
 
-    let html = '';
+    let html = '<div class="space-y-6">';
 
-    // 1. Active Servers (matches Screenshot 2 top section)
+    // 1. Active Servers (where bot is present)
     if (activeGuilds.length > 0) {
       html += `
-        <div class="mb-8">
-          <div class="flex items-center gap-1.5 mb-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
-            <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
-            <span>Inhaber</span>
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>
+            <span class="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Inhaber</span>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             ${activeGuilds.map(g => renderActiveGuildCard(g)).join('')}
           </div>
         </div>
       `;
     }
 
-    // 2. Divider Line (matches Screenshot 2 middle divider)
+    // 2. Inactive Servers (where bot is not present)
     if (inactiveGuilds.length > 0) {
-      if (activeGuilds.length > 0) {
-        html += `
-          <div class="relative my-8 flex items-center justify-center">
-            <div class="w-full border-t border-neutral-800"></div>
-            <span class="absolute px-4 bg-neutral-950 text-xs font-medium text-neutral-500">+ Noch nicht hinzugefügt</span>
-          </div>
-        `;
-      }
-
-      // 3. Inactive Servers (matches Screenshot 2 3-column grid)
       html += `
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          ${inactiveGuilds.map(g => renderInactiveGuildCard(g)).join('')}
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex-1 h-px bg-neutral-200 dark:bg-neutral-800"></div>
+            <span class="text-xs font-medium text-neutral-400 dark:text-neutral-500 flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3 h-3"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Noch nicht hinzugefügt
+            </span>
+            <div class="flex-1 h-px bg-neutral-200 dark:bg-neutral-800"></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${inactiveGuilds.map(g => renderInactiveGuildCard(g)).join('')}
+          </div>
         </div>
       `;
     }
 
+    html += '</div>';
     content.innerHTML = html;
   };
 
@@ -276,50 +278,48 @@ Pages.ServerSelector = async function(container) {
     }
 
     return `
-      <div onclick="Router.navigate('/dashboard/${g.id}')" class="group relative bg-neutral-900 hover:bg-neutral-800/90 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-4 sm:p-5 flex items-center justify-between transition-all duration-150 cursor-pointer shadow-lg select-none">
-        <div class="flex items-center gap-4 min-w-0">
-          <!-- Server Avatar with dashed ring and status dot -->
-          <div class="relative shrink-0">
-            <div class="w-14 h-14 rounded-2xl p-0.5 border border-dashed border-neutral-700 overflow-hidden bg-neutral-800 flex items-center justify-center">
-              ${iconUrl 
-                ? `<img src="${iconUrl}" class="w-full h-full object-cover rounded-xl" alt="${escapeHtml(g.name)}">`
-                : `<span class="text-base font-bold text-neutral-300">${escapeHtml(initials)}</span>`
-              }
-            </div>
-            <!-- Green active dot badge -->
-            <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-neutral-900 flex items-center justify-center shadow-[0_0_8px_rgba(34,197,94,0.6)]">
-              <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+      <a class="group relative bg-white dark:bg-neutral-900 border rounded-2xl p-5 transition-all duration-200 hover:shadow-lg overflow-hidden border-neutral-200 dark:border-neutral-800 hover:border-neutral-400/30 dark:hover:border-white/30 cursor-pointer block select-none" href="/dashboard/${g.id}">
+        <div class="absolute inset-0 bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        <div class="relative flex items-center gap-4">
+          <div class="relative flex-shrink-0">
+            ${iconUrl 
+              ? `<img src="${iconUrl}" alt="${escapeHtml(g.name)}" class="w-14 h-14 rounded-xl group-hover:scale-105 transition-transform duration-300 ring-2 ring-neutral-200 dark:ring-neutral-800 group-hover:ring-neutral-400/30 dark:group-hover:ring-white/30 object-cover">`
+              : `<div class="w-14 h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700 transition-colors ring-2 ring-neutral-200 dark:ring-neutral-800 group-hover:ring-neutral-400/30 dark:group-hover:ring-white/30"><span class="text-lg font-bold text-black dark:text-white">${escapeHtml(initials)}</span></div>`
+            }
+            <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-neutral-900 flex items-center justify-center shadow-lg shadow-green-500/50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-2.5 h-2.5 text-white"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
             </div>
           </div>
-
-          <!-- Server Name, Status & Badges -->
-          <div class="min-w-0">
-            <h3 class="text-base font-semibold text-white truncate group-hover:text-neutral-100">${escapeHtml(g.name)}</h3>
-            <div class="flex items-center gap-1.5 mt-0.5 text-xs text-green-400 font-medium">
-              <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-              <span>Aktiv</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5">
+              <h3 class="font-semibold text-black dark:text-white text-base truncate group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">${escapeHtml(g.name)}</h3>
+              <button type="button" class="flex-shrink-0 w-10 h-10 -m-2 flex items-center justify-center rounded-md transition-all duration-200 opacity-60 sm:opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 text-neutral-500 hover:text-white" title="Server anpinnen" onclick="event.preventDefault(); event.stopPropagation();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pin w-3 h-3"><line x1="12" x2="12" y1="17" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path></svg>
+              </button>
             </div>
-            <div class="flex items-center gap-1.5 mt-2">
-              <span class="px-2 py-0.5 text-[10px] font-medium bg-neutral-800 text-neutral-400 rounded-md border border-neutral-700/60">Kostenlos</span>
+            <div class="flex items-center gap-3 mt-1">
+              <div class="flex items-center gap-1 text-sm text-green-500">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span><span>Aktiv</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 rounded-full">Kostenlos</span>
               ${isOwner ? `
-                <span class="px-2 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 inline-flex items-center gap-1">
-                  <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
-                  Inhaber
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3 h-3"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>Inhaber
                 </span>
               ` : `
-                <span class="px-2 py-0.5 text-[10px] font-medium bg-neutral-800 text-neutral-400 rounded-md border border-neutral-700/60">Admin</span>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 rounded-full">Admin</span>
               `}
             </div>
           </div>
-        </div>
-
-        <!-- Arrow Action Button -->
-        <div class="shrink-0 pl-3">
-          <div class="w-9 h-9 rounded-xl bg-neutral-800 group-hover:bg-neutral-700 group-hover:text-white flex items-center justify-center text-neutral-400 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-4 h-4"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center w-10 h-10 bg-neutral-50 dark:bg-neutral-950 group-hover:bg-neutral-800 dark:group-hover:bg-white text-neutral-500 dark:text-neutral-400 group-hover:text-white dark:group-hover:text-black rounded-xl transition-all duration-200 group-hover:scale-110">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-5 h-5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </div>
           </div>
         </div>
-      </div>
+      </a>
     `;
   };
 
@@ -334,34 +334,37 @@ Pages.ServerSelector = async function(container) {
     const inviteUrl = `https://discord.com/oauth2/authorize?client_id=1480221897131299037&permissions=8&scope=bot%20applications.commands&guild_id=${g.id}`;
 
     return `
-      <div class="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-4 flex items-center justify-between gap-3 transition-colors">
-        <div class="flex items-center gap-3.5 min-w-0">
-          <div class="w-12 h-12 rounded-xl p-0.5 border border-dashed border-neutral-700/80 overflow-hidden bg-neutral-800 flex items-center justify-center shrink-0">
+      <a href="${inviteUrl}" target="_blank" class="group relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400/30 dark:hover:border-white/30 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg overflow-hidden text-left w-full cursor-pointer block">
+        <div class="absolute inset-0 bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        <div class="relative flex items-center gap-4">
+          <div class="relative flex-shrink-0">
             ${iconUrl 
-              ? `<img src="${iconUrl}" class="w-full h-full object-cover rounded-lg grayscale opacity-70" alt="${escapeHtml(g.name)}">`
-              : `<span class="text-sm font-semibold text-neutral-400">${escapeHtml(initials)}</span>`
+              ? `<img src="${iconUrl}" alt="${escapeHtml(g.name)}" class="w-14 h-14 rounded-xl grayscale group-hover:grayscale-0 transition-all duration-200 group-hover:scale-105 object-cover">`
+              : `<div class="w-14 h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700 transition-colors"><span class="text-lg font-semibold text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">${escapeHtml(initials)}</span></div>`
             }
+            <div class="absolute -inset-1 border-2 border-dashed border-neutral-300 dark:border-neutral-700 group-hover:border-neutral-400/30 dark:group-hover:border-white/30 rounded-xl transition-colors"></div>
           </div>
-          <div class="min-w-0">
-            <h4 class="text-sm font-semibold text-white truncate">${escapeHtml(g.name)}</h4>
-            <p class="text-xs text-neutral-500 mt-0.5">Bot nicht installiert</p>
-            <div class="mt-1.5">
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-black dark:text-white text-base truncate group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">${escapeHtml(g.name)}</h3>
+            <p class="text-sm text-neutral-400 dark:text-neutral-500 mt-0.5">Bot nicht installiert</p>
+            <div class="flex items-center gap-2 mt-2">
               ${isOwner ? `
-                <span class="px-2 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-400 rounded-md border border-amber-500/20 inline-flex items-center gap-1">
-                  <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
-                  Inhaber
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3 h-3"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>Inhaber
                 </span>
               ` : `
-                <span class="px-2 py-0.5 text-[10px] font-medium bg-neutral-800 text-neutral-400 rounded-md border border-neutral-700/60">Admin</span>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 rounded-full">Admin</span>
               `}
             </div>
           </div>
+          <div class="flex-shrink-0">
+            <div class="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 group-hover:bg-neutral-800 dark:group-hover:bg-white text-black dark:text-white group-hover:text-white dark:group-hover:text-black text-sm font-medium rounded-xl transition-all duration-200">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-4 h-4"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+              <span class="hidden sm:inline">Bot hinzufügen</span>
+            </div>
+          </div>
         </div>
-        <a href="${inviteUrl}" target="_blank" class="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-medium rounded-xl border border-neutral-700 transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-3.5 h-3.5"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
-          <span>Bot hinzufügen</span>
-        </a>
-      </div>
+      </a>
     `;
   };
 

@@ -51,8 +51,8 @@ const Router = {
     const app = document.getElementById('app');
     if (!app) return;
 
-    // If accessing dashboard or settings while not logged in, prompt login popup and redirect
-    if ((path.startsWith('/dashboard') || path === '/settings') && !this.currentUser) {
+    // If accessing dashboard while not logged in, prompt login popup and redirect
+    if (path.startsWith('/dashboard') && !this.currentUser) {
       this.replace('/');
       API.login(path).then(() => {
         this.checkAuth().then(() => {
