@@ -24,10 +24,28 @@ DashboardTabs.Invites = async function (container, guildId) {
   let allRoles = [];
 
   try {
-    const res = await API.getConfig(guildId);
-    cfgData = res?.config?.invites || {};
-    allChannels = Array.isArray(res?.channels) ? res.channels : [];
-    allRoles = Array.isArray(res?.roles) ? res.roles : [];
+    const [cfgRes, chRes, roleRes] = await Promise.allSettled([
+      API.getConfig(guildId),
+      API.getChannels(guildId),
+      API.getRoles(guildId)
+    ]);
+    if (cfgRes.status === 'fulfilled' && cfgRes.value) {
+      cfgData = cfgRes.value?.config?.invites || {};
+      if (Array.isArray(cfgRes.value?.channels) && cfgRes.value.channels.length > 0) {
+        allChannels = cfgRes.value.channels;
+      }
+      if (Array.isArray(cfgRes.value?.roles) && cfgRes.value.roles.length > 0) {
+        allRoles = cfgRes.value.roles;
+      }
+    }
+    if (chRes.status === 'fulfilled' && Array.isArray(chRes.value?.channels) && chRes.value.channels.length > 0) {
+      allChannels = chRes.value.channels.filter(
+        c => c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || !c.type
+      );
+    }
+    if (roleRes.status === 'fulfilled' && Array.isArray(roleRes.value?.roles) && roleRes.value.roles.length > 0) {
+      allRoles = roleRes.value.roles;
+    }
   } catch (err) {
     console.warn('[Invites] Failed to load config:', err);
   }
@@ -644,10 +662,16 @@ DashboardTabs.Invites = async function (container, guildId) {
                             </svg>
                           </div>
                         </button>
-                        ${rewardRoleDropdownOpen ? `
-                          <div class="orbit-dropdown-menu absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto p-1">
+                        <div id="inv-reward-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${rewardRoleDropdownOpen ? '' : 'hidden'} absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                          <div class="p-2 border-b border-neutral-800 shrink-0">
+                            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="inv-reward-role-search" placeholder="Rolle suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full">
+                            </div>
+                          </div>
+                          <div class="overflow-y-auto overscroll-contain p-1 max-h-48 scrollbar-thin" data-lenis-prevent="true">
                             ${allRoles.length > 0 ? allRoles.map(r => `
-                              <button type="button" data-pick-reward-role="${escapeHtml(r.id)}" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-left hover:bg-neutral-800 transition-colors ${String(r.id) === String(draftRewardRoleId) ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300'}">
+                              <button type="button" data-pick-reward-role="${escapeHtml(r.id)}" data-search-label="${escapeHtml((r.name || '').toLowerCase())}" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-left hover:bg-neutral-800 transition-colors cursor-pointer ${String(r.id) === String(draftRewardRoleId) ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300'}">
                                 <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(r.color || '#b9bbbe')};"></span>
                                 <span class="truncate">${escapeHtml(r.name)}</span>
                               </button>
@@ -655,7 +679,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                               <div class="px-3 py-2 text-xs text-neutral-500">Keine Rollen verfügbar</div>
                             `}
                           </div>
-                        ` : ''}
+                        </div>
                       </div>
                     </div>
                     <button type="button" id="inv-reward-add-btn" ${canAddReward ? '' : 'disabled=""'} class="flex items-center gap-1 px-3 py-2.5 rounded-xl bg-white text-black text-xs font-medium hover:bg-neutral-200 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed transition-[transform,background-color,color] duration-150 ease-out flex-shrink-0 cursor-pointer">
@@ -704,10 +728,16 @@ DashboardTabs.Invites = async function (container, guildId) {
                                 </svg>
                               </div>
                             </button>
-                            ${autoPostChannelDropdownOpen ? `
-                              <div class="orbit-dropdown-menu absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto p-1">
+                            <div id="inv-autopost-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${autoPostChannelDropdownOpen ? '' : 'hidden'} absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-64 flex flex-col overflow-hidden">
+                              <div class="p-2 border-b border-neutral-800 shrink-0">
+                                <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                                  <input type="text" id="inv-autopost-channel-search" placeholder="Kanal suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full">
+                                </div>
+                              </div>
+                              <div class="overflow-y-auto overscroll-contain p-1 max-h-48 scrollbar-thin" data-lenis-prevent="true">
                                 ${allChannels.length > 0 ? allChannels.map(ch => `
-                                  <button type="button" data-pick-autopost-channel="${escapeHtml(ch.id)}" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-left hover:bg-neutral-800 transition-colors ${String(ch.id) === String(state.auto_post.channel_id) ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300'}">
+                                  <button type="button" data-pick-autopost-channel="${escapeHtml(ch.id)}" data-search-label="${escapeHtml((ch.name || '').toLowerCase())}" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-left hover:bg-neutral-800 transition-colors cursor-pointer ${String(ch.id) === String(state.auto_post.channel_id) ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300'}">
                                     <span class="text-neutral-500">#</span>
                                     <span class="truncate">${escapeHtml(ch.name)}</span>
                                   </button>
@@ -715,7 +745,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                                   <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle verfügbar</div>
                                 `}
                               </div>
-                            ` : ''}
+                            </div>
                           </div>
 
                           <div class="flex items-center gap-2">
@@ -828,7 +858,7 @@ DashboardTabs.Invites = async function (container, guildId) {
       const selectedChannel = allChannels.find(c => String(c.id) === String(draftChannelId));
       modalRoot.innerHTML = `
         <div id="inv-source-modal-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-          <div class="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col">
+          <div class="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] flex flex-col">
             <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-800">
               <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/15 flex items-center justify-center">
@@ -870,19 +900,27 @@ DashboardTabs.Invites = async function (container, guildId) {
                 <label class="text-xs font-medium text-neutral-300 block mb-1.5">Zielkanal für Einladung</label>
                 <div class="relative">
                   <button type="button" id="inv-source-channel-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-sm text-left cursor-pointer">
-                    <span class="truncate text-white">${selectedChannel ? `# ${escapeHtml(selectedChannel.name)}` : 'Kanal auswählen...'}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-400"><path d="m6 9 6 6 6-6"></path></svg>
+                    <span id="inv-source-channel-label" class="truncate text-white">${selectedChannel ? `# ${escapeHtml(selectedChannel.name)}` : 'Kanal auswählen...'}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-400 transition-transform duration-200 ${modalChannelDropdownOpen ? 'rotate-180' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
                   </button>
-                  ${modalChannelDropdownOpen ? `
-                    <div class="orbit-dropdown-menu absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto p-1">
-                      ${allChannels.map(ch => `
-                        <button type="button" data-pick-source-channel="${escapeHtml(ch.id)}" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-left hover:bg-neutral-800 ${String(ch.id) === String(draftChannelId) ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300'}">
+                  <div id="inv-source-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${modalChannelDropdownOpen ? '' : 'hidden'} absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                    <div class="p-2 border-b border-neutral-800 shrink-0">
+                      <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                        <input type="text" id="inv-source-channel-search" placeholder="Kanal suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full">
+                      </div>
+                    </div>
+                    <div class="overflow-y-auto overscroll-contain p-1 max-h-48 scrollbar-thin" data-lenis-prevent="true">
+                      ${allChannels.length > 0 ? allChannels.map(ch => `
+                        <button type="button" data-pick-source-channel="${escapeHtml(ch.id)}" data-search-label="${escapeHtml((ch.name || '').toLowerCase())}" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-left hover:bg-neutral-800 cursor-pointer ${String(ch.id) === String(draftChannelId) ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300'}">
                           <span class="text-neutral-500">#</span>
                           <span class="truncate">${escapeHtml(ch.name)}</span>
                         </button>
-                      `).join('')}
+                      `).join('') : `
+                        <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle verfügbar</div>
+                      `}
                     </div>
-                  ` : ''}
+                  </div>
                 </div>
               </div>
 
@@ -910,7 +948,16 @@ DashboardTabs.Invites = async function (container, guildId) {
       document.getElementById('inv-source-modal-close')?.addEventListener('click', closeModal);
       document.getElementById('inv-source-modal-cancel')?.addEventListener('click', closeModal);
       document.getElementById('inv-source-modal-backdrop')?.addEventListener('click', (e) => {
-        if (e.target.id === 'inv-source-modal-backdrop') closeModal();
+        if (e.target.id === 'inv-source-modal-backdrop') {
+          closeModal();
+          return;
+        }
+        const chMenu = document.getElementById('inv-source-channel-menu');
+        const chBtn = document.getElementById('inv-source-channel-btn');
+        if (chMenu && !chMenu.classList.contains('hidden') && !chMenu.contains(e.target) && (!chBtn || !chBtn.contains(e.target))) {
+          modalChannelDropdownOpen = false;
+          chMenu.classList.add('hidden');
+        }
       });
 
       document.getElementById('inv-source-name-input')?.addEventListener('input', (e) => {
@@ -935,8 +982,28 @@ DashboardTabs.Invites = async function (container, guildId) {
       document.getElementById('inv-source-channel-btn')?.addEventListener('click', (e) => {
         e.stopPropagation();
         modalChannelDropdownOpen = !modalChannelDropdownOpen;
-        renderModal();
+        const chMenu = document.getElementById('inv-source-channel-menu');
+        if (chMenu) {
+          chMenu.classList.toggle('hidden', !modalChannelDropdownOpen);
+          if (modalChannelDropdownOpen) {
+            const searchIn = document.getElementById('inv-source-channel-search');
+            if (searchIn) setTimeout(() => searchIn.focus(), 10);
+          }
+          if (window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
+        }
       });
+
+      const modalSearchInput = document.getElementById('inv-source-channel-search');
+      if (modalSearchInput) {
+        modalSearchInput.addEventListener('click', (e) => e.stopPropagation());
+        modalSearchInput.addEventListener('input', (e) => {
+          const term = (e.target.value || '').toLowerCase();
+          modalRoot.querySelectorAll('[data-pick-source-channel]').forEach(item => {
+            const lbl = item.getAttribute('data-search-label') || '';
+            item.style.display = lbl.includes(term) ? 'flex' : 'none';
+          });
+        });
+      }
 
       modalRoot.querySelectorAll('[data-pick-source-channel]').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -1022,8 +1089,30 @@ DashboardTabs.Invites = async function (container, guildId) {
       rewardRoleDropdownOpen = !rewardRoleDropdownOpen;
       autoPostChannelDropdownOpen = false;
       autoPostColorPopoverOpen = false;
-      render();
+      const roleMenu = document.getElementById('inv-reward-role-menu');
+      const chMenu = document.getElementById('inv-autopost-channel-menu');
+      if (chMenu) chMenu.classList.add('hidden');
+      if (roleMenu) {
+        roleMenu.classList.toggle('hidden', !rewardRoleDropdownOpen);
+        if (rewardRoleDropdownOpen) {
+          const s = document.getElementById('inv-reward-role-search');
+          if (s) setTimeout(() => s.focus(), 10);
+        }
+      }
+      if (window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
     });
+
+    const roleSearchInput = document.getElementById('inv-reward-role-search');
+    if (roleSearchInput) {
+      roleSearchInput.addEventListener('click', (e) => e.stopPropagation());
+      roleSearchInput.addEventListener('input', (e) => {
+        const term = (e.target.value || '').toLowerCase();
+        container.querySelectorAll('[data-pick-reward-role]').forEach(item => {
+          const lbl = item.getAttribute('data-search-label') || '';
+          item.style.display = lbl.includes(term) ? 'flex' : 'none';
+        });
+      });
+    }
 
     container.querySelectorAll('[data-pick-reward-role]').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1072,8 +1161,30 @@ DashboardTabs.Invites = async function (container, guildId) {
       autoPostChannelDropdownOpen = !autoPostChannelDropdownOpen;
       rewardRoleDropdownOpen = false;
       autoPostColorPopoverOpen = false;
-      render();
+      const roleMenu = document.getElementById('inv-reward-role-menu');
+      const chMenu = document.getElementById('inv-autopost-channel-menu');
+      if (roleMenu) roleMenu.classList.add('hidden');
+      if (chMenu) {
+        chMenu.classList.toggle('hidden', !autoPostChannelDropdownOpen);
+        if (autoPostChannelDropdownOpen) {
+          const s = document.getElementById('inv-autopost-channel-search');
+          if (s) setTimeout(() => s.focus(), 10);
+        }
+      }
+      if (window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
     });
+
+    const autoPostSearchInput = document.getElementById('inv-autopost-channel-search');
+    if (autoPostSearchInput) {
+      autoPostSearchInput.addEventListener('click', (e) => e.stopPropagation());
+      autoPostSearchInput.addEventListener('input', (e) => {
+        const term = (e.target.value || '').toLowerCase();
+        container.querySelectorAll('[data-pick-autopost-channel]').forEach(item => {
+          const lbl = item.getAttribute('data-search-label') || '';
+          item.style.display = lbl.includes(term) ? 'flex' : 'none';
+        });
+      });
+    }
 
     container.querySelectorAll('[data-pick-autopost-channel]').forEach(btn => {
       btn.addEventListener('click', (e) => {

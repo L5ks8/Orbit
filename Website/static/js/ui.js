@@ -196,6 +196,7 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
     };
 
     if (searchInput) {
+      searchInput.onclick = (e) => e.stopPropagation();
       searchInput.oninput = (e) => filter(e.target.value);
     }
 
@@ -230,16 +231,15 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
       <div 
         id="${containerId}-menu" 
         data-lenis-prevent="true"
+        style="z-index: 99999;"
         class="custom-select-menu orbit-dropdown-menu hidden absolute top-full left-0 right-0 mt-1.5 z-[99999] bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col"
       >
-        ${options.length > 7 ? `
-          <div class="p-2 border-b border-neutral-800 shrink-0">
-            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="text-neutral-500">${icon('search', 14)}</span>
-              <input type="text" id="${containerId}-search" placeholder="Search..." class="bg-transparent text-white focus:outline-none w-full">
-            </div>
+        <div class="p-2 border-b border-neutral-800 shrink-0">
+          <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+            <span class="text-neutral-500">${icon('search', 14)}</span>
+            <input type="text" id="${containerId}-search" placeholder="Suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full">
           </div>
-        ` : ''}
+        </div>
         <div class="overflow-y-auto overscroll-contain p-1 flex flex-col gap-0.5 scrollbar-thin" data-lenis-prevent="true">
           ${options.map(opt => `
             <div 
@@ -383,6 +383,53 @@ const OrbitDropdownManager = {
     });
   },
 
+  ensureSearchBar(menu) {
+    if (menu.dataset.orbitSearchInit === 'true') return;
+    if (menu.querySelector('input[type="text"], input[type="search"]')) {
+      menu.dataset.orbitSearchInit = 'true';
+      return;
+    }
+    // Skip 3-dot action menus or color swatch popovers
+    if (
+      menu.hasAttribute('data-poll-menu') ||
+      menu.querySelector('[data-pick-autopost-color], [data-poll-action], [data-msg-action], [data-panel-action]')
+    ) {
+      menu.dataset.orbitSearchInit = 'true';
+      return;
+    }
+    const items = Array.from(menu.querySelectorAll('button, .select-item'));
+    if (items.length === 0) return;
+    const hasTextItems = items.some(it => (it.textContent || '').trim().length > 0);
+    if (!hasTextItems) {
+      menu.dataset.orbitSearchInit = 'true';
+      return;
+    }
+    menu.dataset.orbitSearchInit = 'true';
+    const searchWrap = document.createElement('div');
+    searchWrap.className = 'orbit-auto-search sticky top-0 z-20 bg-neutral-900 p-1.5 border-b border-neutral-800 shrink-0';
+    searchWrap.innerHTML = `
+      <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="text" placeholder="Suchen..." class="orbit-auto-search-input bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs">
+      </div>
+    `;
+    searchWrap.addEventListener('click', (e) => e.stopPropagation());
+    const input = searchWrap.querySelector('input');
+    input.addEventListener('click', (e) => e.stopPropagation());
+    input.addEventListener('keydown', (e) => e.stopPropagation());
+    input.addEventListener('input', (e) => {
+      const term = (e.target.value || '').toLowerCase().trim();
+      const currentItems = menu.querySelectorAll('button, .select-item');
+      currentItems.forEach(it => {
+        if (searchWrap.contains(it)) return;
+        const txt = (it.textContent || '').toLowerCase();
+        it.style.display = (!term || txt.includes(term)) ? '' : 'none';
+      });
+    });
+    menu.insertBefore(searchWrap, menu.firstChild);
+    setTimeout(() => input.focus(), 10);
+  },
+
   sync() {
     const openMenus = this.getOpenDropdowns();
     this.activeOpenMenus = openMenus;
@@ -391,6 +438,7 @@ const OrbitDropdownManager = {
     const nextUnclipped = new Set();
 
     openMenus.forEach(menu => {
+      this.ensureSearchBar(menu);
       if (!menu.classList.contains('orbit-dropdown-active-menu')) {
         menu.classList.add('orbit-dropdown-active-menu');
       }
@@ -408,9 +456,9 @@ const OrbitDropdownManager = {
         }
       });
 
-      // Elevate ancestor stacking contexts so sibling cards below never cover the open dropdown
+      // Elevate ancestor stacking contexts so sibling cards or modal boxes never clip or cover the open dropdown
       let curr = menu.parentElement;
-      const stopRoot = document.getElementById('dash-tab-content') || document.body;
+      const stopRoot = document.getElementById('dash-tab-content');
       while (curr && curr !== stopRoot && curr !== document.body) {
         nextElevated.add(curr);
         if (!curr.classList.contains('orbit-dropdown-ancestor-active')) {
@@ -420,7 +468,6 @@ const OrbitDropdownManager = {
           curr.classList.contains('overflow-hidden') &&
           !curr.classList.contains('overflow-y-auto') &&
           !curr.classList.contains('h-full') &&
-          !curr.classList.contains('flex-1') &&
           !curr.hasAttribute('data-tour')
         ) {
           nextUnclipped.add(curr);
