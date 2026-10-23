@@ -235,12 +235,17 @@ class GuildsMixin:
                 if not bot_in_server:
                     continue
                 settings_cfg = load_settings_config(int(g["id"]))
-                manager_roles = settings_cfg.get("manager_roles", [])
-                if manager_roles:
-                    member = bot_guild.get_member(int(user["id"]))
-                    if not (member and any(str(r.id) in manager_roles for r in member.roles)):
-                        continue
-                else:
+                manager_roles = [str(r) for r in settings_cfg.get("manager_roles", [])]
+                manager_users = [str(u) for u in settings_cfg.get("manager_users", [])]
+                for item in settings_cfg.get("dashboard_access", []):
+                    if isinstance(item, dict):
+                        if item.get("type") == "role" and item.get("id"):
+                            manager_roles.append(str(item.get("id")))
+                        elif item.get("type") == "user" and item.get("id"):
+                            manager_users.append(str(item.get("id")))
+                member = bot_guild.get_member(int(user["id"]))
+                has_custom_access = (str(user["id"]) in manager_users) or (member and any(str(r.id) in manager_roles for r in member.roles))
+                if not has_custom_access:
                     continue
 
             manageable_guilds.append({

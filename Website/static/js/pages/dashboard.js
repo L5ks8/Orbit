@@ -271,7 +271,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                   <p class="px-3 mb-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">${sec.title}</p>
                   <div class="space-y-0.5">
                     ${sec.links.map(l => {
-                      const isActive = tab === l.id;
+                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings');
                       return `
                         <a 
                           href="${l.path}" 
@@ -463,7 +463,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     DashboardTabs.EmbedBuilder(tabContainer, guildId);
   } else if (tab === 'leaderboard' && DashboardTabs.Leaderboard) {
     DashboardTabs.Leaderboard(tabContainer, guildId);
-  } else if (tab === 'settings' && DashboardTabs.Settings) {
+  } else if ((tab === 'settings' || tab === 'server-settings') && DashboardTabs.Settings) {
     DashboardTabs.Settings(tabContainer, guildId);
   } else if (tab === 'security' && DashboardTabs.Security) {
     DashboardTabs.Security(tabContainer, guildId);

@@ -36,6 +36,15 @@ class ConfigMixin:
         categories = [{"id": str(c.id), "name": c.name} for c in guild.categories]
         roles = [{"id": str(r.id), "name": r.name, "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe"} for r in guild.roles if not r.is_default()]
         emojis = [{"id": str(e.id), "name": e.name, "animated": e.animated} for e in guild.emojis]
+        members = [
+            {
+                "id": str(m.id),
+                "name": m.display_name or m.name,
+                "username": m.name,
+                "avatar": str(m.display_avatar.with_size(64).url) if getattr(m, "display_avatar", None) else "/img/logo.png"
+            }
+            for m in list(guild.members)[:250] if not getattr(m, "bot", False)
+        ]
 
         welcome_cfg = load_welcome_config(guild_id)
         automod_cfg = load_automod_config(guild_id)
@@ -434,6 +443,7 @@ class ConfigMixin:
             "categories": categories,
             "roles": roles,
             "emojis": emojis,
+            "members": members,
             "config": config_data
         })
 
@@ -451,12 +461,22 @@ class ConfigMixin:
             from Components.Database.mongodb import get_config
             data = await request.json()
 
-            if user_perms.get("is_admin") and "settings" in data:
+            settings_payload = data.get("settings") or data.get("Settings")
+            if user_perms.get("is_admin") and isinstance(settings_payload, dict):
                 from Components.Systems.WebDashboard._storage import save_settings_config, load_settings_config
                 s_cfg = load_settings_config(guild_id)
-                new_s = data["settings"]
+                new_s = settings_payload
                 for k, v in new_s.items():
                     s_cfg[k] = v
+                if "dashboard_access" in new_s and isinstance(new_s["dashboard_access"], list):
+                    s_cfg["manager_roles"] = [
+                        str(it.get("id")) for it in new_s["dashboard_access"]
+                        if isinstance(it, dict) and it.get("type") == "role" and it.get("id")
+                    ]
+                    s_cfg["manager_users"] = [
+                        str(it.get("id")) for it in new_s["dashboard_access"]
+                        if isinstance(it, dict) and it.get("type") == "user" and it.get("id")
+                    ]
                 if "autoresponder_enabled" in new_s:
                     s_cfg["autoresponder_enabled"] = bool(new_s["autoresponder_enabled"])
                 if "messages_enabled" in new_s:

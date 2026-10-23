@@ -99,8 +99,15 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
         if not is_admin:
             from Components.Systems.WebDashboard._storage import load_settings_config
             settings_cfg = load_settings_config(guild_id)
-            manager_roles = settings_cfg.get("manager_roles", [])
-            if any(str(r.id) in manager_roles for r in member.roles):
+            manager_roles = [str(r) for r in settings_cfg.get("manager_roles", [])]
+            manager_users = [str(u) for u in settings_cfg.get("manager_users", [])]
+            for item in settings_cfg.get("dashboard_access", []):
+                if isinstance(item, dict):
+                    if item.get("type") == "role" and item.get("id"):
+                        manager_roles.append(str(item.get("id")))
+                    elif item.get("type") == "user" and item.get("id"):
+                        manager_users.append(str(item.get("id")))
+            if str(user["id"]) in manager_users or any(str(r.id) in manager_roles for r in member.roles):
                 is_admin = True
         
         user_perms = {
