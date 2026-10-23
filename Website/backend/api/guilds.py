@@ -307,7 +307,7 @@ class GuildsMixin:
                         tracked_by_date[k[0]] = tracked_by_date.get(k[0], 0) + diff
 
         # 3. For any date in the last 48h where doc["messages"] > sum(hours) (e.g. saved before hourly subdoc),
-        # distribute the remaining untracked messages deterministically across the valid hours of that date.
+        # place the remaining untracked messages into the latest hour of that date in the 48h window.
         for date_key in sorted(dates_in_48h):
             doc = doc_map.get(date_key)
             if not doc:
@@ -319,24 +319,8 @@ class GuildsMixin:
                     idx for (dk, _), idx in bucket_index_by_key.items() if dk == date_key
                 ]
                 if date_indices:
-                    import math
-                    weights = []
-                    for idx in date_indices:
-                        hr = int(hourly_buckets[idx]["hour"])
-                        # Natural activity curve peaking in afternoon/evening UTC
-                        w = max(0.15, 0.55 + 0.45 * math.sin((hr - 8) * math.pi / 12))
-                        weights.append(w)
-                    total_w = sum(weights) or 1.0
-                    allocated = 0
-                    for k_idx, idx in enumerate(date_indices):
-                        if k_idx == len(date_indices) - 1:
-                            share = max(0, untracked - allocated)
-                        else:
-                            share = int(round(untracked * (weights[k_idx] / total_w)))
-                            if allocated + share > untracked:
-                                share = max(0, untracked - allocated)
-                        hourly_buckets[idx]["messages"] += share
-                        allocated += share
+                    target_idx = date_indices[-1]
+                    hourly_buckets[target_idx]["messages"] += untracked
 
         return hourly_buckets
 

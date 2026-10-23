@@ -2,9 +2,9 @@
  * Orbit Dashboard - Overview Tab
  * Fully functional overview connected to MongoDB:
  * - 5 live stat cards with week-over-week comparison badges
- * - Live Messages chart with interactive 48h / 60m toggle & smooth bar hover tooltip
+ * - Live Messages Recharts-style bar chart (48h / 60m) with #22c55e baseline bars, #86efac active bar highlight & 400ms smooth tooltip
  * - Top Message Channels with PeakBot indigo channel badges, circular SVG progress rings & 1D / 1W / 1M / 1Y / All filters
- * - Activity area chart with 1D / 1W / 1M / 1Y / All filters & buttery-smooth hover line, dot, and tooltip
+ * - Activity Recharts-style area chart with trend indicator, 1D / 1W / 1M / 1Y / All filters & smooth hover line, dot, and 400ms tooltip
  * - In-place data refresh with spinning icon and live-updating "Synced" timestamp (no full-tab reload)
  * - Real Features status from MongoDB guild configuration
  * - Real Recent Mod Activity feed from MongoDB (ModLogs, Cases, Warns, Bans)
@@ -81,13 +81,59 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     `;
   }
 
-  function buildMonotoneSvgPath(points) {
+  function renderActivityTrendBlock(periodMsgs, prevPeriodMsgs, pctVal, rangeKey) {
+    const curr = Number(periodMsgs) || 0;
+    const prev = Number(prevPeriodMsgs) || 0;
+    const diff = curr - prev;
+    const pct = prev <= 0 ? (curr > 0 ? 100.0 : 0.0) : ((curr - prev) / prev) * 100;
+    const isDown = pct < 0;
+    const absPctStr = Math.abs(pct).toFixed(1) + '%';
+    const diffStr = diff >= 0 ? `+${formatNumber(diff)}` : formatNumber(diff);
+
+    const periodComparisonLabel = {
+      '1': 'vs. previous day',
+      '7': 'vs. previous week',
+      '30': 'vs. previous month',
+      '365': 'vs. previous year',
+      'all': 'vs. previous period'
+    }[rangeKey] || 'vs. previous week';
+
+    const colorClass = isDown ? 'text-red-400' : 'text-emerald-400';
+    const trendLabel = isDown ? 'Trending down' : 'Trending up';
+    const arrowSvg = isDown
+      ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-right w-5 h-5"><path d="m7 7 10 10"></path><path d="M17 7v10H7"></path></svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right w-5 h-5"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>`;
+
+    return `
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-0.5 text-2xl font-bold tabular-nums leading-none ${colorClass}">${arrowSvg}${absPctStr}</span>
+        <span class="text-[10px] font-semibold uppercase tracking-wider ${colorClass}">${trendLabel}</span>
+      </div>
+      <span class="text-[11px] text-neutral-500 mt-1 tabular-nums">${diffStr} ${periodComparisonLabel}</span>
+    `;
+  }
+
+  function buildRechartsBarPath(x, y, w, h) {
+    const bottom = 150;
+    const barH = Math.max(2, h);
+    const top = bottom - barH;
+    const r = barH <= 2 ? 1 : Math.min(2, w / 2, barH / 2);
+    const x1 = Number(x.toFixed(2));
+    const x2 = Number((x + w).toFixed(2));
+    const yTop = Number(top.toFixed(4));
+    const yArc = Number((top + r).toFixed(4));
+    const xArcL = Number((x + r).toFixed(2));
+    const xArcR = Number((x + w - r).toFixed(2));
+    return `M${x1},${yArc}A ${r},${r},0,0,1,${xArcL},${yTop}L ${xArcR},${yTop}A ${r},${r},0,0,1,${x2},${yArc}L ${x2},${bottom}L ${x1},${bottom}Z`;
+  }
+
+  function buildMonotoneRechartsArea(points, bottomY = 150, topY = 8) {
     if (!points || points.length === 0) return { line: '', area: '' };
     if (points.length === 1) {
       const p = points[0];
       return {
         line: `M${p.x},${p.y}`,
-        area: `M${p.x},148 L${p.x},${p.y} L${p.x},148 Z`
+        area: `M${p.x},${p.y}L${p.x},${bottomY}Z`
       };
     }
 
@@ -128,22 +174,33 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       }
     }
 
-    let d = `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
+    let line = `M${Number(points[0].x.toFixed(3))},${Number(points[0].y.toFixed(3))}`;
     for (let i = 0; i < n - 1; i++) {
       const p0 = points[i];
       const p1 = points[i + 1];
       const seg = (p1.x - p0.x) / 3;
-      const cp1x = p0.x + seg;
-      const cp1y = Math.min(148, Math.max(20, p0.y + tangents[i] * seg));
-      const cp2x = p1.x - seg;
-      const cp2y = Math.min(148, Math.max(20, p1.y - tangents[i + 1] * seg));
-      d += ` C${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p1.x.toFixed(2)},${p1.y.toFixed(2)}`;
+      const cp1x = Number((p0.x + seg).toFixed(3));
+      const cp1y = Number(Math.min(bottomY, Math.max(topY, p0.y + tangents[i] * seg)).toFixed(3));
+      const cp2x = Number((p1.x - seg).toFixed(3));
+      const cp2y = Number(Math.min(bottomY, Math.max(topY, p1.y - tangents[i + 1] * seg)).toFixed(3));
+      const px = Number(p1.x.toFixed(3));
+      const py = Number(p1.y.toFixed(3));
+      line += `C${cp1x},${cp1y},${cp2x},${cp2y},${px},${py}`;
     }
 
-    const first = points[0];
-    const last = points[n - 1];
-    const area = `${d} L${last.x.toFixed(2)},148 L${first.x.toFixed(2)},148 Z`;
-    return { line: d, area };
+    let baselineReturn = `L${Number(points[n - 1].x.toFixed(3))},${bottomY}`;
+    for (let i = n - 1; i > 0; i--) {
+      const p1 = points[i];
+      const p0 = points[i - 1];
+      const seg = (p1.x - p0.x) / 3;
+      const cp2x = Number((p1.x - seg).toFixed(3));
+      const cp1x = Number((p0.x + seg).toFixed(3));
+      const px = Number(p0.x.toFixed(3));
+      baselineReturn += `C${cp2x},${bottomY},${cp1x},${bottomY},${px},${bottomY}`;
+    }
+    baselineReturn += 'Z';
+
+    return { line, area: line + baselineReturn };
   }
 
   function evaluateFeaturesList(configData, openTicketsCount) {
@@ -230,6 +287,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     topChannels: [],
     history: [],
     periodMessages: 0,
+    prevPeriodMessages: 0,
     changes: {},
     syncedAt: Date.now(),
     isRefreshing: false
@@ -279,6 +337,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     state.topChannels = statsData?.top_channels || [];
     state.history = statsData?.history || [];
     state.periodMessages = statsData?.period_messages ?? messageCount;
+    state.prevPeriodMessages = statsData?.prev_period_messages ?? 0;
     state.syncedAt = Date.now();
 
     const featuresList = evaluateFeaturesList(configData, openTickets);
@@ -439,7 +498,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       <!-- Two-column row: 48h/60m messages chart & Top Message Channels -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         
-        <!-- Messages · Last 48 hours / 60 minutes -->
+        <!-- Messages · Last 48 hours / 60 minutes (Exact Recharts layout) -->
         <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
           <div class="px-4 pt-4 pb-2 flex items-start justify-between gap-3">
             <div class="min-w-0">
@@ -452,13 +511,19 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
                 <span class="text-[10px] text-green-400 font-semibold uppercase tracking-wider">Live</span>
               </div>
               <div class="relative inline-flex p-0.5 rounded-lg bg-neutral-800 border border-neutral-700" id="live-mode-buttons">
-                <button type="button" data-live-mode="48h" class="relative px-2.5 py-1 text-[11px] font-medium rounded-md text-black bg-white select-none cursor-pointer transition-colors">48h</button>
-                <button type="button" data-live-mode="60m" class="relative px-2.5 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white select-none cursor-pointer transition-colors">60m</button>
+                <button type="button" data-live-mode="48h" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-black cursor-pointer">
+                  <span data-pill class="absolute inset-0 bg-white rounded-md" style="opacity: 1;"></span>
+                  <span class="relative z-10">48h</span>
+                </button>
+                <button type="button" data-live-mode="60m" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-400 hover:text-white cursor-pointer">
+                  <span data-pill class="absolute inset-0 bg-white rounded-md hidden" style="opacity: 0;"></span>
+                  <span class="relative z-10">60m</span>
+                </button>
               </div>
             </div>
           </div>
           <div class="px-5 pb-5">
-            <div id="live-chart-wrapper" class="relative select-none" style="width: 100%; height: 180px;"></div>
+            <div id="live-chart-wrapper" class="recharts-responsive-container relative select-none" style="width: 100%; height: 180px; min-width: 0px;"></div>
           </div>
         </div>
 
@@ -470,11 +535,11 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
               <p id="top-channels-subtitle" class="text-[11px] text-neutral-500 mt-0.5">Last 7 days</p>
             </div>
             <div class="relative inline-flex p-0.5 rounded-lg bg-neutral-800 border border-neutral-700 shrink-0" id="top-channels-range-buttons">
-              <button type="button" data-ch-range="1" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">1D</button>
-              <button type="button" data-ch-range="7" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-black bg-white cursor-pointer transition-colors">1W</button>
-              <button type="button" data-ch-range="30" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">1M</button>
-              <button type="button" data-ch-range="365" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">1Y</button>
-              <button type="button" data-ch-range="all" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">All</button>
+              <button type="button" data-ch-range="1" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none text-neutral-400 hover:text-white cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md hidden"></span><span class="relative z-10">1D</span></button>
+              <button type="button" data-ch-range="7" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none text-black cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md"></span><span class="relative z-10">1W</span></button>
+              <button type="button" data-ch-range="30" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none text-neutral-400 hover:text-white cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md hidden"></span><span class="relative z-10">1M</span></button>
+              <button type="button" data-ch-range="365" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none text-neutral-400 hover:text-white cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md hidden"></span><span class="relative z-10">1Y</span></button>
+              <button type="button" data-ch-range="all" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none text-neutral-400 hover:text-white cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md hidden"></span><span class="relative z-10">All</span></button>
             </div>
           </div>
           <div id="top-channels-body" class="flex-1 px-2 pb-3"></div>
@@ -482,7 +547,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
 
       </div>
 
-      <!-- Activity Section Chart -->
+      <!-- Activity Section Chart (Exact Recharts layout) -->
       <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
         <div class="px-5 pt-4 pb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <div class="flex items-center gap-2">
@@ -490,27 +555,28 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             <span class="text-sm font-medium text-white">Activity</span>
             <span id="activity-range-subtitle" class="text-[11px] text-neutral-500">last 7 days</span>
           </div>
-          <div class="relative inline-flex p-0.5 rounded-lg bg-neutral-800 border border-neutral-700 shrink-0" id="activity-range-buttons">
-            <button type="button" data-act-range="1" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">1D</button>
-            <button type="button" data-act-range="7" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-black bg-white cursor-pointer transition-colors">1W</button>
-            <button type="button" data-act-range="30" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">1M</button>
-            <button type="button" data-act-range="365" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">1Y</button>
-            <button type="button" data-act-range="all" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">All</button>
+          <div class="relative inline-flex p-0.5 rounded-lg bg-neutral-800 border border-neutral-700 flex-shrink-0" id="activity-range-buttons">
+            <button type="button" data-act-range="1" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-400 hover:text-white cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md hidden"></span><span class="relative z-10">1D</span></button>
+            <button type="button" data-act-range="7" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-black cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md"></span><span class="relative z-10">1W</span></button>
+            <button type="button" data-act-range="30" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-400 hover:text-white cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md hidden"></span><span class="relative z-10">1M</span></button>
+            <button type="button" data-act-range="365" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-400 hover:text-white cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md hidden"></span><span class="relative z-10">1Y</span></button>
+            <button type="button" data-act-range="all" class="relative px-2.5 py-1 max-sm:px-3 max-sm:py-1.5 text-[11px] font-medium rounded-md transition-[transform,color] duration-150 ease-out active:scale-[0.96] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-neutral-400 hover:text-white cursor-pointer"><span data-pill class="absolute inset-0 bg-white rounded-md hidden"></span><span class="relative z-10">All</span></button>
           </div>
         </div>
         <div class="px-5 pb-3 flex items-end justify-between gap-6 flex-wrap">
-          <div class="flex items-end gap-3">
+          <div class="flex items-end gap-4">
             <div class="flex flex-col">
               <span id="activity-total-messages" class="text-4xl font-bold text-white tabular-nums leading-none">${formatNumber(state.periodMessages)}</span>
-              <span class="text-[11px] text-neutral-500 mt-1">messages</span>
+              <span class="text-[11px] text-neutral-500 mt-1">Messages</span>
             </div>
-            <div id="activity-pct-wrapper" class="mb-0.5">
-              ${renderPctBadge(state.changes.period_messages_pct)}
+            <div id="activity-pct-wrapper" class="flex flex-col pb-0.5">
+              ${renderActivityTrendBlock(state.periodMessages, state.prevPeriodMessages, state.changes.period_messages_pct, state.activityRange)}
             </div>
           </div>
+          <div class="flex flex-col items-end gap-1.5"></div>
         </div>
         <div class="px-5 pb-4">
-          <div id="activity-chart-wrapper" class="relative select-none" style="width: 100%; height: 185px;"></div>
+          <div id="activity-chart-wrapper" class="recharts-responsive-container relative select-none" style="width: 100%; height: 180px; min-width: 0px;"></div>
         </div>
       </div>
 
@@ -635,113 +701,126 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         });
       }
 
-      const maxVal = Math.max(1, ...buckets.map(b => b.messages));
-      const W = 440;
-      const padLeft = 8;
-      const padRight = 8;
-      const plotW = W - padLeft - padRight;
-      const slotW = plotW / count;
-      const barW = Math.max(3, Math.min(8, slotW * 0.68));
+      const maxDataVal = Math.max(0, ...buckets.map(b => b.messages));
+      const step = maxDataVal <= 0 ? 1 : Math.ceil(maxDataVal / 4);
+      const yMax = step * 4;
+      const yTicks = [0, step, step * 2, step * 3, step * 4];
+      const yCoords = [150, 113.5, 77, 40.5, 6.75];
 
-      const barsSvg = buckets.map((b, i) => {
-        const x = padLeft + i * slotW + (slotW - barW) / 2;
-        const h = b.messages > 0 ? Math.max(6, Math.round((b.messages / maxVal) * 108)) : 3;
+      const W = 444;
+      const H = 180;
+      const plotLeft = 32;
+      const plotRight = 440;
+      const plotW = plotRight - plotLeft; // 408
+      const plotH = 146; // 150 - 4
+      const slotW = plotW / count; // 8.5 for 48h
+      const barW = is48h ? 6 : 4.8;
+
+      const barsMeta = buckets.map((b, i) => {
+        const x = plotLeft + i * slotW + 0.85;
+        const h = b.messages > 0 ? Math.max(2, (b.messages / yMax) * plotH) : 2;
         const y = 150 - h;
-        const opacity = b.messages > 0 ? '0.9' : '0.35';
-        const color = b.messages > 0 ? '#22c55e' : '#262626';
-        return `<rect data-bar-idx="${i}" data-target-y="${y.toFixed(2)}" data-target-h="${h}" x="${x.toFixed(2)}" y="147" width="${barW.toFixed(2)}" height="3" rx="2" fill="${color}" opacity="${opacity}" style="transition: y 450ms cubic-bezier(0.22, 1, 0.36, 1), height 450ms cubic-bezier(0.22, 1, 0.36, 1), fill 150ms ease, opacity 150ms ease;"></rect>`;
+        const d = buildRechartsBarPath(x, y, barW, h);
+        return { x, y, w: barW, h, d, label: b.label, messages: b.messages };
+      });
+
+      const barsSvg = barsMeta.map((b, i) => `
+        <g class="recharts-layer recharts-bar-rectangle">
+          <path data-bar-idx="${i}" name="Messages" fill="#22c55e" x="${b.x.toFixed(2)}" y="${b.y.toFixed(4)}" width="${b.w}" height="${b.h.toFixed(4)}" class="recharts-rectangle" d="${b.d}" style="transition: fill 150ms ease;"></path>
+        </g>
+      `).join('');
+
+      const tickIndices = is48h ? [0, 8, 16, 24, 32, 40] : [0, 10, 20, 30, 40, 50];
+      const xTicksSvg = tickIndices.map(idx => {
+        const b = barsMeta[Math.min(barsMeta.length - 1, idx)];
+        const tx = Number((plotLeft + idx * slotW + slotW / 2).toFixed(2));
+        return `
+          <g class="recharts-layer recharts-cartesian-axis-tick-label">
+            <text height="30" orientation="bottom" width="408" stroke="none" font-size="9" x="${tx}" y="158" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="#525252">
+              <tspan x="${tx}" dy="0.71em">${escapeHtml(b?.label || '')}</tspan>
+            </text>
+          </g>
+        `;
       }).join('');
 
-      const tickIndices = is48h ? [4, 18, 32, 46] : [5, 22, 39, 56];
-      const ticksSvg = tickIndices.map(idx => {
-        const b = buckets[Math.min(buckets.length - 1, idx)];
-        const x = padLeft + idx * slotW;
-        return `<text x="${x.toFixed(1)}" y="170" font-size="9" fill="#525252" text-anchor="middle">${escapeHtml(b?.label || '')}</text>`;
-      }).join('');
+      const yTicksSvg = yTicks.map((val, idx) => `
+        <g class="recharts-layer recharts-cartesian-axis-tick-label">
+          <text width="32" orientation="left" height="146" stroke="none" font-size="9" x="24" y="${yCoords[idx]}" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="#525252">
+            <tspan x="24" dy="0.355em">${val}</tspan>
+          </text>
+        </g>
+      `).join('');
 
       wrapper.innerHTML = `
-        <svg id="live-chart-svg" width="100%" height="180" viewBox="0 0 440 180" class="overflow-visible">
-          <line stroke="#262626" x1="0" y1="150" x2="440" y2="150"></line>
-          <line stroke="#262626" x1="0" y1="113.5" x2="440" y2="113.5"></line>
-          <line stroke="#262626" x1="0" y1="77" x2="440" y2="77"></line>
-          <line stroke="#262626" x1="0" y1="40" x2="440" y2="40"></line>
-          <line id="live-hover-line" x1="0" y1="30" x2="0" y2="150" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="3 3" class="opacity-0 pointer-events-none" style="transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;"></line>
-          ${barsSvg}
-          ${ticksSvg}
-        </svg>
-        <div id="live-chart-tooltip" class="opacity-0 pointer-events-none absolute z-20 rounded-lg border border-[#2e2e2e] bg-[#171717] px-3 py-2 shadow-xl" style="top: 8px; left: 0; transition: left 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;">
-          <p id="live-tooltip-date" class="text-[11px] font-medium text-neutral-400 leading-tight"></p>
-          <p class="text-[12px] text-neutral-300 mt-1 leading-tight">Messages: <span id="live-tooltip-val" class="font-bold text-white tabular-nums">0</span></p>
+        <div class="recharts-wrapper" style="position: relative; cursor: default; width: 100%; height: 180px;">
+          <div id="live-chart-tooltip" tabindex="-1" class="recharts-tooltip-wrapper" style="visibility: hidden; opacity: 0; pointer-events: none; position: absolute; top: 0px; left: 0px; z-index: 20; transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease; transform: translate(46.25px, 27.5px);">
+            <div class="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 shadow-xl">
+              <p id="live-tooltip-date" class="text-[11px] text-neutral-400 mb-1"></p>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="text-neutral-400">Messages:</span>
+                <span id="live-tooltip-val" class="text-white font-semibold tabular-nums">0</span>
+              </div>
+            </div>
+          </div>
+          <svg id="live-chart-svg" role="application" tabindex="0" class="recharts-surface" width="444" height="180" viewBox="0 0 444 180" style="width: 100%; height: 100%; display: block;">
+            <g class="recharts-cartesian-grid">
+              <g class="recharts-cartesian-grid-horizontal">
+                <line stroke="#171717" fill="none" x="32" y="4" width="408" height="146" x1="32" y1="150" x2="440" y2="150"></line>
+                <line stroke="#171717" fill="none" x="32" y="4" width="408" height="146" x1="32" y1="113.5" x2="440" y2="113.5"></line>
+                <line stroke="#171717" fill="none" x="32" y="4" width="408" height="146" x1="32" y1="77" x2="440" y2="77"></line>
+                <line stroke="#171717" fill="none" x="32" y="4" width="408" height="146" x1="32" y1="40.5" x2="440" y2="40.5"></line>
+                <line stroke="#171717" fill="none" x="32" y="4" width="408" height="146" x1="32" y1="4" x2="440" y2="4"></line>
+              </g>
+            </g>
+            <g class="recharts-layer recharts-bar">
+              <g class="recharts-layer recharts-bar-rectangles">
+                <g class="recharts-layer">
+                  ${barsSvg}
+                </g>
+              </g>
+            </g>
+            <g class="recharts-cartesian-axis-tick-labels recharts-xAxis-tick-labels">
+              ${xTicksSvg}
+            </g>
+            <g class="recharts-cartesian-axis-tick-labels recharts-yAxis-tick-labels">
+              ${yTicksSvg}
+            </g>
+          </svg>
         </div>
       `;
 
       const svgEl = document.getElementById('live-chart-svg');
-      const hoverLine = document.getElementById('live-hover-line');
       const tooltip = document.getElementById('live-chart-tooltip');
       const tooltipDate = document.getElementById('live-tooltip-date');
       const tooltipVal = document.getElementById('live-tooltip-val');
-      const barRects = svgEl ? Array.from(svgEl.querySelectorAll('rect[data-bar-idx]')) : [];
-
-      requestAnimationFrame(() => {
-        barRects.forEach(r => {
-          r.setAttribute('y', r.getAttribute('data-target-y'));
-          r.setAttribute('height', r.getAttribute('data-target-h'));
-        });
-      });
-
-      let isLiveHoverActive = false;
+      const barPaths = svgEl ? Array.from(svgEl.querySelectorAll('path[data-bar-idx]')) : [];
 
       function handleMove(clientX) {
         const rect = wrapper.getBoundingClientRect();
         if (!rect.width) return;
         const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
         const svgX = (relX / rect.width) * W;
-        const idx = Math.max(0, Math.min(count - 1, Math.floor((svgX - padLeft) / slotW)));
-        const bucket = buckets[idx];
-        if (!bucket) return;
+        const idx = Math.max(0, Math.min(count - 1, Math.floor((svgX - plotLeft) / slotW)));
+        const b = barsMeta[idx];
+        if (!b) return;
 
-        const centerX = padLeft + idx * slotW + slotW / 2;
-        if (hoverLine) {
-          if (!isLiveHoverActive) {
-            hoverLine.style.transition = 'none';
-            hoverLine.style.transform = `translateX(${centerX.toFixed(2)}px)`;
-            hoverLine.getBoundingClientRect();
-            hoverLine.style.transition = 'transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
-          } else {
-            hoverLine.style.transform = `translateX(${centerX.toFixed(2)}px)`;
-          }
-          hoverLine.classList.remove('opacity-0');
-        }
-
-        barRects.forEach((r, i) => {
-          if (i === idx) {
-            r.setAttribute('fill', '#4ade80');
-            r.setAttribute('opacity', '1');
-          } else {
-            const hasMsg = buckets[i].messages > 0;
-            r.setAttribute('fill', hasMsg ? '#22c55e' : '#262626');
-            r.setAttribute('opacity', hasMsg ? '0.9' : '0.35');
-          }
+        barPaths.forEach((p, i) => {
+          p.setAttribute('fill', i === idx ? '#86efac' : '#22c55e');
         });
 
         if (tooltip && tooltipDate && tooltipVal) {
-          tooltipDate.textContent = bucket.label;
-          tooltipVal.textContent = formatNumber(bucket.messages);
-          const pxX = (centerX / W) * rect.width;
-          const tipW = tooltip.offsetWidth || 115;
-          const leftPos = pxX + tipW + 16 > rect.width ? Math.max(4, pxX - tipW - 10) : pxX + 10;
+          tooltipDate.textContent = b.label;
+          tooltipVal.textContent = formatNumber(b.messages);
+          tooltip.style.visibility = 'visible';
+          tooltip.style.opacity = '1';
 
-          if (!isLiveHoverActive) {
-            tooltip.style.transition = 'none';
-            tooltip.style.left = `${leftPos}px`;
-            tooltip.getBoundingClientRect();
-            tooltip.style.transition = 'left 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
-          } else {
-            tooltip.style.left = `${leftPos}px`;
-          }
-          tooltip.classList.remove('opacity-0');
+          const pxX = ((b.x + b.w / 2) / W) * rect.width;
+          const tipW = tooltip.offsetWidth || 120;
+          const tx = pxX + tipW + 18 > rect.width
+            ? Math.max(8, pxX - tipW - 10)
+            : pxX + 10;
+          tooltip.style.transform = `translate(${tx.toFixed(1)}px, 27.5px)`;
         }
-        isLiveHoverActive = true;
       }
 
       wrapper.onmousemove = (e) => handleMove(e.clientX);
@@ -749,14 +828,11 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         if (e.touches && e.touches[0]) handleMove(e.touches[0].clientX);
       };
       wrapper.onmouseleave = () => {
-        isLiveHoverActive = false;
-        if (hoverLine) hoverLine.classList.add('opacity-0');
-        if (tooltip) tooltip.classList.add('opacity-0');
-        barRects.forEach((r, i) => {
-          const hasMsg = buckets[i].messages > 0;
-          r.setAttribute('fill', hasMsg ? '#22c55e' : '#262626');
-          r.setAttribute('opacity', hasMsg ? '0.9' : '0.35');
-        });
+        if (tooltip) {
+          tooltip.style.opacity = '0';
+          tooltip.style.visibility = 'hidden';
+        }
+        barPaths.forEach(p => p.setAttribute('fill', '#22c55e'));
       };
     }
 
@@ -831,7 +907,14 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
 
       if (totalEl) totalEl.textContent = formatNumber(state.periodMessages);
       if (subtitleEl) subtitleEl.textContent = (RANGE_LABELS[state.activityRange] || 'Last 7 days').toLowerCase();
-      if (pctWrapper) pctWrapper.innerHTML = renderPctBadge(state.changes?.period_messages_pct);
+      if (pctWrapper) {
+        pctWrapper.innerHTML = renderActivityTrendBlock(
+          state.periodMessages,
+          state.prevPeriodMessages,
+          state.changes?.period_messages_pct,
+          state.activityRange
+        );
+      }
 
       const history = Array.isArray(state.history) && state.history.length > 0
         ? state.history
@@ -848,15 +931,16 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       const step = maxDataVal <= 0 ? 1 : Math.ceil(maxDataVal / 4);
       const yMax = step * 4;
       const yTicks = [0, step, step * 2, step * 3, step * 4];
+      const yCoords = [150, 114.5, 79, 43.5, 8];
 
-      const W = 940;
-      const H = 185;
-      const padLeft = 34;
-      const padRight = 24;
-      const topY = 20;
-      const bottomY = 148;
-      const plotW = W - padLeft - padRight;
-      const plotH = bottomY - topY;
+      const W = 949;
+      const H = 180;
+      const padLeft = 28;
+      const padRight = 4; // 949 - 945
+      const topY = 8;
+      const bottomY = 150;
+      const plotW = 917; // 945 - 28
+      const plotH = 142; // 150 - 8
 
       const points = history.map((item, idx) => {
         const x = history.length === 1
@@ -875,16 +959,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         };
       });
 
-      const { line, area } = buildMonotoneSvgPath(points);
-
-      const gridSvg = yTicks.map((tickVal, idx) => {
-        const y = bottomY - (idx / 4) * plotH;
-        const isBase = idx === 0;
-        return `
-          <line stroke="#262626" ${isBase ? '' : 'stroke-dasharray="2 2"'} x1="${padLeft}" y1="${y.toFixed(1)}" x2="${W - padRight}" y2="${y.toFixed(1)}"></line>
-          <text x="${padLeft - 10}" y="${(y + 3.5).toFixed(1)}" font-size="11" fill="#525252" text-anchor="end" class="tabular-nums">${tickVal}</text>
-        `;
-      }).join('');
+      const { line, area } = buildMonotoneRechartsArea(points, bottomY, topY);
 
       const maxLabels = 7;
       const labelIndices = [];
@@ -896,34 +971,74 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         }
       }
 
-      const xLabelsSvg = labelIndices.map(idx => {
+      const xLabelsSvg = labelIndices.map((idx, posIdx) => {
         const pt = points[idx];
-        return `<text x="${pt.x.toFixed(1)}" y="172" font-size="11" fill="#525252" text-anchor="middle">${escapeHtml(pt.label)}</text>`;
+        const lx = posIdx === labelIndices.length - 1 ? Math.min(pt.x, 934.64) : pt.x;
+        return `
+          <g class="recharts-layer recharts-cartesian-axis-tick-label">
+            <text height="30" orientation="bottom" width="917" stroke="none" font-size="10" x="${lx.toFixed(2)}" y="158" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="#525252">
+              <tspan x="${lx.toFixed(2)}" dy="0.71em">${escapeHtml(pt.label)}</tspan>
+            </text>
+          </g>
+        `;
       }).join('');
 
+      const yLabelsSvg = yTicks.map((tickVal, idx) => `
+        <g class="recharts-layer recharts-cartesian-axis-tick-label">
+          <text width="28" orientation="left" height="142" stroke="none" font-size="10" x="20" y="${yCoords[idx]}" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="#525252">
+            <tspan x="20" dy="0.355em">${tickVal}</tspan>
+          </text>
+        </g>
+      `).join('');
+
       wrapper.innerHTML = `
-        <svg id="activity-chart-svg" width="100%" height="${H}" viewBox="0 0 ${W} ${H}" class="overflow-visible">
-          <defs>
-            <linearGradient id="orbitWeeklyFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#22c55e" stop-opacity="0.28"></stop>
-              <stop offset="100%" stop-color="#22c55e" stop-opacity="0.0"></stop>
-            </linearGradient>
-          </defs>
-          ${gridSvg}
-          <path id="activity-area-path" d="${area}" fill="url(#orbitWeeklyFill)" style="opacity: 0; transition: opacity 550ms ease-out;"></path>
-          <path id="activity-line-path" d="${line}" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-          <!-- Smoothly Gliding Hover Elements -->
-          <line id="activity-hover-line" x1="0" y1="${topY}" x2="0" y2="${bottomY}" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3 3" class="opacity-0 pointer-events-none" style="transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;"></line>
-          <circle id="activity-hover-dot" cx="0" cy="0" r="4.5" fill="#22c55e" stroke="#ffffff" stroke-width="2.5" class="opacity-0 pointer-events-none" style="transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;"></circle>
-          ${xLabelsSvg}
-        </svg>
-        <div id="activity-chart-tooltip" class="opacity-0 pointer-events-none absolute z-20 rounded-lg border border-[#2e2e2e] bg-[#171717] px-3 py-2 shadow-xl" style="top: 40px; left: 0; transition: left 180ms cubic-bezier(0.22, 1, 0.36, 1), top 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;">
-          <p id="activity-tooltip-date" class="text-[11px] font-medium text-neutral-400 leading-tight"></p>
-          <p id="activity-tooltip-val" class="text-[12px] text-neutral-300 mt-1 leading-tight">Messages: <span id="activity-tooltip-num" class="font-bold text-white tabular-nums">0</span></p>
+        <div class="recharts-wrapper" style="position: relative; cursor: default; width: 100%; height: 180px;">
+          <div id="activity-chart-tooltip" tabindex="-1" class="recharts-tooltip-wrapper" style="visibility: hidden; opacity: 0; pointer-events: none; position: absolute; top: 0px; left: 0px; z-index: 20; transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease; transform: translate(0px, 0px);">
+            <div class="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 shadow-xl">
+              <p id="activity-tooltip-date" class="text-[11px] text-neutral-400 mb-1"></p>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="text-neutral-400">Messages:</span>
+                <span id="activity-tooltip-num" class="text-white font-semibold tabular-nums">0</span>
+              </div>
+            </div>
+          </div>
+          <svg id="activity-chart-svg" role="application" tabindex="0" class="recharts-surface" width="949" height="180" viewBox="0 0 949 180" style="width: 100%; height: 100%; display: block;">
+            <g class="recharts-cartesian-grid">
+              <g class="recharts-cartesian-grid-horizontal">
+                <line stroke="#171717" fill="none" x="28" y="8" width="917" height="142" x1="28" y1="150" x2="945" y2="150"></line>
+                <line stroke="#171717" fill="none" x="28" y="8" width="917" height="142" x1="28" y1="114.5" x2="945" y2="114.5"></line>
+                <line stroke="#171717" fill="none" x="28" y="8" width="917" height="142" x1="28" y1="79" x2="945" y2="79"></line>
+                <line stroke="#171717" fill="none" x="28" y="8" width="917" height="142" x1="28" y1="43.5" x2="945" y2="43.5"></line>
+                <line stroke="#171717" fill="none" x="28" y="8" width="917" height="142" x1="28" y1="8" x2="945" y2="8"></line>
+              </g>
+            </g>
+            <defs>
+              <clipPath id="recharts1-clip"><rect x="28" y="8" height="142" width="917"></rect></clipPath>
+              <linearGradient id="weeklyFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#22c55e" stop-opacity="0.3"></stop>
+                <stop offset="100%" stop-color="#22c55e" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <g class="recharts-layer recharts-area">
+              <g class="recharts-layer">
+                <path id="activity-area-path" name="Messages" stroke-width="2" fill="url(#weeklyFill)" fill-opacity="0.6" height="142" stroke="none" width="917" class="recharts-curve recharts-area-area" d="${area}" style="opacity: 0; transition: opacity 550ms ease-out;"></path>
+                <path id="activity-line-path" name="Messages" stroke-width="2" fill="none" fill-opacity="0.6" height="142" stroke="#22c55e" width="917" class="recharts-curve recharts-area-curve" d="${line}"></path>
+              </g>
+            </g>
+            <line id="activity-hover-line" x1="0" y1="${topY}" x2="0" y2="${bottomY}" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3 3" class="opacity-0 pointer-events-none" style="transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;"></line>
+            <g class="recharts-layer recharts-area-dots">
+              <circle id="activity-hover-dot" cx="0" cy="0" r="4" fill="#22c55e" stroke="#ffffff" stroke-width="2" class="opacity-0 pointer-events-none" style="transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;"></circle>
+            </g>
+            <g class="recharts-cartesian-axis-tick-labels recharts-xAxis-tick-labels">
+              ${xLabelsSvg}
+            </g>
+            <g class="recharts-cartesian-axis-tick-labels recharts-yAxis-tick-labels">
+              ${yLabelsSvg}
+            </g>
+          </svg>
         </div>
       `;
 
-      // Smooth draw animation for the line & area fade-in
       const linePathEl = document.getElementById('activity-line-path');
       const areaPathEl = document.getElementById('activity-area-path');
       if (linePathEl) {
@@ -974,7 +1089,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             hoverLine.style.transition = 'none';
             hoverLine.style.transform = `translateX(${pt.x.toFixed(2)}px)`;
             hoverLine.getBoundingClientRect();
-            hoverLine.style.transition = 'transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
+            hoverLine.style.transition = 'transform 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
           } else {
             hoverLine.style.transform = `translateX(${pt.x.toFixed(2)}px)`;
           }
@@ -986,7 +1101,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             hoverDot.style.transition = 'none';
             hoverDot.style.transform = `translate(${pt.x.toFixed(2)}px, ${pt.y.toFixed(2)}px)`;
             hoverDot.getBoundingClientRect();
-            hoverDot.style.transition = 'transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
+            hoverDot.style.transition = 'transform 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
           } else {
             hoverDot.style.transform = `translate(${pt.x.toFixed(2)}px, ${pt.y.toFixed(2)}px)`;
           }
@@ -996,28 +1111,20 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         if (tooltip && tooltipDate && tooltipNum) {
           tooltipDate.textContent = pt.tooltipDate;
           tooltipNum.textContent = formatNumber(pt.val);
+          tooltip.style.visibility = 'visible';
+          tooltip.style.opacity = '1';
 
           const pxX = (pt.x / W) * rect.width;
           const pxY = (pt.y / H) * rect.height;
-          const tipW = tooltip.offsetWidth || 115;
-          const tipH = tooltip.offsetHeight || 52;
+          const tipW = tooltip.offsetWidth || 125;
+          const tipH = tooltip.offsetHeight || 54;
 
-          const leftPos = pxX + tipW + 18 > rect.width
+          const tx = pxX + tipW + 18 > rect.width
             ? Math.max(8, pxX - tipW - 14)
             : pxX + 14;
-          const topPos = Math.max(10, Math.min(rect.height - tipH - 28, pxY - tipH - 8));
+          const ty = Math.max(8, Math.min(rect.height - tipH - 26, pxY - tipH / 2));
 
-          if (!isHoverActive) {
-            tooltip.style.transition = 'none';
-            tooltip.style.left = `${leftPos}px`;
-            tooltip.style.top = `${topPos}px`;
-            tooltip.getBoundingClientRect();
-            tooltip.style.transition = 'left 180ms cubic-bezier(0.22, 1, 0.36, 1), top 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
-          } else {
-            tooltip.style.left = `${leftPos}px`;
-            tooltip.style.top = `${topPos}px`;
-          }
-          tooltip.classList.remove('opacity-0');
+          tooltip.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px)`;
         }
 
         isHoverActive = true;
@@ -1031,7 +1138,10 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         isHoverActive = false;
         if (hoverLine) hoverLine.classList.add('opacity-0');
         if (hoverDot) hoverDot.classList.add('opacity-0');
-        if (tooltip) tooltip.classList.add('opacity-0');
+        if (tooltip) {
+          tooltip.style.opacity = '0';
+          tooltip.style.visibility = 'hidden';
+        }
       };
     }
 
@@ -1135,14 +1245,21 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       if (!group) return;
       group.querySelectorAll(`button[${attrName}]`).forEach(btn => {
         const isSelected = btn.getAttribute(attrName) === String(activeValue);
+        const pill = btn.querySelector('[data-pill]');
         if (isSelected) {
-          btn.className = btn.className
-            .replace(/text-neutral-400|hover:text-white/g, '')
-            .trim() + ' text-black bg-white';
+          btn.classList.remove('text-neutral-400', 'hover:text-white');
+          btn.classList.add('text-black');
+          if (pill) {
+            pill.classList.remove('hidden');
+            pill.style.opacity = '1';
+          }
         } else {
-          btn.className = btn.className
-            .replace(/text-black|bg-white/g, '')
-            .trim() + ' text-neutral-400 hover:text-white';
+          btn.classList.remove('text-black');
+          btn.classList.add('text-neutral-400', 'hover:text-white');
+          if (pill) {
+            pill.classList.add('hidden');
+            pill.style.opacity = '0';
+          }
         }
       });
     }
@@ -1207,6 +1324,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             if (updated) {
               state.history = updated.history || [];
               state.periodMessages = updated.period_messages ?? 0;
+              state.prevPeriodMessages = updated.prev_period_messages ?? 0;
               state.changes = updated.changes || state.changes;
               renderActivityChart();
             }
@@ -1250,6 +1368,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         if (freshStats) {
           state.history = freshStats.history || state.history;
           state.periodMessages = freshStats.period_messages ?? state.periodMessages;
+          state.prevPeriodMessages = freshStats.prev_period_messages ?? state.prevPeriodMessages;
           state.topChannels = freshStats.top_channels || state.topChannels;
           state.changes = freshStats.changes || state.changes;
           if (freshStats.live_48h && !freshLive?.live_48h) state.live48h = freshStats.live_48h;
