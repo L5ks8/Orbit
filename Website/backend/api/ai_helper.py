@@ -585,6 +585,35 @@ Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
         self._save_guild_chats(guild_id, chats)
         return web.json_response({"success": True, "chats": chats})
 
+    async def api_ai_helper_rename_chat(self, request: web.Request):
+        guild_id_str = request.match_info.get("id", "")
+        chat_id = request.match_info.get("chat_id", "")
+        if not guild_id_str.isdigit() or not chat_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "Invalid JSON"}, status=400)
+
+        new_title = str(body.get("title") or "").strip()[:80]
+        if not new_title:
+            return web.json_response({"error": "Empty title"}, status=400)
+
+        chats = self._load_guild_chats(guild_id)
+        for c in chats:
+            if str(c.get("id")) == str(chat_id):
+                c["title"] = new_title
+                c["updated_at"] = time.time()
+                break
+        self._save_guild_chats(guild_id, chats)
+        return web.json_response({"success": True, "chats": chats})
+
     async def api_ai_helper_chat(self, request: web.Request):
         guild_id_str = request.match_info.get("id", "")
         if not guild_id_str.isdigit():

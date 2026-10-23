@@ -359,6 +359,13 @@ const API = {
     return await this.request(`/api/ai_helper/${guildId}/chats/${encodeURIComponent(chatId)}`, {
       method: 'DELETE'
     });
+  },
+
+  async renameAIHelperChat(guildId, chatId, title) {
+    return await this.request(`/api/ai_helper/${guildId}/chats/${encodeURIComponent(chatId)}/rename`, {
+      method: 'POST',
+      body: { title }
+    });
   }
 };
 

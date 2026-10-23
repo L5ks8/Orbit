@@ -192,6 +192,7 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/ai_helper/{id}/undo", dashboard.api_ai_helper_undo)
     app.router.add_post("/api/ai_helper/{id}/redo", dashboard.api_ai_helper_redo)
     app.router.add_delete("/api/ai_helper/{id}/chats/{chat_id}", dashboard.api_ai_helper_delete_chat)
+    app.router.add_post("/api/ai_helper/{id}/chats/{chat_id}/rename", dashboard.api_ai_helper_rename_chat)
 
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)
 

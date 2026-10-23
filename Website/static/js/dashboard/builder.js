@@ -82,8 +82,16 @@ DashboardTabs.Builder = async function(container, guildId) {
     for (const c of (serverChats || [])) {
       if (c && c.id) {
         const existing = map.get(String(c.id));
-        if (!existing || (c.messages?.length || 0) >= (existing.messages?.length || 0)) {
+        if (!existing) {
           map.set(String(c.id), c);
+        } else {
+          const sLen = c.messages?.length || 0;
+          const lLen = existing.messages?.length || 0;
+          const sUpd = Number(c.updated_at || c.created_at || 0);
+          const lUpd = Number(existing.updated_at || existing.created_at || 0);
+          if (sLen > lLen || (sLen === lLen && sUpd > lUpd)) {
+            map.set(String(c.id), c);
+          }
         }
       }
     }
@@ -494,23 +502,33 @@ DashboardTabs.Builder = async function(container, guildId) {
                   : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]'
               }" data-select-chat="${escapeHtml(c.id)}">
                 ${isEditing ? `
-                  <input type="text" data-rename-input="${escapeHtml(c.id)}" value="${escapeHtml(c.title || 'Neuer Chat')}" class="flex-1 min-w-0 bg-neutral-950 border border-white/20 rounded-md px-2 py-0.5 text-[13px] font-medium text-white focus:outline-none mr-1" />
-                ` : `
-                  <span class="flex-1 min-w-0 truncate text-[13.5px] font-medium pr-1">${escapeHtml(c.title || 'Neuer Chat')}</span>
-                `}
-                <div class="relative flex-shrink-0">
-                  <button type="button" data-chat-options="${escapeHtml(c.id)}" class="relative grid place-items-center h-7 w-7 flex-shrink-0 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.1] transition-[opacity,color,background-color,transform] duration-150 active:scale-[0.94] before:absolute before:inset-[-6px] before:content-[''] ${isMobile || isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100'}" title="Optionen" aria-label="Chat-Optionen">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal w-4 h-4"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-                  </button>
-                  <div data-chat-options-menu="${escapeHtml(c.id)}" class="orbit-dropdown-menu ${isMenuOpen ? '' : 'hidden'} absolute right-0 top-8 w-36 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1 z-[99999]">
-                    <button type="button" data-rename-chat="${escapeHtml(c.id)}" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-neutral-200 hover:bg-white/[0.08] text-left">
-                      Umbenennen
+                  <div class="flex items-center gap-1 flex-1 min-w-0 pr-0.5" data-rename-wrap="${escapeHtml(c.id)}">
+                    <input type="text" data-rename-input="${escapeHtml(c.id)}" value="${escapeHtml(c.title || 'Neuer Chat')}" class="flex-1 min-w-0 h-7 bg-neutral-950 border border-white/25 rounded-md px-2 text-[13px] font-medium text-white placeholder-neutral-500 focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/20" />
+                    <button type="button" data-rename-save="${escapeHtml(c.id)}" class="grid place-items-center h-6 w-6 rounded-md bg-white text-black hover:bg-neutral-200 flex-shrink-0 transition-colors" title="Speichern">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                     </button>
-                    <button type="button" data-delete-chat="${escapeHtml(c.id)}" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-red-400 hover:bg-red-500/10 text-left">
-                      Löschen
+                    <button type="button" data-rename-cancel="${escapeHtml(c.id)}" class="grid place-items-center h-6 w-6 rounded-md text-neutral-400 hover:text-white hover:bg-white/10 flex-shrink-0 transition-colors" title="Abbrechen">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
                   </div>
-                </div>
+                ` : `
+                  <span class="flex-1 min-w-0 truncate text-[13.5px] font-medium pr-1">${escapeHtml(c.title || 'Neuer Chat')}</span>
+                  <div class="relative flex-shrink-0">
+                    <button type="button" data-chat-options="${escapeHtml(c.id)}" class="relative grid place-items-center h-7 w-7 flex-shrink-0 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.1] transition-[opacity,color,background-color,transform] duration-150 active:scale-[0.94] before:absolute before:inset-[-6px] before:content-[''] ${isMobile || isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100'}" title="Optionen" aria-label="Chat-Optionen">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal w-4 h-4"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                    </button>
+                    <div data-chat-options-menu="${escapeHtml(c.id)}" class="orbit-dropdown-menu ${isMenuOpen ? '' : 'hidden'} absolute right-0 top-8 w-40 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1 z-[99999]">
+                      <button type="button" data-rename-chat="${escapeHtml(c.id)}" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-neutral-200 hover:bg-white/[0.08] text-left transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-400"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        Umbenennen
+                      </button>
+                      <button type="button" data-delete-chat="${escapeHtml(c.id)}" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-red-400 hover:bg-red-500/10 text-left transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        Löschen
+                      </button>
+                    </div>
+                  </div>
+                `}
               </div>
             </div>
           `;
@@ -1396,7 +1414,12 @@ DashboardTabs.Builder = async function(container, guildId) {
 
     container.querySelectorAll('[data-select-chat]').forEach(el => {
       el.addEventListener('click', (e) => {
-        if (e.target.closest('[data-chat-options]') || e.target.closest('[data-delete-chat]') || e.target.closest('[data-rename-chat]') || e.target.closest('[data-rename-input]')) return;
+        if (
+          e.target.closest('[data-chat-options]') ||
+          e.target.closest('[data-delete-chat]') ||
+          e.target.closest('[data-rename-chat]') ||
+          e.target.closest('[data-rename-wrap]')
+        ) return;
         activeChatId = el.getAttribute('data-select-chat');
         mobileChatDrawerOpen = false;
         openChatOptionsId = null;
@@ -1438,13 +1461,26 @@ DashboardTabs.Builder = async function(container, guildId) {
 
     container.querySelectorAll('[data-rename-input]').forEach(inp => {
       const cid = inp.getAttribute('data-rename-input');
+      let committed = false;
       const commitRename = () => {
-        if (editingChatId !== cid) return;
+        if (committed || editingChatId !== cid) return;
+        committed = true;
+        const nextTitle = inp.value.trim();
         const target = chats.find(c => c.id === cid);
-        if (target && inp.value.trim()) {
-          target.title = inp.value.trim();
+        if (target && nextTitle) {
+          target.title = nextTitle;
+          target.updated_at = Date.now() / 1000;
           saveLocalChats(chats, activeChatId);
+          if (!String(cid).startsWith('temp_') && API.renameAIHelperChat) {
+            API.renameAIHelperChat(guildId, cid, nextTitle).catch(() => {});
+          }
         }
+        editingChatId = null;
+        render();
+      };
+      const cancelRename = () => {
+        if (committed) return;
+        committed = true;
         editingChatId = null;
         render();
       };
@@ -1455,11 +1491,26 @@ DashboardTabs.Builder = async function(container, guildId) {
           commitRename();
         } else if (e.key === 'Escape') {
           e.preventDefault();
-          editingChatId = null;
-          render();
+          cancelRename();
         }
       });
-      inp.addEventListener('blur', commitRename);
+      const saveBtn = container.querySelector(`[data-rename-save="${CSS.escape ? CSS.escape(cid) : cid}"]`);
+      const cancelBtn = container.querySelector(`[data-rename-cancel="${CSS.escape ? CSS.escape(cid) : cid}"]`);
+      saveBtn?.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        commitRename();
+      });
+      cancelBtn?.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cancelRename();
+      });
+      inp.addEventListener('blur', () => {
+        setTimeout(() => {
+          if (!committed) commitRename();
+        }, 100);
+      });
     });
 
     container.querySelectorAll('[data-delete-chat]').forEach(btn => {
