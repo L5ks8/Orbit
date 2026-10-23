@@ -51,9 +51,17 @@ const Router = {
     const app = document.getElementById('app');
     if (!app) return;
 
-    // If accessing dashboard while not logged in, always redirect to home screen immediately
+    // If accessing dashboard while not logged in, prompt login popup and redirect
     if (path.startsWith('/dashboard') && !this.currentUser) {
-      return this.replace('/');
+      this.replace('/');
+      API.login(path).then(() => {
+        this.checkAuth().then(() => {
+          if (this.currentUser) {
+            this.navigate(path);
+          }
+        });
+      });
+      return;
     }
 
     // Show top navbar for public pages
@@ -169,3 +177,21 @@ const Router = {
 window.Router = Router;
 window.Pages = window.Pages || {};
 window.DashboardTabs = window.DashboardTabs || {};
+
+window.handleDashboardAuth = function(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (window.Router && window.Router.currentUser) {
+    window.Router.navigate('/dashboard');
+  } else {
+    API.login('/dashboard').then(() => {
+      if (window.Router) {
+        window.Router.checkAuth().then(() => {
+          if (window.Router.currentUser) {
+            window.Router.navigate('/dashboard');
+          }
+        });
+      }
+    });
+  }
+};
+

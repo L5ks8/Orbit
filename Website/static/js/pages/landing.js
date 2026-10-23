@@ -64,7 +64,7 @@ Pages.Landing = function(container) {
         </form>
         
         <div class="hero-ctas flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-10 lg:mb-14 animate-fade-in-up delay-225">
-          <a href="/dashboard" class="flex items-center gap-2 bg-white hover:bg-neutral-200 text-black text-sm sm:text-base font-semibold px-5 sm:px-8 py-3 sm:py-4 rounded-full btn-glow btn-arrow-container cursor-pointer">
+          <a href="/dashboard" onclick="handleDashboardAuth(event)" class="flex items-center gap-2 bg-white hover:bg-neutral-200 text-black text-sm sm:text-base font-semibold px-5 sm:px-8 py-3 sm:py-4 rounded-full btn-glow btn-arrow-container cursor-pointer">
             Go to Dashboard
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-4 h-4 btn-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
           </a>
@@ -113,7 +113,7 @@ Pages.Landing = function(container) {
             <div class="w-full lg:w-1/2">
               <h3 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-balance">Modern Ticket &amp; Support System</h3>
               <p class="text-neutral-400 leading-relaxed mb-5 text-pretty">Automated ticket creation with Components v2, multi-category routing, moderator button claiming, HTML transcripts, and real-time Discord support.</p>
-              <a href="${botInviteUrl}" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-neutral-200 transition-[background-color,transform] hover:-translate-y-0.5 active:scale-[0.96] cursor-pointer group/cta">
+              <a href="/dashboard" onclick="handleDashboardAuth(event)" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-neutral-200 transition-[background-color,transform] hover:-translate-y-0.5 active:scale-[0.96] cursor-pointer group/cta">
                 Get Started
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-3.5 h-3.5 group-hover/cta:translate-x-0.5 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
               </a>
@@ -130,7 +130,7 @@ Pages.Landing = function(container) {
             <div class="w-full lg:w-1/2">
               <h3 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-balance">Ask your analytics</h3>
               <p class="text-neutral-400 leading-relaxed mb-5 text-pretty">Ask a plain question and get a live chart with a straight answer — then fix what’s slowing your server down.</p>
-              <a href="${botInviteUrl}" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-neutral-200 transition-[background-color,transform] hover:-translate-y-0.5 active:scale-[0.96] cursor-pointer group/cta">
+              <a href="/dashboard" onclick="handleDashboardAuth(event)" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-neutral-200 transition-[background-color,transform] hover:-translate-y-0.5 active:scale-[0.96] cursor-pointer group/cta">
                 Get Started
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-3.5 h-3.5 group-hover/cta:translate-x-0.5 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
               </a>
@@ -147,7 +147,7 @@ Pages.Landing = function(container) {
             <div class="w-full lg:w-1/2">
               <h3 class="text-2xl lg:text-3xl font-bold text-white mb-4 text-balance">Auto-Moderation &amp; Server Protection</h3>
               <p class="text-neutral-400 leading-relaxed mb-5 text-pretty">Powerful protection against spam, phishing links, mass mentions, and raids. Configurable filters, AutoMod rules, and detailed moderation logs.</p>
-              <a href="${botInviteUrl}" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-neutral-200 transition-[background-color,transform] hover:-translate-y-0.5 active:scale-[0.96] cursor-pointer group/cta">
+              <a href="/dashboard" onclick="handleDashboardAuth(event)" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-neutral-200 transition-[background-color,transform] hover:-translate-y-0.5 active:scale-[0.96] cursor-pointer group/cta">
                 Get Started
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-3.5 h-3.5 group-hover/cta:translate-x-0.5 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
               </a>
