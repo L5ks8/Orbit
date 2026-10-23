@@ -963,34 +963,42 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       const circumference = 94.2;
 
       body.innerHTML = `
-        <div class="divide-y divide-neutral-800/40">
-          ${channels.map((ch) => {
-            const msgs = Number(ch.messages) || 0;
-            const pct = ch.percentage !== undefined ? Number(ch.percentage) : Math.round((msgs / totalMsgs) * 100);
-            const changeVal = ch.change !== undefined ? Number(ch.change) : msgs;
-            const changeFormatted = changeVal >= 0 ? `+${formatNumber(changeVal)}` : formatNumber(changeVal);
-            const dashLen = Math.max(0, Math.min(circumference, (pct / 100) * circumference)).toFixed(1);
+        <div>
+          <div class="grid grid-cols-[minmax(0,1.4fr)_minmax(56px,auto)_minmax(64px,auto)] sm:grid-cols-[minmax(0,1.4fr)_minmax(70px,1fr)_minmax(90px,1fr)_minmax(110px,1fr)] gap-2 sm:gap-3 px-2.5 pb-1.5">
+            <span class="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Channel</span>
+            <span class="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Messages</span>
+            <span class="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">% of Activity</span>
+            <span class="hidden sm:block text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">Change</span>
+          </div>
+          <div class="divide-y divide-neutral-800/40">
+            ${channels.map((ch) => {
+              const msgs = Number(ch.messages) || 0;
+              const pct = ch.percentage !== undefined ? Number(ch.percentage) : Math.round((msgs / totalMsgs) * 100);
+              const changeVal = ch.change !== undefined ? Number(ch.change) : msgs;
+              const changeFormatted = changeVal >= 0 ? `+${formatNumber(changeVal)}` : formatNumber(changeVal);
+              const dashLen = Math.max(0, Math.min(circumference, (pct / 100) * circumference)).toFixed(1);
 
-            return `
-              <div class="grid grid-cols-[minmax(0,1.4fr)_minmax(56px,auto)_minmax(64px,auto)] sm:grid-cols-[minmax(0,1.4fr)_minmax(70px,1fr)_minmax(90px,1fr)_minmax(110px,1fr)] gap-2 sm:gap-3 items-center px-2.5 py-1.5 hover:bg-white/[0.02] transition-colors">
-                <span class="inline-flex items-center gap-1 min-w-0 px-1.5 py-0.5 bg-indigo-500/15 border border-indigo-500/20 rounded w-fit max-w-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-2.5 h-2.5 text-indigo-300 flex-shrink-0"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
-                  <span class="text-[11px] text-indigo-200 font-medium truncate">${escapeHtml(ch.name)}</span>
-                </span>
-                <span class="text-sm text-white font-semibold tabular-nums">${formatNumber(msgs)}</span>
-                <div class="flex items-center gap-1.5">
-                  <div class="relative w-5 h-5 flex-shrink-0">
-                    <svg viewBox="0 0 36 36" class="w-5 h-5 -rotate-90">
-                      <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="4" class="text-neutral-700"></circle>
-                      <circle data-target-dash="${dashLen} 94.2" cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 94.2" class="text-emerald-500" style="transition: stroke-dasharray 550ms cubic-bezier(0.22, 1, 0.36, 1);"></circle>
-                    </svg>
+              return `
+                <div class="grid grid-cols-[minmax(0,1.4fr)_minmax(56px,auto)_minmax(64px,auto)] sm:grid-cols-[minmax(0,1.4fr)_minmax(70px,1fr)_minmax(90px,1fr)_minmax(110px,1fr)] gap-2 sm:gap-3 items-center px-2.5 py-1.5 hover:bg-white/[0.02] transition-colors">
+                  <span class="inline-flex items-center gap-1 min-w-0 px-1.5 py-0.5 bg-indigo-500/15 border border-indigo-500/20 rounded w-fit max-w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-2.5 h-2.5 text-indigo-300 flex-shrink-0"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
+                    <span class="text-[11px] text-indigo-200 font-medium truncate">${escapeHtml(ch.name)}</span>
+                  </span>
+                  <span class="text-sm text-white font-semibold tabular-nums">${formatNumber(msgs)}</span>
+                  <div class="flex items-center gap-1.5">
+                    <div class="relative w-5 h-5 flex-shrink-0">
+                      <svg viewBox="0 0 36 36" class="w-5 h-5 -rotate-90">
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="4" class="text-neutral-700"></circle>
+                        <circle data-target-dash="${dashLen} 94.2" cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 94.2" class="text-emerald-500" style="transition: stroke-dasharray 550ms cubic-bezier(0.22, 1, 0.36, 1);"></circle>
+                      </svg>
+                    </div>
+                    <span class="text-xs text-neutral-200 tabular-nums">${pct}%</span>
                   </div>
-                  <span class="text-xs text-neutral-200 tabular-nums">${pct}%</span>
+                  <span class="hidden sm:inline text-xs tabular-nums font-medium ${changeVal >= 0 ? 'text-emerald-400' : 'text-red-400'}">${changeFormatted}</span>
                 </div>
-                <span class="hidden sm:inline text-xs tabular-nums font-medium ${changeVal >= 0 ? 'text-emerald-400' : 'text-red-400'}">${changeFormatted}</span>
-              </div>
-            `;
-          }).join('')}
+              `;
+            }).join('')}
+          </div>
         </div>
       `;
 
