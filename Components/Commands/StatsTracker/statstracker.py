@@ -14,7 +14,8 @@ class StatsTracker(commands.Cog):
         if db is None:
             return
             
-        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        now_utc = datetime.now(timezone.utc)
+        today_str = now_utc.strftime("%Y-%m-%d")
         doc_id = f"{guild_id}_{today_str}"
         
         update_data = {
@@ -25,6 +26,10 @@ class StatsTracker(commands.Cog):
             }
         }
         
+        if stat_name == "messages":
+            hour_key = now_utc.strftime("%H")
+            update_data["$inc"][f"hours.{hour_key}"] = amount
+
         if channel_id:
             update_data["$inc"][f"channels.{channel_id}"] = amount
             

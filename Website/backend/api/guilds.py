@@ -256,6 +256,75 @@ class GuildsMixin:
         self._manageable_guilds_cache[user["id"]] = {'time': now, 'data': manageable_guilds}
         return web.json_response(manageable_guilds)
 
+    def _build_48h_buckets(self, guild_id: int, doc_map: dict, now_dt):
+        from datetime import timedelta
+        import time
+
+        hourly_buckets = []
+        bucket_index_by_key = {}
+        dates_in_48h = set()
+        for i in range(47, -1, -1):
+            d = now_dt - timedelta(hours=i)
+            date_key = d.strftime("%Y-%m-%d")
+            hour_key = d.strftime("%H")
+            dates_in_48h.add(date_key)
+            idx = len(hourly_buckets)
+            bucket_index_by_key[(date_key, hour_key)] = idx
+            hourly_buckets.append({
+                "date": date_key,
+                "hour": hour_key,
+                "label": f"{d.month:02d}/{d.day:02d} {d.hour:02d}h",
+                "short_label": f"{d.hour:02d}:00",
+                "messages": 0
+            })
+
+        # 1. Populate from saved hourly buckets in GuildStats
+        tracked_by_date = {dk: 0 for dk in dates_in_48h}
+        for (date_key, hour_key), idx in bucket_index_by_key.items():
+            doc = doc_map.get(date_key)
+            if doc and isinstance(doc.get("hours"), dict):
+                val = int(doc["hours"].get(hour_key, 0) or 0)
+                hourly_buckets[idx]["messages"] += val
+                tracked_by_date[date_key] = tracked_by_date.get(date_key, 0) + val
+
+        # 2. Check in-memory recent_messages for the last ~65 minutes if any exceed persisted hourly count
+        recent = []
+        if hasattr(self.bot, "recent_messages"):
+            recent = self.bot.recent_messages.get(guild_id, [])
+        if recent:
+            from datetime import datetime, timezone
+            mem_hour_counts = {}
+            for ts in recent:
+                dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+                k = (dt.strftime("%Y-%m-%d"), dt.strftime("%H"))
+                mem_hour_counts[k] = mem_hour_counts.get(k, 0) + 1
+            for k, mem_cnt in mem_hour_counts.items():
+                if k in bucket_index_by_key:
+                    idx = bucket_index_by_key[k]
+                    if mem_cnt > hourly_buckets[idx]["messages"]:
+                        diff = mem_cnt - hourly_buckets[idx]["messages"]
+                        hourly_buckets[idx]["messages"] = mem_cnt
+                        tracked_by_date[k[0]] = tracked_by_date.get(k[0], 0) + diff
+
+        # 3. For any date in the last 48h where doc["messages"] > sum(hours) (e.g. saved before hourly subdoc),
+        # place the remaining untracked messages into the valid hours of that date in the 48h window.
+        for date_key in sorted(dates_in_48h):
+            doc = doc_map.get(date_key)
+            if not doc:
+                continue
+            doc_msgs = int(doc.get("messages", 0) or 0)
+            untracked = doc_msgs - tracked_by_date.get(date_key, 0)
+            if untracked > 0:
+                date_indices = [
+                    idx for (dk, _), idx in bucket_index_by_key.items() if dk == date_key
+                ]
+                if date_indices:
+                    # Place in most recent hour(s) of that date so total_48h and bars reflect MongoDB data accurately
+                    target_idx = date_indices[-1]
+                    hourly_buckets[target_idx]["messages"] += untracked
+
+        return hourly_buckets
+
     async def api_guild_stats(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
@@ -266,43 +335,87 @@ class GuildsMixin:
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
             
-        try:
-            days = int(request.query.get("days", "7"))
-        except ValueError:
-            days = 7
+        raw_days = str(request.query.get("days", "7")).strip().lower()
+        raw_channels_days = str(request.query.get("channels_days", raw_days)).strip().lower()
             
         from Components.Database.mongodb import get_db
         db = get_db()
         
         from datetime import datetime, timedelta, timezone
+        import time
         today = datetime.now(timezone.utc)
-        
-        stats = []
-        today_doc = None
-        channels_agg = {}
+        today_str = today.strftime("%Y-%m-%d")
+
+        all_docs = []
+        doc_map = {}
         if db is not None:
-            doc_ids = []
-            for i in range(days - 1, -1, -1):
+            try:
+                all_docs = list(db["GuildStats"].find({
+                    "$or": [
+                        {"guild_id": guild_id},
+                        {"guild_id": str(guild_id)},
+                        {"_id": {"$regex": f"^{guild_id}_"}}
+                    ]
+                }))
+                for doc in all_docs:
+                    d_str = doc.get("date")
+                    if not d_str and isinstance(doc.get("_id"), str) and "_" in doc["_id"]:
+                        d_str = doc["_id"].split("_", 1)[1]
+                    if d_str:
+                        doc_map[d_str] = doc
+            except Exception as e:
+                print(f"[api_guild_stats] Error querying GuildStats for {guild_id}: {e}", flush=True)
+
+        def _resolve_num_days(val_str: str) -> int:
+            if val_str == "all":
+                if doc_map:
+                    earliest_str = min(doc_map.keys())
+                    try:
+                        earliest_dt = datetime.strptime(earliest_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        span = (today.replace(hour=0, minute=0, second=0, microsecond=0) - earliest_dt).days + 1
+                        return max(7, min(span, 365))
+                    except Exception:
+                        return 30
+                return 30
+            try:
+                return max(1, min(int(val_str), 365))
+            except ValueError:
+                return 7
+
+        num_days = _resolve_num_days(raw_days)
+        channels_num_days = _resolve_num_days(raw_channels_days)
+
+        live_48h = self._build_48h_buckets(guild_id, doc_map, today)
+        total_48h = sum(b["messages"] for b in live_48h)
+
+        # Build Activity history for requested range
+        stats = []
+        prev_period_messages = 0
+        if raw_days == "1":
+            # For 1D (Last 24 hours), provide 24 hourly points so the Activity chart renders a full 24h curve
+            last_24 = live_48h[-24:]
+            prev_24 = live_48h[:24]
+            prev_period_messages = sum(b["messages"] for b in prev_24)
+            for b in last_24:
+                stats.append({
+                    "date": b["short_label"],
+                    "full_date": b["label"],
+                    "joins": 0,
+                    "leaves": 0,
+                    "messages": b["messages"]
+                })
+        else:
+            for i in range(num_days - 1, -1, -1):
                 d = today - timedelta(days=i)
                 date_str = d.strftime("%Y-%m-%d")
-                doc_ids.append(f"{guild_id}_{date_str}")
-                
-            docs = list(db["GuildStats"].find({"_id": {"$in": doc_ids}}))
-            doc_map = {doc["_id"]: doc for doc in docs}
-            
-            for doc_id in doc_ids:
-                doc = doc_map.get(doc_id)
-                date_str = doc_id.split("_")[1]
+                doc = doc_map.get(date_str)
                 if doc:
                     stats.append({
                         "date": date_str,
-                        "joins": doc.get("joins", 0),
-                        "leaves": doc.get("leaves", 0),
-                        "messages": doc.get("messages", 0)
+                        "joins": int(doc.get("joins", 0) or 0),
+                        "leaves": int(doc.get("leaves", 0) or 0),
+                        "messages": int(doc.get("messages", 0) or 0)
                     })
-                    if "channels" in doc:
-                        for cid, count in doc["channels"].items():
-                            channels_agg[cid] = channels_agg.get(cid, 0) + count
                 else:
                     stats.append({
                         "date": date_str,
@@ -310,10 +423,127 @@ class GuildsMixin:
                         "leaves": 0,
                         "messages": 0
                     })
-                    
-            today_str = today.strftime("%Y-%m-%d")
-            today_doc = doc_map.get(f"{guild_id}_{today_str}")
-        
+            for i in range(num_days * 2 - 1, num_days - 1, -1):
+                d = today - timedelta(days=i)
+                date_str = d.strftime("%Y-%m-%d")
+                doc = doc_map.get(date_str)
+                if doc:
+                    prev_period_messages += int(doc.get("messages", 0) or 0)
+
+        period_messages = sum(item["messages"] for item in stats)
+
+        # Build Top Message Channels for channels_days range
+        channels_agg = {}
+        if raw_channels_days == "all":
+            target_docs = list(doc_map.values())
+        else:
+            target_docs = []
+            for i in range(channels_num_days - 1, -1, -1):
+                d = today - timedelta(days=i)
+                doc = doc_map.get(d.strftime("%Y-%m-%d"))
+                if doc:
+                    target_docs.append(doc)
+
+        for doc in target_docs:
+            ch_map = doc.get("channels")
+            if isinstance(ch_map, dict):
+                for cid, count in ch_map.items():
+                    channels_agg[str(cid)] = channels_agg.get(str(cid), 0) + int(count or 0)
+
+        # Compute 7-day and previous 7-day metrics for top stat cards
+        week_messages = 0
+        prev_week_messages = 0
+        week_joins = 0
+        week_leaves = 0
+        prev_week_joins = 0
+        prev_week_leaves = 0
+        week_voice_minutes = 0
+        prev_week_voice_minutes = 0
+        week_active_users_set = set()
+        prev_week_active_users_set = set()
+
+        for i in range(6, -1, -1):
+            d_str = (today - timedelta(days=i)).strftime("%Y-%m-%d")
+            doc = doc_map.get(d_str)
+            if doc:
+                week_messages += int(doc.get("messages", 0) or 0)
+                week_joins += int(doc.get("joins", 0) or 0)
+                week_leaves += int(doc.get("leaves", 0) or 0)
+                week_voice_minutes += int(doc.get("voice_minutes", 0) or 0)
+                for u in doc.get("active_users", []) or []:
+                    week_active_users_set.add(str(u))
+
+        for i in range(13, 6, -1):
+            d_str = (today - timedelta(days=i)).strftime("%Y-%m-%d")
+            doc = doc_map.get(d_str)
+            if doc:
+                prev_week_messages += int(doc.get("messages", 0) or 0)
+                prev_week_joins += int(doc.get("joins", 0) or 0)
+                prev_week_leaves += int(doc.get("leaves", 0) or 0)
+                prev_week_voice_minutes += int(doc.get("voice_minutes", 0) or 0)
+                for u in doc.get("active_users", []) or []:
+                    prev_week_active_users_set.add(str(u))
+
+        # Include live active voice sessions not yet flushed to MongoDB
+        stats_cog = self.bot.get_cog("StatsTracker")
+        live_voice_minutes = 0
+        if stats_cog and hasattr(stats_cog, "voice_join_times"):
+            now_ts = time.time()
+            for uid_str, join_ts in list(stats_cog.voice_join_times.items()):
+                try:
+                    member = guild.get_member(int(uid_str))
+                    if member and member.voice and member.voice.channel:
+                        elapsed = max(0, int((now_ts - join_ts) / 60))
+                        live_voice_minutes += elapsed
+                        week_active_users_set.add(str(uid_str))
+                except Exception:
+                    pass
+
+        week_voice_minutes += live_voice_minutes
+
+        # Fallback to LevelData if GuildStats has 0 messages/voice (e.g. historical data in LevelData)
+        if db is not None and week_messages == 0 and week_voice_minutes == 0 and not doc_map:
+            try:
+                level_docs = list(db["LevelData"].find({"$or": [{"guild_id": guild_id}, {"guild_id": str(guild_id)}]}))
+                if level_docs:
+                    lvl_msgs = sum(int(d.get("message_count", 0) or 0) for d in level_docs)
+                    lvl_voice = sum(int(d.get("voice_minutes", 0) or 0) for d in level_docs)
+                    lvl_users = {str(d.get("user_id")) for d in level_docs if (d.get("message_count", 0) or 0) > 0 or (d.get("voice_minutes", 0) or 0) > 0}
+                    week_messages = max(week_messages, lvl_msgs)
+                    week_voice_minutes = max(week_voice_minutes, lvl_voice)
+                    week_active_users_set |= lvl_users
+            except Exception:
+                pass
+
+        today_doc = doc_map.get(today_str)
+        today_messages = int(today_doc.get("messages", 0) or 0) if today_doc else 0
+        today_joins = int(today_doc.get("joins", 0) or 0) if today_doc else 0
+        today_leaves = int(today_doc.get("leaves", 0) or 0) if today_doc else 0
+        today_active_users = len(today_doc.get("active_users", [])) if today_doc and "active_users" in today_doc else 0
+        today_voice_minutes = (int(today_doc.get("voice_minutes", 0) or 0) if today_doc else 0) + live_voice_minutes
+
+        voice_hours = round(week_voice_minutes / 60, 1)
+        if voice_hours.is_integer():
+            voice_hours = int(voice_hours)
+
+        def _calc_pct(curr: float, prev: float) -> int:
+            if prev <= 0:
+                return 100 if curr > 0 else 0
+            return round(((curr - prev) / prev) * 100)
+
+        total_members = guild.member_count or len(guild.members) or 0
+        net_week_members = week_joins - week_leaves
+        prev_members_est = max(1, total_members - net_week_members)
+        members_pct = round((net_week_members / prev_members_est) * 100) if net_week_members != 0 else 0
+
+        changes = {
+            "members_pct": members_pct,
+            "messages_pct": _calc_pct(week_messages, prev_week_messages),
+            "active_users_pct": _calc_pct(len(week_active_users_set), len(prev_week_active_users_set)),
+            "voice_pct": _calc_pct(week_voice_minutes, prev_week_voice_minutes),
+            "period_messages_pct": _calc_pct(period_messages, prev_period_messages)
+        }
+
         from Components.Systems.Tickets._storage import load_ticket_config
         ticket_cfg = load_ticket_config(guild_id)
         open_tickets = len(ticket_cfg.get("active_tickets", {}))
@@ -321,25 +551,41 @@ class GuildsMixin:
         total_msgs = sum(channels_agg.values()) if channels_agg else 1
         top_channels = []
         for cid, count in sorted(channels_agg.items(), key=lambda x: x[1], reverse=True)[:5]:
-            ch = guild.get_channel(int(cid))
+            if count <= 0:
+                continue
+            ch = guild.get_channel(int(cid)) if str(cid).isdigit() else None
+            ch_name = ch.name if ch else f"channel-{cid}"
             if ch:
                 top_channels.append({
-                    "name": ch.name,
+                    "id": str(cid),
+                    "name": ch_name,
                     "messages": count,
                     "percentage": round((count / total_msgs) * 100),
                     "change": count
                 })
         
         return web.json_response({
-            "total_members": guild.member_count,
-            "today_joins": today_doc.get("joins", 0) if today_doc else 0,
-            "today_leaves": today_doc.get("leaves", 0) if today_doc else 0,
-            "today_messages": today_doc.get("messages", 0) if today_doc else 0,
-            "today_active_users": len(today_doc.get("active_users", [])) if today_doc and "active_users" in today_doc else 0,
-            "today_voice_minutes": today_doc.get("voice_minutes", 0) if today_doc else 0,
+            "total_members": total_members,
+            "member_count": total_members,
+            "today_joins": today_joins,
+            "today_leaves": today_leaves,
+            "today_messages": today_messages,
+            "week_messages": week_messages,
+            "message_count": week_messages,
+            "period_messages": period_messages,
+            "prev_period_messages": prev_period_messages,
+            "today_active_users": today_active_users,
+            "week_active_users": len(week_active_users_set),
+            "active_users": len(week_active_users_set),
+            "today_voice_minutes": today_voice_minutes,
+            "week_voice_minutes": week_voice_minutes,
+            "voice_hours": voice_hours,
             "open_tickets": open_tickets,
+            "changes": changes,
             "history": stats,
-            "top_channels": top_channels
+            "top_channels": top_channels,
+            "live_48h": live_48h,
+            "total_48h": total_48h
         })
 
     async def api_guild_stats_live(self, request: web.Request):
@@ -368,15 +614,37 @@ class GuildsMixin:
                     minutes[minute_idx] += 1
                 
         from datetime import datetime, timedelta, timezone
+        now_dt = datetime.now(timezone.utc)
         result = []
         for i in range(60):
-            d = datetime.now(timezone.utc) - timedelta(minutes=59 - i)
+            d = now_dt - timedelta(minutes=59 - i)
             result.append({
                 "name": f"{d.hour:02d}:{d.minute:02d}",
+                "label": f"{d.hour:02d}:{d.minute:02d}",
                 "messages": minutes[i]
             })
+
+        from Components.Database.mongodb import get_db
+        db = get_db()
+        doc_map = {}
+        if db is not None:
+            try:
+                for i in range(3):
+                    d_str = (now_dt - timedelta(days=i)).strftime("%Y-%m-%d")
+                    doc = db["GuildStats"].find_one({"_id": f"{guild_id}_{d_str}"})
+                    if doc:
+                        doc_map[d_str] = doc
+            except Exception:
+                pass
+        live_48h = self._build_48h_buckets(guild_id, doc_map, now_dt)
+        total_48h = sum(b["messages"] for b in live_48h)
             
-        return web.json_response({"live_60m": result, "total_60m": sum(minutes)})
+        return web.json_response({
+            "live_60m": result,
+            "total_60m": sum(minutes),
+            "live_48h": live_48h,
+            "total_48h": total_48h
+        })
 
     async def api_mod_activity(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
@@ -389,22 +657,55 @@ class GuildsMixin:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
             
         from Components.Commands.ModLog._modlog_storage import get_recent_modlogs
-        logs = get_recent_modlogs(guild_id)
+        logs = get_recent_modlogs(guild_id, limit=25)
+
+        if not hasattr(self, "_user_name_cache"):
+            self._user_name_cache = {}
+
+        async def _resolve_user_name(raw_id, prefix: str) -> str:
+            if not raw_id:
+                return f"Unknown {prefix}"
+            raw_str = str(raw_id).strip()
+            if not raw_str.isdigit():
+                return raw_str
+            uid = int(raw_str)
+            if uid == 0:
+                return "AutoMod" if prefix == "Mod" else "Unknown User"
+            member = guild.get_member(uid)
+            if member:
+                self._user_name_cache[uid] = member.display_name or member.name
+                return self._user_name_cache[uid]
+            user_obj = self.bot.get_user(uid)
+            if user_obj:
+                self._user_name_cache[uid] = user_obj.display_name or user_obj.name
+                return self._user_name_cache[uid]
+            if uid in self._user_name_cache:
+                return self._user_name_cache[uid]
+            try:
+                fetched = await self.bot.fetch_user(uid)
+                if fetched:
+                    self._user_name_cache[uid] = fetched.display_name or fetched.name
+                    return self._user_name_cache[uid]
+            except Exception:
+                pass
+            return f"{prefix} {uid}"
         
         results = []
         for log in logs:
-            target = guild.get_member(log.get("user_id"))
-            mod = guild.get_member(log.get("moderator_id"))
-            
-            target_name = target.name if target else f"User {log.get('user_id')}"
-            mod_name = mod.name if mod else f"Mod {log.get('moderator_id')}"
+            uid = log.get("user_id")
+            mid = log.get("moderator_id")
+            target_name = await _resolve_user_name(uid, "User")
+            mod_name = await _resolve_user_name(mid, "Mod")
             
             results.append({
-                "action": log.get("action_type", "Unknown"),
-                "reason": log.get("reason", "No reason provided"),
+                "action": log.get("action_type", "Moderation"),
+                "reason": log.get("reason") or "No reason provided",
                 "target_name": target_name,
+                "target_id": str(uid) if uid else "",
                 "mod_name": mod_name,
-                "timestamp": log.get("timestamp", 0)
+                "mod_id": str(mid) if mid else "",
+                "timestamp": log.get("timestamp", 0),
+                "case_id": log.get("case_id")
             })
             
         return web.json_response(results)

@@ -161,8 +161,9 @@ const API = {
     return await this.request(`/api/mod_activity/${guildId}`);
   },
 
-  async getGuildStats(guildId, days = 7) {
-    return await this.request(`/api/guild_stats/${guildId}?days=${days}`);
+  async getGuildStats(guildId, days = 7, channelsDays = null) {
+    const chQuery = channelsDays !== null ? `&channels_days=${encodeURIComponent(channelsDays)}` : '';
+    return await this.request(`/api/guild_stats/${guildId}?days=${encodeURIComponent(days)}${chQuery}`);
   },
 
   async getGuildStatsLive(guildId) {
