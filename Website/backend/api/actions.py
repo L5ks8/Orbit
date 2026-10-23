@@ -283,36 +283,122 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
         
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("can_roles"):
+        if not guild or not (user_perms.get("can_roles") or user_perms.get("can_channels") or user_perms.get("is_admin")):
             return web.json_response({"error": "Unauthorized or missing Manage Roles permission"}, status=403)
             
         try:
             data = await request.json()
-            channel_id = data.get("channel_id")
-            if not channel_id:
-                return web.json_response({"error": "No channel_id provided"}, status=400)
-                
-            channel = guild.get_channel(int(channel_id))
-            if not channel:
-                return web.json_response({"error": "Channel not found"}, status=400)
-                
             verify_cfg = load_verify_config(guild_id)
-            
-            emb_title = verify_cfg.get("embed_title") or "Server Verification"
-            emb_desc = verify_cfg.get("embed_description") or "Please click the button below to verify your account and gain access to the server."
-            
+            sys_payload = data.get("system") if isinstance(data.get("system"), dict) else data
+
+            created_verified_role = None
+            created_unverified_role = None
+            created_channel = None
+
+            # 1. Create Verified Role if requested
+            if data.get("create_verified_role") or sys_payload.get("create_verified_role"):
+                r_name = str(data.get("verified_role_name") or sys_payload.get("verified_role_name") or "Verified").strip()[:60]
+                r_col_str = str(data.get("verified_role_color") or sys_payload.get("verified_role_color") or "#22c55e").strip()
+                try:
+                    if r_col_str.startswith("rgb"):
+                        inner = r_col_str[r_col_str.find("(") + 1:r_col_str.find(")")]
+                        parts = [int(x.strip()) for x in inner.split(",")[:3]]
+                        r_color = discord.Color.from_rgb(parts[0], parts[1], parts[2])
+                    else:
+                        r_color = discord.Color(int(r_col_str.lstrip("#"), 16))
+                except Exception:
+                    r_color = discord.Color.from_rgb(34, 197, 94)
+
+                existing_r = discord.utils.get(guild.roles, name=r_name)
+                if existing_r and not existing_r.managed and existing_r != guild.default_role:
+                    created_verified_role = existing_r
+                else:
+                    created_verified_role = await guild.create_role(
+                        name=r_name,
+                        color=r_color,
+                        reason="Orbit Verification Quick Setup"
+                    )
+                sys_payload["role_id"] = str(created_verified_role.id)
+
+            # 2. Create Unverified Role if requested
+            if data.get("create_unverified_role") or sys_payload.get("create_unverified_role"):
+                ur_name = str(data.get("unverified_role_name") or sys_payload.get("unverified_role_name") or "Unverified").strip()[:60]
+                existing_ur = discord.utils.get(guild.roles, name=ur_name)
+                if existing_ur and not existing_ur.managed and existing_ur != guild.default_role:
+                    created_unverified_role = existing_ur
+                else:
+                    created_unverified_role = await guild.create_role(
+                        name=ur_name,
+                        color=discord.Color.from_rgb(115, 115, 115),
+                        reason="Orbit Verification Quick Setup"
+                    )
+                sys_payload["remove_role_id"] = str(created_unverified_role.id)
+
+            # 3. Resolve or Create Channel
+            channel_id = sys_payload.get("channel_id") or data.get("channel_id")
+            channel = None
+            if (data.get("create_channel") or sys_payload.get("create_channel")) or not channel_id:
+                if data.get("create_channel") or sys_payload.get("create_channel"):
+                    ch_name = str(data.get("channel_name") or sys_payload.get("channel_name") or "verify").strip().lower().replace(" ", "-")[:50] or "verify"
+                    existing_ch = discord.utils.get(guild.text_channels, name=ch_name)
+                    if existing_ch:
+                        channel = existing_ch
+                    else:
+                        overwrites = {
+                            guild.default_role: discord.PermissionOverwrite(view_channel=True, send_messages=False, add_reactions=False),
+                            guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, embed_links=True, attach_files=True, manage_messages=True)
+                        }
+                        rid_val = sys_payload.get("role_id") or verify_cfg.get("role_id")
+                        if rid_val and str(rid_val).isdigit():
+                            v_role = guild.get_role(int(rid_val))
+                            if v_role:
+                                overwrites[v_role] = discord.PermissionOverwrite(view_channel=False)
+                        channel = await guild.create_text_channel(
+                            name=ch_name,
+                            overwrites=overwrites,
+                            topic="Verify your account here to unlock access to the server.",
+                            reason="Orbit Verification Quick Setup"
+                        )
+                    created_channel = channel
+                    channel_id = str(channel.id)
+                    sys_payload["channel_id"] = channel_id
+
+            if not channel and channel_id and str(channel_id).isdigit():
+                channel = guild.get_channel(int(channel_id))
+            if not channel:
+                return web.json_response({"error": "Bitte wähle einen gültigen Kanal aus oder lasse den Bot einen neuen erstellen."}, status=400)
+
+            # Optional: lock other channels so @everyone only sees #verify until verified
+            if data.get("lock_channels") or sys_payload.get("lock_channels"):
+                rid_val = sys_payload.get("role_id") or verify_cfg.get("role_id")
+                v_role = guild.get_role(int(rid_val)) if (rid_val and str(rid_val).isdigit()) else None
+                try:
+                    await channel.set_permissions(guild.default_role, view_channel=True, send_messages=False)
+                    if v_role:
+                        await channel.set_permissions(v_role, view_channel=False)
+                except Exception:
+                    pass
+
+            emb_title = sys_payload.get("embed_title") or verify_cfg.get("embed_title") or "Server Verification"
+            emb_desc = sys_payload.get("embed_description") or verify_cfg.get("embed_description") or "Please click the button below to verify your account and gain access to the server."
+            raw_color = str(sys_payload.get("embed_color") or verify_cfg.get("embed_color") or "#5865F2").strip()
             try:
-                emb_color = discord.Color(int(str(verify_cfg.get("embed_color", "#5865F2")).lstrip('#'), 16))
+                if raw_color.startswith("rgb"):
+                    inner = raw_color[raw_color.find("(") + 1:raw_color.find(")")]
+                    parts = [int(x.strip()) for x in inner.split(",")[:3]]
+                    emb_color = discord.Color.from_rgb(parts[0], parts[1], parts[2])
+                else:
+                    emb_color = discord.Color(int(raw_color.lstrip('#'), 16))
             except Exception:
                 emb_color = discord.Color.blue()
-                
+
             embed = discord.Embed(
                 title=emb_title,
                 description=emb_desc,
                 color=emb_color
             )
-            
-            emb_image = verify_cfg.get("embed_image", "")
+
+            emb_image = sys_payload.get("embed_image") if "embed_image" in sys_payload else verify_cfg.get("embed_image", "")
             file_to_send = None
             import pathlib
             file_candidates = [
@@ -320,23 +406,32 @@ class ActionsMixin:
                 pathlib.Path(__file__).resolve().parent.parent.parent / "static" / "img" / "default_verify.png",
                 pathlib.Path("Website/frontend/public/img/default_verify.png"),
                 pathlib.Path("Website/frontend/dist/img/default_verify.png"),
-                pathlib.Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "img" / "default_verify.png",
-                pathlib.Path(__file__).resolve().parent.parent.parent / "frontend" / "dist" / "img" / "default_verify.png",
             ]
             local_default_img = next((p for p in file_candidates if p.exists()), None)
-            
-            if (not emb_image or emb_image == "/img/default_verify.png" or emb_image.startswith("/") or "default_verify" in emb_image) and local_default_img:
+
+            if emb_image == "none":
+                pass
+            elif (not emb_image or emb_image == "/img/default_verify.png" or emb_image.startswith("/") or "default_verify" in str(emb_image)) and local_default_img:
                 file_to_send = discord.File(fp=str(local_default_img), filename="verify_banner.png")
                 embed.set_image(url="attachment://verify_banner.png")
-            elif emb_image and emb_image.startswith("http") and "Web/static/default_verify.png" not in emb_image:
-                embed.set_image(url=emb_image)
-            elif local_default_img:
-                file_to_send = discord.File(fp=str(local_default_img), filename="verify_banner.png")
-                embed.set_image(url="attachment://verify_banner.png")
-                
-            from Components.Systems.Verify._views import PersistentVerifyLayout
-            view = PersistentVerifyLayout()
-            
+            elif emb_image and str(emb_image).startswith("http") and "Web/static/default_verify.png" not in str(emb_image):
+                embed.set_image(url=str(emb_image))
+
+            sys_id = str(sys_payload.get("id") or data.get("system_id") or "default")
+            btn_label = str(sys_payload.get("button_label") or verify_cfg.get("button_label") or "Verify").strip()[:80] or "Verify"
+            btn_style_str = str(sys_payload.get("button_style") or verify_cfg.get("button_style") or "success").lower()
+            style_map = {
+                "success": discord.ButtonStyle.success,
+                "primary": discord.ButtonStyle.primary,
+                "secondary": discord.ButtonStyle.secondary,
+                "danger": discord.ButtonStyle.danger
+            }
+            btn_style = style_map.get(btn_style_str, discord.ButtonStyle.success)
+            custom_id = f"orbit:verify_start:{sys_id}" if sys_id and sys_id != "default" else "orbit:verify_start"
+
+            view = discord.ui.View(timeout=None)
+            view.add_item(discord.ui.Button(label=btn_label, style=btn_style, custom_id=custom_id))
+
             send_kwargs = {
                 "embed": embed,
                 "view": view,
@@ -344,15 +439,79 @@ class ActionsMixin:
             }
             if file_to_send:
                 send_kwargs["file"] = file_to_send
-                
-            await channel.send(**send_kwargs)
 
-            verify_cfg = load_verify_config(guild_id)
+            sent_msg = await channel.send(**send_kwargs)
+
+            # Update system & primary verify_cfg
+            import time
+            systems = verify_cfg.get("systems", [])
+            if not isinstance(systems, list):
+                systems = []
+
+            updated_sys = {
+                "id": sys_id,
+                "name": str(sys_payload.get("name") or emb_title or "Verification System"),
+                "enabled": True,
+                "deployed": True,
+                "deployed_at": time.time(),
+                "message_id": str(sent_msg.id),
+                "channel_id": str(channel.id),
+                "role_id": str(sys_payload.get("role_id") or verify_cfg.get("role_id") or ""),
+                "remove_role_id": str(sys_payload.get("remove_role_id") if "remove_role_id" in sys_payload else (verify_cfg.get("remove_role_id") or "")),
+                "verification_type": str(sys_payload.get("verification_type") or verify_cfg.get("verification_type") or "captcha"),
+                "timeout_action": str(sys_payload.get("timeout_action") or verify_cfg.get("timeout_action") or "none"),
+                "timeout_minutes": int(sys_payload.get("timeout_minutes") if "timeout_minutes" in sys_payload else (verify_cfg.get("timeout_minutes") or 0)),
+                "questionnaire_enabled": bool(sys_payload.get("questionnaire_enabled") or sys_payload.get("verification_type") == "questionnaire"),
+                "questions": sys_payload.get("questions") if isinstance(sys_payload.get("questions"), list) else (verify_cfg.get("questions") or []),
+                "embed_title": emb_title,
+                "embed_description": emb_desc,
+                "embed_color": raw_color,
+                "embed_image": emb_image or "/img/default_verify.png",
+                "button_label": btn_label,
+                "button_style": btn_style_str
+            }
+
+            replaced = False
+            for idx, s in enumerate(systems):
+                if isinstance(s, dict) and str(s.get("id")) == sys_id:
+                    systems[idx] = updated_sys
+                    replaced = True
+                    break
+            if not replaced:
+                systems.append(updated_sys)
+
+            verify_cfg["systems"] = systems
             verify_cfg["channel_id"] = channel.id
             verify_cfg["enabled"] = True
+            if updated_sys["role_id"] and updated_sys["role_id"].isdigit():
+                verify_cfg["role_id"] = int(updated_sys["role_id"])
+            if updated_sys["remove_role_id"] and updated_sys["remove_role_id"].isdigit():
+                verify_cfg["remove_role_id"] = int(updated_sys["remove_role_id"])
+            else:
+                verify_cfg["remove_role_id"] = None
+            verify_cfg["verification_type"] = updated_sys["verification_type"]
+            verify_cfg["timeout_action"] = updated_sys["timeout_action"]
+            verify_cfg["timeout_minutes"] = updated_sys["timeout_minutes"]
+            verify_cfg["embed_title"] = updated_sys["embed_title"]
+            verify_cfg["embed_description"] = updated_sys["embed_description"]
+            verify_cfg["embed_color"] = updated_sys["embed_color"]
+            verify_cfg["embed_image"] = updated_sys["embed_image"]
+            verify_cfg["button_label"] = updated_sys["button_label"]
+            verify_cfg["button_style"] = updated_sys["button_style"]
+            verify_cfg["questionnaire_enabled"] = updated_sys["questionnaire_enabled"]
+            verify_cfg["questions"] = updated_sys["questions"]
             save_verify_config(guild_id, verify_cfg)
-            
-            return web.json_response({"success": True})
+
+            return web.json_response({
+                "success": True,
+                "system": updated_sys,
+                "systems": systems,
+                "created_verified_role": {"id": str(created_verified_role.id), "name": created_verified_role.name} if created_verified_role else None,
+                "created_unverified_role": {"id": str(created_unverified_role.id), "name": created_unverified_role.name} if created_unverified_role else None,
+                "created_channel": {"id": str(created_channel.id), "name": created_channel.name} if created_channel else None
+            })
+        except discord.Forbidden:
+            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen (Rollen/Kanäle verwalten oder Nachrichten senden)."}, status=403)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 

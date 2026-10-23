@@ -29,6 +29,16 @@ class VerifyListenerCog(commands.Cog):
         except (ValueError, TypeError):
             return
 
+        # Automatically assign Unverified role on join if configured
+        raw_unverified_id = config.get("remove_role_id")
+        if raw_unverified_id and str(raw_unverified_id).isdigit():
+            unv_role = member.guild.get_role(int(raw_unverified_id))
+            if unv_role and member.guild.me.top_role > unv_role:
+                try:
+                    await member.add_roles(unv_role, reason="Orbit Verification: Unverified role on join")
+                except Exception:
+                    pass
+
         timeout_action = config.get("timeout_action", "none")
         timeout_minutes = config.get("timeout_minutes", 0)
         if timeout_minutes == 0:
@@ -105,9 +115,11 @@ class VerifyListenerCog(commands.Cog):
             return
         if interaction.response.is_done():
             return
-        if interaction.data and interaction.data.get("custom_id") == "orbit:verify_start":
+        cid = str((interaction.data or {}).get("custom_id") or "")
+        if cid == "orbit:verify_start" or cid.startswith("orbit:verify_start:"):
             from Components.Systems.Verify._views import handle_verify_interaction
-            await handle_verify_interaction(interaction)
+            sys_id = cid.split(":", 2)[2] if cid.startswith("orbit:verify_start:") else None
+            await handle_verify_interaction(interaction, system_id=sys_id)
 
     @auto_kick_checker.before_loop
     async def before_auto_kick(self):

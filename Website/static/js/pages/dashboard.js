@@ -242,7 +242,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                   <p class="px-3 mb-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">${sec.title}</p>
                   <div class="space-y-0.5">
                     ${sec.links.map(l => {
-                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings') || (l.id === 'welcomegoodbye' && tab === 'welcome') || (l.id === 'builder' && tab === 'ai-helper');
+                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings') || (l.id === 'welcomegoodbye' && tab === 'welcome') || (l.id === 'builder' && tab === 'ai-helper') || (l.id === 'verify' && tab === 'verification');
                       return `
                         <a 
                           href="${l.path}" 
@@ -442,6 +442,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     'roles': () => DashboardTabs.Roles && DashboardTabs.Roles(tabContainer, guildId),
     'invites': () => DashboardTabs.Invites && DashboardTabs.Invites(tabContainer, guildId),
     'verify': () => DashboardTabs.Verification && DashboardTabs.Verification(tabContainer, guildId),
+    'verification': () => DashboardTabs.Verification && DashboardTabs.Verification(tabContainer, guildId),
     'messages': () => DashboardTabs.Messages && DashboardTabs.Messages(tabContainer, guildId),
     'level': () => DashboardTabs.Level && DashboardTabs.Level(tabContainer, guildId),
     'polls': () => DashboardTabs.Polls && DashboardTabs.Polls(tabContainer, guildId),

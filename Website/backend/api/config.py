@@ -394,15 +394,21 @@ class ConfigMixin:
             },
             "verify": {
                 "enabled": verify_cfg.get("enabled", False),
+                "channel_id": str(verify_cfg.get("channel_id")) if verify_cfg.get("channel_id") else "",
                 "role_id": str(verify_cfg.get("role_id")) if verify_cfg.get("role_id") else "",
                 "remove_role_id": str(verify_cfg.get("remove_role_id")) if verify_cfg.get("remove_role_id") else "",
                 "verification_type": verify_cfg.get("verification_type", "captcha"),
                 "timeout_action": verify_cfg.get("timeout_action", "none"),
-                "timeout_minutes": verify_cfg.get("timeout_minutes", None),
+                "timeout_minutes": verify_cfg.get("timeout_minutes", 0),
                 "embed_title": verify_cfg.get("embed_title") or "Server Verification",
                 "embed_description": verify_cfg.get("embed_description") or "Please click the button below to verify your account and gain access to the server.",
                 "embed_color": verify_cfg.get("embed_color") or "#5865F2",
-                "embed_image": verify_cfg.get("embed_image") or "/img/default_verify.png"
+                "embed_image": verify_cfg.get("embed_image") or "/img/default_verify.png",
+                "button_label": verify_cfg.get("button_label") or "Verify",
+                "button_style": verify_cfg.get("button_style") or "success",
+                "questionnaire_enabled": bool(verify_cfg.get("questionnaire_enabled", False)),
+                "questions": verify_cfg.get("questions", []),
+                "systems": verify_cfg.get("systems", [])
             },
             "autoresponder": autoresponder_cfg,
             "joinroles": {
@@ -860,28 +866,69 @@ class ConfigMixin:
                 
                 save_security_config(guild_id, sec_cfg)
 
-            if user_perms.get("can_roles") and "verify" in data:
+            if (user_perms.get("can_roles") or user_perms.get("can_channels") or user_perms.get("is_admin")) and "verify" in data:
                 verify_cfg = load_verify_config(guild_id)
-                verify_cfg["enabled"] = bool(data.get("verify", {}).get("enabled"))
-                rid = data.get("verify", {}).get("role_id")
-                verify_cfg["role_id"] = int(rid) if rid else None
-                rrid = data.get("verify", {}).get("remove_role_id")
-                verify_cfg["remove_role_id"] = int(rrid) if rrid else None
-                verify_cfg["verification_type"] = data.get("verify", {}).get("verification_type", "captcha")
-                verify_cfg["timeout_action"] = data.get("verify", {}).get("timeout_action", "none")
-                try:
-                    verify_cfg["timeout_minutes"] = int(data.get("verify", {}).get("timeout_minutes", 0))
-                except (ValueError, TypeError):
-                    verify_cfg["timeout_minutes"] = 0
-                
-                verify_cfg["embed_title"] = data.get("verify", {}).get("embed_title") or "Server Verification"
-                verify_cfg["embed_description"] = data.get("verify", {}).get("embed_description") or "Please click the button below to verify your account and gain access to the server."
-                verify_cfg["embed_color"] = data.get("verify", {}).get("embed_color") or "#5865F2"
-                img_val = data.get("verify", {}).get("embed_image", "")
-                if not img_val or "Web/static/default_verify.png" in img_val:
-                    img_val = "/img/default_verify.png"
-                verify_cfg["embed_image"] = img_val
-                verify_cfg["embed_fields"] = data.get("verify", {}).get("embed_fields", [])
+                v_in = data.get("verify", {})
+                if isinstance(v_in.get("systems"), list):
+                    verify_cfg["systems"] = v_in["systems"]
+                    active_sys = next((s for s in v_in["systems"] if isinstance(s, dict) and s.get("enabled", True)), None)
+                    if not active_sys and v_in["systems"]:
+                        active_sys = v_in["systems"][0] if isinstance(v_in["systems"][0], dict) else None
+                    if active_sys:
+                        verify_cfg["enabled"] = any(isinstance(s, dict) and s.get("enabled", True) for s in v_in["systems"])
+                        vcid = active_sys.get("channel_id")
+                        verify_cfg["channel_id"] = int(vcid) if (vcid and str(vcid).isdigit()) else None
+                        vrid = active_sys.get("role_id")
+                        verify_cfg["role_id"] = int(vrid) if (vrid and str(vrid).isdigit()) else None
+                        vrrid = active_sys.get("remove_role_id")
+                        verify_cfg["remove_role_id"] = int(vrrid) if (vrrid and str(vrrid).isdigit()) else None
+                        verify_cfg["verification_type"] = active_sys.get("verification_type", "captcha")
+                        verify_cfg["timeout_action"] = active_sys.get("timeout_action", "none")
+                        try:
+                            verify_cfg["timeout_minutes"] = int(active_sys.get("timeout_minutes", 0) or 0)
+                        except (ValueError, TypeError):
+                            verify_cfg["timeout_minutes"] = 0
+                        verify_cfg["embed_title"] = active_sys.get("embed_title") or "Server Verification"
+                        verify_cfg["embed_description"] = active_sys.get("embed_description") or "Please click the button below to verify your account and gain access to the server."
+                        verify_cfg["embed_color"] = active_sys.get("embed_color") or "#5865F2"
+                        verify_cfg["embed_image"] = active_sys.get("embed_image") or "/img/default_verify.png"
+                        verify_cfg["button_label"] = active_sys.get("button_label") or "Verify"
+                        verify_cfg["button_style"] = active_sys.get("button_style") or "success"
+                        verify_cfg["questionnaire_enabled"] = bool(active_sys.get("questionnaire_enabled", False))
+                        verify_cfg["questions"] = active_sys.get("questions", []) if isinstance(active_sys.get("questions"), list) else []
+                    else:
+                        verify_cfg["enabled"] = False
+                else:
+                    verify_cfg["enabled"] = bool(v_in.get("enabled"))
+                    vcid = v_in.get("channel_id")
+                    if vcid is not None:
+                        verify_cfg["channel_id"] = int(vcid) if (vcid and str(vcid).isdigit()) else None
+                    rid = v_in.get("role_id")
+                    verify_cfg["role_id"] = int(rid) if (rid and str(rid).isdigit()) else None
+                    rrid = v_in.get("remove_role_id")
+                    verify_cfg["remove_role_id"] = int(rrid) if (rrid and str(rrid).isdigit()) else None
+                    verify_cfg["verification_type"] = v_in.get("verification_type", "captcha")
+                    verify_cfg["timeout_action"] = v_in.get("timeout_action", "none")
+                    try:
+                        verify_cfg["timeout_minutes"] = int(v_in.get("timeout_minutes", 0) or 0)
+                    except (ValueError, TypeError):
+                        verify_cfg["timeout_minutes"] = 0
+                    verify_cfg["embed_title"] = v_in.get("embed_title") or "Server Verification"
+                    verify_cfg["embed_description"] = v_in.get("embed_description") or "Please click the button below to verify your account and gain access to the server."
+                    verify_cfg["embed_color"] = v_in.get("embed_color") or "#5865F2"
+                    img_val = v_in.get("embed_image", "")
+                    if not img_val or "Web/static/default_verify.png" in img_val:
+                        img_val = "/img/default_verify.png"
+                    verify_cfg["embed_image"] = img_val
+                    verify_cfg["embed_fields"] = v_in.get("embed_fields", [])
+                    if "button_label" in v_in:
+                        verify_cfg["button_label"] = v_in.get("button_label") or "Verify"
+                    if "button_style" in v_in:
+                        verify_cfg["button_style"] = v_in.get("button_style") or "success"
+                    if "questionnaire_enabled" in v_in:
+                        verify_cfg["questionnaire_enabled"] = bool(v_in.get("questionnaire_enabled"))
+                    if isinstance(v_in.get("questions"), list):
+                        verify_cfg["questions"] = v_in["questions"]
                 
                 save_verify_config(guild_id, verify_cfg)
 

@@ -118,6 +118,64 @@ class CaptchaInteractionLayout(View):
 
 ACTIVE_INTERACTIONS = set()
 
+
+class QuestionnaireVerifyModal(Modal):
+    def __init__(self, role_id: int, remove_role_id: int = None, questions: list = None, title_text: str = "Verification Questionnaire"):
+        super().__init__(title=(title_text or "Verification Questionnaire")[:45])
+        self.role_id = int(role_id) if role_id else None
+        self.remove_role_id = int(remove_role_id) if remove_role_id else None
+        self.questions = (questions or [])[:5]
+        self.inputs = []
+        if not self.questions:
+            self.questions = [{"question": "Do you agree to follow the server rules?", "placeholder": "Type yes to confirm", "answer": ""}]
+        for idx, q in enumerate(self.questions):
+            q_label = str(q.get("question") or f"Question {idx + 1}").strip()[:45]
+            q_placeholder = str(q.get("placeholder") or "Your answer...").strip()[:100]
+            ti = TextInput(
+                label=q_label,
+                placeholder=q_placeholder,
+                min_length=1,
+                max_length=300,
+                required=True
+            )
+            self.inputs.append((ti, str(q.get("answer") or "").strip()))
+            self.add_item(ti)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        if not interaction.guild or not isinstance(interaction.user, discord.Member):
+            return await interaction.followup.send(embed=make_embed("Verification must be completed inside a server.", discord.Color.red()), ephemeral=True)
+
+        for ti, expected in self.inputs:
+            if expected:
+                valid_options = [opt.strip().lower() for opt in expected.split(",") if opt.strip()]
+                user_val = ti.value.strip().lower()
+                if valid_options and user_val not in valid_options:
+                    return await interaction.followup.send(
+                        embed=make_embed(f"**Incorrect answer** for `{ti.label}`.\nPlease review the server rules/instructions and try again.", discord.Color.red()),
+                        ephemeral=True
+                    )
+
+        role = interaction.guild.get_role(self.role_id)
+        if not role:
+            return await interaction.followup.send(embed=make_embed("Configuration error: The verified role could not be found on this server.", discord.Color.red()), ephemeral=True)
+
+        remove_role = interaction.guild.get_role(self.remove_role_id) if self.remove_role_id else None
+        try:
+            await interaction.user.add_roles(role, reason="Completed verification questionnaire")
+            if remove_role and remove_role in interaction.user.roles:
+                try:
+                    await interaction.user.remove_roles(remove_role, reason="Removed after verification questionnaire")
+                except Exception:
+                    pass
+            remove_pending_kick(interaction.guild.id, interaction.user.id)
+            await interaction.followup.send(embed=make_embed("You are now successfully verified on this server!", discord.Color.green()), ephemeral=True)
+        except discord.Forbidden:
+            await interaction.followup.send(embed=make_embed(f"I do not have permission to assign {role.mention}. Please ensure my bot role is higher than the verified role.", discord.Color.red()), ephemeral=True)
+        except Exception as e:
+            await interaction.followup.send(embed=make_embed(f"An error occurred assigning the verified role: {e}", discord.Color.red()), ephemeral=True)
+
+
 async def _send_safe(interaction: discord.Interaction, **kwargs):
     try:
         if not interaction.response.is_done():
@@ -127,20 +185,78 @@ async def _send_safe(interaction: discord.Interaction, **kwargs):
     except (discord.NotFound, discord.HTTPException):
         pass
 
-async def handle_verify_interaction(interaction: discord.Interaction):
+
+def _resolve_system_config(config: dict, system_id: str = None, channel_id: int = None) -> dict:
+    systems = config.get("systems")
+    if isinstance(systems, list) and systems:
+        if system_id:
+            matched = next((s for s in systems if isinstance(s, dict) and str(s.get("id")) == str(system_id)), None)
+            if matched:
+                return matched
+        if channel_id:
+            matched = next((s for s in systems if isinstance(s, dict) and str(s.get("channel_id")) == str(channel_id) and s.get("enabled", True)), None)
+            if matched:
+                return matched
+        active = next((s for s in systems if isinstance(s, dict) and s.get("enabled", True)), None)
+        if active:
+            return active
+    return config
+
+
+async def handle_verify_interaction(interaction: discord.Interaction, system_id: str = None):
     """Central, resilient handler for the verify button click."""
     if interaction.id in ACTIVE_INTERACTIONS:
         return
     ACTIVE_INTERACTIONS.add(interaction.id)
     try:
+        if not interaction.guild:
+            return await _send_safe(interaction, embed=make_embed("Verification must be completed inside a server.", discord.Color.red()), ephemeral=True)
+
+        raw_cfg = load_verify_config(interaction.guild.id)
+        config = _resolve_system_config(raw_cfg, system_id=system_id, channel_id=getattr(interaction.channel, "id", None))
+
+        if not config.get("enabled", True) and not raw_cfg.get("enabled", True):
+            return await _send_safe(interaction, embed=make_embed("Server verification is currently disabled.", discord.Color.red()), ephemeral=True)
+
+        raw_role_id = config.get("role_id") or raw_cfg.get("role_id")
+        if not raw_role_id:
+            return await _send_safe(interaction, embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please contact an administrator.", discord.Color.red()), ephemeral=True)
+
+        try:
+            role_id = int(raw_role_id)
+        except (ValueError, TypeError):
+            return await _send_safe(interaction, embed=make_embed("Server verification has an invalid role configured. Please contact an administrator.", discord.Color.red()), ephemeral=True)
+
+        raw_rem_role_id = config.get("remove_role_id") or raw_cfg.get("remove_role_id")
+        remove_role_id = None
+        if raw_rem_role_id:
+            try:
+                remove_role_id = int(raw_rem_role_id)
+            except (ValueError, TypeError):
+                remove_role_id = None
+
+        verification_type = config.get("verification_type") or raw_cfg.get("verification_type", "captcha")
+        questions = config.get("questions") if isinstance(config.get("questions"), list) else (raw_cfg.get("questions") or [])
+        questionnaire_enabled = bool(config.get("questionnaire_enabled") or verification_type == "questionnaire")
+
+        # QUESTIONNAIRE MODAL (must be sent before deferring!)
+        if (verification_type == "questionnaire" or (questionnaire_enabled and questions)) and not interaction.response.is_done():
+            if isinstance(interaction.user, discord.Member) and any(r.id == role_id for r in interaction.user.roles):
+                return await _send_safe(interaction, embed=make_embed("You are already verified on this server!", discord.Color.green()), ephemeral=True)
+            modal = QuestionnaireVerifyModal(
+                role_id=role_id,
+                remove_role_id=remove_role_id,
+                questions=questions,
+                title_text=str(config.get("name") or config.get("embed_title") or "Verification Questionnaire")
+            )
+            await interaction.response.send_modal(modal)
+            return
+
         if not interaction.response.is_done():
             try:
                 await interaction.response.defer(ephemeral=True)
             except Exception:
                 pass
-
-        if not interaction.guild:
-            return await _send_safe(interaction, embed=make_embed("Verification must be completed inside a server.", discord.Color.red()), ephemeral=True)
 
         member = interaction.user if isinstance(interaction.user, discord.Member) else interaction.guild.get_member(interaction.user.id)
         if not member:
@@ -152,19 +268,6 @@ async def handle_verify_interaction(interaction: discord.Interaction):
         if not isinstance(member, discord.Member):
             return await _send_safe(interaction, embed=make_embed("Could not resolve your server member details. Please try again.", discord.Color.red()), ephemeral=True)
 
-        config = load_verify_config(interaction.guild.id)
-        if not config.get("enabled", True):
-            return await _send_safe(interaction, embed=make_embed("Server verification is currently disabled.", discord.Color.red()), ephemeral=True)
-
-        raw_role_id = config.get("role_id")
-        if not raw_role_id:
-            return await _send_safe(interaction, embed=make_embed("Server verification is currently misconfigured (`Verified role not set`). Please contact an administrator.", discord.Color.red()), ephemeral=True)
-
-        try:
-            role_id = int(raw_role_id)
-        except (ValueError, TypeError):
-            return await _send_safe(interaction, embed=make_embed("Server verification has an invalid role configured. Please contact an administrator.", discord.Color.red()), ephemeral=True)
-
         role = interaction.guild.get_role(role_id)
         if not role:
             return await _send_safe(interaction, embed=make_embed("Server verification is currently misconfigured (`Verified role not found in server`).", discord.Color.red()), ephemeral=True)
@@ -174,16 +277,6 @@ async def handle_verify_interaction(interaction: discord.Interaction):
 
         if interaction.guild.me.top_role <= role:
             return await _send_safe(interaction, embed=make_embed(f"I cannot assign {role.mention} because my bot role is lower in the hierarchy. Please ask a server admin to move my role above the verified role in Server Settings -> Roles.", discord.Color.red()), ephemeral=True)
-
-        raw_rem_role_id = config.get("remove_role_id")
-        remove_role_id = None
-        if raw_rem_role_id:
-            try:
-                remove_role_id = int(raw_rem_role_id)
-            except (ValueError, TypeError):
-                remove_role_id = None
-
-        verification_type = config.get("verification_type", "captcha")
 
         # ONE-CLICK VERIFICATION
         if verification_type == "oneclick":

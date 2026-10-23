@@ -36,6 +36,11 @@ def load_verify_config(guild_id: int) -> Dict[str, Any]:
         "embed_image": DEFAULT_VERIFY_IMAGE,
         "embed_color": DEFAULT_VERIFY_COLOR,
         "embed_fields": [],
+        "button_label": "Verify",
+        "button_style": "success",
+        "questionnaire_enabled": False,
+        "questions": [],
+        "systems": [],
         "verified_ips": []
     }
     
@@ -70,6 +75,35 @@ def load_verify_config(guild_id: int) -> Dict[str, Any]:
         merged["embed_color"] = DEFAULT_VERIFY_COLOR
     if not isinstance(merged.get("embed_fields"), list):
         merged["embed_fields"] = []
+    if not isinstance(merged.get("questions"), list):
+        merged["questions"] = []
+    if not isinstance(merged.get("systems"), list):
+        merged["systems"] = []
+
+    # Migrate legacy single-system config into systems array if systems is empty
+    if not merged["systems"] and (merged.get("role_id") or merged.get("channel_id") or merged.get("enabled")):
+        t_mins = int(merged.get("timeout_minutes") or merged.get("auto_kick_minutes") or 0)
+        t_act = merged.get("timeout_action") or ("kick" if t_mins > 0 else "none")
+        merged["systems"] = [{
+            "id": "default",
+            "name": merged.get("embed_title") or "Server Verification",
+            "enabled": bool(merged.get("enabled", False)),
+            "deployed": bool(merged.get("enabled") and merged.get("channel_id")),
+            "channel_id": str(merged.get("channel_id") or ""),
+            "role_id": str(merged.get("role_id") or ""),
+            "remove_role_id": str(merged.get("remove_role_id") or ""),
+            "verification_type": merged.get("verification_type") or "captcha",
+            "timeout_action": t_act,
+            "timeout_minutes": t_mins,
+            "questionnaire_enabled": bool(merged.get("questionnaire_enabled") or merged.get("verification_type") == "questionnaire"),
+            "questions": merged.get("questions") or [],
+            "embed_title": merged.get("embed_title") or DEFAULT_VERIFY_TITLE,
+            "embed_description": merged.get("embed_description") or DEFAULT_VERIFY_DESC,
+            "embed_color": merged.get("embed_color") or DEFAULT_VERIFY_COLOR,
+            "embed_image": merged.get("embed_image") or DEFAULT_VERIFY_IMAGE,
+            "button_label": merged.get("button_label") or "Verify",
+            "button_style": merged.get("button_style") or "success"
+        }]
         
     return merged
 

@@ -203,10 +203,13 @@ const API = {
     });
   },
 
-  async sendVerifyPanel(guildId, channelId) {
+  async sendVerifyPanel(guildId, channelIdOrPayload) {
+    const body = (typeof channelIdOrPayload === 'object' && channelIdOrPayload !== null)
+      ? channelIdOrPayload
+      : { channel_id: channelIdOrPayload };
     return await this.request(`/api/action/${guildId}/send_verify_panel`, {
       method: 'POST',
-      body: { channel_id: channelId }
+      body
     });
   },
 
