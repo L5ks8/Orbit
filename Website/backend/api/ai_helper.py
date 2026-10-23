@@ -4,6 +4,7 @@ import json
 import time
 import base64
 import secrets
+import pathlib
 import asyncio
 import aiohttp
 import discord
@@ -21,15 +22,16 @@ from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_
 from Components.Systems.JoinToCreate._storage import load_jtc_config, save_jtc_config
 from Components.Systems.Security._storage import load_security_config, save_security_config
 
-# Reversed segments fallback so secret scanners never match a literal or base64 token
-_FALLBACK_PARTS = ("Wz5h34YbuYZPisyQ", "jbyeu59RYF3bydGW", "BMaiCDppv2LCrZ8M", "6V1O_ksg")
 _GROQ_RESOLVED_MODELS: List[str] = []
+_GROQ_VISION_MODELS: List[str] = []
 
-# In-memory fallback stores if MongoDB is unavailable
+# In-memory fallback stores
 _MEM_CHATS: Dict[int, List[Dict[str, Any]]] = {}
 _MEM_UNDO_STACK: Dict[int, List[Dict[str, Any]]] = {}
 _MEM_REDO_STACK: Dict[int, List[Dict[str, Any]]] = {}
 _MEM_ACTION_HISTORY: Dict[int, List[Dict[str, Any]]] = {}
+
+_DATA_DIR = pathlib.Path("Storage") / "AIHelper"
 
 SUPPORTED_PERMISSIONS = {
     "view_channel",
@@ -61,14 +63,25 @@ def _get_groq_api_key() -> str:
     if env_key:
         return env_key
     try:
-        return "".join(_FALLBACK_PARTS)[::-1].strip()
+        env_path = pathlib.Path(".env")
+        if env_path.exists():
+            for line in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+                line = line.strip()
+                if line.startswith("GROQ_API_KEY="):
+                    val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    if val:
+                        os.environ["GROQ_API_KEY"] = val
+                        return val
     except Exception:
-        return ""
+        pass
+    return ""
 
 
-async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str) -> List[str]:
-    global _GROQ_RESOLVED_MODELS
-    if _GROQ_RESOLVED_MODELS:
+async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str, need_vision: bool = False) -> List[str]:
+    global _GROQ_RESOLVED_MODELS, _GROQ_VISION_MODELS
+    if need_vision and _GROQ_VISION_MODELS:
+        return _GROQ_VISION_MODELS
+    if not need_vision and _GROQ_RESOLVED_MODELS:
         return _GROQ_RESOLVED_MODELS
 
     headers = {"Authorization": f"Bearer {groq_key}"}
@@ -80,14 +93,22 @@ async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str) ->
         ) as resp:
             if resp.status == 200:
                 data = await resp.json()
+                all_ids = [m.get("id", "") for m in data.get("data", []) if m.get("id")]
                 raw_models = [
-                    m["id"] for m in data.get("data", [])
-                    if "whisper" not in m.get("id", "").lower()
-                    and "guard" not in m.get("id", "").lower()
-                    and "orpheus" not in m.get("id", "").lower()
-                    and "allam" not in m.get("id", "").lower()
-                    and "tts" not in m.get("id", "").lower()
+                    mid for mid in all_ids
+                    if "whisper" not in mid.lower()
+                    and "guard" not in mid.lower()
+                    and "orpheus" not in mid.lower()
+                    and "allam" not in mid.lower()
+                    and "tts" not in mid.lower()
                 ]
+
+                vision_candidates = [
+                    mid for mid in raw_models
+                    if any(vk in mid.lower() for vk in ("llama-4-scout", "llama-4-maverick", "vision", "llava"))
+                ]
+                if vision_candidates:
+                    _GROQ_VISION_MODELS = vision_candidates
 
                 def _sort_pref(m_id: str) -> int:
                     ml = m_id.lower()
@@ -97,25 +118,38 @@ async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str) ->
                         return 1
                     if "qwen" in ml:
                         return 2
-                    if "20b" in ml or "27b" in ml or "32b" in ml:
+                    if "scout" in ml or "maverick" in ml:
                         return 3
-                    return 4
+                    if "20b" in ml or "27b" in ml or "32b" in ml:
+                        return 4
+                    return 5
 
                 raw_models.sort(key=_sort_pref)
                 if raw_models:
                     _GROQ_RESOLVED_MODELS = raw_models
-                    return _GROQ_RESOLVED_MODELS
     except Exception as e:
         print(f"[AIHelper] Error fetching Groq models: {e}")
 
-    return ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+    if need_vision:
+        return _GROQ_VISION_MODELS or [
+            "meta-llama/llama-4-scout-17b-16e-instruct",
+            "meta-llama/llama-4-maverick-17b-128e-instruct",
+            "llama-3.2-90b-vision-preview",
+            "llama-3.2-11b-vision-preview",
+        ]
+
+    return _GROQ_RESOLVED_MODELS or [
+        "openai/gpt-oss-120b",
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-20b",
+        "llama-3.3-70b-versatile",
+    ]
 
 
 def _extract_json_payload(raw_text: str) -> Dict[str, Any]:
     """Extracts JSON object from the model output, stripping <think> tags or markdown fences."""
     cleaned = re.sub(r"<think>[\s\S]*?</think>", "", raw_text or "", flags=re.DOTALL).strip()
 
-    # Try direct JSON parse
     try:
         parsed = json.loads(cleaned)
         if isinstance(parsed, dict):
@@ -123,7 +157,6 @@ def _extract_json_payload(raw_text: str) -> Dict[str, Any]:
     except Exception:
         pass
 
-    # Try extracting from ```json ... ``` code block
     fence_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", cleaned, flags=re.IGNORECASE)
     if fence_match:
         try:
@@ -133,7 +166,6 @@ def _extract_json_payload(raw_text: str) -> Dict[str, Any]:
         except Exception:
             pass
 
-    # Try finding outermost { ... }
     first_brace = cleaned.find("{")
     last_brace = cleaned.rfind("}")
     if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
@@ -149,27 +181,68 @@ def _extract_json_payload(raw_text: str) -> Dict[str, Any]:
 
 
 class AIHelperMixin:
+    def _disk_chat_path(self, guild_id: int) -> pathlib.Path:
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        return _DATA_DIR / f"chats_{guild_id}.json"
+
     def _load_guild_chats(self, guild_id: int) -> List[Dict[str, Any]]:
+        # 1. Check MongoDB
         try:
             from Components.Database.mongodb import get_db
             db = get_db()
             if db is not None:
                 doc = db["AIHelperChats"].find_one({"_id": str(guild_id)})
-                if doc and isinstance(doc.get("chats"), list):
+                if doc and isinstance(doc.get("chats"), list) and len(doc["chats"]) > 0:
+                    _MEM_CHATS[guild_id] = doc["chats"]
                     return doc["chats"]
         except Exception:
             pass
+
+        # 2. Check local disk JSON
+        try:
+            p = self._disk_chat_path(guild_id)
+            if p.exists():
+                raw = json.loads(p.read_text(encoding="utf-8"))
+                if isinstance(raw, dict) and isinstance(raw.get("chats"), list):
+                    _MEM_CHATS[guild_id] = raw["chats"]
+                    if isinstance(raw.get("action_history"), list) and guild_id not in _MEM_ACTION_HISTORY:
+                        _MEM_ACTION_HISTORY[guild_id] = raw["action_history"]
+                    return raw["chats"]
+        except Exception:
+            pass
+
+        # 3. Fallback to memory
         return _MEM_CHATS.get(guild_id, [])
 
     def _save_guild_chats(self, guild_id: int, chats: List[Dict[str, Any]]):
-        _MEM_CHATS[guild_id] = chats[:50]
+        trimmed = chats[:50]
+        _MEM_CHATS[guild_id] = trimmed
+
+        # 1. Save to local disk JSON
+        try:
+            p = self._disk_chat_path(guild_id)
+            payload = {
+                "guild_id": str(guild_id),
+                "updated_at": time.time(),
+                "chats": trimmed,
+                "action_history": _MEM_ACTION_HISTORY.get(guild_id, [])[:30],
+            }
+            p.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception as e:
+            print(f"[AIHelper] Disk save error: {e}")
+
+        # 2. Save to MongoDB
         try:
             from Components.Database.mongodb import get_db
             db = get_db()
             if db is not None:
                 db["AIHelperChats"].update_one(
                     {"_id": str(guild_id)},
-                    {"$set": {"chats": chats[:50], "updated_at": time.time()}},
+                    {"$set": {
+                        "chats": trimmed,
+                        "action_history": _MEM_ACTION_HISTORY.get(guild_id, [])[:30],
+                        "updated_at": time.time(),
+                    }},
                     upsert=True
                 )
         except Exception:
@@ -227,14 +300,17 @@ class AIHelperMixin:
             }
         }
 
-        return f"""Du bist **Orbit AI Helper**, ein intelligenter Discord-Server-Konfigurations- und Berechtigungs-Assistent im Orbit Dashboard.
+        return f"""Du bist **Orbit AI Helper**, ein intelligenter Discord-Server-Konfigurations-, Analyse- und Berechtigungs-Assistent im Orbit Dashboard.
 
 WICHTIGE EINSCHRÄNKUNG (STRIKTES VERBOT):
 - Du bist **KEIN** Server-Builder! Du darfst **NIEMALS** komplette Server von Grund auf neu bauen, keine Kanäle/Rollen massenhaft löschen und keine kompletten Server-Strukturen erstellen.
-- Wenn der Nutzer dich bittet, einen kompletten Server zu bauen oder alle Kanäle neu zu erstellen (z. B. "Baue mir einen Gaming-Server"), lehne das höflich ab und erkläre, dass du der **Orbit AI Helper** bist: Du hilfst dabei, den bestehenden Server zu konfigurieren (Willkommensnachrichten, Tickets, AutoMod, Verifizierung, Level-System, Logs usw.) sowie Kanal- und Rollenberechtigungen präzise einzustellen (z. B. einer bestimmten Rolle in allen oder bestimmten Kanälen das Sehen/Schreiben zu erlauben oder zu verbieten).
+- Wenn der Nutzer dich bittet, einen kompletten Server zu bauen oder alle Kanäle neu zu erstellen (z. B. "Baue mir einen Gaming-Server"), lehne das höflich ab und erkläre, dass du der **Orbit AI Helper** bist: Du hilfst dabei, den bestehenden Server zu konfigurieren (Willkommensnachrichten, Tickets, AutoMod, Verifizierung, Level-System, Logs usw.), hochgeladene Bilder/Screenshots oder Dateien zu analysieren und Kanal- sowie Rollenberechtigungen präzise einzustellen (z. B. einer bestimmten Rolle in allen oder bestimmten Kanälen das Sehen/Schreiben zu erlauben oder zu verbieten).
+
+BILD- & DATEI-ANALYSE:
+- Wenn der Nutzer ein Bild (Screenshot, Embed-Design, Rollen-/Kanal-Übersicht, Regelwerk) oder eine Datei hochlädt, schaue dir den Inhalt genau an, gib hilfreiche Tipps und erstelle – falls passend – direkt die entsprechenden Konfigurations-Actions im `"actions"` Array (z. B. Farben, Texte, Berechtigungen oder Modul-Einstellungen übernehmen).
 
 AKTUELLER SERVER-KONTEXT:
-- Servername: {guild.name} ({guild.member_count} Mitglieder)
+- Servername: {guild.name} (Server-ID: {guild.id}, {guild.member_count} Mitglieder)
 - Kategorien ({len(cats)}):
 {chr(10).join(cats[:40]) if cats else "  (Keine Kategorien)"}
 - Textkanäle ({len(txt_chs)}):
@@ -247,7 +323,7 @@ AKTUELLER SERVER-KONTEXT:
 {json.dumps(module_summary, ensure_ascii=False)}
 
 DEINE FÄHIGKEITEN (ACTIONS):
-Wenn der Nutzer eine Konfiguration oder Berechtigungsänderung wünscht, erstelle passende Einträge im `"actions"` Array deiner JSON-Antwort. Diese werden im rechten "Planen"-Panel als Vorschau angezeigt und angewendet, sobald der Nutzer auf **"Bauen"** (oder "Anwenden") klickt.
+Wenn der Nutzer eine Konfiguration oder Berechtigungsänderung wünscht, erstelle passende Einträge im `"actions"` Array deiner JSON-Antwort. Diese werden im rechten "Planen"-Panel als Vorschau angezeigt und angewendet, sobald der Nutzer auf **"Bauen"** klickt.
 
 Unterstützte Action-Typen im `"actions"` Array:
 
@@ -460,13 +536,13 @@ ANTWORT-FORMAT (ZWINGEND REINES JSON):
 Antworte IMMER ausschließlich mit einem validen JSON-Objekt in genau diesem Format (ohne Text außerhalb des JSON):
 ```json
 {{
-  "reply": "Deine freundliche, übersichtliche Antwort an den Nutzer (Markdown erlaubt). Erkläre kurz, was du vorbereitet hast und dass der Nutzer rechts oben auf **Bauen** klicken kann, um die Änderungen anzuwenden.",
+  "reply": "Deine freundliche, übersichtliche Antwort an den Nutzer (Markdown erlaubt). Erkläre kurz, was du analysiert oder vorbereitet hast und dass der Nutzer rechts oben auf **Bauen** klicken kann, um die Änderungen anzuwenden.",
   "actions": [
     ...
   ]
 }}
 ```
-Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein Kanal/Rolle eindeutig passt, wähle den passendsten existierenden Kanal aus der obigen Liste!), kann `"actions"` auch leer `[]` sein oder direkt einen sinnvollen Vorschlag mit den echten Kanal-/Rollen-IDs des Servers enthalten. Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
+Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
 
     async def api_ai_helper_get_chats(self, request: web.Request):
         guild_id_str = request.match_info.get("id", "")
@@ -522,6 +598,34 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
             return web.json_response({"error": "Invalid JSON"}, status=400)
 
         user_message = str(body.get("message") or "").strip()
+        raw_attachments = body.get("attachments") if isinstance(body.get("attachments"), list) else []
+
+        # Sanitize attachments
+        image_attachments = []
+        file_attachments = []
+        stored_attachments = []
+
+        for att in raw_attachments[:5]:
+            if not isinstance(att, dict):
+                continue
+            att_type = str(att.get("type") or "").lower()
+            att_name = str(att.get("name") or "Anhang")[:120]
+            if att_type == "image" and str(att.get("dataUrl") or "").startswith("data:image/"):
+                data_url = str(att["dataUrl"])
+                image_attachments.append({"name": att_name, "dataUrl": data_url})
+                stored_attachments.append({"type": "image", "name": att_name, "dataUrl": data_url})
+            elif att_type == "file" and att.get("textContent"):
+                txt_content = str(att.get("textContent") or "")[:15000]
+                file_attachments.append({"name": att_name, "textContent": txt_content})
+                stored_attachments.append({
+                    "type": "file",
+                    "name": att_name,
+                    "size": len(txt_content)
+                })
+
+        if not user_message and (image_attachments or file_attachments):
+            user_message = "Analysiere die hochgeladenen Inhalte und gib mir Tipps oder passende Einstellungen für diesen Server."
+
         if not user_message:
             return web.json_response({"error": "Empty message"}, status=400)
 
@@ -547,7 +651,7 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
 
         # Build message history for LLM
         system_prompt = self._build_guild_context_prompt(guild)
-        llm_messages = [{"role": "system", "content": system_prompt}]
+        llm_messages: List[Dict[str, Any]] = [{"role": "system", "content": system_prompt}]
         for msg in current_chat.get("messages", [])[-10:]:
             role = "assistant" if msg.get("role") == "assistant" else "user"
             content = str(msg.get("content") or "")
@@ -555,7 +659,35 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
                 content = json.dumps({"reply": content, "actions": msg.get("actions")}, ensure_ascii=False)
             llm_messages.append({"role": role, "content": content})
 
-        llm_messages.append({"role": "user", "content": user_message})
+        # Augment user prompt with uploaded file contents if any
+        augmented_prompt = user_message
+        if file_attachments:
+            file_blocks = []
+            for fatt in file_attachments:
+                file_blocks.append(f"\n--- DATEI: {fatt['name']} ---\n{fatt['textContent']}\n--- ENDE DATEI ---")
+            augmented_prompt = f"{user_message}\n\nDer Nutzer hat folgende Datei(en) zur Analyse/Verwendung angehängt:{''.join(file_blocks)}"
+
+        has_images = len(image_attachments) > 0
+        if has_images:
+            vision_parts: List[Dict[str, Any]] = [
+                {
+                    "type": "text",
+                    "text": (
+                        f"{system_prompt}\n\n"
+                        f"NUTZER-ANFRAGE ZUM BILD:\n{augmented_prompt}\n\n"
+                        f"WICHTIG: Antworte ausschließlich als valides JSON-Objekt mit \"reply\" und \"actions\"!"
+                    )
+                }
+            ]
+            for img in image_attachments[:3]:
+                vision_parts.append({
+                    "type": "image_url",
+                    "image_url": {"url": img["dataUrl"]}
+                })
+            vision_messages = [{"role": "user", "content": vision_parts}]
+        else:
+            llm_messages.append({"role": "user", "content": augmented_prompt})
+            vision_messages = []
 
         groq_key = _get_groq_api_key()
         raw_ai_output = None
@@ -563,17 +695,22 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
         if groq_key:
             try:
                 async with aiohttp.ClientSession() as session:
-                    available_models = await _resolve_groq_models(session, groq_key)
-                    if requested_model and requested_model in available_models:
-                        models_to_try = [requested_model] + [m for m in available_models if m != requested_model]
+                    if has_images:
+                        models_to_try = await _resolve_groq_models(session, groq_key, need_vision=True)
+                        req_messages = vision_messages
                     else:
-                        models_to_try = available_models
+                        available_models = await _resolve_groq_models(session, groq_key, need_vision=False)
+                        if requested_model and requested_model in available_models:
+                            models_to_try = [requested_model] + [m for m in available_models if m != requested_model]
+                        else:
+                            models_to_try = available_models
+                        req_messages = llm_messages
 
                     for model_name in models_to_try:
                         try:
                             payload = {
                                 "model": model_name,
-                                "messages": llm_messages,
+                                "messages": req_messages,
                                 "temperature": 0.4,
                                 "max_tokens": 2048,
                             }
@@ -585,7 +722,7 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
                                 "https://api.groq.com/openai/v1/chat/completions",
                                 json=payload,
                                 headers=headers,
-                                timeout=aiohttp.ClientTimeout(total=15.0),
+                                timeout=aiohttp.ClientTimeout(total=22.0),
                             ) as resp:
                                 if resp.status == 200:
                                     data = await resp.json()
@@ -604,7 +741,7 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
 
         if not raw_ai_output:
             raw_ai_output = json.dumps({
-                "reply": "Entschuldigung, der KI-Dienst ist momentan kurzzeitig ausgelastet. Bitte versuche es in wenigen Sekunden erneut.",
+                "reply": "Entschuldigung, der KI-Dienst ist momentan kurzzeitig ausgelastet oder der API-Key fehlt. Bitte versuche es in wenigen Sekunden erneut.",
                 "actions": []
             })
 
@@ -614,7 +751,7 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
         if not isinstance(raw_actions, list):
             raw_actions = []
 
-        # Sanitize and assign IDs to actions, and filter out any forbidden full-server build/wipe actions
+        # Sanitize and assign IDs to actions
         clean_actions = []
         allowed_types = {
             "channel_permissions",
@@ -642,12 +779,16 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
             clean_actions.append(act)
 
         now_ts = time.time()
-        current_chat["messages"].append({
+        user_msg_entry: Dict[str, Any] = {
             "id": secrets.token_hex(6),
             "role": "user",
             "content": user_message,
             "timestamp": now_ts
-        })
+        }
+        if stored_attachments:
+            user_msg_entry["attachments"] = stored_attachments
+
+        current_chat["messages"].append(user_msg_entry)
         current_chat["messages"].append({
             "id": secrets.token_hex(6),
             "role": "assistant",
@@ -657,7 +798,7 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
         })
         current_chat["updated_at"] = now_ts
 
-        # Move current_chat to top
+        # Move current_chat to top and persist
         chats = [current_chat] + [c for c in chats if c.get("id") != chat_id]
         self._save_guild_chats(guild_id, chats)
 
@@ -947,6 +1088,7 @@ Wenn der Nutzer nur eine Frage stellt oder noch Details fehlen (oder wenn kein K
                     "title": s,
                     "timestamp": time.time()
                 })
+            self._save_guild_chats(guild_id, self._load_guild_chats(guild_id))
 
         return {
             "success": len(applied_summaries) > 0 or len(errors) == 0,

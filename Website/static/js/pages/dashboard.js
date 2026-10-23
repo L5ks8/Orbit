@@ -230,11 +230,11 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       <div class="min-h-screen bg-neutral-950 relative overflow-x-hidden">
 
         <!-- Sidebar matching PeakBot exactly -->
-        <aside id="dash-sidebar" class="fixed top-0 left-0 h-full w-64 bg-neutral-900 border-r border-neutral-800 z-50 transform transition-transform duration-300 lg:translate-x-0 -translate-x-full">
-          <div class="flex flex-col h-full">
+        <aside id="dash-sidebar" data-lenis-prevent="true" class="fixed top-0 left-0 h-full w-64 bg-neutral-900 border-r border-neutral-800 z-50 transform transition-transform duration-300 lg:translate-x-0 -translate-x-full">
+          <div class="flex flex-col h-full min-h-0 overflow-hidden">
 
             <!-- Logo & Brand Header -->
-            <div class="p-5 border-b border-neutral-800">
+            <div class="p-5 border-b border-neutral-800 shrink-0">
               <div class="flex items-center justify-between">
                 <a class="flex items-center gap-3" aria-label="Go to homepage" href="/">
                   <div class="relative">
@@ -253,7 +253,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
             </div>
 
             <!-- Server Switcher Card -->
-            <div class="p-4">
+            <div class="p-4 shrink-0">
               <a class="flex items-center gap-3 p-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 transition-all group" href="/dashboard">
                 <img src="${guildIconUrl}" alt="${escapeHtml(currentGuild.name)}" class="w-10 h-10 rounded-xl object-cover">
                 <div class="flex-1 min-w-0">
@@ -265,7 +265,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
             </div>
 
             <!-- Nav Links List -->
-            <nav class="flex-1 px-3 pb-4 overflow-y-auto">
+            <nav id="dash-sidebar-nav" data-lenis-prevent="true" class="flex-1 min-h-0 px-3 pb-4 overflow-y-auto overscroll-contain scrollbar-thin">
               ${navSections.map(sec => `
                 <div class="mb-4">
                   <p class="px-3 mb-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">${sec.title}</p>
@@ -408,6 +408,17 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       </div>
     </div>
   `;
+
+  // Preserve and restore left sidebar scroll position across tab switches
+  const sidebarNav = document.getElementById('dash-sidebar-nav');
+  if (sidebarNav) {
+    if (typeof window.__dashSidebarScrollTop === 'number') {
+      sidebarNav.scrollTop = window.__dashSidebarScrollTop;
+    }
+    sidebarNav.addEventListener('scroll', () => {
+      window.__dashSidebarScrollTop = sidebarNav.scrollTop;
+    }, { passive: true });
+  }
 
   // Toggle mobile sidebar
   window.toggleSidebar = () => {

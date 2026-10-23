@@ -4844,3 +4844,166 @@ input:checked + .toggle-slider:before {
     padding-bottom: 7rem;
   }
 }
+
+
+/* ==========================================================================
+   GLOBAL FIXES: TOGGLES, DROPDOWNS (Z-INDEX & SCROLL), AND SIDEBAR SCROLL
+   ========================================================================== */
+
+/* 1. Neutralize Tailwind v4 (orbit.css) standalone translate/rotate/scale
+      so it never doubles Tailwind v3 (peakbot.css) transform utilities */
+[class*="translate-"],
+[class*="-translate-"],
+[class*="rotate-"],
+[class*="-rotate-"],
+[class*="scale-"] {
+  translate: none !important;
+  rotate: none !important;
+  scale: none !important;
+}
+
+.\!bg-black {
+  background-color: #0a0a0a !important;
+}
+.\!bg-white {
+  background-color: #ffffff !important;
+}
+
+/* 2. Universal Dashboard Switch / Toggle Styling (role="switch") */
+button[role="switch"] {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  border-radius: 9999px !important;
+  cursor: pointer !important;
+  transition: background-color 180ms cubic-bezier(0.4, 0, 0.2, 1), border-color 180ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-sizing: border-box !important;
+}
+
+button[role="switch"][aria-checked="true"] {
+  background-color: #ffffff !important;
+}
+
+button[role="switch"][aria-checked="false"] {
+  background-color: #404040 !important;
+}
+
+button[role="switch"] > span {
+  position: absolute !important;
+  top: 50% !important;
+  left: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 9999px !important;
+  pointer-events: none !important;
+  translate: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45) !important;
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background-color 180ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+button[role="switch"][aria-checked="true"] > span {
+  background-color: #0a0a0a !important;
+  transform: translate(21px, -50%) !important;
+}
+
+button[role="switch"][aria-checked="false"] > span {
+  background-color: #171717 !important;
+  transform: translate(3px, -50%) !important;
+}
+
+/* Compact w-9 h-5 switches (e.g. Sticky Roles / Booster Role) */
+button[role="switch"].w-9 > span {
+  width: 14px !important;
+  height: 14px !important;
+}
+button[role="switch"].w-9[aria-checked="true"] > span {
+  transform: translate(19px, -50%) !important;
+}
+button[role="switch"].w-9[aria-checked="false"] > span {
+  transform: translate(3px, -50%) !important;
+}
+
+/* Larger w-11 h-6 switches */
+button[role="switch"].w-11 > span {
+  width: 18px !important;
+  height: 18px !important;
+}
+button[role="switch"].w-11[aria-checked="true"] > span {
+  transform: translate(22px, -50%) !important;
+}
+button[role="switch"].w-11[aria-checked="false"] > span {
+  transform: translate(3px, -50%) !important;
+}
+
+/* 3. Left Sidebar Navigation (#dash-sidebar) Independent Scrolling */
+#dash-sidebar {
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+#dash-sidebar > div {
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+#dash-sidebar nav {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+#dash-sidebar nav::-webkit-scrollbar {
+  width: 5px;
+}
+#dash-sidebar nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+#dash-sidebar nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+}
+#dash-sidebar nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* 4. Global Dropdown Highest Z-Index, Internal Scroll & Ancestor Stacking Elevation */
+.custom-select-menu:not(.hidden),
+.orbit-dropdown-menu:not(.hidden),
+[id$="-menu"].absolute:not(.hidden),
+[id$="-dropdown"].absolute:not(.hidden),
+[id$="-popover"].absolute:not(.hidden),
+.orbit-dropdown-active-menu {
+  z-index: 99999 !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.custom-select-menu:not(.hidden) .overflow-y-auto,
+[id$="-menu"].absolute:not(.hidden) .overflow-y-auto,
+[id$="-dropdown"].absolute:not(.hidden) .overflow-y-auto,
+[id$="-menu"].absolute.overflow-y-auto:not(.hidden),
+[id$="-dropdown"].absolute.overflow-y-auto:not(.hidden) {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  max-height: min(240px, 55vh) !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.orbit-dropdown-ancestor-active {
+  z-index: 9990 !important;
+}
+
+.orbit-dropdown-card-unclip {
+  overflow: visible !important;
+}

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="dark" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
@@ -180,7 +180,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Auto-resize textareas dynamically
       document.addEventListener('input', (e) => {
-        if (e.target.tagName === 'TEXTAREA') {
+        if (e.target.tagName === 'TEXTAREA' && e.target.id !== 'ai-helper-textarea' && !e.target.hasAttribute('data-no-autoresize')) {
           e.target.style.height = 'auto';
           e.target.style.height = e.target.scrollHeight + 'px';
         }
@@ -196,6 +196,22 @@
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           smoothWheel: true,
           touchMultiplier: 1.2,
+          prevent: (node) => {
+            if (window.__orbitDropdownOpen) return true;
+            if (!node || !node.closest) return false;
+            if (node.closest('#dash-sidebar, [data-lenis-prevent], .custom-select-menu, .orbit-dropdown-menu, [id$="-menu"], [id$="-dropdown"], [id$="-popover"]')) {
+              return true;
+            }
+            let el = node;
+            while (el && el !== document.body && el !== document.documentElement) {
+              const style = window.getComputedStyle(el);
+              if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+                return true;
+              }
+              el = el.parentElement;
+            }
+            return false;
+          }
         });
         window.__lenis = lenis;
 

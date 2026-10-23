@@ -1,6 +1,6 @@
 /**
  * Orbit UI Helpers & Components
- * Toast, Modals, Custom Selects, Toggles, SaveBar, and Markdown.
+ * Toast, Modals, Custom Selects, Toggles, SaveBar, Global Dropdown Z-Index & Scroll Lock Manager, and Markdown.
  */
 
 // --- TOAST SYSTEM ---
@@ -108,13 +108,13 @@ const Modal = {
       : 'bg-white text-black hover:bg-neutral-200';
 
     container.innerHTML = `
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" id="active-modal-overlay">
+      <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" id="active-modal-overlay" data-lenis-prevent>
         <div class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-scale-up" onclick="event.stopPropagation()">
           <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
             <h3 class="text-base font-semibold text-white">${title}</h3>
             <button class="text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-neutral-800" onclick="Modal.close()">${icon('x', 18)}</button>
           </div>
-          <div class="p-6 text-sm text-neutral-300">
+          <div class="p-6 text-sm text-neutral-300 max-h-[70vh] overflow-y-auto overscroll-contain" data-lenis-prevent>
             ${content}
           </div>
           <div class="flex items-center justify-end gap-3 px-6 py-4 bg-neutral-950 border-t border-neutral-800">
@@ -165,12 +165,15 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
       } else {
         menu.classList.add('hidden');
       }
+      if (window.OrbitDropdownManager) window.OrbitDropdownManager.sync();
     };
 
     trigger.onclick = (e) => {
       e.stopPropagation();
       const isHidden = menu.classList.contains('hidden');
-      document.querySelectorAll('.custom-select-menu').forEach(m => m.classList.add('hidden'));
+      document.querySelectorAll('.custom-select-menu').forEach(m => {
+        if (m !== menu) m.classList.add('hidden');
+      });
       toggle(isHidden);
     };
 
@@ -214,7 +217,7 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
       <button 
         type="button" 
         id="${containerId}-trigger"
-        class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-sm hover:border-neutral-700 transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-600"
+        class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-sm hover:border-neutral-700 transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-600 cursor-pointer"
       >
         <span class="select-label truncate ${isSelected ? 'text-white font-medium' : 'text-neutral-500'}">${displayLabel}</span>
         <span class="text-neutral-500 shrink-0">${icon('chevron-down', 16)}</span>
@@ -222,7 +225,8 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
 
       <div 
         id="${containerId}-menu" 
-        class="custom-select-menu hidden absolute top-full left-0 right-0 mt-1 z-50 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col"
+        data-lenis-prevent="true"
+        class="custom-select-menu orbit-dropdown-menu hidden absolute top-full left-0 right-0 mt-1.5 z-[99999] bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col"
       >
         ${options.length > 7 ? `
           <div class="p-2 border-b border-neutral-800 shrink-0">
@@ -232,7 +236,7 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
             </div>
           </div>
         ` : ''}
-        <div class="overflow-y-auto p-1 flex flex-col gap-0.5">
+        <div class="overflow-y-auto overscroll-contain p-1 flex flex-col gap-0.5 scrollbar-thin" data-lenis-prevent="true">
           ${options.map(opt => `
             <div 
               class="select-item flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-neutral-800 transition-colors ${String(opt.value) === String(value) ? 'bg-neutral-800/80 text-white font-semibold' : 'text-neutral-300'}"
@@ -264,19 +268,12 @@ function renderToggle({ id, checked = false, onChange = null, label = '', descri
       const isChecked = el.getAttribute('aria-checked') === 'true';
       const next = !isChecked;
       el.setAttribute('aria-checked', String(next));
-      
-      const thumb = el.querySelector('.toggle-thumb');
-      if (next) {
-        el.classList.remove('bg-neutral-800');
-        el.classList.add('bg-white');
-        thumb.classList.remove('translate-x-0.5');
-        thumb.classList.add('translate-x-5', 'bg-black');
-        thumb.classList.remove('bg-neutral-400');
-      } else {
-        el.classList.remove('bg-white');
-        el.classList.add('bg-neutral-800');
-        thumb.classList.remove('translate-x-5', 'bg-black');
-        thumb.classList.add('translate-x-0.5', 'bg-neutral-400');
+      el.classList.toggle('bg-white', next);
+      el.classList.toggle('bg-neutral-700', !next);
+
+      const thumb = el.querySelector('span');
+      if (thumb) {
+        thumb.className = `pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out ${next ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-900'}`;
       }
 
       if (onChange) onChange(next);
@@ -297,9 +294,9 @@ function renderToggle({ id, checked = false, onChange = null, label = '', descri
         role="switch" 
         id="${toggleId}"
         aria-checked="${checked ? 'true' : 'false'}"
-        class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? 'bg-white' : 'bg-neutral-800'}"
+        class="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 ${checked ? 'bg-white' : 'bg-neutral-700'}"
       >
-        <span class="toggle-thumb pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-5 bg-black' : 'translate-x-0.5 bg-neutral-400'}"></span>
+        <span class="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out ${checked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-900'}"></span>
       </button>
     </div>
   `;
@@ -355,6 +352,154 @@ const DiscordMarkdown = {
   }
 };
 
+// --- GLOBAL DROPDOWN Z-INDEX, INTERNAL SCROLL & OUTSIDE SCROLL-LOCK MANAGER ---
+const OrbitDropdownManager = {
+  selector: '.custom-select-menu, .orbit-dropdown-menu, [id$="-menu"].absolute, [id$="-dropdown"].absolute, [id$="-popover"].absolute',
+  elevatedAncestors: new Set(),
+  unclippedAncestors: new Set(),
+
+  getOpenDropdowns() {
+    const candidates = document.querySelectorAll(this.selector);
+    const openList = [];
+    candidates.forEach(el => {
+      if (el.classList.contains('hidden')) return;
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return;
+      openList.push(el);
+    });
+    return openList;
+  },
+
+  sync() {
+    // Clean up previous ancestor classes
+    this.elevatedAncestors.forEach(anc => anc.classList.remove('orbit-dropdown-ancestor-active'));
+    this.elevatedAncestors.clear();
+    this.unclippedAncestors.forEach(anc => anc.classList.remove('orbit-dropdown-card-unclip'));
+    this.unclippedAncestors.clear();
+
+    const openMenus = this.getOpenDropdowns();
+
+    openMenus.forEach(menu => {
+      menu.classList.add('orbit-dropdown-active-menu');
+      menu.setAttribute('data-lenis-prevent', 'true');
+      menu.style.zIndex = '99999';
+
+      // Ensure inner scroll containers have data-lenis-prevent
+      menu.querySelectorAll('.overflow-y-auto').forEach(sc => {
+        sc.setAttribute('data-lenis-prevent', 'true');
+      });
+
+      // Elevate ancestor stacking contexts so sibling cards below never cover the open dropdown
+      let curr = menu.parentElement;
+      const stopRoot = document.getElementById('dash-tab-content') || document.body;
+      while (curr && curr !== stopRoot && curr !== document.body) {
+        curr.classList.add('orbit-dropdown-ancestor-active');
+        this.elevatedAncestors.add(curr);
+        if (curr.classList.contains('overflow-hidden') && !curr.classList.contains('overflow-y-auto')) {
+          curr.classList.add('orbit-dropdown-card-unclip');
+          this.unclippedAncestors.add(curr);
+        }
+        curr = curr.parentElement;
+      }
+    });
+
+    if (openMenus.length > 0) {
+      window.__orbitDropdownOpen = true;
+      if (window.__lenis && typeof window.__lenis.stop === 'function') {
+        window.__lenis.stop();
+      }
+    } else {
+      window.__orbitDropdownOpen = false;
+      if (window.__lenis && typeof window.__lenis.start === 'function') {
+        window.__lenis.start();
+      }
+    }
+  },
+
+  findScrollableInMenu(menu, target) {
+    let curr = target;
+    while (curr && curr !== menu) {
+      const st = window.getComputedStyle(curr);
+      if ((st.overflowY === 'auto' || st.overflowY === 'scroll') && curr.scrollHeight > curr.clientHeight) {
+        return curr;
+      }
+      curr = curr.parentElement;
+    }
+    const innerAuto = menu.querySelector('.overflow-y-auto');
+    if (innerAuto && innerAuto.scrollHeight > innerAuto.clientHeight) {
+      return innerAuto;
+    }
+    if (menu.scrollHeight > menu.clientHeight) {
+      return menu;
+    }
+    return null;
+  },
+
+  init() {
+    // Observe class & DOM changes to detect dropdown open/close immediately
+    const observer = new MutationObserver(() => {
+      this.sync();
+    });
+    if (document.body) {
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style'],
+        childList: true,
+        subtree: true
+      });
+    }
+
+    // Lock wheel scrolling outside open dropdowns, and allow smooth scrolling inside open dropdowns & sidebar
+    window.addEventListener('wheel', (e) => {
+      const openMenus = this.getOpenDropdowns();
+      if (openMenus.length > 0) {
+        const activeMenu = openMenus.find(m => m.contains(e.target));
+        if (!activeMenu) {
+          // User scrolled outside the open dropdown -> block scrolling completely!
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        // User is scrolling inside the open dropdown
+        const scroller = this.findScrollableInMenu(activeMenu, e.target);
+        if (!scroller) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        const atTop = scroller.scrollTop <= 0 && e.deltaY < 0;
+        const atBottom = (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1) && e.deltaY > 0;
+        if (atTop || atBottom) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        // Allow native scroll inside the dropdown scroller, stop Lenis from hijacking
+        e.stopPropagation();
+        return;
+      }
+    }, { passive: false, capture: true });
+
+    // Also lock touchmove outside open dropdowns on touch devices
+    window.addEventListener('touchmove', (e) => {
+      const openMenus = this.getOpenDropdowns();
+      if (openMenus.length > 0) {
+        const activeMenu = openMenus.find(m => m.contains(e.target));
+        if (!activeMenu) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    }, { passive: false, capture: true });
+  }
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => OrbitDropdownManager.init());
+} else {
+  OrbitDropdownManager.init();
+}
+
 // Global Helpers
 window.Toast = Toast;
 window.Modal = Modal;
@@ -362,3 +507,4 @@ window.renderCustomSelect = renderCustomSelect;
 window.renderToggle = renderToggle;
 window.SaveBar = SaveBar;
 window.DiscordMarkdown = DiscordMarkdown;
+window.OrbitDropdownManager = OrbitDropdownManager;
