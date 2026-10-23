@@ -22,7 +22,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
   const userAvatar = user.avatar 
     ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64` 
     : '/img/logo.png';
-  const userName = user.global_name || user.username || 'Benutzer';
+  const userName = user.global_name || user.username || 'User';
 
   // Load server list to find current server
   let guilds = [];
@@ -46,22 +46,22 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
   // Navigation sections matching PeakBot exactly
   const navSections = [
     {
-      title: 'Hauptbereich',
+      title: 'Main',
       links: [
         {
-          name: 'Übersicht',
+          name: 'Overview',
           id: 'overview',
           path: `/dashboard/${guildId}`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard w-4 h-4"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>`
         },
         {
-          name: 'KI-Builder',
+          name: 'AI Builder',
           id: 'builder',
           path: `/dashboard/${guildId}/builder`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>`
         },
         {
-          name: 'Bot-Profil',
+          name: 'Bot Profile',
           id: 'bot-profile',
           path: `/dashboard/${guildId}/bot-profile`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-4 h-4"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>`
@@ -81,10 +81,10 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       ]
     },
     {
-      title: 'Willkommen & Onboarding',
+      title: 'Welcome & Onboarding',
       links: [
         {
-          name: 'Willkommen',
+          name: 'Welcome',
           id: 'welcomegoodbye',
           path: `/dashboard/${guildId}/welcome`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square w-4 h-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`
@@ -96,13 +96,13 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tags w-4 h-4"><path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"></path><path d="M9.586 5.586A2 2 0 0 0 8.172 5H3a1 1 0 0 0-1 1v5.172a2 2 0 0 0 .586 1.414L8.29 18.29a2.426 2.426 0 0 0 3.42 0l3.58-3.58a2.426 2.426 0 0 0 0-3.42z"></path><circle cx="6.5" cy="9.5" r=".5" fill="currentColor"></circle></svg>`
         },
         {
-          name: 'Invite-Tracker',
+          name: 'Invite Tracker',
           id: 'invites',
           path: `/dashboard/${guildId}/invites`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-plus w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>`
         },
         {
-          name: 'Verifizierung',
+          name: 'Verification',
           id: 'verify',
           path: `/dashboard/${guildId}/verify`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-4 h-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>`
@@ -136,7 +136,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star w-4 h-4"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
         },
         {
-          name: 'Umfragen',
+          name: 'Polls',
           id: 'polls',
           path: `/dashboard/${guildId}/polls`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart-3 w-4 h-4"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>`
@@ -159,7 +159,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ticket w-4 h-4"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>`
         },
         {
-          name: 'Voice-Kanäle',
+          name: 'Voice Channels',
           id: 'tempvoice',
           path: `/dashboard/${guildId}/tempvoice`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-headphones w-4 h-4"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>`
@@ -167,7 +167,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       ]
     },
     {
-      title: 'Moderation & Sicherheit',
+      title: 'Moderation & Security',
       links: [
         {
           name: 'Auto-Moderation',
@@ -176,7 +176,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert w-4 h-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>`
         },
         {
-          name: 'Sicherheit',
+          name: 'Security',
           id: 'security',
           path: `/dashboard/${guildId}/security`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-4 h-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>`
@@ -190,10 +190,10 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       ]
     },
     {
-      title: 'Wartung',
+      title: 'Maintenance',
       links: [
         {
-          name: 'Inaktiv-Kick',
+          name: 'Inactive Kick',
           id: 'inactive-kick',
           path: `/dashboard/${guildId}/inactive-kick`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-minus w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>`
@@ -201,22 +201,22 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       ]
     },
     {
-      title: 'Vorlagen',
+      title: 'Templates',
       links: [
         {
-          name: 'Vorlagen durchsuchen',
+          name: 'Browse Templates',
           id: 'browse-templates',
           path: `/dashboard/${guildId}/browse-templates`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-compass w-4 h-4"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>`
         },
         {
-          name: 'Meine Vorlagen',
+          name: 'My Templates',
           id: 'templates',
           path: `/dashboard/${guildId}/templates`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panels-top-left w-4 h-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>`
         },
         {
-          name: 'Vorlage teilen',
+          name: 'Share Template',
           id: 'share-template',
           path: `/dashboard/${guildId}/share-template`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2 w-4 h-4"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>`
@@ -258,7 +258,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                 <img src="${guildIconUrl}" alt="${escapeHtml(currentGuild.name)}" class="w-10 h-10 rounded-xl object-cover">
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-white truncate">${escapeHtml(currentGuild.name)}</p>
-                  <p class="text-xs text-neutral-500">Klicken zum Wechseln</p>
+                  <p class="text-xs text-neutral-500">Click to switch</p>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left w-4 h-4 text-neutral-400 group-hover:text-neutral-300 transition-colors"><path d="m15 18-6-6 6-6"></path></svg>
               </a>
@@ -298,14 +298,14 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                   <span class="flex items-center justify-center shrink-0 w-7 h-7 rounded-lg bg-neutral-700/40">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap w-4 h-4 text-neutral-400"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                   </span>
-                  <span class="text-sm font-semibold text-white truncate">Kostenlos Plan</span>
+                  <span class="text-sm font-semibold text-white truncate">Free Plan</span>
                 </div>
-                <p class="mt-2 text-[11px] leading-relaxed text-neutral-500">Mit einem Upgrade alle Features freischalten</p>
+                <p class="mt-2 text-[11px] leading-relaxed text-neutral-500">Unlock all features with an upgrade</p>
                 <button type="button" class="block w-full mt-3 py-2 text-xs font-semibold text-black text-center bg-white hover:bg-neutral-200 rounded-lg transition-[transform,background-color] duration-150 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 cursor-pointer">Upgrade to Pro</button>
               </div>
               <div class="flex items-center justify-between text-xs">
                 <a href="https://discord.gg/getorbit" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-neutral-400 hover:text-white transition-colors">Support<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link w-3 h-3"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></a>
-                <a href="/" class="text-neutral-400 hover:text-white transition-colors">Zurück zur Startseite</a>
+                <a href="/" class="text-neutral-400 hover:text-white transition-colors">Back to Home</a>
               </div>
             </div>
 
@@ -319,10 +319,10 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           <header class="sticky top-0 z-20 h-16 bg-neutral-900/90 backdrop-blur-sm border-b border-neutral-800">
             <div class="flex items-center justify-between h-full px-4 lg:px-8">
               <div class="flex items-center gap-2 sm:gap-4">
-                <button onclick="toggleSidebar()" class="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 lg:hidden transition-colors cursor-pointer" aria-label="Sidebar umschalten">
+                <button onclick="toggleSidebar()" class="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 lg:hidden transition-colors cursor-pointer" aria-label="Toggle sidebar">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu w-5 h-5"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>
                 </button>
-                <a class="p-1.5 rounded-xl hover:bg-neutral-800 transition-colors group" title="Zurück zu den Servern" href="/dashboard">
+                <a class="p-1.5 rounded-xl hover:bg-neutral-800 transition-colors group" title="Back to servers" href="/dashboard">
                   <img src="/img/logo.png" alt="Orbit" width="28" height="28" class="rounded-xl group-hover:shadow-lg transition-shadow sm:w-8 sm:h-8">
                 </a>
                 <div class="w-px h-8 bg-neutral-700 hidden sm:block"></div>
@@ -332,7 +332,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
               <div class="flex items-center gap-1.5 sm:gap-3">
                 <!-- Notifications with popup dropdown -->
                 <div class="relative">
-                  <button id="dash-notif-btn" class="relative p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="Benachrichtigungen" aria-expanded="false">
+                  <button id="dash-notif-btn" class="relative p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="Notifications" aria-expanded="false">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell w-5 h-5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
                   </button>
 
@@ -358,11 +358,11 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                 
                 <!-- User dropdown -->
                 <div class="relative">
-                  <button id="dash-user-menu-btn" class="flex items-center gap-1.5 sm:gap-3 p-1 sm:p-1.5 pr-1.5 sm:pr-3 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="Benutzermenü" aria-expanded="false">
+                  <button id="dash-user-menu-btn" class="flex items-center gap-1.5 sm:gap-3 p-1 sm:p-1.5 pr-1.5 sm:pr-3 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="User menu" aria-expanded="false">
                     <img src="${userAvatar}" alt="${escapeHtml(userName)}" class="w-8 h-8 rounded-xl ring-2 ring-neutral-700 object-cover">
                     <div class="hidden sm:block text-left">
                       <p class="text-sm font-medium text-white">${escapeHtml(userName)}</p>
-                      <p class="text-[10px] text-neutral-500">Mitglied</p>
+                      <p class="text-[10px] text-neutral-500">Member</p>
                     </div>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
                   </button>
@@ -375,18 +375,18 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                     </div>
                     <div class="py-1">
                       <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home w-4 h-4"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Start
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home w-4 h-4"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Home
                       </a>
                       <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/dashboard">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-server w-4 h-4"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg> Meine Server
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-server w-4 h-4"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg> My Servers
                       </a>
                       <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/settings">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg> Einstellungen
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg> Settings
                       </a>
                     </div>
                     <div class="border-t border-neutral-800 pt-1 mt-1">
                       <button onclick="API.logout()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer text-left">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Abmelden
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sign out
                       </button>
                     </div>
                   </div>
@@ -400,7 +400,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           <main id="dash-tab-content" class="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto min-h-[calc(100vh-64px)] bg-neutral-950">
             <div class="flex items-center justify-center p-12 text-neutral-500 text-sm">
               <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              Lade Dashboard...
+              Loading dashboard...
             </div>
           </main>
 

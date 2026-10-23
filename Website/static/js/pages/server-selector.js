@@ -23,7 +23,7 @@ Pages.ServerSelector = async function(container) {
   const userAvatar = user.avatar 
     ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64` 
     : '/img/logo.png';
-  const userName = user.global_name || user.username || 'Benutzer';
+  const userName = user.global_name || user.username || 'User';
 
   container.innerHTML = `
     <div class="min-h-screen bg-neutral-950 text-neutral-100 font-sans">
@@ -31,16 +31,16 @@ Pages.ServerSelector = async function(container) {
       <header class="sticky top-0 z-20 h-16 bg-neutral-900/90 backdrop-blur-sm border-b border-neutral-800">
         <div class="flex items-center justify-between h-full px-4 lg:px-8">
           <div class="flex items-center gap-2 sm:gap-4">
-            <a class="p-1.5 rounded-xl hover:bg-neutral-800 transition-colors group" title="Zurück nach Hause" href="/">
+            <a class="p-1.5 rounded-xl hover:bg-neutral-800 transition-colors group" title="Back to Home" href="/">
               <img src="/img/logo.png" alt="Orbit" width="28" height="28" class="rounded-xl group-hover:shadow-lg transition-shadow sm:w-8 sm:h-8">
             </a>
             <div class="w-px h-8 bg-neutral-700 hidden sm:block"></div>
-            <h1 class="text-sm sm:text-[15px] font-semibold text-white truncate max-w-[100px] sm:max-w-none">Armaturenbrett</h1>
+            <h1 class="text-sm sm:text-[15px] font-semibold text-white truncate max-w-[100px] sm:max-w-none">Dashboard</h1>
           </div>
           <div class="flex items-center gap-1.5 sm:gap-3">
             <!-- Notifications with popup dropdown -->
             <div class="relative">
-              <button id="notif-btn" class="relative p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="Benachrichtigungen" aria-expanded="false">
+              <button id="notif-btn" class="relative p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="Notifications" aria-expanded="false">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell w-5 h-5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
               </button>
 
@@ -66,11 +66,11 @@ Pages.ServerSelector = async function(container) {
             
             <!-- User Menu with dropdown toggle -->
             <div class="relative">
-              <button id="user-menu-btn" class="flex items-center gap-1.5 sm:gap-3 p-1 sm:p-1.5 pr-1.5 sm:pr-3 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="Benutzermenü" aria-expanded="false">
+              <button id="user-menu-btn" class="flex items-center gap-1.5 sm:gap-3 p-1 sm:p-1.5 pr-1.5 sm:pr-3 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer" aria-label="User menu" aria-expanded="false">
                 <img src="${userAvatar}" alt="${escapeHtml(userName)}" class="w-8 h-8 rounded-xl ring-2 ring-neutral-700 object-cover">
                 <div class="hidden sm:block text-left">
                   <p class="text-sm font-medium text-white">${escapeHtml(userName)}</p>
-                  <p class="text-[10px] text-neutral-500">Mitglied</p>
+                  <p class="text-[10px] text-neutral-500">Member</p>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform"><path d="m6 9 6 6 6-6"></path></svg>
               </button>
@@ -83,18 +83,18 @@ Pages.ServerSelector = async function(container) {
                 </div>
                 <div class="py-1">
                   <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home w-4 h-4"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Start
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home w-4 h-4"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Home
                   </a>
                   <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/dashboard">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-server w-4 h-4"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg> Meine Server
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-server w-4 h-4"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg> My Servers
                   </a>
                   <a class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" href="/settings">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg> Einstellungen
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg> Settings
                   </a>
                 </div>
                 <div class="border-t border-neutral-800 pt-1 mt-1">
                   <button onclick="API.logout()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer text-left">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Abmelden
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sign out
                   </button>
                 </div>
               </div>
@@ -111,12 +111,12 @@ Pages.ServerSelector = async function(container) {
           <!-- Top Row: Title + Refresh Button -->
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 class="text-2xl font-bold text-white tracking-tight">Deine Server</h1>
-              <p id="server-count-label" class="text-xs text-neutral-500 mt-1">Lade Server...</p>
+              <h1 class="text-2xl font-bold text-white tracking-tight">Your Servers</h1>
+              <p id="server-count-label" class="text-xs text-neutral-500 mt-1">Loading servers...</p>
             </div>
             <button id="refresh-guilds-btn" onclick="loadGuildsList(true)" class="flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-neutral-400 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 rounded-xl transition-all disabled:opacity-50 cursor-pointer">
               <svg id="refresh-spinner" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-3.5 h-3.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
-              <span>Aktualisieren</span>
+              <span>Refresh</span>
             </button>
           </div>
 
@@ -125,14 +125,14 @@ Pages.ServerSelector = async function(container) {
             <div class="absolute left-4 flex items-center justify-center pointer-events-none text-neutral-500">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search w-4 h-4"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
             </div>
-            <input id="guild-search-input" placeholder="Server suchen..." class="w-full h-11 pl-11 pr-4 bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-neutral-700 transition-colors" type="text" value="">
+            <input id="guild-search-input" placeholder="Search servers..." class="w-full h-11 pl-11 pr-4 bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-neutral-700 transition-colors" type="text" value="">
           </div>
 
           <!-- Guilds Sections Container -->
           <div id="guilds-content">
             <div class="flex items-center justify-center p-12 text-neutral-500 text-sm">
               <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              Lade deine Server...
+              Loading your servers...
             </div>
           </div>
 
@@ -185,7 +185,7 @@ Pages.ServerSelector = async function(container) {
       if (content) {
         content.innerHTML = `
           <div class="p-8 rounded-2xl bg-red-950/20 border border-red-900/30 text-red-400 text-center">
-            Fehler beim Laden der Server. Bitte melden Sie sich erneut an.
+            Failed to load servers. Please sign in again.
           </div>
         `;
       }
@@ -209,13 +209,13 @@ Pages.ServerSelector = async function(container) {
     const inactiveGuilds = filtered.filter(g => !Boolean(g.bot_in_server || g.has_bot));
 
     if (countLabel) {
-      countLabel.textContent = `${activeGuilds.length} ${activeGuilds.length === 1 ? 'Server aktivieren' : 'Server aktiv'}`;
+      countLabel.textContent = `${activeGuilds.length} ${activeGuilds.length === 1 ? 'server active' : 'servers active'}`;
     }
 
     if (filtered.length === 0) {
       content.innerHTML = `
         <div class="text-center py-16 text-neutral-500">
-          <p class="text-sm">Keine Server gefunden für "${escapeHtml(query)}".</p>
+          <p class="text-sm">No servers found for "${escapeHtml(query)}".</p>
         </div>
       `;
       return;
@@ -229,7 +229,7 @@ Pages.ServerSelector = async function(container) {
         <div>
           <div class="flex items-center gap-2 mb-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>
-            <span class="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Inhaber</span>
+            <span class="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Owner</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             ${activeGuilds.map(g => renderActiveGuildCard(g)).join('')}
@@ -245,7 +245,7 @@ Pages.ServerSelector = async function(container) {
           <div class="flex items-center gap-3 mb-4">
             <div class="flex-1 h-px bg-neutral-200 dark:bg-neutral-800"></div>
             <span class="text-xs font-medium text-neutral-400 dark:text-neutral-500 flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3 h-3"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Noch nicht hinzugefügt
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3 h-3"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Not Added Yet
             </span>
             <div class="flex-1 h-px bg-neutral-200 dark:bg-neutral-800"></div>
           </div>
@@ -293,20 +293,20 @@ Pages.ServerSelector = async function(container) {
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5">
               <h3 class="font-semibold text-black dark:text-white text-base truncate group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">${escapeHtml(g.name)}</h3>
-              <button type="button" class="flex-shrink-0 w-10 h-10 -m-2 flex items-center justify-center rounded-md transition-all duration-200 opacity-60 sm:opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 text-neutral-500 hover:text-white" title="Server anpinnen" onclick="event.preventDefault(); event.stopPropagation();">
+              <button type="button" class="flex-shrink-0 w-10 h-10 -m-2 flex items-center justify-center rounded-md transition-all duration-200 opacity-60 sm:opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 text-neutral-500 hover:text-white" title="Pin server" onclick="event.preventDefault(); event.stopPropagation();">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pin w-3 h-3"><line x1="12" x2="12" y1="17" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path></svg>
               </button>
             </div>
             <div class="flex items-center gap-3 mt-1">
               <div class="flex items-center gap-1 text-sm text-green-500">
-                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span><span>Aktiv</span>
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span><span>Active</span>
               </div>
             </div>
             <div class="flex items-center gap-2 mt-2">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 rounded-full">Kostenlos</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 rounded-full">Free</span>
               ${isOwner ? `
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3 h-3"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>Inhaber
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3 h-3"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>Owner
                 </span>
               ` : `
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 rounded-full">Admin</span>
@@ -346,11 +346,11 @@ Pages.ServerSelector = async function(container) {
           </div>
           <div class="flex-1 min-w-0">
             <h3 class="font-semibold text-black dark:text-white text-base truncate group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">${escapeHtml(g.name)}</h3>
-            <p class="text-sm text-neutral-400 dark:text-neutral-500 mt-0.5">Bot nicht installiert</p>
+            <p class="text-sm text-neutral-400 dark:text-neutral-500 mt-0.5">Bot not installed</p>
             <div class="flex items-center gap-2 mt-2">
               ${isOwner ? `
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3 h-3"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>Inhaber
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown w-3 h-3"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>Owner
                 </span>
               ` : `
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 rounded-full">Admin</span>
@@ -360,7 +360,7 @@ Pages.ServerSelector = async function(container) {
           <div class="flex-shrink-0">
             <div class="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 group-hover:bg-neutral-800 dark:group-hover:bg-white text-black dark:text-white group-hover:text-white dark:group-hover:text-black text-sm font-medium rounded-xl transition-all duration-200">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-4 h-4"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
-              <span class="hidden sm:inline">Bot hinzufügen</span>
+              <span class="hidden sm:inline">Add Bot</span>
             </div>
           </div>
         </div>

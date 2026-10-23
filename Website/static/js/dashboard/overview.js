@@ -14,7 +14,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     <div id="overview-container" class="space-y-6 pb-10">
       <div id="overview-loading" class="flex items-center justify-center p-12 text-neutral-500 text-sm">
         <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        Lade Übersicht...
+        Loading overview...
       </div>
       <div id="overview-content" class="hidden space-y-6"></div>
     </div>
@@ -56,28 +56,28 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       <div class="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-4 h-4 text-blue-400 animate-spin flex-shrink-0"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
         <div>
-          <p class="text-sm font-medium text-white">Wird eingerichtet...</p>
-          <p class="text-xs text-neutral-400">Die Statistiken erscheinen kurz nachdem der Bot mit dem Tracking begonnen hat.</p>
+          <p class="text-sm font-medium text-white">Setting up...</p>
+          <p class="text-xs text-neutral-400">Statistics will appear shortly after the bot starts tracking.</p>
         </div>
       </div>
 
-      <!-- Banner 2: KI-Builder Card -->
+      <!-- Banner 2: AI Builder Card -->
       <div class="relative overflow-hidden rounded-xl border border-green-500/10 bg-gradient-to-br from-green-950/40 via-neutral-900 to-neutral-900 px-5 py-5 sm:px-6">
         <div class="absolute -top-8 -right-8 w-40 h-40 bg-green-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="pointer-events-none absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(circle, rgb(255, 255, 255) 1px, transparent 1px); background-size: 14px 14px; mask-image: linear-gradient(to left bottom, black 0%, rgba(0, 0, 0, 0.4) 40%, transparent 80%);"></div>
         <div class="relative flex flex-col sm:flex-row sm:items-center gap-5">
           <div class="flex-1 min-w-0 space-y-2">
-            <span class="text-[10px] font-semibold text-green-400 uppercase tracking-widest block leading-none">KI-Builder</span>
-            <h2 class="text-base font-bold text-white leading-tight text-balance">Richte deinen Server in Sekunden ein</h2>
+            <span class="text-[10px] font-semibold text-green-400 uppercase tracking-widest block leading-none">AI Builder</span>
+            <h2 class="text-base font-bold text-white leading-tight text-balance">Set up your server in seconds</h2>
             <div class="flex flex-wrap gap-1">
-              <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-2.5 h-2.5"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>Kanäle</span>
-              <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-2.5 h-2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>Berechtigungen</span>
-              <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users w-2.5 h-2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Rollen</span>
-              <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-2.5 h-2.5"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>Bot-Konfig</span>
+              <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-2.5 h-2.5"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>Channels</span>
+              <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-2.5 h-2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>Permissions</span>
+              <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users w-2.5 h-2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Roles</span>
+              <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot w-2.5 h-2.5"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>Bot Config</span>
             </div>
           </div>
           <a class="inline-flex items-center justify-center gap-2 pl-5 pr-[18px] py-2.5 bg-white hover:bg-neutral-200 text-black text-sm font-semibold rounded-lg transition-transform duration-150 ease-out active:scale-[0.96] whitespace-nowrap shrink-0 self-stretch sm:self-center" href="/dashboard/${guildId}/builder">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg> KI-Builder ausprobieren
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg> Try AI Builder
           </a>
         </div>
       </div>
@@ -94,14 +94,14 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
               <div class="flex items-center gap-2.5">
                 <h1 class="text-xl font-semibold text-white truncate">${escapeHtml(guild.name)}</h1>
               </div>
-              <p class="text-xs text-neutral-500 mt-0.5 truncate tabular-nums">Online & Aktiv</p>
+              <p class="text-xs text-neutral-500 mt-0.5 truncate tabular-nums">Online & Active</p>
             </div>
           </div>
           <div class="flex items-center gap-3 shrink-0">
             <div class="flex items-center gap-1.5 text-xs"><div class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"></div></div>
             <div class="flex items-center gap-1.5 text-xs text-neutral-500">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span class="hidden sm:inline">Synchronisiert</span>
+              <span class="hidden sm:inline">Synced</span>
               <button onclick="DashboardTabs.Overview(document.getElementById('dash-tab-content'), '${guildId}')" class="p-1 hover:bg-neutral-800 rounded-md transition-colors text-neutral-400 hover:text-white cursor-pointer" aria-label="Refresh">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-3.5 h-3.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
               </button>
@@ -273,7 +273,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         <div class="px-5 pt-4 pb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <div class="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity w-3.5 h-3.5 text-green-400"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
-            <span class="text-sm font-medium text-white">Aktivität</span>
+            <span class="text-sm font-medium text-white">Activity</span>
             <span class="text-[11px] text-neutral-500">last 7 days</span>
           </div>
           <div class="relative inline-flex p-0.5 rounded-lg bg-neutral-800 border border-neutral-700 shrink-0">
@@ -327,11 +327,11 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
           <div class="flex flex-col flex-1 divide-y divide-neutral-800/60">
             ${[
               { name: 'Auto-Moderation', active: true },
-              { name: 'Willkommen & Rollen', active: true },
+              { name: 'Welcome & Roles', active: true },
               { name: 'Leveling & XP', active: true },
               { name: 'Support Tickets', active: true },
               { name: 'Invite Tracker', active: true },
-              { name: 'Verifizierung', active: true },
+              { name: 'Verification', active: true },
               { name: 'Auto-Responder', active: true },
               { name: 'Temp Voice', active: true }
             ].map(f => `
@@ -341,7 +341,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
                 </div>
                 <div class="text-xs font-medium text-neutral-300">${f.name}</div>
                 <div class="ml-auto">
-                  <span class="px-2 py-0.5 text-[10px] font-medium rounded ${f.active ? 'bg-green-500/10 text-green-400' : 'bg-neutral-800 text-neutral-500'}">Aktiv</span>
+                  <span class="px-2 py-0.5 text-[10px] font-medium rounded ${f.active ? 'bg-green-500/10 text-green-400' : 'bg-neutral-800 text-neutral-500'}">Active</span>
                 </div>
               </div>
             `).join('')}
@@ -381,7 +381,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     if (loading) {
       loading.innerHTML = `
         <div class="p-8 rounded-2xl bg-red-950/20 border border-red-900/30 text-red-400 text-center">
-          Fehler beim Laden der Serverdaten.
+          Failed to load server data.
         </div>
       `;
     }
