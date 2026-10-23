@@ -2,9 +2,10 @@
  * Orbit Dashboard - Overview Tab
  * Fully functional overview connected to MongoDB:
  * - 5 live stat cards with week-over-week comparison badges
- * - Live Messages chart with interactive 48h / 60m toggle & bar hover tooltip
- * - Top Message Channels with interactive 1D / 1W / 1M / 1Y / All time filters
- * - Activity area chart with 1D / 1W / 1M / 1Y / All filters & interactive hover dashed line, point dot, and tooltip
+ * - Live Messages chart with interactive 48h / 60m toggle & smooth bar hover tooltip
+ * - Top Message Channels with PeakBot indigo channel badges, circular SVG progress rings & 1D / 1W / 1M / 1Y / All filters
+ * - Activity area chart with 1D / 1W / 1M / 1Y / All filters & buttery-smooth hover line, dot, and tooltip
+ * - In-place data refresh with spinning icon and live-updating "Synced" timestamp (no full-tab reload)
  * - Real Features status from MongoDB guild configuration
  * - Real Recent Mod Activity feed from MongoDB (ModLogs, Cases, Warns, Bans)
  */
@@ -13,6 +14,10 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
   if (DashboardTabs._overviewPollTimer) {
     clearInterval(DashboardTabs._overviewPollTimer);
     DashboardTabs._overviewPollTimer = null;
+  }
+  if (DashboardTabs._overviewSyncTimer) {
+    clearInterval(DashboardTabs._overviewSyncTimer);
+    DashboardTabs._overviewSyncTimer = null;
   }
 
   function escapeHtml(str) {
@@ -44,7 +49,6 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
 
   function formatChartDateLabel(dateStr) {
     if (!dateStr) return '';
-    // If already HH:MM format (for 1D hourly view)
     if (/^\d{2}:\d{2}$/.test(dateStr) || /^\d{2}\/\d{2}\s+\d{2}h$/.test(dateStr)) {
       return dateStr;
     }
@@ -142,6 +146,69 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     return { line: d, area };
   }
 
+  function evaluateFeaturesList(configData, openTicketsCount) {
+    const cfg = configData?.config || configData || {};
+    const am = cfg.automod || {};
+    const sec = cfg.security || {};
+    const isAutomodActive = Boolean(
+      am.enabled ||
+      am.banned_words?.enabled ||
+      am.anti_spam?.enabled ||
+      am.anti_invites?.enabled ||
+      am.anti_link?.enabled ||
+      am.anti_caps?.enabled ||
+      am.mention_spam?.enabled ||
+      am.anti_scam?.enabled ||
+      am.anti_alt?.enabled ||
+      am.anti_bot?.enabled ||
+      am.ai_automod?.enabled ||
+      am.ai_image?.enabled ||
+      am.anti_zalgo?.enabled ||
+      sec.anti_nuke?.enabled ||
+      sec.anti_raid?.enabled ||
+      sec.webhook_protection?.enabled
+    );
+
+    const isWelcomeRolesActive = Boolean(
+      cfg.welcome?.enabled ||
+      cfg.welcome?.dm_enabled ||
+      cfg.goodbye?.enabled ||
+      cfg.goodbye?.dm_enabled ||
+      cfg.joinroles?.enabled ||
+      cfg.joinroles?.user_roles_enabled ||
+      cfg.joinroles?.bot_roles_enabled ||
+      cfg.joinroles?.tag_roles_enabled ||
+      cfg.joinroles?.sticky_roles?.enabled ||
+      cfg.joinroles?.booster_role?.enabled
+    );
+
+    const isLevelActive = Boolean(cfg.level?.enabled);
+    const isTicketsActive = Boolean(cfg.ticket?.enabled || openTicketsCount > 0);
+    const isInvitesActive = Boolean(cfg.invites?.enabled);
+    const isVerifyActive = Boolean(cfg.verify?.enabled);
+    const isAutoResponderActive = Boolean(
+      cfg.autoresponder_enabled ||
+      cfg.settings?.autoresponder_enabled ||
+      (Array.isArray(cfg.autoresponder) && cfg.autoresponder.length > 0) ||
+      (cfg.autoresponder && typeof cfg.autoresponder === 'object' && Object.keys(cfg.autoresponder).length > 0)
+    );
+    const isTempVoiceActive = Boolean(
+      cfg.tempvoice?.enabled ||
+      (Array.isArray(cfg.tempvoice?.hubs) && cfg.tempvoice.hubs.length > 0)
+    );
+
+    return [
+      { name: 'Auto-Moderation', active: isAutomodActive, tab: 'automod' },
+      { name: 'Welcome & Roles', active: isWelcomeRolesActive, tab: 'welcome' },
+      { name: 'Leveling & XP', active: isLevelActive, tab: 'level' },
+      { name: 'Support Tickets', active: isTicketsActive, tab: 'tickets' },
+      { name: 'Invite Tracker', active: isInvitesActive, tab: 'invites' },
+      { name: 'Verification', active: isVerifyActive, tab: 'verify' },
+      { name: 'Auto-Responder', active: isAutoResponderActive, tab: 'messages' },
+      { name: 'Temp Voice', active: isTempVoiceActive, tab: 'tempvoice' }
+    ];
+  }
+
   container.innerHTML = `
     <div id="overview-container" class="space-y-6 pb-10">
       <div id="overview-loading" class="flex items-center justify-center p-12 text-neutral-500 text-sm">
@@ -152,11 +219,10 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     </div>
   `;
 
-  // State for interactive filters
   const state = {
-    liveMode: '48h',        // '48h' | '60m'
-    channelRange: '7',      // '1' | '7' | '30' | '365' | 'all'
-    activityRange: '7',     // '1' | '7' | '30' | '365' | 'all'
+    liveMode: '48h',
+    channelRange: '7',
+    activityRange: '7',
     live48h: [],
     total48h: 0,
     live60m: [],
@@ -165,7 +231,8 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     history: [],
     periodMessages: 0,
     changes: {},
-    syncedAt: Date.now()
+    syncedAt: Date.now(),
+    isRefreshing: false
   };
 
   const RANGE_LABELS = {
@@ -214,67 +281,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     state.periodMessages = statsData?.period_messages ?? messageCount;
     state.syncedAt = Date.now();
 
-    // Evaluate real Features status from MongoDB config
-    const cfg = configData?.config || configData || {};
-    const am = cfg.automod || {};
-    const sec = cfg.security || {};
-    const isAutomodActive = Boolean(
-      am.enabled ||
-      am.banned_words?.enabled ||
-      am.anti_spam?.enabled ||
-      am.anti_invites?.enabled ||
-      am.anti_link?.enabled ||
-      am.anti_caps?.enabled ||
-      am.mention_spam?.enabled ||
-      am.anti_scam?.enabled ||
-      am.anti_alt?.enabled ||
-      am.anti_bot?.enabled ||
-      am.ai_automod?.enabled ||
-      am.ai_image?.enabled ||
-      am.anti_zalgo?.enabled ||
-      sec.anti_nuke?.enabled ||
-      sec.anti_raid?.enabled ||
-      sec.webhook_protection?.enabled
-    );
-
-    const isWelcomeRolesActive = Boolean(
-      cfg.welcome?.enabled ||
-      cfg.welcome?.dm_enabled ||
-      cfg.goodbye?.enabled ||
-      cfg.goodbye?.dm_enabled ||
-      cfg.joinroles?.enabled ||
-      cfg.joinroles?.user_roles_enabled ||
-      cfg.joinroles?.bot_roles_enabled ||
-      cfg.joinroles?.tag_roles_enabled ||
-      cfg.joinroles?.sticky_roles?.enabled ||
-      cfg.joinroles?.booster_role?.enabled
-    );
-
-    const isLevelActive = Boolean(cfg.level?.enabled);
-    const isTicketsActive = Boolean(cfg.ticket?.enabled || openTickets > 0);
-    const isInvitesActive = Boolean(cfg.invites?.enabled);
-    const isVerifyActive = Boolean(cfg.verify?.enabled);
-    const isAutoResponderActive = Boolean(
-      cfg.autoresponder_enabled ||
-      cfg.settings?.autoresponder_enabled ||
-      (Array.isArray(cfg.autoresponder) && cfg.autoresponder.length > 0) ||
-      (cfg.autoresponder && typeof cfg.autoresponder === 'object' && Object.keys(cfg.autoresponder).length > 0)
-    );
-    const isTempVoiceActive = Boolean(
-      cfg.tempvoice?.enabled ||
-      (Array.isArray(cfg.tempvoice?.hubs) && cfg.tempvoice.hubs.length > 0)
-    );
-
-    const featuresList = [
-      { name: 'Auto-Moderation', active: isAutomodActive, tab: 'automod' },
-      { name: 'Welcome & Roles', active: isWelcomeRolesActive, tab: 'welcome' },
-      { name: 'Leveling & XP', active: isLevelActive, tab: 'level' },
-      { name: 'Support Tickets', active: isTicketsActive, tab: 'tickets' },
-      { name: 'Invite Tracker', active: isInvitesActive, tab: 'invites' },
-      { name: 'Verification', active: isVerifyActive, tab: 'verify' },
-      { name: 'Auto-Responder', active: isAutoResponderActive, tab: 'messages' },
-      { name: 'Temp Voice', active: isTempVoiceActive, tab: 'tempvoice' }
-    ];
+    const featuresList = evaluateFeaturesList(configData, openTickets);
     const activeFeaturesCount = featuresList.filter(f => f.active).length;
 
     const modLogs = Array.isArray(modActivity) ? modActivity : [];
@@ -287,7 +294,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     content.innerHTML = `
       ${!hasAnyData ? `
       <!-- Banner 1: Setup in progress (shown only when no stats tracked yet) -->
-      <div class="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+      <div id="overview-setup-banner" class="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-4 h-4 text-blue-400 animate-spin flex-shrink-0"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
         <div>
           <p class="text-sm font-medium text-white">Setting up...</p>
@@ -329,16 +336,16 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
               <div class="flex items-center gap-2.5">
                 <h1 class="text-xl font-semibold text-white truncate">${escapeHtml(guild.name)}</h1>
               </div>
-              <p class="text-xs text-neutral-500 mt-0.5 truncate tabular-nums">Online &amp; Active · ${formatNumber(memberCount)} members</p>
+              <p id="overview-server-subtitle" class="text-xs text-neutral-500 mt-0.5 truncate tabular-nums">Online &amp; Active · ${formatNumber(memberCount)} members</p>
             </div>
           </div>
           <div class="flex items-center gap-3 shrink-0">
             <div class="flex items-center gap-1.5 text-xs"><div class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"></div></div>
             <div class="flex items-center gap-1.5 text-xs text-neutral-500">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span id="overview-sync-label" class="hidden sm:inline">Synced just now</span>
-              <button id="overview-refresh-btn" type="button" class="p-1 hover:bg-neutral-800 rounded-md transition-colors text-neutral-400 hover:text-white cursor-pointer" aria-label="Refresh">
-                <svg id="overview-refresh-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-3.5 h-3.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+              <span id="overview-sync-label" class="hidden sm:inline tabular-nums transition-colors duration-300">Just now</span>
+              <button id="overview-refresh-btn" type="button" class="p-1 hover:bg-neutral-800 rounded-md transition-colors text-neutral-400 hover:text-white cursor-pointer" aria-label="Refresh" title="Refresh statistics">
+                <svg id="overview-refresh-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-3.5 h-3.5 transition-transform"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
               </button>
             </div>
           </div>
@@ -359,7 +366,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             </div>
             <p id="stat-card-members" class="text-[28px] font-bold tabular-nums leading-none text-white">${formatNumber(memberCount)}</p>
             <div class="mt-2 flex items-center gap-1.5 min-h-[18px]">
-              ${renderPctBadge(state.changes.members_pct)}
+              <span id="stat-pct-members">${renderPctBadge(state.changes.members_pct)}</span>
               <span class="text-[10px] text-neutral-600">vs last week</span>
             </div>
           </div>
@@ -374,7 +381,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             </div>
             <p id="stat-card-messages" class="text-[28px] font-bold tabular-nums leading-none text-white">${formatNumber(messageCount)}</p>
             <div class="mt-2 flex items-center gap-1.5 min-h-[18px]">
-              ${renderPctBadge(state.changes.messages_pct)}
+              <span id="stat-pct-messages">${renderPctBadge(state.changes.messages_pct)}</span>
               <span class="text-[10px] text-neutral-600">vs last week</span>
             </div>
           </div>
@@ -389,7 +396,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             </div>
             <p id="stat-card-active-users" class="text-[28px] font-bold tabular-nums leading-none text-white">${formatNumber(activeUsers)}</p>
             <div class="mt-2 flex items-center gap-1.5 min-h-[18px]">
-              ${renderPctBadge(state.changes.active_users_pct)}
+              <span id="stat-pct-active-users">${renderPctBadge(state.changes.active_users_pct)}</span>
               <span class="text-[10px] text-neutral-600">vs last week</span>
             </div>
           </div>
@@ -404,7 +411,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             </div>
             <p id="stat-card-voice-hours" class="text-[28px] font-bold tabular-nums leading-none text-white">${voiceHours}</p>
             <div class="mt-2 flex items-center gap-1.5 min-h-[18px]">
-              ${renderPctBadge(state.changes.voice_pct)}
+              <span id="stat-pct-voice">${renderPctBadge(state.changes.voice_pct)}</span>
               <span class="text-[10px] text-neutral-600">vs last week</span>
             </div>
           </div>
@@ -418,7 +425,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
               <span class="text-xs font-medium text-neutral-400">Open tickets</span>
             </div>
             <p id="stat-card-tickets" class="text-[28px] font-bold tabular-nums leading-none text-white">${formatNumber(openTickets)}</p>
-            <div class="mt-2 flex items-center gap-1.5 min-h-[18px]">
+            <div id="stat-tickets-status" class="mt-2 flex items-center gap-1.5 min-h-[18px]">
               ${openTickets > 0
                 ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400">${openTickets} awaiting reply</span>`
                 : `<span class="text-[10px] text-neutral-500">all clear</span>`
@@ -470,7 +477,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
               <button type="button" data-ch-range="all" class="relative px-2 py-1 text-[11px] font-medium rounded-md text-neutral-400 hover:text-white cursor-pointer transition-colors">All</button>
             </div>
           </div>
-          <div id="top-channels-body" class="flex-1 px-4 pb-4 pt-1"></div>
+          <div id="top-channels-body" class="flex-1 px-2 pb-3"></div>
         </div>
 
       </div>
@@ -517,22 +524,9 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-4 h-4 text-neutral-500"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               <span class="text-sm font-semibold text-white">Features</span>
             </div>
-            <span class="text-[11px] font-medium text-neutral-500 tabular-nums">${activeFeaturesCount}/${featuresList.length} active</span>
+            <span id="features-active-count" class="text-[11px] font-medium text-neutral-500 tabular-nums">${activeFeaturesCount}/${featuresList.length} active</span>
           </div>
-          <div class="flex flex-col flex-1 divide-y divide-neutral-800/60">
-            ${featuresList.map(f => `
-              <a href="/dashboard/${guildId}/${f.tab}" class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-800/40 transition-colors group">
-                <div class="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center text-xs font-semibold text-neutral-400">
-                  <span class="w-2 h-2 rounded-full ${f.active ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.5)]' : 'bg-neutral-600'}"></span>
-                </div>
-                <div class="text-xs font-medium text-neutral-300 group-hover:text-white transition-colors">${escapeHtml(f.name)}</div>
-                <div class="ml-auto flex items-center gap-2">
-                  <span class="px-2 py-0.5 text-[10px] font-medium rounded ${f.active ? 'bg-green-500/10 text-green-400' : 'bg-neutral-800 text-neutral-500'}">${f.active ? 'Active' : 'Inactive'}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-600 group-hover:text-neutral-400 transition-colors"><path d="m9 18 6-6-6-6"/></svg>
-                </div>
-              </a>
-            `).join('')}
-          </div>
+          <div id="features-list-body" class="flex flex-col flex-1 divide-y divide-neutral-800/60"></div>
         </div>
 
         <!-- Recent Mod Activity -->
@@ -554,7 +548,69 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       </div>
     `;
 
+    // ─── Synced Label Helper ────────────────────────────────────────────────────
+
+    function updateSyncLabel(justRefreshed = false) {
+      const el = document.getElementById('overview-sync-label');
+      if (!el) return;
+      const diffSec = Math.max(0, Math.floor((Date.now() - state.syncedAt) / 1000));
+      const syncTimeStr = new Date(state.syncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      el.title = `Last synced at ${syncTimeStr}`;
+
+      if (justRefreshed) {
+        el.textContent = `Synced just now (${syncTimeStr})`;
+        el.classList.remove('text-neutral-500');
+        el.classList.add('text-green-400');
+        setTimeout(() => {
+          if (el) {
+            el.classList.remove('text-green-400');
+            el.classList.add('text-neutral-500');
+          }
+        }, 1800);
+        return;
+      }
+
+      if (diffSec < 5) {
+        el.textContent = 'Just now';
+      } else if (diffSec < 60) {
+        el.textContent = `${diffSec}s ago`;
+      } else if (diffSec < 3600) {
+        el.textContent = `${Math.floor(diffSec / 60)}m ago`;
+      } else {
+        el.textContent = `${Math.floor(diffSec / 3600)}h ago`;
+      }
+    }
+
+    DashboardTabs._overviewSyncTimer = setInterval(() => {
+      if (!document.getElementById('overview-sync-label')) {
+        clearInterval(DashboardTabs._overviewSyncTimer);
+        DashboardTabs._overviewSyncTimer = null;
+        return;
+      }
+      updateSyncLabel(false);
+    }, 5000);
+
     // ─── Render Functions for Dynamic Sections ──────────────────────────────────
+
+    function renderFeaturesList(list) {
+      const body = document.getElementById('features-list-body');
+      const countEl = document.getElementById('features-active-count');
+      if (!body) return;
+      const activeCnt = list.filter(f => f.active).length;
+      if (countEl) countEl.textContent = `${activeCnt}/${list.length} active`;
+      body.innerHTML = list.map(f => `
+        <a href="/dashboard/${guildId}/${f.tab}" class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-800/40 transition-colors group">
+          <div class="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center text-xs font-semibold text-neutral-400">
+            <span class="w-2 h-2 rounded-full ${f.active ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.5)]' : 'bg-neutral-600'}"></span>
+          </div>
+          <div class="text-xs font-medium text-neutral-300 group-hover:text-white transition-colors">${escapeHtml(f.name)}</div>
+          <div class="ml-auto flex items-center gap-2">
+            <span class="px-2 py-0.5 text-[10px] font-medium rounded ${f.active ? 'bg-green-500/10 text-green-400' : 'bg-neutral-800 text-neutral-500'}">${f.active ? 'Active' : 'Inactive'}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-600 group-hover:text-neutral-400 transition-colors"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </a>
+      `).join('');
+    }
 
     function renderLiveChart() {
       const wrapper = document.getElementById('live-chart-wrapper');
@@ -593,7 +649,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         const y = 150 - h;
         const opacity = b.messages > 0 ? '0.9' : '0.35';
         const color = b.messages > 0 ? '#22c55e' : '#262626';
-        return `<rect data-bar-idx="${i}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barW.toFixed(2)}" height="${h}" rx="2" fill="${color}" opacity="${opacity}" class="transition-opacity duration-75"></rect>`;
+        return `<rect data-bar-idx="${i}" data-target-y="${y.toFixed(2)}" data-target-h="${h}" x="${x.toFixed(2)}" y="147" width="${barW.toFixed(2)}" height="3" rx="2" fill="${color}" opacity="${opacity}" style="transition: y 450ms cubic-bezier(0.22, 1, 0.36, 1), height 450ms cubic-bezier(0.22, 1, 0.36, 1), fill 150ms ease, opacity 150ms ease;"></rect>`;
       }).join('');
 
       const tickIndices = is48h ? [4, 18, 32, 46] : [5, 22, 39, 56];
@@ -609,11 +665,11 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
           <line stroke="#262626" x1="0" y1="113.5" x2="440" y2="113.5"></line>
           <line stroke="#262626" x1="0" y1="77" x2="440" y2="77"></line>
           <line stroke="#262626" x1="0" y1="40" x2="440" y2="40"></line>
-          <line id="live-hover-line" x1="0" y1="30" x2="0" y2="150" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 3" class="hidden pointer-events-none"></line>
+          <line id="live-hover-line" x1="0" y1="30" x2="0" y2="150" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="3 3" class="opacity-0 pointer-events-none" style="transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;"></line>
           ${barsSvg}
           ${ticksSvg}
         </svg>
-        <div id="live-chart-tooltip" class="hidden pointer-events-none absolute z-20 rounded-lg border border-[#2e2e2e] bg-[#171717] px-3 py-2 shadow-xl" style="top: 8px; left: 0;">
+        <div id="live-chart-tooltip" class="opacity-0 pointer-events-none absolute z-20 rounded-lg border border-[#2e2e2e] bg-[#171717] px-3 py-2 shadow-xl" style="top: 8px; left: 0; transition: left 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;">
           <p id="live-tooltip-date" class="text-[11px] font-medium text-neutral-400 leading-tight"></p>
           <p class="text-[12px] text-neutral-300 mt-1 leading-tight">Messages: <span id="live-tooltip-val" class="font-bold text-white tabular-nums">0</span></p>
         </div>
@@ -626,6 +682,15 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       const tooltipVal = document.getElementById('live-tooltip-val');
       const barRects = svgEl ? Array.from(svgEl.querySelectorAll('rect[data-bar-idx]')) : [];
 
+      requestAnimationFrame(() => {
+        barRects.forEach(r => {
+          r.setAttribute('y', r.getAttribute('data-target-y'));
+          r.setAttribute('height', r.getAttribute('data-target-h'));
+        });
+      });
+
+      let isLiveHoverActive = false;
+
       function handleMove(clientX) {
         const rect = wrapper.getBoundingClientRect();
         if (!rect.width) return;
@@ -637,9 +702,15 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
 
         const centerX = padLeft + idx * slotW + slotW / 2;
         if (hoverLine) {
-          hoverLine.setAttribute('x1', centerX.toFixed(2));
-          hoverLine.setAttribute('x2', centerX.toFixed(2));
-          hoverLine.classList.remove('hidden');
+          if (!isLiveHoverActive) {
+            hoverLine.style.transition = 'none';
+            hoverLine.style.transform = `translateX(${centerX.toFixed(2)}px)`;
+            hoverLine.getBoundingClientRect();
+            hoverLine.style.transition = 'transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
+          } else {
+            hoverLine.style.transform = `translateX(${centerX.toFixed(2)}px)`;
+          }
+          hoverLine.classList.remove('opacity-0');
         }
 
         barRects.forEach((r, i) => {
@@ -656,12 +727,21 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         if (tooltip && tooltipDate && tooltipVal) {
           tooltipDate.textContent = bucket.label;
           tooltipVal.textContent = formatNumber(bucket.messages);
-          tooltip.classList.remove('hidden');
           const pxX = (centerX / W) * rect.width;
           const tipW = tooltip.offsetWidth || 115;
           const leftPos = pxX + tipW + 16 > rect.width ? Math.max(4, pxX - tipW - 10) : pxX + 10;
-          tooltip.style.left = `${leftPos}px`;
+
+          if (!isLiveHoverActive) {
+            tooltip.style.transition = 'none';
+            tooltip.style.left = `${leftPos}px`;
+            tooltip.getBoundingClientRect();
+            tooltip.style.transition = 'left 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
+          } else {
+            tooltip.style.left = `${leftPos}px`;
+          }
+          tooltip.classList.remove('opacity-0');
         }
+        isLiveHoverActive = true;
       }
 
       wrapper.onmousemove = (e) => handleMove(e.clientX);
@@ -669,8 +749,9 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         if (e.touches && e.touches[0]) handleMove(e.touches[0].clientX);
       };
       wrapper.onmouseleave = () => {
-        if (hoverLine) hoverLine.classList.add('hidden');
-        if (tooltip) tooltip.classList.add('hidden');
+        isLiveHoverActive = false;
+        if (hoverLine) hoverLine.classList.add('opacity-0');
+        if (tooltip) tooltip.classList.add('opacity-0');
         barRects.forEach((r, i) => {
           const hasMsg = buckets[i].messages > 0;
           r.setAttribute('fill', hasMsg ? '#22c55e' : '#262626');
@@ -699,33 +780,46 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         return;
       }
 
-      const maxCount = Math.max(1, ...channels.map(c => Number(c.messages) || 0));
+      const totalMsgs = Math.max(1, channels.reduce((acc, c) => acc + (Number(c.messages) || 0), 0));
+      const circumference = 94.2;
+
       body.innerHTML = `
-        <div class="space-y-3 pt-1">
-          ${channels.map((ch, idx) => {
+        <div class="divide-y divide-neutral-800/40">
+          ${channels.map((ch) => {
             const msgs = Number(ch.messages) || 0;
-            const pct = ch.percentage !== undefined ? Number(ch.percentage) : Math.round((msgs / maxCount) * 100);
-            const barWidth = Math.max(4, Math.min(100, Math.round((msgs / maxCount) * 100)));
+            const pct = ch.percentage !== undefined ? Number(ch.percentage) : Math.round((msgs / totalMsgs) * 100);
+            const changeVal = ch.change !== undefined ? Number(ch.change) : msgs;
+            const changeFormatted = changeVal >= 0 ? `+${formatNumber(changeVal)}` : formatNumber(changeVal);
+            const dashLen = Math.max(0, Math.min(circumference, (pct / 100) * circumference)).toFixed(1);
+
             return `
-              <div class="space-y-1.5">
-                <div class="flex items-center justify-between text-xs gap-2">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <span class="w-4 h-4 rounded bg-neutral-800 text-[10px] font-semibold text-neutral-400 flex items-center justify-center shrink-0 tabular-nums">${idx + 1}</span>
-                    <span class="text-neutral-300 font-medium truncate">#${escapeHtml(ch.name)}</span>
+              <div class="grid grid-cols-[minmax(0,1.4fr)_minmax(56px,auto)_minmax(64px,auto)] sm:grid-cols-[minmax(0,1.4fr)_minmax(70px,1fr)_minmax(90px,1fr)_minmax(110px,1fr)] gap-2 sm:gap-3 items-center px-2.5 py-1.5 hover:bg-white/[0.02] transition-colors">
+                <span class="inline-flex items-center gap-1 min-w-0 px-1.5 py-0.5 bg-indigo-500/15 border border-indigo-500/20 rounded w-fit max-w-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-2.5 h-2.5 text-indigo-300 flex-shrink-0"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
+                  <span class="text-[11px] text-indigo-200 font-medium truncate">${escapeHtml(ch.name)}</span>
+                </span>
+                <span class="text-sm text-white font-semibold tabular-nums">${formatNumber(msgs)}</span>
+                <div class="flex items-center gap-1.5">
+                  <div class="relative w-5 h-5 flex-shrink-0">
+                    <svg viewBox="0 0 36 36" class="w-5 h-5 -rotate-90">
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="4" class="text-neutral-700"></circle>
+                      <circle data-target-dash="${dashLen} 94.2" cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 94.2" class="text-emerald-500" style="transition: stroke-dasharray 550ms cubic-bezier(0.22, 1, 0.36, 1);"></circle>
+                    </svg>
                   </div>
-                  <div class="flex items-center gap-2 shrink-0 tabular-nums">
-                    <span class="text-white font-semibold">${formatNumber(msgs)}</span>
-                    <span class="text-[10px] text-neutral-500 w-8 text-right">${pct}%</span>
-                  </div>
+                  <span class="text-xs text-neutral-200 tabular-nums">${pct}%</span>
                 </div>
-                <div class="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                  <div class="h-full bg-green-500 rounded-full transition-all duration-300" style="width: ${barWidth}%;"></div>
-                </div>
+                <span class="hidden sm:inline text-xs tabular-nums font-medium ${changeVal >= 0 ? 'text-emerald-400' : 'text-red-400'}">${changeFormatted}</span>
               </div>
             `;
           }).join('')}
         </div>
       `;
+
+      requestAnimationFrame(() => {
+        body.querySelectorAll('circle[data-target-dash]').forEach(c => {
+          c.setAttribute('stroke-dasharray', c.getAttribute('data-target-dash'));
+        });
+      });
     }
 
     function renderActivityChart() {
@@ -751,7 +845,6 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
 
       const values = history.map(h => Number(h.messages) || 0);
       const maxDataVal = Math.max(0, ...values);
-      // Match screenshots: when max is 0, Y-axis ticks are 0, 1, 2, 3, 4
       const step = maxDataVal <= 0 ? 1 : Math.ceil(maxDataVal / 4);
       const yMax = step * 4;
       const yTicks = [0, step, step * 2, step * 3, step * 4];
@@ -793,7 +886,6 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         `;
       }).join('');
 
-      // X-axis date labels (show all when <= 8 points, otherwise up to 7 evenly spaced labels)
       const maxLabels = 7;
       const labelIndices = [];
       if (points.length <= 8) {
@@ -818,24 +910,45 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             </linearGradient>
           </defs>
           ${gridSvg}
-          <path d="${area}" fill="url(#orbitWeeklyFill)"></path>
-          <path d="${line}" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-          <!-- Interactive Hover Elements matching screenshots -->
-          <line id="activity-hover-line" x1="0" y1="${topY}" x2="0" y2="${bottomY}" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3 3" class="hidden pointer-events-none"></line>
-          <circle id="activity-hover-dot" cx="0" cy="${bottomY}" r="4.5" fill="#22c55e" stroke="#ffffff" stroke-width="2.5" class="hidden pointer-events-none"></circle>
+          <path id="activity-area-path" d="${area}" fill="url(#orbitWeeklyFill)" style="opacity: 0; transition: opacity 550ms ease-out;"></path>
+          <path id="activity-line-path" d="${line}" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <!-- Smoothly Gliding Hover Elements -->
+          <line id="activity-hover-line" x1="0" y1="${topY}" x2="0" y2="${bottomY}" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3 3" class="opacity-0 pointer-events-none" style="transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;"></line>
+          <circle id="activity-hover-dot" cx="0" cy="0" r="4.5" fill="#22c55e" stroke="#ffffff" stroke-width="2.5" class="opacity-0 pointer-events-none" style="transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;"></circle>
           ${xLabelsSvg}
         </svg>
-        <div id="activity-chart-tooltip" class="hidden pointer-events-none absolute z-20 rounded-lg border border-[#2e2e2e] bg-[#171717] px-3 py-2 shadow-xl" style="top: 40px; left: 0;">
+        <div id="activity-chart-tooltip" class="opacity-0 pointer-events-none absolute z-20 rounded-lg border border-[#2e2e2e] bg-[#171717] px-3 py-2 shadow-xl" style="top: 40px; left: 0; transition: left 180ms cubic-bezier(0.22, 1, 0.36, 1), top 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;">
           <p id="activity-tooltip-date" class="text-[11px] font-medium text-neutral-400 leading-tight"></p>
-          <p class="text-[12px] text-neutral-300 mt-1 leading-tight">Messages: <span id="activity-tooltip-val" class="font-bold text-white tabular-nums">0</span></p>
+          <p id="activity-tooltip-val" class="text-[12px] text-neutral-300 mt-1 leading-tight">Messages: <span id="activity-tooltip-num" class="font-bold text-white tabular-nums">0</span></p>
         </div>
       `;
+
+      // Smooth draw animation for the line & area fade-in
+      const linePathEl = document.getElementById('activity-line-path');
+      const areaPathEl = document.getElementById('activity-area-path');
+      if (linePathEl) {
+        try {
+          const totalLen = Math.ceil(linePathEl.getTotalLength() || 1000);
+          linePathEl.style.strokeDasharray = `${totalLen}`;
+          linePathEl.style.strokeDashoffset = `${totalLen}`;
+          linePathEl.getBoundingClientRect();
+          linePathEl.style.transition = 'stroke-dashoffset 650ms cubic-bezier(0.22, 1, 0.36, 1)';
+          linePathEl.style.strokeDashoffset = '0';
+        } catch (_) {}
+      }
+      if (areaPathEl) {
+        requestAnimationFrame(() => {
+          areaPathEl.style.opacity = '1';
+        });
+      }
 
       const hoverLine = document.getElementById('activity-hover-line');
       const hoverDot = document.getElementById('activity-hover-dot');
       const tooltip = document.getElementById('activity-chart-tooltip');
       const tooltipDate = document.getElementById('activity-tooltip-date');
-      const tooltipVal = document.getElementById('activity-tooltip-val');
+      const tooltipNum = document.getElementById('activity-tooltip-num');
+
+      let isHoverActive = false;
 
       function handleActivityHover(clientX) {
         const rect = wrapper.getBoundingClientRect();
@@ -857,19 +970,32 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         if (!pt) return;
 
         if (hoverLine) {
-          hoverLine.setAttribute('x1', pt.x.toFixed(2));
-          hoverLine.setAttribute('x2', pt.x.toFixed(2));
-          hoverLine.classList.remove('hidden');
+          if (!isHoverActive) {
+            hoverLine.style.transition = 'none';
+            hoverLine.style.transform = `translateX(${pt.x.toFixed(2)}px)`;
+            hoverLine.getBoundingClientRect();
+            hoverLine.style.transition = 'transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
+          } else {
+            hoverLine.style.transform = `translateX(${pt.x.toFixed(2)}px)`;
+          }
+          hoverLine.classList.remove('opacity-0');
         }
+
         if (hoverDot) {
-          hoverDot.setAttribute('cx', pt.x.toFixed(2));
-          hoverDot.setAttribute('cy', pt.y.toFixed(2));
-          hoverDot.classList.remove('hidden');
+          if (!isHoverActive) {
+            hoverDot.style.transition = 'none';
+            hoverDot.style.transform = `translate(${pt.x.toFixed(2)}px, ${pt.y.toFixed(2)}px)`;
+            hoverDot.getBoundingClientRect();
+            hoverDot.style.transition = 'transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
+          } else {
+            hoverDot.style.transform = `translate(${pt.x.toFixed(2)}px, ${pt.y.toFixed(2)}px)`;
+          }
+          hoverDot.classList.remove('opacity-0');
         }
-        if (tooltip && tooltipDate && tooltipVal) {
+
+        if (tooltip && tooltipDate && tooltipNum) {
           tooltipDate.textContent = pt.tooltipDate;
-          tooltipVal.textContent = formatNumber(pt.val);
-          tooltip.classList.remove('hidden');
+          tooltipNum.textContent = formatNumber(pt.val);
 
           const pxX = (pt.x / W) * rect.width;
           const pxY = (pt.y / H) * rect.height;
@@ -881,9 +1007,20 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             : pxX + 14;
           const topPos = Math.max(10, Math.min(rect.height - tipH - 28, pxY - tipH - 8));
 
-          tooltip.style.left = `${leftPos}px`;
-          tooltip.style.top = `${topPos}px`;
+          if (!isHoverActive) {
+            tooltip.style.transition = 'none';
+            tooltip.style.left = `${leftPos}px`;
+            tooltip.style.top = `${topPos}px`;
+            tooltip.getBoundingClientRect();
+            tooltip.style.transition = 'left 180ms cubic-bezier(0.22, 1, 0.36, 1), top 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease';
+          } else {
+            tooltip.style.left = `${leftPos}px`;
+            tooltip.style.top = `${topPos}px`;
+          }
+          tooltip.classList.remove('opacity-0');
         }
+
+        isHoverActive = true;
       }
 
       wrapper.onmousemove = (e) => handleActivityHover(e.clientX);
@@ -891,9 +1028,10 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         if (e.touches && e.touches[0]) handleActivityHover(e.touches[0].clientX);
       };
       wrapper.onmouseleave = () => {
-        if (hoverLine) hoverLine.classList.add('hidden');
-        if (hoverDot) hoverDot.classList.add('hidden');
-        if (tooltip) tooltip.classList.add('hidden');
+        isHoverActive = false;
+        if (hoverLine) hoverLine.classList.add('opacity-0');
+        if (hoverDot) hoverDot.classList.add('opacity-0');
+        if (tooltip) tooltip.classList.add('opacity-0');
       };
     }
 
@@ -916,7 +1054,6 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
         return;
       }
 
-      // Compute summary counts by action category
       const counts = {};
       logs.forEach(item => {
         const act = String(item.action || 'mod').toLowerCase();
@@ -983,13 +1120,15 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       `;
     }
 
-    // Initial render of all dynamic charts and lists
+    // Initial render of all dynamic sections
+    renderFeaturesList(featuresList);
     renderLiveChart();
     renderTopChannels();
     renderActivityChart();
     renderModActivity(modLogs);
+    updateSyncLabel(false);
 
-    // ─── Event Listeners for Filter Toggles & Refresh ───────────────────────────
+    // ─── Event Listeners for Filter Toggles & In-Place Refresh ──────────────────
 
     function updateToggleButtonStyles(containerId, attrName, activeValue) {
       const group = document.getElementById(containerId);
@@ -1078,55 +1217,117 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       });
     }
 
-    // 4. Manual Refresh Button & Auto-Polling
-    const refreshBtn = document.getElementById('overview-refresh-btn');
-    const refreshIcon = document.getElementById('overview-refresh-icon');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
-        if (refreshIcon) refreshIcon.classList.add('animate-spin');
-        DashboardTabs.Overview(container, guildId, guild);
-      });
-    }
+    // 4. In-Place Data Refresh Function (no page reload, spins icon, updates Synced time)
+    async function refreshOverviewData(isManual = false) {
+      if (state.isRefreshing) return;
+      state.isRefreshing = true;
 
-    DashboardTabs._overviewPollTimer = setInterval(async () => {
-      if (!document.getElementById('overview-content')) {
-        clearInterval(DashboardTabs._overviewPollTimer);
-        DashboardTabs._overviewPollTimer = null;
-        return;
+      const refreshIcon = document.getElementById('overview-refresh-icon');
+      if (isManual && refreshIcon) {
+        refreshIcon.classList.add('animate-spin');
       }
+
+      const minSpinPromise = isManual
+        ? new Promise(resolve => setTimeout(resolve, 550))
+        : Promise.resolve();
+
       try {
-        const [freshLive, freshStats, freshMod] = await Promise.all([
-          API.getGuildStatsLive(guildId).catch(() => null),
+        const [freshConfig, freshStats, freshLive, freshMod] = await Promise.all([
+          API.getConfig(guildId).catch(() => null),
           API.getGuildStats(guildId, state.activityRange, state.channelRange).catch(() => null),
-          API.getModActivity(guildId).catch(() => null)
+          API.getGuildStatsLive(guildId).catch(() => null),
+          API.getModActivity(guildId).catch(() => null),
+          minSpinPromise
         ]);
+
         if (freshLive) {
           if (freshLive.live_60m) state.live60m = freshLive.live_60m;
           if (freshLive.total_60m !== undefined) state.total60m = freshLive.total_60m;
           if (freshLive.live_48h) state.live48h = freshLive.live_48h;
           if (freshLive.total_48h !== undefined) state.total48h = freshLive.total_48h;
         }
+
         if (freshStats) {
           state.history = freshStats.history || state.history;
           state.periodMessages = freshStats.period_messages ?? state.periodMessages;
           state.topChannels = freshStats.top_channels || state.topChannels;
           state.changes = freshStats.changes || state.changes;
+          if (freshStats.live_48h && !freshLive?.live_48h) state.live48h = freshStats.live_48h;
+          if (freshStats.total_48h !== undefined && freshLive?.total_48h === undefined) state.total48h = freshStats.total_48h;
+
+          const newMembers = freshStats.total_members ?? freshStats.member_count ?? memberCount;
+          const newMsgs = freshStats.week_messages ?? freshStats.message_count ?? messageCount;
+          const newActive = freshStats.week_active_users ?? freshStats.active_users ?? activeUsers;
+          const newVoice = freshStats.voice_hours ?? voiceHours;
+          const newTickets = freshStats.open_tickets ?? openTickets;
+
           const memEl = document.getElementById('stat-card-members');
           const msgEl = document.getElementById('stat-card-messages');
           const actEl = document.getElementById('stat-card-active-users');
           const vcEl = document.getElementById('stat-card-voice-hours');
           const tkEl = document.getElementById('stat-card-tickets');
-          if (memEl) memEl.textContent = formatNumber(freshStats.total_members ?? freshStats.member_count ?? memberCount);
-          if (msgEl) msgEl.textContent = formatNumber(freshStats.week_messages ?? freshStats.message_count ?? messageCount);
-          if (actEl) actEl.textContent = formatNumber(freshStats.week_active_users ?? freshStats.active_users ?? activeUsers);
-          if (vcEl) vcEl.textContent = freshStats.voice_hours ?? voiceHours;
-          if (tkEl) tkEl.textContent = formatNumber(freshStats.open_tickets ?? openTickets);
+          const subEl = document.getElementById('overview-server-subtitle');
+
+          if (memEl) memEl.textContent = formatNumber(newMembers);
+          if (msgEl) msgEl.textContent = formatNumber(newMsgs);
+          if (actEl) actEl.textContent = formatNumber(newActive);
+          if (vcEl) vcEl.textContent = newVoice;
+          if (tkEl) tkEl.textContent = formatNumber(newTickets);
+          if (subEl) subEl.innerHTML = `Online &amp; Active · ${formatNumber(newMembers)} members`;
+
+          const pctMem = document.getElementById('stat-pct-members');
+          const pctMsg = document.getElementById('stat-pct-messages');
+          const pctAct = document.getElementById('stat-pct-active-users');
+          const pctVc = document.getElementById('stat-pct-voice');
+          const tkStatus = document.getElementById('stat-tickets-status');
+
+          if (pctMem) pctMem.innerHTML = renderPctBadge(state.changes.members_pct);
+          if (pctMsg) pctMsg.innerHTML = renderPctBadge(state.changes.messages_pct);
+          if (pctAct) pctAct.innerHTML = renderPctBadge(state.changes.active_users_pct);
+          if (pctVc) pctVc.innerHTML = renderPctBadge(state.changes.voice_pct);
+          if (tkStatus) {
+            tkStatus.innerHTML = newTickets > 0
+              ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400">${newTickets} awaiting reply</span>`
+              : `<span class="text-[10px] text-neutral-500">all clear</span>`;
+          }
+
+          if (freshConfig) {
+            renderFeaturesList(evaluateFeaturesList(freshConfig, newTickets));
+          }
         }
+
         renderLiveChart();
         renderTopChannels();
         renderActivityChart();
         if (Array.isArray(freshMod)) renderModActivity(freshMod);
-      } catch (_) {}
+
+        state.syncedAt = Date.now();
+        updateSyncLabel(isManual);
+      } catch (e) {
+        console.warn('[OverviewTab] Error refreshing data:', e);
+      } finally {
+        if (refreshIcon) {
+          refreshIcon.classList.remove('animate-spin');
+        }
+        state.isRefreshing = false;
+      }
+    }
+
+    const refreshBtn = document.getElementById('overview-refresh-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        refreshOverviewData(true);
+      });
+    }
+
+    DashboardTabs._overviewPollTimer = setInterval(() => {
+      if (!document.getElementById('overview-content')) {
+        clearInterval(DashboardTabs._overviewPollTimer);
+        DashboardTabs._overviewPollTimer = null;
+        return;
+      }
+      refreshOverviewData(false);
     }, 30000);
 
     loading.classList.add('hidden');
