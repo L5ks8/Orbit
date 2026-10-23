@@ -271,7 +271,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                   <p class="px-3 mb-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">${sec.title}</p>
                   <div class="space-y-0.5">
                     ${sec.links.map(l => {
-                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings');
+                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings') || (l.id === 'welcomegoodbye' && tab === 'welcome');
                       return `
                         <a 
                           href="${l.path}" 
@@ -447,28 +447,42 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
   if (!tabContainer) return;
 
   // Mount tab or overview
-  if (tab === 'overview') {
-    if (DashboardTabs.Overview) {
-      DashboardTabs.Overview(tabContainer, guildId, currentGuild);
-    }
-  } else if (tab === 'bot-profile' && DashboardTabs.BotProfile) {
-    DashboardTabs.BotProfile(tabContainer, guildId);
-  } else if (tab === 'analytics' && DashboardTabs.Analytics) {
-    DashboardTabs.Analytics(tabContainer, guildId);
-  } else if (tab === 'roles' && DashboardTabs.Roles) {
-    DashboardTabs.Roles(tabContainer, guildId);
-  } else if (tab === 'invites' && DashboardTabs.Invites) {
-    DashboardTabs.Invites(tabContainer, guildId);
-  } else if (tab === 'embed-builder' && DashboardTabs.EmbedBuilder) {
-    DashboardTabs.EmbedBuilder(tabContainer, guildId);
-  } else if (tab === 'leaderboard' && DashboardTabs.Leaderboard) {
-    DashboardTabs.Leaderboard(tabContainer, guildId);
-  } else if ((tab === 'settings' || tab === 'server-settings') && DashboardTabs.Settings) {
-    DashboardTabs.Settings(tabContainer, guildId);
-  } else if (tab === 'security' && DashboardTabs.Security) {
-    DashboardTabs.Security(tabContainer, guildId);
-  } else if (tab === 'verify' && DashboardTabs.Verification) {
-    DashboardTabs.Verification(tabContainer, guildId);
+  const tabHandlers = {
+    'overview': () => DashboardTabs.Overview && DashboardTabs.Overview(tabContainer, guildId, currentGuild),
+    'builder': () => DashboardTabs.Builder && DashboardTabs.Builder(tabContainer, guildId),
+    'bot-profile': () => DashboardTabs.BotProfile && DashboardTabs.BotProfile(tabContainer, guildId),
+    'settings': () => DashboardTabs.Settings && DashboardTabs.Settings(tabContainer, guildId),
+    'server-settings': () => DashboardTabs.Settings && DashboardTabs.Settings(tabContainer, guildId),
+    'analytics': () => DashboardTabs.Analytics && DashboardTabs.Analytics(tabContainer, guildId),
+    'welcome': () => DashboardTabs.Welcome && DashboardTabs.Welcome(tabContainer, guildId),
+    'welcomegoodbye': () => DashboardTabs.Welcome && DashboardTabs.Welcome(tabContainer, guildId),
+    'roles': () => DashboardTabs.Roles && DashboardTabs.Roles(tabContainer, guildId),
+    'invites': () => DashboardTabs.Invites && DashboardTabs.Invites(tabContainer, guildId),
+    'verify': () => DashboardTabs.Verification && DashboardTabs.Verification(tabContainer, guildId),
+    'messages': () => DashboardTabs.Messages && DashboardTabs.Messages(tabContainer, guildId),
+    'embed-builder': () => DashboardTabs.EmbedBuilder && DashboardTabs.EmbedBuilder(tabContainer, guildId),
+    'level': () => DashboardTabs.Level && DashboardTabs.Level(tabContainer, guildId),
+    'polls': () => DashboardTabs.Polls && DashboardTabs.Polls(tabContainer, guildId),
+    'giveaways': () => DashboardTabs.Giveaways && DashboardTabs.Giveaways(tabContainer, guildId),
+    'tickets': () => DashboardTabs.Tickets && DashboardTabs.Tickets(tabContainer, guildId),
+    'tempvoice': () => DashboardTabs.TempVoice && DashboardTabs.TempVoice(tabContainer, guildId),
+    'automod': () => DashboardTabs.AutoMod && DashboardTabs.AutoMod(tabContainer, guildId),
+    'security': () => DashboardTabs.Security && DashboardTabs.Security(tabContainer, guildId),
+    'backups': () => DashboardTabs.Backups && DashboardTabs.Backups(tabContainer, guildId),
+    'inactive-kick': () => DashboardTabs.InactiveKick && DashboardTabs.InactiveKick(tabContainer, guildId),
+    'browse-templates': () => DashboardTabs.BrowseTemplates && DashboardTabs.BrowseTemplates(tabContainer, guildId),
+    'templates': () => DashboardTabs.Templates && DashboardTabs.Templates(tabContainer, guildId),
+    'share-template': () => DashboardTabs.ShareTemplate && DashboardTabs.ShareTemplate(tabContainer, guildId),
+    'appeals': () => DashboardTabs.Appeals && DashboardTabs.Appeals(tabContainer, guildId),
+    'serverstats': () => DashboardTabs.ServerStats && DashboardTabs.ServerStats(tabContainer, guildId),
+    'autoresponder': () => DashboardTabs.AutoResponder && DashboardTabs.AutoResponder(tabContainer, guildId),
+    'automation': () => DashboardTabs.Automation && DashboardTabs.Automation(tabContainer, guildId),
+    'boost': () => DashboardTabs.Boost && DashboardTabs.Boost(tabContainer, guildId),
+    'leaderboard': () => DashboardTabs.Leaderboard && DashboardTabs.Leaderboard(tabContainer, guildId)
+  };
+
+  if (tabHandlers[tab]) {
+    tabHandlers[tab]();
   } else if (DashboardTabs.Modules) {
     DashboardTabs.Modules(tabContainer, guildId, tab);
   }
