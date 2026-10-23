@@ -36,7 +36,7 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
         
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild or not (user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_messages")):
             return web.json_response({"error": "Unauthorized"}, status=403)
             
         data = load_embeds_config(guild_id)
@@ -49,7 +49,7 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
         
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild or not (user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_messages")):
             return web.json_response({"error": "Unauthorized"}, status=403)
             
         try:
@@ -68,13 +68,13 @@ class ActionsMixin:
             else:
                 payload["id"] = secrets.token_hex(8)
                 if not payload.get("name"):
-                    payload["name"] = "Neue Nachricht"
+                    payload["name"] = "Untitled message"
                 embeds.append(payload)
                 
             data["embeds"] = embeds
             save_embeds_config(guild_id, data)
             
-            return web.json_response({"success": True, "id": payload.get("id")})
+            return web.json_response({"success": True, "id": payload.get("id"), "embed": payload})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
@@ -87,7 +87,7 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
         
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild or not (user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_messages")):
             return web.json_response({"error": "Unauthorized"}, status=403)
             
         data = load_embeds_config(guild_id)
@@ -105,88 +105,172 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
         
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or (not user_perms.get("can_channels") and not user_perms.get("is_admin")):
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("can_messages") or user_perms.get("is_admin")):
             return web.json_response({"error": "Unauthorized or missing Manage Channels permission"}, status=403)
             
         try:
             data = await request.json()
             channel_id = data.get("channel_id")
             if not channel_id:
-                return web.json_response({"error": "No channel_id provided"}, status=400)
+                return web.json_response({"error": "Bitte wähle zuerst einen Kanal aus."}, status=400)
                 
             channel = guild.get_channel(int(channel_id))
             if not channel:
-                return web.json_response({"error": "Channel not found"}, status=400)
+                return web.json_response({"error": "Kanal wurde nicht gefunden."}, status=400)
                 
-            content = data.get("content", "").strip()
-            title = data.get("title", "").strip()
-            url = data.get("url", "").strip()
-            description = data.get("description", "").strip()
-            color = data.get("color", "")
-            image = data.get("image", "").strip()
-            thumbnail = data.get("thumbnail", "").strip()
+            content = str(data.get("content") or "").strip()
+            has_embed_flag = data.get("has_embed", True)
+            title = str(data.get("title") or "").strip()
+            url = str(data.get("url") or "").strip()
+            description = str(data.get("description") or "").strip()
+            color = str(data.get("color") or "").strip()
+            image = str(data.get("image") or "").strip()
+            thumbnail = str(data.get("thumbnail") or "").strip()
             
-            author_name = data.get("author_name", "").strip()
-            author_url = data.get("author_url", "").strip()
-            author_icon = data.get("author_icon", "").strip()
+            author_name = str(data.get("author_name") or "").strip()
+            author_url = str(data.get("author_url") or "").strip()
+            author_icon = str(data.get("author_icon") or "").strip()
             
-            footer_text = data.get("footer_text", "").strip()
-            footer_icon = data.get("footer_icon", "").strip()
+            footer_text = str(data.get("footer_text") or "").strip()
+            footer_icon = str(data.get("footer_icon") or "").strip()
+            include_timestamp = bool(data.get("timestamp", False))
             
-            fields = data.get("fields", [])
+            fields = data.get("fields", []) if isinstance(data.get("fields"), list) else []
+            buttons = data.get("buttons", []) if isinstance(data.get("buttons"), list) else []
             
-            if not title and not description and not image and not thumbnail and not author_name and not fields and not footer_text and not content:
-                return web.json_response({"error": "Message cannot be completely empty"}, status=400)
-                
-            embed = discord.Embed()
-            
+            session_user = await self.get_user_session(request)
+            uid_str = str(session_user.get("id")) if session_user else ""
+            uname_str = str(session_user.get("global_name") or session_user.get("username") or "User") if session_user else "User"
+            member_count = guild.member_count or len(guild.members)
+
             def replace_vars(text):
-                if not text: return text
-                t = text.replace("{user}", request.headers.get("X-User-ID", "Unknown User"))
+                if not text:
+                    return text
+                t = str(text)
+                t = t.replace("{user}", f"<@{uid_str}>" if uid_str else uname_str)
+                t = t.replace("{user.mention}", f"<@{uid_str}>" if uid_str else uname_str)
+                t = t.replace("{user.name}", uname_str)
+                t = t.replace("{username}", uname_str)
                 t = t.replace("{server}", guild.name)
-                t = t.replace("{membercount}", str(guild.member_count))
+                t = t.replace("{server.name}", guild.name)
+                t = t.replace("{membercount}", str(member_count))
+                t = t.replace("{server.members}", str(member_count))
+                t = t.replace("{count}", str(member_count))
                 return t
+
+            embed = discord.Embed()
+            if has_embed_flag:
+                if title:
+                    embed.title = replace_vars(title)[:256]
+                if url and url.startswith("http"):
+                    embed.url = url
+                if description:
+                    embed.description = replace_vars(description)[:4096]
                 
-            if title: embed.title = replace_vars(title)
-            if url: embed.url = url
-            if description: embed.description = replace_vars(description)
-            
-            if color:
-                try: embed.color = discord.Color(int(color.replace("#", ""), 16))
-                except Exception: pass
-            
-            if author_name:
-                author_kwargs = {"name": replace_vars(author_name)}
-                if author_url: author_kwargs["url"] = author_url
-                if author_icon: author_kwargs["icon_url"] = author_icon
-                embed.set_author(**author_kwargs)
+                if color:
+                    try:
+                        if color.startswith("rgb"):
+                            inner = color[color.find("(") + 1:color.find(")")]
+                            parts = [int(x.strip()) for x in inner.split(",")[:3]]
+                            embed.color = discord.Color.from_rgb(parts[0], parts[1], parts[2])
+                        else:
+                            embed.color = discord.Color(int(color.replace("#", ""), 16))
+                    except Exception:
+                        pass
                 
-            if footer_text:
-                footer_kwargs = {"text": replace_vars(footer_text)}
-                if footer_icon: footer_kwargs["icon_url"] = footer_icon
-                embed.set_footer(**footer_kwargs)
+                if author_name:
+                    author_kwargs = {"name": replace_vars(author_name)[:256]}
+                    if author_url and author_url.startswith("http"):
+                        author_kwargs["url"] = author_url
+                    if author_icon and author_icon.startswith("http"):
+                        author_kwargs["icon_url"] = author_icon
+                    embed.set_author(**author_kwargs)
+                    
+                if footer_text:
+                    footer_kwargs = {"text": replace_vars(footer_text)[:2048]}
+                    if footer_icon and footer_icon.startswith("http"):
+                        footer_kwargs["icon_url"] = footer_icon
+                    embed.set_footer(**footer_kwargs)
+
+                if include_timestamp:
+                    embed.timestamp = discord.utils.utcnow()
+                    
+                for field in fields[:25]:
+                    if not isinstance(field, dict):
+                        continue
+                    fname = str(field.get("name") or "").strip()
+                    fval = str(field.get("value") or "").strip()
+                    finline = bool(field.get("inline", False))
+                    if fname or fval:
+                        embed.add_field(
+                            name=(replace_vars(fname) or "\u200b")[:256],
+                            value=(replace_vars(fval) or "\u200b")[:1024],
+                            inline=finline
+                        )
                 
-            for field in fields:
-                fname = field.get("name", "").strip()
-                fval = field.get("value", "").strip()
-                finline = field.get("inline", False)
-                if fname or fval:
-                    embed.add_field(name=replace_vars(fname) or "\u200b", value=replace_vars(fval) or "\u200b", inline=finline)
+                if image and image.startswith("http"):
+                    embed.set_image(url=image)
+                if thumbnail and thumbnail.startswith("http"):
+                    embed.set_thumbnail(url=thumbnail)
             
-            if image: embed.set_image(url=image)
-            if thumbnail: embed.set_thumbnail(url=thumbnail)
-            
+            has_embed = bool(
+                has_embed_flag and (
+                    embed.title or embed.description or embed.image or embed.thumbnail
+                    or embed.author or embed.fields or embed.footer
+                )
+            )
+
+            if not has_embed and not content:
+                return web.json_response({"error": "Die Nachricht darf nicht komplett leer sein."}, status=400)
+
+            view = None
+            if buttons:
+                v = discord.ui.View(timeout=None)
+                for btn in buttons[:5]:
+                    if not isinstance(btn, dict):
+                        continue
+                    b_label = str(btn.get("label") or "Link").strip()[:80]
+                    b_url = str(btn.get("url") or "").strip()
+                    if b_label and b_url.startswith("http"):
+                        v.add_item(discord.ui.Button(style=discord.ButtonStyle.link, label=b_label, url=b_url))
+                if len(v.children) > 0:
+                    view = v
+
             send_kwargs = {}
-            has_embed = bool(embed.title or embed.description or embed.image or embed.thumbnail or embed.author or embed.fields or embed.footer)
             if has_embed:
                 send_kwargs["embed"] = embed
             if content:
                 send_kwargs["content"] = replace_vars(content)
-                
-            await channel.send(**send_kwargs)
+            if view:
+                send_kwargs["view"] = view
+
+            send_as = str(data.get("send_as") or "bot")
+            sender_name = str(data.get("sender_name") or "").strip()
+            sender_avatar = str(data.get("sender_avatar") or "").strip()
+
+            sent_via_webhook = False
+            if send_as == "webhook" and sender_name:
+                try:
+                    webhooks = await channel.webhooks()
+                    wh = next((w for w in webhooks if w.name == "Orbit Message Sender"), None)
+                    if not wh:
+                        wh = await channel.create_webhook(name="Orbit Message Sender")
+                    wh_kwargs = dict(send_kwargs)
+                    wh_kwargs["username"] = sender_name[:80]
+                    if sender_avatar and sender_avatar.startswith("http"):
+                        wh_kwargs["avatar_url"] = sender_avatar
+                    wh_kwargs["wait"] = True
+                    await wh.send(**wh_kwargs)
+                    sent_via_webhook = True
+                except Exception:
+                    sent_via_webhook = False
+
+            if not sent_via_webhook:
+                await channel.send(**send_kwargs)
+
             return web.json_response({"success": True})
         except discord.Forbidden:
-            return web.json_response({"error": "Bot missing permissions to send messages in that channel"}, status=403)
+            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen, um in diesem Kanal Nachrichten zu senden."}, status=403)
         except Exception as e:
             import traceback
             traceback.print_exc()
@@ -801,161 +885,6 @@ class ActionsMixin:
         else:
             return web.json_response({"error": msg}, status=400)
 
-    async def api_action_post_invite_leaderboard(self, request: web.Request):
-        guild_id_str = request.match_info.get("id")
-        if not guild_id_str or not guild_id_str.isdigit():
-            return web.json_response({"error": "Invalid guild ID"}, status=400)
-        guild_id = int(guild_id_str)
-
-        guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
-            return web.json_response({"error": "Unauthorized"}, status=403)
-
-        try:
-            import time
-            from Components.Database.mongodb import get_config, set_config
-            from Components.Commands.Invite.invitelistener import build_invite_leaderboard_embed
-
-            data = await request.json()
-            inv_cfg = get_config("InviteConfig", guild_id) or {}
-            auto_post = inv_cfg.get("auto_post") or {}
-            if isinstance(data, dict):
-                for k in ["enabled", "channel_id", "title", "color", "interval", "top_limit", "show_podium", "show_numbers"]:
-                    if k in data:
-                        auto_post[k] = data[k]
-
-            cid = auto_post.get("channel_id")
-            if not cid or not str(cid).isdigit():
-                return web.json_response({"error": "Bitte wähle zuerst einen Kanal aus."}, status=400)
-
-            channel = guild.get_channel(int(cid))
-            if not channel:
-                return web.json_response({"error": "Kanal wurde auf dem Server nicht gefunden."}, status=404)
-
-            embed = build_invite_leaderboard_embed(
-                guild,
-                self.bot,
-                auto_post,
-                show_inviter_count=bool(inv_cfg.get("show_inviter_count", True))
-            )
-            msg = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
-
-            auto_post["last_posted_at"] = time.time()
-            auto_post["last_message_id"] = str(msg.id)
-            inv_cfg["auto_post"] = auto_post
-            set_config("InviteConfig", guild_id, inv_cfg)
-
-            return web.json_response({"success": True, "message_id": str(msg.id)})
-        except discord.Forbidden:
-            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen, um in diesem Kanal Nachrichten zu senden."}, status=403)
-        except Exception as e:
-            return web.json_response({"error": str(e)}, status=500)
-
-    async def api_action_create_invite_source(self, request: web.Request):
-        guild_id_str = request.match_info.get("id")
-        if not guild_id_str or not guild_id_str.isdigit():
-            return web.json_response({"error": "Invalid guild ID"}, status=400)
-        guild_id = int(guild_id_str)
-
-        guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
-            return web.json_response({"error": "Unauthorized"}, status=403)
-
-        try:
-            import time
-            from Components.Database.mongodb import get_config, set_config
-            from Components.Commands.Invite._storage import refresh_invite_cache
-
-            data = await request.json()
-            name = str(data.get("name") or "YouTube").strip()[:40]
-            color = str(data.get("color") or "rgb(239, 68, 68)").strip()
-            channel_id = str(data.get("channel_id") or "").strip()
-            custom_code = str(data.get("code") or "").strip()
-
-            target_channel = None
-            if channel_id and channel_id.isdigit():
-                target_channel = guild.get_channel(int(channel_id))
-            if not target_channel and guild.text_channels:
-                target_channel = guild.text_channels[0]
-
-            if not target_channel:
-                return web.json_response({"error": "Kein gültiger Textkanal für den Einladungslink gefunden."}, status=400)
-
-            invite_code = custom_code
-            if not invite_code:
-                try:
-                    inv = await target_channel.create_invite(
-                        max_age=0,
-                        max_uses=0,
-                        unique=True,
-                        reason=f"Orbit Quellen-Tracker: {name}"
-                    )
-                    invite_code = inv.code
-                    await refresh_invite_cache(guild)
-                except discord.Forbidden:
-                    return web.json_response({"error": "Dem Bot fehlt die Berechtigung 'Einladung erstellen' in diesem Kanal."}, status=403)
-                except Exception as e:
-                    return web.json_response({"error": f"Fehler beim Erstellen der Discord-Einladung: {e}"}, status=400)
-
-            source_obj = {
-                "id": secrets.token_hex(6),
-                "name": name,
-                "color": color,
-                "channel_id": str(target_channel.id),
-                "channel_name": target_channel.name,
-                "code": invite_code,
-                "url": f"https://discord.gg/{invite_code}",
-                "uses": 0,
-                "active": 0,
-                "left": 0,
-                "created_at": time.time()
-            }
-
-            inv_cfg = get_config("InviteConfig", guild_id) or {}
-            sources = inv_cfg.get("sources", [])
-            if not isinstance(sources, list):
-                sources = []
-            sources.append(source_obj)
-            inv_cfg["sources"] = sources
-            set_config("InviteConfig", guild_id, inv_cfg)
-
-            return web.json_response({"success": True, "source": source_obj})
-        except Exception as e:
-            return web.json_response({"error": str(e)}, status=500)
-
-    async def api_action_delete_invite_source(self, request: web.Request):
-        guild_id_str = request.match_info.get("id")
-        source_id = request.match_info.get("source_id")
-        if not guild_id_str or not guild_id_str.isdigit() or not source_id:
-            return web.json_response({"error": "Invalid parameters"}, status=400)
-        guild_id = int(guild_id_str)
-
-        guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
-            return web.json_response({"error": "Unauthorized"}, status=403)
-
-        try:
-            from Components.Database.mongodb import get_config, set_config
-            inv_cfg = get_config("InviteConfig", guild_id) or {}
-            sources = inv_cfg.get("sources", [])
-            if isinstance(sources, list):
-                removed = next((s for s in sources if isinstance(s, dict) and str(s.get("id")) == str(source_id)), None)
-                inv_cfg["sources"] = [s for s in sources if isinstance(s, dict) and str(s.get("id")) != str(source_id)]
-                set_config("InviteConfig", guild_id, inv_cfg)
-                if removed and removed.get("code"):
-                    try:
-                        guild_invites = await guild.invites()
-                        for ginv in guild_invites:
-                            if ginv.code == removed["code"]:
-                                await ginv.delete(reason="Orbit Quellen-Tracker Quelle gelöscht")
-                                break
-                    except Exception:
-                        pass
-            return web.json_response({"success": True})
-        except Exception as e:
-            return web.json_response({"error": str(e)}, status=500)
-
-    
     async def api_get_messages(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
