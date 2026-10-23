@@ -34,10 +34,26 @@ def make_bar(pct: int, length: int = 10) -> str:
     empty = length - filled
     return "▰" * filled + "▱" * empty
 
+def _resolve_poll_color(entry: dict, ended: bool = False) -> discord.Color:
+    if ended:
+        return discord.Color(0x2B2D31)
+    c_str = str(entry.get("color") or "").strip()
+    if c_str:
+        try:
+            if c_str.startswith("rgb"):
+                inner = c_str[c_str.find("(") + 1:c_str.find(")")]
+                parts = [int(x.strip()) for x in inner.split(",")[:3]]
+                return discord.Color.from_rgb(parts[0], parts[1], parts[2])
+            return discord.Color(int(c_str.lstrip("#"), 16))
+        except Exception:
+            pass
+    return ORBIT_COLOR
+
 def build_poll_embed(entry: dict, ended: bool = False, closed_by: int | None = None) -> discord.Embed:
     question = entry.get("question", "Community Poll")
     author_id = entry.get("author_id")
-    end_ts = entry.get("end_timestamp", int(time.time()))
+    end_ts = entry.get("end_timestamp", 0)
+    no_time_limit = bool(entry.get("no_time_limit")) or not end_ts
     options = entry.get("options", [])
     raw_votes = entry.get("votes", {})
 
@@ -55,7 +71,10 @@ def build_poll_embed(entry: dict, ended: bool = False, closed_by: int | None = N
     ]
 
     if ended:
-        lines.append(f"**Status:** Closed <t:{end_ts}:R>")
+        close_ts = end_ts or int(time.time())
+        lines.append(f"**Status:** Closed <t:{close_ts}:R>")
+    elif no_time_limit:
+        lines.append("**Duration:** No time limit")
     else:
         lines.append(f"**Ends:** <t:{end_ts}:R> (<t:{end_ts}:f>)")
 
@@ -92,15 +111,22 @@ def build_poll_embed(entry: dict, ended: bool = False, closed_by: int | None = N
 
     poll_id = entry.get("poll_id", "")
     embed = discord.Embed(
-        title="Community Poll",
+        title="📊 POLL",
         description="\n".join(lines),
-        color=ORBIT_COLOR if not ended else discord.Color(0x2B2D31)
+        color=_resolve_poll_color(entry, ended=ended)
     )
 
+    extra_hints = []
+    if entry.get("allow_multiple_votes"):
+        extra_hints.append("Multiple votes allowed")
+    if entry.get("anonymous"):
+        extra_hints.append("Anonymous voting")
+    hint_suffix = (" · " + " · ".join(extra_hints)) if extra_hints else ""
+
     if ended:
-        embed.set_footer(text=f"Poll ID: #{poll_id} · Voting has concluded.")
+        embed.set_footer(text=f"Poll ID: #{poll_id} · Voting has concluded.{hint_suffix}")
     else:
-        embed.set_footer(text=f"Poll ID: #{poll_id} · Click a button below to cast your vote.")
+        embed.set_footer(text=f"Poll ID: #{poll_id} · Click a button below to cast your vote.{hint_suffix}")
 
     return embed
 
@@ -143,7 +169,8 @@ def build_poll_v2_view(entry: dict, ended: bool = False):
     options = entry.get("options", [])
     question = entry.get("question", "Community Poll")
     author_id = entry.get("author_id")
-    end_ts = entry.get("end_timestamp", int(time.time()))
+    end_ts = entry.get("end_timestamp", 0)
+    no_time_limit = bool(entry.get("no_time_limit")) or not end_ts
     raw_votes = entry.get("votes", {})
 
     counts = []
@@ -160,7 +187,10 @@ def build_poll_v2_view(entry: dict, ended: bool = False):
     ]
 
     if ended:
-        lines.append(f"**Status:** Closed <t:{end_ts}:R>")
+        close_ts = end_ts or int(time.time())
+        lines.append(f"**Status:** Closed <t:{close_ts}:R>")
+    elif no_time_limit:
+        lines.append("**Duration:** No time limit")
     else:
         lines.append(f"**Ends:** <t:{end_ts}:R> (<t:{end_ts}:f>)")
 
@@ -228,12 +258,19 @@ def build_poll_v2_view(entry: dict, ended: bool = False):
         if current_buttons:
             rows.append(ActionRow(*current_buttons))
 
-    footer_text = f"Poll ID: #{poll_id} · Voting has concluded." if ended else f"Poll ID: #{poll_id} · Click a button above to cast your vote."
+    extra_hints = []
+    if entry.get("allow_multiple_votes"):
+        extra_hints.append("Multiple votes allowed")
+    if entry.get("anonymous"):
+        extra_hints.append("Anonymous voting")
+    hint_suffix = (" · " + " · ".join(extra_hints)) if extra_hints else ""
+
+    footer_text = f"Poll ID: #{poll_id} · Voting has concluded.{hint_suffix}" if ended else f"Poll ID: #{poll_id} · Click a button above to cast your vote.{hint_suffix}"
     container = Container(
-        TextDisplay(content=f"# Community Poll\n\n{body_text}"),
+        TextDisplay(content=f"# 📊 Poll\n\n{body_text}"),
         *rows,
         TextDisplay(content=f"-# {footer_text}"),
-        accent_color=ORBIT_COLOR if not ended else discord.Color(0x2B2D31)
+        accent_color=_resolve_poll_color(entry, ended=ended)
     )
     view.add_item(container)
     return view
@@ -256,6 +293,7 @@ async def end_poll_logic(bot: commands.Bot, guild_id: int, entry: dict, closed_b
         return False
 
     entry["closed"] = True
+    entry["status"] = "ended"
     if closed_by:
         entry["closed_by"] = closed_by
     update_poll_entry(guild_id, entry)
@@ -362,7 +400,8 @@ class PollCommand(commands.Cog):
                         continue
                     if not entry or not isinstance(entry, dict):
                         continue
-                    if now >= entry.get("end_timestamp", 0) and not entry.get("closed"):
+                    end_ts = entry.get("end_timestamp", 0)
+                    if end_ts and not entry.get("no_time_limit") and not entry.get("draft") and entry.get("status") != "draft" and now >= end_ts and not entry.get("closed"):
                         await end_poll_logic(self.bot, gid, entry)
                 except Exception as inner_e:
                     print(f"[PollLoop] Error ending poll: {inner_e}")

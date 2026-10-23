@@ -1969,3 +1969,327 @@ class ActionsMixin:
             return web.json_response({"success": True})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
+    def _normalize_poll_entry(self, guild: discord.Guild, pid: str, entry: dict) -> dict:
+        import time
+        now = int(time.time())
+        options = entry.get("options") if isinstance(entry.get("options"), list) else []
+        raw_votes = entry.get("votes") if isinstance(entry.get("votes"), dict) else {}
+        option_votes = []
+        for idx in range(len(options)):
+            v_list = raw_votes.get(str(idx), [])
+            option_votes.append(len(v_list) if isinstance(v_list, list) else 0)
+        total_votes = sum(option_votes)
+
+        is_draft = bool(entry.get("draft")) or entry.get("status") == "draft"
+        end_ts = int(entry.get("end_timestamp") or 0)
+        no_time_limit = bool(entry.get("no_time_limit")) or (not is_draft and end_ts == 0)
+        is_closed = bool(entry.get("closed")) or entry.get("status") == "ended" or (not is_draft and not no_time_limit and end_ts > 0 and now >= end_ts)
+
+        if is_draft:
+            status = "draft"
+        elif is_closed:
+            status = "ended"
+        else:
+            status = "active"
+
+        cid_val = entry.get("channel_id")
+        cid_str = str(cid_val) if cid_val and str(cid_val) != "0" else ""
+        ch_name = ""
+        if cid_str and cid_str.isdigit() and guild:
+            ch_obj = guild.get_channel(int(cid_str))
+            if ch_obj:
+                ch_name = ch_obj.name
+
+        dur_mins = int(entry.get("duration_minutes") or 1440)
+        created_at = int(entry.get("created_at") or 0)
+        if not created_at:
+            if end_ts > 0 and dur_mins > 0:
+                created_at = max(1, end_ts - dur_mins * 60)
+            else:
+                created_at = now
+
+        dur_val = entry.get("duration_value")
+        dur_unit = entry.get("duration_unit")
+        if not dur_val or not dur_unit:
+            if dur_mins % 10080 == 0:
+                dur_val = max(1, dur_mins // 10080)
+                dur_unit = "weeks"
+            elif dur_mins % 1440 == 0:
+                dur_val = max(1, dur_mins // 1440)
+                dur_unit = "days"
+            elif dur_mins % 60 == 0:
+                dur_val = max(1, dur_mins // 60)
+                dur_unit = "hours"
+            else:
+                dur_val = max(1, dur_mins)
+                dur_unit = "minutes"
+
+        return {
+            "id": str(entry.get("poll_id") or pid),
+            "poll_id": str(entry.get("poll_id") or pid),
+            "question": str(entry.get("question") or ""),
+            "options": [str(o) for o in options],
+            "option_votes": option_votes,
+            "total_votes": total_votes,
+            "channel_id": cid_str,
+            "channel_name": ch_name,
+            "message_id": str(entry.get("message_id") or "") if entry.get("message_id") else "",
+            "status": status,
+            "closed": is_closed,
+            "draft": is_draft,
+            "created_at": created_at,
+            "end_timestamp": end_ts,
+            "duration_minutes": dur_mins,
+            "duration_value": int(dur_val),
+            "duration_unit": str(dur_unit),
+            "no_time_limit": no_time_limit,
+            "allow_multiple_votes": bool(entry.get("allow_multiple_votes", False)),
+            "anonymous": bool(entry.get("anonymous", False)),
+            "required_role_id": str(entry.get("required_role_id") or ""),
+            "color": str(entry.get("color") or "#5865F2")
+        }
+
+    async def api_get_polls(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Commands.Poll._storage import load_polls
+            raw_polls = load_polls(guild_id)
+            polls_list = []
+            if isinstance(raw_polls, dict):
+                for pid, entry in raw_polls.items():
+                    if pid == "_id" or not isinstance(entry, dict):
+                        continue
+                    polls_list.append(self._normalize_poll_entry(guild, str(pid), entry))
+
+            polls_list.sort(key=lambda x: x.get("created_at", 0), reverse=True)
+            return web.json_response({"polls": polls_list})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_save_poll(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            import time
+            from Components.Commands.Poll._storage import (
+                load_polls,
+                save_polls,
+                generate_poll_id,
+                update_poll_entry
+            )
+            from Components.Commands.Poll.poll import build_poll_kwargs, build_poll_embed, build_poll_view
+
+            data = await request.json()
+            is_draft = bool(data.get("draft", False))
+            poll_id = str(data.get("poll_id") or data.get("id") or "").strip()
+
+            question = str(data.get("question") or "").strip()[:256]
+            raw_opts = data.get("options") if isinstance(data.get("options"), list) else []
+            clean_opts = [str(o).strip()[:100] for o in raw_opts if str(o).strip()]
+
+            if not is_draft:
+                if not question:
+                    return web.json_response({"error": "Bitte gib eine Frage für die Umfrage ein."}, status=400)
+                if len(clean_opts) < 2:
+                    return web.json_response({"error": "Bitte gib mindestens 2 Optionen an."}, status=400)
+            else:
+                if not question:
+                    question = "Unbenannte Umfrage"
+                while len(clean_opts) < 2:
+                    clean_opts.append(f"Option {len(clean_opts) + 1}")
+
+            clean_opts = clean_opts[:10]
+
+            channel_id_str = str(data.get("channel_id") or "").strip()
+            target_channel = None
+            if channel_id_str and channel_id_str.isdigit():
+                target_channel = guild.get_channel(int(channel_id_str))
+
+            if not is_draft and not target_channel:
+                return web.json_response({"error": "Bitte wähle einen gültigen Kanal aus."}, status=400)
+
+            try:
+                dur_val = max(1, min(999, int(data.get("duration_value") or 1)))
+            except (ValueError, TypeError):
+                dur_val = 1
+
+            dur_unit = str(data.get("duration_unit") or "days").lower()
+            unit_multipliers = {
+                "minutes": 1,
+                "hours": 60,
+                "days": 1440,
+                "weeks": 10080
+            }
+            if dur_unit not in unit_multipliers:
+                dur_unit = "days"
+            duration_minutes = dur_val * unit_multipliers[dur_unit]
+
+            no_time_limit = bool(data.get("no_time_limit", False))
+            allow_multiple_votes = bool(data.get("allow_multiple_votes", False))
+            anonymous = bool(data.get("anonymous", False))
+            required_role_id = str(data.get("required_role_id") or "").strip()
+            color = str(data.get("color") or "#5865F2").strip() or "#5865F2"
+
+            session = await self.get_user_session(request)
+            author_id = int(session["id"]) if session and str(session.get("id", "")).isdigit() else (self.bot.user.id if self.bot.user else 0)
+
+            all_polls = load_polls(guild_id)
+            if not isinstance(all_polls, dict):
+                all_polls = {}
+
+            existing_entry = all_polls.get(poll_id) if poll_id and poll_id in all_polls else None
+            if not poll_id or not existing_entry:
+                poll_id = generate_poll_id(guild_id)
+
+            now = int(time.time())
+            end_timestamp = 0 if (no_time_limit or is_draft) else (now + duration_minutes * 60)
+
+            prev_votes = existing_entry.get("votes", {}) if isinstance(existing_entry, dict) else {}
+            new_votes = {}
+            for idx in range(len(clean_opts)):
+                old_list = prev_votes.get(str(idx), [])
+                new_votes[str(idx)] = old_list if isinstance(old_list, list) else []
+
+            entry = {
+                "poll_id": poll_id,
+                "channel_id": target_channel.id if target_channel else (int(channel_id_str) if channel_id_str.isdigit() else 0),
+                "message_id": int(existing_entry.get("message_id") or 0) if isinstance(existing_entry, dict) else 0,
+                "question": question,
+                "options": clean_opts,
+                "author_id": existing_entry.get("author_id", author_id) if isinstance(existing_entry, dict) else author_id,
+                "created_at": existing_entry.get("created_at", now) if isinstance(existing_entry, dict) else now,
+                "duration_minutes": duration_minutes,
+                "duration_value": dur_val,
+                "duration_unit": dur_unit,
+                "end_timestamp": end_timestamp,
+                "no_time_limit": no_time_limit,
+                "allow_multiple_votes": allow_multiple_votes,
+                "anonymous": anonymous,
+                "required_role_id": required_role_id,
+                "color": color,
+                "votes": new_votes,
+                "closed": False,
+                "closed_by": None,
+                "draft": is_draft,
+                "status": "draft" if is_draft else "active"
+            }
+
+            if not is_draft and target_channel:
+                kwargs = build_poll_kwargs(entry, ended=False)
+                msg = None
+                existing_msg_id = entry.get("message_id")
+                if existing_msg_id:
+                    try:
+                        old_msg = await target_channel.fetch_message(int(existing_msg_id))
+                        try:
+                            await old_msg.edit(**kwargs)
+                        except discord.HTTPException:
+                            fb_embed = build_poll_embed(entry, ended=False)
+                            fb_view = build_poll_view(entry, ended=False)
+                            await old_msg.edit(content=None, embed=fb_embed, view=fb_view)
+                        msg = old_msg
+                    except Exception:
+                        msg = None
+
+                if not msg:
+                    try:
+                        msg = await target_channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
+                    except discord.HTTPException:
+                        fb_embed = build_poll_embed(entry, ended=False)
+                        fb_view = build_poll_view(entry, ended=False)
+                        msg = await target_channel.send(embed=fb_embed, view=fb_view, allowed_mentions=discord.AllowedMentions.none())
+
+                if msg:
+                    entry["message_id"] = msg.id
+                    entry["channel_id"] = target_channel.id
+
+            all_polls[poll_id] = entry
+            save_polls(guild_id, all_polls)
+
+            return web.json_response({
+                "success": True,
+                "poll": self._normalize_poll_entry(guild, poll_id, entry)
+            })
+        except discord.Forbidden:
+            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen, um in diesem Kanal Nachrichten zu senden."}, status=403)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_end_poll(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        poll_id = request.match_info.get("poll_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not poll_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Commands.Poll._storage import get_poll_entry
+            from Components.Commands.Poll.poll import end_poll_logic
+
+            entry = get_poll_entry(guild_id, poll_id)
+            if not entry:
+                return web.json_response({"error": "Umfrage wurde nicht gefunden."}, status=404)
+
+            session = await self.get_user_session(request)
+            closed_by = int(session["id"]) if session and str(session.get("id", "")).isdigit() else None
+
+            await end_poll_logic(self.bot, guild_id, entry, closed_by=closed_by)
+            updated = get_poll_entry(guild_id, poll_id) or entry
+            updated["closed"] = True
+            updated["status"] = "ended"
+
+            return web.json_response({
+                "success": True,
+                "poll": self._normalize_poll_entry(guild, str(updated.get("poll_id") or poll_id), updated)
+            })
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_delete_poll(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        poll_id = request.match_info.get("poll_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not poll_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Commands.Poll._storage import delete_poll_entry
+            removed = delete_poll_entry(guild_id, poll_id)
+            if removed and isinstance(removed, dict):
+                cid = removed.get("channel_id")
+                mid = removed.get("message_id")
+                if cid and mid and not removed.get("closed"):
+                    try:
+                        ch = guild.get_channel(int(cid))
+                        if ch:
+                            msg = await ch.fetch_message(int(mid))
+                            await msg.delete()
+                    except Exception:
+                        pass
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)

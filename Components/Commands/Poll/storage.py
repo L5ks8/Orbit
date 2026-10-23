@@ -58,25 +58,45 @@ def create_poll_entry(
     options: list[str],
     author_id: int,
     duration_minutes: int = 60,
-    end_timestamp: int = 0
+    end_timestamp: int = 0,
+    no_time_limit: bool = False,
+    allow_multiple_votes: bool = False,
+    anonymous: bool = False,
+    required_role_id: int | str | None = None,
+    color: str = "#5865F2",
+    draft: bool = False,
+    duration_value: int = 1,
+    duration_unit: str = "days"
 ) -> Dict[str, Any]:
     data = load_polls(guild_id)
     now = int(time.time())
-    if not end_timestamp:
+    if no_time_limit or draft:
+        end_timestamp = 0
+    elif not end_timestamp:
         end_timestamp = now + (duration_minutes * 60)
 
     entry = {
         "poll_id": poll_id,
-        "channel_id": channel_id,
-        "message_id": message_id,
+        "channel_id": int(channel_id) if channel_id and str(channel_id).isdigit() else 0,
+        "message_id": int(message_id) if message_id and str(message_id).isdigit() else 0,
         "question": question,
         "options": options,
         "author_id": author_id,
+        "created_at": now,
         "duration_minutes": duration_minutes,
+        "duration_value": duration_value,
+        "duration_unit": duration_unit,
         "end_timestamp": end_timestamp,
+        "no_time_limit": bool(no_time_limit),
+        "allow_multiple_votes": bool(allow_multiple_votes),
+        "anonymous": bool(anonymous),
+        "required_role_id": str(required_role_id) if required_role_id else "",
+        "color": color or "#5865F2",
         "votes": {str(idx): [] for idx in range(len(options))},
         "closed": False,
-        "closed_by": None
+        "closed_by": None,
+        "draft": bool(draft),
+        "status": "draft" if draft else "active"
     }
     data[poll_id] = entry
     save_polls(guild_id, data)
@@ -125,7 +145,7 @@ def record_vote(guild_id: int, poll_id: str, user_id: int, option_idx: int) -> t
             pid_clean = f"P-{pid_clean}"
 
     entry = data.get(pid_clean)
-    if not entry or entry.get("closed"):
+    if not entry or entry.get("closed") or entry.get("draft") or entry.get("status") == "draft":
         return ("invalid", "", entry)
 
     options = entry.get("options", [])
@@ -141,25 +161,33 @@ def record_vote(guild_id: int, poll_id: str, user_id: int, option_idx: int) -> t
     target_key = str(option_idx)
     target_name = options[option_idx]
 
-    # Check previous vote
-    prev_idx = None
-    for k, uids in votes.items():
-        if user_id in uids:
-            prev_idx = k
-            uids.remove(user_id)
-            break
-
-    if prev_idx == target_key:
-        # User toggled off their vote
-        action = "removed"
-    elif prev_idx is not None:
-        # User switched their vote
-        votes[target_key].append(user_id)
-        action = "changed"
+    if entry.get("allow_multiple_votes"):
+        if user_id in votes[target_key]:
+            votes[target_key].remove(user_id)
+            action = "removed"
+        else:
+            votes[target_key].append(user_id)
+            action = "voted"
     else:
-        # First time voting
-        votes[target_key].append(user_id)
-        action = "voted"
+        # Check previous vote
+        prev_idx = None
+        for k, uids in votes.items():
+            if user_id in uids:
+                prev_idx = k
+                uids.remove(user_id)
+                break
+
+        if prev_idx == target_key:
+            # User toggled off their vote
+            action = "removed"
+        elif prev_idx is not None:
+            # User switched their vote
+            votes[target_key].append(user_id)
+            action = "changed"
+        else:
+            # First time voting
+            votes[target_key].append(user_id)
+            action = "voted"
 
     save_polls(guild_id, data)
     return (action, target_name, entry)
@@ -198,10 +226,24 @@ def close_poll_entry(guild_id: int, poll_id: str, closed_by: int | None = None) 
 
     entry = data[pid_clean]
     entry["closed"] = True
+    entry["status"] = "ended"
     if closed_by:
         entry["closed_by"] = closed_by
     save_polls(guild_id, data)
     return entry
+
+def delete_poll_entry(guild_id: int, poll_id: str) -> Dict[str, Any] | None:
+    data = load_polls(guild_id)
+    pid_clean = poll_id.strip().upper()
+    if not pid_clean.startswith("P-") and f"P-{pid_clean}" in data:
+        pid_clean = f"P-{pid_clean}"
+    if pid_clean not in data and poll_id in data:
+        pid_clean = poll_id
+    if pid_clean not in data:
+        return None
+    removed = data.pop(pid_clean, None)
+    save_polls(guild_id, data)
+    return removed
 
 def get_all_active_polls() -> List[tuple[int, Dict[str, Any]]]:
     seen_polls = set()
@@ -216,7 +258,7 @@ def get_all_active_polls() -> List[tuple[int, Dict[str, Any]]]:
                 if gid_str and str(gid_str).isdigit():
                     gid = int(gid_str)
                     for k, v in doc.items():
-                        if k != "_id" and isinstance(v, dict) and not v.get("closed"):
+                        if k != "_id" and isinstance(v, dict) and not v.get("closed") and not v.get("draft") and v.get("status") != "draft":
                             pid = v.get("poll_id") or k
                             v["poll_id"] = pid
                             if pid not in seen_polls:
@@ -232,7 +274,7 @@ def get_all_active_polls() -> List[tuple[int, Dict[str, Any]]]:
                     gid = int(guild_folder.name)
                     data = load_polls(gid)
                     for k, entry in data.items():
-                        if isinstance(entry, dict) and not entry.get("closed"):
+                        if isinstance(entry, dict) and not entry.get("closed") and not entry.get("draft") and entry.get("status") != "draft":
                             pid = entry.get("poll_id") or k
                             entry["poll_id"] = pid
                             if pid not in seen_polls:

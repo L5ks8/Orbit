@@ -390,6 +390,30 @@ const API = {
     return await this.request(`/api/action/${guildId}/invite_sources/${encodeURIComponent(sourceId)}`, {
       method: 'DELETE'
     });
+  },
+
+  // Polls (Umfragen)
+  async getPolls(guildId) {
+    return await this.request(`/api/polls/${guildId}`);
+  },
+
+  async savePoll(guildId, payload) {
+    return await this.request(`/api/polls/${guildId}`, {
+      method: 'POST',
+      body: payload
+    });
+  },
+
+  async endPoll(guildId, pollId) {
+    return await this.request(`/api/polls/${guildId}/${encodeURIComponent(pollId)}/end`, {
+      method: 'POST'
+    });
+  },
+
+  async deletePoll(guildId, pollId) {
+    return await this.request(`/api/polls/${guildId}/${encodeURIComponent(pollId)}`, {
+      method: 'DELETE'
+    });
   }
 };
 

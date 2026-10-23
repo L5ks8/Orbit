@@ -45,6 +45,14 @@ class PollListener(commands.Cog):
                     ephemeral=True
                 )
 
+            req_role = str(poll.get("required_role_id") or "").strip()
+            if req_role and req_role.isdigit() and isinstance(interaction.user, discord.Member):
+                if not any(r.id == int(req_role) for r in interaction.user.roles) and not interaction.user.guild_permissions.administrator:
+                    return await interaction.response.send_message(
+                        embed=make_embed(f"You need the <@&{req_role}> role to vote in this poll.", discord.Color.red()),
+                        ephemeral=True
+                    )
+
             removed, updated_entry = remove_vote(interaction.guild.id, poll_id, interaction.user.id)
             if removed and updated_entry:
                 await interaction.response.send_message(
@@ -79,6 +87,14 @@ class PollListener(commands.Cog):
                     embed=make_embed("This poll is closed or no longer available.", discord.Color.red()),
                     ephemeral=True
                 )
+
+            req_role = str(poll.get("required_role_id") or "").strip()
+            if req_role and req_role.isdigit() and isinstance(interaction.user, discord.Member):
+                if not any(r.id == int(req_role) for r in interaction.user.roles) and not interaction.user.guild_permissions.administrator:
+                    return await interaction.response.send_message(
+                        embed=make_embed(f"You need the <@&{req_role}> role to vote in this poll.", discord.Color.red()),
+                        ephemeral=True
+                    )
 
             action, opt_name, updated_entry = record_vote(interaction.guild.id, poll_id, interaction.user.id, opt_idx)
             if action == "voted":

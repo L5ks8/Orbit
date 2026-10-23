@@ -196,6 +196,10 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/action/{id}/post_invite_leaderboard", dashboard.api_action_post_invite_leaderboard)
     app.router.add_post("/api/action/{id}/invite_sources", dashboard.api_action_create_invite_source)
     app.router.add_delete("/api/action/{id}/invite_sources/{source_id}", dashboard.api_action_delete_invite_source)
+    app.router.add_get("/api/polls/{id}", dashboard.api_get_polls)
+    app.router.add_post("/api/polls/{id}", dashboard.api_save_poll)
+    app.router.add_post("/api/polls/{id}/{poll_id}/end", dashboard.api_end_poll)
+    app.router.add_delete("/api/polls/{id}/{poll_id}", dashboard.api_delete_poll)
 
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)
 
