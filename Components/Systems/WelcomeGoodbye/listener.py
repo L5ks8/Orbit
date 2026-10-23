@@ -199,6 +199,11 @@ class WelcomeListener(commands.Cog):
                                 inline=bool(f.get("inline", False))
                             )
 
+            if not embed.title and not embed.description and not embed.fields and not embed.image and not embed.thumbnail:
+                embed.description = f"Welcome to **{guild.name}**, {member.mention}!"
+
+            content_text = fmt_text(config.get("message", ""))
+
             for attempt in range(3):
                 try:
                     await channel.send(content=content_text if content_text else None, embed=embed, allowed_mentions=allowed)
