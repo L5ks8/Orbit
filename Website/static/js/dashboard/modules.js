@@ -63,12 +63,6 @@ DashboardTabs.Modules = async function(container, guildId, moduleId) {
       window.renderBackupsModule(content, guildId, cfg.backups || {});
     } else if (moduleId === 'inactive-kick' && window.renderInactiveKickModule) {
       window.renderInactiveKickModule(content, guildId, cfg.inactive_kick || {});
-    } else if (moduleId === 'browse-templates' && window.renderBrowseTemplatesModule) {
-      window.renderBrowseTemplatesModule(content, guildId);
-    } else if (moduleId === 'templates' && window.renderTemplatesModule) {
-      window.renderTemplatesModule(content, guildId);
-    } else if (moduleId === 'share-template' && window.renderShareTemplateModule) {
-      window.renderShareTemplateModule(content, guildId);
     } else {
       content.innerHTML = `<div class="p-8 text-center text-neutral-400">Module "${moduleId}" not found.</div>`;
     }

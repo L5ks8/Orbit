@@ -117,12 +117,6 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           id: 'messages',
           path: `/dashboard/${guildId}/messages`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers w-4 h-4"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg>`
-        },
-        {
-          name: 'Embed library',
-          id: 'embed-builder',
-          path: `/dashboard/${guildId}/embed-builder`,
-          svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-compass w-4 h-4"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>`
         }
       ]
     },
@@ -197,29 +191,6 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           id: 'inactive-kick',
           path: `/dashboard/${guildId}/inactive-kick`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-minus w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>`
-        }
-      ]
-    },
-    {
-      title: 'Templates',
-      links: [
-        {
-          name: 'Browse Templates',
-          id: 'browse-templates',
-          path: `/dashboard/${guildId}/browse-templates`,
-          svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-compass w-4 h-4"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>`
-        },
-        {
-          name: 'My Templates',
-          id: 'templates',
-          path: `/dashboard/${guildId}/templates`,
-          svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panels-top-left w-4 h-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>`
-        },
-        {
-          name: 'Share Template',
-          id: 'share-template',
-          path: `/dashboard/${guildId}/share-template`,
-          svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2 w-4 h-4"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>`
         }
       ]
     }
@@ -472,7 +443,6 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     'invites': () => DashboardTabs.Invites && DashboardTabs.Invites(tabContainer, guildId),
     'verify': () => DashboardTabs.Verification && DashboardTabs.Verification(tabContainer, guildId),
     'messages': () => DashboardTabs.Messages && DashboardTabs.Messages(tabContainer, guildId),
-    'embed-builder': () => DashboardTabs.EmbedBuilder && DashboardTabs.EmbedBuilder(tabContainer, guildId),
     'level': () => DashboardTabs.Level && DashboardTabs.Level(tabContainer, guildId),
     'polls': () => DashboardTabs.Polls && DashboardTabs.Polls(tabContainer, guildId),
     'giveaways': () => DashboardTabs.Giveaways && DashboardTabs.Giveaways(tabContainer, guildId),
@@ -482,9 +452,6 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     'security': () => DashboardTabs.Security && DashboardTabs.Security(tabContainer, guildId),
     'backups': () => DashboardTabs.Backups && DashboardTabs.Backups(tabContainer, guildId),
     'inactive-kick': () => DashboardTabs.InactiveKick && DashboardTabs.InactiveKick(tabContainer, guildId),
-    'browse-templates': () => DashboardTabs.BrowseTemplates && DashboardTabs.BrowseTemplates(tabContainer, guildId),
-    'templates': () => DashboardTabs.Templates && DashboardTabs.Templates(tabContainer, guildId),
-    'share-template': () => DashboardTabs.ShareTemplate && DashboardTabs.ShareTemplate(tabContainer, guildId),
     'appeals': () => DashboardTabs.Appeals && DashboardTabs.Appeals(tabContainer, guildId),
     'serverstats': () => DashboardTabs.ServerStats && DashboardTabs.ServerStats(tabContainer, guildId),
     'autoresponder': () => DashboardTabs.AutoResponder && DashboardTabs.AutoResponder(tabContainer, guildId),
