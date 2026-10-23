@@ -322,6 +322,43 @@ const API = {
       method: 'POST',
       body: { solution }
     });
+  },
+
+  // AI Helper
+  async getAIHelperChats(guildId) {
+    return await this.request(`/api/ai_helper/${guildId}/chats`);
+  },
+
+  async sendAIHelperChat(guildId, payload) {
+    return await this.request(`/api/ai_helper/${guildId}/chat`, {
+      method: 'POST',
+      body: payload
+    });
+  },
+
+  async applyAIHelperActions(guildId, actions) {
+    return await this.request(`/api/ai_helper/${guildId}/apply`, {
+      method: 'POST',
+      body: { actions }
+    });
+  },
+
+  async undoAIHelperAction(guildId) {
+    return await this.request(`/api/ai_helper/${guildId}/undo`, {
+      method: 'POST'
+    });
+  },
+
+  async redoAIHelperAction(guildId) {
+    return await this.request(`/api/ai_helper/${guildId}/redo`, {
+      method: 'POST'
+    });
+  },
+
+  async deleteAIHelperChat(guildId, chatId) {
+    return await this.request(`/api/ai_helper/${guildId}/chats/${encodeURIComponent(chatId)}`, {
+      method: 'DELETE'
+    });
   }
 };
 

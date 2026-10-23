@@ -31,10 +31,45 @@ class ConfigMixin:
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
 
-        channels = [{"id": str(c.id), "name": c.name} for c in guild.text_channels]
-        voice_channels = [{"id": str(c.id), "name": c.name} for c in guild.voice_channels]
-        categories = [{"id": str(c.id), "name": c.name} for c in guild.categories]
-        roles = [{"id": str(r.id), "name": r.name, "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe"} for r in guild.roles if not r.is_default()]
+        channels = [
+            {
+                "id": str(c.id),
+                "name": c.name,
+                "category_id": str(c.category_id) if c.category_id else None,
+                "position": c.position,
+                "type": "text"
+            }
+            for c in sorted(guild.text_channels, key=lambda x: x.position)
+        ]
+        voice_channels = [
+            {
+                "id": str(c.id),
+                "name": c.name,
+                "category_id": str(c.category_id) if c.category_id else None,
+                "position": c.position,
+                "type": "voice"
+            }
+            for c in sorted(guild.voice_channels, key=lambda x: x.position)
+        ]
+        categories = [
+            {
+                "id": str(c.id),
+                "name": c.name,
+                "position": c.position
+            }
+            for c in sorted(guild.categories, key=lambda x: x.position)
+        ]
+        roles = [
+            {
+                "id": str(r.id),
+                "name": r.name,
+                "color": str(r.color) if str(r.color) != "#000000" else "#b9bbbe",
+                "position": r.position,
+                "members_count": len(r.members) if hasattr(r, "members") else 0
+            }
+            for r in sorted(guild.roles, key=lambda x: x.position, reverse=True)
+            if not r.is_default()
+        ]
         emojis = [{"id": str(e.id), "name": e.name, "animated": e.animated} for e in guild.emojis]
         members = [
             {

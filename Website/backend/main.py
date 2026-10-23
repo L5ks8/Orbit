@@ -7,8 +7,9 @@ from Website.backend.api.auth import AuthMixin
 from Website.backend.api.config import ConfigMixin
 from Website.backend.api.guilds import GuildsMixin
 from Website.backend.api.actions import ActionsMixin
+from Website.backend.api.ai_helper import AIHelperMixin
 
-class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin):
+class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMixin):
     def __init__(self, bot):
         self.bot = bot
         self.client_id = os.environ.get("DISCORD_CLIENT_ID", "")
@@ -178,6 +179,12 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/server/{id}/appeals/resolve", dashboard.api_resolve_appeal)
     app.router.add_get("/api/channels/{id}", dashboard.api_channels)
     app.router.add_get("/api/roles/{id}", dashboard.api_roles)
+    app.router.add_get("/api/ai_helper/{id}/chats", dashboard.api_ai_helper_get_chats)
+    app.router.add_post("/api/ai_helper/{id}/chat", dashboard.api_ai_helper_chat)
+    app.router.add_post("/api/ai_helper/{id}/apply", dashboard.api_ai_helper_apply)
+    app.router.add_post("/api/ai_helper/{id}/undo", dashboard.api_ai_helper_undo)
+    app.router.add_post("/api/ai_helper/{id}/redo", dashboard.api_ai_helper_redo)
+    app.router.add_delete("/api/ai_helper/{id}/chats/{chat_id}", dashboard.api_ai_helper_delete_chat)
 
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)
 

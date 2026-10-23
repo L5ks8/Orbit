@@ -55,7 +55,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard w-4 h-4"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>`
         },
         {
-          name: 'AI Builder',
+          name: 'AI Helper',
           id: 'builder',
           path: `/dashboard/${guildId}/builder`,
           svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>`
@@ -271,7 +271,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                   <p class="px-3 mb-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">${sec.title}</p>
                   <div class="space-y-0.5">
                     ${sec.links.map(l => {
-                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings') || (l.id === 'welcomegoodbye' && tab === 'welcome');
+                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings') || (l.id === 'welcomegoodbye' && tab === 'welcome') || (l.id === 'builder' && tab === 'ai-helper');
                       return `
                         <a 
                           href="${l.path}" 
@@ -397,7 +397,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           </header>
 
           <!-- Main Content Body -->
-          <main id="dash-tab-content" class="p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto min-h-[calc(100vh-64px)] bg-neutral-950">
+          <main id="dash-tab-content" class="p-4 lg:p-6 xl:p-8 ${(tab === 'builder' || tab === 'ai-helper') ? '' : 'max-w-[1200px] mx-auto'} min-h-[calc(100vh-64px)] bg-neutral-950">
             <div class="flex items-center justify-center p-12 text-neutral-500 text-sm">
               <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               Loading dashboard...
@@ -450,6 +450,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
   const tabHandlers = {
     'overview': () => DashboardTabs.Overview && DashboardTabs.Overview(tabContainer, guildId, currentGuild),
     'builder': () => DashboardTabs.Builder && DashboardTabs.Builder(tabContainer, guildId),
+    'ai-helper': () => DashboardTabs.Builder && DashboardTabs.Builder(tabContainer, guildId),
     'bot-profile': () => DashboardTabs.BotProfile && DashboardTabs.BotProfile(tabContainer, guildId),
     'settings': () => DashboardTabs.Settings && DashboardTabs.Settings(tabContainer, guildId),
     'server-settings': () => DashboardTabs.Settings && DashboardTabs.Settings(tabContainer, guildId),

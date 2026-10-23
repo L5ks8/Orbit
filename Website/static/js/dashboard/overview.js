@@ -465,14 +465,14 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       </div>
       ` : ''}
 
-      <!-- Banner 2: AI Builder Card -->
+      <!-- Banner 2: AI Helper Card -->
       <div class="relative overflow-hidden rounded-xl border border-green-500/10 bg-gradient-to-br from-green-950/40 via-neutral-900 to-neutral-900 px-5 py-5 sm:px-6">
         <div class="absolute -top-8 -right-8 w-40 h-40 bg-green-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="pointer-events-none absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(circle, rgb(255, 255, 255) 1px, transparent 1px); background-size: 14px 14px; mask-image: linear-gradient(to left bottom, black 0%, rgba(0, 0, 0, 0.4) 40%, transparent 80%);"></div>
         <div class="relative flex flex-col sm:flex-row sm:items-center gap-5">
           <div class="flex-1 min-w-0 space-y-2">
-            <span class="text-[10px] font-semibold text-green-400 uppercase tracking-widest block leading-none">AI Builder</span>
-            <h2 class="text-base font-bold text-white leading-tight text-balance">Set up your server in seconds</h2>
+            <span class="text-[10px] font-semibold text-green-400 uppercase tracking-widest block leading-none">AI Helper</span>
+            <h2 class="text-base font-bold text-white leading-tight text-balance">Configure your server in seconds</h2>
             <div class="flex flex-wrap gap-1">
               <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-2.5 h-2.5"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>Channels</span>
               <span class="inline-flex items-center gap-1 text-[10px] text-neutral-400 bg-neutral-800/80 border border-neutral-700/60 px-2 py-0.5 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-2.5 h-2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>Permissions</span>
@@ -481,7 +481,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
             </div>
           </div>
           <a class="inline-flex items-center justify-center gap-2 pl-5 pr-[18px] py-2.5 bg-white hover:bg-neutral-200 text-black text-sm font-semibold rounded-lg transition-transform duration-150 ease-out active:scale-[0.96] whitespace-nowrap shrink-0 self-stretch sm:self-center" href="/dashboard/${guildId}/builder">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg> Try AI Builder
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg> Try AI Helper
           </a>
         </div>
       </div>
