@@ -577,8 +577,11 @@ Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
         if not guild:
             return web.json_response({"error": "Unauthorized"}, status=403)
 
-        chats = self._load_guild_chats(guild_id)
-        chats = [c for c in chats if c.get("id") != chat_id]
+        if chat_id == "all":
+            chats = []
+        else:
+            chats = self._load_guild_chats(guild_id)
+            chats = [c for c in chats if c.get("id") != chat_id]
         self._save_guild_chats(guild_id, chats)
         return web.json_response({"success": True, "chats": chats})
 

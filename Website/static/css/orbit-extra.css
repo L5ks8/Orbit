@@ -5007,3 +5007,17 @@ button[role="switch"].w-11[aria-checked="false"] > span {
 .orbit-dropdown-card-unclip {
   overflow: visible !important;
 }
+
+/* 5. AI Helper 1:1 PeakBot Layout Guarantees */
+@media (min-width: 1024px) {
+  [data-tour="builder-chats"],
+  [data-tour="builder-plan"] {
+    display: flex !important;
+  }
+}
+
+[data-tour="builder-chats"] input[type="text"] {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-shadow: none !important;
+}

@@ -1,5 +1,5 @@
 /**
- * Orbit Dashboard - AI Helper Tab (1:1 PeakBot AI Layout + Groq Vision/File Analysis, Persistent Chat History & Server ID Inspector)
+ * Orbit Dashboard - AI Helper Tab (1:1 PeakBot Layout + Groq Vision/File Analysis, Persistent Chat History & Channel/Role ID Actions)
  */
 
 DashboardTabs.Builder = async function(container, guildId) {
@@ -30,19 +30,22 @@ DashboardTabs.Builder = async function(container, guildId) {
 
   function getGreeting(name) {
     const hour = new Date().getHours();
-    if (hour >= 22 || hour < 5) return `Bis spät dran, ${name}`;
+    if (hour >= 20 || hour < 5) return `Bis spät dran, ${name}`;
     if (hour < 12) return `Guten Morgen, ${name}`;
     if (hour < 18) return `Guten Tag, ${name}`;
     return `Guten Abend, ${name}`;
   }
 
-  function formatRelativeTime(ts) {
-    if (!ts) return '';
-    const diffSec = Math.max(0, Math.floor(Date.now() / 1000 - Number(ts)));
-    if (diffSec < 60) return 'Gerade eben';
-    if (diffSec < 3600) return `vor ${Math.floor(diffSec / 60)} Min.`;
-    if (diffSec < 86400) return `vor ${Math.floor(diffSec / 3600)} Std.`;
-    return `vor ${Math.floor(diffSec / 86400)} Tg.`;
+  function getChatDateLabel(ts) {
+    if (!ts) return 'Heute';
+    const d = new Date(Number(ts) * 1000);
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 86400 * 1000;
+    const t = d.getTime();
+    if (t >= startOfToday) return 'Heute';
+    if (t >= startOfYesterday) return 'Gestern';
+    return 'Älter';
   }
 
   function loadLocalChats() {
@@ -103,9 +106,8 @@ DashboardTabs.Builder = async function(container, guildId) {
     chatData = chatsRes || { chats: [], action_history: [], can_undo: false, can_redo: false };
   } catch (_) {}
 
-  const userName = user?.global_name || user?.username || 'Admin';
+  const userName = user?.global_name || user?.username || 'Lukas';
 
-  // Merge backend chats with localStorage fallback so chat history is NEVER lost
   let chats = mergeChats(Array.isArray(chatData.chats) ? chatData.chats : [], loadLocalChats());
   let savedActiveId = null;
   try {
@@ -119,7 +121,6 @@ DashboardTabs.Builder = async function(container, guildId) {
   saveLocalChats(chats, activeChatId);
 
   let chatSearchQuery = '';
-  let planSearchQuery = '';
   let leftSidebarCollapsed = false;
   let mobileChatDrawerOpen = false;
   let mobileActiveView = 'chat'; // 'chat' | 'preview'
@@ -131,10 +132,11 @@ DashboardTabs.Builder = async function(container, guildId) {
   let modelDropdownOpen = false;
   let historyDropdownOpen = false;
   let quickAddDropdownOpen = false;
+  let openChatOptionsId = null;
   let isSending = false;
   let isApplying = false;
   let pendingActions = [];
-  let pendingAttachments = []; // [{ id, type: 'image'|'file', name, dataUrl, textContent, size }]
+  let pendingAttachments = [];
   let draftInputText = '';
   let appliedActionIds = new Set();
   let actionHistory = Array.isArray(chatData.action_history) ? chatData.action_history : [];
@@ -180,10 +182,10 @@ DashboardTabs.Builder = async function(container, guildId) {
     {
       key: 'joinroles',
       title: 'Reaktionsrollen',
-      desc: 'Rollen aus Reaktionen & Auto-Rollen',
+      desc: 'Rollen aus Reaktionen',
       color: 'rgb(230, 126, 34)',
       isEnabled: () => Boolean(cfg?.joinroles?.enabled || cfg?.config?.joinroles?.enabled),
-      prompt: 'Richte Auto-Rollen bei Serverbeitritt für neue Mitglieder auf diesem Server ein.',
+      prompt: 'Richte Reaktionsrollen bzw. Auto-Rollen bei Serverbeitritt für neue Mitglieder auf diesem Server ein.',
       svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mouse-pointer-click w-[18px] h-[18px] flex-shrink-0 opacity-75" style="color: rgb(230, 126, 34);"><path d="m9 9 5 12 1.8-5.2L21 14Z"></path><path d="M7.2 2.2 8 5.1"></path><path d="m5.1 8-2.9-.8"></path><path d="M14 4.1 12 6"></path><path d="m6 12-1.9 2"></path></svg>`
     },
     {
@@ -288,7 +290,7 @@ DashboardTabs.Builder = async function(container, guildId) {
     {
       key: 'ai_image',
       title: 'Bildmoderation',
-      desc: 'AI-Scan gepostete Bilder (Pro)',
+      desc: 'AI-Scan geposteter Bilder (Pro)',
       color: 'rgb(128, 132, 142)',
       isEnabled: () => Boolean(cfg?.automod?.ai_image?.enabled || cfg?.config?.automod?.ai_image?.enabled),
       prompt: 'Aktiviere die KI-Bildmoderation für gepostete Bilder auf diesem Server.',
@@ -322,13 +324,22 @@ DashboardTabs.Builder = async function(container, guildId) {
       svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-plus w-[18px] h-[18px] flex-shrink-0 opacity-75" style="color: rgb(255, 152, 0);"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>`
     },
     {
-      key: 'permissions_helper',
-      title: 'Kanal-Berechtigungen',
-      desc: 'Rollen-Zugriff in Kanälen steuern',
-      color: 'rgb(56, 189, 248)',
+      key: 'notifications',
+      title: 'Benachrichtigungen',
+      desc: 'Social- und Stream-Benachrichtigungen',
+      color: 'rgb(245, 158, 11)',
       isEnabled: () => false,
-      prompt: 'Ich möchte für eine bestimmte Rolle in jedem Kanal (oder bestimmten Kanälen) einstellen, dass sie den Kanal nicht sehen oder dort nicht schreiben darf. Welche Rolle soll angepasst werden?',
-      svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock w-[18px] h-[18px] flex-shrink-0 opacity-75" style="color: rgb(56, 189, 248);"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+      prompt: 'Hilf mir dabei, einen Ankündigungs- und Benachrichtigungskanal mit den richtigen Berechtigungen einzurichten.',
+      svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell w-[18px] h-[18px] flex-shrink-0 opacity-75" style="color: rgb(245, 158, 11);"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>`
+    },
+    {
+      key: 'inactive_kick',
+      title: 'Inaktiver Tritt',
+      desc: 'Entfernen Sie inaktive Mitglieder',
+      color: 'rgb(100, 116, 139)',
+      isEnabled: () => false,
+      prompt: 'Wie richte ich den Schutz gegen inaktive Mitglieder auf meinem Server am besten ein?',
+      svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-minus w-[18px] h-[18px] flex-shrink-0 opacity-75" style="color: rgb(100, 116, 139);"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>`
     }
   ];
 
@@ -345,10 +356,10 @@ DashboardTabs.Builder = async function(container, guildId) {
     }
     if (btnEl) {
       const origHtml = btnEl.innerHTML;
-      btnEl.innerHTML = `<span class="text-emerald-400 font-semibold">✓ Kopiert</span>`;
+      btnEl.innerHTML = `<span class="text-emerald-400">✓</span>`;
       setTimeout(() => {
         if (btnEl && btnEl.isConnected) btnEl.innerHTML = origHtml;
-      }, 1200);
+      }, 1100);
     }
   }
 
@@ -426,18 +437,15 @@ DashboardTabs.Builder = async function(container, guildId) {
           const att = await processTextFile(file);
           pendingAttachments.push(att);
         }
-      } catch (err) {
+      } catch (_) {
         if (window.Toast) window.Toast.error(`Konnte Datei "${file.name}" nicht lesen.`);
       }
     }
     quickAddDropdownOpen = false;
     render();
-    if (window.Toast) {
-      window.Toast.success(`${fileList.length} Anhang/Anhänge für die KI bereitgestellt`);
-    }
   }
 
-  function renderChatListItems() {
+  function renderChatListItems(isMobile) {
     const q = chatSearchQuery.trim().toLowerCase();
     const filtered = q
       ? chats.filter(c => (c.title || '').toLowerCase().includes(q) || (c.messages || []).some(m => (m.content || '').toLowerCase().includes(q)))
@@ -445,41 +453,53 @@ DashboardTabs.Builder = async function(container, guildId) {
 
     if (!filtered.length) {
       return `
-        <div class="text-center py-10 px-4">
-          <div class="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center mx-auto mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square w-5 h-5 text-neutral-600"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-          </div>
-          <p class="text-[13px] text-neutral-400 font-medium">${q ? 'Keine passenden Chats gefunden' : 'Noch keine gespeicherten Chats'}</p>
-          <p class="text-[11px] text-neutral-500 mt-1">Deine Unterhaltungen mit der KI werden hier automatisch gespeichert.</p>
+        <div class="px-3.5 py-6 text-center">
+          <span class="text-[12px] text-neutral-500">${q ? 'Keine Chats gefunden' : 'Noch keine Chats'}</span>
         </div>
       `;
     }
 
-    return `
-      <div class="px-2 space-y-1">
-        ${filtered.map(c => {
+    // Group by Heute / Gestern / Älter matching PeakBot Screenshot 1
+    const groups = new Map();
+    for (const c of filtered) {
+      const label = getChatDateLabel(c.updated_at || c.created_at);
+      if (!groups.has(label)) groups.set(label, []);
+      groups.get(label).push(c);
+    }
+
+    return Array.from(groups.entries()).map(([groupLabel, groupChats]) => `
+      <div class="mb-2 last:mb-0">
+        <div class="px-3.5 pb-1"><span class="text-[11px] font-medium text-neutral-500">${escapeHtml(groupLabel)}</span></div>
+        ${groupChats.map(c => {
           const isCurrent = c.id === activeChatId;
-          const msgCount = Array.isArray(c.messages) ? c.messages.length : 0;
-          const timeStr = formatRelativeTime(c.updated_at || c.created_at);
+          const isMenuOpen = openChatOptionsId === c.id;
           return `
-            <div class="group relative flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-              isCurrent
-                ? 'bg-white/[0.1] text-white border border-white/[0.12] shadow-sm'
-                : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04] border border-transparent'
-            }" data-select-chat="${escapeHtml(c.id)}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square w-4 h-4 flex-shrink-0 ${isCurrent ? 'text-white' : 'text-neutral-500'}"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              <div class="min-w-0 flex-1">
-                <p class="text-[13px] font-medium truncate">${escapeHtml(c.title || 'Neues Gespräch')}</p>
-                <p class="text-[11px] text-neutral-500 truncate">${msgCount} Nachr.${timeStr ? ' · ' + escapeHtml(timeStr) : ''}</p>
+            <div class="px-1.5" style="opacity: 1;">
+              <div class="group/row relative flex items-center rounded-lg cursor-pointer h-[38px] pl-3 pr-1 transition-colors duration-150 ${
+                isCurrent
+                  ? 'bg-white/[0.08] text-white'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]'
+              }" data-select-chat="${escapeHtml(c.id)}">
+                <span class="flex-1 min-w-0 truncate text-[13.5px] font-medium pr-1">${escapeHtml(c.title || 'Neuer Chat')}</span>
+                <div class="relative flex-shrink-0">
+                  <button type="button" data-chat-options="${escapeHtml(c.id)}" class="relative grid place-items-center h-7 w-7 flex-shrink-0 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.1] transition-[opacity,color,background-color,transform] duration-150 active:scale-[0.94] before:absolute before:inset-[-6px] before:content-[''] ${isMobile || isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100'}" title="Optionen" aria-label="Chat-Optionen">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal w-4 h-4"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                  </button>
+                  <div class="orbit-dropdown-menu ${isMenuOpen ? '' : 'hidden'} absolute right-0 top-8 w-36 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1 z-[99999]">
+                    <button type="button" data-rename-chat="${escapeHtml(c.id)}" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-neutral-200 hover:bg-white/[0.08] text-left">
+                      Umbenennen
+                    </button>
+                    <button type="button" data-delete-chat="${escapeHtml(c.id)}" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-red-400 hover:bg-red-500/10 text-left">
+                      Löschen
+                    </button>
+                  </div>
+                </div>
               </div>
-              <button type="button" data-delete-chat="${escapeHtml(c.id)}" class="opacity-0 group-hover:opacity-100 p-1 rounded-md text-neutral-500 hover:text-red-400 hover:bg-white/[0.08] transition-all cursor-pointer" title="Chat löschen">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 w-3.5 h-3.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-              </button>
             </div>
           `;
         }).join('')}
       </div>
-    `;
+    `).join('');
   }
 
   function renderFeaturesListHtml() {
@@ -487,7 +507,7 @@ DashboardTabs.Builder = async function(container, guildId) {
     return `
       <p class="px-2.5 pt-2 pb-1 text-[12.5px] text-neutral-500 text-pretty">
         ${enabledCount > 0
-          ? `${enabledCount} Funktion(en) bereits aktiv. Wählen Sie unten eine Funktion aus und die KI konfiguriert oder aktualisiert sie für Sie.`
+          ? `${enabledCount} Funktion(en) bereits aktiv. Wählen Sie unten eine Funktion aus und die KI konfiguriert sie für Sie.`
           : 'Noch nichts eingerichtet. Wählen Sie unten eine Funktion aus und die KI konfiguriert sie für Sie.'}
       </p>
       <div class="pt-2">
@@ -498,17 +518,10 @@ DashboardTabs.Builder = async function(container, guildId) {
           ${FEATURES_LIST.map(f => {
             const active = f.isEnabled();
             return `
-              <button type="button" data-feature-prompt="${escapeHtml(f.prompt)}" aria-pressed="${active ? 'true' : 'false'}" class="group/add w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-colors disabled:cursor-default active:scale-[0.995] cursor-pointer ${
-                active
-                  ? 'border-emerald-500/25 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08]'
-                  : 'border-white/[0.05] hover:border-white/[0.12] hover:bg-white/[0.03]'
-              }">
+              <button type="button" data-feature-prompt="${escapeHtml(f.prompt)}" aria-pressed="${active ? 'true' : 'false'}" class="group/add w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-colors disabled:cursor-default active:scale-[0.995] border-white/[0.05] hover:border-white/[0.12] hover:bg-white/[0.03]">
                 ${f.svg}
                 <span class="min-w-0 flex-1">
-                  <span class="flex items-center gap-1.5">
-                    <span class="block text-[13.5px] font-medium truncate text-neutral-200">${escapeHtml(f.title)}</span>
-                    ${active ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Aktiv</span>` : ''}
-                  </span>
+                  <span class="block text-[13.5px] font-medium truncate text-neutral-200">${escapeHtml(f.title)}</span>
                   <span class="block text-[12px] text-neutral-500 truncate">${escapeHtml(f.desc)}</span>
                 </span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4 flex-shrink-0 text-neutral-600 group-hover/add:text-neutral-300 transition-colors"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
@@ -523,56 +536,30 @@ DashboardTabs.Builder = async function(container, guildId) {
   function renderPlanContentHtml() {
     if (planTab === 'features') {
       return `
-        <div class="h-full overflow-y-auto overscroll-contain p-2 space-y-1.5 scrollbar-thin bg-neutral-900" data-lenis-prevent="true">
+        <div class="h-full overflow-y-auto overscroll-contain p-2 space-y-1.5 scrollbar-thin bg-white dark:bg-neutral-900" data-lenis-prevent="true">
           ${renderFeaturesListHtml()}
         </div>
       `;
     }
 
-    const q = planSearchQuery.trim().toLowerCase();
-
     if (planTab === 'roles') {
-      const rawRoles = Array.isArray(cfg.roles) ? cfg.roles : [];
-      const allRolesWithEveryone = [
-        { id: String(guildId), name: 'everyone', color: '#99aab5', isEveryone: true },
-        ...rawRoles
-      ];
-      const roles = q
-        ? allRolesWithEveryone.filter(r => r.name.toLowerCase().includes(q) || String(r.id).includes(q))
-        : allRolesWithEveryone;
-
+      const roles = Array.isArray(cfg.roles) ? cfg.roles : [];
       return `
-        <div class="h-full overflow-y-auto overscroll-contain p-2.5 space-y-1.5 bg-neutral-900 scrollbar-thin" data-lenis-prevent="true">
-          ${pendingActions.length > 0 ? renderPendingActionsBanner() : ''}
-          <div class="px-2 py-1 flex items-center justify-between">
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Rollen (${roles.length})</span>
-            <span class="text-[10.5px] text-neutral-500">ID kopieren oder @KI</span>
-          </div>
+        <div class="h-full overflow-y-auto overscroll-contain bg-white dark:bg-neutral-900 py-2 scrollbar-thin" data-lenis-prevent="true">
+          ${pendingActions.length > 0 ? `<div class="px-2 mb-2">${renderPendingActionsBanner()}</div>` : ''}
           ${roles.map(r => {
             const color = r.color && r.color !== '#000000' ? r.color : '#99aab5';
-            const displayRoleName = r.isEveryone ? '@everyone' : r.name;
-            const mentionStr = r.isEveryone ? `@everyone (ID: ${r.id})` : `@${r.name} (ID: ${r.id})`;
-            const hasPendingRoleChange = pendingActions.some(a =>
-              (a.role_id && String(a.role_id) === String(r.id)) ||
-              (a.role_name && a.role_name.replace(/^@/, '').toLowerCase() === r.name.toLowerCase())
-            );
+            const mentionStr = `@${r.name} (ID: ${r.id})`;
             return `
-              <div class="group flex items-center gap-2 px-2.5 py-2 rounded-xl bg-white/[0.015] hover:bg-neutral-800/70 border border-white/[0.04] hover:border-white/[0.09] transition-all">
-                <span class="w-3 h-3 rounded-full flex-shrink-0 ring-1 ring-white/10" style="background-color: ${escapeHtml(color)};"></span>
-                <div class="min-w-0 flex-1 cursor-pointer" data-insert-mention="${escapeHtml(mentionStr)}" title="Klicken, um ${escapeHtml(mentionStr)} in den KI-Chat einzufügen">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-[13.5px] font-medium text-neutral-200 group-hover:text-white truncate">${escapeHtml(displayRoleName)}</span>
-                    ${hasPendingRoleChange ? `<span class="px-1.5 py-0.2 rounded text-[9.5px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Geplant</span>` : ''}
+              <div>
+                <div class="flex items-center gap-2.5 mx-2 px-3 py-2 rounded-lg select-none group min-h-[40px] text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60 cursor-pointer" data-insert-mention="${escapeHtml(mentionStr)}" title="Klicken für @KI (${escapeHtml(r.id)})">
+                  <span class="w-3.5 h-3.5 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(color)};"></span>
+                  <span title="${escapeHtml(r.name)}" class="text-[15px] font-medium truncate min-w-0 leading-5">${escapeHtml(r.name)}</span>
+                  <div class="flex-1"></div>
+                  <div class="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
+                    <button type="button" data-copy-id="${escapeHtml(r.id)}" data-copy-label="@${escapeHtml(r.name)}" class="px-1.5 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[10.5px] font-mono text-neutral-300 hover:text-white border border-neutral-700" title="Rollen-ID kopieren (${escapeHtml(r.id)})">ID</button>
+                    <button type="button" data-insert-mention="${escapeHtml(mentionStr)}" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white hover:text-black text-[10.5px] font-medium text-neutral-200" title="An KI übergeben">@KI</button>
                   </div>
-                  <span class="block text-[10.5px] font-mono text-neutral-500 truncate">ID: ${escapeHtml(r.id)}</span>
-                </div>
-                <div class="flex items-center gap-1 flex-shrink-0">
-                  <button type="button" data-copy-id="${escapeHtml(r.id)}" data-copy-label="@${escapeHtml(r.name)}" class="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[11px] font-mono text-neutral-300 hover:text-white border border-neutral-700/80 transition-colors cursor-pointer" title="Rollen-ID kopieren (${escapeHtml(r.id)})">
-                    ID kopieren
-                  </button>
-                  <button type="button" data-insert-mention="${escapeHtml(mentionStr)}" class="px-2 py-1 rounded-lg bg-white/[0.06] hover:bg-white hover:text-black text-[11px] font-medium text-neutral-200 transition-colors cursor-pointer" title="Rolle in den KI-Chat einfügen">
-                    @KI
-                  </button>
                 </div>
               </div>
             `;
@@ -581,7 +568,7 @@ DashboardTabs.Builder = async function(container, guildId) {
       `;
     }
 
-    // Default: 'channels' tree with direct ID copy and @KI buttons
+    // Default: 'channels' matching Screenshot 2 1:1
     const textChannels = Array.isArray(cfg.channels) ? cfg.channels : [];
     const voiceChannels = Array.isArray(cfg.voice_channels) ? cfg.voice_channels : [];
     const categories = Array.isArray(cfg.categories) ? cfg.categories : [];
@@ -591,106 +578,60 @@ DashboardTabs.Builder = async function(container, guildId) {
       ...voiceChannels.map(c => ({ ...c, isVoice: true }))
     ];
 
-    const filteredChannels = q
-      ? allChannels.filter(c => c.name.toLowerCase().includes(q) || String(c.id).includes(q))
-      : allChannels;
-
-    const hasGlobalPermChange = pendingActions.some(a => a.type === 'channel_permissions' && (a.target_scope === 'all' || !a.target_scope));
-
-    function isChannelAffected(ch) {
-      if (hasGlobalPermChange) return true;
-      return pendingActions.some(a => {
-        if (a.type === 'channel_permissions') {
-          const cids = (a.channel_ids || []).map(String);
-          const cnames = (a.channel_names || []).map(n => String(n).replace(/^#/, '').toLowerCase());
-          const catIds = (a.category_ids || []).map(String);
-          if (cids.includes(String(ch.id)) || cnames.includes(ch.name.toLowerCase())) return true;
-          if (ch.category_id && catIds.includes(String(ch.category_id))) return true;
-        }
-        if (a.settings && String(a.settings.channel_id) === String(ch.id)) return true;
-        return false;
-      });
-    }
+    const uncategorized = allChannels.filter(c => !c.category_id);
 
     function renderChannelRow(ch) {
-      const affected = isChannelAffected(ch);
       const mentionStr = `${ch.isVoice ? '🔊 ' : '#'}${ch.name} (ID: ${ch.id})`;
-      const iconSvg = ch.isVoice
-        ? `<span class="flex-shrink-0 text-neutral-500">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume2 w-4 h-4 flex-shrink-0"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-          </span>`
-        : `<span class="flex-shrink-0 text-neutral-500">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-4 h-4 flex-shrink-0"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
-          </span>`;
+      const iconHtml = ch.isVoice
+        ? `<span class="flex-shrink-0 text-neutral-500 dark:text-neutral-400"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume2 w-5 h-5 flex-shrink-0"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></span>`
+        : `<span class="flex-shrink-0 "><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-5 h-5 flex-shrink-0"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg></span>`;
 
       return `
-        <div class="mx-2 my-0.5">
-          <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl select-none group min-h-[38px] text-neutral-300 hover:text-white hover:bg-neutral-800/70 border border-transparent hover:border-white/[0.07] transition-all ${affected ? 'bg-amber-500/[0.06] ring-1 ring-amber-500/20' : ''}">
-            ${iconSvg}
-            <div class="min-w-0 flex-1 cursor-pointer" data-insert-mention="${escapeHtml(mentionStr)}" title="Klicken, um ${escapeHtml(mentionStr)} in den KI-Chat einzufügen">
-              <div class="flex items-center gap-1.5">
-                <span class="text-[13.5px] font-medium truncate leading-5 ${affected ? 'text-amber-200' : 'text-neutral-200 group-hover:text-white'}">${escapeHtml(ch.name)}</span>
-                ${affected ? `<span class="px-1.5 py-0.2 rounded text-[9.5px] font-semibold bg-amber-500/20 text-amber-300">Geplant</span>` : ''}
-              </div>
-              <span class="block text-[10px] font-mono text-neutral-500 truncate">ID: ${escapeHtml(ch.id)}</span>
-            </div>
-            <div class="flex items-center gap-1 flex-shrink-0">
-              <button type="button" data-copy-id="${escapeHtml(ch.id)}" data-copy-label="#${escapeHtml(ch.name)}" class="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10.5px] font-mono text-neutral-300 hover:text-white border border-neutral-700/80 transition-colors cursor-pointer" title="Kanal-ID kopieren (${escapeHtml(ch.id)})">
-                ID kopieren
-              </button>
-              <button type="button" data-insert-mention="${escapeHtml(mentionStr)}" class="px-1.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white hover:text-black text-[10.5px] font-medium text-neutral-300 transition-colors cursor-pointer" title="Kanal + ID in den KI-Chat einfügen">
-                @KI
-              </button>
+        <div>
+          <div class="flex items-center gap-2.5 mx-2 px-3 py-2 rounded-lg select-none group min-h-[40px] text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60 cursor-grab active:cursor-grabbing" role="button" tabindex="0" data-insert-mention="${escapeHtml(mentionStr)}" style="transition: transform linear;">
+            ${iconHtml}
+            <span title="${escapeHtml(ch.name)}" class="text-[15px] font-medium truncate min-w-0 leading-5 ">${escapeHtml(ch.name)}</span>
+            <div class="flex-1"></div>
+            <div class="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
+              <button type="button" data-copy-id="${escapeHtml(ch.id)}" data-copy-label="#${escapeHtml(ch.name)}" class="px-1.5 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[10.5px] font-mono text-neutral-300 hover:text-white border border-neutral-700" title="Kanal-ID kopieren (${escapeHtml(ch.id)})">ID</button>
+              <button type="button" data-insert-mention="${escapeHtml(mentionStr)}" class="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white hover:text-black text-[10.5px] font-medium text-neutral-200" title="Kanal in KI-Chat einfügen">@KI</button>
             </div>
           </div>
         </div>
       `;
     }
 
-    if (q) {
-      return `
-        <div class="h-full overflow-y-auto overscroll-contain bg-neutral-900 py-2 scrollbar-thin" data-lenis-prevent="true">
-          ${filteredChannels.length > 0 ? filteredChannels.map(renderChannelRow).join('') : `<p class="text-center text-xs text-neutral-500 py-8">Keine Kanäle für "${escapeHtml(planSearchQuery)}" gefunden</p>`}
-        </div>
-      `;
-    }
-
-    const uncategorized = allChannels.filter(c => !c.category_id);
-
     return `
-      <div id="ai-plan-scroll" class="h-full overflow-y-auto overscroll-contain bg-neutral-900 scrollbar-thin" data-lenis-prevent="true">
-        <div class="py-2">
-          ${pendingActions.length > 0 ? `<div class="px-2 mb-2">${renderPendingActionsBanner()}</div>` : ''}
-          ${uncategorized.length > 0 ? `
-            <div class="mb-2">
-              ${uncategorized.map(renderChannelRow).join('')}
-            </div>
-          ` : ''}
-          ${categories.map(cat => {
-            const isCollapsed = collapsedCategories.has(String(cat.id));
-            const catChannels = allChannels.filter(c => String(c.category_id) === String(cat.id));
-            return `
-              <div class="pt-3 first:pt-0">
-                <div class="flex items-center justify-between gap-1 px-2 py-1 mx-1 mt-1 mb-0.5 rounded-lg select-none group transition-colors hover:bg-neutral-800/50">
-                  <div data-toggle-cat="${escapeHtml(cat.id)}" class="flex items-center gap-1 min-w-0 flex-1 cursor-pointer">
-                    <button type="button" class="p-1 text-neutral-400 hover:text-white rounded-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-3.5 h-3.5 transition-transform duration-200 ease-out ${isCollapsed ? '-rotate-90' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
-                    </button>
-                    <span class="text-[11.5px] font-bold text-neutral-400 uppercase tracking-[0.02em] truncate group-hover:text-white">${escapeHtml(cat.name)}</span>
-                    <span class="text-[10px] text-neutral-600 tabular-nums">(${catChannels.length})</span>
-                  </div>
-                  <button type="button" data-copy-id="${escapeHtml(cat.id)}" data-copy-label="Kategorie ${escapeHtml(cat.name)}" class="opacity-70 group-hover:opacity-100 px-1.5 py-0.5 rounded text-[10px] font-mono text-neutral-400 hover:text-white hover:bg-neutral-700 transition-all cursor-pointer" title="Kategorie-ID kopieren (${escapeHtml(cat.id)})">
-                    ID
-                  </button>
-                </div>
-                ${!isCollapsed ? `
-                  <div class="mt-[2px]">
-                    ${catChannels.map(renderChannelRow).join('')}
-                  </div>
-                ` : ''}
+      <div class="h-full overflow-y-auto overscroll-contain bg-white dark:bg-neutral-900 scrollbar-thin" data-lenis-prevent="true">
+        <div style="opacity: 1; transform: none;">
+          <div class="py-2">
+            ${pendingActions.length > 0 ? `<div class="px-2 mb-2">${renderPendingActionsBanner()}</div>` : ''}
+            ${uncategorized.length > 0 ? `
+              <div class="mb-2">
+                ${uncategorized.map(renderChannelRow).join('')}
               </div>
-            `;
-          }).join('')}
+            ` : ''}
+            ${categories.map(cat => {
+              const isCollapsed = collapsedCategories.has(String(cat.id));
+              const catChannels = allChannels.filter(c => String(c.category_id) === String(cat.id));
+              return `
+                <div class="pt-4 first:pt-0  " style="transition: transform linear;">
+                  <div data-toggle-cat="${escapeHtml(cat.id)}" class="flex items-center gap-1 px-2 py-1.5 mx-1 mt-2 mb-1 rounded-lg select-none cursor-pointer group transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800/50 cursor-grab active:cursor-grabbing" role="button" tabindex="0">
+                    <button type="button" class="p-1.5 sm:p-0.5 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white rounded-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 sm:w-3 sm:h-3 transition-transform duration-200 ease-out ${isCollapsed ? '-rotate-90' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
+                    </button>
+                    <span class="text-[12px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-[0.02em] truncate group-hover:text-black dark:group-hover:text-white flex-1">${escapeHtml(cat.name)}</span>
+                    <button type="button" data-copy-id="${escapeHtml(cat.id)}" data-copy-label="Kategorie ${escapeHtml(cat.name)}" class="opacity-0 group-hover:opacity-100 px-1.5 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[10px] font-mono text-neutral-300 hover:text-white border border-neutral-700 transition-opacity" title="Kategorie-ID kopieren (${escapeHtml(cat.id)})">ID</button>
+                  </div>
+                  ${!isCollapsed ? `
+                    <div class="mt-[2px]">
+                      ${catChannels.map(renderChannelRow).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
         </div>
       </div>
     `;
@@ -705,13 +646,13 @@ DashboardTabs.Builder = async function(container, guildId) {
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
             ${pendingActions.length} ausstehende Änderung(en)
           </span>
-          <button type="button" id="ai-clear-pending-btn" class="text-[11px] text-neutral-400 hover:text-white transition-colors cursor-pointer">Verwerfen</button>
+          <button type="button" id="ai-clear-pending-btn" class="text-[11px] text-neutral-400 hover:text-white transition-colors">Verwerfen</button>
         </div>
         <div class="space-y-1">
           ${pendingActions.map((act, idx) => `
             <div class="flex items-center justify-between gap-2 text-[12px] bg-neutral-950/60 px-2.5 py-1.5 rounded-lg border border-white/[0.05]">
               <span class="text-neutral-200 truncate font-medium">${escapeHtml(act.title || act.type)}</span>
-              <button type="button" data-remove-pending="${idx}" class="text-neutral-500 hover:text-red-400 transition-colors cursor-pointer" title="Entfernen">✕</button>
+              <button type="button" data-remove-pending="${idx}" class="text-neutral-500 hover:text-red-400 transition-colors" title="Entfernen">✕</button>
             </div>
           `).join('')}
         </div>
@@ -727,25 +668,22 @@ DashboardTabs.Builder = async function(container, guildId) {
           if (att.type === 'image') {
             return `
               <div class="relative group flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-neutral-800/90 border border-white/10">
-                <img src="${att.dataUrl}" alt="${escapeHtml(att.name)}" class="w-11 h-11 rounded-lg object-cover border border-white/10">
-                <div class="min-w-0 max-w-[140px]">
+                <img src="${att.dataUrl}" alt="${escapeHtml(att.name)}" class="w-10 h-10 rounded-lg object-cover border border-white/10">
+                <div class="min-w-0 max-w-[140px] text-left">
                   <p class="text-[11.5px] font-medium text-white truncate">${escapeHtml(att.name)}</p>
-                  <p class="text-[10px] text-emerald-400">KI-Bildanalyse bereit</p>
+                  <p class="text-[10px] text-emerald-400">Bild angehängt</p>
                 </div>
-                <button type="button" data-remove-attachment="${idx}" class="p-1 rounded-md text-neutral-400 hover:text-red-400 hover:bg-white/10 transition-colors cursor-pointer" title="Entfernen">✕</button>
+                <button type="button" data-remove-attachment="${idx}" class="p-1 rounded-md text-neutral-400 hover:text-red-400 hover:bg-white/10 transition-colors" title="Entfernen">✕</button>
               </div>
             `;
           }
           return `
-            <div class="relative group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-neutral-800/90 border border-white/10">
-              <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
-              </div>
-              <div class="min-w-0 max-w-[160px]">
+            <div class="relative group flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-800/90 border border-white/10">
+              <div class="min-w-0 max-w-[160px] text-left">
                 <p class="text-[11.5px] font-medium text-white truncate">${escapeHtml(att.name)}</p>
-                <p class="text-[10px] text-neutral-400">${att.size || 0} Zeichen · Datei bereit</p>
+                <p class="text-[10px] text-neutral-400">${att.size || 0} Zeichen</p>
               </div>
-              <button type="button" data-remove-attachment="${idx}" class="p-1 rounded-md text-neutral-400 hover:text-red-400 hover:bg-white/10 transition-colors cursor-pointer" title="Entfernen">✕</button>
+              <button type="button" data-remove-attachment="${idx}" class="p-1 rounded-md text-neutral-400 hover:text-red-400 hover:bg-white/10 transition-colors" title="Entfernen">✕</button>
             </div>
           `;
         }).join('')}
@@ -760,66 +698,46 @@ DashboardTabs.Builder = async function(container, guildId) {
         <input type="file" id="ai-upload-image-input" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="hidden">
         <input type="file" id="ai-upload-file-input" accept=".txt,.md,.json,.csv,.yaml,.yml,.py,.js,.html,.css,image/*" multiple class="hidden">
         ${renderAttachmentsPreviewHtml()}
-        <textarea id="${inputId}" data-no-autoresize="true" placeholder="Frage etwas, lade über + ein Bild/Datei hoch oder wähle rechts einen Kanal/Rolle…" rows="1" class="w-full px-5 pt-4 pb-2 bg-transparent border-0 text-base sm:text-[15.5px] text-white placeholder-neutral-500 resize-none overflow-hidden focus:outline-none focus:ring-0" style="height: 48px; overflow-y: hidden;">${escapeHtml(draftInputText)}</textarea>
+        <textarea id="${inputId}" data-no-autoresize="true" placeholder="Wie kann ich Ihnen heute helfen?" rows="1" class="w-full px-5 pt-4 pb-2 bg-transparent border-0 text-base sm:text-[15.5px] text-white placeholder-neutral-500 resize-none overflow-hidden focus:outline-none focus:ring-0 " style="height: 48px; overflow-y: hidden;">${escapeHtml(draftInputText)}</textarea>
         <div class="flex items-center justify-between gap-2 px-2.5 pb-2.5">
           <div class="relative">
-            <button type="button" id="ai-quick-add-btn" class="relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,transform] active:scale-[0.96] text-neutral-400 hover:text-white hover:bg-white/[0.06] cursor-pointer" title="Bild, Datei hochladen oder Schnellbefehl wählen" aria-label="Bild, Datei hochladen oder Schnellbefehl wählen">
+            <button type="button" id="ai-quick-add-btn" class="relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,transform] active:scale-[0.96] before:absolute before:inset-[-2px] before:content-[''] text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04]" title="Hängen Sie ein Bild an" aria-label="Hängen Sie ein Bild an">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-[18px] h-[18px]"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
             </button>
-            <div id="ai-quick-add-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${quickAddDropdownOpen ? '' : 'hidden'} absolute bottom-11 left-0 w-80 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl p-1.5 z-[99999] space-y-1">
-              <div class="px-2.5 py-1 text-[10.5px] font-semibold text-neutral-500 uppercase tracking-wider">Hochladen & Analysieren</div>
-              <button type="button" id="ai-trigger-image-upload" class="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-lg text-[12.5px] text-white hover:bg-white/[0.08] transition-colors cursor-pointer">
+            <div id="ai-quick-add-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${quickAddDropdownOpen ? '' : 'hidden'} absolute bottom-11 left-0 w-72 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 z-[99999] space-y-1 text-left">
+              <button type="button" id="ai-trigger-image-upload" class="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-lg text-[12.5px] text-white hover:bg-white/[0.08] transition-colors">
                 <span class="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                 </span>
                 <div class="min-w-0 flex-1">
                   <span class="block font-medium text-white">Bild / Screenshot hochladen</span>
-                  <span class="block text-[11px] text-neutral-400 truncate">KI zieht sich Tipps, Farben & Ideen aus dem Bild</span>
+                  <span class="block text-[11px] text-neutral-400 truncate">KI analysiert das Bild</span>
                 </div>
               </button>
-              <button type="button" id="ai-trigger-file-upload" class="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-lg text-[12.5px] text-white hover:bg-white/[0.08] transition-colors cursor-pointer">
+              <button type="button" id="ai-trigger-file-upload" class="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-lg text-[12.5px] text-white hover:bg-white/[0.08] transition-colors">
                 <span class="w-7 h-7 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
                 </span>
                 <div class="min-w-0 flex-1">
                   <span class="block font-medium text-white">Datei / Vorlage hochladen</span>
-                  <span class="block text-[11px] text-neutral-400 truncate">Text, JSON, Regeln oder Configs einlesen</span>
+                  <span class="block text-[11px] text-neutral-400 truncate">Text, JSON oder Configs</span>
                 </div>
-              </button>
-              <div class="border-t border-neutral-800 my-1"></div>
-              <div class="px-2.5 py-1 text-[10.5px] font-semibold text-neutral-500 uppercase tracking-wider">Schnellbefehle</div>
-              <button type="button" data-quick-prompt="Mache in jedem Channel, dass die Rolle @Unverified nicht die Permission hat, den Channel zu sehen." class="w-full text-left px-2.5 py-1.5 rounded-lg text-[12px] text-neutral-200 hover:bg-white/[0.06] transition-colors cursor-pointer">
-                🔒 Rolle in allen Kanälen ausblenden
-              </button>
-              <button type="button" data-quick-prompt="Richte Willkommensnachrichten mit einem schönen Embed für neue Mitglieder ein." class="w-full text-left px-2.5 py-1.5 rounded-lg text-[12px] text-neutral-200 hover:bg-white/[0.06] transition-colors cursor-pointer">
-                👋 Willkommensnachricht konfigurieren
-              </button>
-              <button type="button" data-quick-prompt="Aktiviere den AutoMod Spam-Schutz, Linkfilter und Inhaltsfilter für diesen Server." class="w-full text-left px-2.5 py-1.5 rounded-lg text-[12px] text-neutral-200 hover:bg-white/[0.06] transition-colors cursor-pointer">
-                🛡️ AutoMod & Spam-Schutz aktivieren
-              </button>
-              <button type="button" data-quick-prompt="Konfiguriere das Ticket-System für Support-Anfragen auf diesem Server." class="w-full text-left px-2.5 py-1.5 rounded-lg text-[12px] text-neutral-200 hover:bg-white/[0.06] transition-colors cursor-pointer">
-                🎫 Ticket-System einrichten
               </button>
             </div>
           </div>
           <div class="flex items-center gap-1.5">
             <div class="relative">
-              <button type="button" id="ai-model-picker-btn" class="inline-flex items-center gap-1 px-2.5 h-9 rounded-lg text-[12.5px] font-medium text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04] transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer" title="Modell auswählen" aria-label="Modell auswählen">
-                <span>${escapeHtml(selectedModelLabel)}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-3 h-3 opacity-60 transition-transform duration-150"><path d="m6 9 6 6 6-6"></path></svg>
-              </button>
-              <div id="ai-model-picker-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${modelDropdownOpen ? '' : 'hidden'} absolute bottom-11 right-0 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl p-1.5 z-[99999] space-y-0.5">
+              <button type="button" id="ai-model-picker-btn" class="hidden sm:inline-flex items-center gap-1 px-2.5 h-9 rounded-lg text-[12.5px] font-medium text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04] transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" title="Modell auswählen" aria-label="Modell auswählen">${escapeHtml(selectedModelLabel)}<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-3 h-3 opacity-60 transition-transform duration-150 "><path d="m6 9 6 6 6-6"></path></svg></button>
+              <div id="ai-model-picker-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${modelDropdownOpen ? '' : 'hidden'} absolute bottom-11 right-0 w-60 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 z-[99999] space-y-0.5 text-left">
                 ${MODELS.map(m => `
-                  <button type="button" data-select-model="${escapeHtml(m.id)}" data-select-model-label="${escapeHtml(m.label)}" class="w-full flex flex-col items-start px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${selectedModel === m.id ? 'bg-white/[0.08] text-white' : 'text-neutral-300 hover:bg-white/[0.04]'}">
+                  <button type="button" data-select-model="${escapeHtml(m.id)}" data-select-model-label="${escapeHtml(m.label)}" class="w-full flex flex-col items-start px-3 py-2 rounded-lg text-left transition-colors ${selectedModel === m.id ? 'bg-white/[0.08] text-white' : 'text-neutral-300 hover:bg-white/[0.04]'}">
                     <span class="text-[12.5px] font-semibold">${escapeHtml(m.label)}</span>
                     <span class="text-[11px] text-neutral-500">${escapeHtml(m.desc)}</span>
                   </button>
                 `).join('')}
               </div>
             </div>
-            <button type="button" id="${sendBtnId}" ${canSendNow ? '' : 'disabled'} class="relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,box-shadow,transform] ${canSendNow ? 'bg-white text-black hover:bg-neutral-200 cursor-pointer shadow-sm' : 'bg-neutral-800 text-neutral-600 cursor-not-allowed'}" title="Schicken" aria-label="Schicken">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send w-4 h-4"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-            </button>
+            <button type="button" id="${sendBtnId}" ${canSendNow ? '' : 'disabled=""'} class="relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,box-shadow,transform] before:absolute before:inset-[-2px] before:content-[''] ${canSendNow ? 'bg-white text-black hover:bg-neutral-200 cursor-pointer' : 'bg-neutral-800 text-neutral-600 cursor-not-allowed'}" title="Schicken" aria-label="Schicken"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send w-4 h-4"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg></button>
           </div>
         </div>
       </div>
@@ -832,7 +750,7 @@ DashboardTabs.Builder = async function(container, guildId) {
 
     if (messages.length === 0 && !isSending) {
       return `
-        <div class="flex-1 flex items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain" data-lenis-prevent="true">
+        <div class="flex-1 flex items-center justify-center p-3 sm:p-6 overflow-y-auto" data-lenis-prevent="true">
           <div class="w-full my-auto space-y-6 sm:space-y-8">
             <div class="flex flex-col items-center justify-center px-4 sm:px-6 py-8">
               <div class="flex flex-col items-center text-center w-full max-w-[640px] 2xl:max-w-[720px]">
@@ -843,9 +761,11 @@ DashboardTabs.Builder = async function(container, guildId) {
                   <h2 class="text-[27px] sm:text-[34px] font-semibold tracking-tight text-white leading-none text-balance">${escapeHtml(getGreeting(userName))}</h2>
                 </div>
                 ${renderPromptInputBox('ai-helper-textarea', 'ai-helper-send-btn')}
-                <div class="mt-2 text-center text-[11px] text-neutral-500">Tipp: Über <strong>+</strong> kannst du Bilder/Screenshots oder Dateien hochladen – und rechts in der Serverleiste direkt Kanal-/Rollen-IDs kopieren.</div>
+                <div class="mt-2 text-center text-[11px] text-neutral-500">Sie chatten mit Peak, einem KI-Assistenten. KI kann Fehler machen – prüfen Sie Änderungen, bevor Sie sie anwenden.</div>
               </div>
             </div>
+            <div class="h-px"></div>
+            <div></div>
           </div>
         </div>
       `;
@@ -934,7 +854,6 @@ DashboardTabs.Builder = async function(container, guildId) {
                 <span class="w-2 h-2 rounded-full bg-white/60 animate-bounce"></span>
                 <span class="w-2 h-2 rounded-full bg-white/60 animate-bounce" style="animation-delay: 150ms;"></span>
                 <span class="w-2 h-2 rounded-full bg-white/60 animate-bounce" style="animation-delay: 300ms;"></span>
-                <span class="ml-1">Orbit analysiert deine Anfrage…</span>
               </div>
             </div>
           ` : ''}
@@ -943,7 +862,7 @@ DashboardTabs.Builder = async function(container, guildId) {
       <div class="flex-shrink-0 p-3 sm:p-4 border-t border-neutral-800/80 bg-neutral-900">
         <div class="max-w-[740px] mx-auto">
           ${renderPromptInputBox('ai-helper-textarea', 'ai-helper-send-btn')}
-          <div class="mt-2 text-center text-[11px] text-neutral-500">Sie chatten mit Orbit, einem KI-Assistenten. KI kann Fehler machen – prüfen Sie Änderungen, bevor Sie sie anwenden.</div>
+          <div class="mt-2 text-center text-[11px] text-neutral-500">Sie chatten mit Peak, einem KI-Assistenten. KI kann Fehler machen – prüfen Sie Änderungen, bevor Sie sie anwenden.</div>
         </div>
       </div>
     `;
@@ -957,15 +876,14 @@ DashboardTabs.Builder = async function(container, guildId) {
 
     container.innerHTML = `
       <div class="relative w-full flex flex-col h-[calc(100dvh-4rem-2rem)] lg:h-[calc(100dvh-4rem-3rem)] xl:h-[calc(100dvh-4rem-4rem)] overflow-hidden">
-        <!-- Mobile Chat History Backdrop & Drawer -->
+        <!-- Mobile Chat Drawer Backdrop & Drawer -->
         <div id="ai-mobile-drawer-backdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${mobileChatDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}"></div>
         <div class="fixed left-0 top-0 h-full w-[90vw] sm:w-[85vw] max-w-80 z-50 lg:hidden transition-transform duration-300 ease-out border-r border-neutral-800 ${mobileChatDrawerOpen ? 'translate-x-0' : '-translate-x-full'}">
           <div class="flex flex-col h-full bg-neutral-900">
             <div class="px-2 pt-2 pb-1.5 flex-shrink-0">
               <div class="flex items-center gap-1.5">
                 <button type="button" data-action="new-chat" class="flex-1 flex items-center gap-2 px-3 h-9 rounded-lg text-[13.5px] font-medium text-neutral-100 bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.06] transition-[background-color,transform] duration-150 ease-out active:scale-[0.99]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen w-4 h-4 text-neutral-300"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path></svg>
-                  Neuer Chat
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen w-4 h-4 text-neutral-300"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path></svg>Neuer Chat
                 </button>
                 <button type="button" id="ai-close-mobile-drawer" class="grid place-items-center h-9 w-9 rounded-lg hover:bg-white/[0.06] text-neutral-500 transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96]" title="Schließen">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
@@ -977,7 +895,12 @@ DashboardTabs.Builder = async function(container, guildId) {
               </div>
             </div>
             <div class="flex-1 overflow-y-auto overscroll-contain py-1 scrollbar-thin" data-lenis-prevent="true">
-              ${renderChatListItems()}
+              ${renderChatListItems(true)}
+            </div>
+            <div class="px-2 py-1.5 flex-shrink-0 border-t border-white/[0.05]">
+              <button type="button" data-action="clear-all-chats" class="w-full flex items-center justify-center gap-1.5 h-8 rounded-lg text-[12px] text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2 w-3.5 h-3.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>Alles löschen
+              </button>
             </div>
           </div>
         </div>
@@ -992,7 +915,7 @@ DashboardTabs.Builder = async function(container, guildId) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4 text-neutral-300"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
                   <span class="text-[13.5px] font-semibold text-neutral-100">Merkmale</span>
                 </div>
-                <button type="button" data-close-features="true" class="relative grid place-items-center h-8 w-8 rounded-lg text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.06] transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96]" title="Schließen Sie Funktionen">
+                <button type="button" data-close-features="true" class="relative grid place-items-center h-8 w-8 rounded-lg text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.06] transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96] before:absolute before:inset-[-4px] before:content-['']" title="Schließen Sie Funktionen">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                 </button>
               </div>
@@ -1004,74 +927,76 @@ DashboardTabs.Builder = async function(container, guildId) {
         </div>
 
         <!-- Main 3-Column Row -->
-        <div class="w-full flex-1 flex gap-2 sm:gap-3.5 min-h-0">
-          <!-- Column 1: Desktop Chat History Sidebar -->
-          <div data-tour="builder-chats" class="scroll-mt-24 hidden lg:flex shrink-0 overflow-hidden transition-[width] duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]" style="width: ${leftSidebarCollapsed ? '0px' : '270px'};">
+        <div class="w-full flex-1 flex gap-2 sm:gap-4 min-h-0">
+          <!-- Column 1: Left Chat History Sidebar (1:1 Screenshot 1) -->
+          <div data-tour="builder-chats" class="scroll-mt-24 hidden lg:flex shrink-0 overflow-hidden transition-[width] duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]" style="width: ${leftSidebarCollapsed ? '0px' : '296px'};">
             <div class="w-full flex flex-col flex-shrink-0 overflow-hidden bg-neutral-900 border border-neutral-800 rounded-2xl">
-              <div class="px-2.5 pt-2.5 pb-1.5 flex-shrink-0 border-b border-neutral-800/70">
-                <div class="flex items-center justify-between px-1 mb-2">
-                  <span class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">Chatverlauf (${chats.length})</span>
-                  <button type="button" id="ai-collapse-sidebar-btn" class="grid place-items-center h-7 w-7 rounded-lg hover:bg-white/[0.06] text-neutral-500 hover:text-neutral-300 transition-colors cursor-pointer" title="Seitenleiste einklappen">
+              <div class="px-2 pt-2 pb-1.5 flex-shrink-0">
+                <div class="flex items-center gap-1.5">
+                  <button type="button" data-action="new-chat" class="flex-1 flex items-center gap-2 px-3 h-9 rounded-lg text-[13.5px] font-medium text-neutral-100 bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.06] transition-[background-color,transform] duration-150 ease-out active:scale-[0.99]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen w-4 h-4 text-neutral-300"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path></svg>Neuer Chat
+                  </button>
+                  <button type="button" id="ai-collapse-sidebar-btn" class="grid place-items-center h-9 w-9 rounded-lg hover:bg-white/[0.06] text-neutral-500 hover:text-neutral-300 transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96]" title="Seitenleiste einklappen" aria-label="Seitenleiste einklappen">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-left-close w-4 h-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="m16 15-3-3 3-3"></path></svg>
                   </button>
                 </div>
-                <button type="button" data-action="new-chat" class="w-full flex items-center justify-center gap-2 px-3 h-9 rounded-lg text-[13px] font-medium text-neutral-100 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] transition-[background-color,transform] duration-150 ease-out active:scale-[0.99] cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen w-4 h-4 text-neutral-300"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path></svg>
-                  Neuer Chat
-                </button>
-                <div class="relative mt-2">
+                <div class="relative mt-1.5">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                  <input id="ai-desktop-chat-search" data-chat-search="true" placeholder="Chats durchsuchen…" class="w-full bg-white/[0.03] border border-white/[0.06] rounded-lg pl-8 pr-3 h-8 text-[12.5px] text-white placeholder:text-neutral-500 focus:outline-none focus:bg-white/[0.05] focus:border-white/[0.1] transition-[background-color,border-color]" type="text" value="${escapeHtml(chatSearchQuery)}">
+                  <input id="ai-desktop-chat-search" data-chat-search="true" placeholder="Chats durchsuchen…" class="w-full bg-white/[0.03] border border-white/[0.06] rounded-lg pl-8 pr-8 h-9 text-base sm:text-[13px] text-white placeholder:text-neutral-500 focus:outline-none focus:bg-white/[0.05] focus:border-white/[0.1] transition-[background-color,border-color]" type="text" value="${escapeHtml(chatSearchQuery)}">
                 </div>
               </div>
-              <div id="ai-desktop-chat-list" data-lenis-prevent="true" class="flex-1 overflow-y-auto overscroll-contain py-2 scrollbar-thin">
-                ${renderChatListItems()}
+              <div id="ai-desktop-chat-list" data-lenis-prevent="true" class="flex-1 overflow-y-auto overscroll-contain py-1 scrollbar-thin">
+                ${renderChatListItems(false)}
+              </div>
+              <div class="px-2 py-1.5 flex-shrink-0 border-t border-white/[0.05]">
+                <button type="button" data-action="clear-all-chats" class="w-full flex items-center justify-center gap-1.5 h-8 rounded-lg text-[12px] text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04] transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2 w-3.5 h-3.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>Alles löschen
+                </button>
               </div>
             </div>
           </div>
 
           <!-- Columns 2 & 3 Container -->
-          <div class="flex-1 min-w-0 flex flex-col lg:flex-row gap-0 lg:gap-3.5 min-h-0">
+          <div class="flex-1 min-w-0 flex flex-col lg:flex-row gap-0 lg:gap-4 min-h-0">
             <!-- Mobile Tab Bar -->
-            <div class="flex lg:hidden gap-1.5 p-1.5 bg-neutral-900 border border-neutral-800 border-b-0 rounded-t-2xl flex-shrink-0">
-              <button type="button" id="ai-open-mobile-drawer" class="px-3 py-2 text-xs font-medium rounded-lg text-neutral-300 hover:text-white bg-neutral-800 hover:bg-neutral-700 transition-colors flex items-center gap-1.5" title="Chatverlauf">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Chats (${chats.length})
+            <div class="flex lg:hidden gap-1.5 p-1.5 bg-neutral-900 border border-neutral-800 border-b-0 rounded-t-2xl flex-shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+              <button type="button" id="ai-open-mobile-drawer" class="px-3 py-2.5 text-sm font-medium rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-700 transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" title="Chatverlauf" aria-label="Chatverlauf">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text w-5 h-5"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
               </button>
-              <button type="button" data-mobile-view="chat" class="relative flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${mobileActiveView === 'chat' ? 'bg-white text-black' : 'text-neutral-400'}">
-                Chatten
+              <button type="button" data-mobile-view="chat" class="relative flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition-[color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${mobileActiveView === 'chat' ? 'text-white' : 'text-neutral-400'}">
+                ${mobileActiveView === 'chat' ? '<span class="absolute inset-0 bg-neutral-700 rounded-lg shadow-sm" style="opacity: 1;"></span>' : ''}
+                <span class="relative z-10">Chatten</span>
               </button>
-              <button type="button" data-mobile-view="preview" class="relative flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${mobileActiveView === 'preview' ? 'bg-white text-black' : 'text-neutral-400'}">
-                Serverleiste & IDs ${hasPending ? `(${pendingActions.length})` : ''}
+              <button type="button" data-mobile-view="preview" class="relative flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition-[color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${mobileActiveView === 'preview' ? 'text-white' : 'text-neutral-400'}">
+                ${mobileActiveView === 'preview' ? '<span class="absolute inset-0 bg-neutral-700 rounded-lg shadow-sm" style="opacity: 1;"></span>' : ''}
+                <span class="relative z-10">Vorschau</span>
               </button>
             </div>
 
-            <!-- Column 2: Center Chat Pane -->
-            <div class="lg:flex-[11] ${mobileActiveView === 'chat' ? 'flex' : 'hidden lg:flex'} flex-col min-h-0 min-w-0 flex-1">
+            <!-- Column 2: Center Chat Pane (1:1 Screenshot 3) -->
+            <div class="lg:flex-[12] ${mobileActiveView === 'chat' ? 'flex' : 'hidden lg:flex'} flex-col min-h-0 min-w-0 flex-1">
               <div class="relative h-full flex flex-col min-h-0 bg-neutral-900 border border-white/[0.06] ring-1 ring-white/[0.02] rounded-2xl max-lg:rounded-t-none overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
-                <!-- Top Toolbar -->
-                <div class="flex-shrink-0 flex items-center justify-between px-3 sm:px-4 py-2.5 min-h-[50px] border-b border-neutral-800">
-                  <div class="flex items-center gap-2 min-w-0">
+                <div class="flex-shrink-0 flex items-center justify-between px-2 sm:px-4 py-3 min-h-[52px] border-b border-neutral-800">
+                  <div>
                     ${leftSidebarCollapsed ? `
-                      <button type="button" id="ai-expand-sidebar-btn" class="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-neutral-300 hover:text-white bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors cursor-pointer" title="Chatverlauf einblenden">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="m14 9 3 3-3 3"></path></svg>
-                        Verlauf (${chats.length})
+                      <button type="button" id="ai-expand-sidebar-btn" class="p-2.5 sm:p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-[color,background-color,transform] active:scale-[0.96]" title="Seitenleiste ausklappen" aria-label="Seitenleiste ausklappen">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-left-open w-5 h-5 sm:w-4 sm:h-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="m14 9 3 3-3 3"></path></svg>
                       </button>
                     ` : ''}
-                    <span class="text-[13px] font-medium text-neutral-300 truncate">${getActiveChat() ? escapeHtml(getActiveChat().title) : 'Neues Gespräch mit Orbit AI'}</span>
                   </div>
                   <div class="flex items-center gap-1">
-                    <button type="button" id="ai-undo-btn" ${canUndo ? '' : 'disabled'} class="p-2 sm:p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer" title="Rückgängig machen (Strg+Z)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"></path></svg>
+                    <button type="button" id="ai-undo-btn" ${canUndo ? '' : 'disabled=""'} class="p-2.5 sm:p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-[color,background-color,transform] active:scale-[0.96] disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100" title="Rückgängig machen (Strg+Z)" aria-label="Rückgängig machen (Strg+Z)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo2 w-5 h-5 sm:w-4 sm:h-4"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"></path></svg>
                     </button>
-                    <button type="button" id="ai-redo-btn" ${canRedo ? '' : 'disabled'} class="p-2 sm:p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer" title="Wiederherstellen (Strg+Y)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="m15 14 5-5-5-5"></path><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"></path></svg>
+                    <button type="button" id="ai-redo-btn" ${canRedo ? '' : 'disabled=""'} class="p-2.5 sm:p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-[color,background-color,transform] active:scale-[0.96] disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100" title="Wiederherstellen (Strg+Y)" aria-label="Wiederherstellen (Strg+Y)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-redo2 w-5 h-5 sm:w-4 sm:h-4"><path d="m15 14 5-5-5-5"></path><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"></path></svg>
                     </button>
                     <div class="relative">
-                      <button type="button" id="ai-history-btn" class="p-2 sm:p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 cursor-pointer" title="Aktionsgeschichte">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+                      <button type="button" id="ai-history-btn" class="p-2.5 sm:p-1.5 rounded-lg transition-[color,background-color,transform] active:scale-[0.96] text-neutral-400 hover:text-white hover:bg-neutral-800" title="Aktionsgeschichte" aria-label="Aktionsgeschichte">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-history w-5 h-5 sm:w-4 sm:h-4"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+                        ${actionHistory.length > 0 ? `<span class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 text-[8px] font-bold tabular-nums bg-neutral-600 text-white rounded-full flex items-center justify-center">${actionHistory.length}</span>` : ''}
                       </button>
-                      <div id="ai-history-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${historyDropdownOpen ? '' : 'hidden'} absolute right-0 mt-2 w-72 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl p-3 z-[99999]">
+                      <div id="ai-history-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${historyDropdownOpen ? '' : 'hidden'} absolute right-0 mt-2 w-72 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-3 z-[99999]">
                         <p class="text-[12px] font-semibold text-white mb-2">Aktionsgeschichte</p>
                         ${actionHistory.length === 0 ? `
                           <p class="text-[12px] text-neutral-500 py-3 text-center">Noch keine Aktionen angewendet</p>
@@ -1087,97 +1012,84 @@ DashboardTabs.Builder = async function(container, guildId) {
                         `}
                       </div>
                     </div>
-                    <button type="button" data-action="new-chat" class="p-2 sm:p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer" title="Neuer Chat">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    <button type="button" data-action="new-chat" class="p-2.5 sm:p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-[color,background-color,transform] active:scale-[0.96]" title="Neuer Chat" aria-label="Neuer Chat">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw w-5 h-5 sm:w-4 sm:h-4"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
                     </button>
                   </div>
                 </div>
-
-                <!-- Main Chat Content -->
                 <div class="relative flex-1 flex flex-col min-h-0 overflow-hidden">
                   ${renderCenterBodyHtml()}
                 </div>
               </div>
             </div>
 
-            <!-- Column 3: Right Server Plan / Channel & Role ID Inspector Pane -->
-            <div data-tour="builder-plan" class="scroll-mt-24 min-h-0 min-w-0 lg:w-[350px] xl:w-[380px] shrink-0 ${mobileActiveView === 'preview' ? 'flex flex-1' : 'hidden lg:flex'}">
+            <!-- Column 3: Right Planen Pane (1:1 Screenshot 2) -->
+            <div data-tour="builder-plan" class="scroll-mt-24 min-h-0 min-w-0 lg:flex-[5] lg:min-w-[300px] ${mobileActiveView === 'preview' ? 'flex flex-1' : 'hidden lg:flex'}">
               <div class="relative w-full flex flex-col h-full bg-neutral-900 border border-neutral-800 ring-1 ring-white/[0.02] rounded-2xl max-lg:rounded-t-none overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]">
-                <!-- Plan Header -->
-                <div class="flex-shrink-0 flex flex-col gap-y-2 px-3.5 py-3 border-b border-neutral-800/80">
+                <div class="flex-shrink-0 flex flex-col gap-y-2 px-3 sm:px-5 py-3 border-b border-neutral-800/80">
                   <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0 flex-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" class="w-4 h-4 text-neutral-400 shrink-0"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
-                      <span class="text-[14px] font-semibold text-white truncate">Server & IDs</span>
-                      <span class="text-[11.5px] text-neutral-500 tabular-nums truncate">
-                        ${totalChannels} Kanäle · ${totalRoles} Rollen
-                      </span>
+                      <div class="flex items-center gap-2 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text w-4 h-4 text-neutral-400"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
+                        <span class="text-[15px] font-medium text-white">Planen</span>
+                      </div>
+                      <span class="text-neutral-700 hidden xl:inline">·</span>
+                      <span class="hidden xl:inline text-[13px] tabular-nums truncate"><span class="text-neutral-200 font-semibold">${totalChannels}</span><span class="text-neutral-600"> Kanäle · </span><span class="text-neutral-200 font-semibold">${totalRoles}</span><span class="text-neutral-600"> Rollen</span><span class="text-neutral-600"> · </span><span class="text-neutral-200 font-semibold">${totalCategories}</span><span class="text-neutral-600"> Kategorien</span></span>
+                      <span class="xl:hidden text-[12.5px] tabular-nums truncate"><span class="text-neutral-200 font-semibold">${totalChannels}</span><span class="text-neutral-600"> ch</span><span class="text-neutral-700"> · </span><span class="text-neutral-200 font-semibold">${totalRoles}</span><span class="text-neutral-600"> r</span><span class="text-neutral-700"> · </span><span class="text-neutral-200 font-semibold">${totalCategories}</span><span class="text-neutral-600"> Katze</span></span>
                     </div>
                     <div class="flex items-center gap-1.5 flex-shrink-0">
-                      <button type="button" data-copy-id="${escapeHtml(guildId)}" data-copy-label="Server" class="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10.5px] font-mono text-neutral-300 hover:text-white border border-neutral-700 transition-colors cursor-pointer" title="Server-ID kopieren (${escapeHtml(guildId)})">
-                        Server-ID
+                      <button type="button" id="ai-refresh-plan-btn" class="p-2.5 sm:p-1.5 rounded-lg text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04] transition-colors disabled:opacity-40" title="Setzen Sie den Plan auf den Live-Serverstatus zurück">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-3.5 h-3.5 "><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
                       </button>
-                      <button type="button" id="ai-refresh-plan-btn" class="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04] transition-colors cursor-pointer" title="Live-Serverstatus aktualisieren">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
-                      </button>
-                      <button type="button" id="ai-apply-all-btn" ${hasPending && !isApplying ? '' : 'disabled'} class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11.5px] font-semibold transition-all ${
+                      <button type="button" id="ai-apply-all-btn" ${hasPending && !isApplying ? '' : 'disabled=""'} class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-[color,background-color,transform] duration-150 ease-out ${
                         hasPending && !isApplying
-                          ? 'bg-white text-black hover:bg-neutral-200 active:scale-[0.97] cursor-pointer shadow-sm'
+                          ? 'bg-white text-black hover:bg-neutral-200 active:scale-[0.97] cursor-pointer'
                           : 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
-                      }" title="${hasPending ? 'Ausstehende Änderungen jetzt anwenden' : 'Keine ausstehenden Änderungen'}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3 h-3"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path></svg>
-                        ${isApplying ? 'Baut…' : (hasPending ? `Bauen (${pendingActions.length})` : 'Bauen')}
+                      }" title="${hasPending ? 'Ausstehende Änderungen anwenden' : 'Es sind keine ausstehenden Änderungen anzuwenden'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket w-3 h-3"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>${isApplying ? 'Baut…' : 'Bauen'}
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <!-- Plan Sub-Tabs (Kanäle | Rollen | Merkmale) + Filter -->
-                <div class="flex-shrink-0 px-2.5 pt-2.5 pb-2 border-b border-neutral-800/80 space-y-2">
-                  <div class="relative flex items-center gap-1 min-w-0">
-                    <button type="button" data-plan-tab="channels" class="relative flex-1 px-2.5 py-1.5 rounded-lg text-[12.5px] font-semibold transition-colors cursor-pointer ${planTab === 'channels' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'}">
-                      <span class="inline-flex items-center justify-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
-                        Kanäle
+                <!-- Sub-Tabs (Kanäle | Rollen | Merkmale) -->
+                <div class="flex-shrink-0 flex items-center gap-2 px-2.5 pt-3 pb-2 border-b border-neutral-800/80">
+                  <div class="relative flex items-center gap-0.5 min-w-0">
+                    <button type="button" data-plan-tab="channels" class="relative flex-shrink-0 px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-lg text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                      ${planTab === 'channels' ? '<span class="absolute inset-0 rounded-lg bg-white shadow-[0_2px_8px_-2px_rgba(255,255,255,0.18)]" style="opacity: 1;"></span>' : ''}
+                      <span class="relative z-10 inline-flex items-center gap-1.5 ${planTab === 'channels' ? 'text-black' : 'text-neutral-400 hover:text-white'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-4 h-4"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>Kanäle
                       </span>
                     </button>
-                    <button type="button" data-plan-tab="roles" class="relative flex-1 px-2.5 py-1.5 rounded-lg text-[12.5px] font-semibold transition-colors cursor-pointer ${planTab === 'roles' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'}">
-                      <span class="inline-flex items-center justify-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-                        Rollen
+                    <button type="button" data-plan-tab="roles" data-tour="builder-roles-tab" class="relative flex-shrink-0 px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-lg text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                      ${planTab === 'roles' ? '<span class="absolute inset-0 rounded-lg bg-white shadow-[0_2px_8px_-2px_rgba(255,255,255,0.18)]" style="opacity: 1;"></span>' : ''}
+                      <span class="relative z-10 inline-flex items-center gap-1.5 ${planTab === 'roles' ? 'text-black' : 'text-neutral-400 hover:text-white'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Rollen
                       </span>
                     </button>
-                    <button type="button" data-plan-tab="features" class="relative flex-1 px-2.5 py-1.5 rounded-lg text-[12.5px] font-semibold transition-colors cursor-pointer ${planTab === 'features' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'}">
-                      <span class="inline-flex items-center justify-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
-                        Merkmale
+                    <button type="button" data-plan-tab="features" aria-label="Merkmale" data-tour="builder-features-tab" class="relative flex-shrink-0 px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-lg text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 hover:bg-white/[0.05]">
+                      ${planTab === 'features' ? '<span class="absolute inset-0 rounded-lg bg-white shadow-[0_2px_8px_-2px_rgba(255,255,255,0.18)]" style="opacity: 1;"></span>' : ''}
+                      <span class="relative z-10 inline-flex items-center gap-1.5 ${planTab === 'features' ? 'text-black' : 'text-neutral-400 hover:text-white'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>Merkmale
                       </span>
                     </button>
                   </div>
-                  ${planTab !== 'features' ? `
-                    <div class="relative">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class=" absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                      <input id="ai-plan-search-input" type="text" value="${escapeHtml(planSearchQuery)}" placeholder="${planTab === 'roles' ? 'Rolle oder ID suchen…' : 'Kanal oder ID suchen…'}" class="w-full h-8 pl-8 pr-3 rounded-lg bg-white/[0.03] border border-white/[0.06] text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/[0.15]">
-                    </div>
-                  ` : ''}
                 </div>
 
-                <!-- Plan Body -->
-                <div class="flex-1 overflow-hidden relative bg-neutral-900">
+                <!-- Plan Content Body -->
+                <div class="flex-1 overflow-hidden relative bg-white dark:bg-neutral-900">
                   ${renderPlanContentHtml()}
                 </div>
 
                 <!-- Plan Footer -->
-                <div class="flex-shrink-0 flex items-center justify-between px-4 py-2 border-t border-neutral-800/80 text-[11px]">
+                <div class="flex-shrink-0 flex items-center justify-between px-4 py-2.5 border-t border-neutral-800/80 text-[11px]">
                   ${hasPending ? `
                     <span class="inline-flex items-center gap-1.5 text-amber-400 font-medium">
-                      <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                      ${pendingActions.length} Änderung(en) bereit – Klicken Sie auf „Bauen“
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>${pendingActions.length} Änderung(en) ausstehend
                     </span>
                   ` : `
-                    <span class="inline-flex items-center gap-1.5 text-neutral-400">
-                      <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                      Klicke auf <strong class="text-white">ID kopieren</strong> oder <strong class="text-white">@KI</strong>
+                    <span class="inline-flex items-center gap-1.5 text-neutral-500">
+                      <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>Alles synchron – nichts ausstehend
                     </span>
                   `}
                 </div>
@@ -1211,6 +1123,7 @@ DashboardTabs.Builder = async function(container, guildId) {
     pendingAttachments = [];
     quickAddDropdownOpen = false;
     modelDropdownOpen = false;
+    openChatOptionsId = null;
 
     let tempChat = getActiveChat();
     if (!tempChat) {
@@ -1335,9 +1248,9 @@ DashboardTabs.Builder = async function(container, guildId) {
         const hasContent = (textarea.value.trim().length > 0 || pendingAttachments.length > 0) && !isSending;
         sendBtn.disabled = !hasContent;
         if (hasContent) {
-          sendBtn.className = 'relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,box-shadow,transform] bg-white text-black hover:bg-neutral-200 cursor-pointer shadow-sm';
+          sendBtn.className = "relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,box-shadow,transform] before:absolute before:inset-[-2px] before:content-[''] bg-white text-black hover:bg-neutral-200 cursor-pointer";
         } else {
-          sendBtn.className = 'relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,box-shadow,transform] bg-neutral-800 text-neutral-600 cursor-not-allowed';
+          sendBtn.className = "relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,box-shadow,transform] before:absolute before:inset-[-2px] before:content-[''] bg-neutral-800 text-neutral-600 cursor-not-allowed";
         }
       };
 
@@ -1352,7 +1265,6 @@ DashboardTabs.Builder = async function(container, guildId) {
         }
       });
 
-      // Clipboard paste support for images
       textarea.addEventListener('paste', (e) => {
         const items = e.clipboardData?.items;
         if (!items) return;
@@ -1376,7 +1288,6 @@ DashboardTabs.Builder = async function(container, guildId) {
       });
     }
 
-    // Drag and drop files/images onto prompt box
     const dropzone = document.getElementById('ai-prompt-dropzone');
     if (dropzone) {
       dropzone.addEventListener('dragover', (e) => {
@@ -1395,409 +1306,404 @@ DashboardTabs.Builder = async function(container, guildId) {
       });
     }
 
-    // Upload triggers in (+) menu
     const imgUploadBtn = document.getElementById('ai-trigger-image-upload');
     const fileUploadBtn = document.getElementById('ai-trigger-file-upload');
     const imgInput = document.getElementById('ai-upload-image-input');
     const fileInput = document.getElementById('ai-upload-file-input');
 
     if (imgUploadBtn && imgInput) {
-      imgUploadBtn.onclick = (e) => {
+      imgUploadBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         imgInput.click();
-      };
-      imgInput.onchange = (e) => {
-        if (e.target.files?.length) handleFilesSelected(e.target.files);
-      };
+      });
+      imgInput.addEventListener('change', () => {
+        if (imgInput.files?.length) handleFilesSelected(imgInput.files);
+      });
     }
 
     if (fileUploadBtn && fileInput) {
-      fileUploadBtn.onclick = (e) => {
+      fileUploadBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         fileInput.click();
-      };
-      fileInput.onchange = (e) => {
-        if (e.target.files?.length) handleFilesSelected(e.target.files);
-      };
+      });
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files?.length) handleFilesSelected(fileInput.files);
+      });
     }
 
-    // Remove attachment chip
     container.querySelectorAll('[data-remove-attachment]').forEach(btn => {
-      btn.onclick = (e) => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const idx = parseInt(btn.getAttribute('data-remove-attachment'), 10);
-        if (!isNaN(idx)) {
+        const idx = Number(btn.getAttribute('data-remove-attachment'));
+        if (!Number.isNaN(idx)) {
           pendingAttachments.splice(idx, 1);
           render();
         }
-      };
+      });
     });
 
-    // Copy Channel / Role / Category / Server ID buttons
     container.querySelectorAll('[data-copy-id]').forEach(btn => {
-      btn.onclick = (e) => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const idVal = btn.getAttribute('data-copy-id');
-        const lblVal = btn.getAttribute('data-copy-label') || '';
-        copyIdToClipboard(idVal, lblVal, btn);
-      };
+        const labelVal = btn.getAttribute('data-copy-label') || '';
+        copyIdToClipboard(idVal, labelVal, btn);
+      });
     });
 
-    // Search filter inside right Planen pane
-    const planSearchInput = document.getElementById('ai-plan-search-input');
-    if (planSearchInput) {
-      planSearchInput.oninput = (e) => {
-        planSearchQuery = e.target.value || '';
-        const pos = planSearchInput.selectionStart;
-        render();
-        const nextInp = document.getElementById('ai-plan-search-input');
-        if (nextInp) {
-          nextInp.focus();
-          if (typeof pos === 'number') nextInp.setSelectionRange(pos, pos);
-        }
-      };
-    }
-
-    // Sidebar collapse / expand
-    const collapseBtn = document.getElementById('ai-collapse-sidebar-btn');
-    if (collapseBtn) {
-      collapseBtn.onclick = () => {
-        leftSidebarCollapsed = true;
-        render();
-      };
-    }
-    const expandBtn = document.getElementById('ai-expand-sidebar-btn');
-    if (expandBtn) {
-      expandBtn.onclick = () => {
-        leftSidebarCollapsed = false;
-        render();
-      };
-    }
-
-    // Mobile drawer open/close
-    const openMobileDrawer = document.getElementById('ai-open-mobile-drawer');
-    if (openMobileDrawer) {
-      openMobileDrawer.onclick = () => {
-        mobileChatDrawerOpen = true;
-        render();
-      };
-    }
-    const closeMobileDrawer = document.getElementById('ai-close-mobile-drawer');
-    const mobileBackdrop = document.getElementById('ai-mobile-drawer-backdrop');
-    if (closeMobileDrawer) {
-      closeMobileDrawer.onclick = () => {
-        mobileChatDrawerOpen = false;
-        render();
-      };
-    }
-    if (mobileBackdrop) {
-      mobileBackdrop.onclick = () => {
-        mobileChatDrawerOpen = false;
-        render();
-      };
-    }
-
-    // Mobile view switch (Chatten | Vorschau)
-    container.querySelectorAll('[data-mobile-view]').forEach(btn => {
-      btn.onclick = () => {
-        mobileActiveView = btn.getAttribute('data-mobile-view') || 'chat';
-        render();
-      };
-    });
-
-    // New Chat buttons
     container.querySelectorAll('[data-action="new-chat"]').forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         activeChatId = null;
-        pendingActions = [];
+        draftInputText = '';
+        pendingAttachments = [];
         mobileChatDrawerOpen = false;
+        openChatOptionsId = null;
         saveLocalChats(chats, null);
         render();
-      };
+      });
     });
 
-    // Select Chat from history
+    container.querySelectorAll('[data-action="clear-all-chats"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        chats = [];
+        activeChatId = null;
+        openChatOptionsId = null;
+        saveLocalChats([], null);
+        try {
+          await API.deleteAIHelperChat(guildId, 'all');
+        } catch (_) {}
+        render();
+        if (window.Toast) window.Toast.success('Alle Chats gelöscht');
+      });
+    });
+
     container.querySelectorAll('[data-select-chat]').forEach(el => {
-      el.onclick = (e) => {
-        if (e.target.closest('[data-delete-chat]')) return;
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('[data-chat-options]') || e.target.closest('[data-delete-chat]') || e.target.closest('[data-rename-chat]')) return;
         activeChatId = el.getAttribute('data-select-chat');
         mobileChatDrawerOpen = false;
+        openChatOptionsId = null;
         saveLocalChats(chats, activeChatId);
+        render();
+      });
+    });
 
-        const c = getActiveChat();
-        pendingActions = [];
-        if (c && Array.isArray(c.messages)) {
-          for (const m of c.messages) {
-            if (Array.isArray(m.actions)) {
-              for (const act of m.actions) {
-                if (act.id && !appliedActionIds.has(act.id)) {
-                  pendingActions.push(act);
-                }
-              }
-            }
+    container.querySelectorAll('[data-chat-options]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cid = btn.getAttribute('data-chat-options');
+        openChatOptionsId = (openChatOptionsId === cid) ? null : cid;
+        render();
+      });
+    });
+
+    container.querySelectorAll('[data-rename-chat]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cid = btn.getAttribute('data-rename-chat');
+        const target = chats.find(c => c.id === cid);
+        openChatOptionsId = null;
+        if (target) {
+          const nextTitle = window.prompt('Chat umbenennen:', target.title || 'Neuer Chat');
+          if (nextTitle && nextTitle.trim()) {
+            target.title = nextTitle.trim();
+            saveLocalChats(chats, activeChatId);
           }
         }
         render();
-      };
+      });
     });
 
-    // Delete Chat from history
     container.querySelectorAll('[data-delete-chat]').forEach(btn => {
-      btn.onclick = async (e) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const cid = btn.getAttribute('data-delete-chat');
+        openChatOptionsId = null;
         if (!cid) return;
         chats = chats.filter(c => c.id !== cid);
         if (activeChatId === cid) {
-          activeChatId = chats[0]?.id || null;
-          pendingActions = [];
+          activeChatId = chats.length ? chats[0].id : null;
         }
         saveLocalChats(chats, activeChatId);
-        render();
         try {
-          await API.deleteAIHelperChat(guildId, cid);
+          if (!String(cid).startsWith('temp_')) {
+            await API.deleteAIHelperChat(guildId, cid);
+          }
         } catch (_) {}
-      };
-    });
-
-    // Search Chats
-    container.querySelectorAll('[data-chat-search]').forEach(inp => {
-      inp.oninput = (e) => {
-        chatSearchQuery = e.target.value || '';
-        const listEl = document.getElementById('ai-desktop-chat-list');
-        if (listEl) listEl.innerHTML = renderChatListItems();
-      };
-    });
-
-    // Plan sub-tabs (Kanäle | Rollen | Merkmale)
-    container.querySelectorAll('[data-plan-tab]').forEach(btn => {
-      btn.onclick = () => {
-        planTab = btn.getAttribute('data-plan-tab') || 'channels';
         render();
-      };
+      });
     });
 
-    // Close Features panel
+    container.querySelectorAll('[data-chat-search]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        chatSearchQuery = inp.value;
+        const desktopList = document.getElementById('ai-desktop-chat-list');
+        if (desktopList) desktopList.innerHTML = renderChatListItems(false);
+      });
+    });
+
+    const collapseBtn = document.getElementById('ai-collapse-sidebar-btn');
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', () => {
+        leftSidebarCollapsed = true;
+        render();
+      });
+    }
+
+    const expandBtn = document.getElementById('ai-expand-sidebar-btn');
+    if (expandBtn) {
+      expandBtn.addEventListener('click', () => {
+        leftSidebarCollapsed = false;
+        render();
+      });
+    }
+
+    const openMobileDrawer = document.getElementById('ai-open-mobile-drawer');
+    if (openMobileDrawer) {
+      openMobileDrawer.addEventListener('click', () => {
+        mobileChatDrawerOpen = true;
+        render();
+      });
+    }
+
+    const closeMobileDrawer = document.getElementById('ai-close-mobile-drawer');
+    const mobileBackdrop = document.getElementById('ai-mobile-drawer-backdrop');
+    if (closeMobileDrawer) {
+      closeMobileDrawer.addEventListener('click', () => {
+        mobileChatDrawerOpen = false;
+        render();
+      });
+    }
+    if (mobileBackdrop) {
+      mobileBackdrop.addEventListener('click', () => {
+        mobileChatDrawerOpen = false;
+        render();
+      });
+    }
+
+    container.querySelectorAll('[data-mobile-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        mobileActiveView = btn.getAttribute('data-mobile-view') || 'chat';
+        render();
+      });
+    });
+
+    container.querySelectorAll('[data-plan-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nextTab = btn.getAttribute('data-plan-tab');
+        planTab = nextTab;
+        render();
+      });
+    });
+
     container.querySelectorAll('[data-close-features]').forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         featuresPanelOpen = false;
         if (planTab === 'features') planTab = 'channels';
         render();
-      };
+      });
     });
 
-    // Feature prompt buttons inside Merkmale
+    const featuresBackdrop = document.getElementById('ai-features-sheet-backdrop');
+    if (featuresBackdrop) {
+      featuresBackdrop.addEventListener('click', () => {
+        featuresPanelOpen = false;
+        render();
+      });
+    }
+
+    container.querySelectorAll('[data-toggle-cat]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('[data-copy-id]')) return;
+        const catId = String(el.getAttribute('data-toggle-cat'));
+        if (collapsedCategories.has(catId)) {
+          collapsedCategories.delete(catId);
+        } else {
+          collapsedCategories.add(catId);
+        }
+        render();
+      });
+    });
+
+    container.querySelectorAll('[data-insert-mention]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('[data-copy-id]')) return;
+        e.stopPropagation();
+        const mention = el.getAttribute('data-insert-mention');
+        const input = document.getElementById('ai-helper-textarea');
+        if (input && mention) {
+          const prefix = input.value && !input.value.endsWith(' ') ? input.value + ' ' : (input.value || '');
+          input.value = `${prefix}${mention} `;
+          draftInputText = input.value;
+          input.focus();
+          input.dispatchEvent(new Event('input'));
+        }
+      });
+    });
+
     container.querySelectorAll('[data-feature-prompt]').forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         const promptText = btn.getAttribute('data-feature-prompt');
         if (promptText) {
+          featuresPanelOpen = false;
           mobileActiveView = 'chat';
           sendMessage(promptText);
         }
-      };
+      });
     });
 
-    // Category collapse toggle in Kanäle tree
-    container.querySelectorAll('[data-toggle-cat]').forEach(el => {
-      el.onclick = () => {
-        const cid = String(el.getAttribute('data-toggle-cat'));
-        if (collapsedCategories.has(cid)) collapsedCategories.delete(cid);
-        else collapsedCategories.add(cid);
-        render();
-      };
-    });
-
-    // Click channel or role (@KI) in Planen pane to insert mention + ID into prompt
-    container.querySelectorAll('[data-insert-mention]').forEach(el => {
-      el.onclick = (e) => {
+    const quickAddBtn = document.getElementById('ai-quick-add-btn');
+    if (quickAddBtn) {
+      quickAddBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const mention = el.getAttribute('data-insert-mention');
-        const ta = document.getElementById('ai-helper-textarea');
-        if (ta && mention) {
-          const prefix = ta.value && !ta.value.endsWith(' ') ? ' ' : '';
-          ta.value = ta.value + prefix + mention + ' ';
-          draftInputText = ta.value;
-          ta.dispatchEvent(new Event('input'));
-          ta.focus();
-          if (window.Toast) {
-            window.Toast.info(`${mention} in den Chat eingefügt`);
-          }
-        }
-      };
-    });
+        quickAddDropdownOpen = !quickAddDropdownOpen;
+        modelDropdownOpen = false;
+        historyDropdownOpen = false;
+        openChatOptionsId = null;
+        render();
+      });
+    }
 
-    // Model selector dropdown
-    const modelBtn = document.getElementById('ai-model-picker-btn');
-    if (modelBtn) {
-      modelBtn.onclick = (e) => {
+    const modelPickerBtn = document.getElementById('ai-model-picker-btn');
+    if (modelPickerBtn) {
+      modelPickerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         modelDropdownOpen = !modelDropdownOpen;
         quickAddDropdownOpen = false;
         historyDropdownOpen = false;
+        openChatOptionsId = null;
         render();
-      };
+      });
     }
+
     container.querySelectorAll('[data-select-model]').forEach(btn => {
-      btn.onclick = (e) => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
         selectedModel = btn.getAttribute('data-select-model') || 'openai/gpt-oss-120b';
         selectedModelLabel = btn.getAttribute('data-select-model-label') || 'Onyx V1';
         modelDropdownOpen = false;
         render();
-      };
+      });
     });
 
-    // Quick add (+) button
-    const quickAddBtn = document.getElementById('ai-quick-add-btn');
-    if (quickAddBtn) {
-      quickAddBtn.onclick = (e) => {
-        e.stopPropagation();
-        quickAddDropdownOpen = !quickAddDropdownOpen;
-        modelDropdownOpen = false;
-        historyDropdownOpen = false;
-        render();
-      };
-    }
-    container.querySelectorAll('[data-quick-prompt]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const p = btn.getAttribute('data-quick-prompt');
-        quickAddDropdownOpen = false;
-        if (p) sendMessage(p);
-      };
-    });
-
-    // History popover
-    const histBtn = document.getElementById('ai-history-btn');
-    if (histBtn) {
-      histBtn.onclick = (e) => {
+    const historyBtn = document.getElementById('ai-history-btn');
+    if (historyBtn) {
+      historyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         historyDropdownOpen = !historyDropdownOpen;
         modelDropdownOpen = false;
         quickAddDropdownOpen = false;
+        openChatOptionsId = null;
         render();
-      };
+      });
     }
 
-    // Apply All (Bauen) button
     const applyAllBtn = document.getElementById('ai-apply-all-btn');
     if (applyAllBtn) {
-      applyAllBtn.onclick = () => {
-        if (pendingActions.length > 0) {
+      applyAllBtn.addEventListener('click', () => {
+        if (pendingActions.length > 0 && !isApplying) {
           applyActions([...pendingActions]);
         }
-      };
+      });
     }
 
-    // Apply single action from chat card
     container.querySelectorAll('[data-apply-single]').forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         const actId = btn.getAttribute('data-apply-single');
         const activeChat = getActiveChat();
-        let targetAct = pendingActions.find(a => a.id === actId);
-        if (!targetAct && activeChat && Array.isArray(activeChat.messages)) {
-          for (const m of activeChat.messages) {
-            if (Array.isArray(m.actions)) {
-              const found = m.actions.find(a => a.id === actId);
-              if (found) {
-                targetAct = found;
-                break;
-              }
+        let found = pendingActions.find(a => a.id === actId);
+        if (!found && activeChat) {
+          for (const m of (activeChat.messages || [])) {
+            for (const a of (m.actions || [])) {
+              if (a.id === actId) found = a;
             }
           }
         }
-        if (targetAct) {
-          applyActions([targetAct]);
+        if (found) {
+          applyActions([found]);
         }
-      };
+      });
     });
 
-    // Clear / remove pending actions
     const clearPendingBtn = document.getElementById('ai-clear-pending-btn');
     if (clearPendingBtn) {
-      clearPendingBtn.onclick = () => {
+      clearPendingBtn.addEventListener('click', () => {
         pendingActions = [];
         render();
-      };
+      });
     }
+
     container.querySelectorAll('[data-remove-pending]').forEach(btn => {
-      btn.onclick = () => {
-        const idx = parseInt(btn.getAttribute('data-remove-pending'), 10);
-        if (!isNaN(idx)) {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.getAttribute('data-remove-pending'));
+        if (!Number.isNaN(idx)) {
           pendingActions.splice(idx, 1);
           render();
         }
-      };
+      });
     });
 
-    // Refresh live server state button
-    const refreshBtn = document.getElementById('ai-refresh-plan-btn');
-    if (refreshBtn) {
-      refreshBtn.onclick = async () => {
-        pendingActions = [];
+    const refreshPlanBtn = document.getElementById('ai-refresh-plan-btn');
+    if (refreshPlanBtn) {
+      refreshPlanBtn.addEventListener('click', async () => {
         try {
           cfg = await API.getConfig(guildId);
+          render();
           if (window.Toast) window.Toast.success('Live-Serverstatus aktualisiert');
         } catch (_) {}
-        render();
-      };
+      });
     }
 
-    // Undo / Redo buttons
     const undoBtn = document.getElementById('ai-undo-btn');
     if (undoBtn) {
-      undoBtn.onclick = async () => {
+      undoBtn.addEventListener('click', async () => {
         if (!canUndo) return;
         try {
           const res = await API.undoAIHelperAction(guildId);
-          canUndo = Boolean(res.can_undo);
-          canRedo = Boolean(res.can_redo);
-          cfg = await API.getConfig(guildId);
-          if (window.Toast) window.Toast.success('Änderung rückgängig gemacht');
-          render();
+          if (res) {
+            canUndo = Boolean(res.can_undo);
+            canRedo = Boolean(res.can_redo);
+            if (Array.isArray(res.action_history)) actionHistory = res.action_history;
+            cfg = await API.getConfig(guildId).catch(() => cfg);
+            render();
+            if (window.Toast) window.Toast.info('Letzte Aktion rückgängig gemacht');
+          }
         } catch (err) {
-          if (window.Toast) window.Toast.error(err.message || 'Fehler beim Rückgängigmachen');
+          if (window.Toast) window.Toast.error(err.message || 'Rückgängig fehlgeschlagen');
         }
-      };
+      });
     }
 
     const redoBtn = document.getElementById('ai-redo-btn');
     if (redoBtn) {
-      redoBtn.onclick = async () => {
+      redoBtn.addEventListener('click', async () => {
         if (!canRedo) return;
         try {
           const res = await API.redoAIHelperAction(guildId);
-          canUndo = Boolean(res.can_undo);
-          canRedo = Boolean(res.can_redo);
-          cfg = await API.getConfig(guildId);
-          if (window.Toast) window.Toast.success('Änderung wiederhergestellt');
-          render();
+          if (res) {
+            canUndo = Boolean(res.can_undo);
+            canRedo = Boolean(res.can_redo);
+            if (Array.isArray(res.action_history)) actionHistory = res.action_history;
+            cfg = await API.getConfig(guildId).catch(() => cfg);
+            render();
+            if (window.Toast) window.Toast.success('Aktion wiederhergestellt');
+          }
         } catch (err) {
-          if (window.Toast) window.Toast.error(err.message || 'Fehler beim Wiederherstellen');
+          if (window.Toast) window.Toast.error(err.message || 'Wiederherstellen fehlgeschlagen');
         }
-      };
-    }
-
-    if (window.OrbitDropdownManager) {
-      window.OrbitDropdownManager.sync();
+      });
     }
   }
 
-  // Close AI Helper popovers when clicking outside
-  document.addEventListener('click', (e) => {
-    if (quickAddDropdownOpen || modelDropdownOpen || historyDropdownOpen) {
-      if (!e.target.closest('#ai-quick-add-btn, #ai-quick-add-menu, #ai-model-picker-btn, #ai-model-picker-menu, #ai-history-btn, #ai-history-menu')) {
-        quickAddDropdownOpen = false;
-        modelDropdownOpen = false;
-        historyDropdownOpen = false;
-        render();
-      }
+  document.addEventListener('click', () => {
+    if (modelDropdownOpen || historyDropdownOpen || quickAddDropdownOpen || openChatOptionsId) {
+      modelDropdownOpen = false;
+      historyDropdownOpen = false;
+      quickAddDropdownOpen = false;
+      openChatOptionsId = null;
+      render();
     }
   });
 
   render();
-};
-
-window.renderBuilderModule = function(el, guildId) {
-  return DashboardTabs.Builder(el, guildId);
 };
