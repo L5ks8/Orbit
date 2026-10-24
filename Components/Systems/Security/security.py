@@ -274,6 +274,13 @@ class SecurityModule(commands.Cog):
                 suspicious = True
                 reasons.append("No custom profile picture (Default Avatar)")
 
+            if cfg.get("default_username", False):
+                import re
+                uname = member.name.lower()
+                if re.match(r"^(user|member|discord)?[._-]?[0-9]{4,10}$", uname) or uname.startswith("user_"):
+                    suspicious = True
+                    reasons.append(f"Default/patterned username detected ('{member.name}')")
+
             if suspicious:
                 action = str(cfg.get("suspicious_action", "flag")).lower()
                 action_map = {
@@ -378,13 +385,37 @@ class SecurityModule(commands.Cog):
         if len(joins) >= threshold:
             action = str(cfg.get("action", "timeout")).lower()
             action_map = {
+                "lockdown": "Server Lockdown",
                 "timeout": "Timed Out (1 hour)",
                 "kick": "Kicked from Server",
                 "ban": "Banned from Server",
             }
             action_display = action_map.get(action, action.capitalize())
             try:
-                if action == "timeout":
+                if action == "lockdown":
+                    action_display = f"Server Lockdown (Auto-unlock in {cfg.get('auto_unlock_after', '60m')})"
+                    try:
+                        default_role = guild.default_role
+                        cur_perms = default_role.permissions
+                        if cur_perms.send_messages:
+                            await default_role.edit(permissions=discord.Permissions(cur_perms.value & ~discord.Permissions(send_messages=True).value), reason="Orbit Anti-Raid: Lockdown Triggered")
+                            unlock_sec = parse_time(cfg.get("auto_unlock_after", "60m")) or 3600
+                            async def _auto_unlock():
+                                await asyncio.sleep(unlock_sec)
+                                try:
+                                    p = guild.default_role.permissions
+                                    await guild.default_role.edit(permissions=discord.Permissions(p.value | discord.Permissions(send_messages=True).value), reason="Orbit Anti-Raid: Auto-Unlock")
+                                    log_threat(guild.id, "raid", f"Server lockdown automatically lifted after {unlock_sec // 60} minutes.")
+                                except Exception:
+                                    pass
+                            asyncio.create_task(_auto_unlock())
+                    except Exception as lock_err:
+                        print(f"[Security] Lockdown error: {lock_err}")
+                    try:
+                        await member.timeout(discord.utils.utcnow() + datetime.timedelta(hours=1), reason="Orbit Anti-Raid: Mass Join Raid")
+                    except Exception:
+                        pass
+                elif action == "timeout":
                     await member.timeout(discord.utils.utcnow() + datetime.timedelta(hours=1), reason="Orbit Anti-Raid: Mass Join Raid")
                 elif action == "kick":
                     await member.kick(reason="Orbit Anti-Raid: Mass Join Raid")

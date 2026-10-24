@@ -43,7 +43,8 @@ def load_security_config(guild_id: int) -> Dict[str, Any]:
             "rate_limit": 5,
             "action": "delete",
             "trusted_webhooks": ""
-        }
+        },
+        "threat_logs": []
     }
     try:
         data = get_config("Security", guild_id)

@@ -973,12 +973,21 @@ class ConfigMixin:
                 sec_cfg = load_security_config(guild_id)
                 new_sec = data["security"]
                 
-                if "anti_nuke" in new_sec:
-                    sec_cfg["anti_nuke"] = new_sec["anti_nuke"]
-                if "anti_raid" in new_sec:
-                    sec_cfg["anti_raid"] = new_sec["anti_raid"]
-                if "webhook_protection" in new_sec:
-                    sec_cfg["webhook_protection"] = new_sec["webhook_protection"]
+                if isinstance(new_sec, dict):
+                    if "anti_nuke" in new_sec and isinstance(new_sec["anti_nuke"], dict):
+                        if not isinstance(sec_cfg.get("anti_nuke"), dict):
+                            sec_cfg["anti_nuke"] = {}
+                        sec_cfg["anti_nuke"].update(new_sec["anti_nuke"])
+                    if "anti_raid" in new_sec and isinstance(new_sec["anti_raid"], dict):
+                        if not isinstance(sec_cfg.get("anti_raid"), dict):
+                            sec_cfg["anti_raid"] = {}
+                        sec_cfg["anti_raid"].update(new_sec["anti_raid"])
+                    if "webhook_protection" in new_sec and isinstance(new_sec["webhook_protection"], dict):
+                        if not isinstance(sec_cfg.get("webhook_protection"), dict):
+                            sec_cfg["webhook_protection"] = {}
+                        sec_cfg["webhook_protection"].update(new_sec["webhook_protection"])
+                    if "threat_logs" in new_sec and isinstance(new_sec["threat_logs"], list):
+                        sec_cfg["threat_logs"] = new_sec["threat_logs"]
                 
                 save_security_config(guild_id, sec_cfg)
 
