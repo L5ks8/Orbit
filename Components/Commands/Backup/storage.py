@@ -23,12 +23,27 @@ if MONGODB_URI:
     except Exception as e:
         print(f"Warning: Failed to connect to MongoDB for Backup Storage: {e}")
 
+def clean_doc_for_json(doc):
+    if not isinstance(doc, dict):
+        return doc
+    clean = {}
+    for k, v in doc.items():
+        if k == "_id":
+            clean[k] = str(v)
+        elif isinstance(v, dict):
+            clean[k] = clean_doc_for_json(v)
+        elif isinstance(v, list):
+            clean[k] = [clean_doc_for_json(x) if isinstance(x, dict) else x for x in v]
+        else:
+            clean[k] = v
+    return clean
+
 def get_backups(guild_id: int) -> List[Dict]:
     if backups_col is None:
         return []
     try:
         cursor = backups_col.find({"guild_id": guild_id}).sort("timestamp", pymongo.DESCENDING)
-        return list(cursor)
+        return [clean_doc_for_json(b) for b in cursor]
     except Exception as e:
         print(f"Backup Error (get_backups): {e}")
         return []
@@ -37,7 +52,8 @@ def get_backup(backup_id: str) -> Optional[Dict]:
     if backups_col is None:
         return None
     try:
-        return backups_col.find_one({"_id": backup_id})
+        b = backups_col.find_one({"_id": backup_id})
+        return clean_doc_for_json(b) if b else None
     except Exception as e:
         print(f"Backup Error (get_backup): {e}")
         return None
@@ -85,8 +101,10 @@ def get_backup_config(guild_id: int) -> Dict:
     try:
         cfg = backup_configs_col.find_one({"guild_id": guild_id})
         if cfg:
+            cfg.pop("_id", None)
             default_cfg.update(cfg)
         default_cfg["max_slots"] = MAX_BACKUPS
+        default_cfg.pop("_id", None)
         return default_cfg
     except Exception as e:
         print(f"Backup Error (get_backup_config): {e}")
@@ -98,11 +116,13 @@ def save_backup_config(guild_id: int, config_data: Dict):
     try:
         config_data["guild_id"] = guild_id
         config_data["max_slots"] = MAX_BACKUPS
+        save_data = {k: v for k, v in config_data.items() if k != "_id"}
         backup_configs_col.update_one(
             {"guild_id": guild_id},
-            {"$set": config_data},
+            {"$set": save_data},
             upsert=True
         )
+        config_data.pop("_id", None)
     except Exception as e:
         print(f"Backup Error (save_backup_config): {e}")
 
@@ -110,7 +130,7 @@ def get_all_active_backup_configs() -> List[Dict]:
     if backup_configs_col is None:
         return []
     try:
-        return list(backup_configs_col.find({"enabled": True}))
+        return [clean_doc_for_json(c) for c in backup_configs_col.find({"enabled": True})]
     except Exception as e:
         print(f"Backup Error (get_all_active_backup_configs): {e}")
         return []
@@ -123,5 +143,5 @@ def calculate_next_backup_timestamp(interval: str, from_time: int = None) -> int
         "daily": 24 * 3600,
         "weekly": 7 * 24 * 3600
     }
-    delta = interval_map.get(interval.lower(), 24 * 3600)
+    delta = interval_map.get(str(interval).lower(), 24 * 3600)
     return base + delta

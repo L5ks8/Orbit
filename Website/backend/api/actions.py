@@ -3119,6 +3119,8 @@ class ActionsMixin:
         from Components.Commands.Backup.storage import get_backups, get_backup_config, MAX_BACKUPS
         backups = get_backups(guild_id)
         config = get_backup_config(guild_id)
+        if isinstance(config, dict):
+            config.pop("_id", None)
 
         sanitized_backups = []
         for b in backups:
@@ -3271,5 +3273,7 @@ class ActionsMixin:
         else:
             cfg["next_backup"] = None
 
+        cfg.pop("_id", None)
         save_backup_config(guild_id, cfg)
+        cfg.pop("_id", None)
         return web.json_response({"success": True, "config": cfg})

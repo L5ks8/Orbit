@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from discord import app_commands
 import uuid
 import time
+import asyncio
 from datetime import datetime
 
 from Components.Commands.Backup.storage import (
@@ -14,6 +15,7 @@ from Components.Commands.Backup.storage import (
     save_backup_config,
     get_all_active_backup_configs,
     calculate_next_backup_timestamp,
+    clean_doc_for_json,
     MAX_BACKUPS
 )
 from Components.Commands.Backup._views import OverwriteBackupView, BackupListView, ConfirmLoadView
@@ -52,6 +54,7 @@ async def create_backup_data(guild: discord.Guild, name: str = None) -> dict:
             "position": ch.position,
             "type": str(ch.type),
             "category_id": ch.category.id if ch.category else None,
+            "old_id": ch.id
         }
         if isinstance(ch, discord.TextChannel):
             ch_data["topic"] = ch.topic
@@ -71,6 +74,38 @@ async def create_backup_data(guild: discord.Guild, name: str = None) -> dict:
         ch_data["overwrites"] = overwrites
         channels_data.append(ch_data)
 
+    modules_config = {}
+    try:
+        from Components.Systems.Verify._storage import load_verify_config
+        modules_config["verify"] = clean_doc_for_json(load_verify_config(guild.id))
+    except Exception:
+        pass
+
+    try:
+        from Components.Systems.Tickets._storage import load_ticket_config
+        modules_config["tickets"] = clean_doc_for_json(load_ticket_config(guild.id))
+    except Exception:
+        pass
+
+    try:
+        from Components.Systems.Automoderation.log_storage import load_log_config
+        modules_config["logs"] = clean_doc_for_json(load_log_config(guild.id))
+    except Exception:
+        pass
+
+    try:
+        from Components.Systems.WelcomeGoodbye._storage import load_welcome_config, load_goodbye_config
+        modules_config["welcome"] = clean_doc_for_json(load_welcome_config(guild.id))
+        modules_config["goodbye"] = clean_doc_for_json(load_goodbye_config(guild.id))
+    except Exception:
+        pass
+
+    try:
+        from Components.Systems.Roles._storage import load_join_roles
+        modules_config["join_roles"] = clean_doc_for_json(load_join_roles(guild.id))
+    except Exception:
+        pass
+
     backup_id = str(uuid.uuid4())
     backup_name = name or f"Backup {datetime.now().strftime('%m/%d/%Y %H:%M')}"
 
@@ -84,18 +119,19 @@ async def create_backup_data(guild: discord.Guild, name: str = None) -> dict:
         "channels": channels_data,
         "channels_count": len(channels_data),
         "roles_count": len(roles_data),
-        "members_count": guild.member_count or len(guild.members)
+        "members_count": guild.member_count or len(guild.members),
+        "modules_config": modules_config
     }
 
 async def restore_backup_data(guild: discord.Guild, backup_data: dict):
-    # Delete channels
+    # 1. Delete channels
     for ch in list(guild.channels):
         try:
             await ch.delete()
         except discord.HTTPException:
             pass
 
-    # Delete custom roles
+    # 2. Delete custom roles
     for role in list(guild.roles):
         if role.is_bot_managed() or role.is_integration() or role.is_default() or role.is_premium_subscriber():
             continue
@@ -106,8 +142,9 @@ async def restore_backup_data(guild: discord.Guild, backup_data: dict):
         except discord.HTTPException:
             pass
 
-    # Recreate roles
+    # 3. Recreate roles
     role_map = {}
+    roles_by_name = {}
     roles_data = backup_data.get("roles", [])
     for r_data in roles_data:
         try:
@@ -120,11 +157,13 @@ async def restore_backup_data(guild: discord.Guild, backup_data: dict):
                 reason="Backup restoration"
             )
             role_map[str(r_data["old_id"])] = new_role
+            roles_by_name[r_data["name"].lower().strip()] = new_role
         except discord.HTTPException:
             pass
 
-    # Recreate categories
+    # 4. Recreate categories
     category_map = {}
+    categories_by_name = {}
     categories_data = backup_data.get("categories", [])
     for cat_data in categories_data:
         try:
@@ -133,10 +172,13 @@ async def restore_backup_data(guild: discord.Guild, backup_data: dict):
                 reason="Backup restoration"
             )
             category_map[str(cat_data["old_id"])] = new_cat
+            categories_by_name[cat_data["name"].lower().strip()] = new_cat
         except discord.HTTPException:
             pass
 
-    # Recreate channels
+    # 5. Recreate channels
+    channel_map = {}
+    channels_by_name = {}
     channels_data = backup_data.get("channels", [])
     for ch_data in channels_data:
         try:
@@ -153,8 +195,9 @@ async def restore_backup_data(guild: discord.Guild, backup_data: dict):
             cat_id = ch_data.get("category_id")
             category = category_map.get(str(cat_id)) if cat_id else None
 
+            new_ch = None
             if ch_data["type"] == "text":
-                await guild.create_text_channel(
+                new_ch = await guild.create_text_channel(
                     name=ch_data["name"],
                     category=category,
                     topic=ch_data.get("topic"),
@@ -164,7 +207,7 @@ async def restore_backup_data(guild: discord.Guild, backup_data: dict):
                     reason="Backup restoration"
                 )
             elif ch_data["type"] == "voice":
-                await guild.create_voice_channel(
+                new_ch = await guild.create_voice_channel(
                     name=ch_data["name"],
                     category=category,
                     user_limit=ch_data.get("user_limit", 0),
@@ -172,14 +215,218 @@ async def restore_backup_data(guild: discord.Guild, backup_data: dict):
                     overwrites=overwrites,
                     reason="Backup restoration"
                 )
+
+            if new_ch:
+                if ch_data.get("old_id"):
+                    channel_map[str(ch_data["old_id"])] = new_ch
+                channels_by_name[ch_data["name"].lower().strip()] = new_ch
         except discord.HTTPException:
             pass
 
+    # Wait 1.5s for Discord channel and role caches to propagate
+    await asyncio.sleep(1.5)
+
+    saved_modules = backup_data.get("modules_config", {}) or {}
+
+    # 6. Reconfigure & Resend Verification System
+    try:
+        from Components.Systems.Verify._storage import load_verify_config, save_verify_config
+        v_saved = saved_modules.get("verify")
+        verify_cfg = v_saved if isinstance(v_saved, dict) else load_verify_config(guild.id)
+
+        # Match verification channel
+        v_ch = None
+        old_vch_id = str(verify_cfg.get("channel_id") or "")
+        if old_vch_id in channel_map:
+            v_ch = channel_map[old_vch_id]
+        if not v_ch:
+            v_ch = channels_by_name.get("verify") or channels_by_name.get("verification") or next((c for name, c in channels_by_name.items() if "verify" in name), None)
+
+        # Match verified and unverified roles
+        old_vrole_id = str(verify_cfg.get("role_id") or "")
+        v_role = role_map.get(old_vrole_id) or roles_by_name.get("verified") or roles_by_name.get("mitglied") or roles_by_name.get("member")
+
+        old_unvrole_id = str(verify_cfg.get("remove_role_id") or "")
+        unv_role = role_map.get(old_unvrole_id) or roles_by_name.get("unverified")
+
+        if v_ch:
+            verify_cfg["channel_id"] = str(v_ch.id)
+        if v_role:
+            verify_cfg["role_id"] = str(v_role.id)
+        if unv_role:
+            verify_cfg["remove_role_id"] = str(unv_role.id)
+
+        # Update sub-systems
+        if isinstance(verify_cfg.get("systems"), list):
+            for s in verify_cfg["systems"]:
+                if isinstance(s, dict):
+                    if str(s.get("channel_id")) in channel_map:
+                        s["channel_id"] = str(channel_map[str(s["channel_id"])].id)
+                    elif v_ch:
+                        s["channel_id"] = str(v_ch.id)
+                    if str(s.get("role_id")) in role_map:
+                        s["role_id"] = str(role_map[str(s["role_id"])].id)
+                    elif v_role:
+                        s["role_id"] = str(v_role.id)
+                    if str(s.get("remove_role_id")) in role_map:
+                        s["remove_role_id"] = str(role_map[str(s["remove_role_id"])].id)
+                    elif unv_role:
+                        s["remove_role_id"] = str(unv_role.id)
+
+        verify_cfg["enabled"] = True
+        save_verify_config(guild.id, verify_cfg)
+
+        # Automatically send verification panel message
+        if v_ch:
+            emb_title = verify_cfg.get("embed_title") or "Server Verification"
+            emb_desc = verify_cfg.get("embed_description") or "Please click the button below to verify your account and gain access to the server."
+            v_embed = discord.Embed(
+                title=emb_title,
+                description=emb_desc,
+                color=ORBIT_COLOR
+            )
+            btn_label = str(verify_cfg.get("button_label") or "Verify").strip() or "Verify"
+            v_view = discord.ui.View(timeout=None)
+            v_view.add_item(discord.ui.Button(
+                label=btn_label[:80],
+                style=discord.ButtonStyle.success,
+                custom_id="orbit:verify_start"
+            ))
+            sent_v = await v_ch.send(embed=v_embed, view=v_view)
+            verify_cfg["message_id"] = str(sent_v.id)
+            save_verify_config(guild.id, verify_cfg)
+    except Exception as e:
+        print(f"[BackupRestore] Error restoring verification system: {e}")
+
+    # 7. Reconfigure & Resend Ticket Desk
+    try:
+        from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
+        from Components.Systems.Tickets._views import PersistentTicketPanelLayout
+        t_saved = saved_modules.get("tickets")
+        ticket_cfg = t_saved if isinstance(t_saved, dict) else load_ticket_config(guild.id)
+
+        # Match panel channel
+        t_ch = None
+        old_tch_id = str(ticket_cfg.get("panel_channel_id") or "")
+        if old_tch_id in channel_map:
+            t_ch = channel_map[old_tch_id]
+        if not t_ch:
+            t_ch = channels_by_name.get("tickets") or channels_by_name.get("ticket") or channels_by_name.get("support") or next((c for name, c in channels_by_name.items() if "ticket" in name), None)
+
+        # Match category
+        old_tcat_id = str(ticket_cfg.get("category_id") or "")
+        t_cat = category_map.get(old_tcat_id) or categories_by_name.get("tickets") or categories_by_name.get("support") or next((c for name, c in categories_by_name.items() if "ticket" in name), None)
+
+        # Match support role
+        old_supp_id = str(ticket_cfg.get("support_role_id") or "")
+        supp_role = role_map.get(old_supp_id) or roles_by_name.get("support") or roles_by_name.get("staff") or roles_by_name.get("moderator")
+
+        # Match ticket log channel
+        old_tlog_id = str(ticket_cfg.get("log_channel_id") or "")
+        tlog_ch = channel_map.get(old_tlog_id) or channels_by_name.get("ticket-logs") or channels_by_name.get("mod-logs")
+
+        if t_ch:
+            ticket_cfg["panel_channel_id"] = str(t_ch.id)
+        if t_cat:
+            ticket_cfg["category_id"] = str(t_cat.id)
+        if supp_role:
+            ticket_cfg["support_role_id"] = str(supp_role.id)
+        if tlog_ch:
+            ticket_cfg["log_channel_id"] = str(tlog_ch.id)
+
+        ticket_cfg["enabled"] = True
+        save_ticket_config(guild.id, ticket_cfg)
+
+        # Automatically send ticket panel message
+        if t_ch:
+            p_title = ticket_cfg.get("panel_title") or "Support Ticket Desk"
+            p_desc = ticket_cfg.get("panel_description") or "Click the button below to open a direct support channel with our team."
+            p_instr = ticket_cfg.get("panel_instructions") or "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."
+            t_options = ticket_cfg.get("options_slots") or ticket_cfg.get("options") or []
+
+            t_view = PersistentTicketPanelLayout(
+                title=p_title,
+                description=p_desc,
+                instructions=p_instr,
+                options_slots=t_options
+            )
+            t_embed = discord.Embed(
+                title=p_title,
+                description=f"{p_desc}\n\n{p_instr}",
+                color=ORBIT_COLOR
+            )
+            await t_ch.send(embed=t_embed, view=t_view)
+    except Exception as e:
+        print(f"[BackupRestore] Error restoring ticket desk: {e}")
+
+    # 8. Reconfigure Log Channels
+    try:
+        from Components.Systems.Automoderation.log_storage import load_log_config, save_log_config
+        l_saved = saved_modules.get("logs")
+        log_cfg = l_saved if isinstance(l_saved, dict) else load_log_config(guild.id)
+        default_log_ch = channels_by_name.get("mod-logs") or channels_by_name.get("logs") or channels_by_name.get("audit-log") or next((c for name, c in channels_by_name.items() if "log" in name), None)
+
+        if isinstance(log_cfg.get("channels"), dict):
+            for cat, ch_id in list(log_cfg["channels"].items()):
+                if ch_id and str(ch_id) in channel_map:
+                    log_cfg["channels"][cat] = str(channel_map[str(ch_id)].id)
+                elif default_log_ch:
+                    log_cfg["channels"][cat] = str(default_log_ch.id)
+        save_log_config(guild.id, log_cfg)
+    except Exception as e:
+        print(f"[BackupRestore] Error restoring log channels: {e}")
+
+    # 9. Reconfigure Welcome & Goodbye
+    try:
+        from Components.Systems.WelcomeGoodbye._storage import (
+            load_welcome_config, save_welcome_config,
+            load_goodbye_config, save_goodbye_config
+        )
+        w_saved = saved_modules.get("welcome")
+        w_cfg = w_saved if isinstance(w_saved, dict) else load_welcome_config(guild.id)
+        old_wch = str(w_cfg.get("channel_id") or "")
+        new_wch = channel_map.get(old_wch) or channels_by_name.get("welcome") or channels_by_name.get("willkommen")
+        if new_wch:
+            w_cfg["channel_id"] = str(new_wch.id)
+            save_welcome_config(guild.id, w_cfg)
+
+        g_saved = saved_modules.get("goodbye")
+        g_cfg = g_saved if isinstance(g_saved, dict) else load_goodbye_config(guild.id)
+        old_gch = str(g_cfg.get("channel_id") or "")
+        new_gch = channel_map.get(old_gch) or channels_by_name.get("goodbye") or channels_by_name.get("leave")
+        if new_gch:
+            g_cfg["channel_id"] = str(new_gch.id)
+            save_goodbye_config(guild.id, g_cfg)
+    except Exception as e:
+        print(f"[BackupRestore] Error restoring welcome/goodbye: {e}")
+
+    # 10. Reconfigure Join Roles
+    try:
+        from Components.Systems.Roles._storage import load_join_roles, save_join_roles
+        j_saved = saved_modules.get("join_roles")
+        join_roles = j_saved if isinstance(j_saved, list) else load_join_roles(guild.id)
+        if isinstance(join_roles, list):
+            new_join_roles = []
+            for r_id in join_roles:
+                if str(r_id) in role_map:
+                    new_join_roles.append(str(role_map[str(r_id)].id))
+            save_join_roles(guild.id, new_join_roles)
+    except Exception as e:
+        print(f"[BackupRestore] Error restoring join roles: {e}")
+
+    # 11. Notify Server Owner
     try:
         owner = guild.owner
         if owner:
-            embed = make_embed(f"The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!", ORBIT_COLOR)
-            embed.title = "Backup Restored"
+            embed = make_embed(
+                f"The server backup **{backup_data.get('name')}** has been fully restored on **{guild.name}**!\n\n"
+                f"✅ Channels & Roles reconstructed\n"
+                f"✅ Verification System reconfigured & panel deployed\n"
+                f"✅ Support Ticket Desk reconfigured & panel deployed\n"
+                f"✅ Log channels, Welcome, Goodbye, and Join Roles updated",
+                ORBIT_COLOR
+            )
+            embed.title = "Backup Restored Successfully"
             await owner.send(embed=embed)
     except Exception:
         pass
@@ -326,7 +573,7 @@ class BackupCommand(commands.Cog):
         if not backup_data:
             return await interaction.followup.send(embed=make_embed("Backup data not found.", discord.Color.red()), ephemeral=True)
 
-        await interaction.followup.send(embed=make_embed("Starting backup restoration... This may take a few moments."), ephemeral=True)
+        await interaction.followup.send(embed=make_embed("Starting backup restoration... Channels, roles, verification, tickets, and log configs are being reconstructed."), ephemeral=True)
         await restore_backup_data(guild, backup_data)
 
 async def setup(bot: commands.Bot):
