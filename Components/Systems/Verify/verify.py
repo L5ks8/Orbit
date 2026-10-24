@@ -93,7 +93,28 @@ class VerificationCog(commands.Cog, name="Verification"):
             file_to_send = discord.File(fp=str(local_img), filename="verify_banner.png")
             embed.set_image(url="attachment://verify_banner.png")
 
-        view = PersistentVerifyLayout()
+        systems = verify_cfg.get("systems", [])
+        matched_sys = None
+        if isinstance(systems, list) and systems:
+            matched_sys = next((s for s in systems if str(s.get("channel_id")) == str(target_channel.id)), None)
+            if not matched_sys:
+                matched_sys = next((s for s in systems if s.get("id") == "default"), None)
+            if not matched_sys and systems:
+                matched_sys = systems[0]
+
+        sys_id = str(matched_sys.get("id") if matched_sys else "default")
+        btn_label = str((matched_sys.get("button_label") if matched_sys else verify_cfg.get("button_label")) or "Verify")[:80]
+        btn_style_str = str((matched_sys.get("button_style") if matched_sys else verify_cfg.get("button_style")) or "success").lower()
+        style_map = {
+            "success": discord.ButtonStyle.success,
+            "primary": discord.ButtonStyle.primary,
+            "secondary": discord.ButtonStyle.secondary,
+            "danger": discord.ButtonStyle.danger
+        }
+        btn_style = style_map.get(btn_style_str, discord.ButtonStyle.success)
+
+        view = discord.ui.View(timeout=None)
+        view.add_item(discord.ui.Button(label=btn_label, style=btn_style, custom_id=f"orbit:verify_start:{sys_id}"))
         send_kwargs = {
             "embed": embed,
             "view": view,
@@ -103,7 +124,11 @@ class VerificationCog(commands.Cog, name="Verification"):
             send_kwargs["file"] = file_to_send
 
         try:
-            await target_channel.send(**send_kwargs)
+            sent_msg = await target_channel.send(**send_kwargs)
+            if matched_sys:
+                matched_sys["message_id"] = str(sent_msg.id)
+                matched_sys["channel_id"] = str(target_channel.id)
+                matched_sys["deployed"] = True
             
             verify_cfg["channel_id"] = target_channel.id
             verify_cfg["enabled"] = True

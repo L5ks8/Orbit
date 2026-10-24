@@ -427,7 +427,7 @@ class ActionsMixin:
                 "danger": discord.ButtonStyle.danger
             }
             btn_style = style_map.get(btn_style_str, discord.ButtonStyle.success)
-            custom_id = f"orbit:verify_start:{sys_id}" if sys_id and sys_id != "default" else "orbit:verify_start"
+            custom_id = f"orbit:verify_start:{sys_id}" if sys_id else "orbit:verify_start"
 
             view = discord.ui.View(timeout=None)
             view.add_item(discord.ui.Button(label=btn_label, style=btn_style, custom_id=custom_id))
@@ -448,6 +448,10 @@ class ActionsMixin:
             if not isinstance(systems, list):
                 systems = []
 
+            raw_vtype = str(sys_payload.get("verification_type") or verify_cfg.get("verification_type") or "captcha").strip().lower()
+            if raw_vtype not in ["oneclick", "captcha", "web_captcha", "questionnaire"]:
+                raw_vtype = "captcha"
+
             updated_sys = {
                 "id": sys_id,
                 "name": str(sys_payload.get("name") or emb_title or "Verification System"),
@@ -458,7 +462,7 @@ class ActionsMixin:
                 "channel_id": str(channel.id),
                 "role_id": str(sys_payload.get("role_id") or verify_cfg.get("role_id") or ""),
                 "remove_role_id": str(sys_payload.get("remove_role_id") if "remove_role_id" in sys_payload else (verify_cfg.get("remove_role_id") or "")),
-                "verification_type": str(sys_payload.get("verification_type") or verify_cfg.get("verification_type") or "captcha"),
+                "verification_type": raw_vtype,
                 "timeout_action": str(sys_payload.get("timeout_action") or verify_cfg.get("timeout_action") or "none"),
                 "timeout_minutes": int(sys_payload.get("timeout_minutes") if "timeout_minutes" in sys_payload else (verify_cfg.get("timeout_minutes") or 0)),
                 "questionnaire_enabled": bool(sys_payload.get("questionnaire_enabled") or sys_payload.get("verification_type") == "questionnaire"),

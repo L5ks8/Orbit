@@ -186,20 +186,32 @@ async def _send_safe(interaction: discord.Interaction, **kwargs):
         pass
 
 
-def _resolve_system_config(config: dict, system_id: str = None, channel_id: int = None) -> dict:
+def _resolve_system_config(config: dict, system_id: str = None, channel_id: int = None, message_id: int = None) -> dict:
     systems = config.get("systems")
     if isinstance(systems, list) and systems:
+        # 1. Match by explicit system_id
         if system_id:
-            matched = next((s for s in systems if isinstance(s, dict) and str(s.get("id")) == str(system_id)), None)
+            matched = next((s for s in systems if isinstance(s, dict) and str(s.get("id", "")).strip().lower() == str(system_id).strip().lower()), None)
             if matched:
                 return matched
+        # 2. Match by message_id
+        if message_id:
+            matched = next((s for s in systems if isinstance(s, dict) and str(s.get("message_id", "")).strip() == str(message_id).strip()), None)
+            if matched:
+                return matched
+        # 3. Match by channel_id (prefer enabled)
         if channel_id:
-            matched = next((s for s in systems if isinstance(s, dict) and str(s.get("channel_id")) == str(channel_id) and s.get("enabled", True)), None)
+            matched = next((s for s in systems if isinstance(s, dict) and str(s.get("channel_id", "")).strip() == str(channel_id).strip() and s.get("enabled", True)), None)
+            if not matched:
+                matched = next((s for s in systems if isinstance(s, dict) and str(s.get("channel_id", "")).strip() == str(channel_id).strip()), None)
             if matched:
                 return matched
+        # 4. Fallback to active system or first system
         active = next((s for s in systems if isinstance(s, dict) and s.get("enabled", True)), None)
         if active:
             return active
+        if len(systems) > 0 and isinstance(systems[0], dict):
+            return systems[0]
     return config
 
 
@@ -213,7 +225,15 @@ async def handle_verify_interaction(interaction: discord.Interaction, system_id:
             return await _send_safe(interaction, embed=make_embed("Verification must be completed inside a server.", discord.Color.red()), ephemeral=True)
 
         raw_cfg = load_verify_config(interaction.guild.id)
-        config = _resolve_system_config(raw_cfg, system_id=system_id, channel_id=getattr(interaction.channel, "id", None))
+        msg_id = getattr(interaction.message, "id", None)
+        ch = interaction.channel
+        ch_id = getattr(ch, "id", None)
+        if hasattr(ch, "parent_id") and ch.parent_id:
+            ch_id = ch.parent_id
+        elif not ch_id and getattr(interaction, "channel_id", None):
+            ch_id = interaction.channel_id
+
+        config = _resolve_system_config(raw_cfg, system_id=system_id, channel_id=ch_id, message_id=msg_id)
 
         if not config.get("enabled", True) and not raw_cfg.get("enabled", True):
             return await _send_safe(interaction, embed=make_embed("Server verification is currently disabled.", discord.Color.red()), ephemeral=True)
@@ -235,7 +255,10 @@ async def handle_verify_interaction(interaction: discord.Interaction, system_id:
             except (ValueError, TypeError):
                 remove_role_id = None
 
-        verification_type = config.get("verification_type") or raw_cfg.get("verification_type", "captcha")
+        verification_type = str(config.get("verification_type") or raw_cfg.get("verification_type") or "captcha").strip().lower()
+        if verification_type not in ["oneclick", "captcha", "web_captcha", "questionnaire"]:
+            verification_type = "captcha"
+
         questions = config.get("questions") if isinstance(config.get("questions"), list) else (raw_cfg.get("questions") or [])
         questionnaire_enabled = bool(config.get("questionnaire_enabled") or verification_type == "questionnaire")
 

@@ -73,6 +73,17 @@ DashboardTabs.Verification = async function(container, guildId) {
       });
     }
 
+    // Ensure every system has a valid verification_type
+    systems.forEach(s => {
+      if (!s.verification_type || typeof s.verification_type !== 'string') {
+        s.verification_type = vCfg.verification_type || 'captcha';
+      }
+      s.verification_type = String(s.verification_type).toLowerCase();
+      if (!['oneclick', 'captcha', 'web_captcha', 'questionnaire'].includes(s.verification_type)) {
+        s.verification_type = 'captcha';
+      }
+    });
+
     // Modal state
     let quickSetupOpen = false;
     let quickStep = 1;
@@ -143,6 +154,35 @@ DashboardTabs.Verification = async function(container, guildId) {
       return roles.find(r => String(r.id) === String(rid)) || null;
     }
 
+    function syncEditingSystemFromDom() {
+      if (!editingSystem) return;
+      const nameIn = document.getElementById('ed-sys-name');
+      if (nameIn) editingSystem.name = nameIn.value;
+      const tMinsIn = document.getElementById('ed-timeout-mins');
+      if (tMinsIn) editingSystem.timeout_minutes = Math.max(0, parseInt(tMinsIn.value, 10) || 0);
+      const titleIn = document.getElementById('ed-embed-title');
+      if (titleIn) editingSystem.embed_title = titleIn.value;
+      const descIn = document.getElementById('ed-embed-desc');
+      if (descIn) editingSystem.embed_description = descIn.value;
+      const btnLblIn = document.getElementById('ed-btn-label');
+      if (btnLblIn) editingSystem.button_label = btnLblIn.value;
+      const colIn = document.getElementById('ed-embed-color');
+      if (colIn) editingSystem.embed_color = colIn.value;
+      const imgIn = document.getElementById('ed-embed-image');
+      if (imgIn) editingSystem.embed_image = imgIn.value;
+
+      const chInput = document.getElementById('ed-channel-select-input');
+      if (chInput && chInput.value) editingSystem.channel_id = chInput.value;
+      const vRoleInput = document.getElementById('ed-vrole-select-input');
+      if (vRoleInput && vRoleInput.value) editingSystem.role_id = vRoleInput.value;
+      const uRoleInput = document.getElementById('ed-urole-select-input');
+      if (uRoleInput) editingSystem.remove_role_id = uRoleInput.value;
+      const tActInput = document.getElementById('ed-timeout-action-select-input');
+      if (tActInput && tActInput.value) editingSystem.timeout_action = tActInput.value;
+      const btnStyleInput = document.getElementById('ed-btn-style-select-input');
+      if (btnStyleInput && btnStyleInput.value) editingSystem.button_style = btnStyleInput.value;
+    }
+
     function renderSystemCard(sys) {
       const modeInfo = MODE_META[sys.verification_type] || MODE_META.captcha;
       const isDeployed = Boolean(sys.deployed || (sys.enabled && sys.channel_id));
@@ -177,10 +217,28 @@ DashboardTabs.Verification = async function(container, guildId) {
 
             <!-- Metadata Pills -->
             <div class="flex flex-wrap items-center gap-1.5 mt-3">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium border ${modeInfo.badgeClass}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-3 h-3"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
-                ${escapeHtml(modeInfo.label)}
-              </span>
+              <!-- Interactive Mode Selector on Card -->
+              <div class="relative inline-block text-left" data-sys-mode-container="${escapeHtml(sys.id)}">
+                <button type="button" data-sys-mode-trigger="${escapeHtml(sys.id)}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border ${modeInfo.badgeClass} hover:brightness-125 transition-all cursor-pointer select-none" title="Klicken, um Verifizierungs-Methode direkt zu wechseln">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-3 h-3"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                  <span>${escapeHtml(modeInfo.label)}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-2.5 h-2.5 opacity-70"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <div id="sys-mode-menu-${escapeHtml(sys.id)}" class="hidden absolute left-0 top-full mt-1.5 z-40 w-52 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl p-1.5 space-y-1">
+                  <div class="px-2 py-1 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider border-b border-neutral-800">Methode wählen</div>
+                  ${Object.entries(MODE_META).map(([mKey, mMeta]) => `
+                    <button type="button" data-sys-set-mode="${escapeHtml(sys.id)}" data-mode-key="${mKey}" class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                      sys.verification_type === mKey ? 'bg-indigo-500/15 text-indigo-300 font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
+                    }">
+                      <div class="min-w-0 pr-2">
+                        <div class="truncate">${escapeHtml(mMeta.label)}</div>
+                        <div class="text-[10px] text-neutral-500 font-normal truncate">${escapeHtml(mMeta.desc)}</div>
+                      </div>
+                      ${sys.verification_type === mKey ? '<svg class="w-3.5 h-3.5 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"></path></svg>' : ''}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
 
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-neutral-800/80 text-neutral-300 border border-neutral-700/70">
                 ${escapeHtml(getChannelName(sys.channel_id))}
@@ -289,7 +347,8 @@ DashboardTabs.Verification = async function(container, guildId) {
                   id: 'qs-vrole-select',
                   options: roleOpts,
                   value: quickState.verifiedRoleId,
-                  placeholder: 'Rolle auswählen...'
+                  placeholder: 'Rolle auswählen...',
+                  onChange: (v) => { quickState.verifiedRoleId = v; }
                 }) : ''}
               </div>
             `}
@@ -342,7 +401,8 @@ DashboardTabs.Verification = async function(container, guildId) {
                   id: 'qs-urole-select',
                   options: roleOpts,
                   value: quickState.unverifiedRoleId,
-                  placeholder: 'Unverifizierte Rolle auswählen...'
+                  placeholder: 'Unverifizierte Rolle auswählen...',
+                  onChange: (v) => { quickState.unverifiedRoleId = v; }
                 }) : ''}
               </div>
             ` : ''}
@@ -385,7 +445,8 @@ DashboardTabs.Verification = async function(container, guildId) {
                   id: 'qs-ch-select',
                   options: channelOpts,
                   value: quickState.channelId,
-                  placeholder: 'Kanal auswählen...'
+                  placeholder: 'Kanal auswählen...',
+                  onChange: (v) => { quickState.channelId = v; }
                 }) : ''}
               </div>
             `}
@@ -598,13 +659,16 @@ DashboardTabs.Verification = async function(container, guildId) {
                     <label class="block text-xs font-medium text-neutral-300 mb-1.5">Verifizierungs-Methode</label>
                     <div class="grid grid-cols-2 gap-2">
                       ${Object.entries(MODE_META).map(([key, m]) => `
-                        <button type="button" data-ed-vtype="${key}" class="text-left p-2.5 rounded-xl border transition-all cursor-pointer ${
+                        <button type="button" data-ed-vtype="${key}" class="text-left p-3 rounded-xl border transition-all cursor-pointer ${
                           sys.verification_type === key
-                            ? 'border-indigo-500/40 bg-indigo-500/10 text-white'
+                            ? 'border-indigo-500 bg-indigo-500/10 text-white ring-1 ring-indigo-500/30'
                             : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700'
                         }">
-                          <div class="text-xs font-semibold text-white">${escapeHtml(m.label)}</div>
-                          <div class="text-[10px] text-neutral-500 mt-0.5">${escapeHtml(m.desc)}</div>
+                          <div class="text-xs font-semibold text-white flex items-center justify-between">
+                            <span>${escapeHtml(m.label)}</span>
+                            ${sys.verification_type === key ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-normal">Aktiv</span>' : ''}
+                          </div>
+                          <div class="text-[10px] text-neutral-500 mt-1 leading-snug">${escapeHtml(m.desc)}</div>
                         </button>
                       `).join('')}
                     </div>
@@ -620,7 +684,8 @@ DashboardTabs.Verification = async function(container, guildId) {
                       id: 'ed-channel-select',
                       options: channelOpts,
                       value: String(sys.channel_id || ''),
-                      placeholder: 'Kanal auswählen...'
+                      placeholder: 'Kanal auswählen...',
+                      onChange: (v) => { editingSystem.channel_id = v; }
                     }) : ''}
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -630,7 +695,8 @@ DashboardTabs.Verification = async function(container, guildId) {
                         id: 'ed-vrole-select',
                         options: roleOpts,
                         value: String(sys.role_id || ''),
-                        placeholder: 'Rolle auswählen...'
+                        placeholder: 'Rolle auswählen...',
+                        onChange: (v) => { editingSystem.role_id = v; }
                       }) : ''}
                     </div>
                     <div>
@@ -639,7 +705,8 @@ DashboardTabs.Verification = async function(container, guildId) {
                         id: 'ed-urole-select',
                         options: roleOptsWithNone,
                         value: String(sys.remove_role_id || ''),
-                        placeholder: 'Keine (Optional)'
+                        placeholder: 'Keine (Optional)',
+                        onChange: (v) => { editingSystem.remove_role_id = v; }
                       }) : ''}
                     </div>
                   </div>
@@ -659,7 +726,15 @@ DashboardTabs.Verification = async function(container, guildId) {
                           { value: 'ban', label: 'Mitglied bannen (Auto-Ban)' }
                         ],
                         value: String(sys.timeout_action || 'none'),
-                        placeholder: 'Aktion wählen...'
+                        placeholder: 'Aktion wählen...',
+                        onChange: (v) => {
+                          editingSystem.timeout_action = v;
+                          if (v !== 'none' && (!editingSystem.timeout_minutes || Number(editingSystem.timeout_minutes) <= 0)) {
+                            editingSystem.timeout_minutes = 10;
+                            const mIn = document.getElementById('ed-timeout-mins');
+                            if (mIn) mIn.value = '10';
+                          }
+                        }
                       }) : ''}
                     </div>
                     <div>
@@ -722,7 +797,14 @@ DashboardTabs.Verification = async function(container, guildId) {
                           { value: 'danger', label: 'Rot (Danger)' }
                         ],
                         value: String(sys.button_style || 'success'),
-                        placeholder: 'Stil wählen...'
+                        placeholder: 'Stil wählen...',
+                        onChange: (v) => {
+                          editingSystem.button_style = v;
+                          const prev = document.getElementById('ed-preview-btn');
+                          if (prev) {
+                            prev.className = 'inline-flex items-center justify-center px-4 py-1.5 rounded text-xs font-medium transition-colors ' + (btnColors[v] || btnColors.success);
+                          }
+                        }
                       }) : ''}
                     </div>
                   </div>
@@ -935,6 +1017,50 @@ DashboardTabs.Verification = async function(container, guildId) {
           };
         }
       });
+
+      // Mode dropdown toggle on system cards
+      container.querySelectorAll('[data-sys-mode-trigger]').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const sysId = btn.getAttribute('data-sys-mode-trigger');
+          const menu = document.getElementById(`sys-mode-menu-${sysId}`);
+          if (!menu) return;
+          const isHidden = menu.classList.contains('hidden');
+          container.querySelectorAll('[id^="sys-mode-menu-"]').forEach(m => m.classList.add('hidden'));
+          if (isHidden) menu.classList.remove('hidden');
+        };
+      });
+
+      // Mode selection buttons on system cards
+      container.querySelectorAll('[data-sys-set-mode]').forEach(btn => {
+        btn.onclick = async (e) => {
+          e.stopPropagation();
+          const sysId = btn.getAttribute('data-sys-set-mode');
+          const modeKey = btn.getAttribute('data-mode-key');
+          const sys = systems.find(s => String(s.id) === String(sysId));
+          if (!sys) return;
+          sys.verification_type = modeKey;
+          if (modeKey === 'questionnaire') {
+            sys.questionnaire_enabled = true;
+            if (!Array.isArray(sys.questions) || sys.questions.length === 0) {
+              sys.questions = [{ question: 'Do you agree to follow our server rules?', placeholder: 'Type yes', answer: '' }];
+            }
+          }
+          await persistSystems(true);
+          const meta = MODE_META[modeKey] || MODE_META.captcha;
+          if (window.Toast) Toast.success(`Modus auf "${meta.label}" gesetzt!`);
+          render();
+        };
+      });
+
+      // Hide card mode menus on outside click
+      const onDocClick = (e) => {
+        if (!e.target.closest('[data-sys-mode-container]')) {
+          container.querySelectorAll('[id^="sys-mode-menu-"]').forEach(m => m.classList.add('hidden'));
+        }
+      };
+      document.removeEventListener('click', onDocClick);
+      document.addEventListener('click', onDocClick);
 
       // Deploy / Resend buttons on system cards
       container.querySelectorAll('[data-sys-deploy]').forEach(btn => {
@@ -1233,8 +1359,10 @@ DashboardTabs.Verification = async function(container, guildId) {
 
         container.querySelectorAll('[data-ed-vtype]').forEach(btn => {
           btn.onclick = () => {
-            editingSystem.verification_type = btn.getAttribute('data-ed-vtype');
-            if (editingSystem.verification_type === 'questionnaire') {
+            syncEditingSystemFromDom();
+            const newVType = btn.getAttribute('data-ed-vtype');
+            editingSystem.verification_type = newVType;
+            if (newVType === 'questionnaire') {
               editingSystem.questionnaire_enabled = true;
               if (!Array.isArray(editingSystem.questions) || editingSystem.questions.length === 0) {
                 editingSystem.questions = [{ question: 'Do you agree to follow our server rules?', placeholder: 'Type yes', answer: '' }];
@@ -1360,14 +1488,15 @@ DashboardTabs.Verification = async function(container, guildId) {
         const saveBtn = document.getElementById('sys-editor-save');
         if (saveBtn) {
           saveBtn.onclick = async () => {
+            syncEditingSystemFromDom();
             editorSubmitting = true;
             render();
             try {
               const idx = systems.findIndex(s => String(s.id) === String(editingSystem.id));
               if (idx >= 0) {
-                systems[idx] = editingSystem;
+                systems[idx] = JSON.parse(JSON.stringify(editingSystem));
               } else {
-                systems.push(editingSystem);
+                systems.push(JSON.parse(JSON.stringify(editingSystem)));
               }
               await persistSystems(false);
               editorOpen = false;
@@ -1383,6 +1512,7 @@ DashboardTabs.Verification = async function(container, guildId) {
         const deployBtn = document.getElementById('sys-editor-deploy');
         if (deployBtn) {
           deployBtn.onclick = async () => {
+            syncEditingSystemFromDom();
             if (!editingSystem.channel_id) {
               if (window.Toast) Toast.error('Bitte wähle einen Kanal aus, in den das Panel gesendet werden soll.');
               return;

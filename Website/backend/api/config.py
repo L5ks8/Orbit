@@ -961,12 +961,22 @@ class ConfigMixin:
                 verify_cfg = load_verify_config(guild_id)
                 v_in = data.get("verify", {})
                 if isinstance(v_in.get("systems"), list):
-                    verify_cfg["systems"] = v_in["systems"]
-                    active_sys = next((s for s in v_in["systems"] if isinstance(s, dict) and s.get("enabled", True)), None)
-                    if not active_sys and v_in["systems"]:
-                        active_sys = v_in["systems"][0] if isinstance(v_in["systems"][0], dict) else None
+                    clean_systems = []
+                    for s in v_in["systems"]:
+                        if isinstance(s, dict):
+                            s_clean = dict(s)
+                            s_clean["id"] = str(s_clean.get("id") or f"sys_{secrets.token_hex(4)}")
+                            raw_v = str(s_clean.get("verification_type") or "captcha").strip().lower()
+                            if raw_v not in ["oneclick", "captcha", "web_captcha", "questionnaire"]:
+                                raw_v = "captcha"
+                            s_clean["verification_type"] = raw_v
+                            clean_systems.append(s_clean)
+                    verify_cfg["systems"] = clean_systems
+                    active_sys = next((s for s in clean_systems if s.get("enabled", True)), None)
+                    if not active_sys and clean_systems:
+                        active_sys = clean_systems[0]
                     if active_sys:
-                        verify_cfg["enabled"] = any(isinstance(s, dict) and s.get("enabled", True) for s in v_in["systems"])
+                        verify_cfg["enabled"] = any(s.get("enabled", True) for s in clean_systems)
                         vcid = active_sys.get("channel_id")
                         verify_cfg["channel_id"] = int(vcid) if (vcid and str(vcid).isdigit()) else None
                         vrid = active_sys.get("role_id")
@@ -985,7 +995,7 @@ class ConfigMixin:
                         verify_cfg["embed_image"] = active_sys.get("embed_image") or "/img/default_verify.png"
                         verify_cfg["button_label"] = active_sys.get("button_label") or "Verify"
                         verify_cfg["button_style"] = active_sys.get("button_style") or "success"
-                        verify_cfg["questionnaire_enabled"] = bool(active_sys.get("questionnaire_enabled", False))
+                        verify_cfg["questionnaire_enabled"] = bool(active_sys.get("questionnaire_enabled", False) or active_sys.get("verification_type") == "questionnaire")
                         verify_cfg["questions"] = active_sys.get("questions", []) if isinstance(active_sys.get("questions"), list) else []
                     else:
                         verify_cfg["enabled"] = False

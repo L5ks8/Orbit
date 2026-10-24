@@ -727,6 +727,22 @@ function renderErrorState(container, options = {}) {
 window.Toast = Toast;
 window.Modal = Modal;
 window.renderCustomSelect = renderCustomSelect;
+window.bindCustomSelects = function(map) {
+  if (!map || typeof map !== 'object') return;
+  Object.entries(map).forEach(([containerId, cb]) => {
+    if (typeof cb !== 'function') return;
+    const menu = document.getElementById(`${containerId}-menu`);
+    if (menu) {
+      menu.querySelectorAll('.select-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const val = item.getAttribute('data-value');
+          const lbl = item.getAttribute('data-label');
+          try { cb(val, lbl); } catch (err) { console.error('bindCustomSelects error:', err); }
+        });
+      });
+    }
+  });
+};
 window.renderToggle = renderToggle;
 window.SaveBar = SaveBar;
 window.DiscordMarkdown = DiscordMarkdown;
