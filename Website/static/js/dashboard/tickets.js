@@ -999,6 +999,27 @@ DashboardTabs.Tickets = async function (container, guildId) {
     const openTicketBuilderModal = (panelToEdit = null) => {
       const isEdit = Boolean(panelToEdit);
 
+      // Lock background scrolling while modal is open
+      const prevBodyOverflow = document.body.style.overflow;
+      const prevDocOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      if (window.lenis && typeof window.lenis.stop === 'function') {
+        window.lenis.stop();
+      }
+
+      const unlockScroll = () => {
+        document.body.style.overflow = prevBodyOverflow;
+        document.documentElement.style.overflow = prevDocOverflow;
+        if (window.lenis && typeof window.lenis.start === 'function') {
+          window.lenis.start();
+        }
+      };
+
+      const rawRoleIds = Array.isArray(panelToEdit?.role_ids)
+        ? [...panelToEdit.role_ids].map(String)
+        : (panelToEdit?.role_id ? [String(panelToEdit.role_id)] : (allRoles[0]?.id ? [String(allRoles[0].id)] : []));
+
       // Create a working copy of the panel
       const editingPanel = panelToEdit ? JSON.parse(JSON.stringify(panelToEdit)) : {
         id: `panel_${Date.now()}`,
@@ -1010,7 +1031,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
         panel_channel_id: state.panels[0]?.panel_channel_id || (allChannels[0]?.id || ''),
         log_channel_id: state.panels[0]?.log_channel_id || '',
         category_id: allCategories[0]?.id || '',
-        role_id: allRoles[0]?.id || '',
+        role_ids: rawRoleIds,
+        role_id: rawRoleIds[0] || '',
         button_label: 'Ticket öffnen',
         options: [
           {
@@ -1019,12 +1041,15 @@ DashboardTabs.Tickets = async function (container, guildId) {
             description: 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.',
             color: '#5865F2',
             category_id: allCategories[0]?.id || '',
-            role_id: allRoles[0]?.id || ''
+            role_ids: rawRoleIds.length > 0 ? [...rawRoleIds] : [],
+            role_id: rawRoleIds[0] || ''
           }
         ]
       };
 
-      // Ensure options array exists
+      if (!Array.isArray(editingPanel.role_ids)) {
+        editingPanel.role_ids = editingPanel.role_id ? [String(editingPanel.role_id)] : [];
+      }
       if (!Array.isArray(editingPanel.options) || editingPanel.options.length === 0) {
         editingPanel.options = [
           {
@@ -1033,92 +1058,144 @@ DashboardTabs.Tickets = async function (container, guildId) {
             description: 'Öffnen Sie ein Support-Ticket.',
             color: editingPanel.color || '#5865F2',
             category_id: editingPanel.category_id || '',
+            role_ids: [...editingPanel.role_ids],
             role_id: editingPanel.role_id || ''
           }
         ];
       }
+      editingPanel.options.forEach(opt => {
+        if (!Array.isArray(opt.role_ids)) {
+          opt.role_ids = opt.role_id ? [String(opt.role_id)] : [];
+        }
+      });
 
       let currentStep = 1; // 1: Grundlagen, 2: Aufstellen (Optionen), 3: Rezension
       const modalRoot = document.getElementById('tickets-modal-root');
-      if (!modalRoot) return;
+      if (!modalRoot) {
+        unlockScroll();
+        return;
+      }
+
+      const closeModal = () => {
+        unlockScroll();
+        window.removeEventListener('keydown', handleKeyDown);
+        modalRoot.innerHTML = '';
+      };
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      const syncInputsToState = () => {
+        if (currentStep === 1) {
+          const nameEl = document.getElementById('builder-input-name');
+          const titleEl = document.getElementById('builder-input-title');
+          const descEl = document.getElementById('builder-input-desc');
+          const instrEl = document.getElementById('builder-input-instr');
+          const colorEl = document.getElementById('builder-custom-color');
+          if (nameEl) editingPanel.name = nameEl.value;
+          if (titleEl) editingPanel.title = titleEl.value;
+          if (descEl) editingPanel.description = descEl.value;
+          if (instrEl) editingPanel.instructions = instrEl.value;
+          if (colorEl && colorEl.value.trim()) {
+            const raw = colorEl.value.trim();
+            editingPanel.color = raw.startsWith('#') ? raw : `#${raw}`;
+          }
+        } else if (currentStep === 2) {
+          modalRoot.querySelectorAll('[data-opt-field]').forEach(input => {
+            const fld = input.getAttribute('data-opt-field');
+            const idx = parseInt(input.getAttribute('data-opt-idx'), 10);
+            if (!isNaN(idx) && editingPanel.options[idx]) {
+              editingPanel.options[idx][fld] = input.value;
+            }
+          });
+        }
+      };
+
+      const COLOR_CARDS = [
+        { color: '#5865F2', name: 'Blurple', hex: '#5865F2' },
+        { color: '#57F287', name: 'Grün', hex: '#57F287' },
+        { color: '#248046', name: 'Smaragd', hex: '#248046' },
+        { color: '#FEE75C', name: 'Gold', hex: '#FEE75C' },
+        { color: '#ED4245', name: 'Karmesin', hex: '#ED4245' },
+        { color: '#EB459E', name: 'Fuchsia', hex: '#EB459E' },
+        { color: '#9B59B6', name: 'Violett', hex: '#9B59B6' },
+        { color: '#1ABC9C', name: 'Türkis', hex: '#1ABC9C' },
+      ];
 
       const renderModal = () => {
         const panelChannel = getChannelById(editingPanel.panel_channel_id);
         const logChannel = getChannelById(editingPanel.log_channel_id);
         const defCategory = getCategoryById(editingPanel.category_id);
-        const defRole = getRoleById(editingPanel.role_id);
 
         modalRoot.innerHTML = `
-          <div id="builder-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div class="w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh]">
+          <div id="builder-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/75 backdrop-blur-md animate-fadeIn select-none">
+            <div class="w-[96vw] max-w-[1240px] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_20px_50px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[92vh] select-text">
               
               <!-- Modal Header -->
-              <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-neutral-800 flex-shrink-0">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  <button type="button" id="modal-btn-back-header" class="grid place-items-center -ml-2 size-9 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-4 h-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+              <div class="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-neutral-800 flex-shrink-0 bg-neutral-900/90 backdrop-blur-sm">
+                <div class="flex items-center gap-2 min-w-0">
+                  <button type="button" id="modal-btn-back-header" class="grid place-items-center -ml-2 size-9 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors cursor-pointer" title="${currentStep > 1 ? 'Zurück' : 'Schließen'}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-4 h-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
                   </button>
-                  <h2 class="text-sm font-semibold text-white truncate text-balance">
-                    ${isEdit ? `Ticket-Typ bearbeiten – ${escapeHtml(editingPanel.name)}` : 'Neu – Prüfung'}
-                  </h2>
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style="background-color: ${editingPanel.color || '#5865F2'};"></div>
+                    <h2 class="text-sm font-semibold text-white truncate">
+                      ${isEdit ? `Ticket-Typ bearbeiten – ${escapeHtml(editingPanel.name)}` : 'Neuer Ticket-Typ'}
+                    </h2>
+                  </div>
                 </div>
 
-                <div class="flex items-center gap-2 flex-shrink-0">
-                  <!-- Step Pills Nav -->
-                  <div class="hidden sm:flex gap-0.5 p-1 rounded-xl bg-neutral-800/50 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                    <button type="button" data-nav-step="1" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer ${currentStep === 1 ? 'text-black font-semibold' : 'text-neutral-300 hover:text-white'}">
-                      ${currentStep === 1 ? '<span class="absolute inset-0 bg-white rounded-lg shadow-[0_1px_4px_-1px_rgba(0,0,0,0.5)]"></span>' : ''}
-                      <span class="relative z-10 flex items-center gap-1.5">
-                        ${currentStep > 1 ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-400"><path d="M20 6 9 17l-5-5"></path></svg>' : ''}
-                        Grundlagen
-                      </span>
+                <div class="flex items-center gap-3 flex-shrink-0">
+                  <!-- Step Navigation Pills -->
+                  <div class="hidden sm:flex gap-1 p-1 rounded-xl bg-neutral-800/60 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+                    <button type="button" data-nav-step="1" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${currentStep === 1 ? 'text-black font-semibold bg-white shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/40'}">
+                      ${currentStep > 1 ? '<svg class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                      <span>1. Grundlagen</span>
                     </button>
 
-                    <button type="button" data-nav-step="2" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer ${currentStep === 2 ? 'text-black font-semibold' : 'text-neutral-300 hover:text-white'}">
-                      ${currentStep === 2 ? '<span class="absolute inset-0 bg-white rounded-lg shadow-[0_1px_4px_-1px_rgba(0,0,0,0.5)]"></span>' : ''}
-                      <span class="relative z-10 flex items-center gap-1.5">
-                        ${currentStep > 2 ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-400"><path d="M20 6 9 17l-5-5"></path></svg>' : ''}
-                        Aufstellen (Optionen)
-                      </span>
+                    <button type="button" data-nav-step="2" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${currentStep === 2 ? 'text-black font-semibold bg-white shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/40'}">
+                      ${currentStep > 2 ? '<svg class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                      <span>2. Optionen (${editingPanel.options.length})</span>
                     </button>
 
-                    <button type="button" data-nav-step="3" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer ${currentStep === 3 ? 'text-black font-semibold' : 'text-neutral-300 hover:text-white'}">
-                      ${currentStep === 3 ? '<span class="absolute inset-0 bg-white rounded-lg shadow-[0_1px_4px_-1px_rgba(0,0,0,0.5)]"></span>' : ''}
-                      <span class="relative z-10 flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="${currentStep === 3 ? 'text-black' : 'text-neutral-400'}"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-                        Rezension
-                      </span>
+                    <button type="button" data-nav-step="3" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${currentStep === 3 ? 'text-black font-semibold bg-white shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/40'}">
+                      <svg class="w-3.5 h-3.5 ${currentStep === 3 ? 'text-black' : 'text-neutral-400'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+                      <span>3. Rezension & Vorschau</span>
                     </button>
                   </div>
 
-                  <button type="button" id="modal-btn-close-header" class="grid place-items-center -mr-2 size-9 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                  <button type="button" id="modal-btn-close-header" class="grid place-items-center -mr-2 size-9 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors cursor-pointer" title="Schließen">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                   </button>
                 </div>
               </div>
 
               <!-- Modal Body Content -->
-              <div class="flex-1 overflow-y-auto min-h-0 p-5">
+              <div class="flex-1 overflow-y-auto min-h-0 p-5 sm:p-6" id="bld-modal-scroll-area">
                 ${renderStepContent()}
               </div>
 
               <!-- Modal Footer -->
-              <div class="flex items-center justify-between gap-3 px-5 py-3 border-t border-neutral-800 flex-shrink-0">
-                <button type="button" id="modal-btn-prev" class="flex items-center gap-1.5 h-10 -ml-2.5 pl-2.5 pr-3.5 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer ${currentStep === 1 ? 'opacity-30 pointer-events-none' : ''}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-3.5 h-3.5"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+              <div class="flex items-center justify-between gap-3 px-5 py-3.5 border-t border-neutral-800 flex-shrink-0 bg-neutral-900/90 backdrop-blur-sm">
+                <button type="button" id="modal-btn-prev" class="flex items-center gap-1.5 h-10 px-3 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors cursor-pointer ${currentStep === 1 ? 'opacity-30 pointer-events-none' : ''}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-3.5 h-3.5"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
                   Vorherige
                 </button>
 
                 <div class="flex items-center gap-3">
-                  <div class="hidden sm:flex items-center gap-2.5 h-10 px-3.5 rounded-xl bg-neutral-800/60 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
-                    <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${editingPanel.color || '#5865F2'};"></div>
-                    <span class="text-[10px] text-neutral-400 font-medium whitespace-nowrap">Kanal</span>
-                    <span class="text-[10px] text-neutral-700">/</span>
-                    <span class="text-[10px] text-neutral-500 tabular-nums whitespace-nowrap">Schritt ${currentStep}/3</span>
+                  <div class="hidden sm:flex items-center gap-2 h-10 px-3.5 rounded-xl bg-neutral-800/60 border border-neutral-700/50">
+                    <span class="w-3 h-3 rounded-md shadow-sm shrink-0" style="background-color: ${editingPanel.color || '#5865F2'};"></span>
+                    <span class="text-xs text-neutral-400 font-medium whitespace-nowrap">${editingPanel.options.length} Option${editingPanel.options.length === 1 ? '' : 'en'}</span>
+                    <span class="text-neutral-600">·</span>
+                    <span class="text-xs text-neutral-400 font-medium tabular-nums whitespace-nowrap">Schritt ${currentStep}/3</span>
                   </div>
 
-                  <button type="button" id="modal-btn-next" class="inline-flex items-center justify-center gap-2 font-semibold rounded-xl bg-white text-black hover:bg-neutral-200 px-4 py-2 text-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shadow-lg shadow-white/5">
-                    ${currentStep === 3 ? (isEdit ? 'Änderungen speichern' : 'Typ erstellen') : 'Weiter'}
+                  <button type="button" id="modal-btn-next" class="inline-flex items-center justify-center gap-2 font-semibold rounded-xl bg-white text-black hover:bg-neutral-200 px-5 py-2.5 text-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shadow-lg shadow-white/5">
+                    ${currentStep === 3 ? (isEdit ? 'Änderungen speichern' : 'Ticket-Typ erstellen') : 'Weiter zu Schritt ' + (currentStep + 1)}
                   </button>
                 </div>
               </div>
@@ -1135,76 +1212,109 @@ DashboardTabs.Tickets = async function (container, guildId) {
           const panelChannel = getChannelById(editingPanel.panel_channel_id);
           const logChannel = getChannelById(editingPanel.log_channel_id);
           const defCategory = getCategoryById(editingPanel.category_id);
-          const defRole = getRoleById(editingPanel.role_id);
 
           return `
-            <div class="space-y-4 max-w-2xl mx-auto">
+            <div class="space-y-6 max-w-4xl mx-auto w-full py-1">
               <div>
-                <h3 class="text-sm font-semibold text-white">Grundlagen des Ticket-Typs</h3>
-                <p class="text-xs text-neutral-400 mt-0.5">Legen Sie Name, Beschreibung, Panel-Kanal und Akzentfarbe für dieses Ticket fest.</p>
+                <h3 class="text-base font-semibold text-white">Grundlagen des Ticket-Typs</h3>
+                <p class="text-xs text-neutral-400 mt-1">Legen Sie Name, Kanäle, Akzentfarbe und Standard-Support-Rollen für dieses Ticket fest.</p>
               </div>
 
               <!-- Name & Title -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Interner Name *</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Interner Name *</label>
                   <input type="text" id="builder-input-name" value="${escapeHtml(editingPanel.name)}" placeholder="z. B. Community Support Desk" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+                  <p class="text-[11px] text-neutral-500 mt-1">Wird im Dashboard und in Übersichten angezeigt.</p>
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Titel (Discord Embed) *</label>
-                  <input type="text" id="builder-input-title" value="${escapeHtml(editingPanel.title)}" placeholder="z. B. Support Ticket" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel-Titel (Discord Embed) *</label>
+                  <input type="text" id="builder-input-title" value="${escapeHtml(editingPanel.title)}" placeholder="z. B. Support Ticket Desk" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+                  <p class="text-[11px] text-neutral-500 mt-1">Wird als Überschrift der Nachricht auf Discord dargestellt.</p>
                 </div>
               </div>
 
-              <!-- Description -->
-              <div>
-                <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Beschreibung</label>
-                <input type="text" id="builder-input-desc" value="${escapeHtml(editingPanel.description)}" placeholder="z. B. Öffnen Sie ein Ticket, um mit unserem Team zu sprechen." class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+              <!-- Description & Instructions -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel-Beschreibung</label>
+                  <textarea id="builder-input-desc" rows="3" placeholder="z. B. Öffnen Sie ein Ticket, um mit unserem Team zu sprechen." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 resize-none">${escapeHtml(editingPanel.description)}</textarea>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Anweisungs-Blockquote im Discord Embed</label>
+                  <textarea id="builder-input-instr" rows="3" placeholder="> Wählen Sie die passende Kategorie unten aus..." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 resize-none">${escapeHtml(editingPanel.instructions)}</textarea>
+                </div>
               </div>
 
-              <!-- Instructions (Quote Block) -->
+              <!-- Color Selection (Prominent Color Cards/Tiles) -->
               <div>
-                <label class="block text-xs font-medium text-neutral-300 mb-1.5">Anweisungs-Blockquote im Embed</label>
-                <textarea id="builder-input-instr" rows="2" placeholder="> Wählen Sie die passende Kategorie unten aus..." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">${escapeHtml(editingPanel.instructions)}</textarea>
-              </div>
+                <div class="flex items-center justify-between mb-2.5">
+                  <div>
+                    <label class="block text-xs font-semibold text-white">Akzentfarbe auswählen</label>
+                    <p class="text-[11px] text-neutral-400 mt-0.5">Wählen Sie ein Farbfeld oder tragen Sie eine eigene HEX-Farbe ein.</p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-3.5 h-3.5 rounded-md shadow-sm" style="background-color: ${editingPanel.color || '#5865F2'};"></span>
+                    <span class="text-xs font-mono font-semibold text-white uppercase">${escapeHtml(editingPanel.color || '#5865F2')}</span>
+                  </div>
+                </div>
 
-              <!-- Color Palette -->
-              <div>
-                <label class="block text-xs font-medium text-neutral-300 mb-1.5">Akzentfarbe</label>
-                <div class="flex items-center gap-2 flex-wrap">
-                  ${[
-                    { color: '#5865F2', label: 'Discord Blurple' },
-                    { color: '#248046', label: 'Emerald' },
-                    { color: '#F0B232', label: 'Gold' },
-                    { color: '#DA373C', label: 'Crimson' },
-                    { color: '#EB459E', label: 'Fuchsia' },
-                    { color: '#9B59B6', label: 'Purple' },
-                    { color: '#1ABC9C', label: 'Teal' }
-                  ].map(c => `
-                    <button type="button" data-builder-color="${c.color}" class="size-8 rounded-xl border-2 transition-transform active:scale-95 flex items-center justify-center cursor-pointer ${editingPanel.color === c.color ? 'border-white scale-110 shadow-md' : 'border-transparent hover:border-neutral-500'}" style="background-color: ${c.color};" title="${c.label}">
-                      ${editingPanel.color === c.color ? '<svg class="w-4 h-4 text-white drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
-                    </button>
-                  `).join('')}
-                  <input type="text" id="builder-custom-color" value="${escapeHtml(editingPanel.color)}" placeholder="#5865F2" class="w-24 h-8 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white uppercase text-center font-mono">
+                <!-- 8 Color Preset Fields -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5">
+                  ${COLOR_CARDS.map(c => {
+                    const isSelected = (editingPanel.color || '').toLowerCase() === c.color.toLowerCase();
+                    return `
+                      <button type="button" data-builder-color="${c.color}" class="group relative p-2.5 rounded-xl border flex flex-col items-start gap-1.5 transition-all duration-150 cursor-pointer ${isSelected ? 'border-white bg-neutral-800 ring-2 ring-white/20 shadow-md' : 'border-neutral-800 bg-neutral-800/40 hover:border-neutral-700 hover:bg-neutral-800/80'}">
+                        <div class="flex items-center justify-between w-full">
+                          <span class="w-6 h-6 rounded-lg shadow-inner flex items-center justify-center shrink-0 border border-white/10" style="background-color: ${c.color};">
+                            ${isSelected ? '<svg class="w-3.5 h-3.5 text-white drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                          </span>
+                          ${isSelected ? '<span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Aktiv</span>' : ''}
+                        </div>
+                        <div class="min-w-0 w-full text-left">
+                          <p class="text-xs font-semibold text-white truncate">${c.name}</p>
+                          <p class="text-[10px] text-neutral-500 font-mono truncate uppercase">${c.hex}</p>
+                        </div>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+
+                <!-- Custom Color Field / Tile -->
+                <div class="mt-2.5 p-3 rounded-xl bg-neutral-800/40 border border-neutral-800 flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="relative w-9 h-9 rounded-xl overflow-hidden border border-neutral-700 shadow-inner shrink-0 flex items-center justify-center cursor-pointer" style="background-color: ${editingPanel.color || '#5865F2'};">
+                      <input type="color" id="builder-native-color-picker" value="${editingPanel.color && editingPanel.color.startsWith('#') && editingPanel.color.length === 7 ? editingPanel.color : '#5865F2'}" class="absolute -inset-2 w-16 h-16 opacity-0 cursor-pointer">
+                      <svg class="w-4 h-4 text-white drop-shadow pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 4-3 3 8 8 3-3-8-8Z"/><path d="m3 21 8-8"/><path d="m14 7 3 3"/></svg>
+                    </div>
+                    <div>
+                      <p class="text-xs font-semibold text-white">Eigene Hex-Farbe</p>
+                      <p class="text-[11px] text-neutral-400">Farbe per Picker anklicken oder HEX-Wert direkt eingeben.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <span class="text-xs text-neutral-500 font-mono">#</span>
+                    <input type="text" id="builder-custom-color" value="${(editingPanel.color || '#5865F2').replace(/^#/, '')}" placeholder="5865F2" maxlength="7" class="w-24 h-9 px-2 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white uppercase text-center font-mono focus:outline-none focus:border-neutral-500">
+                  </div>
                 </div>
               </div>
 
               <!-- Channels Row (Panel Channel & Log Channel) -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <!-- Panel Channel Dropdown -->
                 <div class="relative">
-                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Kanal (Hier wird das Ticket gepostet) *</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel-Kanal (Hier wird das Ticket gepostet) *</label>
                   <button type="button" id="bld-dd-panel-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
                     <span id="bld-dd-panel-ch-label" class="min-w-0 truncate ${panelChannel ? 'text-white font-medium' : 'text-neutral-500'}">
                       ${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kanal auswählen...'}
                     </span>
                     <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                   </button>
-                  <div id="bld-dd-panel-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
-                    <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                      <div class="relative w-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                        <input type="text" id="bld-search-panel-ch" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                  <div id="bld-dd-panel-ch-menu" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                    <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
+                      <div class="relative">
+                        <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="bld-search-panel-ch" placeholder="Kanal suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                       </div>
                     </div>
                     <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-panel-ch">
@@ -1219,18 +1329,18 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <!-- Log Channel Dropdown -->
                 <div class="relative">
-                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Mitarbeiter-/Log-Kanal</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Mitarbeiter-/Log-Kanal</label>
                   <button type="button" id="bld-dd-log-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
                     <span id="bld-dd-log-ch-label" class="min-w-0 truncate ${logChannel ? 'text-white font-medium' : 'text-neutral-500'}">
                       ${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}
                     </span>
                     <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                   </button>
-                  <div id="bld-dd-log-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
-                    <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                      <div class="relative w-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                        <input type="text" id="bld-search-log-ch" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                  <div id="bld-dd-log-ch-menu" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                    <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
+                      <div class="relative">
+                        <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="bld-search-log-ch" placeholder="Kanal suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                       </div>
                     </div>
                     <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-log-ch">
@@ -1245,22 +1355,22 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 </div>
               </div>
 
-              <!-- Default Category & Support Role -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <!-- Default Category & Multi-Role Support -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <!-- Category Dropdown -->
                 <div class="relative">
-                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Standard-Kategorie für geöffnete Tickets</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Standard-Kategorie für geöffnete Tickets</label>
                   <button type="button" id="bld-dd-cat-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
                     <span id="bld-dd-cat-label" class="min-w-0 truncate ${defCategory ? 'text-white font-medium' : 'text-neutral-500'}">
                       ${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatische Kategorie'}
                     </span>
                     <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                   </button>
-                  <div id="bld-dd-cat-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
-                    <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                      <div class="relative w-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                        <input type="text" id="bld-search-cat" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                  <div id="bld-dd-cat-menu" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                    <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
+                      <div class="relative">
+                        <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="bld-search-cat" placeholder="Kategorie suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                       </div>
                     </div>
                     <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-cat">
@@ -1274,30 +1384,50 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   </div>
                 </div>
 
-                <!-- Support Role Dropdown -->
-                <div class="relative">
-                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Standard-Support-Rolle</label>
-                  <button type="button" id="bld-dd-role-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
-                    <span id="bld-dd-role-label" class="min-w-0 truncate ${defRole ? 'text-white font-medium' : 'text-neutral-500'}">
-                      ${defRole ? `@${escapeHtml(defRole.name)}` : 'Keine Standard-Rolle'}
-                    </span>
-                    <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                  </button>
-                  <div id="bld-dd-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
-                    <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                      <div class="relative w-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                        <input type="text" id="bld-search-role" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
-                      </div>
-                    </div>
-                    <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-role">
-                      <button type="button" data-bld-role="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Keine Standard-Rolle</button>
-                      ${allRoles.map(r => `
-                        <button type="button" data-bld-role="${escapeHtml(r.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center gap-2 ${String(r.id) === String(editingPanel.role_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                <!-- Support Roles Multi-Select -->
+                <div>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Standard-Support-Rollen</label>
+                  <div class="p-2 bg-neutral-800 border border-neutral-700 rounded-xl flex flex-wrap items-center gap-1.5 min-h-[40px]">
+                    ${(editingPanel.role_ids || []).map(rid => {
+                      const r = getRoleById(rid);
+                      if (!r) return '';
+                      return `
+                        <span class="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-0.5 rounded-lg text-xs font-medium bg-neutral-900 border border-neutral-700 text-white shadow-sm">
                           <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
-                          <span class="truncate">@${escapeHtml(r.name)}</span>
-                        </button>
-                      `).join('')}
+                          <span class="truncate max-w-[140px]">@${escapeHtml(r.name)}</span>
+                          <button type="button" data-bld-del-panel-role="${escapeHtml(r.id)}" class="p-0.5 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer" title="Rolle entfernen">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                          </button>
+                        </span>
+                      `;
+                    }).join('')}
+
+                    <!-- Add Role Dropdown Button -->
+                    <div class="relative inline-block">
+                      <button type="button" id="bld-btn-add-panel-role" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-700 hover:bg-neutral-600 text-neutral-200 hover:text-white transition-colors cursor-pointer">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                        Rolle hinzufügen
+                      </button>
+
+                      <div id="bld-menu-add-panel-role" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 top-full mt-1.5 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                        <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
+                          <div class="relative">
+                            <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input type="text" id="bld-search-add-panel-role" placeholder="Rolle suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                          </div>
+                        </div>
+                        <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-add-panel-role">
+                          ${allRoles.map(r => `
+                            <button type="button" data-bld-add-panel-role-id="${escapeHtml(r.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between transition-colors ${editingPanel.role_ids.includes(String(r.id)) ? 'bg-neutral-800/80 text-emerald-400 font-medium' : 'text-neutral-300 hover:bg-neutral-800'}">
+                              <div class="flex items-center gap-2 truncate">
+                                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                                <span class="truncate">@${escapeHtml(r.name)}</span>
+                              </div>
+                              ${editingPanel.role_ids.includes(String(r.id)) ? '<svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                            </button>
+                          `).join('')}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1308,80 +1438,147 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
         // STEP 2: Aufstellen (Optionen hinzufügen)
         if (currentStep === 2) {
+          const defCategory = getCategoryById(editingPanel.category_id);
+
           return `
-            <div class="space-y-5 max-w-3xl mx-auto">
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="space-y-6 max-w-5xl mx-auto w-full py-1">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-neutral-800/30 p-4 rounded-2xl border border-neutral-800">
                 <div>
                   <h3 class="text-sm font-semibold text-white flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
                     Optionen in diesem Ticket (${editingPanel.options.length})
                   </h3>
-                  <p class="text-xs text-neutral-400 mt-0.5">
-                    Fügen Sie mehrere Auswahl-Optionen zu diesem Ticket-Panel hinzu (z. B. Support, Kauf-Hilfe, Bug Report). Jede Option kann eine eigene Support-Ping-Rolle und eine eigene Kategorie besitzen!
+                  <p class="text-xs text-neutral-400 mt-1">
+                    Fügen Sie mehrere Auswahl-Optionen zu diesem Ticket-Panel hinzu (z. B. Support, Kauf-Hilfe, Bug Report). Jede Option kann eine eigene Support-Ping-Rolle und eine eigene Ziel-Kategorie besitzen!
                   </p>
                 </div>
-                <button type="button" id="bld-btn-add-option" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all duration-150 active:scale-[0.96] shrink-0 cursor-pointer">
+                <button type="button" id="bld-btn-add-option" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all duration-150 active:scale-[0.96] shrink-0 cursor-pointer shadow-md shadow-white/5">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
                   Option hinzufügen
                 </button>
               </div>
 
               <!-- Options List Container -->
-              <div class="space-y-3" id="bld-options-container">
+              <div class="space-y-4" id="bld-options-container">
                 ${editingPanel.options.map((opt, oIdx) => {
-                  const optCat = getCategoryById(opt.category_id || editingPanel.category_id);
-                  const optRole = getRoleById(opt.role_id || editingPanel.role_id);
+                  const optCat = getCategoryById(opt.category_id);
+                  const optRoleIds = Array.isArray(opt.role_ids) ? opt.role_ids : (opt.role_id ? [opt.role_id] : []);
 
                   return `
-                    <div class="p-4 rounded-xl bg-neutral-800/40 border border-neutral-800 hover:border-neutral-700 space-y-3 transition-colors" data-bld-opt-row="${oIdx}">
-                      <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2 min-w-0">
-                          <span class="w-6 h-6 rounded-lg bg-neutral-800 border border-neutral-700/80 flex items-center justify-center text-xs font-bold text-neutral-400 tabular-nums">
-                            ${oIdx + 1}
+                    <div class="p-4 sm:p-5 rounded-2xl bg-neutral-800/40 border border-neutral-800 hover:border-neutral-700 space-y-4 transition-all" data-bld-opt-row="${oIdx}">
+                      <!-- Option Header -->
+                      <div class="flex items-center justify-between gap-2 border-b border-neutral-800/80 pb-3">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                          <span class="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-xs font-bold text-neutral-300 tabular-nums shadow-inner">
+                            #${oIdx + 1}
                           </span>
-                          <span class="text-xs font-semibold text-white truncate">${escapeHtml(opt.name || `Option ${oIdx + 1}`)}</span>
+                          <span class="text-sm font-semibold text-white truncate">${escapeHtml(opt.name || `Option ${oIdx + 1}`)}</span>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
+                        <div class="flex items-center gap-1.5 shrink-0">
+                          <button type="button" data-bld-dup-opt="${oIdx}" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" title="Option duplizieren">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                            <span class="hidden sm:inline">Duplizieren</span>
+                          </button>
                           ${editingPanel.options.length > 1 ? `
-                            <button type="button" data-bld-del-opt="${oIdx}" class="p-1 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Option entfernen">
-                              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
+                            <button type="button" data-bld-del-opt="${oIdx}" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Option entfernen">
+                              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
+                              <span class="hidden sm:inline">Entfernen</span>
                             </button>
                           ` : ''}
                         </div>
                       </div>
 
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <!-- Title & Description Fields -->
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label class="block text-[11px] font-medium text-neutral-400 mb-1">Option-Titel *</label>
-                          <input type="text" data-opt-field="name" data-opt-idx="${oIdx}" value="${escapeHtml(opt.name)}" placeholder="z. B. Allgemeiner Support" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
+                          <label class="block text-xs font-medium text-neutral-300 mb-1.5">Option-Titel *</label>
+                          <input type="text" data-opt-field="name" data-opt-idx="${oIdx}" value="${escapeHtml(opt.name)}" placeholder="z. B. Allgemeiner Support" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
                         </div>
                         <div>
-                          <label class="block text-[11px] font-medium text-neutral-400 mb-1">Kurzbeschreibung</label>
-                          <input type="text" data-opt-field="description" data-opt-idx="${oIdx}" value="${escapeHtml(opt.description)}" placeholder="z. B. Fragen zum Server..." class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
+                          <label class="block text-xs font-medium text-neutral-300 mb-1.5">Kurzbeschreibung</label>
+                          <input type="text" data-opt-field="description" data-opt-idx="${oIdx}" value="${escapeHtml(opt.description)}" placeholder="z. B. Fragen zum Server, technische Hilfe..." class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
                         </div>
                       </div>
 
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                        <!-- Ziel-Kategorie Dropdown -->
-                        <div>
-                          <label class="block text-[11px] font-medium text-neutral-400 mb-1">Ziel-Kategorie für diese Option</label>
-                          <select data-opt-field="category_id" data-opt-idx="${oIdx}" class="w-full h-9 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
-                            <option value="">Standard-Kategorie verwenden (${defCategory ? defCategory.name : 'Automatisch'})</option>
-                            ${allCategories.map(c => `
-                              <option value="${escapeHtml(c.id)}" ${String(c.id) === String(opt.category_id) ? 'selected' : ''}>📁 ${escapeHtml(c.name)}</option>
-                            `).join('')}
-                          </select>
+                      <!-- Ziel-Kategorie & Ping-Rollen Row -->
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                        <!-- Ziel-Kategorie Searchable Dropdown -->
+                        <div class="relative">
+                          <label class="block text-xs font-medium text-neutral-300 mb-1.5">Ziel-Kategorie für diese Option</label>
+                          <button type="button" id="bld-opt-cat-btn-${oIdx}" data-bld-opt-cat-idx="${oIdx}" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
+                            <span id="bld-opt-cat-label-${oIdx}" class="min-w-0 truncate ${optCat ? 'text-white font-medium' : 'text-neutral-400'}">
+                              ${optCat ? `📁 ${escapeHtml(optCat.name)}` : `Standard-Kategorie verwenden (${defCategory ? escapeHtml(defCategory.name) : 'Automatisch'})`}
+                            </span>
+                            <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                          </button>
+                          <div id="bld-opt-cat-menu-${oIdx}" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                            <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
+                              <div class="relative">
+                                <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="bld-opt-cat-search-${oIdx}" placeholder="Kategorie suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                              </div>
+                            </div>
+                            <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-opt-cat-list-${oIdx}">
+                              <button type="button" data-bld-opt-cat-val="" data-opt-idx="${oIdx}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">
+                                Standard-Kategorie verwenden (${defCategory ? escapeHtml(defCategory.name) : 'Automatisch'})
+                              </button>
+                              ${allCategories.map(c => `
+                                <button type="button" data-bld-opt-cat-val="${escapeHtml(c.id)}" data-opt-idx="${oIdx}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(opt.category_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                                  <span class="truncate">📁 ${escapeHtml(c.name)}</span>
+                                </button>
+                              `).join('')}
+                            </div>
+                          </div>
                         </div>
 
-                        <!-- Ping-Rolle Dropdown -->
+                        <!-- Support Ping-Rollen Multi-Select -->
                         <div>
-                          <label class="block text-[11px] font-medium text-neutral-400 mb-1">Support Ping-Rolle für diese Option</label>
-                          <select data-opt-field="role_id" data-opt-idx="${oIdx}" class="w-full h-9 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
-                            <option value="">Standard-Rolle verwenden (${defRole ? `@${defRole.name}` : 'Keine'})</option>
-                            ${allRoles.map(r => `
-                              <option value="${escapeHtml(r.id)}" ${String(r.id) === String(opt.role_id) ? 'selected' : ''}>@${escapeHtml(r.name)}</option>
-                            `).join('')}
-                          </select>
+                          <label class="block text-xs font-medium text-neutral-300 mb-1.5">Support Ping-Rollen für diese Option</label>
+                          <div class="p-2 bg-neutral-800 border border-neutral-700 rounded-xl flex flex-wrap items-center gap-1.5 min-h-[40px]">
+                            ${optRoleIds.length === 0 ? `
+                              <span class="text-[11px] text-neutral-400 italic py-0.5 px-1">Erbt Standard-Support-Rollen (${(editingPanel.role_ids || []).length})</span>
+                            ` : optRoleIds.map(rid => {
+                              const r = getRoleById(rid);
+                              if (!r) return '';
+                              return `
+                                <span class="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-0.5 rounded-lg text-xs font-medium bg-neutral-900 border border-neutral-700 text-white shadow-sm">
+                                  <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                                  <span class="truncate max-w-[130px]">@${escapeHtml(r.name)}</span>
+                                  <button type="button" data-bld-del-opt-role="${oIdx}:${escapeHtml(r.id)}" class="p-0.5 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer" title="Rolle entfernen">
+                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                  </button>
+                                </span>
+                              `;
+                            }).join('')}
+
+                            <!-- Add Role Button for Option -->
+                            <div class="relative inline-block">
+                              <button type="button" id="bld-opt-role-btn-${oIdx}" data-bld-opt-role-idx="${oIdx}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-700 hover:bg-neutral-600 text-neutral-200 hover:text-white transition-colors cursor-pointer">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                                Rolle hinzufügen
+                              </button>
+
+                              <div id="bld-opt-role-menu-${oIdx}" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 top-full mt-1.5 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                                <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
+                                  <div class="relative">
+                                    <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <input type="text" id="bld-opt-role-search-${oIdx}" placeholder="Rolle suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                                  </div>
+                                </div>
+                                <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-opt-role-list-${oIdx}">
+                                  ${allRoles.map(r => `
+                                    <button type="button" data-bld-opt-add-role="${oIdx}:${escapeHtml(r.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between transition-colors ${optRoleIds.includes(String(r.id)) ? 'bg-neutral-800/80 text-emerald-400 font-medium' : 'text-neutral-300 hover:bg-neutral-800'}">
+                                      <div class="flex items-center gap-2 truncate">
+                                        <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                                        <span class="truncate">@${escapeHtml(r.name)}</span>
+                                      </div>
+                                      ${optRoleIds.includes(String(r.id)) ? '<svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                                    </button>
+                                  `).join('')}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1389,9 +1586,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 }).join('')}
               </div>
 
+              <!-- Bottom Add Option Button -->
               <div class="pt-2">
-                <button type="button" id="bld-btn-add-option-bottom" class="w-full py-2.5 rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/40 text-xs font-medium text-neutral-400 hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                <button type="button" id="bld-btn-add-option-bottom" class="w-full py-3 rounded-2xl border border-dashed border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/40 text-xs font-semibold text-neutral-300 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
                   Weitere Option zu diesem Ticket hinzufügen
                 </button>
               </div>
@@ -1399,155 +1597,140 @@ DashboardTabs.Tickets = async function (container, guildId) {
           `;
         }
 
-        // STEP 3: Rezension (2-Column 1:1 PeakBot & Discord Live Preview)
+        // STEP 3: Rezension (2-Column 1:1 Discord Live Preview)
         if (currentStep === 3) {
           const panelChannel = getChannelById(editingPanel.panel_channel_id);
           const logChannel = getChannelById(editingPanel.log_channel_id);
           const defCategory = getCategoryById(editingPanel.category_id);
-          const defRole = getRoleById(editingPanel.role_id);
           const optCount = editingPanel.options.length;
 
           return `
-            <div class="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr,360px] xl:grid-cols-[1fr,420px] gap-6 w-full py-1">
               <!-- Left Column: Summary Info -->
-              <div class="space-y-4">
+              <div class="space-y-5">
                 <div>
-                  <h3 class="text-sm font-semibold text-white">Zusammenfassung & Vorschau</h3>
-                  <p class="text-xs text-neutral-400 mt-0.5">Überprüfen Sie alle Einstellungen und testen Sie das Panel vor dem Speichern.</p>
+                  <h3 class="text-base font-semibold text-white">Zusammenfassung & Vorschau</h3>
+                  <p class="text-xs text-neutral-400 mt-1">Überprüfen Sie alle Einstellungen und testen Sie das Panel vor dem Speichern.</p>
                 </div>
 
                 <!-- Panel Info Box -->
-                <div class="rounded-2xl bg-neutral-800/20 overflow-hidden shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                  <div class="flex items-center gap-3 p-3.5">
-                    <div class="grid place-items-center size-10 rounded-xl flex-shrink-0" style="background-color: ${editingPanel.color ? editingPanel.color.replace('rgb(', 'rgba(').replace(')', ', 0.125)') : 'rgba(88, 101, 242, 0.125)'};">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ticket w-5 h-5" style="color: ${editingPanel.color || '#5865F2'};"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-semibold text-white truncate">${escapeHtml(editingPanel.name)}</p>
-                      <p class="text-xs text-neutral-500 truncate">${escapeHtml(editingPanel.description || 'Keine Beschreibung')}</p>
-                    </div>
-                    <span class="flex-shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap bg-indigo-500/15 text-indigo-400">
-                      1 Ticket (${optCount} Opt.)
-                    </span>
+                <div class="rounded-2xl bg-neutral-800/40 p-4 border border-neutral-800 flex items-center gap-3.5">
+                  <div class="size-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md" style="background-color: ${editingPanel.color ? editingPanel.color.replace('rgb(', 'rgba(').replace(')', ', 0.15)') : 'rgba(88, 101, 242, 0.15)'};">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ticket" style="color: ${editingPanel.color || '#5865F2'};"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
                   </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-semibold text-white truncate">${escapeHtml(editingPanel.name)}</p>
+                      <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${editingPanel.color || '#5865F2'};"></span>
+                    </div>
+                    <p class="text-xs text-neutral-400 truncate mt-0.5">${escapeHtml(editingPanel.description || 'Keine Beschreibung')}</p>
+                  </div>
+                  <span class="flex-shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-indigo-500/15 text-indigo-400 border border-indigo-500/20">
+                    1 Ticket (${optCount} Opt.)
+                  </span>
                 </div>
 
-                <!-- 4 KPI Info Tiles -->
-                <div class="grid grid-cols-2 gap-2.5">
-                  <div class="rounded-xl px-3.5 py-2.5 bg-neutral-800/20 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                    <div class="flex items-center gap-1.5 mb-1">
-                      <span class="text-neutral-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg></span>
-                      <p class="text-[10px] text-neutral-500 uppercase tracking-wider truncate">Panel-Kanal</p>
-                    </div>
-                    <p class="text-xs truncate tabular-nums text-neutral-300 font-medium">${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kein Kanal gewählt'}</p>
+                <!-- 4 KPI Tiles -->
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
+                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Panel-Kanal</p>
+                    <p class="text-xs truncate text-neutral-200 font-medium">${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kein Kanal gewählt'}</p>
                   </div>
 
-                  <div class="rounded-xl px-3.5 py-2.5 bg-neutral-800/20 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                    <div class="flex items-center gap-1.5 mb-1">
-                      <span class="text-neutral-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path></svg></span>
-                      <p class="text-[10px] text-neutral-500 uppercase tracking-wider truncate">Mitarbeiterkanal</p>
-                    </div>
-                    <p class="text-xs truncate tabular-nums text-neutral-300 font-medium">${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}</p>
+                  <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
+                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Mitarbeiterkanal</p>
+                    <p class="text-xs truncate text-neutral-200 font-medium">${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}</p>
                   </div>
 
-                  <div class="rounded-xl px-3.5 py-2.5 bg-neutral-800/20 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                    <div class="flex items-center gap-1.5 mb-1">
-                      <span class="text-neutral-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg></span>
-                      <p class="text-[10px] text-neutral-500 uppercase tracking-wider truncate">Kategorie</p>
-                    </div>
-                    <p class="text-xs truncate tabular-nums text-neutral-300 font-medium">${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatisch'}</p>
+                  <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
+                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Standard-Kategorie</p>
+                    <p class="text-xs truncate text-neutral-200 font-medium">${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatisch'}</p>
                   </div>
 
-                  <div class="rounded-xl px-3.5 py-2.5 bg-neutral-800/20 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                    <div class="flex items-center gap-1.5 mb-1">
-                      <span class="text-neutral-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>
-                      <p class="text-[10px] text-neutral-500 uppercase tracking-wider truncate">Support-Rollen</p>
-                    </div>
-                    <p class="text-xs truncate tabular-nums text-neutral-300 font-medium">${defRole ? `@${escapeHtml(defRole.name)}` : 'Server-Standard'}</p>
+                  <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
+                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Standard-Rollen</p>
+                    <p class="text-xs truncate text-neutral-200 font-medium">
+                      ${editingPanel.role_ids && editingPanel.role_ids.length > 0 ? `${editingPanel.role_ids.length} Rolle(n)` : 'Keine Standard-Rolle'}
+                    </p>
                   </div>
                 </div>
 
                 <!-- Configured Options Summary -->
-                <div class="rounded-xl p-3 bg-neutral-800/30 border border-neutral-800 space-y-2">
-                  <div class="text-xs font-semibold text-neutral-300">Konfigurierte Optionen (${optCount}):</div>
-                  <div class="space-y-1.5">
+                <div class="rounded-2xl p-4 bg-neutral-800/30 border border-neutral-800 space-y-2.5">
+                  <div class="text-xs font-semibold text-neutral-300 flex items-center justify-between">
+                    <span>Konfigurierte Optionen (${optCount}):</span>
+                    <button type="button" data-nav-step="2" class="text-indigo-400 hover:text-indigo-300 text-xs cursor-pointer">Bearbeiten</button>
+                  </div>
+                  <div class="space-y-2">
                     ${editingPanel.options.map((opt, idx) => {
-                      const r = getRoleById(opt.role_id || editingPanel.role_id);
                       const c = getCategoryById(opt.category_id || editingPanel.category_id);
+                      const optRoles = Array.isArray(opt.role_ids) && opt.role_ids.length > 0 ? opt.role_ids : (editingPanel.role_ids || []);
                       return `
-                        <div class="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-neutral-800/50">
-                          <span class="font-medium text-white truncate">${idx + 1}. ${escapeHtml(opt.name)}</span>
-                          <div class="flex items-center gap-1.5 text-[11px] text-neutral-400 shrink-0">
-                            ${c ? `<span class="text-neutral-400">📁 ${escapeHtml(c.name)}</span>` : ''}
-                            ${r ? `<span class="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300">@${escapeHtml(r.name)}</span>` : ''}
+                        <div class="flex items-center justify-between text-xs p-3 rounded-xl bg-neutral-800/50 border border-neutral-800 gap-3">
+                          <div class="min-w-0">
+                            <span class="font-semibold text-white">${idx + 1}. ${escapeHtml(opt.name)}</span>
+                            ${opt.description ? `<p class="text-[11px] text-neutral-400 truncate mt-0.5">${escapeHtml(opt.description)}</p>` : ''}
+                          </div>
+                          <div class="flex items-center gap-1.5 text-[11px] text-neutral-400 shrink-0 flex-wrap justify-end">
+                            ${c ? `<span class="px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-700">📁 ${escapeHtml(c.name)}</span>` : ''}
+                            ${optRoles.length > 0 ? `<span class="px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 border border-indigo-500/20">${optRoles.length} Rolle(n)</span>` : ''}
                           </div>
                         </div>
                       `;
                     }).join('')}
                   </div>
                 </div>
-
-                <!-- Badges -->
-                <div class="flex flex-wrap gap-2 pt-1">
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap bg-[#5865F2] text-white">
-                    ${escapeHtml(editingPanel.button_label || 'Ticket öffnen')}
-                  </span>
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap bg-emerald-500/10 text-emerald-400 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.2)]">
-                    <svg class="w-3 h-3 mr-1 -ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>
-                    Willkommen einbetten
-                  </span>
-                </div>
               </div>
 
               <!-- Right Column: 1:1 Discord Live-Vorschau -->
-              <div class="border-l border-neutral-800/60 pl-6 hidden lg:block">
-                <div class="px-1 py-1 mb-2.5 flex items-center gap-2">
-                  <svg class="lucide lucide-eye w-3.5 h-3.5 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                  <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Panel-Vorschau</span>
+              <div class="lg:border-l border-neutral-800 lg:pl-6">
+                <div class="px-1 py-1 mb-3 flex items-center gap-2">
+                  <svg class="lucide lucide-eye w-4 h-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <span class="text-xs font-semibold text-neutral-300 uppercase tracking-wider">Discord Live-Vorschau</span>
                 </div>
 
-                <div class="rounded-xl overflow-hidden border border-neutral-700/30 shadow-2xl">
+                <div class="rounded-2xl overflow-hidden border border-neutral-700/40 shadow-2xl bg-[#313338]">
                   <!-- Channel Header -->
-                  <div class="bg-[#2f3136] px-3.5 py-2 flex items-center gap-2">
-                    <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
+                  <div class="bg-[#2b2d31] px-4 py-2.5 flex items-center gap-2 border-b border-[#1f2023]">
+                    <svg class="w-4 h-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
                     <span class="text-xs font-semibold text-white truncate">${panelChannel ? escapeHtml(panelChannel.name) : 'tickets'}</span>
                   </div>
 
                   <!-- Bot Message Content -->
-                  <div class="bg-[#313338] p-3.5 space-y-2.5 font-sans">
-                    <div class="flex gap-2.5">
-                      <div class="size-8 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-xs shrink-0 mt-0.5">
+                  <div class="p-4 space-y-3 font-sans text-neutral-200">
+                    <div class="flex gap-3">
+                      <div class="size-9 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-md">
                         <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
                       </div>
                       <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                        <div class="flex items-center gap-2 mb-1.5 flex-wrap">
                           <span class="text-xs font-semibold text-white">Orbit</span>
-                          <span class="inline-flex items-center px-1 py-px text-[9px] font-bold bg-[#5865F2] text-white rounded leading-none">BOT</span>
+                          <span class="inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold bg-[#5865F2] text-white rounded leading-none">BOT</span>
                           <span class="text-[10px] text-neutral-400">Heute um 12:00 Uhr</span>
                         </div>
 
                         <!-- Discord Embed -->
-                        <div class="border-l-[3px] rounded-r bg-[#2b2d31] p-3 space-y-1.5" style="border-color: ${editingPanel.color || '#5865F2'};">
-                          <p class="text-xs font-bold text-white leading-snug">${escapeHtml(editingPanel.title || editingPanel.name)}</p>
+                        <div class="border-l-[4px] rounded-r-lg bg-[#2b2d31] p-3.5 space-y-2 shadow-sm" style="border-color: ${editingPanel.color || '#5865F2'};">
+                          <p class="text-sm font-bold text-white leading-snug">${escapeHtml(editingPanel.title || editingPanel.name)}</p>
                           <p class="text-xs text-neutral-300 leading-relaxed">${escapeHtml(editingPanel.description || '')}</p>
                           ${editingPanel.instructions ? `
-                            <div class="border-l-[3px] border-[#4e5058] pl-2 py-0.5 mt-1.5">
-                              <p class="text-[11px] text-neutral-300 leading-relaxed">${escapeHtml(editingPanel.instructions)}</p>
+                            <div class="border-l-[3px] border-[#4e5058] pl-2.5 py-1 mt-2 bg-[#232428]/50 rounded-r">
+                              <p class="text-[11px] text-neutral-300 leading-relaxed italic">${escapeHtml(editingPanel.instructions)}</p>
                             </div>
                           ` : ''}
                         </div>
 
                         <!-- Discord Select Menu Preview Component -->
-                        <div class="mt-2.5">
-                          <div class="w-full rounded bg-[#2b2d31] border border-[#1e1f22] p-2 flex items-center justify-between text-xs text-neutral-300 shadow-inner">
-                            <span class="truncate">Select a category...</span>
-                            <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                        <div class="mt-3">
+                          <div class="w-full rounded-md bg-[#2b2d31] border border-[#1e1f22] p-2.5 flex items-center justify-between text-xs text-neutral-200 shadow-inner">
+                            <span class="truncate text-neutral-300">Wähle eine Kategorie...</span>
+                            <svg class="w-4 h-4 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                           </div>
                         </div>
 
                         <!-- Discord Button Component -->
-                        <div class="mt-2">
-                          <button type="button" class="px-3.5 py-1.5 rounded-md text-xs font-medium text-white bg-[#5865F2] flex items-center gap-1.5 shadow pointer-events-none">
+                        <div class="mt-2.5">
+                          <button type="button" class="px-4 py-2 rounded-md text-xs font-semibold text-white flex items-center gap-2 shadow pointer-events-none" style="background-color: ${editingPanel.color || '#5865F2'};">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
                             ${escapeHtml(editingPanel.button_label || 'Ticket öffnen')}
                           </button>
@@ -1568,6 +1751,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         // Step Navigation Pills
         modalRoot.querySelectorAll('[data-nav-step]').forEach(btn => {
           btn.addEventListener('click', () => {
+            syncInputsToState();
             const stepNum = parseInt(btn.getAttribute('data-nav-step'), 10);
             if (stepNum && stepNum >= 1 && stepNum <= 3) {
               currentStep = stepNum;
@@ -1577,21 +1761,27 @@ DashboardTabs.Tickets = async function (container, guildId) {
         });
 
         // Close / Back buttons in Header
-        document.getElementById('modal-btn-close-header')?.addEventListener('click', () => {
-          modalRoot.innerHTML = '';
+        document.getElementById('modal-btn-close-header')?.addEventListener('click', closeModal);
+
+        document.getElementById('builder-backdrop')?.addEventListener('click', (e) => {
+          if (e.target.id === 'builder-backdrop') {
+            closeModal();
+          }
         });
 
         document.getElementById('modal-btn-back-header')?.addEventListener('click', () => {
+          syncInputsToState();
           if (currentStep > 1) {
             currentStep--;
             renderModal();
           } else {
-            modalRoot.innerHTML = '';
+            closeModal();
           }
         });
 
         // Footer Prev / Next
         document.getElementById('modal-btn-prev')?.addEventListener('click', () => {
+          syncInputsToState();
           if (currentStep > 1) {
             currentStep--;
             renderModal();
@@ -1599,6 +1789,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         });
 
         document.getElementById('modal-btn-next')?.addEventListener('click', async () => {
+          syncInputsToState();
           if (currentStep < 3) {
             currentStep++;
             renderModal();
@@ -1630,7 +1821,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
               state.panels.push(editingPanel);
             }
 
-            modalRoot.innerHTML = '';
+            closeModal();
             renderMain();
             await saveTicketConfig(true);
             if (window.Notifications) Notifications.show(`Ticket-Typ "${editingPanel.name}" erfolgreich gespeichert!`, 'success');
@@ -1644,6 +1835,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           const descInput = document.getElementById('builder-input-desc');
           const instrInput = document.getElementById('builder-input-instr');
           const customColorInput = document.getElementById('builder-custom-color');
+          const nativeColorInput = document.getElementById('builder-native-color-picker');
 
           nameInput?.addEventListener('input', (e) => {
             editingPanel.name = e.target.value;
@@ -1662,11 +1854,25 @@ DashboardTabs.Tickets = async function (container, guildId) {
           });
 
           customColorInput?.addEventListener('input', (e) => {
+            const raw = e.target.value.trim();
+            if (raw) {
+              editingPanel.color = raw.startsWith('#') ? raw : `#${raw}`;
+              if (nativeColorInput && editingPanel.color.length === 7) {
+                nativeColorInput.value = editingPanel.color;
+              }
+            }
+          });
+
+          nativeColorInput?.addEventListener('input', (e) => {
             editingPanel.color = e.target.value;
+            if (customColorInput) {
+              customColorInput.value = e.target.value.replace(/^#/, '');
+            }
           });
 
           modalRoot.querySelectorAll('[data-builder-color]').forEach(btn => {
             btn.addEventListener('click', () => {
+              syncInputsToState();
               editingPanel.color = btn.getAttribute('data-builder-color');
               renderModal();
             });
@@ -1804,54 +2010,65 @@ DashboardTabs.Tickets = async function (container, guildId) {
             });
           });
 
-          // Support Role Dropdown
-          const bldRoleBtn = document.getElementById('bld-dd-role-btn');
-          const bldRoleMenu = document.getElementById('bld-dd-role-menu');
-          const bldSearchRole = document.getElementById('bld-search-role');
-          const bldRoleLabel = document.getElementById('bld-dd-role-label');
+          // Panel Multi-Role Add / Delete Handlers
+          const bldAddPanelRoleBtn = document.getElementById('bld-btn-add-panel-role');
+          const bldAddPanelRoleMenu = document.getElementById('bld-menu-add-panel-role');
+          const bldSearchAddPanelRole = document.getElementById('bld-search-add-panel-role');
 
-          bldRoleBtn?.addEventListener('click', (e) => {
+          bldAddPanelRoleBtn?.addEventListener('click', (e) => {
             e.stopPropagation();
-            const wasHidden = bldRoleMenu?.classList.contains('hidden');
+            const wasHidden = bldAddPanelRoleMenu?.classList.contains('hidden');
             closeAllDropdowns();
             if (wasHidden) {
-              bldRoleMenu?.classList.remove('hidden');
-              if (bldSearchRole) {
-                bldSearchRole.value = '';
-                bldSearchRole.focus();
-                filterBldRole('');
+              bldAddPanelRoleMenu?.classList.remove('hidden');
+              if (bldSearchAddPanelRole) {
+                bldSearchAddPanelRole.value = '';
+                bldSearchAddPanelRole.focus();
+                filterBldAddPanelRoles('');
               }
             }
           });
 
-          const filterBldRole = (term) => {
+          const filterBldAddPanelRoles = (term) => {
             const lower = term.toLowerCase().trim();
-            document.querySelectorAll('#bld-list-role [data-bld-role]').forEach(btn => {
+            document.querySelectorAll('#bld-list-add-panel-role [data-bld-add-panel-role-id]').forEach(btn => {
               const txt = btn.textContent.toLowerCase();
               btn.style.display = (!lower || txt.includes(lower)) ? '' : 'none';
             });
           };
 
-          bldSearchRole?.addEventListener('input', (e) => filterBldRole(e.target.value));
+          bldSearchAddPanelRole?.addEventListener('input', (e) => filterBldAddPanelRoles(e.target.value));
 
-          document.querySelectorAll('#bld-list-role [data-bld-role]').forEach(btn => {
+          document.querySelectorAll('#bld-list-add-panel-role [data-bld-add-panel-role-id]').forEach(btn => {
             btn.addEventListener('click', (e) => {
               e.stopPropagation();
-              const rid = btn.getAttribute('data-bld-role');
-              editingPanel.role_id = rid;
-              const r = getRoleById(rid);
-              if (bldRoleLabel) {
-                bldRoleLabel.textContent = r ? `@${r.name}` : 'Keine Standard-Rolle';
-                bldRoleLabel.className = `min-w-0 truncate ${r ? 'text-white font-medium' : 'text-neutral-500'}`;
+              const rid = btn.getAttribute('data-bld-add-panel-role-id');
+              if (!editingPanel.role_ids.includes(String(rid))) {
+                editingPanel.role_ids.push(String(rid));
+                editingPanel.role_id = editingPanel.role_ids[0] || '';
               }
-              bldRoleMenu?.classList.add('hidden');
+              bldAddPanelRoleMenu?.classList.add('hidden');
+              syncInputsToState();
+              renderModal();
+            });
+          });
+
+          modalRoot.querySelectorAll('[data-bld-del-panel-role]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const rid = btn.getAttribute('data-bld-del-panel-role');
+              editingPanel.role_ids = editingPanel.role_ids.filter(id => String(id) !== String(rid));
+              editingPanel.role_id = editingPanel.role_ids[0] || '';
+              syncInputsToState();
+              renderModal();
             });
           });
         }
 
-        // Step 2 Event Listeners (Options Add/Remove/Update)
+        // Step 2 Event Listeners (Options Add/Remove/Duplicate/Update)
         if (currentStep === 2) {
           const addOpt = () => {
+            syncInputsToState();
             const newIdx = editingPanel.options.length + 1;
             editingPanel.options.push({
               id: `opt_${Date.now()}_${newIdx}`,
@@ -1859,17 +2076,48 @@ DashboardTabs.Tickets = async function (container, guildId) {
               description: 'Öffnen Sie ein Ticket.',
               color: editingPanel.color || '#5865F2',
               category_id: editingPanel.category_id || '',
+              role_ids: editingPanel.role_ids && editingPanel.role_ids.length > 0 ? [...editingPanel.role_ids] : [],
               role_id: editingPanel.role_id || ''
             });
             renderModal();
+            setTimeout(() => {
+              const newRow = modalRoot.querySelector(`[data-bld-opt-row="${editingPanel.options.length - 1}"]`);
+              if (newRow) {
+                newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                newRow.querySelector('input[data-opt-field="name"]')?.focus();
+              }
+            }, 50);
           };
 
           document.getElementById('bld-btn-add-option')?.addEventListener('click', addOpt);
           document.getElementById('bld-btn-add-option-bottom')?.addEventListener('click', addOpt);
 
+          // Duplicate Option
+          modalRoot.querySelectorAll('[data-bld-dup-opt]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              syncInputsToState();
+              const idx = parseInt(btn.getAttribute('data-bld-dup-opt'), 10);
+              const source = editingPanel.options[idx];
+              if (source) {
+                const dup = JSON.parse(JSON.stringify(source));
+                dup.id = `opt_${Date.now()}_dup`;
+                dup.name = `${dup.name || 'Option'} (Kopie)`;
+                editingPanel.options.splice(idx + 1, 0, dup);
+                renderModal();
+                setTimeout(() => {
+                  const newRow = modalRoot.querySelector(`[data-bld-opt-row="${idx + 1}"]`);
+                  if (newRow) newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 50);
+              }
+            });
+          });
+
+          // Delete Option
           modalRoot.querySelectorAll('[data-bld-del-opt]').forEach(btn => {
             btn.addEventListener('click', (e) => {
               e.stopPropagation();
+              syncInputsToState();
               const idx = parseInt(btn.getAttribute('data-bld-del-opt'), 10);
               if (!isNaN(idx) && editingPanel.options.length > 1) {
                 editingPanel.options.splice(idx, 1);
@@ -1878,6 +2126,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
             });
           });
 
+          // Input field listeners
           modalRoot.querySelectorAll('[data-opt-field]').forEach(input => {
             const handleFieldUpdate = (e) => {
               const fld = input.getAttribute('data-opt-field');
@@ -1888,6 +2137,124 @@ DashboardTabs.Tickets = async function (container, guildId) {
             };
             input.addEventListener('input', handleFieldUpdate);
             input.addEventListener('change', handleFieldUpdate);
+          });
+
+          // Option Category Dropdowns
+          modalRoot.querySelectorAll('[data-bld-opt-cat-idx]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const oIdx = btn.getAttribute('data-bld-opt-cat-idx');
+              const menu = document.getElementById(`bld-opt-cat-menu-${oIdx}`);
+              const searchInput = document.getElementById(`bld-opt-cat-search-${oIdx}`);
+              const wasHidden = menu?.classList.contains('hidden');
+              closeAllDropdowns();
+              if (wasHidden) {
+                menu?.classList.remove('hidden');
+                if (searchInput) {
+                  searchInput.value = '';
+                  searchInput.focus();
+                  filterOptCat(oIdx, '');
+                }
+              }
+            });
+          });
+
+          const filterOptCat = (oIdx, term) => {
+            const lower = term.toLowerCase().trim();
+            document.querySelectorAll(`#bld-opt-cat-list-${oIdx} [data-bld-opt-cat-val]`).forEach(btn => {
+              const txt = btn.textContent.toLowerCase();
+              btn.style.display = (!lower || txt.includes(lower)) ? '' : 'none';
+            });
+          };
+
+          modalRoot.querySelectorAll('[id^="bld-opt-cat-search-"]').forEach(input => {
+            const oIdx = input.id.replace('bld-opt-cat-search-', '');
+            input.addEventListener('input', (e) => filterOptCat(oIdx, e.target.value));
+          });
+
+          modalRoot.querySelectorAll('[data-bld-opt-cat-val]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const oIdx = parseInt(btn.getAttribute('data-opt-idx'), 10);
+              const catId = btn.getAttribute('data-bld-opt-cat-val');
+              if (editingPanel.options[oIdx]) {
+                editingPanel.options[oIdx].category_id = catId;
+                const c = getCategoryById(catId);
+                const defCategory = getCategoryById(editingPanel.category_id);
+                const labelEl = document.getElementById(`bld-opt-cat-label-${oIdx}`);
+                if (labelEl) {
+                  labelEl.textContent = c ? `📁 ${c.name}` : `Standard-Kategorie verwenden (${defCategory ? defCategory.name : 'Automatisch'})`;
+                  labelEl.className = `min-w-0 truncate ${c ? 'text-white font-medium' : 'text-neutral-400'}`;
+                }
+              }
+              document.getElementById(`bld-opt-cat-menu-${oIdx}`)?.classList.add('hidden');
+            });
+          });
+
+          // Option Multi-Role Add / Delete
+          modalRoot.querySelectorAll('[data-bld-opt-role-idx]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const oIdx = btn.getAttribute('data-bld-opt-role-idx');
+              const menu = document.getElementById(`bld-opt-role-menu-${oIdx}`);
+              const searchInput = document.getElementById(`bld-opt-role-search-${oIdx}`);
+              const wasHidden = menu?.classList.contains('hidden');
+              closeAllDropdowns();
+              if (wasHidden) {
+                menu?.classList.remove('hidden');
+                if (searchInput) {
+                  searchInput.value = '';
+                  searchInput.focus();
+                  filterOptRole(oIdx, '');
+                }
+              }
+            });
+          });
+
+          const filterOptRole = (oIdx, term) => {
+            const lower = term.toLowerCase().trim();
+            document.querySelectorAll(`#bld-opt-role-list-${oIdx} [data-bld-opt-add-role]`).forEach(btn => {
+              const txt = btn.textContent.toLowerCase();
+              btn.style.display = (!lower || txt.includes(lower)) ? '' : 'none';
+            });
+          };
+
+          modalRoot.querySelectorAll('[id^="bld-opt-role-search-"]').forEach(input => {
+            const oIdx = input.id.replace('bld-opt-role-search-', '');
+            input.addEventListener('input', (e) => filterOptRole(oIdx, e.target.value));
+          });
+
+          modalRoot.querySelectorAll('[data-bld-opt-add-role]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const [oIdxStr, rid] = btn.getAttribute('data-bld-opt-add-role').split(':');
+              const oIdx = parseInt(oIdxStr, 10);
+              const opt = editingPanel.options[oIdx];
+              if (opt) {
+                if (!Array.isArray(opt.role_ids)) opt.role_ids = opt.role_id ? [opt.role_id] : [];
+                if (!opt.role_ids.includes(String(rid))) {
+                  opt.role_ids.push(String(rid));
+                  opt.role_id = opt.role_ids[0] || '';
+                }
+                syncInputsToState();
+                renderModal();
+              }
+            });
+          });
+
+          modalRoot.querySelectorAll('[data-bld-del-opt-role]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const [oIdxStr, rid] = btn.getAttribute('data-bld-del-opt-role').split(':');
+              const oIdx = parseInt(oIdxStr, 10);
+              const opt = editingPanel.options[oIdx];
+              if (opt && Array.isArray(opt.role_ids)) {
+                opt.role_ids = opt.role_ids.filter(id => String(id) !== String(rid));
+                opt.role_id = opt.role_ids[0] || '';
+                syncInputsToState();
+                renderModal();
+              }
+            });
           });
         }
       };

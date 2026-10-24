@@ -349,7 +349,7 @@ class TicketOpenModal(Modal):
         support_role_id = config.get("support_role_id")
 
         category = None
-        support_role = None
+        support_roles = []
         matched_slot = self.slot_config or {}
         if not matched_slot:
             for slot in config.get("options_slots", []):
@@ -359,16 +359,28 @@ class TicketOpenModal(Modal):
 
         if matched_slot.get("category_id") and str(matched_slot["category_id"]).isdigit():
             category = interaction.guild.get_channel(int(matched_slot["category_id"]))
-        if matched_slot.get("role_id") and str(matched_slot["role_id"]).isdigit():
-            support_role = interaction.guild.get_role(int(matched_slot["role_id"]))
+
+        # Gather all support roles (from matched slot or panel defaults)
+        raw_rids = matched_slot.get("role_ids") or []
+        if not raw_rids and matched_slot.get("role_id"):
+            raw_rids = [matched_slot.get("role_id")]
+        if not raw_rids:
+            raw_rids = config.get("support_role_ids") or []
+        if not raw_rids and support_role_id:
+            raw_rids = [support_role_id]
+
+        for rid in raw_rids:
+            if rid and str(rid).isdigit():
+                r_obj = interaction.guild.get_role(int(rid))
+                if r_obj and r_obj not in support_roles:
+                    support_roles.append(r_obj)
+
+        support_role = support_roles[0] if support_roles else None
 
         if not category and category_id and str(category_id).isdigit():
             category = interaction.guild.get_channel(int(category_id))
         if not category and interaction.channel and getattr(interaction.channel, "category", None):
             category = interaction.channel.category
-
-        if not support_role and support_role_id and str(support_role_id).isdigit():
-            support_role = interaction.guild.get_role(int(support_role_id))
 
         subject = self.custom_inputs[0][1].value.strip() if self.custom_inputs else self.category_option
         if len(self.custom_inputs) > 1:
@@ -449,7 +461,9 @@ class TicketOpenModal(Modal):
             interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, read_message_history=True),
             interaction.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, read_message_history=True, manage_channels=True)
         }
-        if support_role:
+        for sr in support_roles:
+            overwrites[sr] = discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, read_message_history=True, manage_messages=True)
+        if not support_roles and support_role:
             overwrites[support_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, read_message_history=True, manage_messages=True)
 
         try:
@@ -471,7 +485,9 @@ class TicketOpenModal(Modal):
         embed = discord.Embed(title=f"Ticket Opened: #{ticket_channel.name}", color=ORBIT_COLOR)
         embed.add_field(name="Category", value=self.category_option, inline=True)
         embed.add_field(name="Creator", value=interaction.user.mention, inline=True)
-        if support_role:
+        if support_roles:
+            embed.add_field(name="Assigned Team", value=" ".join(sr.mention for sr in support_roles), inline=True)
+        elif support_role:
             embed.add_field(name="Assigned Team", value=support_role.mention, inline=True)
         for lbl, inp in self.custom_inputs:
             val = inp.value.strip() or "—"
@@ -482,8 +498,12 @@ class TicketOpenModal(Modal):
 
         try:
             pings = [interaction.user.mention]
-            if config.get("ping_support_roles", True) and support_role:
-                pings.append(support_role.mention)
+            if config.get("ping_support_roles", True):
+                for sr in support_roles:
+                    if sr.mention not in pings:
+                        pings.append(sr.mention)
+                if not support_roles and support_role and support_role.mention not in pings:
+                    pings.append(support_role.mention)
             if config.get("ping_custom_role_enabled", False) and config.get("ping_custom_role_id"):
                 c_rid = config.get("ping_custom_role_id")
                 if str(c_rid).isdigit():
@@ -535,8 +555,18 @@ class TicketControlLayout(discord.ui.View):
                     return
 
             is_staff = interaction.user.guild_permissions.manage_guild
-            if isinstance(interaction.user, discord.Member) and support_role_id:
-                if any(r.id == support_role_id for r in getattr(interaction.user, 'roles', [])):
+            if isinstance(interaction.user, discord.Member):
+                staff_rids = [int(rid) for rid in config.get("support_role_ids", []) if str(rid).isdigit()]
+                if support_role_id and str(support_role_id).isdigit():
+                    staff_rids.append(int(support_role_id))
+                for s in config.get("options_slots", []):
+                    if isinstance(s, dict):
+                        for rid in s.get("role_ids", []):
+                            if str(rid).isdigit():
+                                staff_rids.append(int(rid))
+                        if s.get("role_id") and str(s.get("role_id")).isdigit():
+                            staff_rids.append(int(s.get("role_id")))
+                if any(r.id in staff_rids for r in getattr(interaction.user, 'roles', [])):
                     is_staff = True
 
             if not is_staff:
@@ -591,9 +621,16 @@ class TicketControlLayout(discord.ui.View):
             staff_only = bool(config.get("staff_only_close", False))
             is_staff = interaction.user.guild_permissions.manage_guild or interaction.user.guild_permissions.manage_channels
             if isinstance(interaction.user, discord.Member):
-                slot_roles = [int(s["role_id"]) for s in config.get("options_slots", []) if isinstance(s, dict) and s.get("role_id") and str(s.get("role_id")).isdigit()]
+                slot_roles = [int(rid) for rid in config.get("support_role_ids", []) if str(rid).isdigit()]
                 if support_role_id and str(support_role_id).isdigit():
                     slot_roles.append(int(support_role_id))
+                for s in config.get("options_slots", []):
+                    if isinstance(s, dict):
+                        for rid in s.get("role_ids", []):
+                            if str(rid).isdigit():
+                                slot_roles.append(int(rid))
+                        if s.get("role_id") and str(s.get("role_id")).isdigit():
+                            slot_roles.append(int(s.get("role_id")))
                 if any(r.id in slot_roles for r in getattr(interaction.user, 'roles', [])):
                     is_staff = True
 
