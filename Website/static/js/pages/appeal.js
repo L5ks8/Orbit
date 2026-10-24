@@ -28,9 +28,9 @@
 
   Pages.Appeal = async function (container, customUrl) {
     container.innerHTML = `
-      <div class="relative min-h-[calc(100vh-80px)] flex flex-col items-center justify-center px-4 py-16 sm:py-24 animate-fade-in overflow-hidden">
+      <div class="relative min-h-screen flex flex-col items-center px-4 pt-36 sm:pt-44 md:pt-48 pb-24 animate-fade-in overflow-hidden" style="padding-top: calc(var(--promo-h, 0px) + 9.5rem);">
         <!-- Ambient Background Glow -->
-        <div class="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#5865F2]/10 blur-[120px] rounded-full"></div>
+        <div class="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#5865F2]/10 blur-[120px] rounded-full"></div>
         <div class="pointer-events-none absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-[400px] h-[250px] bg-indigo-600/5 blur-[100px] rounded-full"></div>
 
         <div id="appeal-loading" class="flex flex-col items-center justify-center p-12 text-neutral-400 gap-3">
