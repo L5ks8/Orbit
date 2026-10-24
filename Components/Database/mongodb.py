@@ -62,7 +62,27 @@ def get_db():
             else:
                 _db = _client["OrbitBot"]
                 print(f"[MongoDB] Fallback active database: '{_db.name}'")
+        _ensure_background_indexes(_db)
     return _db
+
+_indexes_ensured = False
+def _ensure_background_indexes(db):
+    global _indexes_ensured
+    if _indexes_ensured or db is None:
+        return
+    _indexes_ensured = True
+    def _worker():
+        try:
+            db["GuildStats"].create_index("guild_id", background=True)
+            db["GuildStats"].create_index([("guild_id", 1), ("date", -1)], background=True)
+            db["LevelData"].create_index("guild_id", background=True)
+            db["InviteTracker"].create_index("guild_id", background=True)
+            db["InviteStats"].create_index("guild_id", background=True)
+            db["UptimeStats"].create_index("date", background=True)
+            print("[MongoDB] Ensured collection indexes on background thread.", flush=True)
+        except Exception as e:
+            print(f"[MongoDB] Error ensuring background indexes: {e}", flush=True)
+    threading.Thread(target=_worker, daemon=True, name="mongo_indexer").start()
 
 def _query_collection_doc(collection, guild_id):
     """Fast indexed query using $in to test str and int _id in 1 query, then secondary guild_id."""

@@ -361,13 +361,20 @@ class AIHelperMixin:
             if db is not None:
                 now_dt = datetime.now(timezone.utc)
                 curr_dates = [(now_dt - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
-                docs = list(db["GuildStats"].find({
-                    "$or": [
-                        {"guild_id": guild_id},
-                        {"guild_id": str(guild_id)},
-                        {"_id": {"$regex": f"^{guild_id}_"}}
-                    ]
-                }))
+                gid_str = str(guild_id)
+                def _fetch_ai_stats():
+                    d = list(db["GuildStats"].find({
+                        "_id": {
+                            "$gte": f"{gid_str}_",
+                            "$lt": f"{gid_str}_\uffff"
+                        }
+                    }).limit(365))
+                    if not d:
+                        d = list(db["GuildStats"].find({
+                            "$or": [{"guild_id": guild_id}, {"guild_id": gid_str}]
+                        }).limit(365))
+                    return d
+                docs = await asyncio.to_thread(_fetch_ai_stats)
                 tot_msgs = 0
                 tot_voice = 0
                 tot_joins = 0

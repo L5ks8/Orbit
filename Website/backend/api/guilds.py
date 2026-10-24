@@ -143,8 +143,10 @@ class GuildsMixin:
         today = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         past_45_days = today - datetime.timedelta(days=45)
         
-        docs = list(db["UptimeStats"].find({"date": {"$gte": past_45_days}}).sort("date", 1))
-        uptime_map = {doc["_id"]: doc for doc in docs}
+        def _fetch_uptime():
+            docs = list(db["UptimeStats"].find({"date": {"$gte": past_45_days}}).sort("date", 1))
+            return {doc["_id"]: doc for doc in docs}
+        uptime_map = await asyncio.to_thread(_fetch_uptime)
         
         result = []
         for i in range(44, -1, -1):
@@ -381,18 +383,24 @@ class GuildsMixin:
         doc_map = {}
         if db is not None:
             try:
-                # Fast direct indexed lookup
-                all_docs = list(db["GuildStats"].find({
-                    "$or": [
-                        {"guild_id": guild_id},
-                        {"guild_id": str(guild_id)}
-                    ]
-                }).limit(365))
-                if not all_docs:
-                    # Fallback only if no direct guild_id field found
-                    all_docs = list(db["GuildStats"].find({
-                        "_id": {"$regex": f"^{guild_id}_"}
+                gid_str = str(guild_id)
+                def _fetch_guild_stats():
+                    # Fast primary-key range scan: instant clustered B-Tree index lookup (<1ms, no full table regex)
+                    docs = list(db["GuildStats"].find({
+                        "_id": {
+                            "$gte": f"{gid_str}_",
+                            "$lt": f"{gid_str}_\uffff"
+                        }
                     }).limit(365))
+                    if not docs:
+                        docs = list(db["GuildStats"].find({
+                            "$or": [
+                                {"guild_id": guild_id},
+                                {"guild_id": gid_str}
+                            ]
+                        }).limit(365))
+                    return docs
+                all_docs = await asyncio.to_thread(_fetch_guild_stats)
                 for doc in all_docs:
                     d_str = doc.get("date")
                     if not d_str and isinstance(doc.get("_id"), str) and "_" in doc["_id"]:
@@ -540,7 +548,9 @@ class GuildsMixin:
         # Fallback to LevelData if GuildStats has 0 messages/voice (e.g. historical data in LevelData)
         if db is not None and week_messages == 0 and week_voice_minutes == 0 and not doc_map:
             try:
-                level_docs = list(db["LevelData"].find({"$or": [{"guild_id": guild_id}, {"guild_id": str(guild_id)}]}, {"message_count": 1, "voice_minutes": 1, "user_id": 1}).limit(200))
+                def _fetch_level_summary():
+                    return list(db["LevelData"].find({"$or": [{"guild_id": guild_id}, {"guild_id": str(guild_id)}]}, {"message_count": 1, "voice_minutes": 1, "user_id": 1}).limit(200))
+                level_docs = await asyncio.to_thread(_fetch_level_summary)
                 if level_docs:
                     lvl_msgs = sum(int(d.get("message_count", 0) or 0) for d in level_docs)
                     lvl_voice = sum(int(d.get("voice_minutes", 0) or 0) for d in level_docs)
@@ -675,11 +685,18 @@ class GuildsMixin:
         doc_map = {}
         if db is not None:
             try:
-                for i in range(3):
-                    d_str = (now_dt - timedelta(days=i)).strftime("%Y-%m-%d")
-                    doc = db["GuildStats"].find_one({"_id": f"{guild_id}_{d_str}"})
-                    if doc:
-                        doc_map[d_str] = doc
+                def _fetch_3d_docs():
+                    m = {}
+                    gid_str = str(guild_id)
+                    ids = [f"{gid_str}_{(now_dt - timedelta(days=i)).strftime('%Y-%m-%d')}" for i in range(3)]
+                    for doc in db["GuildStats"].find({"_id": {"$in": ids}}):
+                        d_str = doc.get("date")
+                        if not d_str and isinstance(doc.get("_id"), str) and "_" in doc["_id"]:
+                            d_str = doc["_id"].split("_", 1)[1]
+                        if d_str:
+                            m[d_str] = doc
+                    return m
+                doc_map = await asyncio.to_thread(_fetch_3d_docs)
             except Exception:
                 pass
         live_48h = self._build_48h_buckets(guild_id, doc_map, now_dt)
@@ -932,13 +949,23 @@ class GuildsMixin:
         doc_map = {}
         if db is not None:
             try:
-                all_docs = list(db["GuildStats"].find({
-                    "$or": [
-                        {"guild_id": guild_id},
-                        {"guild_id": str(guild_id)},
-                        {"_id": {"$regex": f"^{guild_id}_"}}
-                    ]
-                }))
+                gid_str = str(guild_id)
+                def _fetch_analytics_docs():
+                    docs = list(db["GuildStats"].find({
+                        "_id": {
+                            "$gte": f"{gid_str}_",
+                            "$lt": f"{gid_str}_\uffff"
+                        }
+                    }).limit(365))
+                    if not docs:
+                        docs = list(db["GuildStats"].find({
+                            "$or": [
+                                {"guild_id": guild_id},
+                                {"guild_id": gid_str}
+                            ]
+                        }).limit(365))
+                    return docs
+                all_docs = await asyncio.to_thread(_fetch_analytics_docs)
                 for doc in all_docs:
                     d_str = doc.get("date")
                     if not d_str and isinstance(doc.get("_id"), str) and "_" in doc["_id"]:
@@ -1129,7 +1156,9 @@ class GuildsMixin:
         level_docs = []
         if db is not None:
             try:
-                level_docs = list(db["LevelData"].find({"$or": [{"guild_id": guild_id}, {"guild_id": str(guild_id)}]}))
+                def _fetch_level_people():
+                    return list(db["LevelData"].find({"$or": [{"guild_id": guild_id}, {"guild_id": str(guild_id)}]}).limit(500))
+                level_docs = await asyncio.to_thread(_fetch_level_people)
             except Exception:
                 pass
 
@@ -1290,8 +1319,12 @@ class GuildsMixin:
         top_sources = []
         if db is not None:
             try:
-                inv_docs = list(db["InviteTracker"].find({"guild_id": str(guild_id)}))
-                inv_stats = list(db["InviteStats"].find({"guild_id": str(guild_id)}))
+                def _fetch_invites():
+                    return (
+                        list(db["InviteTracker"].find({"guild_id": str(guild_id)}).limit(500)),
+                        list(db["InviteStats"].find({"guild_id": str(guild_id)}).limit(500))
+                    )
+                inv_docs, inv_stats = await asyncio.to_thread(_fetch_invites)
                 code_counts = {}
                 for doc in inv_docs:
                     inv_id = str(doc.get("inviter_id") or "")
