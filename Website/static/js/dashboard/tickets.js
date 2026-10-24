@@ -333,7 +333,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
             <!-- Einreichungen Section -->
             <div class="mb-8">
-              <div class="flex items-center justify-between gap-3 mb-4">
+              <div id="submissions-header" class="flex items-center justify-between gap-3 mb-4 flex-wrap">
                 <h3 class="text-sm font-semibold text-white text-balance">Einreichungen</h3>
               </div>
               <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -731,7 +731,58 @@ DashboardTabs.Tickets = async function (container, guildId) {
     const renderSubmissionsSection = () => {
       const filterBar = document.getElementById('submissions-filter-bar');
       const listContainer = document.getElementById('submissions-list-container');
+      const subHeader = document.getElementById('submissions-header');
       if (!filterBar || !listContainer) return;
+
+      const allSubmissions = [
+        ...state.activeTickets.map(t => ({
+          ...t,
+          status: t.status || (t.claimed_by ? 'claimed' : 'open'),
+          is_active: true
+        })),
+        ...state.closedTickets.map(t => ({
+          ...t,
+          status: t.status || 'resolved',
+          is_active: false
+        }))
+      ].sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+
+      if (subHeader) {
+        subHeader.innerHTML = `
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-semibold text-white text-balance">Einreichungen</h3>
+            <span class="text-xs text-neutral-500 tabular-nums">(${allSubmissions.length})</span>
+          </div>
+          ${state.closedTickets.length > 0 ? `
+            <button type="button" id="btn-clear-closed-tickets" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-medium transition-colors cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+              <span>Geschlossene Tickets leeren</span>
+              <span class="px-1.5 py-0.5 rounded-md bg-red-500/20 text-[10px] font-bold tabular-nums">${state.closedTickets.length}</span>
+            </button>
+          ` : ''}
+        `;
+
+        const clearBtn = subHeader.querySelector('#btn-clear-closed-tickets');
+        if (clearBtn) {
+          clearBtn.onclick = async () => {
+            const count = state.closedTickets.length;
+            if (!confirm(`Möchtest du wirklich alle ${count} geschlossenen Tickets aus dem Dashboard löschen?`)) return;
+            try {
+              if (API.clearClosedTickets) {
+                await API.clearClosedTickets(guildId);
+              } else {
+                await saveTicketConfig(true, { clear_closed_tickets: true });
+              }
+              state.closedTickets = [];
+              renderMain();
+              if (window.Notifications) Notifications.show('Alle geschlossenen Tickets wurden gelöscht.', 'success');
+              else if (window.Toast) Toast.success('Alle geschlossenen Tickets wurden gelöscht.');
+            } catch (err) {
+              if (window.Notifications) Notifications.show(err.message || 'Fehler beim Löschen.', 'error');
+            }
+          };
+        }
+      }
 
       const FILTERS = [
         { key: 'all', label: 'Alle' },
@@ -765,19 +816,6 @@ DashboardTabs.Tickets = async function (container, guildId) {
           renderSubmissionsSection();
         });
       });
-
-      const allSubmissions = [
-        ...state.activeTickets.map(t => ({
-          ...t,
-          status: t.status || (t.claimed_by ? 'claimed' : 'open'),
-          is_active: true
-        })),
-        ...state.closedTickets.map(t => ({
-          ...t,
-          status: t.status || 'resolved',
-          is_active: false
-        }))
-      ].sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
 
       const nowSec = Date.now() / 1000;
       const filtered = allSubmissions.filter(item => {
@@ -834,13 +872,18 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
                   ${sub.status === 'open' ? `
-                    <button type="button" data-sub-action="claimed" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium transition-colors">Übernehmen</button>
+                    <button type="button" data-sub-action="claimed" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium transition-colors cursor-pointer">Übernehmen</button>
                   ` : ''}
                   ${sub.status !== 'resolved' ? `
-                    <button type="button" data-sub-action="resolved" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium transition-colors">Lösen</button>
+                    <button type="button" data-sub-action="resolved" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium transition-colors cursor-pointer">Lösen</button>
                   ` : ''}
                   ${sub.status !== 'rejected' ? `
-                    <button type="button" data-sub-action="rejected" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-colors">Ablehnen</button>
+                    <button type="button" data-sub-action="rejected" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-colors cursor-pointer">Ablehnen</button>
+                  ` : ''}
+                  ${!sub.is_active ? `
+                    <button type="button" data-sub-delete="${escapeHtml(subId)}" title="Geschlossenes Ticket aus Dashboard löschen" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ml-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                    </button>
                   ` : ''}
                 </div>
               </div>
@@ -849,13 +892,36 @@ DashboardTabs.Tickets = async function (container, guildId) {
         </div>
       `;
 
+      listContainer.querySelectorAll('[data-sub-delete]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const subId = btn.getAttribute('data-sub-delete');
+          if (!confirm('Dieses geschlossene Ticket aus dem Dashboard löschen?')) return;
+          try {
+            if (API.clearClosedTickets) {
+              await API.clearClosedTickets(guildId, subId);
+            }
+            state.closedTickets = state.closedTickets.filter(t => String(t.id || t.channel_id) !== String(subId));
+            renderMain();
+            if (window.Notifications) Notifications.show('Ticket aus dem Dashboard entfernt.', 'success');
+            else if (window.Toast) Toast.success('Ticket aus dem Dashboard entfernt.');
+          } catch (err) {
+            if (window.Notifications) Notifications.show(err.message || 'Fehler beim Löschen.', 'error');
+          }
+        });
+      });
+
       listContainer.querySelectorAll('[data-sub-action]').forEach(btn => {
         btn.addEventListener('click', async () => {
           const subId = btn.getAttribute('data-sub-id');
           const newStatus = btn.getAttribute('data-sub-action');
+          btn.disabled = true;
+
           const activeIdx = state.activeTickets.findIndex(t => String(t.id || t.channel_id) === String(subId));
+          let ticketNum = 'Ticket';
           if (activeIdx >= 0) {
             const item = state.activeTickets[activeIdx];
+            ticketNum = `#${item.number || subId}`;
             item.status = newStatus;
             if (newStatus === 'resolved' || newStatus === 'rejected') {
               state.activeTickets.splice(activeIdx, 1);
@@ -866,10 +932,29 @@ DashboardTabs.Tickets = async function (container, guildId) {
             }
           } else {
             const closedItem = state.closedTickets.find(t => String(t.id || t.channel_id) === String(subId));
-            if (closedItem) closedItem.status = newStatus;
+            if (closedItem) {
+              ticketNum = `#${closedItem.number || subId}`;
+              closedItem.status = newStatus;
+            }
           }
           renderMain();
-          await saveTicketConfig(true, { submission_action: { id: subId, status: newStatus } });
+
+          try {
+            if (API.ticketAction) {
+              await API.ticketAction(guildId, subId, newStatus);
+            } else {
+              await saveTicketConfig(true, { submission_action: { id: subId, status: newStatus } });
+            }
+            const msg = newStatus === 'resolved'
+              ? `${ticketNum} als Gelöst markiert und in Discord geschlossen.`
+              : (newStatus === 'rejected'
+                ? `${ticketNum} als Abgelehnt markiert und in Discord geschlossen.`
+                : `${ticketNum} erfolgreich übernommen.`);
+            if (window.Notifications) Notifications.show(msg, 'success');
+            else if (window.Toast) Toast.success(msg);
+          } catch (err) {
+            if (window.Notifications) Notifications.show(err.message || 'Fehler bei der Ticket-Aktion.', 'error');
+          }
         });
       });
     };

@@ -631,6 +631,153 @@ class ActionsMixin:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
+    async def api_ticket_action(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            data = await request.json()
+            sub_id = str(data.get("id") or data.get("ticket_id") or "")
+            action = str(data.get("action") or data.get("status") or "")
+            if not sub_id or not action:
+                return web.json_response({"error": "id and action are required"}, status=400)
+
+            from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
+            from Components.Systems.Tickets._views import close_ticket_flow
+
+            ticket_cfg = load_ticket_config(guild_id)
+            session = await self.get_user_session(request)
+            staff_id = int(session["id"]) if (session and session.get("id") and str(session["id"]).isdigit()) else None
+            staff_member = guild.get_member(staff_id) if (guild and staff_id) else None
+            executor = staff_member or self.bot.user
+
+            active_dict = ticket_cfg.setdefault("active_tickets", {})
+            closed_list = ticket_cfg.setdefault("closed_tickets", [])
+            now_ts = time.time()
+
+            discord_ch = None
+            if guild and sub_id.isdigit():
+                discord_ch = guild.get_channel(int(sub_id))
+
+            if action == "claimed":
+                if sub_id in active_dict:
+                    item = active_dict[sub_id]
+                    item["claimed_by"] = staff_id
+                    item["status"] = "claimed"
+                else:
+                    for ct in closed_list:
+                        if isinstance(ct, dict) and str(ct.get("id") or ct.get("channel_id")) == sub_id:
+                            ct["claimed_by"] = staff_id
+                            ct["status"] = "claimed"
+                            break
+
+                if discord_ch and isinstance(discord_ch, discord.TextChannel):
+                    mention_txt = staff_member.mention if staff_member else "Support Team"
+                    claim_emb = discord.Embed(
+                        title="🎫 Ticket übernommen",
+                        description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard übernommen.",
+                        color=discord.Color.yellow()
+                    )
+                    claim_emb.set_footer(text="Orbit Ticket System")
+                    try:
+                        await discord_ch.send(embed=claim_emb)
+                    except Exception:
+                        pass
+
+            elif action in ("resolved", "rejected"):
+                is_resolved = (action == "resolved")
+                final_status = "resolved" if is_resolved else "rejected"
+                status_label = "Gelöst" if is_resolved else "Abgelehnt"
+                reason = f"Ticket über Dashboard als {status_label} markiert"
+
+                if sub_id in active_dict:
+                    item = active_dict.pop(sub_id)
+                    item["status"] = final_status
+                    item["closed_at"] = now_ts
+                    closed_list.insert(0, item)
+
+                    if discord_ch and isinstance(discord_ch, discord.TextChannel):
+                        mention_txt = executor.mention if hasattr(executor, "mention") else "Support Team"
+                        color = discord.Color.green() if is_resolved else discord.Color.red()
+                        emb = discord.Embed(
+                            title=f"🎫 Ticket {status_label}",
+                            description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard als **{status_label}** markiert und wird nun geschlossen.",
+                            color=color
+                        )
+                        emb.set_footer(text="Orbit Ticket System")
+                        try:
+                            await discord_ch.send(embed=emb)
+                        except Exception:
+                            pass
+
+                        asyncio.create_task(close_ticket_flow(
+                            guild, discord_ch, executor,
+                            reason=reason,
+                            final_status=final_status
+                        ))
+                else:
+                    for ct in closed_list:
+                        if isinstance(ct, dict) and str(ct.get("id") or ct.get("channel_id")) == sub_id:
+                            ct["status"] = final_status
+                            break
+
+            save_ticket_config(guild_id, ticket_cfg)
+            return web.json_response({
+                "success": True,
+                "action": action,
+                "ticket_id": sub_id
+            })
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_clear_closed_tickets(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
+            ticket_cfg = load_ticket_config(guild_id)
+
+            sub_id = None
+            try:
+                body = await request.json()
+                sub_id = str(body.get("id") or body.get("ticket_id") or "")
+            except Exception:
+                pass
+
+            if sub_id:
+                orig_len = len(ticket_cfg.get("closed_tickets", []))
+                ticket_cfg["closed_tickets"] = [
+                    t for t in ticket_cfg.get("closed_tickets", [])
+                    if isinstance(t, dict) and str(t.get("id") or t.get("channel_id")) != sub_id
+                ]
+                removed_count = orig_len - len(ticket_cfg["closed_tickets"])
+            else:
+                removed_count = len(ticket_cfg.get("closed_tickets", []))
+                ticket_cfg["closed_tickets"] = []
+
+            save_ticket_config(guild_id, ticket_cfg)
+            return web.json_response({
+                "success": True,
+                "removed_count": removed_count,
+                "remaining_count": len(ticket_cfg["closed_tickets"])
+            })
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+
 
     async def api_action_send_embed(self, request: web.Request):
         guild_id_str = request.match_info.get("id")

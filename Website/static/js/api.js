@@ -356,6 +356,24 @@ const API = {
     });
   },
 
+  async ticketAction(guildId, ticketId, action) {
+    const res = await this.request(`/api/action/${guildId}/ticket_action`, {
+      method: 'POST',
+      body: { id: ticketId, action }
+    });
+    this.invalidateCache(`config_${guildId}`);
+    return res;
+  },
+
+  async clearClosedTickets(guildId, ticketId = null) {
+    const res = await this.request(`/api/action/${guildId}/clear_closed_tickets`, {
+      method: 'POST',
+      body: ticketId ? { id: ticketId } : { all: true }
+    });
+    this.invalidateCache(`config_${guildId}`);
+    return res;
+  },
+
   async sendVerifyPanel(guildId, channelIdOrPayload) {
     const body = (typeof channelIdOrPayload === 'object' && channelIdOrPayload !== null)
       ? channelIdOrPayload

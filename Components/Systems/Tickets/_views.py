@@ -8,7 +8,7 @@ from Components.Commands._utils import make_embed, ORBIT_COLOR
 
 _user_ticket_selections = {}
 
-async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, closed_by: discord.abc.User, reason: str = "No reason provided"):
+async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, closed_by: discord.abc.User, reason: str = "No reason provided", final_status: str = "resolved"):
     config = load_ticket_config(guild.id)
     ticket_data = config.get("active_tickets", {}).get(str(channel.id))
     
@@ -20,7 +20,8 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
         subject = ticket_data.get("subject", "Unknown")
 
     try:
-        await channel.send("### Ticket Closing\nGenerating transcript and shutting down channel in 3 seconds...")
+        status_lbl = "Gelöst" if final_status == "resolved" else ("Abgelehnt" if final_status == "rejected" else "Closing")
+        await channel.send(f"### Ticket {status_lbl}\nGenerating transcript and shutting down channel in 3 seconds...")
     except Exception:
         pass
 
@@ -256,8 +257,10 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             executor_username = f"@{closed_by.name}" if hasattr(closed_by, "name") and closed_by.name else str(closed_by)
             executor_id_str = str(getattr(closed_by, "id", "Unknown"))
 
-            embed = discord.Embed(title="Ticket Closed", description=f"{executor_mention} closed a ticket.", color=discord.Color.dark_red())
-            embed.add_field(name="Ticket Info", value=f"Name: {channel.name}\nID: {channel.id}\nReason: {reason}", inline=False)
+            status_text = "Gelöst" if final_status == "resolved" else ("Abgelehnt" if final_status == "rejected" else "Closed")
+            color = discord.Color.green() if final_status == "resolved" else (discord.Color.red() if final_status == "rejected" else discord.Color.dark_red())
+            embed = discord.Embed(title=f"Ticket {status_text}", description=f"{executor_mention} closed a ticket ({status_text}).", color=color)
+            embed.add_field(name="Ticket Info", value=f"Name: {channel.name}\nID: {channel.id}\nStatus: {status_text}\nReason: {reason}", inline=False)
             embed.add_field(name="Creator Info", value=f"Creator: {creator_mention}\nUsername: {creator_username}\nID: {creator_id_str}", inline=False)
             embed.add_field(name="Executor Info", value=f"Executor: {executor_mention}\nUsername: {executor_username}\nID: {executor_id_str}", inline=False)
             kwargs = {"embed": embed}
@@ -268,7 +271,7 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             except Exception:
                 pass
 
-    close_active_ticket(guild.id, channel.id)
+    close_active_ticket(guild.id, channel.id, final_status=final_status)
     await asyncio.sleep(3)
     try:
         await channel.delete(reason=f"Ticket closed by {closed_by}: {reason}")

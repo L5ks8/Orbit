@@ -162,6 +162,8 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/action/{id}/setup_serverstats", dashboard.api_action_setup_serverstats)
     app.router.add_post("/api/action/{id}/send_verify_panel", dashboard.api_action_send_verify)
     app.router.add_post("/api/action/{id}/send_ticket_panel", dashboard.api_action_send_ticket)
+    app.router.add_post("/api/action/{id}/ticket_action", dashboard.api_ticket_action)
+    app.router.add_post("/api/action/{id}/clear_closed_tickets", dashboard.api_clear_closed_tickets)
     app.router.add_post("/api/action/{id}/send_embed", dashboard.api_action_send_embed)
     app.router.add_post("/api/action/send_custom_embed/{id}", dashboard.api_action_send_custom_embed)
     app.router.add_post("/api/action/{id}/send_honeypot", dashboard.api_action_send_honeypot)

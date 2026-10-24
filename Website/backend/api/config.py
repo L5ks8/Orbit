@@ -1190,24 +1190,67 @@ class ConfigMixin:
                     new_status = str(act.get("status", ""))
                     if sub_id and new_status:
                         import time as _t
+                        discord_ch = None
+                        if guild and sub_id.isdigit():
+                            discord_ch = guild.get_channel(int(sub_id))
+                        session = await self.get_user_session(request)
+                        staff_id = int(session["id"]) if (session and session.get("id") and str(session["id"]).isdigit()) else None
+                        staff_member = guild.get_member(staff_id) if (guild and staff_id) else None
+                        executor = staff_member or self.bot.user
+
                         if sub_id in ticket_cfg.get("active_tickets", {}):
                             item = ticket_cfg["active_tickets"][sub_id]
                             if new_status in ("resolved", "rejected"):
                                 ticket_cfg["active_tickets"].pop(sub_id, None)
                                 item["status"] = new_status
                                 item["closed_at"] = _t.time()
-                                ticket_cfg.setdefault("closed_tickets", []).append(item)
+                                ticket_cfg.setdefault("closed_tickets", []).insert(0, item)
+
+                                if discord_ch and isinstance(discord_ch, discord.TextChannel):
+                                    from Components.Systems.Tickets._views import close_ticket_flow
+                                    status_label = "Gelöst" if new_status == "resolved" else "Abgelehnt"
+                                    color = discord.Color.green() if new_status == "resolved" else discord.Color.red()
+                                    mention_txt = executor.mention if hasattr(executor, "mention") else "Support Team"
+                                    emb = discord.Embed(
+                                        title=f"🎫 Ticket {status_label}",
+                                        description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard als **{status_label}** markiert und wird nun geschlossen.",
+                                        color=color
+                                    )
+                                    emb.set_footer(text="Orbit Ticket System")
+                                    try:
+                                        await discord_ch.send(embed=emb)
+                                    except Exception:
+                                        pass
+
+                                    asyncio.create_task(close_ticket_flow(
+                                        guild, discord_ch, executor,
+                                        reason=f"Ticket über Dashboard als {status_label} markiert",
+                                        final_status=new_status
+                                    ))
                             else:
                                 item["status"] = new_status
                                 if new_status == "claimed":
-                                    session = await self.get_user_session(request)
-                                    if session and session.get("id"):
-                                        item["claimed_by"] = int(session["id"])
+                                    item["claimed_by"] = staff_id
+                                    if discord_ch and isinstance(discord_ch, discord.TextChannel):
+                                        mention_txt = staff_member.mention if staff_member else "Support Team"
+                                        claim_emb = discord.Embed(
+                                            title="🎫 Ticket übernommen",
+                                            description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard übernommen.",
+                                            color=discord.Color.yellow()
+                                        )
+                                        claim_emb.set_footer(text="Orbit Ticket System")
+                                        try:
+                                            await discord_ch.send(embed=claim_emb)
+                                        except Exception:
+                                            pass
                         else:
                             for ct in ticket_cfg.get("closed_tickets", []):
                                 if isinstance(ct, dict) and str(ct.get("id") or ct.get("channel_id")) == sub_id:
                                     ct["status"] = new_status
                                     break
+
+                if t_in.get("clear_closed_tickets"):
+                    ticket_cfg["closed_tickets"] = []
                 
                 save_ticket_config(guild_id, ticket_cfg)
 
