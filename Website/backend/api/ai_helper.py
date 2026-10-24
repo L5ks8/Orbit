@@ -112,17 +112,19 @@ async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str, ne
 
                 def _sort_pref(m_id: str) -> int:
                     ml = m_id.lower()
-                    if "120b" in ml:
-                        return 0
                     if "70b" in ml or "llama-3.3" in ml:
+                        return 0
+                    if "8b-instant" in ml or "llama-3.1-8b" in ml:
                         return 1
-                    if "qwen" in ml:
+                    if "120b" in ml:
                         return 2
-                    if "scout" in ml or "maverick" in ml:
+                    if "qwen" in ml:
                         return 3
-                    if "20b" in ml or "27b" in ml or "32b" in ml:
+                    if "scout" in ml or "maverick" in ml:
                         return 4
-                    return 5
+                    if "20b" in ml or "27b" in ml or "32b" in ml:
+                        return 5
+                    return 6
 
                 raw_models.sort(key=_sort_pref)
                 if raw_models:
@@ -139,10 +141,11 @@ async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str, ne
         ]
 
     return _GROQ_RESOLVED_MODELS or [
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
         "openai/gpt-oss-120b",
         "qwen/qwen3.8-27b",
         "openai/gpt-oss-20b",
-        "llama-3.3-70b-versatile",
     ]
 
 
@@ -250,20 +253,20 @@ class AIHelperMixin:
 
     def _build_guild_context_prompt(self, guild: discord.Guild) -> str:
         guild_id = guild.id
-        cats = [f"- {c.name} (ID: {c.id})" for c in sorted(guild.categories, key=lambda x: x.position)]
+        cats = [f"{c.name}({c.id})" for c in sorted(guild.categories, key=lambda x: x.position)[:25]]
         txt_chs = [
-            f"- #{c.name} (ID: {c.id}, Kategorie: {c.category.name if c.category else 'Keine'})"
-            for c in sorted(guild.text_channels, key=lambda x: x.position)
+            f"#{c.name}({c.id})"
+            for c in sorted(guild.text_channels, key=lambda x: x.position)[:40]
         ]
         vc_chs = [
-            f"- 🔊 {c.name} (ID: {c.id}, Kategorie: {c.category.name if c.category else 'Keine'})"
-            for c in sorted(guild.voice_channels, key=lambda x: x.position)
+            f"🔊{c.name}({c.id})"
+            for c in sorted(guild.voice_channels, key=lambda x: x.position)[:20]
         ]
-        roles_list = [f"- @everyone (ID: {guild.default_role.id})"] + [
-            f"- @{r.name} (ID: {r.id})"
+        roles_list = [f"@{guild.default_role.name}({guild.default_role.id})"] + [
+            f"@{r.name}({r.id})"
             for r in sorted(guild.roles, key=lambda x: x.position, reverse=True)
             if not r.is_default()
-        ]
+        ][:35]
 
         welcome_cfg = load_welcome_config(guild_id)
         goodbye_cfg = load_goodbye_config(guild_id)
@@ -276,273 +279,57 @@ class AIHelperMixin:
         jtc_cfg = load_jtc_config(guild_id)
         sec_cfg = load_security_config(guild_id)
 
-        module_summary = {
-            "welcome": {"enabled": bool(welcome_cfg.get("enabled")), "channel_id": str(welcome_cfg.get("channel_id") or "")},
-            "goodbye": {"enabled": bool(goodbye_cfg.get("enabled")), "channel_id": str(goodbye_cfg.get("channel_id") or "")},
-            "joinroles": {"enabled": bool(joinroles_cfg.get("enabled")), "roles": [str(r) for r in joinroles_cfg.get("roles", [])]},
-            "verify": {"enabled": bool(verify_cfg.get("enabled")), "channel_id": str(verify_cfg.get("channel_id") or ""), "role_id": str(verify_cfg.get("role_id") or "")},
-            "tickets": {"enabled": bool(ticket_cfg.get("enabled")), "channel_id": str(ticket_cfg.get("channel_id") or "")},
-            "level": {"enabled": bool(level_cfg.get("enabled")), "announce_channel_id": str(level_cfg.get("announce_channel_id") or "")},
-            "logs": {"enabled": bool(logs_cfg.get("enabled")), "default_channel_id": str(logs_cfg.get("default_channel_id") or "")},
-            "tempvoice": {"enabled": bool(jtc_cfg.get("enabled")), "trigger_channel_id": str(jtc_cfg.get("trigger_channel_id") or "")},
-            "automod": {
-                "enabled": bool(automod_cfg.get("enabled")),
-                "banned_words": bool(automod_cfg.get("banned_words", {}).get("enabled")),
-                "anti_spam": bool(automod_cfg.get("anti_spam", {}).get("enabled")),
-                "anti_link": bool(automod_cfg.get("anti_link", {}).get("enabled")),
-                "anti_invites": bool(automod_cfg.get("anti_invites", {}).get("enabled")),
-                "anti_alt": bool(automod_cfg.get("anti_alt", {}).get("enabled")),
-                "ai_automod": bool(automod_cfg.get("ai_automod", {}).get("enabled")),
-            },
-            "security": {
-                "anti_raid": bool(sec_cfg.get("anti_raid", {}).get("enabled")),
-                "anti_nuke": bool(sec_cfg.get("anti_nuke", {}).get("enabled")),
-            }
-        }
+        active_mods = []
+        if welcome_cfg.get("enabled"): active_mods.append(f"Welcome(Ch:{welcome_cfg.get('channel_id')})")
+        if goodbye_cfg.get("enabled"): active_mods.append(f"Goodbye(Ch:{goodbye_cfg.get('channel_id')})")
+        if joinroles_cfg.get("enabled"): active_mods.append(f"JoinRoles({len(joinroles_cfg.get('roles', []))} Rollen)")
+        if verify_cfg.get("enabled"): active_mods.append(f"Verify(Ch:{verify_cfg.get('channel_id')}, Role:{verify_cfg.get('role_id')})")
+        if ticket_cfg.get("enabled"): active_mods.append(f"Tickets(Ch:{ticket_cfg.get('channel_id')})")
+        if level_cfg.get("enabled"): active_mods.append(f"Levels(Ch:{level_cfg.get('announce_channel_id')})")
+        if logs_cfg.get("enabled"): active_mods.append(f"Logs(Ch:{logs_cfg.get('default_channel_id')})")
+        if jtc_cfg.get("enabled"): active_mods.append(f"TempVoice(Trigger:{jtc_cfg.get('trigger_channel_id')})")
+        if automod_cfg.get("enabled"): active_mods.append("AutoMod")
+        if sec_cfg.get("anti_raid", {}).get("enabled"): active_mods.append("AntiRaid")
+        if sec_cfg.get("anti_nuke", {}).get("enabled"): active_mods.append("AntiNuke")
 
         return f"""Du bist **Orbit AI Helper**, ein intelligenter Discord-Server-Konfigurations-, Analyse- und Berechtigungs-Assistent im Orbit Dashboard.
 
-WICHTIGE EINSCHRÄNKUNG (STRIKTES VERBOT):
-- Du bist **KEIN** Server-Builder! Du darfst **NIEMALS** komplette Server von Grund auf neu bauen, keine Kanäle/Rollen massenhaft löschen und keine kompletten Server-Strukturen erstellen.
-- Wenn der Nutzer dich bittet, einen kompletten Server zu bauen oder alle Kanäle neu zu erstellen (z. B. "Baue mir einen Gaming-Server"), lehne das höflich ab und erkläre, dass du der **Orbit AI Helper** bist: Du hilfst dabei, den bestehenden Server zu konfigurieren (Willkommensnachrichten, Tickets, AutoMod, Verifizierung, Level-System, Logs usw.), hochgeladene Bilder/Screenshots oder Dateien zu analysieren und Kanal- sowie Rollenberechtigungen präzise einzustellen (z. B. einer bestimmten Rolle in allen oder bestimmten Kanälen das Sehen/Schreiben zu erlauben oder zu verbieten).
+REGELN:
+- Du bist KEIN Server-Builder! Baue niemals komplette Server neu und lösche keine Server-Strukturen. Lehne solche Anfragen höflich ab.
+- Du konfigurierst bestehende Servermodule (Welcome, Tickets, AutoMod, Verify, Levels, TempVoice, Logs) und passt Kanal-/Rollen-Berechtigungen präzise an.
+- Analysiere hochgeladene Screenshots, Bilder oder Vorlagendateien und erstelle passende Actions.
 
-BILD- & DATEI-ANALYSE:
-- Wenn der Nutzer ein Bild (Screenshot, Embed-Design, Rollen-/Kanal-Übersicht, Regelwerk) oder eine Datei hochlädt, schaue dir den Inhalt genau an, gib hilfreiche Tipps und erstelle – falls passend – direkt die entsprechenden Konfigurations-Actions im `"actions"` Array (z. B. Farben, Texte, Berechtigungen oder Modul-Einstellungen übernehmen).
+SERVER-KONTEXT:
+- Server: {guild.name} (ID: {guild.id}, {guild.member_count} Mitglieder)
+- Kategorien: {', '.join(cats) if cats else 'Keine'}
+- Textkanäle: {', '.join(txt_chs) if txt_chs else 'Keine'}
+- Sprachkanäle: {', '.join(vc_chs) if vc_chs else 'Keine'}
+- Rollen: {', '.join(roles_list)}
+- Aktive Module: {', '.join(active_mods) if active_mods else 'Keine'}
 
-AKTUELLER SERVER-KONTEXT:
-- Servername: {guild.name} (Server-ID: {guild.id}, {guild.member_count} Mitglieder)
-- Kategorien ({len(cats)}):
-{chr(10).join(cats[:40]) if cats else "  (Keine Kategorien)"}
-- Textkanäle ({len(txt_chs)}):
-{chr(10).join(txt_chs[:60]) if txt_chs else "  (Keine Textkanäle)"}
-- Sprachkanäle ({len(vc_chs)}):
-{chr(10).join(vc_chs[:30]) if vc_chs else "  (Keine Sprachkanäle)"}
-- Rollen ({len(roles_list)}):
-{chr(10).join(roles_list[:50])}
-- Aktueller Modul-Status:
-{json.dumps(module_summary, ensure_ascii=False)}
-
-DEINE FÄHIGKEITEN (ACTIONS):
-Wenn der Nutzer eine Konfiguration oder Berechtigungsänderung wünscht, erstelle passende Einträge im `"actions"` Array deiner JSON-Antwort. Diese werden im rechten "Planen"-Panel als Vorschau angezeigt und angewendet, sobald der Nutzer auf **"Bauen"** klickt.
-
-Unterstützte Action-Typen im `"actions"` Array:
-
-1. **Kanal-Berechtigungen für Rollen ändern (`"type": "channel_permissions"`)**:
-   Perfekt für Anfragen wie: *"Mache in jedem Channel, dass die Rolle X nicht die Permission hat, den Channel zu sehen"* oder *"Sperre #ankündigungen zum Schreiben für @everyone"*.
-   Format:
-   ```json
-   {{
-     "type": "channel_permissions",
-     "title": "Rolle @Unverified in allen Kanälen ausblenden",
-     "description": "Entzieht der Rolle @Unverified das Recht 'Kanal anzeigen' (view_channel) in allen Kanälen.",
-     "role_id": "<Rollen-ID oder leer lassen wenn role_name genutzt wird>",
-     "role_name": "<Rollenname oder @everyone>",
-     "target_scope": "all",
-     "channel_type": "all",
-     "channel_ids": [],
-     "channel_names": [],
-     "category_ids": [],
-     "category_names": [],
-     "exclude_channel_ids": [],
-     "exclude_channel_names": [],
-     "permissions": {{
-       "view_channel": false
-     }}
-   }}
-   ```
-   - `target_scope`: `"all"` (alle Kanäle), `"category"` (bestimmte Kategorien), oder `"channels"` (bestimmte Kanäle).
-   - `channel_type`: `"all"`, `"text"`, oder `"voice"`.
-   - `permissions`: Objekt mit Discord-Rechten (`view_channel`, `send_messages`, `read_message_history`, `connect`, `speak`, `attach_files`, `embed_links`, `add_reactions`, `use_external_emojis`, `manage_messages`). Werte: `true` (Erlauben), `false` (Verbieten), `null` (Neutral/Zurücksetzen).
-
-2. **Willkommensnachrichten konfigurieren (`"type": "configure_welcome"`)**:
-   ```json
-   {{
-     "type": "configure_welcome",
-     "title": "Willkommensnachrichten einrichten",
-     "description": "Aktiviert Willkommens-Embeds im Kanal #willkommen",
-     "settings": {{
-       "enabled": true,
-       "channel_id": "<Kanal-ID>",
-       "msg_mode": "embed",
-       "message": "Willkommen {{user}} auf **{{server}}**!",
-       "embed_title": "Willkommen auf {{server}}! 👋",
-       "embed_description": "Hallo {{user}}, schön dass du da bist! Du bist unser **#{{membercount}}** Mitglied.",
-       "embed_color": "#5865F2",
-       "embed_footer": "Viel Spaß auf dem Server!",
-       "dm_enabled": false,
-       "dm_message": ""
-     }}
-   }}
-   ```
-
-3. **Abschiedsnachrichten konfigurieren (`"type": "configure_goodbye"`)**:
-   ```json
-   {{
-     "type": "configure_goodbye",
-     "title": "Abschiedsnachrichten einrichten",
-     "description": "Sendet eine Nachricht, wenn ein Mitglied den Server verlässt",
-     "settings": {{
-       "enabled": true,
-       "channel_id": "<Kanal-ID>",
-       "msg_mode": "embed",
-       "message": "**{{username}}** hat den Server verlassen.",
-       "embed_title": "Auf Wiedersehen! 👋",
-       "embed_description": "**{{username}}** hat **{{server}}** verlassen. Wir sind jetzt {{membercount}} Mitglieder.",
-       "embed_color": "#ED4245"
-     }}
-   }}
-   ```
-
-4. **Auto-Rollen / Join-Rollen (`"type": "configure_joinroles"`)**:
-   ```json
-   {{
-     "type": "configure_joinroles",
-     "title": "Auto-Rolle bei Beitritt aktivieren",
-     "description": "Vergibt automatisch die Rolle @Mitglied an neue Mitglieder",
-     "settings": {{
-       "enabled": true,
-       "roles": ["<Rollen-ID>"]
-     }}
-   }}
-   ```
-
-5. **Verifizierung (`"type": "configure_verify"`)**:
-   ```json
-   {{
-     "type": "configure_verify",
-     "title": "Verifizierung einrichten",
-     "description": "Aktiviert das Verifizierungs-System und weist die verifizierte Rolle zu",
-     "settings": {{
-       "enabled": true,
-       "channel_id": "<Kanal-ID>",
-       "role_id": "<Rollen-ID>",
-       "embed_title": "Server-Verifizierung",
-       "embed_description": "Klicke unten auf den Button, um dich zu verifizieren und Zugriff auf den Server zu erhalten.",
-       "embed_color": "#57F287"
-     }}
-   }}
-   ```
-
-6. **Ticket-System (`"type": "configure_tickets"`)**:
-   ```json
-   {{
-     "type": "configure_tickets",
-     "title": "Ticket-System konfigurieren",
-     "description": "Richtet das Support-Ticket-System ein",
-     "settings": {{
-       "enabled": true,
-       "channel_id": "<Kanal-ID>",
-       "category_id": "<Kategorie-ID>",
-       "log_channel_id": "<Log-Kanal-ID>",
-       "supporter_role_ids": ["<Supporter-Rollen-ID>"],
-       "embed_title": "Support-Tickets 🎫",
-       "embed_description": "Wähle unten ein Anliegen aus oder klicke auf den Button, um ein privates Support-Ticket zu öffnen."
-     }}
-   }}
-   ```
-
-7. **Auto-Moderation (`"type": "configure_automod"`)**:
-   ```json
-   {{
-     "type": "configure_automod",
-     "title": "Auto-Moderation anpassen",
-     "description": "Aktiviert Spam-Schutz, Linkfilter und Inhaltsfilter",
-     "settings": {{
-       "enabled": true,
-       "banned_words": {{"enabled": true, "action": "warn", "filter_level": "normal"}},
-       "anti_spam": {{"enabled": true, "max_messages": 5, "time_window_sec": 3, "action": "warn"}},
-       "anti_link": {{"enabled": true, "action": "warn"}},
-       "anti_invites": {{"enabled": true, "action": "warn"}},
-       "anti_alt": {{"enabled": true, "min_age_days": 3, "action": "kick"}},
-       "ai_automod": {{"enabled": true, "action": "delete"}},
-       "ai_image": {{"enabled": true, "action": "delete"}}
-     }}
-   }}
-   ```
-
-8. **Server-Sicherheit / Anti-Raid & Anti-Nuke (`"type": "configure_security"`)**:
-   ```json
-   {{
-     "type": "configure_security",
-     "title": "Anti-Raid & Anti-Nuke Schutz aktivieren",
-     "description": "Schützt den Server vor Join-Raids und Massenlöschungen",
-     "settings": {{
-       "anti_raid": {{"enabled": true, "join_threshold": 10, "time_window": 10, "action": "kick"}},
-       "anti_nuke": {{"enabled": true, "action": "strip_roles"}}
-     }}
-   }}
-   ```
-
-9. **XP & Level-System (`"type": "configure_level"`)**:
-   ```json
-   {{
-     "type": "configure_level",
-     "title": "XP & Level-System aktivieren",
-     "description": "Aktiviert XP für Nachrichten und Level-Up Ankündigungen",
-     "settings": {{
-       "enabled": true,
-       "announce_channel_id": "<Kanal-ID>",
-       "xp_per_message": 15,
-       "xp_cooldown": 60,
-       "level_up_message": "GG {{user}}, du bist auf **Level {{level}}** aufgestiegen! 🎉"
-     }}
-   }}
-   ```
-
-10. **Protokollierung / Logging (`"type": "configure_logs"`)**:
-    ```json
-    {{
-      "type": "configure_logs",
-      "title": "Server-Protokollierung aktivieren",
-      "description": "Protokolliert Ereignisse im Log-Kanal",
-      "settings": {{
-        "enabled": true,
-        "default_channel_id": "<Kanal-ID>"
-      }}
-    }}
-    ```
-
-11. **Join-to-Create Sprachkanäle (`"type": "configure_tempvoice"`)**:
-    ```json
-    {{
-      "type": "configure_tempvoice",
-      "title": "Join-to-Create einrichten",
-      "description": "Aktiviert temporäre Sprachkanäle",
-      "settings": {{
-        "enabled": true,
-        "trigger_channel_id": "<Sprachkanal-ID>",
-        "category_id": "<Kategorie-ID>",
-        "default_name": "🔊 {{user}}s Kanal",
-        "default_limit": 0
-      }}
-    }}
-    ```
-
-12. **Einladungs-Tracker (`"type": "configure_invites"`)**:
-    ```json
-    {{
-      "type": "configure_invites",
-      "title": "Einladungs-Tracker aktivieren",
-      "description": "Verfolgt Einladungen und Austritte",
-      "settings": {{
-        "enabled": true,
-        "track_leaves": true,
-        "count_rejoins": false
-      }}
-    }}
-    ```
+UNTERSTÜTZTE ACTIONS (im "actions" Array deiner Antwort):
+1. channel_permissions: {{"type": "channel_permissions", "title": "...", "description": "...", "role_id": "...", "role_name": "...", "target_scope": "all"|"category"|"channels", "channel_type": "all"|"text"|"voice", "channel_ids": [], "category_ids": [], "exclude_channel_ids": [], "permissions": {{"view_channel": true|false|null, "send_messages": true|false|null, "read_message_history": true|false|null, "connect": true|false|null, "speak": true|false|null}}}}
+2. configure_welcome: {{"type": "configure_welcome", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}}}}
+3. configure_goodbye: {{"type": "configure_goodbye", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#ED4245"}}}}
+4. configure_joinroles: {{"type": "configure_joinroles", "title": "...", "description": "...", "settings": {{"enabled": true, "roles": ["<Rollen-ID>"]}}}}
+5. configure_verify: {{"type": "configure_verify", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "role_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#57F287"}}}}
+6. configure_tickets: {{"type": "configure_tickets", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "category_id": "...", "log_channel_id": "...", "supporter_role_ids": ["..."], "embed_title": "...", "embed_description": "..."}}}}
+7. configure_automod: {{"type": "configure_automod", "title": "...", "description": "...", "settings": {{"enabled": true, "banned_words": {{"enabled": true, "action": "warn"}}, "anti_spam": {{"enabled": true, "max_messages": 5, "time_window_sec": 3, "action": "warn"}}, "anti_link": {{"enabled": true, "action": "warn"}}, "anti_invites": {{"enabled": true, "action": "warn"}}, "anti_alt": {{"enabled": true, "min_age_days": 3, "action": "kick"}}, "ai_automod": {{"enabled": true, "action": "delete"}}}}}}
+8. configure_security: {{"type": "configure_security", "title": "...", "description": "...", "settings": {{"anti_raid": {{"enabled": true, "join_threshold": 10, "time_window": 10, "action": "kick"}}, "anti_nuke": {{"enabled": true, "action": "strip_roles"}}}}}}
+9. configure_level: {{"type": "configure_level", "title": "...", "description": "...", "settings": {{"enabled": true, "announce_channel_id": "...", "xp_per_message": 15, "xp_cooldown": 60, "level_up_message": "GG {{user}}, Level {{level}}!"}}}}
+10. configure_logs: {{"type": "configure_logs", "title": "...", "description": "...", "settings": {{"enabled": true, "default_channel_id": "..."}}}}
+11. configure_tempvoice: {{"type": "configure_tempvoice", "title": "...", "description": "...", "settings": {{"enabled": true, "trigger_channel_id": "...", "category_id": "...", "default_name": "🔊 {{user}}s Kanal", "default_limit": 0}}}}
+12. configure_invites: {{"type": "configure_invites", "title": "...", "description": "...", "settings": {{"enabled": true, "track_leaves": true, "count_rejoins": false}}}}
 
 ANTWORT-FORMAT (ZWINGEND REINES JSON):
-Antworte IMMER ausschließlich mit einem validen JSON-Objekt in genau diesem Format (ohne Text außerhalb des JSON):
+Antworte IMMER ausschließlich mit einem validen JSON-Objekt:
 ```json
 {{
-  "reply": "Deine freundliche, übersichtliche Antwort an den Nutzer (Markdown erlaubt). Erkläre kurz, was du analysiert oder vorbereitet hast und dass der Nutzer rechts oben auf **Bauen** klicken kann, um die Änderungen anzuwenden.",
-  "actions": [
-    ...
-  ]
+  "reply": "Freundliche Antwort an den Nutzer (Markdown erlaubt). Erwähne kurz, dass rechts oben auf **Bauen** geklickt werden kann.",
+  "actions": [...]
 }}
 ```
-Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
+Nutze IMMER die echten IDs aus dem obigen Server-Kontext!"""
 
     async def api_ai_helper_get_chats(self, request: web.Request):
         guild_id_str = request.match_info.get("id", "")
@@ -681,23 +468,26 @@ Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
             }
             chats.insert(0, current_chat)
 
-        # Build message history for LLM
+        # Build message history for LLM with compact context
         system_prompt = self._build_guild_context_prompt(guild)
         llm_messages: List[Dict[str, Any]] = [{"role": "system", "content": system_prompt}]
-        for msg in current_chat.get("messages", [])[-10:]:
+        for msg in current_chat.get("messages", [])[-6:]:
             role = "assistant" if msg.get("role") == "assistant" else "user"
-            content = str(msg.get("content") or "")
+            content = str(msg.get("content") or "").strip()
             if role == "assistant" and msg.get("actions"):
-                content = json.dumps({"reply": content, "actions": msg.get("actions")}, ensure_ascii=False)
-            llm_messages.append({"role": role, "content": content})
+                act_titles = [f"[{a.get('type')}: {a.get('title') or a.get('type')}]" for a in msg.get("actions", []) if isinstance(a, dict)]
+                if act_titles:
+                    content = f"{content}\n(Geplante Aktionen: {', '.join(act_titles[:4])})"
+            llm_messages.append({"role": role, "content": content[:1200]})
 
         # Augment user prompt with uploaded file contents if any
         augmented_prompt = user_message
         if file_attachments:
             file_blocks = []
-            for fatt in file_attachments:
-                file_blocks.append(f"\n--- DATEI: {fatt['name']} ---\n{fatt['textContent']}\n--- ENDE DATEI ---")
-            augmented_prompt = f"{user_message}\n\nDer Nutzer hat folgende Datei(en) zur Analyse/Verwendung angehängt:{''.join(file_blocks)}"
+            for fatt in file_attachments[:4]:
+                txt_snippet = str(fatt.get("textContent") or "")[:1500]
+                file_blocks.append(f"\n--- DATEI: {fatt.get('name', 'file')} ---\n{txt_snippet}\n--- ENDE DATEI ---")
+            augmented_prompt = f"{user_message}\n\nAngehängte Dateien zur Analyse:{''.join(file_blocks)}"
 
         has_images = len(image_attachments) > 0
         if has_images:
@@ -732,19 +522,25 @@ Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
                         req_messages = vision_messages
                     else:
                         available_models = await _resolve_groq_models(session, groq_key, need_vision=False)
+                        # Always guarantee high-capacity fallback models (30,000 TPM)
+                        for fb in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]:
+                            if fb not in available_models:
+                                available_models.append(fb)
+
                         if requested_model and requested_model in available_models:
                             models_to_try = [requested_model] + [m for m in available_models if m != requested_model]
                         else:
                             models_to_try = available_models
                         req_messages = llm_messages
 
+                    current_max_tokens = 1024
                     for model_name in models_to_try:
                         try:
                             payload = {
                                 "model": model_name,
                                 "messages": req_messages,
                                 "temperature": 0.4,
-                                "max_tokens": 2048,
+                                "max_tokens": current_max_tokens,
                             }
                             headers = {
                                 "Content-Type": "application/json",
@@ -754,7 +550,7 @@ Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
                                 "https://api.groq.com/openai/v1/chat/completions",
                                 json=payload,
                                 headers=headers,
-                                timeout=aiohttp.ClientTimeout(total=22.0),
+                                timeout=aiohttp.ClientTimeout(total=20.0),
                             ) as resp:
                                 if resp.status == 200:
                                     data = await resp.json()
@@ -765,6 +561,8 @@ Nutze IMMER die echten Kanal- und Rollen-IDs aus dem obigen Server-Kontext!"""
                                 else:
                                     err_txt = await resp.text()
                                     print(f"[AIHelper] Groq model {model_name} returned {resp.status}: {err_txt[:200]}")
+                                    if resp.status == 413:
+                                        current_max_tokens = min(current_max_tokens, 600)
                         except Exception as req_err:
                             print(f"[AIHelper] Groq request error ({model_name}): {req_err}")
                             continue

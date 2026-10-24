@@ -165,8 +165,8 @@ DashboardTabs.Builder = async function(container, guildId) {
   let planTab = 'channels'; // 'channels' | 'roles' | 'features'
   let featuresPanelOpen = false;
   let collapsedCategories = new Set();
-  let selectedModel = 'openai/gpt-oss-120b';
-  let selectedModelLabel = 'Onyx V1';
+  let selectedModel = 'llama-3.3-70b-versatile';
+  let selectedModelLabel = 'Llama 3.3 70B';
   let modelDropdownOpen = false;
   let historyDropdownOpen = false;
   let quickAddDropdownOpen = false;
@@ -201,10 +201,11 @@ DashboardTabs.Builder = async function(container, guildId) {
   let canRedo = Boolean(chatData.can_redo);
 
   const MODELS = [
-    { id: 'openai/gpt-oss-120b', label: 'Onyx V1', desc: 'GPT-OSS 120B · Höchste Präzision' },
+    { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', desc: 'Meta Llama 3.3 · Schnell, präzise & 30k TPM' },
+    { id: 'openai/gpt-oss-120b', label: 'Onyx V1 (120B)', desc: 'GPT-OSS 120B · Höchste Präzision' },
     { id: 'qwen/qwen3.8-27b', label: 'Qwen 3.8', desc: 'Qwen 27B · Schnell & Clever' },
     { id: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Vision', desc: 'Multimodal · Ideal für Bilder & Screenshots' },
-    { id: 'openai/gpt-oss-20b', label: 'Onyx Fast', desc: 'GPT-OSS 20B · Ultra-Schnell' }
+    { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B', desc: 'Ultra-Schnell · Geringste Latenz' }
   ];
 
   // Exact 17 features from PeakBot reference HTML
@@ -1753,8 +1754,8 @@ DashboardTabs.Builder = async function(container, guildId) {
     container.querySelectorAll('[data-select-model]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        selectedModel = btn.getAttribute('data-select-model') || 'openai/gpt-oss-120b';
-        selectedModelLabel = btn.getAttribute('data-select-model-label') || 'Onyx V1';
+        selectedModel = btn.getAttribute('data-select-model') || 'llama-3.3-70b-versatile';
+        selectedModelLabel = btn.getAttribute('data-select-model-label') || 'Llama 3.3 70B';
         closeAllPopupsDom();
         render();
       });
