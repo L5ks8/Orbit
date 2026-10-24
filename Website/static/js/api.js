@@ -67,18 +67,52 @@ const API = {
   _cache: new Map(),
   _pending: new Map(),
 
+  // Keys that survive a page reload (sessionStorage) so F5 is instant too
+  _persistPrefixes: ['config_', 'botprofile_', 'polls_', 'giveaways_', 'guild_stats_', 'guild_analytics_'],
+
+  _isPersistable(key) {
+    return this._persistPrefixes.some(p => String(key).startsWith(p));
+  },
+
+  _hydrate(key) {
+    if (!this._isPersistable(key)) return null;
+    try {
+      const raw = sessionStorage.getItem('orbit_c_' + key);
+      if (!raw) return null;
+      const item = JSON.parse(raw);
+      if (!item || typeof item.time !== 'number') return null;
+      // Discard anything older than 6h
+      if (Date.now() - item.time > 6 * 3600 * 1000) return null;
+      this._cache.set(key, item);
+      return item;
+    } catch (_) { return null; }
+  },
+
+  _getEntry(key) {
+    return this._cache.get(key) || this._hydrate(key);
+  },
+
   getCache(key, maxAge = 600000) {
-    const item = this._cache.get(key);
+    const item = this._getEntry(key);
     if (!item) return null;
     if (Date.now() - item.time > maxAge) {
-      this._cache.delete(key);
+      // Keep stale entry for stale-while-revalidate, but report as miss
       return null;
     }
     return item.data;
   },
 
+  getStale(key) {
+    const item = this._getEntry(key);
+    return item ? item.data : null;
+  },
+
   setCache(key, data) {
-    this._cache.set(key, { data, time: Date.now() });
+    const item = { data, time: Date.now() };
+    this._cache.set(key, item);
+    if (this._isPersistable(key)) {
+      try { sessionStorage.setItem('orbit_c_' + key, JSON.stringify(item)); } catch (_) {}
+    }
   },
 
   hasCache(key, maxAge = 600000) {
@@ -86,6 +120,14 @@ const API = {
   },
 
   invalidateCache(pattern) {
+    try {
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const sk = sessionStorage.key(i);
+        if (sk && sk.startsWith('orbit_c_') && (!pattern || sk.slice(8).includes(pattern))) {
+          sessionStorage.removeItem(sk);
+        }
+      }
+    } catch (_) {}
     if (!pattern) {
       this._cache.clear();
       return;
@@ -101,6 +143,25 @@ const API = {
     if (!force) {
       const cached = this.getCache(key, maxAge);
       if (cached !== null) return cached;
+      // Stale-while-revalidate: show old data instantly, refresh silently in background
+      const stale = this.getStale(key);
+      if (stale !== null && stale !== undefined) {
+        if (!this._pending.has(key)) {
+          const bg = (async () => {
+            try {
+              const data = await fetchFn();
+              this.setCache(key, data);
+              return data;
+            } catch (_) {
+              return stale;
+            } finally {
+              this._pending.delete(key);
+            }
+          })();
+          this._pending.set(key, bg);
+        }
+        return stale;
+      }
     }
     if (this._pending.has(key)) {
       return this._pending.get(key);
@@ -131,7 +192,7 @@ const API = {
     // Pre-warm secondary endpoints in idle background so tab switching is 100% instant
     if (typeof this.getGiveaways === 'function') this.getGiveaways(guildId).catch(() => {});
     if (typeof this.getPolls === 'function') this.getPolls(guildId).catch(() => {});
-    if (typeof this.getBackups === 'function') this.getBackups(guildId).catch(() => {});
+    if (typeof this.getBotProfile === 'function') this.getBotProfile(guildId).catch(() => {});
   },
 
   async prefetchAll(user) {
@@ -269,7 +330,7 @@ const API = {
   },
 
   async getConfig(guildId, force = false) {
-    const res = await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}${force ? '?force=true' : ''}`), force, 20000);
+    const res = await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}${force ? '?force=true' : ''}`), force, 60000);
     try {
       if (res && typeof res === 'object') {
         if (Array.isArray(res.channels)) {
@@ -695,6 +756,9 @@ const API = {
       body: { actions }
     });
     this.invalidateCache(`config_${guildId}`);
+    this.invalidateCache(`giveaways_${guildId}`);
+    this.invalidateCache(`polls_${guildId}`);
+    this.invalidateCache(`reactionroles_${guildId}`);
     return res;
   },
 
@@ -703,6 +767,9 @@ const API = {
       method: 'POST'
     });
     this.invalidateCache(`config_${guildId}`);
+    this.invalidateCache(`giveaways_${guildId}`);
+    this.invalidateCache(`polls_${guildId}`);
+    this.invalidateCache(`reactionroles_${guildId}`);
     return res;
   },
 
@@ -711,6 +778,9 @@ const API = {
       method: 'POST'
     });
     this.invalidateCache(`config_${guildId}`);
+    this.invalidateCache(`giveaways_${guildId}`);
+    this.invalidateCache(`polls_${guildId}`);
+    this.invalidateCache(`reactionroles_${guildId}`);
     return res;
   },
 

@@ -21,6 +21,16 @@ const Router = {
       }
     });
 
+    // Warm a guild's data as soon as the user hovers/touches a link to its dashboard
+    const warmGuild = (e) => {
+      const link = e.target.closest && e.target.closest('a[href^="/dashboard/"]');
+      if (!link || !this.currentUser) return;
+      const m = (link.getAttribute('href') || '').match(/^\/dashboard\/([0-9]+)/);
+      if (m && API.prefetchGuild) API.prefetchGuild(m[1]);
+    };
+    document.addEventListener('mouseover', warmGuild, { passive: true });
+    document.addEventListener('touchstart', warmGuild, { passive: true });
+
     this.checkAuth().then(() => this.handleRoute());
   },
 

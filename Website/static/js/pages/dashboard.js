@@ -511,6 +511,54 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       }
     }, { passive: true });
   }
+
+  // Background pre-mount of every tab during browser idle time,
+  // so even the very first click on a tab shows instantly (no loading state)
+  Pages._idlePremountAllTabs(tabContainer, guildId, currentGuild);
+};
+
+Pages._idlePremountAllTabs = async function(tabContainer, guildId, currentGuild) {
+  const SKIP = new Set(['builder', 'ai-helper']);
+  const idle = (fn) => (window.requestIdleCallback
+    ? window.requestIdleCallback(fn, { timeout: 1500 })
+    : setTimeout(fn, 120));
+
+  // Wait for the shared config first so all panes render from cache, not with spinners
+  try { await API.getConfig(guildId); } catch (_) {}
+
+  const nav = document.getElementById('dash-sidebar-nav');
+  if (!nav) return;
+  const tabs = [];
+  nav.querySelectorAll('a[href]').forEach(a => {
+    const parts = (a.getAttribute('href') || '').split('/').filter(Boolean);
+    if (parts[0] === 'dashboard' && parts[1] === String(guildId)) {
+      const t = parts[2] || 'overview';
+      if (!SKIP.has(t) && !tabs.includes(t)) tabs.push(t);
+    }
+  });
+
+  const next = () => {
+    // Stop if the user left this guild dashboard
+    if (!tabContainer.isConnected || String(window.__currentDashboardGuildId) !== String(guildId)) return;
+    const t = tabs.shift();
+    if (!t) return;
+    const paneId = `dash-pane-${t}`;
+    if (!document.getElementById(paneId)) {
+      const pane = document.createElement('div');
+      pane.id = paneId;
+      pane.className = 'dash-tab-pane w-full';
+      pane.style.display = 'none';
+      tabContainer.appendChild(pane);
+      const handlers = Pages._getDashboardTabHandlers(pane, guildId, currentGuild);
+      if (handlers[t]) {
+        Pages._mountDashboardTab(pane, handlers[t], t, guildId);
+      } else if (DashboardTabs.Modules) {
+        Pages._mountDashboardTab(pane, () => DashboardTabs.Modules(pane, guildId, t), t, guildId);
+      }
+    }
+    idle(next);
+  };
+  idle(next);
 };
 
 Pages._switchDashboardPane = function(tabContainer, tab, guildId) {
