@@ -159,6 +159,9 @@ class ConfigMixin:
         from Components.Systems.BanAppeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(guild_id)
 
+        from Components.Systems.InactiveKick._storage import load_inactive_kick_config
+        inactive_kick_cfg = load_inactive_kick_config(guild_id)
+
         from Components.Database.mongodb import get_config
         global_settings = get_config("Settings", guild_id)
         ai_enabled = global_settings.get("ai_enabled", True) if global_settings else True
@@ -334,6 +337,7 @@ class ConfigMixin:
             "autoresponder_enabled": settings_cfg.get("autoresponder_enabled", False),
             "messages_enabled": settings_cfg.get("messages_enabled", False),
             "appeals": appeals_cfg,
+            "inactive_kick": inactive_kick_cfg,
             "welcome": {
                 "enabled": welcome_cfg.get("enabled", False),
                 "dm_enabled": welcome_cfg.get("dm_enabled", False),
@@ -753,6 +757,12 @@ class ConfigMixin:
             if (can_admin or can_channels) and "appeals" in data:
                 from Components.Systems.BanAppeals._storage import save_appeals_config
                 save_appeals_config(guild_id, data["appeals"])
+
+            if (can_admin or can_channels) and ("inactive_kick" in data or "inactivekick" in data):
+                from Components.Systems.InactiveKick._storage import save_inactive_kick_config
+                ik_data = data.get("inactive_kick") or data.get("inactivekick")
+                if isinstance(ik_data, dict):
+                    save_inactive_kick_config(guild_id, ik_data)
 
             if (can_admin or can_channels) and "serverstats" in data:
                 s_data = data.get("serverstats", {})

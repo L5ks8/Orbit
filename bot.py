@@ -336,6 +336,7 @@ class OrbitBot(commands.Bot):
             ("Components.Systems.Level.levellistener", "Level Listener"),
             ("Components.Systems.Verify.verifylistener", "Verify Listener"),
             ("Components.Systems.Verify.verify", "Verify Commands"),
+            ("Components.Systems.InactiveKick.listener", "Inactive Kick Listener"),
         ]
 
         print("=== Orbit System Loading ===", flush=True)

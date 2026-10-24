@@ -533,6 +533,7 @@ Pages._getDashboardTabHandlers = function(tabContainer, guildId, currentGuild) {
     'security': () => DashboardTabs.Security && DashboardTabs.Security(tabContainer, guildId),
     'backups': () => DashboardTabs.Backups && DashboardTabs.Backups(tabContainer, guildId),
     'inactive-kick': () => DashboardTabs.InactiveKick && DashboardTabs.InactiveKick(tabContainer, guildId),
+    'idle-kick': () => DashboardTabs.InactiveKick && DashboardTabs.InactiveKick(tabContainer, guildId),
     'appeals': () => DashboardTabs.Appeals && DashboardTabs.Appeals(tabContainer, guildId),
     'serverstats': () => DashboardTabs.ServerStats && DashboardTabs.ServerStats(tabContainer, guildId),
     'autoresponder': () => DashboardTabs.AutoResponder && DashboardTabs.AutoResponder(tabContainer, guildId),
