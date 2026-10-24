@@ -2136,6 +2136,17 @@ DashboardTabs.Roles = async function (container, guildId) {
     // Global click outside to close dropdown menus
     document.addEventListener('click', () => closeAllMenus(null));
   } catch (err) {
-    container.innerHTML = `<div class="p-8 text-red-400 text-center text-sm">Failed to load Roles configuration: ${err.message}</div>`;
+    if (typeof window.renderErrorState === 'function') {
+      window.renderErrorState(container, {
+        title: 'Rollenkonfiguration konnte nicht geladen werden',
+        message: 'Beim Abrufen der Rollen vom Server ist ein Fehler aufgetreten. Bitte überprüfe deine Verbindung oder lade die Seite neu.',
+        details: err?.message || String(err),
+        statusCode: err?.status || (err?.message && err.message.includes('500') ? 500 : 404),
+        onRetry: () => DashboardTabs.Roles(container, guildId),
+        backUrl: `/dashboard/${guildId}`
+      });
+    } else {
+      container.innerHTML = `<div class="p-8 text-red-400 text-center text-sm">Failed to load Roles configuration: ${err.message}</div>`;
+    }
   }
 };

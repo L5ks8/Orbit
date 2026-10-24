@@ -136,13 +136,23 @@ const Router = {
     }
 
     // 404
-    app.innerHTML = `
-      <div class="flex flex-col items-center justify-center min-h-[70vh] text-center p-6">
-        <h1 class="text-6xl font-bold text-white mb-4">404</h1>
-        <p class="text-neutral-400 text-lg mb-6">Page not found.</p>
-        <a href="/" class="px-6 py-2.5 rounded-xl bg-white text-black font-semibold hover:bg-neutral-200 transition-colors">Go Home</a>
-      </div>
-    `;
+    if (typeof window.renderErrorState === 'function') {
+      window.renderErrorState(app, {
+        title: 'Seite nicht gefunden',
+        message: 'Die angeforderte Seite existiert nicht oder wurde möglicherweise verschoben.',
+        statusCode: 404,
+        backUrl: '/',
+        backText: 'Zur Startseite'
+      });
+    } else {
+      app.innerHTML = `
+        <div class="flex flex-col items-center justify-center min-h-[70vh] text-center p-6">
+          <h1 class="text-6xl font-bold text-white mb-4">404</h1>
+          <p class="text-neutral-400 text-lg mb-6">Page not found.</p>
+          <a href="/" class="px-6 py-2.5 rounded-xl bg-white text-black font-semibold hover:bg-neutral-200 transition-colors">Go Home</a>
+        </div>
+      `;
+    }
   },
 
   updateNavbarUser() {

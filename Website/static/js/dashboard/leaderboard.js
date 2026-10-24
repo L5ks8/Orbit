@@ -48,6 +48,17 @@ DashboardTabs.Leaderboard = async function(container, guildId) {
       </div>
     `).join('');
   } catch (err) {
-    container.innerHTML = `<div class="p-8 text-red-400 text-center">Failed to load leaderboard: ${err.message}</div>`;
+    if (typeof window.renderErrorState === 'function') {
+      window.renderErrorState(container, {
+        title: 'Bestenliste konnte nicht geladen werden',
+        message: 'Beim Abrufen der Leaderboard-Daten ist ein Fehler aufgetreten.',
+        details: err?.message || String(err),
+        statusCode: err?.status || 500,
+        onRetry: () => DashboardTabs.Leaderboard(container, guildId),
+        backUrl: `/dashboard/${guildId}`
+      });
+    } else {
+      container.innerHTML = `<div class="p-8 text-red-400 text-center">Failed to load leaderboard: ${err.message}</div>`;
+    }
   }
 };

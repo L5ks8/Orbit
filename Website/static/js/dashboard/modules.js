@@ -70,10 +70,21 @@ DashboardTabs.Modules = async function(container, guildId, moduleId) {
     loading.classList.add('hidden');
     content.classList.remove('hidden');
   } catch (err) {
-    container.innerHTML = `
-      <div class="p-8 rounded-2xl bg-red-950/20 border border-red-900/30 text-red-400 text-center">
-        Failed to load module: ${err.message}
-      </div>
-    `;
+    if (typeof window.renderErrorState === 'function') {
+      window.renderErrorState(container, {
+        title: 'Modul konnte nicht geladen werden',
+        message: 'Beim Abrufen der Modulkonfiguration ist ein Fehler aufgetreten.',
+        details: err?.message || String(err),
+        statusCode: err?.status || 500,
+        onRetry: () => DashboardTabs.Modules(container, guildId, moduleId),
+        backUrl: `/dashboard/${guildId}`
+      });
+    } else {
+      container.innerHTML = `
+        <div class="p-8 rounded-2xl bg-red-950/20 border border-red-900/30 text-red-400 text-center">
+          Failed to load module: ${err.message}
+        </div>
+      `;
+    }
   }
 };

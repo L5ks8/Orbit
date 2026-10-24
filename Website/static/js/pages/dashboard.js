@@ -461,9 +461,39 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     'leaderboard': () => DashboardTabs.Leaderboard && DashboardTabs.Leaderboard(tabContainer, guildId)
   };
 
+  const mountTab = async (handler, tabName) => {
+    try {
+      const p = handler();
+      if (p && typeof p.catch === 'function') {
+        await p;
+      }
+    } catch (err) {
+      console.error(`[Dashboard] Error in tab "${tabName}":`, err);
+      if (typeof window.renderErrorState === 'function') {
+        window.renderErrorState(tabContainer, {
+          title: `Fehler beim Laden von ${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`,
+          message: 'Beim Abrufen der Modulkonfiguration ist ein Fehler aufgetreten. Bitte versuche es erneut.',
+          details: err?.message || String(err),
+          statusCode: err?.status || (err?.message && err.message.includes('500') ? 500 : 404),
+          onRetry: () => mountTab(handler, tabName),
+          backUrl: `/dashboard/${guildId}`
+        });
+      } else {
+        tabContainer.innerHTML = `<div class="p-8 text-red-400 text-center text-sm">Failed to load ${tabName}: ${err.message}</div>`;
+      }
+    }
+  };
+
   if (tabHandlers[tab]) {
-    tabHandlers[tab]();
+    mountTab(tabHandlers[tab], tab);
   } else if (DashboardTabs.Modules) {
-    DashboardTabs.Modules(tabContainer, guildId, tab);
+    mountTab(() => DashboardTabs.Modules(tabContainer, guildId, tab), tab);
+  } else if (typeof window.renderErrorState === 'function') {
+    window.renderErrorState(tabContainer, {
+      title: 'Bereich nicht gefunden',
+      message: `Das Modul "${tab}" existiert nicht oder ist derzeit nicht verfügbar.`,
+      statusCode: 404,
+      backUrl: `/dashboard/${guildId}`
+    });
   }
 };
