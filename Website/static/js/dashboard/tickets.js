@@ -24,15 +24,9 @@ DashboardTabs.Tickets = async function (container, guildId) {
   `;
 
   try {
-    const [configRes, chRes, rolesRes] = await Promise.all([
-      API.getConfig(guildId).catch(() => ({})),
-      API.getChannels(guildId).catch(() => []),
-      API.getRoles(guildId).catch(() => [])
-    ]);
+    const configRes = await API.getConfig(guildId).catch(() => ({}));
 
-    const rawChannels = (Array.isArray(chRes) && chRes.length > 0)
-      ? chRes
-      : (Array.isArray(configRes?.channels) ? configRes.channels : []);
+    const rawChannels = Array.isArray(configRes?.channels) ? configRes.channels : [];
     let allChannels = rawChannels.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
     let allCategories = Array.isArray(configRes?.categories) ? [...configRes.categories] : [];
     if (allCategories.length === 0 && Array.isArray(rawChannels)) {
@@ -44,9 +38,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         }
       });
     }
-    const rawRoles = (Array.isArray(rolesRes) && rolesRes.length > 0)
-      ? rolesRes
-      : (Array.isArray(configRes?.roles) ? configRes.roles : []);
+    const rawRoles = Array.isArray(configRes?.roles) ? configRes.roles : [];
     let allRoles = rawRoles.filter(r => r.name !== '@everyone');
     const allMembers = configRes?.members || [];
     const tCfg = (configRes?.config && configRes.config.ticket) || {};

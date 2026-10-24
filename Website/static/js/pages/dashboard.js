@@ -59,20 +59,34 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     : '/img/logo.png';
   const userName = user.global_name || user.username || 'User';
 
-  // Fast in-memory cache check for instant server title & icon
-  let guilds = API.getCache('guilds');
-  if (!guilds || !Array.isArray(guilds) || guilds.length === 0) {
-    try {
-      const gData = await API.getGuilds();
-      guilds = Array.isArray(gData) ? gData : (gData?.guilds || []);
-    } catch (_) {}
+  // Fast in-memory cache check for instant server title & icon (never block page render!)
+  let currentGuild = window.__currentDashboardGuildObj;
+  if (!currentGuild || String(currentGuild.id) !== String(guildId)) {
+    const cachedCfg = API.getCache ? API.getCache(`config_${guildId}`) : null;
+    if (cachedCfg?.guild) {
+      currentGuild = cachedCfg.guild;
+    } else {
+      const fastGuilds = API.getGuildsFast ? API.getGuildsFast() : [];
+      currentGuild = fastGuilds.find(g => String(g.id) === String(guildId));
+    }
   }
-
-  const currentGuild = (guilds || []).find(g => String(g.id) === String(guildId)) || {
-    id: guildId,
-    name: 'Server Dashboard',
-    icon: null
-  };
+  if (!currentGuild) {
+    currentGuild = {
+      id: guildId,
+      name: 'Server Dashboard',
+      icon: null
+    };
+    if (API.getGuilds) {
+      API.getGuilds().then(gList => {
+        const match = (gList || []).find(g => String(g.id) === String(guildId));
+        if (match) {
+          window.__currentDashboardGuildObj = match;
+          const nameEl = document.querySelector('#dash-sidebar .truncate');
+          if (nameEl && match.name) nameEl.textContent = match.name;
+        }
+      }).catch(() => {});
+    }
+  }
 
   let guildIconUrl = '/img/logo.png';
   if (currentGuild.icon) {

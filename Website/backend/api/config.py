@@ -31,6 +31,15 @@ class ConfigMixin:
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
 
+        if not hasattr(self, "_guild_config_cache"):
+            self._guild_config_cache = {}
+        import time as _t_cfg
+        _now_cfg = _t_cfg.time()
+        _force_cfg = request.query.get("force") == "true"
+        _cached_cfg = self._guild_config_cache.get(guild_id)
+        if _cached_cfg and (_now_cfg - _cached_cfg["time"] < 30) and not _force_cfg:
+            return web.json_response(_cached_cfg["data"])
+
         text_channels = [
             c for c in sorted(guild.channels, key=lambda x: getattr(x, "position", 0))
             if isinstance(c, discord.TextChannel) or (hasattr(c, "send") and not isinstance(c, (discord.VoiceChannel, discord.StageChannel, discord.CategoryChannel)))
@@ -694,7 +703,13 @@ class ConfigMixin:
                 if hub.get("category_id"): hub["category_id"] = str(hub["category_id"])
                 if hub.get("required_role_id"): hub["required_role_id"] = str(hub["required_role_id"])
         
-        return web.json_response({
+        resp_data = {
+            "guild": {
+                "id": str(guild.id),
+                "name": guild.name,
+                "icon": str(guild.icon.url) if guild.icon else None,
+                "member_count": getattr(guild, "member_count", 0) or len(guild.members)
+            },
             "permissions": user_perms,
             "channels": channels,
             "voice_channels": voice_channels,
@@ -703,9 +718,15 @@ class ConfigMixin:
             "emojis": emojis,
             "members": members,
             "config": config_data
-        })
+        }
+        if hasattr(self, "_guild_config_cache"):
+            self._guild_config_cache[guild_id] = {"time": _now_cfg, "data": resp_data}
+        return web.json_response(resp_data)
 
     async def api_post_config(self, request: web.Request):
+        guild_id_invalidate = request.match_info.get("id")
+        if guild_id_invalidate and guild_id_invalidate.isdigit() and hasattr(self, "_guild_config_cache"):
+            self._guild_config_cache.pop(int(guild_id_invalidate), None)
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)

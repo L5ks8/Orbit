@@ -128,22 +128,21 @@
     let currentGuild = { id: guildId, name: 'Server' };
 
     try {
-      const [cfgRes, chRes, roRes, actRes, gRes] = await Promise.all([
+      const [cfgRes, actRes] = await Promise.all([
         API.getConfig(guildId).catch(() => ({})),
-        API.getChannels ? API.getChannels(guildId).catch(() => []) : (API.getGuildChannels ? API.getGuildChannels(guildId).catch(() => []) : []),
-        API.getRoles ? API.getRoles(guildId).catch(() => []) : (API.getGuildRoles ? API.getGuildRoles(guildId).catch(() => []) : []),
-        API.getModActivity ? API.getModActivity(guildId, true).catch(() => []) : Promise.resolve([]),
-        API.getGuilds ? API.getGuilds().catch(() => []) : Promise.resolve([])
+        API.getModActivity ? API.getModActivity(guildId).catch(() => []) : Promise.resolve([])
       ]);
 
       rawConfig = cfgRes?.config || cfgRes || {};
-      channels = Array.isArray(chRes) ? chRes : (Array.isArray(rawConfig.channels) ? rawConfig.channels : []);
-      roles = Array.isArray(roRes) ? roRes : (Array.isArray(rawConfig.roles) ? rawConfig.roles : []);
+      channels = Array.isArray(cfgRes?.channels) ? cfgRes.channels : [];
+      roles = Array.isArray(cfgRes?.roles) ? cfgRes.roles : [];
       modActivity = Array.isArray(actRes) ? actRes : [];
 
-      const gList = Array.isArray(gRes) ? gRes : (gRes?.guilds || []);
-      const foundG = gList.find(g => String(g.id) === String(guildId));
-      if (foundG) currentGuild = foundG;
+      if (cfgRes?.guild) {
+        currentGuild = cfgRes.guild;
+      } else if (window.__currentDashboardGuildObj) {
+        currentGuild = window.__currentDashboardGuildObj;
+      }
     } catch (e) {
       console.warn('[AutoMod] Fetch error:', e);
     }

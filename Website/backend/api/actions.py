@@ -1406,6 +1406,9 @@ class ActionsMixin:
             return web.json_response({"error": str(e)}, status=500)
 
     async def api_save_appeals_config(self, request: web.Request):
+        gid_inv = request.match_info.get("id")
+        if gid_inv and gid_inv.isdigit() and hasattr(self, "_guild_config_cache"):
+            self._guild_config_cache.pop(int(gid_inv), None)
         guild_id = int(request.match_info["id"])
         guild, perms = await self._check_guild_access(request, guild_id)
         if not guild or not (perms.get("is_admin") or perms.get("can_manage_guild")):
@@ -3250,6 +3253,9 @@ class ActionsMixin:
             return web.json_response({"error": str(e)}, status=500)
 
     async def api_save_backup_config(self, request: web.Request):
+        gid_inv = request.match_info.get("id")
+        if gid_inv and gid_inv.isdigit() and hasattr(self, "_guild_config_cache"):
+            self._guild_config_cache.pop(int(gid_inv), None)
         guild_id_str = request.match_info.get("id")
         if not guild_id_str or not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
@@ -3302,6 +3308,9 @@ class ActionsMixin:
         return web.json_response({"success": True, "security": sec_cfg})
 
     async def api_save_security_config(self, request: web.Request):
+        gid_inv = request.match_info.get("id")
+        if gid_inv and gid_inv.isdigit() and hasattr(self, "_guild_config_cache"):
+            self._guild_config_cache.pop(int(gid_inv), None)
         guild_id_str = request.match_info.get("id")
         if not guild_id_str or not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)

@@ -11,7 +11,7 @@ DashboardTabs.Leaderboard = async function(container, guildId) {
           <p class="text-xs text-neutral-400 mt-1">Top active chatters ranked by level and experience.</p>
         </div>
         <a href="/leaderboard/${guildId}" target="_blank" class="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors">
-          ${icon('external-link', 14)} Public Leaderboard Link
+          ${typeof icon === 'function' ? icon('external-link', 14) : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>'} Public Leaderboard Link
         </a>
       </div>
       <div id="dash-lb-list" class="flex flex-col gap-2">

@@ -1551,30 +1551,32 @@ DashboardTabs.Welcome = async function (container, guildId) {
     }
   }
 
-  // Initial render with loading state
-  renderPage();
+  // Initial render placeholder
+  container.innerHTML = `
+    <div class="flex items-center justify-center p-16 text-neutral-500 text-sm animate-fade-in">
+      <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+      Loading Welcome configuration...
+    </div>
+  `;
 
   try {
-    const [configData, chData, guildsData] = await Promise.all([
-      API.getConfig(guildId).catch((err) => {
-        console.warn('[Welcome] API.getConfig failed:', err);
-        return {};
-      }),
-      API.getChannels(guildId).catch(() => ([])),
-      API.getGuilds().catch(() => ([]))
-    ]);
+    const configData = await API.getConfig(guildId).catch((err) => {
+      console.warn('[Welcome] API.getConfig failed:', err);
+      return {};
+    });
 
-    const guildsList = Array.isArray(guildsData) ? guildsData : (guildsData?.guilds || []);
-    const gObj = guildsList.find(g => String(g.id) === String(guildId));
-    if (gObj) {
-      state.guildName = gObj.name || 'My Server';
-      if (gObj.member_count) state.memberCount = gObj.member_count;
+    if (configData.guild) {
+      state.guildName = configData.guild.name || 'My Server';
+      if (configData.guild.member_count) state.memberCount = configData.guild.member_count;
+    } else if (window.__currentDashboardGuildObj) {
+      state.guildName = window.__currentDashboardGuildObj.name || 'My Server';
+      if (window.__currentDashboardGuildObj.member_count) state.memberCount = window.__currentDashboardGuildObj.member_count;
     }
 
     const cfg = configData.config || configData || {};
-    const rawChs = (Array.isArray(chData) && chData.length > 0)
-      ? chData
-      : (Array.isArray(configData.channels) ? configData.channels : []);
+    const rawChs = Array.isArray(configData.channels) && configData.channels.length > 0
+      ? configData.channels
+      : (await API.getChannels(guildId).catch(() => []));
     state.allChannels = rawChs;
     state.emojis = Array.isArray(configData.emojis) ? configData.emojis : (Array.isArray(cfg.emojis) ? cfg.emojis : []);
     state.roles = Array.isArray(configData.roles) ? configData.roles : (Array.isArray(cfg.roles) ? cfg.roles : []);

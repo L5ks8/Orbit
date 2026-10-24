@@ -74,16 +74,11 @@ DashboardTabs.TempVoice = async function (container, guildId) {
       }
     }
 
-    try {
-      if (typeof API.getGuild === 'function') {
-        const g = await API.getGuild(guildId);
-        if (g && g.name) guildName = g.name;
-      } else if (typeof API.getGuilds === 'function') {
-        const gs = await API.getGuilds().catch(() => []);
-        const found = (gs || []).find(x => String(x.id) === String(guildId));
-        if (found && found.name) guildName = found.name;
-      }
-    } catch (_) {}
+    if (configRes?.guild?.name) {
+      guildName = configRes.guild.name;
+    } else if (window.__currentDashboardGuildObj?.name) {
+      guildName = window.__currentDashboardGuildObj.name;
+    }
 
     // Fallback: If voiceChannels or categories were empty, try API.getChannels
     if (voiceChannels.length === 0 || categories.length === 0) {

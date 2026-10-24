@@ -20,21 +20,19 @@ DashboardTabs.Roles = async function (container, guildId) {
   `;
 
   try {
-    const [configRes, chRes, rolesRes, reactionPanelsRes] = await Promise.all([
+    const [configRes, reactionPanelsRes] = await Promise.all([
       API.getConfig(guildId).catch(() => ({})),
-      API.getChannels(guildId).catch(() => []),
-      API.getRoles(guildId).catch(() => []),
-      API.getReactionRoles(guildId).catch(() => [])
+      API.getReactionRoles ? API.getReactionRoles(guildId).catch(() => []) : Promise.resolve([])
     ]);
 
-    const rawRoles = (Array.isArray(rolesRes) && rolesRes.length > 0)
-      ? rolesRes
-      : (Array.isArray(configRes?.roles) ? configRes.roles : []);
+    const rawRoles = (Array.isArray(configRes?.roles) && configRes.roles.length > 0)
+      ? configRes.roles
+      : (await API.getRoles(guildId).catch(() => []));
     let allRoles = rawRoles.filter(r => r.name !== '@everyone');
 
-    const rawChannels = (Array.isArray(chRes) && chRes.length > 0)
-      ? chRes
-      : (Array.isArray(configRes?.channels) ? configRes.channels : []);
+    const rawChannels = (Array.isArray(configRes?.channels) && configRes.channels.length > 0)
+      ? configRes.channels
+      : (await API.getChannels(guildId).catch(() => []));
     let allChannels = rawChannels.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
     const jr = (configRes?.config && configRes.config.joinroles) || {};
 

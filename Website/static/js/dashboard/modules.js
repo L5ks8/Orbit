@@ -2,8 +2,37 @@
  * Orbit Dashboard - Modules Loader & Dispatcher
  * Loads guild configuration, channels, and roles, and delegates to individual tab files.
  */
+window.DashboardTabs = window.DashboardTabs || {};
 
 DashboardTabs.Modules = async function(container, guildId, moduleId) {
+  const directMap = {
+    'tickets': DashboardTabs.Tickets,
+    'automod': DashboardTabs.AutoMod,
+    'welcome': DashboardTabs.Welcome,
+    'welcomegoodbye': DashboardTabs.Welcome,
+    'roles': DashboardTabs.Roles,
+    'security': DashboardTabs.Security,
+    'backups': DashboardTabs.Backups,
+    'appeals': DashboardTabs.Appeals,
+    'inactive-kick': DashboardTabs.InactiveKick,
+    'idle-kick': DashboardTabs.InactiveKick,
+    'tempvoice': DashboardTabs.TempVoice,
+    'jtc': DashboardTabs.TempVoice,
+    'polls': DashboardTabs.Polls,
+    'giveaways': DashboardTabs.Giveaways,
+    'builder': DashboardTabs.Builder,
+    'messages': DashboardTabs.Messages,
+    'overview': DashboardTabs.Overview,
+    'analytics': DashboardTabs.Analytics,
+    'settings': DashboardTabs.Settings,
+    'server-settings': DashboardTabs.Settings,
+    'bot-profile': DashboardTabs.BotProfile
+  };
+
+  if (directMap[moduleId]) {
+    return directMap[moduleId](container, guildId);
+  }
+
   container.innerHTML = `
     <div class="flex flex-col gap-6 max-w-5xl mx-auto animate-fade-in">
       <div id="module-loading" class="flex items-center justify-center p-12 text-neutral-500 text-sm">
@@ -15,11 +44,13 @@ DashboardTabs.Modules = async function(container, guildId, moduleId) {
   `;
 
   try {
-    const [configData, channels, roles] = await Promise.all([
-      API.getConfig(guildId).catch(() => ({})),
-      API.getChannels(guildId).catch(() => ([])),
-      API.getRoles(guildId).catch(() => ([]))
-    ]);
+    const configData = await API.getConfig(guildId).catch(() => ({}));
+    const channels = Array.isArray(configData.channels) && configData.channels.length > 0
+      ? configData.channels
+      : (await API.getChannels(guildId).catch(() => []));
+    const roles = Array.isArray(configData.roles) && configData.roles.length > 0
+      ? configData.roles
+      : (await API.getRoles(guildId).catch(() => []));
 
     const cfg = configData.config || configData || {};
     const categories = configData.categories || [];
@@ -67,12 +98,12 @@ DashboardTabs.Modules = async function(container, guildId, moduleId) {
       content.innerHTML = `<div class="p-8 text-center text-neutral-400">Module "${moduleId}" not found.</div>`;
     }
 
-    loading.classList.add('hidden');
+    if (loading) loading.classList.add('hidden');
     content.classList.remove('hidden');
   } catch (err) {
     if (typeof window.renderErrorState === 'function') {
       window.renderErrorState(container, {
-        title: 'Modul konnte nicht geladen werden',
+        title: 'Error loading module',
         message: 'An error occurred while fetching module configuration.',
         details: err?.message || String(err),
         statusCode: err?.status || 500,

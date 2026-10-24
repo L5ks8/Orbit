@@ -62,16 +62,15 @@ DashboardTabs.Appeals = async function (container, guildId) {
   let activeTab = 'queue'; // 'queue' | 'history'
 
   try {
-    const [cfgRes, chRes, rRes, openRes, histRes] = await Promise.all([
-      API.getAppealsConfig(guildId).catch(() => ({})),
-      API.getChannels(guildId).catch(() => []),
-      API.getRoles(guildId).catch(() => []),
-      API.getAppeals(guildId, true).catch(() => []),
-      API.getAppealsHistory(guildId, true).catch(() => [])
+    const [configData, openRes, histRes] = await Promise.all([
+      API.getConfig(guildId).catch(() => ({})),
+      API.getAppeals ? API.getAppeals(guildId, true).catch(() => []) : Promise.resolve([]),
+      API.getAppealsHistory ? API.getAppealsHistory(guildId, true).catch(() => []) : Promise.resolve([])
     ]);
 
-    if (cfgRes && typeof cfgRes === 'object') {
-      cfg = { ...cfg, ...cfgRes };
+    const appealConfig = (configData?.config && configData.config.appeals) ? configData.config.appeals : (configData?.appeals || {});
+    if (appealConfig && typeof appealConfig === 'object') {
+      cfg = { ...cfg, ...appealConfig };
       if (!Array.isArray(cfg.allowed_punishments)) {
         cfg.allowed_punishments = ['ban', 'timeout'];
       }
@@ -83,8 +82,10 @@ DashboardTabs.Appeals = async function (container, guildId) {
       }
     }
 
-    channels = Array.isArray(chRes) ? chRes.filter(c => !c.type || c.type === 'text' || c.type === 0 || (typeof c.type === 'string' && c.type.includes('text'))) : [];
-    roles = Array.isArray(rRes) ? rRes.filter(r => !r.managed && r.name !== '@everyone') : [];
+    const chList = Array.isArray(configData?.channels) ? configData.channels : [];
+    const rList = Array.isArray(configData?.roles) ? configData.roles : [];
+    channels = chList.filter(c => !c.type || c.type === 'text' || c.type === 0 || (typeof c.type === 'string' && c.type.includes('text')));
+    roles = rList.filter(r => !r.managed && r.name !== '@everyone');
     openAppeals = Array.isArray(openRes) ? openRes : [];
     appealsHistory = Array.isArray(histRes) ? histRes : [];
   } catch (err) {
@@ -102,7 +103,8 @@ DashboardTabs.Appeals = async function (container, guildId) {
   }
 
   function renderView() {
-    const portalUrl = `${window.location.origin}/appeal/${encodeURIComponent(cfg.custom_url || 'orbit')}`;
+    const origin = (typeof window !== 'undefined' && window.location?.origin) ? window.location.origin : '';
+    const portalUrl = `${origin}/appeal/${encodeURIComponent(cfg.custom_url || 'orbit')}`;
 
     container.innerHTML = `
       <div class="space-y-6 pb-20 animate-fade-in max-w-5xl mx-auto">
@@ -163,7 +165,7 @@ DashboardTabs.Appeals = async function (container, guildId) {
           <p class="text-xs text-neutral-400">Share this direct link in your ban DM notifications, server rules, or website.</p>
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div class="flex-1 flex items-center rounded-xl bg-neutral-950 border border-neutral-800 overflow-hidden focus-within:border-neutral-600 transition-colors">
-              <span class="px-3.5 py-2.5 bg-neutral-900/60 border-r border-neutral-800 text-xs text-neutral-500 font-mono select-none">${window.location.origin}/appeal/</span>
+              <span class="px-3.5 py-2.5 bg-neutral-900/60 border-r border-neutral-800 text-xs text-neutral-500 font-mono select-none">${origin}/appeal/</span>
               <input type="text" id="inp-custom-url" value="${esc(cfg.custom_url || '')}" placeholder="orbit" class="flex-1 px-3 py-2.5 bg-transparent text-white text-xs font-mono focus:outline-none">
             </div>
             <a href="${portalUrl}" target="_blank" class="px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors">
@@ -508,7 +510,8 @@ DashboardTabs.Appeals = async function (container, guildId) {
     const copyBtn = container.querySelector('#btn-copy-portal-link');
     if (copyBtn) {
       copyBtn.onclick = () => {
-        const portalUrl = `${window.location.origin}/appeal/${encodeURIComponent(cfg.custom_url || 'orbit')}`;
+        const origin = (typeof window !== 'undefined' && window.location?.origin) ? window.location.origin : '';
+    const portalUrl = `${origin}/appeal/${encodeURIComponent(cfg.custom_url || 'orbit')}`;
         navigator.clipboard.writeText(portalUrl).then(() => {
           if (window.Toast && Toast.success) Toast.success('Appeal portal link copied to clipboard!');
         }).catch(() => {

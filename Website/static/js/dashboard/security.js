@@ -37,34 +37,22 @@ DashboardTabs.Security = async function (container, guildId) {
   let allRoles = [];
 
   try {
-    const [cfgRes, chRes, rRes, secDirectRes] = await Promise.all([
-      API.getConfig(guildId).catch(() => ({})),
-      API.getChannels(guildId).catch(() => []),
-      API.getRoles(guildId).catch(() => []),
-      (typeof API.getSecurityConfig === 'function' ? API.getSecurityConfig(guildId).catch(() => null) : Promise.resolve(null))
-    ]);
-
+    const cfgRes = await API.getConfig(guildId).catch(() => ({}));
     const configObj = (cfgRes && cfgRes.config) ? cfgRes.config : (cfgRes || {});
     rawConfig = configObj;
-    if (secDirectRes && typeof secDirectRes === 'object') {
-      rawConfig.security = secDirectRes;
-    } else if (!rawConfig.security && cfgRes && cfgRes.security) {
+    if (cfgRes && cfgRes.security) {
       rawConfig.security = cfgRes.security;
     }
+    if (cfgRes?.guild) {
+      currentGuild = cfgRes.guild;
+    } else if (window.__currentDashboardGuildObj) {
+      currentGuild = window.__currentDashboardGuildObj;
+    }
 
-    try {
-      if (typeof API.getGuild === 'function') {
-        const g = await API.getGuild(guildId);
-        if (g) currentGuild = g;
-      } else if (typeof API.getGuilds === 'function') {
-        const gs = await API.getGuilds().catch(() => []);
-        const found = (gs || []).find(x => String(x.id) === String(guildId));
-        if (found) currentGuild = found;
-      }
-    } catch (_) {}
-
-    allChannels = Array.isArray(chRes) ? chRes.filter(c => !c.type || c.type === 'text' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text'))) : [];
-    allRoles = Array.isArray(rRes) ? rRes.filter(r => !r.managed && r.name !== '@everyone') : [];
+    const chList = Array.isArray(cfgRes?.channels) ? cfgRes.channels : [];
+    const rList = Array.isArray(cfgRes?.roles) ? cfgRes.roles : [];
+    allChannels = chList.filter(c => !c.type || c.type === 'text' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+    allRoles = rList.filter(r => !r.managed && r.name !== '@everyone');
   } catch (err) {
     console.error('Failed to load security config:', err);
     container.innerHTML = `

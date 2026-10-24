@@ -204,28 +204,77 @@ const API = {
   },
 
   // Guilds
+  getGuildsFast() {
+    const mem = this.getCache('guilds');
+    if (Array.isArray(mem) && mem.length) return mem;
+    try {
+      const local = localStorage.getItem('orbit_guilds_cache');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length) {
+          this.setCache('guilds', parsed);
+          return parsed;
+        }
+      }
+    } catch (_) {}
+    return [];
+  },
+
   async getGuilds(force = false) {
     if (force) {
       this.invalidateCache('guilds');
     }
-    return await this.cachedRequest('guilds', () => this.request(`/api/guilds${force ? '?force=true' : ''}`), force, 15000);
+    return await this.cachedRequest('guilds', async () => {
+      const res = await this.request(`/api/guilds${force ? '?force=true' : ''}`);
+      const list = Array.isArray(res) ? res : (res?.guilds || []);
+      try { localStorage.setItem('orbit_guilds_cache', JSON.stringify(list)); } catch (_) {}
+      return list;
+    }, force, 300000);
   },
 
   async getGuild(guildId) {
     if (!guildId) return null;
-    const guilds = await this.getGuilds().catch(() => []);
-    const found = (guilds || []).find(g => String(g.id) === String(guildId));
-    return found || { id: guildId, name: 'Server' };
+    if (window.__currentDashboardGuildObj && String(window.__currentDashboardGuildObj.id) === String(guildId)) {
+      return window.__currentDashboardGuildObj;
+    }
+    const cachedConfig = this.getCache(`config_${guildId}`);
+    if (cachedConfig?.guild) {
+      window.__currentDashboardGuildObj = cachedConfig.guild;
+      return cachedConfig.guild;
+    }
+    const fastGuilds = this.getGuildsFast();
+    const found = fastGuilds.find(g => String(g.id) === String(guildId));
+    if (found) {
+      window.__currentDashboardGuildObj = found;
+      return found;
+    }
+    return { id: guildId, name: 'Server' };
   },
 
   async getConfig(guildId, force = false) {
-    const res = await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}`), force);
+    const res = await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}${force ? '?force=true' : ''}`), force, 120000);
     try {
-      if (res && typeof res === 'object' && window.DiscordMarkdown) {
-        if (Array.isArray(res.channels)) window.DiscordMarkdown.setChannels(res.channels);
-        if (Array.isArray(res.roles)) window.DiscordMarkdown.setRoles(res.roles);
-        if (Array.isArray(res.emojis)) window.DiscordMarkdown.setEmojis(res.emojis);
-        if (Array.isArray(res.members)) window.__orbitMembers = res.members;
+      if (res && typeof res === 'object') {
+        if (Array.isArray(res.channels)) {
+          this.setCache(`channels_${guildId}`, res.channels);
+          if (window.DiscordMarkdown) window.DiscordMarkdown.setChannels(res.channels);
+        }
+        if (Array.isArray(res.roles)) {
+          this.setCache(`roles_${guildId}`, res.roles);
+          if (window.DiscordMarkdown) window.DiscordMarkdown.setRoles(res.roles);
+        }
+        if (Array.isArray(res.categories)) {
+          this.setCache(`categories_${guildId}`, res.categories);
+        }
+        if (Array.isArray(res.emojis) && window.DiscordMarkdown) {
+          window.DiscordMarkdown.setEmojis(res.emojis);
+        }
+        if (Array.isArray(res.members)) {
+          window.__orbitMembers = res.members;
+        }
+        if (res.guild && typeof res.guild === 'object') {
+          window.__currentDashboardGuildObj = res.guild;
+        }
       }
     } catch (_) {}
     return res;
@@ -286,6 +335,15 @@ const API = {
   },
 
   async getChannels(guildId, force = false) {
+    if (!force) {
+      const cached = this.getCache(`channels_${guildId}`);
+      if (Array.isArray(cached) && cached.length) return cached;
+      const cachedConfig = this.getCache(`config_${guildId}`);
+      if (Array.isArray(cachedConfig?.channels) && cachedConfig.channels.length) {
+        this.setCache(`channels_${guildId}`, cachedConfig.channels);
+        return cachedConfig.channels;
+      }
+    }
     const list = await this.cachedRequest(`channels_${guildId}`, async () => {
       const res = await this.request(`/api/channels/${guildId}`);
       return Array.isArray(res) ? res : (res?.channels || []);
@@ -295,6 +353,15 @@ const API = {
   },
 
   async getRoles(guildId, force = false) {
+    if (!force) {
+      const cached = this.getCache(`roles_${guildId}`);
+      if (Array.isArray(cached) && cached.length) return cached;
+      const cachedConfig = this.getCache(`config_${guildId}`);
+      if (Array.isArray(cachedConfig?.roles) && cachedConfig.roles.length) {
+        this.setCache(`roles_${guildId}`, cachedConfig.roles);
+        return cachedConfig.roles;
+      }
+    }
     return await this.cachedRequest(`roles_${guildId}`, async () => {
       const res = await this.request(`/api/roles/${guildId}`);
       return Array.isArray(res) ? res : (res?.roles || []);

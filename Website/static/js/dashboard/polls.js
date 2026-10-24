@@ -51,21 +51,15 @@ DashboardTabs.Polls = async function(container, guildId) {
   `;
 
   try {
-    const [pollsRes, rawChannels, rawRoles, cfgRes] = await Promise.all([
-      API.getPolls(guildId).catch(() => ({ polls: [] })),
-      API.getChannels(guildId).catch(() => ([])),
-      API.getRoles(guildId).catch(() => ([])),
+    const [pollsRes, cfgRes] = await Promise.all([
+      API.getPolls ? API.getPolls(guildId).catch(() => ({ polls: [] })) : Promise.resolve({ polls: [] }),
       API.getConfig(guildId).catch(() => ({}))
     ]);
 
     let polls = Array.isArray(pollsRes?.polls) ? pollsRes.polls : [];
-    const allChs = (Array.isArray(rawChannels) && rawChannels.length > 0)
-      ? rawChannels
-      : (Array.isArray(cfgRes?.channels) ? cfgRes.channels : []);
+    const allChs = Array.isArray(cfgRes?.channels) ? cfgRes.channels : [];
     let textChannels = allChs.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
-    const allRls = (Array.isArray(rawRoles) && rawRoles.length > 0)
-      ? rawRoles
-      : (Array.isArray(cfgRes?.roles) ? cfgRes.roles : []);
+    const allRls = Array.isArray(cfgRes?.roles) ? cfgRes.roles : [];
     let roles = allRls.filter(r => r.name !== '@everyone');
 
     let currentFilter = 'all'; // 'all' | 'active' | 'ended' | 'draft'
