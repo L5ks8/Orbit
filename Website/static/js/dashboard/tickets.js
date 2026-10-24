@@ -34,7 +34,16 @@ DashboardTabs.Tickets = async function (container, guildId) {
       ? chRes
       : (Array.isArray(configRes?.channels) ? configRes.channels : []);
     let allChannels = rawChannels.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
-    const allCategories = configRes?.categories || [];
+    let allCategories = Array.isArray(configRes?.categories) ? [...configRes.categories] : [];
+    if (allCategories.length === 0 && Array.isArray(rawChannels)) {
+      rawChannels.forEach(c => {
+        if (c.type === 4 || c.type === 'category' || (c.type && String(c.type).includes('category'))) {
+          if (!allCategories.some(cat => String(cat.id) === String(c.id))) {
+            allCategories.push({ id: String(c.id), name: c.name });
+          }
+        }
+      });
+    }
     const rawRoles = (Array.isArray(rolesRes) && rolesRes.length > 0)
       ? rolesRes
       : (Array.isArray(configRes?.roles) ? configRes.roles : []);

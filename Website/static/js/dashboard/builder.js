@@ -98,25 +98,12 @@ DashboardTabs.Builder = async function(container, guildId) {
     return Array.from(map.values()).sort((a, b) => (b.updated_at || b.created_at || 0) - (a.updated_at || a.created_at || 0));
   }
 
-  // Load current user and guild config + saved chats in parallel
   let user = null;
   let cfg = {};
   let chatData = { chats: [], action_history: [], can_undo: false, can_redo: false };
 
-  try {
-    const [uRes, cfgRes, chatsRes] = await Promise.all([
-      API.getUser().catch(() => null),
-      API.getConfig(guildId).catch(() => ({})),
-      API.getAIHelperChats(guildId).catch(() => ({ chats: [], action_history: [], can_undo: false, can_redo: false }))
-    ]);
-    user = uRes;
-    cfg = cfgRes || {};
-    chatData = chatsRes || { chats: [], action_history: [], can_undo: false, can_redo: false };
-  } catch (_) {}
-
-  const userName = user?.global_name || user?.username || 'Lukas';
-
-  let chats = mergeChats(Array.isArray(chatData.chats) ? chatData.chats : [], loadLocalChats());
+  let userName = 'User';
+  let chats = loadLocalChats();
   let savedActiveId = null;
   try {
     savedActiveId = localStorage.getItem(STORAGE_ACTIVE_KEY);
@@ -124,9 +111,33 @@ DashboardTabs.Builder = async function(container, guildId) {
 
   let activeChatId = (savedActiveId && chats.some(c => c.id === savedActiveId))
     ? savedActiveId
-    : null;
+    : (chats.length ? chats[0].id : null);
 
   saveLocalChats(chats, activeChatId);
+
+  // Background fetch to sync latest server state without blocking UI
+  Promise.all([
+    API.getUser().catch(() => null),
+    API.getConfig(guildId).catch(() => ({})),
+    API.getAIHelperChats(guildId).catch(() => ({ chats: [], action_history: [], can_undo: false, can_redo: false }))
+  ]).then(([uRes, cfgRes, chatsRes]) => {
+    user = uRes;
+    if (user?.global_name || user?.username) userName = user.global_name || user.username;
+    cfg = cfgRes || {};
+    chatData = chatsRes || { chats: [], action_history: [], can_undo: false, can_redo: false };
+    if (Array.isArray(chatData.action_history)) actionHistory = chatData.action_history;
+    canUndo = Boolean(chatData.can_undo);
+    canRedo = Boolean(chatData.can_redo);
+
+    chats = mergeChats(Array.isArray(chatData.chats) ? chatData.chats : [], loadLocalChats());
+    if (savedActiveId && chats.some(c => c.id === savedActiveId)) {
+      activeChatId = savedActiveId;
+    } else if (!activeChatId && chats.length > 0) {
+      activeChatId = chats[0].id;
+    }
+    saveLocalChats(chats, activeChatId);
+    render();
+  });
 
   let chatSearchQuery = '';
   let leftSidebarCollapsed = false;
@@ -1399,7 +1410,9 @@ DashboardTabs.Builder = async function(container, guildId) {
     });
 
     container.querySelectorAll('[data-action="clear-all-chats"]').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.onclick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const confirmed = await window.confirmDelete({
           title: 'Alle Chats löschen?',
           message: 'Das kann nicht rückgängig gemacht werden. Alle bisherigen Chatverläufe werden dauerhaft gelöscht.',
@@ -1416,7 +1429,7 @@ DashboardTabs.Builder = async function(container, guildId) {
         } catch (_) {}
         render();
         if (window.Toast) window.Toast.success('Alle Chats gelöscht');
-      });
+      };
     });
 
     container.querySelectorAll('[data-select-chat]').forEach(el => {
@@ -1548,22 +1561,6 @@ DashboardTabs.Builder = async function(container, guildId) {
       });
     });
 
-    container.querySelectorAll('[data-action="clear-all-chats"]').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const confirmed = await window.confirmDelete({
-          title: 'Alle Chats löschen?',
-          message: 'Das kann nicht rückgängig gemacht werden. Alle bisherigen Chatverläufe werden dauerhaft gelöscht.',
-          confirmText: 'Löschen',
-          cancelText: 'Abbrechen'
-        });
-        if (!confirmed) return;
-        chats = [];
-        activeChatId = null;
-        saveLocalChats(chats, activeChatId);
-        render();
-      });
-    });
 
     container.querySelectorAll('[data-chat-search]').forEach(inp => {
       inp.addEventListener('input', () => {

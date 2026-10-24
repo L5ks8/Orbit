@@ -26,6 +26,14 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       existingTabContainer.className = 'p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto min-h-[calc(100vh-64px)] bg-neutral-950';
     }
 
+    // Immediately clear previous tab content so old tab never stretches wide
+    existingTabContainer.innerHTML = `
+      <div class="flex items-center justify-center p-12 text-neutral-500 text-sm animate-fade-in">
+        <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        Loading...
+      </div>
+    `;
+
     const currentGuild = window.__currentDashboardGuildObj || { id: guildId, name: 'Server Dashboard', icon: null };
     const tabHandlers = Pages._getDashboardTabHandlers(existingTabContainer, guildId, currentGuild);
     if (tabHandlers[tab]) {
