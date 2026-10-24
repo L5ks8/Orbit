@@ -170,46 +170,37 @@ DashboardTabs.Invites = async function (container, guildId) {
     const lb = state.leaderboard || [];
     const PODIUM_THEMES = {
       1: {
-        label: 'Gold',
         medal: '👑',
         barClass: 'orbit-podium-gold',
         numClass: 'text-amber-300 drop-shadow-[0_2px_10px_rgba(251,191,36,0.7)]',
         ringClass: 'ring-2 ring-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.5)]',
-        badgeBg: 'bg-amber-400/20 text-amber-300 border-amber-400/40',
         totalClass: 'text-amber-300 font-extrabold',
         subClass: 'text-amber-200/70',
         emptyBarClass: 'orbit-podium-gold opacity-30',
         emptyNumClass: 'text-amber-400/40',
-        barHeight: 'h-24 sm:h-28',
         avatarSize: 'w-16 h-16'
       },
       2: {
-        label: 'Silber',
         medal: '🥈',
         barClass: 'orbit-podium-silver',
         numClass: 'text-slate-100 drop-shadow-[0_2px_10px_rgba(226,232,240,0.7)]',
         ringClass: 'ring-2 ring-slate-300 shadow-[0_0_16px_rgba(226,232,240,0.4)]',
-        badgeBg: 'bg-slate-300/20 text-slate-200 border-slate-300/40',
         totalClass: 'text-slate-100 font-extrabold',
         subClass: 'text-slate-300/70',
         emptyBarClass: 'orbit-podium-silver opacity-30',
         emptyNumClass: 'text-slate-300/40',
-        barHeight: 'h-18 sm:h-20',
-        avatarSize: 'w-12 h-12'
+        avatarSize: 'w-14 h-14'
       },
       3: {
-        label: 'Bronze',
         medal: '🥉',
         barClass: 'orbit-podium-bronze',
         numClass: 'text-orange-300 drop-shadow-[0_2px_10px_rgba(249,115,22,0.7)]',
         ringClass: 'ring-2 ring-orange-500 shadow-[0_0_16px_rgba(249,115,22,0.4)]',
-        badgeBg: 'bg-orange-600/20 text-orange-300 border-orange-500/40',
         totalClass: 'text-orange-300 font-extrabold',
         subClass: 'text-orange-200/70',
         emptyBarClass: 'orbit-podium-bronze opacity-30',
         emptyNumClass: 'text-orange-400/40',
-        barHeight: 'h-14 sm:h-16',
-        avatarSize: 'w-11 h-11'
+        avatarSize: 'w-12 h-12'
       }
     };
 
@@ -217,7 +208,7 @@ DashboardTabs.Invites = async function (container, guildId) {
       const theme = PODIUM_THEMES[rank];
       if (!entry) {
         return `
-          <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10">
+          <div class="flex flex-col items-center flex-1 min-w-[80px] max-w-[150px] relative z-10">
             <div class="h-6 flex items-end justify-center mb-0.5">
               <span class="text-xs opacity-50 select-none">${theme.medal}</span>
             </div>
@@ -225,25 +216,24 @@ DashboardTabs.Invites = async function (container, guildId) {
             <div class="h-3 w-14 rounded bg-neutral-800/30 mt-2"></div>
             <div class="h-3.5 w-8 rounded bg-neutral-800/20 mt-1"></div>
             <div class="mb-1 mt-0.5 h-3"></div>
-            <div class="w-[88%] ${theme.barHeight} ${theme.emptyBarClass} rounded-t-xl mt-1 flex items-end justify-center pb-3">
+            <div class="orbit-podium-bar orbit-podium-bar-${rank} ${theme.emptyBarClass} mt-2 flex items-end justify-center pb-3">
               <span class="text-3xl font-black ${theme.emptyNumClass}">${rank}</span>
             </div>
           </div>
         `;
       }
       return `
-        <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10 group">
+        <div class="flex flex-col items-center flex-1 min-w-[80px] max-w-[150px] relative z-10 group">
           <div class="h-6 flex items-end justify-center mb-0.5">
             <span class="text-sm drop-shadow-md select-none">${theme.medal}</span>
           </div>
           <img src="${escapeHtml(entry.avatar)}" alt="${escapeHtml(entry.name)}" class="${theme.avatarSize} rounded-full object-cover ${theme.ringClass} transition-transform duration-200 group-hover:scale-105">
-          <span class="text-xs font-bold text-white truncate max-w-[115px] mt-2 text-center" title="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</span>
-          <span class="text-[9.5px] font-semibold px-2 py-0.5 rounded-full border ${theme.badgeBg} uppercase tracking-wider mt-0.5">${theme.label}</span>
+          <span class="text-xs font-bold text-white truncate max-w-[125px] mt-2 text-center" title="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</span>
           ${state.show_inviter_count ? `
-            <span class="text-[11.5px] ${theme.totalClass} tabular-nums mt-0.5">${entry.total} Einl.</span>
-            <span class="text-[9.5px] ${theme.subClass} tabular-nums mb-1 mt-0.5 h-3">+${entry.regular} / -${entry.left}</span>
-          ` : `<div class="mb-1 mt-0.5 h-3"></div>`}
-          <div class="w-[88%] ${theme.barHeight} ${theme.barClass} rounded-t-xl mt-1 flex items-end justify-center pb-3 transition-transform duration-200 group-hover:scale-[1.02]">
+            <span class="text-[12px] ${theme.totalClass} tabular-nums mt-1">${entry.total} Einl.</span>
+            <span class="text-[10px] ${theme.subClass} tabular-nums mb-1 mt-0.5 h-3">+${entry.regular} / -${entry.left}</span>
+          ` : `<div class="mb-1 mt-1 h-3"></div>`}
+          <div class="orbit-podium-bar orbit-podium-bar-${rank} ${theme.barClass} mt-2 flex items-end justify-center pb-3 transition-transform duration-200 group-hover:scale-[1.02]">
             <span class="text-3xl font-black ${theme.numClass}">${rank}</span>
           </div>
         </div>
@@ -252,7 +242,7 @@ DashboardTabs.Invites = async function (container, guildId) {
 
     if (lb.length === 0) {
       return `
-        <div class="relative flex items-end justify-center px-4 pt-6 pb-0 gap-2 sm:gap-3">
+        <div class="relative flex items-end justify-center px-4 pt-6 pb-0 gap-3 sm:gap-4 md:gap-6">
           <div class="absolute bottom-0 left-4 right-4 h-px bg-neutral-800"></div>
           ${renderPodiumSlot(null, 2)}
           ${renderPodiumSlot(null, 1)}
@@ -318,7 +308,7 @@ DashboardTabs.Invites = async function (container, guildId) {
     }).join('');
 
     return `
-      <div class="relative flex items-end justify-center px-4 pt-6 pb-0 gap-2 sm:gap-3">
+      <div class="relative flex items-end justify-center px-4 pt-6 pb-0 gap-3 sm:gap-4 md:gap-6">
         <div class="absolute bottom-0 left-4 right-4 h-px bg-neutral-800"></div>
         ${renderPodiumSlot(second, 2)}
         ${renderPodiumSlot(first, 1)}
