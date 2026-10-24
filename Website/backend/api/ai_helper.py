@@ -398,12 +398,12 @@ class AIHelperMixin:
         # 6. Moderation History & Cases
         mod_history_summary = "No recorded moderation cases yet"
         try:
-            from Components.Commands.Cases.storage import get_cases_collection
-            from Components.Commands.ModLog._modlog_storage import get_recent_modlogs
-            cases_col = get_cases_collection()
+            from Components.Commands.Cases.storage import _get_cases_collection
+            from Components.Commands.ModLog.storage import get_recent_modlogs
+            cases_col = _get_cases_collection()
             recent_cases = []
             if cases_col is not None:
-                recent_cases = list(cases_col.find({"guild_id": str(guild_id)}).sort("case_id", -1).limit(50))
+                recent_cases = list(cases_col.find({"guild_id": {"$in": [int(guild_id), str(guild_id)]}}).sort("case_id", -1).limit(50))
             if not recent_cases:
                 recent_cases = get_recent_modlogs(guild_id, limit=50)
 
@@ -419,34 +419,46 @@ class AIHelperMixin:
                 
                 counts_str = ", ".join([f"{act.capitalize()}: {cnt}" for act, cnt in sorted(action_counts.items(), key=lambda x: x[1], reverse=True)])
                 mod_history_summary = f"{len(recent_cases)} total logged actions ({counts_str}). Most frequent action types: {counts_str}. Sample reasons: {', '.join(reasons[:5]) if reasons else 'No reasons provided'}."
-        except Exception as e:
-            mod_history_summary = f"Lookup error: {e}"
+            else:
+                mod_history_summary = "No recorded moderation cases or warnings found for this server."
+        except Exception:
+            mod_history_summary = "No recorded moderation cases or warnings found for this server."
 
         return f"""You are **Orbit AI Helper**, an intelligent Discord server co-pilot, analyst, and configuration assistant in the Orbit Dashboard.
 
+CRITICAL INSTRUCTION - STRICT USER INTENT GATING (DO ONLY WHAT WAS ASKED):
+- DO ONLY WHAT THE USER EXPLICITLY ASKS FOR. Never assume, configure, or volunteer unsolicited setup actions!
+- INFORMATIONAL / ANALYTICAL / QUESTIONS:
+  * When the user asks a question, checks moderation history, asks what the most common actions/reasons are, requests an audit or analytics, or asks how something works:
+    -> Provide ONLY a direct, factual, well-structured answer in "reply" in English.
+    -> "actions" MUST BE AN EMPTY ARRAY: `"actions": []`.
+    -> DO NOT create or suggest unprompted actions (e.g. do NOT configure automod, do NOT deploy tickets, do NOT configure logs unless explicitly requested).
+    -> DO NOT mention the "Build" button if no actions were requested.
+- MODERATION HISTORY QUERIES:
+  * When the user asks to check moderation history or what the most frequent actions/offenses are (e.g., "Check mal die Mod-History und sag mir, was die häufigsten Sachen sind"):
+    -> Refer directly to the "Moderation History & Recent Actions" in SERVER CONTEXT.
+    -> If actions are recorded: report the total volume, breakdown of action types (e.g. Warns, Timeouts, Bans), and top reasons clearly.
+    -> If no actions are recorded: inform the user simply that no moderation cases or warnings are currently recorded on this server.
+    -> ALWAYS leave `"actions": []` empty for history lookups!
+- EXPLICIT ACTION COMMANDS ONLY:
+  * ONLY populate the "actions" array when the user explicitly commands you to build, configure, setup, create, enable, disable, or modify a feature (e.g. "Create a giveaway for Nitro", "Setup ticket panel in #support", "Enable Anti-Spam", "Lock #general").
+  * When executing an explicit user command, include the required action objects in "actions", and mention in "reply" that the user can review and click **Build** at the top right to apply the planned changes.
+- STRICT GENERAL RULES:
+  * You are NOT a server builder! Never delete existing server structures or wipe roles.
+  * ALWAYS reply in English by default!
+  * ALWAYS use real IDs from the SERVER CONTEXT below!
+
 CORE CAPABILITIES:
 1. SERVER OVERVIEW & ANALYTICS AUDIT:
-   - When the user asks to analyze the server, check overview, inspect analytics, audit server security, or ask for improvement advice:
-     Deliver an exhaustive, beautifully organized report in English with clear sections and emojis.
-     Include: Member growth & demographics, 7-day activity metrics, security/AutoMod posture, verification onboarding flow, support desk backlog, and giveaway status.
-     Point out specific vulnerabilities or missing features (e.g., missing anti-raid protection, unconfigured log channels, lack of verification).
-     Propose concrete, one-click actions in the "actions" array so the user can build the recommendations with one click!
-2. CREATING & MANAGING SERVER FEATURES:
+   - When the user asks to analyze the server, check overview, inspect analytics, or audit server security:
+     Deliver an organized report in English. If they specifically ask to optimize or build recommendations, then include actions; otherwise provide pure analysis with "actions": [].
+2. CREATING & MANAGING SERVER FEATURES (When explicitly requested):
    - Create Giveaways: Deploy interactive giveaway messages to any channel via "create_giveaway".
    - Setup Support Ticket Panels: Deploy interactive ticket panels with dropdown categories to any channel via "create_ticket_panel".
    - Setup Verification: Deploy verification button panels with roles and security modes via "create_verification_panel".
    - Channel Permissions: Adjust channel permissions across all channels, categories, or specific channels via "channel_permissions".
    - Self-Assignable Roles: Deploy interactive button menus via "create_reaction_roles".
    - Full Module Configuration: Configure Welcome, Goodbye, Join Roles, AutoMod, Security (Anti-Raid/Anti-Nuke), Levels, Logs, TempVoice, and Invites.
-3. MODERATION HISTORY & CASE AUDIT:
-   - When the user asks to check mod history, review moderation cases, or tell what the most frequent actions or offenses are:
-     Analyze the "Moderation History & Recent Actions" section in SERVER CONTEXT.
-     Highlight the most common moderation actions (e.g. warns vs timeouts vs bans), the total volume, the most common violation reasons, and provide actionable tips to automate or handle those specific infractions via AutoMod.
-4. STRICT RULES:
-   - You are NOT a server builder! Never delete existing server structures or wipe roles.
-   - ALWAYS reply in English by default!
-   - Every recommended change MUST be accompanied by executable actions in the "actions" array.
-   - ALWAYS use real IDs from the SERVER CONTEXT below!
 
 SERVER CONTEXT:
 - Server: {guild.name} (ID: {guild.id}, Total Members: {guild.member_count}, Boost Tier: {guild.premium_tier}, Boosts: {guild.premium_subscription_count})
@@ -486,10 +498,13 @@ RESPONSE FORMAT (STRICTLY PURE JSON):
 Always respond exclusively with a valid JSON object in English:
 ```json
 {{
-  "reply": "Friendly response to the user in English (Markdown allowed). Mention that they can click **Build** at the top right to apply the planned changes.",
-  "actions": [...]
+  "reply": "Clear, concise response to the user in English (Markdown allowed). If executable actions are present, mention that they can click **Build** at the top right to apply them. If no actions are present, simply answer the inquiry without mentioning the Build button.",
+  "actions": []
 }}
 ```
+NOTE ON ACTIONS:
+- If the user asked a question, requested moderation history, asked for an explanation, or requested an audit/overview, "actions" MUST BE `[]`.
+- Only populate "actions" if the user explicitly commanded to create, build, setup, configure, change, enable, or disable something!
 ALWAYS use real IDs from the server context above!"""
 
     async def api_ai_helper_get_chats(self, request: web.Request):
@@ -780,6 +795,24 @@ ALWAYS use real IDs from the server context above!"""
                 continue
             act["id"] = act.get("id") or secrets.token_hex(6)
             clean_actions.append(act)
+
+        # Safety Intent Gating: If the user asked a question, requested history/cases/stats,
+        # or asked for information without an explicit command to build/configure/create,
+        # discard any hallucinated actions so the bot strictly does only what it was asked to do.
+        msg_lower = user_message.lower()
+        action_intent_words = [
+            "create", "build", "setup", "set up", "configure", "apply", "enable", "disable",
+            "turn on", "turn off", "lock", "unlock", "delete", "remove", "add", "deploy", "update",
+            "erstelle", "erstell", "bau", "bauen", "einrichten", "richte ein", "konfigurieren", "konfiguriere",
+            "aktiviere", "aktivier", "deaktiviere", "schalte ein", "schalte aus", "sperre", "entsperre", "lösche", "entferne", "setze", "änder", "ändere"
+        ]
+        has_action_intent = any(w in msg_lower for w in action_intent_words)
+        is_query_intent = any(w in msg_lower for w in [
+            "check", "history", "cases", "offenses", "häufigsten", "warum", "wer", "was ist", "was sind",
+            "what is", "what are", "how many", "show me", "tell me", "sag mir", "zeige", "erklär", "explain"
+        ])
+        if is_query_intent and not has_action_intent:
+            clean_actions = []
 
         now_ts = time.time()
         user_msg_entry: Dict[str, Any] = {

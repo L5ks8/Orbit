@@ -76,3 +76,13 @@ def delete_case(guild_id: int, case_id: int) -> bool:
         
     res = col.delete_one({"guild_id": str(guild_id), "case_id": case_id})
     return res.deleted_count > 0
+
+def get_recent_cases(guild_id: int, limit: int = 50) -> List[Dict[str, Any]]:
+    col = _get_cases_collection()
+    if col is None:
+        return []
+    return list(col.find({"guild_id": {"$in": [int(guild_id), str(guild_id)]}}).sort("case_id", -1).limit(limit))
+
+# Expose collections for external lookups
+get_cases_collection = _get_cases_collection
+get_settings_collection = _get_settings_collection
