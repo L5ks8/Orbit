@@ -258,12 +258,49 @@
             </div>
           </div>
 
-          <!-- Moderator Roles Multi-Select -->
+          <!-- Moderator Roles Multi-Select (Orbit Custom Dropdown) -->
           <div class="flex flex-col gap-2 pt-1">
-            <label class="text-xs font-medium text-neutral-300">Moderator Review Roles</label>
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-medium text-neutral-300">Moderator Review Roles</label>
+              <span class="text-[11px] text-neutral-500 font-mono" id="review-roles-count">${(cfg.mod_roles || []).length} selected</span>
+            </div>
             <p class="text-[11px] text-neutral-400">Roles permitted to approve or decline ban appeals both in the dashboard and Discord.</p>
-            <div id="roles-selector-container" class="flex flex-wrap gap-2 p-2.5 rounded-xl bg-neutral-800/40 border border-neutral-700/60 min-h-[46px] items-center">
-              <!-- Dynamically populated chips -->
+            
+            <div class="relative w-full" id="review-roles-dd-wrap">
+              <button 
+                type="button" 
+                id="review-roles-trigger" 
+                class="w-full flex items-center justify-between gap-2 min-h-[44px] px-3.5 py-2 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-left transition-all cursor-pointer focus:outline-none"
+              >
+                <div class="flex-1 flex flex-wrap gap-1.5 py-0.5 items-center" id="review-roles-chips">
+                  <!-- Dynamically populated chips -->
+                </div>
+                <div class="flex items-center gap-1.5 text-neutral-400 shrink-0">
+                  <span id="review-roles-arrow" class="transition-transform duration-200">${SVGS.chevronDown}</span>
+                </div>
+              </button>
+
+              <div 
+                id="review-roles-menu" 
+                class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] overflow-hidden max-h-60 flex flex-col"
+                data-lenis-prevent
+              >
+                <div class="p-2 border-b border-neutral-800 shrink-0">
+                  <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">${SVGS.search}</span>
+                    <input 
+                      type="text" 
+                      id="review-roles-search" 
+                      placeholder="Search roles..." 
+                      class="w-full pl-8 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-indigo-500" 
+                      autocomplete="off"
+                    />
+                  </div>
+                </div>
+                <div id="review-roles-options" class="overflow-y-auto p-1 space-y-0.5 scrollbar-thin">
+                  <!-- Dynamically populated options -->
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -302,55 +339,66 @@
             </div>
           </div>
 
-          <!-- Policy Settings List (Clean, Slim Rows - NOT Bloated) -->
+          <!-- Policy Settings List (Clean, Slim Rows with Custom Orbit Select) -->
           <div class="divide-y divide-neutral-800/80 rounded-xl border border-neutral-700/60 bg-neutral-800/30 overflow-hidden">
             <!-- Auto-Invite Unbanned -->
-            <div class="flex items-center justify-between p-3.5 px-4 hover:bg-neutral-800/40 transition-colors">
-              <div>
-                <span class="text-xs font-medium text-white">Auto-Invite Accepted Bans</span>
+            <div class="flex items-center justify-between p-3.5 px-4 hover:bg-neutral-800/40 transition-colors gap-4">
+              <div class="flex-1 min-w-0 pr-2">
+                <span class="text-xs font-medium text-white block">Auto-Invite Accepted Bans</span>
                 <p class="text-[11px] text-neutral-400 mt-0.5">Send a one-time server invite DM when a ban appeal is approved.</p>
               </div>
-              <div>
+              <div class="shrink-0">
                 ${renderCustomToggle('toggle-invite-unbanned', cfg.invite_unbanned !== false, 'Auto-invite unbanned')}
               </div>
             </div>
 
             <!-- Anonymous Moderation -->
-            <div class="flex items-center justify-between p-3.5 px-4 hover:bg-neutral-800/40 transition-colors">
-              <div>
-                <span class="text-xs font-medium text-white">Anonymous Moderator Decisions</span>
+            <div class="flex items-center justify-between p-3.5 px-4 hover:bg-neutral-800/40 transition-colors gap-4">
+              <div class="flex-1 min-w-0 pr-2">
+                <span class="text-xs font-medium text-white block">Anonymous Moderator Decisions</span>
                 <p class="text-[11px] text-neutral-400 mt-0.5">Conceal the deciding moderator's name from the appellant.</p>
               </div>
-              <div>
+              <div class="shrink-0">
                 ${renderCustomToggle('toggle-anon-mods', cfg.anonymous_mods, 'Anonymous decisions')}
               </div>
             </div>
 
             <!-- Allow Repeat Appeals -->
-            <div class="flex items-center justify-between p-3.5 px-4 hover:bg-neutral-800/40 transition-colors">
-              <div>
-                <span class="text-xs font-medium text-white">Allow Repeat Appeals</span>
+            <div class="flex items-center justify-between p-3.5 px-4 hover:bg-neutral-800/40 transition-colors gap-4">
+              <div class="flex-1 min-w-0 pr-2">
+                <span class="text-xs font-medium text-white block">Allow Repeat Appeals</span>
                 <p class="text-[11px] text-neutral-400 mt-0.5">Allow users whose appeal was denied to re-apply once cooldown passes.</p>
               </div>
-              <div>
+              <div class="shrink-0">
                 ${renderCustomToggle('toggle-repeat-appeals', cfg.multiple_submissions, 'Allow repeat appeals')}
               </div>
             </div>
 
-            <!-- Cooldown Days -->
-            <div class="flex items-center justify-between p-3.5 px-4 hover:bg-neutral-800/40 transition-colors gap-4">
-              <div>
-                <span class="text-xs font-medium text-white">Re-Application Cooldown</span>
+            <!-- Cooldown Days (Orbit Custom Single-Select Dropdown) -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 px-4 hover:bg-neutral-800/40 transition-colors gap-3">
+              <div class="flex-1 min-w-0 pr-2">
+                <span class="text-xs font-medium text-white block">Re-Application Cooldown</span>
                 <p class="text-[11px] text-neutral-400 mt-0.5">Wait period before a denied appellant can submit another request.</p>
               </div>
-              <select id="sel-cooldown-days" class="h-9 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white focus:outline-none cursor-pointer shrink-0">
-                <option value="0" ${cfg.cooldown_days === 0 ? 'selected' : ''}>None (Immediate)</option>
-                <option value="1" ${cfg.cooldown_days === 1 ? 'selected' : ''}>1 Day</option>
-                <option value="3" ${cfg.cooldown_days === 3 ? 'selected' : ''}>3 Days</option>
-                <option value="7" ${cfg.cooldown_days === 7 ? 'selected' : ''}>7 Days</option>
-                <option value="14" ${cfg.cooldown_days === 14 ? 'selected' : ''}>14 Days</option>
-                <option value="30" ${cfg.cooldown_days === 30 ? 'selected' : ''}>30 Days</option>
-              </select>
+              <div class="relative w-full sm:w-48 shrink-0" id="cooldown-dd-wrap">
+                <button 
+                  type="button" 
+                  id="cooldown-dd-trigger" 
+                  class="w-full flex items-center justify-between gap-2 h-10 px-3.5 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-left text-xs transition-colors cursor-pointer focus:outline-none"
+                >
+                  <span id="cooldown-dd-label" class="text-neutral-200 font-medium truncate">
+                    ${getCooldownLabel(cfg.cooldown_days)}
+                  </span>
+                  <span id="cooldown-dd-arrow" class="text-neutral-400 shrink-0 transition-transform duration-200">${SVGS.chevronDown}</span>
+                </button>
+                <div 
+                  id="cooldown-dd-menu" 
+                  class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] overflow-hidden flex flex-col p-1 space-y-0.5"
+                  data-lenis-prevent
+                >
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -422,56 +470,159 @@
       </div>
     `;
 
-    // In-Place Roles Rendering
-    function renderRolesChips() {
-      const rolesContainer = container.querySelector('#roles-selector-container');
-      if (!rolesContainer) return;
-      rolesContainer.innerHTML = `
-        ${(cfg.mod_roles || []).map(rId => {
-          const r = roles.find(x => String(x.id) === String(rId));
-          const name = r ? r.name : `Role (${rId})`;
-          const color = (r && r.color && r.color !== 0 && r.color !== '#000000') 
-            ? (typeof r.color === 'number' ? `#${r.color.toString(16).padStart(6, '0')}` : r.color) 
-            : '#818cf8';
-          return `
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-900 border border-neutral-700 text-neutral-200">
-              <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${color}"></span>
-              <span>${escapeHtml(name)}</span>
-              <button type="button" class="btn-remove-role text-neutral-400 hover:text-red-400 transition-colors p-0.5 cursor-pointer" data-role-id="${rId}">${SVGS.x}</button>
-            </span>
-          `;
-        }).join('')}
-        <select id="sel-add-role" class="px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-neutral-400 hover:text-white focus:outline-none cursor-pointer">
-          <option value="">+ Add Review Role</option>
-          ${roles.filter(r => !(cfg.mod_roles || []).includes(String(r.id))).map(r => `
-            <option value="${r.id}">@ ${escapeHtml(r.name)}</option>
-          `).join('')}
-        </select>
-      `;
+    // Cooldown Options & Helpers
+    const COOLDOWN_OPTIONS = [
+      { value: 0, label: 'None (Immediate)' },
+      { value: 1, label: '1 Day' },
+      { value: 3, label: '3 Days' },
+      { value: 7, label: '7 Days' },
+      { value: 14, label: '14 Days' },
+      { value: 30, label: '30 Days' }
+    ];
 
-      rolesContainer.querySelectorAll('.btn-remove-role').forEach(btn => {
+    function getCooldownLabel(days) {
+      const val = Number(days);
+      const match = COOLDOWN_OPTIONS.find(o => o.value === val);
+      return match ? match.label : `${val} Days`;
+    }
+
+    function renderCooldownOptions() {
+      const menu = container.querySelector('#cooldown-dd-menu');
+      const label = container.querySelector('#cooldown-dd-label');
+      if (!menu) return;
+
+      const currentVal = Number(cfg.cooldown_days || 0);
+      if (label) label.textContent = getCooldownLabel(currentVal);
+
+      menu.innerHTML = COOLDOWN_OPTIONS.map(opt => {
+        const isSelected = currentVal === opt.value;
+        return `
+          <button 
+            type="button" 
+            data-value="${opt.value}" 
+            class="cooldown-option-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-left transition-colors cursor-pointer ${isSelected ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:text-white hover:bg-neutral-800'}"
+          >
+            <span>${opt.label}</span>
+            ${isSelected ? `<span class="text-emerald-400 shrink-0">${SVGS.check}</span>` : ''}
+          </button>
+        `;
+      }).join('');
+
+      menu.querySelectorAll('.cooldown-option-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const val = Number(btn.dataset.value);
+          cfg.cooldown_days = val;
+          renderCooldownOptions();
+          menu.classList.add('hidden');
+          const arrow = container.querySelector('#cooldown-dd-arrow');
+          if (arrow) arrow.classList.remove('rotate-180');
+          if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
+        };
+      });
+    }
+
+    // Role Color Helper
+    function getRoleColor(r) {
+      if (!r || !r.color || r.color === 0 || r.color === '#000000') return '#818cf8';
+      return typeof r.color === 'number' ? `#${r.color.toString(16).padStart(6, '0')}` : r.color;
+    }
+
+    // Custom Multi-Select Review Roles Rendering
+    function renderReviewRolesChips() {
+      const chipsContainer = container.querySelector('#review-roles-chips');
+      const countEl = container.querySelector('#review-roles-count');
+      if (!chipsContainer) return;
+
+      const modRoles = cfg.mod_roles || [];
+      if (countEl) countEl.textContent = `${modRoles.length} selected`;
+
+      if (modRoles.length === 0) {
+        chipsContainer.innerHTML = `
+          <span class="text-xs text-neutral-500 flex items-center gap-1.5 select-none py-1">
+            <span class="text-neutral-400 font-semibold">+</span>
+            <span>Select moderator review roles...</span>
+          </span>
+        `;
+        return;
+      }
+
+      chipsContainer.innerHTML = modRoles.map(rId => {
+        const r = roles.find(x => String(x.id) === String(rId));
+        const name = r ? r.name : `Role (${rId})`;
+        const color = getRoleColor(r);
+        return `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-neutral-200">
+            <span class="text-neutral-500">@</span>
+            <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${color}"></span>
+            <span class="truncate max-w-[140px]">${escapeHtml(name)}</span>
+            <span role="button" tabindex="0" class="btn-remove-role text-neutral-400 hover:text-red-400 p-0.5 cursor-pointer transition-colors" data-role-id="${rId}" title="Remove role">${SVGS.x}</span>
+          </span>
+        `;
+      }).join('');
+
+      chipsContainer.querySelectorAll('.btn-remove-role').forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
           const rid = btn.dataset.roleId;
           cfg.mod_roles = (cfg.mod_roles || []).filter(x => String(x) !== String(rid));
-          renderRolesChips();
+          renderReviewRolesChips();
+          renderReviewRolesOptions(container.querySelector('#review-roles-search')?.value || '');
           if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       });
+    }
 
-      const selAddRole = rolesContainer.querySelector('#sel-add-role');
-      if (selAddRole) {
-        selAddRole.onchange = (e) => {
-          const val = e.target.value;
-          if (!val) return;
+    function renderReviewRolesOptions(filterQuery = '') {
+      const optionsContainer = container.querySelector('#review-roles-options');
+      if (!optionsContainer) return;
+
+      const query = (filterQuery || '').toLowerCase().trim();
+      const assignableRoles = roles.filter(r => r && r.name !== '@everyone');
+      const filtered = assignableRoles.filter(r => !query || r.name.toLowerCase().includes(query));
+
+      if (filtered.length === 0) {
+        optionsContainer.innerHTML = `
+          <div class="p-3 text-xs text-neutral-500 text-center select-none">No roles found</div>
+        `;
+        return;
+      }
+
+      const modRoles = (cfg.mod_roles || []).map(String);
+      optionsContainer.innerHTML = filtered.map(r => {
+        const isSelected = modRoles.includes(String(r.id));
+        const color = getRoleColor(r);
+        return `
+          <button 
+            type="button" 
+            data-role-id="${r.id}" 
+            class="role-option-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-left transition-colors cursor-pointer ${isSelected ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:text-white hover:bg-neutral-800'}"
+          >
+            <span class="flex items-center gap-2 truncate">
+              <span class="text-neutral-500">@</span>
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color}"></span>
+              <span class="truncate">${escapeHtml(r.name)}</span>
+            </span>
+            ${isSelected ? `<span class="text-emerald-400 shrink-0">${SVGS.check}</span>` : ''}
+          </button>
+        `;
+      }).join('');
+
+      optionsContainer.querySelectorAll('.role-option-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const rid = String(btn.dataset.roleId);
           if (!cfg.mod_roles) cfg.mod_roles = [];
-          if (!cfg.mod_roles.includes(String(val))) {
-            cfg.mod_roles.push(String(val));
+          if (cfg.mod_roles.map(String).includes(rid)) {
+            cfg.mod_roles = cfg.mod_roles.filter(x => String(x) !== rid);
+          } else {
+            cfg.mod_roles.push(rid);
           }
-          renderRolesChips();
+          renderReviewRolesChips();
+          renderReviewRolesOptions(container.querySelector('#review-roles-search')?.value || '');
           if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
-      }
+      });
     }
 
     // In-Place Questions Rendering
@@ -690,7 +841,9 @@
     }
 
     // Bind In-Place Events
-    renderRolesChips();
+    renderReviewRolesChips();
+    renderReviewRolesOptions();
+    renderCooldownOptions();
     renderQuestionsList();
     renderTabContent();
 
@@ -772,7 +925,24 @@
       };
     });
 
-    // 7. Channel Dropdown Toggle & Selection (In-Place DOM update)
+    // Global Closer for All Custom Dropdowns in Appeals
+    function closeAllAppealsDropdowns() {
+      if (channelMenu) channelMenu.classList.add('hidden');
+      const chArrow = container.querySelector('#channel-dd-trigger svg');
+      if (chArrow) chArrow.classList.remove('rotate-180');
+
+      const rolesMenu = container.querySelector('#review-roles-menu');
+      if (rolesMenu) rolesMenu.classList.add('hidden');
+      const rolesArrow = container.querySelector('#review-roles-arrow');
+      if (rolesArrow) rolesArrow.classList.remove('rotate-180');
+
+      const cdMenu = container.querySelector('#cooldown-dd-menu');
+      if (cdMenu) cdMenu.classList.add('hidden');
+      const cdArrow = container.querySelector('#cooldown-dd-arrow');
+      if (cdArrow) cdArrow.classList.remove('rotate-180');
+    }
+
+    // 7. Staff Review Channel Custom Dropdown
     const channelTrigger = container.querySelector('#channel-dd-trigger');
     const channelMenu = container.querySelector('#channel-dd-menu');
     const channelSearch = container.querySelector('#channel-dd-search');
@@ -783,15 +953,16 @@
       channelTrigger.onclick = (e) => {
         e.stopPropagation();
         const isHidden = channelMenu.classList.contains('hidden');
+        closeAllAppealsDropdowns();
         if (isHidden) {
           channelMenu.classList.remove('hidden');
+          const arrow = channelTrigger.querySelector('svg');
+          if (arrow) arrow.classList.add('rotate-180');
           if (channelSearch) {
             channelSearch.value = '';
-            channelSearch.focus();
+            setTimeout(() => channelSearch.focus(), 50);
             channelItems.forEach(it => it.classList.remove('hidden'));
           }
-        } else {
-          channelMenu.classList.add('hidden');
         }
       };
     }
@@ -816,7 +987,7 @@
         e.stopPropagation();
         const chId = it.dataset.channelId || null;
         cfg.channel_id = chId;
-        channelMenu.classList.add('hidden');
+        closeAllAppealsDropdowns();
         if (channelDisplay) {
           channelDisplay.innerHTML = chId ? `# ${escapeHtml(getSelectedChannelName())}` : '<span class="text-neutral-500">None (Disabled)</span>';
         }
@@ -838,13 +1009,62 @@
       };
     });
 
+    // 8. Moderator Review Roles Custom Multi-Select Dropdown
+    const rolesTrigger = container.querySelector('#review-roles-trigger');
+    const rolesMenu = container.querySelector('#review-roles-menu');
+    const rolesSearch = container.querySelector('#review-roles-search');
+    const rolesArrow = container.querySelector('#review-roles-arrow');
+
+    if (rolesTrigger && rolesMenu) {
+      rolesTrigger.onclick = (e) => {
+        if (e.target.closest('.btn-remove-role')) return;
+        e.stopPropagation();
+        const isHidden = rolesMenu.classList.contains('hidden');
+        closeAllAppealsDropdowns();
+        if (isHidden) {
+          rolesMenu.classList.remove('hidden');
+          if (rolesArrow) rolesArrow.classList.add('rotate-180');
+          if (rolesSearch) {
+            rolesSearch.value = '';
+            renderReviewRolesOptions('');
+            setTimeout(() => rolesSearch.focus(), 50);
+          }
+        }
+      };
+    }
+
+    if (rolesSearch) {
+      rolesSearch.onclick = (e) => e.stopPropagation();
+      rolesSearch.oninput = () => {
+        renderReviewRolesOptions(rolesSearch.value);
+      };
+    }
+
+    // 9. Re-Application Cooldown Custom Dropdown
+    const cdTrigger = container.querySelector('#cooldown-dd-trigger');
+    const cdMenu = container.querySelector('#cooldown-dd-menu');
+    const cdArrow = container.querySelector('#cooldown-dd-arrow');
+
+    if (cdTrigger && cdMenu) {
+      cdTrigger.onclick = (e) => {
+        e.stopPropagation();
+        const isHidden = cdMenu.classList.contains('hidden');
+        closeAllAppealsDropdowns();
+        if (isHidden) {
+          cdMenu.classList.remove('hidden');
+          if (cdArrow) cdArrow.classList.add('rotate-180');
+        }
+      };
+    }
+
+    // Global outside click listener
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.custom-channel-dd') && channelMenu) {
-        channelMenu.classList.add('hidden');
+      if (!e.target.closest('.custom-channel-dd') && !e.target.closest('#review-roles-dd-wrap') && !e.target.closest('#cooldown-dd-wrap')) {
+        closeAllAppealsDropdowns();
       }
     });
 
-    // 8. Custom URL Input
+    // 10. Custom URL Input
     const inpCustomUrl = container.querySelector('#inp-custom-url');
     if (inpCustomUrl) {
       inpCustomUrl.oninput = (e) => {
@@ -858,7 +1078,7 @@
       };
     }
 
-    // 9. Copy Link Button
+    // 11. Copy Link Button
     const btnCopy = container.querySelector('#btn-copy-portal-link');
     if (btnCopy) {
       btnCopy.onclick = () => {
@@ -871,15 +1091,6 @@
         }).catch(() => {
           if (window.Toast) Toast.error('Failed to copy link');
         });
-      };
-    }
-
-    // 10. Cooldown Dropdown (In-Place DOM update)
-    const selCooldown = container.querySelector('#sel-cooldown-days');
-    if (selCooldown) {
-      selCooldown.onchange = (e) => {
-        cfg.cooldown_days = parseInt(e.target.value, 10) || 0;
-        if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
       };
     }
 
