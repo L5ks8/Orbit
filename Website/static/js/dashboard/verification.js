@@ -39,8 +39,14 @@ DashboardTabs.Verification = async function(container, guildId) {
     ]);
 
     const vCfg = configData?.config?.verify || configData?.verify || {};
-    let textChannels = (Array.isArray(rawChannels) ? rawChannels : []).filter(c => c.type === 0 || c.type === 5 || c.type === undefined);
-    let roles = (Array.isArray(rawRoles) ? rawRoles : []).filter(r => r.name !== '@everyone' && !r.managed);
+    const allChs = (Array.isArray(rawChannels) && rawChannels.length > 0)
+      ? rawChannels
+      : (Array.isArray(configData?.channels) ? configData.channels : []);
+    let textChannels = allChs.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+    const allRls = (Array.isArray(rawRoles) && rawRoles.length > 0)
+      ? rawRoles
+      : (Array.isArray(configData?.roles) ? configData.roles : []);
+    let roles = allRls.filter(r => r.name !== '@everyone' && !r.managed);
 
     let systems = Array.isArray(vCfg.systems) ? JSON.parse(JSON.stringify(vCfg.systems)) : [];
     if (systems.length === 0 && (vCfg.role_id || vCfg.channel_id || vCfg.enabled)) {

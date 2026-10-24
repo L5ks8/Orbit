@@ -26,14 +26,18 @@ DashboardTabs.Messages = async function (container, guildId) {
   let fullConfig = {};
 
   try {
-    const [cfgRes, savedRes, bpRes, guildsRes] = await Promise.all([
+    const [cfgRes, chRes, savedRes, bpRes, guildsRes] = await Promise.all([
       API.getConfig(guildId).catch(() => ({})),
+      API.getChannels(guildId).catch(() => []),
       API.getSavedEmbeds(guildId).catch(() => []),
       API.getBotProfile(guildId).catch(() => ({})),
       API.getGuilds().catch(() => [])
     ]);
 
-    allChannels = Array.isArray(cfgRes?.channels) ? cfgRes.channels : [];
+    const rawChannels = (Array.isArray(chRes) && chRes.length > 0)
+      ? chRes
+      : (Array.isArray(cfgRes?.channels) ? cfgRes.channels : []);
+    allChannels = rawChannels.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
     fullConfig = cfgRes?.config || {};
     savedEmbeds = Array.isArray(savedRes) ? savedRes : [];
     if (bpRes && typeof bpRes === 'object') {
@@ -792,7 +796,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                           <path d="M12 18v-6"></path>
                         </svg>Neu</button>
                       ${openPopover === 'new' ? `
-                        <div class="orbit-dropdown-menu absolute left-0 mt-2 w-72 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 p-1.5 space-y-1">
+                        <div class="orbit-dropdown-menu absolute left-0 mt-2 w-72 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] p-1.5 space-y-1" style="z-index: 99999;" data-lenis-prevent="true">
                           <div class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Vorlage wählen</div>
                           ${TEMPLATES.map(t => `
                             <button type="button" data-pick-template="${escapeHtml(t.key)}" class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer">
@@ -811,7 +815,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                           <path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path>
                         </svg>Einbettet</button>
                       ${openPopover === 'saved' ? `
-                        <div class="orbit-dropdown-menu absolute left-0 mt-2 w-80 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 p-2 space-y-1.5 max-h-80 overflow-y-auto">
+                        <div class="orbit-dropdown-menu absolute left-0 mt-2 w-80 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] p-2 space-y-1.5 max-h-80 overflow-y-auto" style="z-index: 99999;" data-lenis-prevent="true">
                           <div class="flex items-center justify-between px-2 py-1">
                             <span class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Gespeicherte Nachrichten (${savedEmbeds.length})</span>
                           </div>
@@ -861,7 +865,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                         </svg>
                       </button>
                       ${openPopover === 'send_as' ? `
-                        <div class="orbit-dropdown-menu absolute right-0 mt-2 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 p-2 space-y-1.5">
+                        <div class="orbit-dropdown-menu absolute right-0 mt-2 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] p-2 space-y-1.5" style="z-index: 99999;" data-lenis-prevent="true">
                           <button type="button" data-pick-sendas="bot" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800 cursor-pointer ${state.send_as === 'bot' ? 'bg-neutral-800 text-white' : 'text-neutral-300'}">
                             <img src="${escapeHtml(botAvatarUrl)}" alt="" class="w-6 h-6 rounded-full object-cover bg-neutral-800">
                             <div class="min-w-0 flex-1">
@@ -901,15 +905,23 @@ DashboardTabs.Messages = async function (container, guildId) {
                         </svg>
                       </button>
                       ${openPopover === 'channel' ? `
-                        <div class="orbit-dropdown-menu absolute right-0 mt-2 w-60 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto p-1">
-                          ${allChannels.length > 0 ? allChannels.map(ch => `
-                            <button type="button" data-pick-msg-channel="${escapeHtml(ch.id)}" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-left hover:bg-neutral-800 transition-colors cursor-pointer ${String(ch.id) === String(state.channel_id) ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300'}">
-                              <span class="text-neutral-500">#</span>
-                              <span class="truncate">${escapeHtml(ch.name)}</span>
-                            </button>
-                          `).join('') : `
-                            <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle gefunden</div>
-                          `}
+                        <div class="orbit-dropdown-menu absolute right-0 mt-2 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] overflow-hidden p-1 flex flex-col max-h-72" style="z-index: 99999;" data-lenis-prevent="true">
+                          <div class="p-1.5 border-b border-neutral-800 sticky top-0 bg-neutral-900 z-10">
+                            <div class="relative">
+                              <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                              <input type="text" id="msg-channel-search-input" placeholder="Kanal suchen..." class="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-8 pr-2.5 py-1 text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-neutral-600" autocomplete="off" />
+                            </div>
+                          </div>
+                          <div id="msg-channel-items" class="overflow-y-auto max-h-56 p-1 space-y-0.5" data-lenis-prevent="true">
+                            ${allChannels.length > 0 ? allChannels.map(ch => `
+                              <button type="button" data-pick-msg-channel="${escapeHtml(ch.id)}" data-ch-name="${escapeHtml((ch.name || '').toLowerCase())}" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-left hover:bg-neutral-800 transition-colors cursor-pointer ${String(ch.id) === String(state.channel_id) ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300'}">
+                                <span class="text-neutral-500 font-mono">#</span>
+                                <span class="truncate">${escapeHtml(ch.name)}</span>
+                              </button>
+                            `).join('') : `
+                              <div class="px-3 py-3 text-xs text-neutral-500 text-center">Keine Textkanäle gefunden</div>
+                            `}
+                          </div>
                         </div>
                       ` : ''}
                     </div>
@@ -1089,12 +1101,26 @@ DashboardTabs.Messages = async function (container, guildId) {
       e.stopPropagation();
       openPopover = openPopover === name ? null : name;
       render();
+      if (openPopover && window.OrbitDropdownManager) {
+        window.OrbitDropdownManager.scheduleSync();
+      }
     };
 
     document.getElementById('msg-new-btn')?.addEventListener('click', (e) => togglePopover('new', e));
     document.getElementById('msg-saved-btn')?.addEventListener('click', (e) => togglePopover('saved', e));
     document.getElementById('msg-sendas-btn')?.addEventListener('click', (e) => togglePopover('send_as', e));
-    document.getElementById('msg-channel-btn')?.addEventListener('click', (e) => togglePopover('channel', e));
+    document.getElementById('msg-channel-btn')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (allChannels.length === 0) {
+        try {
+          const freshChannels = await API.getChannels(guildId);
+          if (Array.isArray(freshChannels) && freshChannels.length > 0) {
+            allChannels = freshChannels.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+          }
+        } catch (_) {}
+      }
+      togglePopover('channel', e);
+    });
 
     // Template picker
     container.querySelectorAll('[data-pick-template]').forEach(btn => {
@@ -1185,7 +1211,22 @@ DashboardTabs.Messages = async function (container, guildId) {
       updateToolbarStatesInPlace();
     });
 
-    // Channel picker
+    // Channel picker search & selection
+    const msgChSearch = document.getElementById('msg-channel-search-input');
+    if (msgChSearch) {
+      setTimeout(() => msgChSearch.focus(), 30);
+      msgChSearch.addEventListener('click', (e) => e.stopPropagation());
+      msgChSearch.addEventListener('keydown', (e) => e.stopPropagation());
+      msgChSearch.addEventListener('input', (e) => {
+        const query = (e.target.value || '').toLowerCase().trim();
+        const items = container.querySelectorAll('#msg-channel-items [data-pick-msg-channel]');
+        items.forEach(it => {
+          const name = it.getAttribute('data-ch-name') || '';
+          it.style.display = (!query || name.includes(query)) ? '' : 'none';
+        });
+      });
+    }
+
     container.querySelectorAll('[data-pick-msg-channel]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();

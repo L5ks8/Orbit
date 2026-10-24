@@ -38,13 +38,19 @@ DashboardTabs.Invites = async function (container, guildId) {
         allRoles = cfgRes.value.roles;
       }
     }
-    if (chRes.status === 'fulfilled' && Array.isArray(chRes.value?.channels) && chRes.value.channels.length > 0) {
-      allChannels = chRes.value.channels.filter(
-        c => c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || !c.type
+    const chList = chRes.status === 'fulfilled' && (
+      Array.isArray(chRes.value) ? chRes.value : (Array.isArray(chRes.value?.channels) ? chRes.value.channels : null)
+    );
+    if (chList && chList.length > 0) {
+      allChannels = chList.filter(
+        c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text'))
       );
     }
-    if (roleRes.status === 'fulfilled' && Array.isArray(roleRes.value?.roles) && roleRes.value.roles.length > 0) {
-      allRoles = roleRes.value.roles;
+    const rList = roleRes.status === 'fulfilled' && (
+      Array.isArray(roleRes.value) ? roleRes.value : (Array.isArray(roleRes.value?.roles) ? roleRes.value.roles : null)
+    );
+    if (rList && rList.length > 0) {
+      allRoles = rList.filter(r => r.name !== '@everyone');
     }
   } catch (err) {
     console.warn('[Invites] Failed to load config:', err);
@@ -979,8 +985,19 @@ DashboardTabs.Invites = async function (container, guildId) {
         });
       });
 
-      document.getElementById('inv-source-channel-btn')?.addEventListener('click', (e) => {
+      document.getElementById('inv-source-channel-btn')?.addEventListener('click', async (e) => {
         e.stopPropagation();
+        if (allChannels.length === 0) {
+          try {
+            const fresh = await API.getChannels(guildId);
+            const chList = Array.isArray(fresh) ? fresh : (Array.isArray(fresh?.channels) ? fresh.channels : []);
+            if (chList.length > 0) {
+              allChannels = chList.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+              renderModal();
+              return;
+            }
+          } catch (_) {}
+        }
         modalChannelDropdownOpen = !modalChannelDropdownOpen;
         const chMenu = document.getElementById('inv-source-channel-menu');
         if (chMenu) {

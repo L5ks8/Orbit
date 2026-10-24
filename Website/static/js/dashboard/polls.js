@@ -44,15 +44,22 @@ DashboardTabs.Polls = async function(container, guildId) {
   `;
 
   try {
-    const [pollsRes, rawChannels, rawRoles] = await Promise.all([
+    const [pollsRes, rawChannels, rawRoles, cfgRes] = await Promise.all([
       API.getPolls(guildId).catch(() => ({ polls: [] })),
       API.getChannels(guildId).catch(() => ([])),
-      API.getRoles(guildId).catch(() => ([]))
+      API.getRoles(guildId).catch(() => ([])),
+      API.getConfig(guildId).catch(() => ({}))
     ]);
 
     let polls = Array.isArray(pollsRes?.polls) ? pollsRes.polls : [];
-    const textChannels = (Array.isArray(rawChannels) ? rawChannels : []).filter(c => c.type === 0 || c.type === 5 || c.type === undefined);
-    const roles = (Array.isArray(rawRoles) ? rawRoles : []).filter(r => r.name !== '@everyone');
+    const allChs = (Array.isArray(rawChannels) && rawChannels.length > 0)
+      ? rawChannels
+      : (Array.isArray(cfgRes?.channels) ? cfgRes.channels : []);
+    let textChannels = allChs.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+    const allRls = (Array.isArray(rawRoles) && rawRoles.length > 0)
+      ? rawRoles
+      : (Array.isArray(cfgRes?.roles) ? cfgRes.roles : []);
+    let roles = allRls.filter(r => r.name !== '@everyone');
 
     let currentFilter = 'all'; // 'all' | 'active' | 'ended' | 'draft'
     let openMenuPollId = null;
@@ -648,13 +655,21 @@ DashboardTabs.Polls = async function(container, guildId) {
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
                       </div>
                     </button>
-                    <div id="poll-channel-dd-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 max-h-56 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40">
-                      ${textChannels.length > 0 ? textChannels.map(c => `
-                        <button type="button" data-poll-ch-opt="${escapeHtml(c.id)}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 transition-colors">
-                          <span class="text-neutral-500">#</span>
-                          <span class="truncate">${escapeHtml(c.name)}</span>
-                        </button>
-                      `).join('') : `<div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle gefunden</div>`}
+                    <div id="poll-channel-dd-menu" data-lenis-prevent style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 max-h-60 overflow-hidden rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999] flex flex-col">
+                      <div class="p-2 border-b border-neutral-800 shrink-0 sticky top-0 bg-neutral-900 z-10">
+                        <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                          <input type="text" id="poll-channel-search-input" placeholder="Kanal suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs" autocomplete="off" />
+                        </div>
+                      </div>
+                      <div id="poll-channel-list" class="overflow-y-auto max-h-48 p-1 space-y-0.5" data-lenis-prevent="true">
+                        ${textChannels.length > 0 ? textChannels.map(c => `
+                          <button type="button" data-poll-ch-opt="${escapeHtml(c.id)}" data-ch-name="${escapeHtml((c.name || '').toLowerCase())}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 rounded-lg transition-colors">
+                            <span class="text-neutral-500 font-mono">#</span>
+                            <span class="truncate">${escapeHtml(c.name)}</span>
+                          </button>
+                        `).join('') : `<div class="px-3 py-3 text-xs text-neutral-500 text-center">Keine Textkanäle gefunden</div>`}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -729,7 +744,7 @@ DashboardTabs.Polls = async function(container, guildId) {
                           <span id="poll-role-dd-label" class="min-w-0 truncate text-neutral-400">@ Everyone</span>
                           <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
                         </button>
-                        <div id="poll-role-dd-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1 max-h-48 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40">
+                        <div id="poll-role-dd-menu" data-lenis-prevent style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999]">
                           <button type="button" data-poll-role-opt="" class="w-full px-3 py-1.5 text-left text-xs text-neutral-300 hover:bg-neutral-800">@ Everyone (No restriction)</button>
                           ${roles.map(r => `
                             <button type="button" data-poll-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-1.5 text-left text-xs text-neutral-300 hover:bg-neutral-800 flex items-center gap-2">
@@ -947,17 +962,62 @@ DashboardTabs.Polls = async function(container, guildId) {
         if (inputs.length > 0) inputs[inputs.length - 1].focus();
       };
 
-      // Channel custom dropdown
+      // Channel custom dropdown & search
       const chBtn = modal.querySelector('#poll-channel-dd-btn');
       const chMenu = modal.querySelector('#poll-channel-dd-menu');
       const chClear = modal.querySelector('#poll-channel-dd-clear');
+      const chSearchInput = modal.querySelector('#poll-channel-search-input');
 
-      chBtn.onclick = (e) => {
+      if (chSearchInput) {
+        chSearchInput.onclick = (e) => e.stopPropagation();
+        chSearchInput.onkeydown = (e) => e.stopPropagation();
+        chSearchInput.oninput = (e) => {
+          const q = (e.target.value || '').toLowerCase().trim();
+          modal.querySelectorAll('#poll-channel-list [data-poll-ch-opt]').forEach(btn => {
+            const name = btn.getAttribute('data-ch-name') || '';
+            btn.style.display = (!q || name.includes(q)) ? '' : 'none';
+          });
+        };
+      }
+
+      chBtn.onclick = async (e) => {
         if (e.target.closest('#poll-channel-dd-clear')) return;
         e.stopPropagation();
+        if (textChannels.length === 0) {
+          try {
+            const freshCh = await API.getChannels(guildId);
+            if (Array.isArray(freshCh) && freshCh.length > 0) {
+              textChannels = freshCh.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+              const listEl = modal.querySelector('#poll-channel-list');
+              if (listEl) {
+                listEl.innerHTML = textChannels.map(c => `
+                  <button type="button" data-poll-ch-opt="${escapeHtml(c.id)}" data-ch-name="${escapeHtml((c.name || '').toLowerCase())}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 rounded-lg transition-colors">
+                    <span class="text-neutral-500 font-mono">#</span>
+                    <span class="truncate">${escapeHtml(c.name)}</span>
+                  </button>
+                `).join('');
+                listEl.querySelectorAll('[data-poll-ch-opt]').forEach(optBtn => {
+                  optBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    state.channel_id = optBtn.getAttribute('data-poll-ch-opt') || '';
+                    chMenu.classList.add('hidden');
+                    updateFooterButtonsAndPreview();
+                  };
+                });
+              }
+            }
+          } catch (_) {}
+        }
         modal.querySelector('#poll-unit-dd-menu')?.classList.add('hidden');
         modal.querySelector('#poll-role-dd-menu')?.classList.add('hidden');
+        const isOpening = chMenu.classList.contains('hidden');
         chMenu.classList.toggle('hidden');
+        if (isOpening && chSearchInput) {
+          chSearchInput.value = '';
+          modal.querySelectorAll('#poll-channel-list [data-poll-ch-opt]').forEach(b => b.style.display = '');
+          setTimeout(() => chSearchInput.focus(), 20);
+        }
+        if (window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
       };
 
       chClear.onclick = (e) => {
@@ -1071,6 +1131,7 @@ DashboardTabs.Polls = async function(container, guildId) {
         chMenu.classList.add('hidden');
         unitMenu.classList.add('hidden');
         roleMenu.classList.toggle('hidden');
+        if (window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
       };
       modal.querySelectorAll('[data-poll-role-opt]').forEach(optBtn => {
         optBtn.onclick = (e) => {

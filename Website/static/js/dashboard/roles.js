@@ -20,14 +20,23 @@ DashboardTabs.Roles = async function (container, guildId) {
   `;
 
   try {
-    const [configRes, reactionPanelsRes] = await Promise.all([
-      API.getConfig(guildId),
+    const [configRes, chRes, rolesRes, reactionPanelsRes] = await Promise.all([
+      API.getConfig(guildId).catch(() => ({})),
+      API.getChannels(guildId).catch(() => []),
+      API.getRoles(guildId).catch(() => []),
       API.getReactionRoles(guildId).catch(() => [])
     ]);
 
-    const allRoles = (configRes.roles || []).filter(r => r.name !== '@everyone');
-    const allChannels = (configRes.channels || []).filter(c => c.type === 0 || c.type === 5 || c.type === undefined);
-    const jr = (configRes.config && configRes.config.joinroles) || {};
+    const rawRoles = (Array.isArray(rolesRes) && rolesRes.length > 0)
+      ? rolesRes
+      : (Array.isArray(configRes?.roles) ? configRes.roles : []);
+    let allRoles = rawRoles.filter(r => r.name !== '@everyone');
+
+    const rawChannels = (Array.isArray(chRes) && chRes.length > 0)
+      ? chRes
+      : (Array.isArray(configRes?.channels) ? configRes.channels : []);
+    let allChannels = rawChannels.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+    const jr = (configRes?.config && configRes.config.joinroles) || {};
 
     const state = {
       reactionPanels: Array.isArray(reactionPanelsRes) ? reactionPanelsRes : [],
@@ -1637,12 +1646,23 @@ DashboardTabs.Roles = async function (container, guildId) {
         });
 
         // Channel dropdown
-        document.getElementById('rr-channel-trigger')?.addEventListener('click', (e) => {
+        document.getElementById('rr-channel-trigger')?.addEventListener('click', async (e) => {
           e.stopPropagation();
+          if (allChannels.length === 0) {
+            try {
+              const freshCh = await API.getChannels(guildId);
+              if (Array.isArray(freshCh) && freshCh.length > 0) {
+                allChannels = freshCh.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+              }
+            } catch (_) {}
+          }
           channelDropdownOpen = !channelDropdownOpen;
           openRoleDropdownIdx = null;
           openEmojiPickerIdx = null;
           renderModal();
+          if (channelDropdownOpen && window.OrbitDropdownManager) {
+            window.OrbitDropdownManager.scheduleSync();
+          }
         });
         modalRoot.querySelectorAll('[data-rr-select-channel]').forEach(btn => {
           btn.addEventListener('click', (e) => {
@@ -1714,13 +1734,24 @@ DashboardTabs.Roles = async function (container, guildId) {
         });
 
         modalRoot.querySelectorAll('[data-rr-role-btn]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
+          btn.addEventListener('click', async (e) => {
             e.stopPropagation();
+            if (allRoles.length === 0) {
+              try {
+                const freshRoles = await API.getRoles(guildId);
+                if (Array.isArray(freshRoles) && freshRoles.length > 0) {
+                  allRoles = freshRoles.filter(r => r.name !== '@everyone');
+                }
+              } catch (_) {}
+            }
             const idx = parseInt(btn.getAttribute('data-rr-role-btn'), 10);
             openRoleDropdownIdx = openRoleDropdownIdx === idx ? null : idx;
             openEmojiPickerIdx = null;
             channelDropdownOpen = false;
             renderModal();
+            if (openRoleDropdownIdx !== null && window.OrbitDropdownManager) {
+              window.OrbitDropdownManager.scheduleSync();
+            }
           });
         });
         modalRoot.querySelectorAll('[data-rr-select-role]').forEach(btn => {
@@ -1825,7 +1856,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                       <span id="rule-dd-trigger-label" class="truncate">${escapeHtml(currentTriggerObj.label)}</span>
                       <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0 transition-transform duration-150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
-                    <div id="rule-dd-trigger-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40 max-h-56 overflow-y-auto">
+                    <div id="rule-dd-trigger-menu" data-lenis-prevent style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999] max-h-56 overflow-y-auto">
                       ${TRIGGER_OPTIONS.map(t => `
                         <button type="button" data-rule-trigger-opt="${t.value}" class="w-full px-3 py-2 text-left text-xs ${draft.trigger === t.value ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'} flex items-center justify-between transition-colors">
                           <span>${escapeHtml(t.label)}</span>
@@ -1844,7 +1875,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                         </span>
                         <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                       </button>
-                      <div id="rule-dd-cond-role-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40 max-h-48 overflow-y-auto">
+                      <div id="rule-dd-cond-role-menu" data-lenis-prevent style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999] max-h-48 overflow-y-auto">
                         <button type="button" data-rule-cond-role-opt="" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors">Any role</button>
                         ${allRoles.map(r => `
                           <button type="button" data-rule-cond-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 transition-colors">
@@ -1865,7 +1896,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                       <span id="rule-dd-action-label" class="truncate">${escapeHtml(currentActionObj.label)}</span>
                       <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
-                    <div id="rule-dd-action-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40">
+                    <div id="rule-dd-action-menu" data-lenis-prevent style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999]">
                       ${ACTION_OPTIONS.map(a => `
                         <button type="button" data-rule-action-opt="${a.value}" class="w-full px-3 py-2 text-left text-xs ${draft.action === a.value ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'} flex items-center justify-between transition-colors">
                           <span>${escapeHtml(a.label)}</span>
@@ -1884,7 +1915,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                         </span>
                         <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                       </button>
-                      <div id="rule-dd-target-role-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40 max-h-48 overflow-y-auto">
+                      <div id="rule-dd-target-role-menu" data-lenis-prevent style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999] max-h-48 overflow-y-auto">
                         ${allRoles.map(r => `
                           <button type="button" data-rule-target-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 transition-colors">
                             <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>

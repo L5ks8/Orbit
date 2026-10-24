@@ -22,12 +22,23 @@ DashboardTabs.Tickets = async function (container, guildId) {
   `;
 
   try {
-    const configRes = await API.getConfig(guildId);
-    const allChannels = (configRes.channels || []).filter(c => c.type === 0 || c.type === 5 || c.type === undefined);
-    const allCategories = configRes.categories || [];
-    const allRoles = (configRes.roles || []).filter(r => r.name !== '@everyone');
-    const allMembers = configRes.members || [];
-    const tCfg = (configRes.config && configRes.config.ticket) || {};
+    const [configRes, chRes, rolesRes] = await Promise.all([
+      API.getConfig(guildId).catch(() => ({})),
+      API.getChannels(guildId).catch(() => []),
+      API.getRoles(guildId).catch(() => [])
+    ]);
+
+    const rawChannels = (Array.isArray(chRes) && chRes.length > 0)
+      ? chRes
+      : (Array.isArray(configRes?.channels) ? configRes.channels : []);
+    let allChannels = rawChannels.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+    const allCategories = configRes?.categories || [];
+    const rawRoles = (Array.isArray(rolesRes) && rolesRes.length > 0)
+      ? rolesRes
+      : (Array.isArray(configRes?.roles) ? configRes.roles : []);
+    let allRoles = rawRoles.filter(r => r.name !== '@everyone');
+    const allMembers = configRes?.members || [];
+    const tCfg = (configRes?.config && configRes.config.ticket) || {};
 
     const escapeHtml = (str) => String(str || '')
       .replace(/&/g, '&amp;')
@@ -436,7 +447,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         </span>
                         <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                       </button>
-                      <div id="tkt-dd-ping-role-menu" data-lenis-prevent class="orbit-dropdown-menu hidden absolute right-0 top-full mt-1.5 w-52 max-h-48 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40">
+                      <div id="tkt-dd-ping-role-menu" data-lenis-prevent style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute right-0 top-full mt-1.5 w-56 max-h-56 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999]">
                         <button type="button" data-tkt-ping-role-opt="" class="w-full px-3 py-2 text-left text-xs text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors">Keine Rolle</button>
                         ${allRoles.map(r => `
                           <button type="button" data-tkt-ping-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 transition-colors">
@@ -1127,12 +1138,14 @@ DashboardTabs.Tickets = async function (container, guildId) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 ${openDropdownId === 'panel_ch' ? 'rotate-180' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
                           </div>
                         </button>
-                        <div id="wiz-dd-panel-channel-menu" class="${openDropdownId === 'panel_ch' ? '' : 'hidden'} absolute z-50 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto p-1 space-y-0.5">
-                          ${allChannels.map(c => `
+                        <div id="wiz-dd-panel-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${openDropdownId === 'panel_ch' ? '' : 'hidden'} absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto p-1 space-y-0.5">
+                          ${allChannels.length > 0 ? allChannels.map(c => `
                             <button type="button" data-select-panel-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(draft.panel_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
                               <span class="truncate">#${escapeHtml(c.name)}</span>
                             </button>
-                          `).join('')}
+                          `).join('') : `
+                            <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle verfügbar</div>
+                          `}
                         </div>
                       </div>
                     </div>
@@ -1147,7 +1160,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 ${openDropdownId === 'log_ch' ? 'rotate-180' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
                           </div>
                         </button>
-                        <div id="wiz-dd-log-channel-menu" class="${openDropdownId === 'log_ch' ? '' : 'hidden'} absolute z-50 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto p-1 space-y-0.5">
+                        <div id="wiz-dd-log-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${openDropdownId === 'log_ch' ? '' : 'hidden'} absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto p-1 space-y-0.5">
                           <button type="button" data-select-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Kein Log-Kanal</button>
                           ${allChannels.map(c => `
                             <button type="button" data-select-log-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(draft.log_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
@@ -1168,13 +1181,15 @@ DashboardTabs.Tickets = async function (container, guildId) {
                           <span class="min-w-0 truncate text-sm ${sRole ? 'text-white' : 'text-neutral-500'}">${sRole ? `@${escapeHtml(sRole.name)}` : 'Zuständige Team-Rolle (optional)'}</span>
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400"><path d="m6 9 6 6 6-6"></path></svg>
                         </button>
-                        <div id="wiz-dd-role-menu" class="${openDropdownId === 'role' ? '' : 'hidden'} absolute z-50 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto p-1 space-y-0.5">
+                        <div id="wiz-dd-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${openDropdownId === 'role' ? '' : 'hidden'} absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto p-1 space-y-0.5">
                           <button type="button" data-select-wiz-role="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Keine spezifische Rolle</button>
-                          ${allRoles.map(r => `
+                          ${allRoles.length > 0 ? allRoles.map(r => `
                             <button type="button" data-select-wiz-role="${escapeHtml(r.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(r.id) === String(draft.role_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
                               <span class="truncate">@${escapeHtml(r.name)}</span>
                             </button>
-                          `).join('')}
+                          `).join('') : `
+                            <div class="px-3 py-2 text-xs text-neutral-500">Keine Rollen verfügbar</div>
+                          `}
                         </div>
                       </div>
                     </div>
@@ -1186,7 +1201,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                           <span class="min-w-0 truncate text-sm ${sCat ? 'text-white' : 'text-neutral-500'}">${sCat ? escapeHtml(sCat.name) : 'Automatisch (gleiche Kategorie)'}</span>
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400"><path d="m6 9 6 6 6-6"></path></svg>
                         </button>
-                        <div id="wiz-dd-cat-menu" class="${openDropdownId === 'cat' ? '' : 'hidden'} absolute z-50 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto p-1 space-y-0.5">
+                        <div id="wiz-dd-cat-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${openDropdownId === 'cat' ? '' : 'hidden'} absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto p-1 space-y-0.5">
                           <button type="button" data-select-wiz-cat="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Automatisch</button>
                           ${allCategories.map(cat => `
                             <button type="button" data-select-wiz-cat="${escapeHtml(cat.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(cat.id) === String(draft.category_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
@@ -1278,7 +1293,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                             <span>${q.style === 'paragraph' ? 'Absatz (Mehrzeilig)' : 'Kurztext (1 Zeile)'}</span>
                             <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                           </button>
-                          <div data-q-style-menu="${qIdx}" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1 z-40">
+                          <div data-q-style-menu="${qIdx}" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999]">
                             <button type="button" data-q-style-opt="short" data-q-idx="${qIdx}" class="w-full px-3 py-2 text-left text-xs ${q.style !== 'paragraph' ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors">Kurztext (1 Zeile)</button>
                             <button type="button" data-q-style-opt="paragraph" data-q-idx="${qIdx}" class="w-full px-3 py-2 text-left text-xs ${q.style === 'paragraph' ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors">Absatz (Mehrzeilig)</button>
                           </div>
@@ -1435,10 +1450,19 @@ DashboardTabs.Tickets = async function (container, guildId) {
         });
 
         // Step 2 bindings
-        document.getElementById('wiz-dd-panel-channel-btn')?.addEventListener('click', (e) => {
+        document.getElementById('wiz-dd-panel-channel-btn')?.addEventListener('click', async (e) => {
           e.stopPropagation();
+          if (allChannels.length === 0) {
+            try {
+              const freshCh = await API.getChannels(guildId);
+              if (Array.isArray(freshCh) && freshCh.length > 0) {
+                allChannels = freshCh.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+              }
+            } catch (_) {}
+          }
           openDropdownId = openDropdownId === 'panel_ch' ? null : 'panel_ch';
           renderModalContent();
+          if (openDropdownId && window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
         });
         modalRoot.querySelectorAll('[data-select-panel-ch]').forEach(btn => {
           btn.addEventListener('click', (e) => {
@@ -1449,10 +1473,19 @@ DashboardTabs.Tickets = async function (container, guildId) {
           });
         });
 
-        document.getElementById('wiz-dd-log-channel-btn')?.addEventListener('click', (e) => {
+        document.getElementById('wiz-dd-log-channel-btn')?.addEventListener('click', async (e) => {
           e.stopPropagation();
+          if (allChannels.length === 0) {
+            try {
+              const freshCh = await API.getChannels(guildId);
+              if (Array.isArray(freshCh) && freshCh.length > 0) {
+                allChannels = freshCh.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+              }
+            } catch (_) {}
+          }
           openDropdownId = openDropdownId === 'log_ch' ? null : 'log_ch';
           renderModalContent();
+          if (openDropdownId && window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
         });
         modalRoot.querySelectorAll('[data-select-log-ch]').forEach(btn => {
           btn.addEventListener('click', (e) => {
@@ -1463,10 +1496,19 @@ DashboardTabs.Tickets = async function (container, guildId) {
           });
         });
 
-        document.getElementById('wiz-dd-role-btn')?.addEventListener('click', (e) => {
+        document.getElementById('wiz-dd-role-btn')?.addEventListener('click', async (e) => {
           e.stopPropagation();
+          if (allRoles.length === 0) {
+            try {
+              const freshRoles = await API.getRoles(guildId);
+              if (Array.isArray(freshRoles) && freshRoles.length > 0) {
+                allRoles = freshRoles.filter(r => r.name !== '@everyone');
+              }
+            } catch (_) {}
+          }
           openDropdownId = openDropdownId === 'role' ? null : 'role';
           renderModalContent();
+          if (openDropdownId && window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
         });
         modalRoot.querySelectorAll('[data-select-wiz-role]').forEach(btn => {
           btn.addEventListener('click', (e) => {
@@ -1481,6 +1523,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           e.stopPropagation();
           openDropdownId = openDropdownId === 'cat' ? null : 'cat';
           renderModalContent();
+          if (openDropdownId && window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
         });
         modalRoot.querySelectorAll('[data-select-wiz-cat]').forEach(btn => {
           btn.addEventListener('click', (e) => {

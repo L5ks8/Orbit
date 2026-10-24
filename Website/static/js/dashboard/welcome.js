@@ -246,7 +246,7 @@ DashboardTabs.Welcome = async function(container, guildId) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
                           </div>
                         </button>
-                        <div id="w-channel-menu" class="hidden absolute right-0 mt-1.5 w-60 max-h-60 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl z-40 py-1">
+                        <div id="w-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute right-0 mt-1.5 w-60 max-h-60 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl z-[99999] py-1">
                           <button type="button" data-ch="" class="w-ch-opt w-full px-3 py-2 text-left text-xs text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"># No channel</button>
                           ${state.channels.map(c => `
                             <button type="button" data-ch="${esc(c.id)}" class="w-ch-opt w-full px-3 py-2 text-left text-xs ${String(state.welcome.channel_id) === String(c.id) ? 'bg-white/10 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors truncate"># ${esc(c.name)}</button>
@@ -478,7 +478,7 @@ DashboardTabs.Welcome = async function(container, guildId) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
                           </div>
                         </button>
-                        <div id="g-channel-menu" class="hidden absolute right-0 mt-1.5 w-60 max-h-60 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl z-40 py-1">
+                        <div id="g-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute right-0 mt-1.5 w-60 max-h-60 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl z-[99999] py-1">
                           <button type="button" data-ch="" class="g-ch-opt w-full px-3 py-2 text-left text-xs text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"># No channel</button>
                           ${state.channels.map(c => `
                             <button type="button" data-ch="${esc(c.id)}" class="g-ch-opt w-full px-3 py-2 text-left text-xs ${String(state.goodbye.channel_id) === String(c.id) ? 'bg-white/10 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors truncate"># ${esc(c.name)}</button>
@@ -997,6 +997,9 @@ DashboardTabs.Welcome = async function(container, guildId) {
         e.stopPropagation();
         wChMenu.classList.toggle('hidden');
         document.getElementById('g-channel-menu')?.classList.add('hidden');
+        if (!wChMenu.classList.contains('hidden') && window.OrbitDropdownManager) {
+          window.OrbitDropdownManager.scheduleSync();
+        }
       };
       document.querySelectorAll('.w-ch-opt').forEach(opt => {
         opt.onclick = () => {
@@ -1023,6 +1026,9 @@ DashboardTabs.Welcome = async function(container, guildId) {
         e.stopPropagation();
         gChMenu.classList.toggle('hidden');
         document.getElementById('w-channel-menu')?.classList.add('hidden');
+        if (!gChMenu.classList.contains('hidden') && window.OrbitDropdownManager) {
+          window.OrbitDropdownManager.scheduleSync();
+        }
       };
       document.querySelectorAll('.g-ch-opt').forEach(opt => {
         opt.onclick = () => {
@@ -1314,8 +1320,9 @@ DashboardTabs.Welcome = async function(container, guildId) {
   renderPage();
 
   try {
-    const [configData, guildsData] = await Promise.all([
+    const [configData, chData, guildsData] = await Promise.all([
       API.getConfig(guildId).catch(() => ({})),
+      API.getChannels(guildId).catch(() => ([])),
       API.getGuilds().catch(() => ([]))
     ]);
 
@@ -1327,7 +1334,10 @@ DashboardTabs.Welcome = async function(container, guildId) {
     }
 
     const cfg = configData.config || configData || {};
-    state.channels = Array.isArray(configData.channels) ? configData.channels : [];
+    const rawChs = (Array.isArray(chData) && chData.length > 0)
+      ? chData
+      : (Array.isArray(configData.channels) ? configData.channels : []);
+    state.channels = rawChs.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
 
     if (cfg.botprofile) {
       state.botName = cfg.botprofile.nickname || cfg.botprofile.default_name || 'Orbit';

@@ -31,15 +31,19 @@ class ConfigMixin:
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
 
+        text_channels = [
+            c for c in sorted(guild.channels, key=lambda x: getattr(x, "position", 0))
+            if isinstance(c, discord.TextChannel) or (hasattr(c, "send") and not isinstance(c, (discord.VoiceChannel, discord.StageChannel, discord.CategoryChannel)))
+        ]
         channels = [
             {
                 "id": str(c.id),
                 "name": c.name,
-                "category_id": str(c.category_id) if c.category_id else None,
-                "position": c.position,
+                "category_id": str(c.category_id) if getattr(c, "category_id", None) else None,
+                "position": getattr(c, "position", 0),
                 "type": "text"
             }
-            for c in sorted(guild.text_channels, key=lambda x: x.position)
+            for c in text_channels
         ]
         voice_channels = [
             {
