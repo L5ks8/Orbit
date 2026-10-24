@@ -79,7 +79,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
         panel_channel_id: String(p.panel_channel_id || tCfg.panel_channel_id || ''),
         log_channel_id: String(p.log_channel_id || tCfg.log_channel_id || ''),
         category_id: String(p.category_id || ''),
-        role_id: String(p.role_id || ''),
+        role_ids: Array.isArray(p.role_ids) ? p.role_ids.map(String) : (p.role_id ? [String(p.role_id)] : []),
+        role_id: String(p.role_id || (Array.isArray(p.role_ids) && p.role_ids[0]) || ''),
         button_label: String(p.button_label || 'Ticket öffnen'),
         options: Array.isArray(p.options) && p.options.length > 0 ? p.options.map((opt, oIdx) => ({
           id: String(opt.id || `opt_${pIdx}_${oIdx}`),
@@ -87,7 +88,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
           description: String(opt.description || 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.'),
           color: String(opt.color || '#5865F2'),
           category_id: String(opt.category_id || ''),
-          role_id: String(opt.role_id || '')
+          role_ids: Array.isArray(opt.role_ids) ? opt.role_ids.map(String) : (opt.role_id ? [String(opt.role_id)] : []),
+          role_id: String(opt.role_id || (Array.isArray(opt.role_ids) && opt.role_ids[0]) || '')
         })) : [
           {
             id: `opt_${pIdx}_0`,
@@ -95,6 +97,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
             description: 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.',
             color: '#5865F2',
             category_id: String(p.category_id || ''),
+            role_ids: Array.isArray(p.role_ids) ? p.role_ids.map(String) : (p.role_id ? [String(p.role_id)] : []),
             role_id: String(p.role_id || '')
           }
         ]
@@ -111,6 +114,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         panel_channel_id: String(tCfg.panel_channel_id || (tCfg.options_slots[0]?.panel_channel_id || '')),
         log_channel_id: String(tCfg.log_channel_id || (tCfg.options_slots[0]?.log_channel_id || '')),
         category_id: String(tCfg.options_slots[0]?.category_id || ''),
+        role_ids: Array.isArray(tCfg.options_slots[0]?.role_ids) ? tCfg.options_slots[0].role_ids.map(String) : (tCfg.options_slots[0]?.role_id ? [String(tCfg.options_slots[0].role_id)] : []),
         role_id: String(tCfg.options_slots[0]?.role_id || ''),
         button_label: 'Ticket öffnen',
         options: tCfg.options_slots.map((s, idx) => ({
@@ -119,6 +123,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           description: String(s.description || 'Öffnen Sie ein Ticket.'),
           color: String(s.color || '#5865F2'),
           category_id: String(s.category_id || ''),
+          role_ids: Array.isArray(s.role_ids) ? s.role_ids.map(String) : (s.role_id ? [String(s.role_id)] : []),
           role_id: String(s.role_id || '')
         }))
       }];
@@ -164,6 +169,9 @@ DashboardTabs.Tickets = async function (container, guildId) {
           const allSlots = [];
           state.panels.forEach(p => {
             (p.options || []).forEach(opt => {
+              const optRoles = Array.isArray(opt.role_ids) && opt.role_ids.length > 0
+                ? opt.role_ids
+                : (opt.role_id ? [opt.role_id] : (Array.isArray(p.role_ids) && p.role_ids.length > 0 ? p.role_ids : (p.role_id ? [p.role_id] : [])));
               allSlots.push({
                 id: opt.id,
                 name: opt.name,
@@ -172,7 +180,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 panel_channel_id: p.panel_channel_id,
                 log_channel_id: p.log_channel_id,
                 category_id: opt.category_id || p.category_id,
-                role_id: opt.role_id || p.role_id,
+                role_id: optRoles[0] || opt.role_id || p.role_id || '',
+                role_ids: optRoles,
                 button_label: p.button_label || 'Ticket öffnen'
               });
             });

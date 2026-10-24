@@ -8,6 +8,7 @@ DashboardTabs.Builder = async function(container, guildId) {
 
   const STORAGE_CHATS_KEY = `orbit_ai_helper_chats_${guildId}`;
   const STORAGE_ACTIVE_KEY = `orbit_ai_helper_active_chat_${guildId}`;
+  const STORAGE_APPLIED_KEY = `orbit_ai_helper_applied_actions_${guildId}`;
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -71,6 +72,24 @@ DashboardTabs.Builder = async function(container, guildId) {
       }
     } catch (_) {}
   }
+
+  function loadAppliedActions() {
+    try {
+      const raw = localStorage.getItem(STORAGE_APPLIED_KEY);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw);
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  function saveAppliedActions(set) {
+    try {
+      localStorage.setItem(STORAGE_APPLIED_KEY, JSON.stringify(Array.from(set || [])));
+    } catch (_) {}
+  }
+
 
   function mergeChats(serverChats, localChats) {
     const map = new Map();
@@ -169,7 +188,14 @@ DashboardTabs.Builder = async function(container, guildId) {
   let pendingActions = [];
   let pendingAttachments = [];
   let draftInputText = '';
-  let appliedActionIds = new Set();
+  let appliedActionIds = loadAppliedActions();
+  for (const c of chats) {
+    for (const m of (c.messages || [])) {
+      for (const a of (m.actions || [])) {
+        if (a && a.id && a.applied) appliedActionIds.add(a.id);
+      }
+    }
+  }
   let actionHistory = Array.isArray(chatData.action_history) ? chatData.action_history : [];
   let canUndo = Boolean(chatData.can_undo);
   let canRedo = Boolean(chatData.can_redo);
@@ -860,11 +886,11 @@ DashboardTabs.Builder = async function(container, guildId) {
                   ${msgActions.length > 0 ? `
                     <div class="space-y-2">
                       ${msgActions.map(act => {
-                        const isApplied = appliedActionIds.has(act.id);
+                        const isApplied = Boolean(act.applied || appliedActionIds.has(act.id));
                         return `
-                          <div class="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-white/[0.03] border ${isApplied ? 'border-emerald-500/30' : 'border-white/[0.08]'}">
+                          <div class="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.08] ${isApplied ? 'opacity-80' : ''}">
                             <div class="flex items-center gap-3 min-w-0">
-                              <div class="w-8 h-8 rounded-lg ${isApplied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/[0.06] text-neutral-200'} flex items-center justify-center flex-shrink-0">
+                              <div class="w-8 h-8 rounded-lg bg-white/[0.06] text-neutral-300 flex items-center justify-center flex-shrink-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
                               </div>
                               <div class="min-w-0">
@@ -873,9 +899,10 @@ DashboardTabs.Builder = async function(container, guildId) {
                               </div>
                             </div>
                             ${isApplied ? `
-                              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11.5px] font-semibold bg-emerald-500/20 text-emerald-300 flex-shrink-0">
-                                ✓ Angewendet
-                              </span>
+                              <button type="button" disabled class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-neutral-800 border border-neutral-700/60 text-neutral-400 flex-shrink-0 cursor-not-allowed select-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check text-neutral-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Gebaut
+                              </button>
                             ` : `
                               <button type="button" data-apply-single="${escapeHtml(act.id)}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-white text-black hover:bg-neutral-200 transition-colors flex-shrink-0 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket w-3 h-3"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path></svg>
@@ -1249,8 +1276,25 @@ DashboardTabs.Builder = async function(container, guildId) {
       const res = await API.applyAIHelperActions(guildId, actionsToApply);
       if (res) {
         for (const a of actionsToApply) {
-          if (a.id) appliedActionIds.add(a.id);
+          if (a.id) {
+            appliedActionIds.add(a.id);
+            a.applied = true;
+          }
         }
+        saveAppliedActions(appliedActionIds);
+
+        // Mark on all matching actions inside chats
+        for (const c of chats) {
+          for (const m of (c.messages || [])) {
+            for (const a of (m.actions || [])) {
+              if (appliedActionIds.has(a.id)) {
+                a.applied = true;
+              }
+            }
+          }
+        }
+        saveLocalChats(chats, activeChatId);
+
         const appliedIds = new Set(actionsToApply.map(a => a.id));
         pendingActions = pendingActions.filter(p => !appliedIds.has(p.id));
         canUndo = Boolean(res.can_undo);
@@ -1741,6 +1785,7 @@ DashboardTabs.Builder = async function(container, guildId) {
     container.querySelectorAll('[data-apply-single]').forEach(btn => {
       btn.addEventListener('click', () => {
         const actId = btn.getAttribute('data-apply-single');
+        if (appliedActionIds.has(actId)) return;
         const activeChat = getActiveChat();
         let found = pendingActions.find(a => a.id === actId);
         if (!found && activeChat) {
