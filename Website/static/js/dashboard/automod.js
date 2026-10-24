@@ -154,10 +154,6 @@
     const logsCfg = rawConfig.logs || {};
 
     const state = {
-      // AI Moderation
-      ai_moderation_enabled: Boolean(automodCfg.ai_automod?.enabled),
-      ai_image_enabled: Boolean(automodCfg.ai_image?.enabled),
-
       // Content Filter
       content_filter_enabled: Boolean(automodCfg.banned_words?.enabled),
       filter_level: automodCfg.banned_words?.filter_level || 'relaxed',
@@ -427,71 +423,7 @@
                 <!-- Left Column -->
                 <div class="flex flex-col gap-4 min-w-0 scroll-mt-24">
 
-                  <!-- Card 1: AI Moderation -->
-                  <div class="relative flex flex-col" style="cursor: default;">
-                    <div class="select-none flex flex-col flex-1">
-                      <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-                        <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
-                          <div class="flex items-center gap-2.5 min-w-0">
-                            <span class="flex-shrink-0 transition-colors text-neutral-500">
-                              ${SVGS.sparkles}
-                            </span>
-                            <span class="text-sm font-medium text-white truncate">AI Moderation</span>
-                            <span class="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-indigo-400 border-indigo-500/20 bg-gradient-to-b from-indigo-400/25 to-indigo-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
-                              ${SVGS.crown}Pro
-                            </span>
-                            <span class="text-[10px] px-1.5 py-0.5 bg-white/10 text-neutral-300 rounded font-semibold uppercase tracking-[0.08em]">Beta</span>
-                          </div>
-                          <div class="flex items-center gap-2.5 flex-shrink-0">
-                            ${renderCustomToggle('toggle-ai-mod', state.ai_moderation_enabled, 'Toggle AI Moderation')}
-                          </div>
-                        </div>
-                        <div class="w-full px-5 py-9 text-center group rounded-2xl transition-[background-color] hover:bg-white/[0.015]">
-                          <div class="mx-auto w-11 h-11 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-[transform,background-color] group-hover:bg-violet-500/15 group-active:scale-[0.96]">
-                            ${SVGS.lock}
-                          </div>
-                          <p class="text-sm font-semibold text-white mb-3 text-balance">Reads what people mean, not just keywords</p>
-                          <div class="flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto mb-4">
-                            <span class="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Hate speech</span>
-                            <span class="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Harassment</span>
-                            <span class="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Threats</span>
-                            <span class="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Violence</span>
-                            <span class="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Sexual content</span>
-                            <span class="text-[11px] px-2 py-1 rounded-md bg-neutral-800/70 text-neutral-400 border border-neutral-800">Self-harm</span>
-                          </div>
-                          <a href="/pricing" class="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-white text-black text-sm font-medium shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-[transform,background-color] hover:bg-neutral-200 active:scale-[0.96]">Upgrade to Pro</a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Card 2: AI Image Moderation -->
-                  <div class="relative flex flex-col" style="cursor: default;">
-                    <div class="select-none flex flex-col flex-1">
-                      <div class="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-                        <div class="px-5 py-4 flex items-center justify-between gap-4">
-                          <div class="flex items-center gap-3 min-w-0">
-                            <div class="grid place-items-center w-9 h-9 rounded-xl bg-violet-500/10 text-violet-300 border border-violet-500/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] shrink-0">
-                              ${SVGS.scanEye}
-                            </div>
-                            <div class="min-w-0">
-                              <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="text-sm font-medium text-white text-balance">AI Image Moderation</h3>
-                                <span class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-                                  ${SVGS.lockSmall}Pro
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="flex items-center gap-3">
-                            ${renderCustomToggle('toggle-ai-image', state.ai_image_enabled, 'Toggle AI Image Moderation')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Card 3: Content Filter -->
+                  <!-- Card 1: Content Filter -->
                   <div data-tour="content-filter" class="scroll-mt-24">
                     <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                       <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-neutral-800">
@@ -1359,8 +1291,6 @@
         };
       }
 
-      wireCustomToggle('toggle-ai-mod', 'ai_moderation_enabled');
-      wireCustomToggle('toggle-ai-image', 'ai_image_enabled');
       wireCustomToggle('toggle-content-filter', 'content_filter_enabled');
       wireCustomToggle('toggle-spam', 'spam_enabled');
       wireCustomToggle('toggle-links', 'links_enabled');
@@ -1785,7 +1715,7 @@
 
     async function saveAutomodConfig() {
       const automodPayload = {
-        enabled: state.content_filter_enabled || state.spam_enabled || state.links_enabled || state.ai_moderation_enabled,
+        enabled: state.content_filter_enabled || state.spam_enabled || state.links_enabled,
         exempt_channels: state.exempt_channels,
         exempt_roles: state.exempt_roles,
         log_channel: state.log_channel,
@@ -1829,16 +1759,6 @@
           enabled: state.max_mentions > 0,
           max_mentions: state.max_mentions,
           action: 'warn'
-        },
-
-        ai_automod: {
-          enabled: state.ai_moderation_enabled,
-          action: 'delete'
-        },
-
-        ai_image: {
-          enabled: state.ai_image_enabled,
-          action: 'delete'
         },
 
         dm_notifications: state.dm_notifications
