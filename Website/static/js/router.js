@@ -138,6 +138,7 @@ const Router = {
       if (tab === 'welcome') tab = 'welcomegoodbye';
       if (tab === 'xp') tab = 'level';
       if (tab === 'jtc') tab = 'tempvoice';
+      if (tab === 'stats') tab = 'serverstats';
       if (tab === 'moderation') tab = 'automod';
       if (tab === 'embed-builder') tab = 'messages';
       if (tab === 'verification') tab = 'verify';
