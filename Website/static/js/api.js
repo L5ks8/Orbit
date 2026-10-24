@@ -252,7 +252,7 @@ const API = {
   },
 
   async getConfig(guildId, force = false) {
-    const res = await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}${force ? '?force=true' : ''}`), force, 120000);
+    const res = await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}${force ? '?force=true' : ''}`), force, 20000);
     try {
       if (res && typeof res === 'object') {
         if (Array.isArray(res.channels)) {
@@ -275,6 +275,11 @@ const API = {
         if (res.guild && typeof res.guild === 'object') {
           window.__currentDashboardGuildObj = res.guild;
         }
+        if (!res.config && !res.channels) {
+          this.invalidateCache(`config_${guildId}`);
+        }
+      } else {
+        this.invalidateCache(`config_${guildId}`);
       }
     } catch (_) {}
     return res;

@@ -717,8 +717,26 @@ class ConfigMixin:
             "roles": roles,
             "emojis": emojis,
             "members": members,
-            "config": config_data
+            "config": config_data,
+            # Top-level module mirrors for 100% universal tab compatibility
+            "welcome": config_data.get("welcome"),
+            "goodbye": config_data.get("goodbye"),
+            "automod": config_data.get("automod"),
+            "verify": config_data.get("verify"),
+            "security": config_data.get("security"),
+            "ticket": config_data.get("ticket"),
+            "appeals": config_data.get("appeals"),
+            "inactive_kick": config_data.get("inactive_kick"),
+            "tempvoice": config_data.get("tempvoice"),
+            "level": config_data.get("level"),
+            "invites": config_data.get("invites"),
+            "joinroles": config_data.get("joinroles"),
+            "botprofile": config_data.get("botprofile"),
+            "autoresponder": config_data.get("autoresponder"),
+            "automation": config_data.get("automation"),
+            "logs": config_data.get("logs")
         }
+        print(f"[api_get_config] Guild {guild_id}: Config successfully sent! welcome_enabled={config_data.get('welcome', {}).get('enabled')}, automod_enabled={config_data.get('automod', {}).get('enabled')}, security_enabled={bool(config_data.get('security'))}")
         if hasattr(self, "_guild_config_cache"):
             self._guild_config_cache[guild_id] = {"time": _now_cfg, "data": resp_data}
         return web.json_response(resp_data)

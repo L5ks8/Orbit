@@ -30,9 +30,28 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMi
             return self.sessions[session_id]
 
         try:
-            from Components.Database.mongodb import get_db
+            from Components.Database.mongodb import get_db, _client
             db = get_db()
-            sess = db["WebSessions"].find_one({"_id": session_id})
+            sess = None
+            if db is not None:
+                sess = db["WebSessions"].find_one({"_id": session_id})
+            if not sess and _client is not None:
+                for cand_name in ["orbit", "OrbitBot", "Orbit"]:
+                    if db is not None and db.name == cand_name:
+                        continue
+                    try:
+                        cand_sess = _client[cand_name]["WebSessions"].find_one({"_id": session_id})
+                        if cand_sess and "user" in cand_sess:
+                            sess = cand_sess
+                            if db is not None:
+                                try:
+                                    db["WebSessions"].replace_one({"_id": session_id}, cand_sess, upsert=True)
+                                except Exception:
+                                    pass
+                            break
+                    except Exception:
+                        pass
+
             if sess and "user" in sess:
                 u = sess["user"]
                 sess_data = {
@@ -44,8 +63,8 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMi
                 }
                 self.sessions[session_id] = sess_data
                 return sess_data
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[get_user_session] Error: {e}")
 
         return None
 
@@ -104,6 +123,13 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMi
         perms = member.guild_permissions
         is_owner = (member.id == bot_guild.owner_id)
         is_admin = is_owner or perms.administrator or perms.manage_guild
+        try:
+            if hasattr(self.bot, "is_owner") and (await self.bot.is_owner(member)):
+                is_admin = True
+            elif hasattr(self.bot, "owner_ids") and self.bot.owner_ids and member.id in self.bot.owner_ids:
+                is_admin = True
+        except Exception:
+            pass
         
         if not is_admin:
             from Components.Systems.WebDashboard._storage import load_settings_config
