@@ -465,10 +465,11 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     Pages._mountDashboardTab(tabContainer, () => DashboardTabs.Modules(tabContainer, guildId, tab), tab, guildId);
   } else if (typeof window.renderErrorState === 'function') {
     window.renderErrorState(tabContainer, {
-      title: 'Bereich nicht gefunden',
+      title: 'Module Not Found',
       message: `The module "${tab}" does not exist or is currently unavailable.`,
       statusCode: 404,
-      backUrl: `/dashboard/${guildId}`
+      backUrl: `/dashboard/${guildId}`,
+      backText: 'Back to Overview'
     });
   }
 };

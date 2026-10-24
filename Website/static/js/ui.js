@@ -1091,68 +1091,46 @@ function renderErrorState(container, options = {}) {
   const badgeText = isNotFound ? 'Not Found' : 'Server Error';
 
   container.innerHTML = `
-    <div class="flex flex-col items-center justify-center min-h-[60vh] px-4 py-12 text-center animate-fade-in">
-      <div class="relative w-full max-w-lg bg-neutral-900/90 border border-neutral-800 rounded-2xl p-8 sm:p-10 shadow-2xl backdrop-blur-xl flex flex-col items-center text-center overflow-hidden">
-        <!-- Ambient top glow -->
-        <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-32 ${isNotFound ? 'bg-amber-500/10' : 'bg-rose-500/10'} rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+    <div class="flex flex-col items-center justify-center min-h-[70vh] px-4 py-12 text-center animate-fade-in select-none">
+      ${isNotFound ? `
+        <h1 class="text-7xl sm:text-8xl font-black text-white tracking-tight mb-4 drop-shadow-sm">404</h1>
+      ` : `
+        <h1 class="text-6xl sm:text-7xl font-black text-white tracking-tight mb-4">${escapeHtml(codeLabel)}</h1>
+      `}
 
-        <!-- Error Icon / Code Badge -->
-        <div class="w-16 h-16 rounded-2xl ${isNotFound ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'} border flex items-center justify-center mb-5 flex-shrink-0 shadow-lg">
-          ${isNotFound ? `
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-          ` : `
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-          `}
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-3 tracking-tight">${escapeHtml(title)}</h2>
+      <p class="text-sm sm:text-base font-semibold text-neutral-400 max-w-md mb-8 leading-relaxed">${escapeHtml(message)}</p>
+
+      ${details ? `
+        <div class="w-full max-w-md mb-6 text-left">
+          <details class="group bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden transition-colors">
+            <summary class="flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-neutral-400 cursor-pointer hover:text-white select-none">
+              <span class="flex items-center gap-1.5 font-mono text-[11px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-500"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                Show error details
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-500 group-open:rotate-180 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
+            </summary>
+            <div class="px-3.5 pb-3 pt-1 border-t border-neutral-800/50 bg-neutral-950">
+              <pre class="font-mono text-[11px] text-neutral-300 whitespace-pre-wrap break-all leading-relaxed max-h-36 overflow-y-auto scrollbar-thin">${escapeHtml(details)}</pre>
+            </div>
+          </details>
         </div>
+      ` : ''}
 
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${isNotFound ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'} border mb-3">
-          <span>Error ${escapeHtml(codeLabel)}</span>
-          <span>·</span>
-          <span>${escapeHtml(badgeText)}</span>
-        </div>
-
-        <h2 class="text-xl sm:text-2xl font-bold text-white mb-2 tracking-tight">${escapeHtml(title)}</h2>
-        <p class="text-xs sm:text-sm text-neutral-400 max-w-md mb-6 leading-relaxed">${escapeHtml(message)}</p>
-
-        ${details ? `
-          <div class="w-full mb-6 text-left">
-            <details class="group bg-neutral-950/70 border border-neutral-800/80 rounded-xl overflow-hidden transition-colors">
-              <summary class="flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-neutral-400 cursor-pointer hover:text-white select-none">
-                <span class="flex items-center gap-1.5 font-mono text-[11px]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-500"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-                  Show error details
-                </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-500 group-open:rotate-180 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
-              </summary>
-              <div class="px-3.5 pb-3 pt-1 border-t border-neutral-800/50">
-                <pre class="font-mono text-[11px] text-rose-300/90 whitespace-pre-wrap break-all leading-relaxed max-h-36 overflow-y-auto scrollbar-thin">${escapeHtml(details)}</pre>
-              </div>
-            </details>
-          </div>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        ${onRetry ? `
+          <button type="button" id="orbit-error-retry-btn" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all cursor-pointer shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            <span>Try again</span>
+          </button>
         ` : ''}
-
-        <div class="flex flex-wrap items-center justify-center gap-3 w-full">
-          ${onRetry ? `
-            <button type="button" id="orbit-error-retry-btn" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-neutral-200 active:scale-[0.98] transition-all cursor-pointer shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-              <span>Try again</span>
-            </button>
-          ` : ''}
-          ${backUrl ? `
-            <a href="${escapeHtml(backUrl)}" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-medium border border-neutral-700 transition-all cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
-              <span>${escapeHtml(backText)}</span>
-            </a>
-          ` : ''}
-        </div>
+        ${backUrl ? `
+          <a href="${escapeHtml(backUrl)}" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold border border-neutral-700 transition-all cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            <span>${escapeHtml(backText)}</span>
+          </a>
+        ` : ''}
       </div>
     </div>
   `;

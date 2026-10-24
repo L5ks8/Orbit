@@ -148,18 +148,19 @@ const Router = {
     // 404
     if (typeof window.renderErrorState === 'function') {
       window.renderErrorState(app, {
-        title: 'Seite nicht gefunden',
+        title: 'Page Not Found',
         message: 'The requested page does not exist or may have been moved.',
         statusCode: 404,
         backUrl: '/',
-        backText: 'Zur Startseite'
+        backText: 'Go Home'
       });
     } else {
       app.innerHTML = `
-        <div class="flex flex-col items-center justify-center min-h-[70vh] text-center p-6">
-          <h1 class="text-6xl font-bold text-white mb-4">404</h1>
-          <p class="text-neutral-400 text-lg mb-6">Page not found.</p>
-          <a href="/" class="px-6 py-2.5 rounded-xl bg-white text-black font-semibold hover:bg-neutral-200 transition-colors">Go Home</a>
+        <div class="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 py-12 select-none">
+          <h1 class="text-7xl sm:text-8xl font-black text-white tracking-tight mb-4 drop-shadow-sm">404</h1>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-3 tracking-tight">Page Not Found</h2>
+          <p class="text-sm sm:text-base font-semibold text-neutral-400 mb-8 max-w-md">The requested page does not exist or may have been moved.</p>
+          <a href="/" class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-neutral-200 transition-colors shadow-md">Go Home</a>
         </div>
       `;
     }

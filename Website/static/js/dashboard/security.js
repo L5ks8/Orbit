@@ -32,29 +32,42 @@ DashboardTabs.Security = async function (container, guildId) {
   };
 
   let rawConfig = {};
-  let currentGuild = {};
+  let currentGuild = { id: guildId, name: 'Server' };
   let allChannels = [];
   let allRoles = [];
 
   try {
-    const [cfgRes, gRes, chRes, rRes] = await Promise.all([
+    const [cfgRes, chRes, rRes] = await Promise.all([
       API.getConfig(guildId),
-      API.getGuild(guildId),
-      API.getChannels(guildId),
-      API.getRoles(guildId)
+      API.getChannels(guildId).catch(() => []),
+      API.getRoles(guildId).catch(() => [])
     ]);
     rawConfig = cfgRes || {};
-    currentGuild = gRes || {};
+
+    try {
+      if (typeof API.getGuild === 'function') {
+        const g = await API.getGuild(guildId);
+        if (g) currentGuild = g;
+      } else if (typeof API.getGuilds === 'function') {
+        const gs = await API.getGuilds().catch(() => []);
+        const found = (gs || []).find(x => String(x.id) === String(guildId));
+        if (found) currentGuild = found;
+      }
+    } catch (_) {}
+
     allChannels = Array.isArray(chRes) ? chRes.filter(c => !c.type || c.type === 'text' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text'))) : [];
     allRoles = Array.isArray(rRes) ? rRes.filter(r => !r.managed && r.name !== '@everyone') : [];
   } catch (err) {
     console.error('Failed to load security config:', err);
     container.innerHTML = `
-      <div class="p-8 text-center text-rose-400">
-        <p class="font-medium">Failed to load server security configuration.</p>
-        <p class="text-xs text-neutral-500 mt-1">${escapeHtml(err.message || 'Unknown error')}</p>
+      <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 py-12 select-none">
+        <h2 class="text-xl sm:text-2xl font-bold text-white mb-2 tracking-tight">Failed to load server security configuration</h2>
+        <p class="text-sm font-semibold text-neutral-400 max-w-md mb-6">${escapeHtml(err.message || 'Unknown error occurred.')}</p>
+        <button id="btn-retry-security" class="px-6 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 transition-all cursor-pointer shadow-md">Retry</button>
       </div>
     `;
+    const retryBtn = container.querySelector('#btn-retry-security');
+    if (retryBtn) retryBtn.onclick = () => DashboardTabs.Security(container, guildId);
     return;
   }
 

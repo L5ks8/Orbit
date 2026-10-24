@@ -255,6 +255,13 @@ const API = {
     return await this.cachedRequest('guilds', () => this.request(`/api/guilds${force ? '?force=true' : ''}`), force);
   },
 
+  async getGuild(guildId) {
+    if (!guildId) return null;
+    const guilds = await this.getGuilds().catch(() => []);
+    const found = (guilds || []).find(g => String(g.id) === String(guildId));
+    return found || { id: guildId, name: 'Server' };
+  },
+
   async getConfig(guildId, force = false) {
     const res = await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}`), force);
     try {
