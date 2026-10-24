@@ -148,7 +148,7 @@ const Router = {
     if (typeof window.renderErrorState === 'function') {
       window.renderErrorState(app, {
         title: 'Seite nicht gefunden',
-        message: 'Die angeforderte Seite existiert nicht oder wurde möglicherweise verschoben.',
+        message: 'The requested page does not exist or may have been moved.',
         statusCode: 404,
         backUrl: '/',
         backText: 'Zur Startseite'

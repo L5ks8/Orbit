@@ -517,10 +517,10 @@ DashboardTabs.Roles = async function (container, guildId) {
           const pid = btn.getAttribute('data-delete-panel');
           const panel = state.reactionPanels.find(p => String(p.id) === String(pid));
           const confirmed = await window.confirmDelete({
-            title: `${panel?.title || 'Reaktions-Panel'} löschen?`,
-            message: 'Das kann nicht rückgängig gemacht werden. Das Reaktions-Panel wird nicht mehr funktionieren.',
-            confirmText: 'Löschen',
-            cancelText: 'Abbrechen'
+            title: `Delete ${panel?.title || 'Reaction Panel'}?`,
+            message: 'This cannot be undone. The reaction panel will no longer function.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel'
           });
           if (!confirmed) return;
           try {
@@ -754,10 +754,10 @@ DashboardTabs.Roles = async function (container, guildId) {
           e.stopPropagation();
           const rid = btn.getAttribute('data-delete-rule');
           const confirmed = await window.confirmDelete({
-            title: 'Regel löschen?',
-            message: 'Das kann nicht rückgängig gemacht werden.',
-            confirmText: 'Löschen',
-            cancelText: 'Abbrechen'
+            title: 'Delete rule?',
+            message: 'This cannot be undone.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel'
           });
           if (!confirmed) return;
           state.customRules = state.customRules.filter(r => r.id !== rid);
@@ -1087,37 +1087,37 @@ DashboardTabs.Roles = async function (container, guildId) {
 
       const MODE_META = {
         multi: {
-          label: 'Mehrfachauswahl',
-          desc: 'Klicken Sie zum Hinzufügen oder Entfernen. Stapeln Sie so viele, wie Sie möchten.',
-          previewText: 'Mehrfachauswahl Modus',
+          label: 'Multi-Select',
+          desc: 'Click to add or remove. Stack as many as you want.',
+          previewText: 'Multi-Select Mode',
           previewColor: 'text-emerald-300',
           icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-checks relative z-10 w-3.5 h-3.5"><path d="m3 17 2 2 4-4"></path><path d="m3 7 2 2 4-4"></path><path d="M13 6h8"></path><path d="M13 12h8"></path><path d="M13 18h8"></path></svg>`
         },
         pick_one: {
-          label: 'Wählen Sie eine aus',
-          desc: 'Mitglieder können jeweils nur eine Rolle aus diesem Panel auswählen.',
-          previewText: 'Einzelauswahl Modus',
+          label: 'Pick One',
+          desc: 'Members can only select one role at a time from this panel.',
+          previewText: 'Single-Select Mode',
           previewColor: 'text-sky-300',
           icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target relative z-10 w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>`
         },
         verify: {
-          label: 'Verifizieren',
-          desc: 'Tippen vergibt die Rolle dauerhaft (ideal für Verifizierungs-Gates).',
-          previewText: 'Verifizieren Modus',
+          label: 'Verify',
+          desc: 'Clicking grants the role permanently (ideal for verification gates).',
+          previewText: 'Verify Mode',
           previewColor: 'text-emerald-300',
           icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check relative z-10 w-3.5 h-3.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>`
         },
         opt_out: {
-          label: 'Opt-out',
-          desc: 'Tippen entfernt die Rolle dauerhaft von Ihrem Profil.',
-          previewText: 'Opt-out Modus',
+          label: 'Opt-Out',
+          desc: 'Clicking permanently removes the role from your profile.',
+          previewText: 'Opt-Out Mode',
           previewColor: 'text-amber-300',
           icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ban relative z-10 w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>`
         },
         reversed: {
-          label: 'Umgedreht',
-          desc: 'Reagieren entfernt die Rolle, Entfernen der Reaktion gibt sie zurück.',
-          previewText: 'Umgedreht Modus',
+          label: 'Reversed',
+          desc: 'Reacting removes the role, unreacting returns it.',
+          previewText: 'Reversed Mode',
           previewColor: 'text-rose-300',
           icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-circle relative z-10 w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg>`
         }
@@ -1128,28 +1128,28 @@ DashboardTabs.Roles = async function (container, guildId) {
       const applyTemplate = (tplKey) => {
         const pickRole = (idx) => allRoles[idx % Math.max(1, allRoles.length)];
         if (tplKey === 'color') {
-          draft.embed.title = 'Farbrollen';
-          draft.embed.description = 'Wähle deine Lieblingsfarbe für deinen Namen auf dem Server!';
+          draft.embed.title = 'Color Roles';
+          draft.embed.description = 'Pick your favorite color for your name on the server!';
           draft.embed.color = 'rgb(235, 69, 158)';
           draft.mode = 'pick_one';
           const emojis = ['❤️', '💙', '💚', '💜'];
           draft.components = emojis.slice(0, Math.min(4, Math.max(1, allRoles.length))).map((em, i) => {
             const r = pickRole(i);
-            return { role_id: r ? String(r.id) : '', label: r ? r.name : `Farbe ${i + 1}`, emoji: em, color: 'blue' };
+            return { role_id: r ? String(r.id) : '', label: r ? r.name : `Color ${i + 1}`, emoji: em, color: 'blue' };
           });
         } else if (tplKey === 'pronouns') {
-          draft.embed.title = 'Pronomen';
-          draft.embed.description = 'Wähle deine Pronomen aus, damit andere wissen, wie sie dich ansprechen können.';
+          draft.embed.title = 'Pronouns';
+          draft.embed.description = 'Choose your pronouns so others know how to address you.';
           draft.embed.color = 'rgb(88, 101, 242)';
           draft.mode = 'multi';
           const emojis = ['💙', '💖', '✨'];
           draft.components = emojis.slice(0, Math.min(3, Math.max(1, allRoles.length))).map((em, i) => {
             const r = pickRole(i);
-            return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Pronomen', emoji: em, color: 'gray' };
+            return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Pronouns', emoji: em, color: 'gray' };
           });
         } else if (tplKey === 'region') {
           draft.embed.title = 'Region';
-          draft.embed.description = 'Wähle deine Region aus, um Mitglieder aus deiner Zeitzone zu finden.';
+          draft.embed.description = 'Choose your region to find members in your timezone.';
           draft.embed.color = 'rgb(59, 165, 92)';
           draft.mode = 'pick_one';
           const emojis = ['🌍', '🌎', '🌏'];
@@ -1158,8 +1158,8 @@ DashboardTabs.Roles = async function (container, guildId) {
             return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Region', emoji: em, color: 'blue' };
           });
         } else if (tplKey === 'games') {
-          draft.embed.title = 'Spiel-Pings';
-          draft.embed.description = 'Klicke auf deine Lieblingsspiele, um bei Mitspieler-Suchen benachrichtigt zu werden.';
+          draft.embed.title = 'Game Pings';
+          draft.embed.description = 'Click your favorite games to be notified when players are looking for a group.';
           draft.embed.color = 'rgb(250, 166, 26)';
           draft.mode = 'multi';
           const emojis = ['🎮', '🕹️', '🏆'];
@@ -1168,8 +1168,8 @@ DashboardTabs.Roles = async function (container, guildId) {
             return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Gamer', emoji: em, color: 'blue' };
           });
         } else if (tplKey === 'notifications') {
-          draft.embed.title = 'Benachrichtigungen';
-          draft.embed.description = 'Wähle aus, für welche Ankündigungen, Events oder Updates du gepingt werden möchtest.';
+          draft.embed.title = 'Notifications';
+          draft.embed.description = 'Choose which announcements, events, or updates you want to be pinged for.';
           draft.embed.color = 'rgb(155, 89, 182)';
           draft.mode = 'multi';
           const emojis = ['🔔', '📢', '🎁'];
@@ -1178,13 +1178,13 @@ DashboardTabs.Roles = async function (container, guildId) {
             return { role_id: r ? String(r.id) : '', label: r ? r.name : 'Updates', emoji: em, color: 'blue' };
           });
         } else if (tplKey === 'verify') {
-          draft.embed.title = 'Verifizierung';
-          draft.embed.description = 'Klicke unten auf das Häkchen, um die Regeln zu akzeptieren und Zugriff auf den Server zu erhalten.';
+          draft.embed.title = 'Verification';
+          draft.embed.description = 'Click the checkmark below to accept the rules and gain access to the server.';
           draft.embed.color = 'rgb(87, 242, 135)';
           draft.mode = 'verify';
           const r = pickRole(0);
           draft.components = [
-            { role_id: r ? String(r.id) : '', label: r ? r.name : 'Verifiziert', emoji: '✅', color: 'green' }
+            { role_id: r ? String(r.id) : '', label: r ? r.name : 'Verified', emoji: '✅', color: 'green' }
           ];
         }
         draft.name = draft.embed.title;
@@ -1231,7 +1231,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                     </div>
                   </div>
                   ${draft.components.length === 0 ? `
-                    <p class="text-[10.5px] text-neutral-500 italic mt-1.5 text-pretty">Sobald Sie Rollen hinzufügen, werden hier Schaltflächen angezeigt.</p>
+                    <p class="text-[10.5px] text-neutral-500 italic mt-1.5 text-pretty">Once you add roles, buttons will appear here.</p>
                   ` : `
                     <div class="flex flex-wrap gap-1.5 mt-2">
                       ${draft.components.map(comp => {
@@ -1267,14 +1267,14 @@ DashboardTabs.Roles = async function (container, guildId) {
         const validComps = draft.components.filter(c => c.role_id);
         const canSubmit = validComps.length > 0 && (!draft.post_on_save || Boolean(draft.channel_id));
         const btnLabel = (draft.post_on_save && draft.channel_id)
-          ? 'Speichern & auf Discord posten'
-          : 'Als Entwurf speichern';
+          ? 'Save & post to Discord'
+          : 'Save as Draft';
 
-        let hintText = 'Fügen Sie mindestens eine Rolle hinzu';
+        let hintText = 'Add at least one role';
         if (validComps.length > 0 && draft.post_on_save && !draft.channel_id) {
-          hintText = 'Wählen Sie einen Kanal zum Posten aus';
+          hintText = 'Select a channel to post to';
         } else if (validComps.length > 0) {
-          hintText = `${validComps.length} Rolle${validComps.length === 1 ? '' : 'n'} bereit`;
+          hintText = `${validComps.length} role${validComps.length === 1 ? '' : 's'} ready`;
         }
 
         return `
@@ -1301,7 +1301,7 @@ DashboardTabs.Roles = async function (container, guildId) {
       const handleSubmit = async () => {
         const validComps = draft.components.filter(c => c.role_id);
         if (validComps.length === 0) {
-          if (window.Notifications) Notifications.show('Fügen Sie mindestens eine Rolle hinzu', 'error');
+          if (window.Notifications) Notifications.show('Add at least one role', 'error');
           return;
         }
         const postToDiscord = Boolean(draft.post_on_save && draft.channel_id);
@@ -1332,7 +1332,7 @@ DashboardTabs.Roles = async function (container, guildId) {
           }
         } catch (err) {
           if (submitBtn) submitBtn.disabled = false;
-          if (window.Notifications) Notifications.show(err.message || 'Fehler beim Speichern des Reaktionspanels', 'error');
+          if (window.Notifications) Notifications.show(err.message || 'Failed to save reaction panel', 'error');
         }
       };
 
@@ -1352,7 +1352,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                   </div>
                   <div class="min-w-0">
                     <p class="text-sm font-semibold text-white truncate">${isEditing ? 'Reaktionspanel bearbeiten' : 'Neues Reaktionspanel'}</p>
-                    <p class="text-[11px] text-neutral-500">Mitglieder tippen auf ein Emoji, um eine Rolle zu übernehmen</p>
+                    <p class="text-[11px] text-neutral-500">Members click an emoji to claim a role</p>
                   </div>
                 </div>
                 <button type="button" id="rr-modal-close" class="p-1 text-neutral-500 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-md">
@@ -1385,7 +1385,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell w-3.5 h-3.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>Benachrichtigungen
                         </button>
                         <button type="button" data-rr-tpl="verify" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-3.5 h-3.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Tor überprüfen
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-3.5 h-3.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Verify Gate
                         </button>
                       </div>
                     </div>
@@ -1412,7 +1412,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                     <div class="px-5 py-4 space-y-3">
                       <div>
                         <label class="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">Titel</label>
-                        <input id="rr-modal-title" maxlength="256" placeholder="Wählen Sie Ihre Rollen" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl h-10 px-3 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-colors" type="text" value="${escapeHtml(draft.embed.title)}">
+                        <input id="rr-modal-title" maxlength="256" placeholder="Select your roles" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl h-10 px-3 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-colors" type="text" value="${escapeHtml(draft.embed.title)}">
                       </div>
                       <div>
                         <label class="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">Beschreibung</label>
@@ -1444,8 +1444,8 @@ DashboardTabs.Roles = async function (container, guildId) {
                             <div>
                               <label class="block text-[11px] font-medium text-neutral-400 mb-1">Interaktions-Stil</label>
                               <div class="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-neutral-900 border border-neutral-800">
-                                <button type="button" data-rr-ptype="buttons" class="py-1 rounded-md text-[11px] font-medium ${draft.panel_type === 'buttons' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}">Schaltflächen</button>
-                                <button type="button" data-rr-ptype="reactions" class="py-1 rounded-md text-[11px] font-medium ${draft.panel_type === 'reactions' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}">Reaktionen</button>
+                                <button type="button" data-rr-ptype="buttons" class="py-1 rounded-md text-[11px] font-medium ${draft.panel_type === 'buttons' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}">Buttons</button>
+                                <button type="button" data-rr-ptype="reactions" class="py-1 rounded-md text-[11px] font-medium ${draft.panel_type === 'reactions' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}">Reactions</button>
                               </div>
                             </div>
                           </div>
@@ -1453,11 +1453,11 @@ DashboardTabs.Roles = async function (container, guildId) {
                       ` : ''}
                     </div>
 
-                    <!-- 5. Kanal & Beim Speichern auf Discord posten -->
+                    <!-- 5. Kanal & Post to Discord on save -->
                     <div class="px-5 py-4 space-y-3">
                       <div>
                         <label class="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">
-                          Kanal${needsChannelWarning ? `<span class="ml-2 text-amber-400 normal-case tracking-normal font-normal">· zum Posten erforderlich</span>` : ''}
+                          Channel${needsChannelWarning ? `<span class="ml-2 text-amber-400 normal-case tracking-normal font-normal">· required to post</span>` : ''}
                         </label>
                         <div class="rounded-xl transition-shadow ${needsChannelWarning ? 'ring-1 ring-amber-500/40' : ''}">
                           <div class="w-full">
@@ -1468,7 +1468,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                                     <span class="text-neutral-400">#</span>${escapeHtml(selectedChannel.name)}
                                   </span>
                                 ` : `
-                                  <span class="min-w-0 truncate text-sm text-neutral-500">Wählen Sie einen Kanal…</span>
+                                  <span class="min-w-0 truncate text-sm text-neutral-500">Select a channel…</span>
                                 `}
                                 <div class="flex items-center gap-1">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 ${channelDropdownOpen ? 'rotate-180' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
@@ -1476,7 +1476,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                               </button>
                               <div id="rr-channel-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${channelDropdownOpen ? '' : 'hidden'} absolute left-0 right-0 top-11 z-[99999] bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl p-1 max-h-52 overflow-y-auto overscroll-contain scrollbar-thin space-y-0.5">
                                 ${allChannels.length === 0 ? `
-                                  <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle verfügbar</div>
+                                  <div class="px-3 py-2 text-xs text-neutral-500">No text channels available</div>
                                 ` : allChannels.map(ch => {
                                   const isSel = String(ch.id) === String(draft.channel_id);
                                   return `
@@ -1494,8 +1494,8 @@ DashboardTabs.Roles = async function (container, guildId) {
 
                       <div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-neutral-800/40 border border-neutral-800">
                         <div class="min-w-0">
-                          <p class="text-[12.5px] font-medium text-white">Beim Speichern auf Discord posten</p>
-                          <p class="text-[11px] text-neutral-500 mt-0.5">${selectedChannel ? `Wird beim Speichern direkt in #${escapeHtml(selectedChannel.name)} gepostet.` : 'Wählen Sie oben einen Kanal zum Posten aus.'}</p>
+                          <p class="text-[12.5px] font-medium text-white">Post to Discord on save</p>
+                          <p class="text-[11px] text-neutral-500 mt-0.5">${selectedChannel ? `Will be posted directly to #${escapeHtml(selectedChannel.name)} on save.` : 'Select a channel above to post to.'}</p>
                         </div>
                         <button type="button" id="rr-post-switch" class="w-10 h-5 rounded-full transition-[transform,background-color] duration-200 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 relative flex-shrink-0 ${draft.post_on_save ? 'bg-emerald-500' : 'bg-neutral-700'}">
                           <span class="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-out ${draft.post_on_save ? 'left-[22px]' : 'left-0.5'}"></span>
@@ -1520,7 +1520,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                             <div class="flex items-center gap-2 p-2 rounded-xl bg-neutral-800/50 border border-neutral-800">
                               <!-- Emoji Picker Button -->
                               <div class="relative flex-shrink-0">
-                                <button type="button" data-rr-emoji-btn="${idx}" class="h-9 w-11 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-neutral-600 flex items-center justify-center text-base transition-colors" title="Emoji wählen">
+                                <button type="button" data-rr-emoji-btn="${idx}" class="h-9 w-11 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-neutral-600 flex items-center justify-center text-base transition-colors" title="Choose emoji">
                                   ${escapeHtml(comp.emoji || '✨')}
                                 </button>
                                 <div data-lenis-prevent="true" class="orbit-dropdown-menu ${isEmojiOpen ? '' : 'hidden'} absolute left-0 bottom-full mb-2 z-[99999] w-56 p-2 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl space-y-2 orbit-dropup">
@@ -1542,13 +1542,13 @@ DashboardTabs.Roles = async function (container, guildId) {
                                       <span class="truncate">${escapeHtml(r.name)}</span>
                                     </span>
                                   ` : `
-                                    <span class="text-neutral-500 truncate">Rolle auswählen…</span>
+                                    <span class="text-neutral-500 truncate">Select role…</span>
                                   `}
                                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-400 shrink-0"><path d="m6 9 6 6 6-6"/></svg>
                                 </button>
                                 <div data-lenis-prevent="true" class="orbit-dropdown-menu ${isRoleMenuOpen ? '' : 'hidden'} absolute left-0 right-0 top-10 z-[99999] bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl p-1 max-h-48 overflow-y-auto overscroll-contain scrollbar-thin space-y-0.5">
                                   ${allRoles.length === 0 ? `
-                                    <div class="px-2.5 py-2 text-xs text-neutral-500">Keine Rollen verfügbar</div>
+                                    <div class="px-2.5 py-2 text-xs text-neutral-500">No roles available</div>
                                   ` : allRoles.map(roleItem => {
                                     const rSel = String(roleItem.id) === String(comp.role_id);
                                     const rDot = getRoleDotColor(roleItem);
@@ -1578,7 +1578,7 @@ DashboardTabs.Roles = async function (container, guildId) {
 
                         ${draft.components.length < 25 ? `
                           <button type="button" id="rr-add-role-btn" class="flex items-center justify-center gap-1.5 w-full h-10 border border-dashed border-neutral-700 rounded-xl text-xs text-neutral-400 hover:text-white hover:border-neutral-500 hover:bg-neutral-800/30 transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3.5 h-3.5"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>${draft.components.length === 0 ? 'Fügen Sie Ihre erste Rolle hinzu' : 'Rolle hinzufügen'}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3.5 h-3.5"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>${draft.components.length === 0 ? 'Add your first role' : 'Add role'}
                           </button>
                         ` : ''}
                       </div>
@@ -2188,7 +2188,7 @@ DashboardTabs.Roles = async function (container, guildId) {
     if (typeof window.renderErrorState === 'function') {
       window.renderErrorState(container, {
         title: 'Rollenkonfiguration konnte nicht geladen werden',
-        message: 'Beim Abrufen der Rollen vom Server ist ein Fehler aufgetreten. Bitte überprüfe deine Verbindung oder lade die Seite neu.',
+        message: 'An error occurred while fetching roles from the server. Please check your connection or reload the page.',
         details: err?.message || String(err),
         statusCode: err?.status || (err?.message && err.message.includes('500') ? 500 : 404),
         onRetry: () => DashboardTabs.Roles(container, guildId),

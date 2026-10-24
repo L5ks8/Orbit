@@ -732,8 +732,8 @@ class ActionsMixin:
             elif action in ("resolved", "rejected"):
                 is_resolved = (action == "resolved")
                 final_status = "resolved" if is_resolved else "rejected"
-                status_label = "Gelöst" if is_resolved else "Abgelehnt"
-                reason = f"Ticket über Dashboard als {status_label} markiert"
+                status_label = "Resolved" if is_resolved else "Rejected"
+                reason = f"Ticket marked as {status_label} via Dashboard"
 
                 if in_active and active_key and active_key in active_dict:
                     item = active_dict.pop(active_key)
@@ -750,7 +750,7 @@ class ActionsMixin:
                     color = discord.Color.green() if is_resolved else discord.Color.red()
                     emb = discord.Embed(
                         title=f"🎫 Ticket {status_label}",
-                        description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard als **{status_label}** markiert und wird nun geschlossen.",
+                        description=f"This ticket was marked as **{status_label}** via Dashboard by {mention_txt} and is now being closed.",
                         color=color
                     )
                     emb.set_footer(text="Orbit Ticket System")
@@ -846,7 +846,7 @@ class ActionsMixin:
                 if discord_ch:
                     asyncio.create_task(close_ticket_flow(
                         guild, discord_ch, executor,
-                        reason="Ticket über Dashboard gelöscht",
+                        reason="Ticket deleted via Dashboard",
                         final_status="deleted"
                     ))
             else:
@@ -858,7 +858,7 @@ class ActionsMixin:
                             if ch and isinstance(ch, discord.TextChannel):
                                 asyncio.create_task(close_ticket_flow(
                                     guild, ch, executor,
-                                    reason="Geschlossene Tickets über Dashboard geleert",
+                                    reason="Cleared closed tickets via Dashboard",
                                     final_status="deleted"
                                 ))
                 removed_count = len(ticket_cfg.get("closed_tickets", []))

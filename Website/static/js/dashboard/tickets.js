@@ -73,7 +73,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         id: String(p.id || `panel_${Date.now()}_${pIdx}`),
         name: String(p.name || p.title || 'Support Ticket'),
         title: String(p.title || p.name || 'Support Ticket'),
-        description: String(p.description || 'Öffnen Sie ein Ticket, um mit unserem Team zu sprechen.'),
+        description: String(p.description || 'Open a ticket to speak with our team.'),
         instructions: String(p.instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.'),
         color: String(p.color || '#5865F2'),
         panel_channel_id: String(p.panel_channel_id || tCfg.panel_channel_id || ''),
@@ -81,11 +81,11 @@ DashboardTabs.Tickets = async function (container, guildId) {
         category_id: String(p.category_id || ''),
         role_ids: Array.isArray(p.role_ids) ? p.role_ids.map(String) : (p.role_id ? [String(p.role_id)] : []),
         role_id: String(p.role_id || (Array.isArray(p.role_ids) && p.role_ids[0]) || ''),
-        button_label: String(p.button_label || 'Ticket öffnen'),
+        button_label: String(p.button_label || 'Open Ticket'),
         options: Array.isArray(p.options) && p.options.length > 0 ? p.options.map((opt, oIdx) => ({
           id: String(opt.id || `opt_${pIdx}_${oIdx}`),
-          name: String(opt.name || 'Allgemeine Unterstützung'),
-          description: String(opt.description || 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.'),
+          name: String(opt.name || 'General Support'),
+          description: String(opt.description || 'Open a private 1-on-1 support channel with our team.'),
           color: String(opt.color || '#5865F2'),
           category_id: String(opt.category_id || ''),
           role_ids: Array.isArray(opt.role_ids) ? opt.role_ids.map(String) : (opt.role_id ? [String(opt.role_id)] : []),
@@ -93,8 +93,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
         })) : [
           {
             id: `opt_${pIdx}_0`,
-            name: 'Allgemeine Unterstützung',
-            description: 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.',
+            name: 'General Support',
+            description: 'Open a private 1-on-1 support channel with our team.',
             color: '#5865F2',
             category_id: String(p.category_id || ''),
             role_ids: Array.isArray(p.role_ids) ? p.role_ids.map(String) : (p.role_id ? [String(p.role_id)] : []),
@@ -108,7 +108,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         id: 'panel_default',
         name: String(tCfg.panel_title || 'Support Ticket'),
         title: String(tCfg.panel_title || 'Support Ticket'),
-        description: String(tCfg.panel_description || 'Öffnen Sie ein Ticket, um mit unserem Team zu sprechen.'),
+        description: String(tCfg.panel_description || 'Open a ticket to speak with our team.'),
         instructions: String(tCfg.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.'),
         color: '#5865F2',
         panel_channel_id: String(tCfg.panel_channel_id || (tCfg.options_slots[0]?.panel_channel_id || '')),
@@ -116,11 +116,11 @@ DashboardTabs.Tickets = async function (container, guildId) {
         category_id: String(tCfg.options_slots[0]?.category_id || ''),
         role_ids: Array.isArray(tCfg.options_slots[0]?.role_ids) ? tCfg.options_slots[0].role_ids.map(String) : (tCfg.options_slots[0]?.role_id ? [String(tCfg.options_slots[0].role_id)] : []),
         role_id: String(tCfg.options_slots[0]?.role_id || ''),
-        button_label: 'Ticket öffnen',
+        button_label: 'Open Ticket',
         options: tCfg.options_slots.map((s, idx) => ({
           id: String(s.id || `opt_${idx}`),
           name: String(s.name || 'Option'),
-          description: String(s.description || 'Öffnen Sie ein Ticket.'),
+          description: String(s.description || 'Open a ticket.'),
           color: String(s.color || '#5865F2'),
           category_id: String(s.category_id || ''),
           role_ids: Array.isArray(s.role_ids) ? s.role_ids.map(String) : (s.role_id ? [String(s.role_id)] : []),
@@ -182,7 +182,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 category_id: opt.category_id || p.category_id,
                 role_id: optRoles[0] || opt.role_id || p.role_id || '',
                 role_ids: optRoles,
-                button_label: p.button_label || 'Ticket öffnen'
+                button_label: p.button_label || 'Open Ticket'
               });
             });
           });
@@ -213,8 +213,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
           setSaveIndicator('Gespeichert', 'saved');
           setTimeout(() => setSaveIndicator('Auto-saved', 'neutral'), 1800);
         } catch (err) {
-          setSaveIndicator('Fehler beim Speichern', 'error');
-          if (window.Notifications) Notifications.show(err.message || 'Fehler beim Speichern', 'error');
+          setSaveIndicator('Failed to save', 'error');
+          if (window.Notifications) Notifications.show(err.message || 'Failed to save', 'error');
         }
       };
 
@@ -285,23 +285,23 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <div class="flex flex-wrap items-center gap-2.5 flex-1">
                 <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 whitespace-nowrap shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <span id="tkt-stat-open" class="text-sm font-semibold tabular-nums text-amber-400">${openCount}</span>
-                  <span class="text-[11px] text-neutral-500">Offen</span>
+                  <span class="text-[11px] text-neutral-500">Open</span>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 whitespace-nowrap shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <span id="tkt-stat-claimed" class="text-sm font-semibold tabular-nums text-blue-400">${claimedCount}</span>
-                  <span class="text-[11px] text-neutral-500">Übernommen</span>
+                  <span class="text-[11px] text-neutral-500">Claimed</span>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 whitespace-nowrap shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <span id="tkt-stat-resolved" class="text-sm font-semibold tabular-nums text-emerald-400">${resolved7d}</span>
-                  <span class="text-[11px] text-neutral-500">Gelöst (7T)</span>
+                  <span class="text-[11px] text-neutral-500">Resolved (7d)</span>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 whitespace-nowrap shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                   <span class="text-sm font-semibold tabular-nums text-neutral-300">${escapeHtml(avgStr)}</span>
-                  <span class="text-[11px] text-neutral-500">Ø Lösungszeit</span>
+                  <span class="text-[11px] text-neutral-500">Avg Resolution Time</span>
                 </div>
               </div>
               <button type="button" id="btn-goto-analytics" class="flex items-center gap-1.5 flex-shrink-0 -mr-1 px-1 py-1 text-xs text-neutral-500 hover:text-white whitespace-nowrap transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-lg">
-                Analytics ansehen
+                View analytics
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-3 h-3 flex-shrink-0"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
               </button>
             </div>
@@ -310,19 +310,19 @@ DashboardTabs.Tickets = async function (container, guildId) {
             <div data-tour="tickets-roles" class="mb-8 scroll-mt-24">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <div>
-                  <h3 class="text-sm font-semibold text-white text-balance">Ticketarten</h3>
-                  <p class="text-xs text-neutral-400 mt-0.5">Erstellen und verwalten Sie verschiedene Ticketarten für Ihren Server.</p>
+                  <h3 class="text-sm font-semibold text-white text-balance">Ticket Types</h3>
+                  <p class="text-xs text-neutral-400 mt-0.5">Create and manage different ticket types for your server.</p>
                 </div>
                 <div class="flex items-center flex-wrap gap-2.5">
                   <div class="flex items-center gap-3">
-                    <span id="tkt-types-counter" class="text-xs tabular-nums text-neutral-500">${count}/999 Typen</span>
+                    <span id="tkt-types-counter" class="text-xs tabular-nums text-neutral-500">${count}/999 Types</span>
                     <div class="w-16 h-1 rounded-full bg-neutral-800 overflow-hidden">
                       <div id="tkt-types-progress" class="h-full rounded-full transition-all bg-white/60" style="width: ${progressPct}%;"></div>
                     </div>
                   </div>
                   <button type="button" id="btn-create-ticket-top" data-tour="tickets-create" class="flex items-center gap-1.5 bg-white text-black font-medium text-sm rounded-xl h-10 pl-3.5 pr-4 hover:bg-neutral-200 whitespace-nowrap transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer scroll-mt-24">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4 flex-shrink-0"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                    Ticket-Typ erstellen
+                    Create Ticket Type
                   </button>
                 </div>
               </div>
@@ -346,13 +346,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
             <div data-tour="tickets-channel" class="scroll-mt-24">
               <h3 class="text-sm font-semibold text-white text-balance mb-4">Einstellungen</h3>
               <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-                <!-- Row 1: Automatische Schließzeit -->
+                <!-- Row 1: Automatic Close Time -->
                 <div data-tour="tickets-autoclose" class="relative px-5 py-4 flex items-center justify-between gap-4 scroll-mt-24">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-timer w-4 h-4 text-amber-400"><line x1="10" x2="14" y1="2" y2="2"></line><line x1="12" x2="15" y1="14" y2="11"></line><circle cx="12" cy="14" r="8"></circle></svg>
                     </div>
-                    <p class="text-sm font-medium text-white min-w-0 truncate">Automatische Schließzeit</p>
+                    <p class="text-sm font-medium text-white min-w-0 truncate">Automatic Close Time</p>
                     <span class="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-emerald-400 border-emerald-500/20 bg-gradient-to-b from-emerald-400/25 to-emerald-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
                       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles shrink-0 -ml-px opacity-90" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
                       Anlasser
@@ -401,13 +401,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <div class="border-t border-neutral-800/60"></div>
 
-                <!-- Row 4: Nur Mitarbeiter können Tickets schließen -->
+                <!-- Row 4: Only staff can close tickets -->
                 <div class="px-5 py-4 flex items-center justify-between gap-4">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock w-4 h-4 text-rose-400"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                     </div>
-                    <p class="text-sm font-medium text-white min-w-0 truncate">Nur Mitarbeiter können Tickets schließen</p>
+                    <p class="text-sm font-medium text-white min-w-0 truncate">Only staff can close tickets</p>
                   </div>
                   <div class="flex-shrink-0">
                     <div class="flex items-center gap-3">
@@ -435,13 +435,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <div class="border-t border-neutral-800/60"></div>
 
-                <!-- Row 6: Pingen Sie eine Rolle für ein neues Ticket (Custom Searchable Dropdown) -->
+                <!-- Row 6: Ping a role for new tickets (Custom Searchable Dropdown) -->
                 <div class="px-5 py-4 flex items-center justify-between gap-4">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell w-4 h-4 text-violet-400"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
                     </div>
-                    <p class="text-sm font-medium text-white min-w-0 truncate">Pingen Sie eine Rolle für ein neues Ticket</p>
+                    <p class="text-sm font-medium text-white min-w-0 truncate">Ping a role for new tickets</p>
                   </div>
                   <div class="flex items-center gap-2.5 flex-shrink-0">
                     <div id="ping-custom-role-wrap" class="relative ${state.ping_custom_role_enabled ? '' : 'hidden'}">
@@ -449,7 +449,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         <span id="tkt-dd-ping-role-label" class="truncate">
                           ${(() => {
                             const pr = allRoles.find(r => String(r.id) === String(state.ping_custom_role_id));
-                            return pr ? `@${escapeHtml(pr.name)}` : 'Rolle wählen...';
+                            return pr ? `@${escapeHtml(pr.name)}` : 'Select role...';
                           })()}
                         </span>
                         <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
@@ -481,13 +481,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <div class="border-t border-neutral-800/60"></div>
 
-                <!-- Row 7: Ticketanforderung -->
+                <!-- Row 7: Ticket Claiming -->
                 <div data-tour="tickets-claiming" class="px-5 py-4 flex items-center justify-between gap-4 scroll-mt-24">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-4 h-4 text-emerald-400"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
                     </div>
-                    <p class="text-sm font-medium text-white min-w-0 truncate">Ticketanforderung</p>
+                    <p class="text-sm font-medium text-white min-w-0 truncate">Ticket Claiming</p>
                   </div>
                   <div class="flex-shrink-0">
                     <div class="flex items-center gap-3">
@@ -517,7 +517,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
       if (!grid) return;
 
       const count = state.panels.length;
-      if (counterEl) counterEl.textContent = `${count}/999 Typen`;
+      if (counterEl) counterEl.textContent = `${count}/999 Types`;
       if (progressEl) progressEl.style.width = `${Math.min(100, count > 0 ? Math.max(4, (count / 10) * 100) : 0)}%`;
 
       if (count === 0) {
@@ -526,10 +526,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
             <div class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3 text-neutral-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
             </div>
-            <p class="text-sm font-medium text-neutral-300">Keine Ticketarten vorhanden</p>
-            <p class="text-xs text-neutral-500 mt-1">Erstellen Sie Ihren ersten Ticket-Typ, um zu beginnen.</p>
+            <p class="text-sm font-medium text-neutral-300">No ticket types yet</p>
+            <p class="text-xs text-neutral-500 mt-1">Create your first ticket type to get started.</p>
             <button type="button" id="btn-create-first-ticket" class="mt-4 px-4 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-transform active:scale-[0.96] cursor-pointer">
-              + Jetzt Ticket-Typ erstellen
+              + Jetzt Create Ticket Type
             </button>
           </div>
         `;
@@ -576,17 +576,17 @@ DashboardTabs.Tickets = async function (container, guildId) {
                       <div class="py-0.5">
                         <button type="button" data-card-action="edit" data-panel-id="${escapeHtml(p.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-neutral-300 hover:text-white hover:bg-neutral-800 flex items-center gap-2">
                           <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                          Bearbeiten
+                          Edit
                         </button>
                         <button type="button" data-card-action="duplicate" data-panel-id="${escapeHtml(p.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-neutral-300 hover:text-white hover:bg-neutral-800 flex items-center gap-2">
                           <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                          Duplizieren
+                          Duplicate
                         </button>
                       </div>
                       <div class="pt-1">
                         <button type="button" data-card-action="delete" data-panel-id="${escapeHtml(p.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2">
                           <svg class="w-3.5 h-3.5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
-                          Löschen
+                          Delete
                         </button>
                       </div>
                     </div>
@@ -594,7 +594,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 </div>
 
                 <p class="text-xs text-neutral-400 leading-relaxed line-clamp-2 mb-3 pl-[52px] text-pretty">
-                  ${escapeHtml(p.description || 'Keine Beschreibung')}
+                  ${escapeHtml(p.description || 'No description')}
                 </p>
               </div>
 
@@ -665,7 +665,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           } else if (act === 'duplicate') {
             const clone = JSON.parse(JSON.stringify(panel));
             clone.id = `panel_${Date.now()}`;
-            clone.name = `${panel.name || panel.title || 'Ticket'} (Kopie)`;
+            clone.name = `${panel.name || panel.title || 'Ticket'} (Copy)`;
             clone.title = clone.name;
             state.panels.push(clone);
             renderMain();
@@ -673,16 +673,16 @@ DashboardTabs.Tickets = async function (container, guildId) {
             if (window.Notifications) Notifications.show(`Ticket-Typ "${clone.name}" wurde dupliziert.`, 'success');
           } else if (act === 'delete') {
             const confirmed = await window.confirmDelete({
-              title: `${panel.name || panel.title || 'Ticket-Typ'} löschen?`,
-              message: 'Das kann nicht rückgängig gemacht werden. Das Ticket-Panel wird nicht mehr funktionieren.',
-              confirmText: 'Löschen',
-              cancelText: 'Abbrechen'
+              title: `Delete ${panel.name || panel.title || 'ticket type'}?`,
+              message: 'This cannot be undone. The ticket panel will no longer function.',
+              confirmText: 'Delete',
+              cancelText: 'Cancel'
             });
             if (!confirmed) return;
             state.panels = state.panels.filter(p => p.id !== pid);
             renderMain();
             await saveTicketConfig(true);
-            if (window.Notifications) Notifications.show(`Ticket-Typ wurde gelöscht.`, 'info');
+            if (window.Notifications) Notifications.show(`Ticket type deleted.`, 'info');
           }
         });
       });
@@ -716,9 +716,9 @@ DashboardTabs.Tickets = async function (container, guildId) {
               color: panel.color || '#5865F2',
               options: panel.options || []
             });
-            if (window.Notifications) Notifications.show(`Ticket-Panel "${panel.name || panel.title}" erfolgreich in Discord gesendet!`, 'success');
+            if (window.Notifications) Notifications.show(`Ticket panel "${panel.name || panel.title}" sent to Discord successfully!`, 'success');
           } catch (err) {
-            if (window.Notifications) Notifications.show(err.message || 'Fehler beim Senden des Ticket-Panels', 'error');
+            if (window.Notifications) Notifications.show(err.message || 'Failed to send ticket panel.', 'error');
           } finally {
             btn.innerHTML = origContent;
             btn.disabled = false;
@@ -756,7 +756,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           ${state.closedTickets.length > 0 ? `
             <button type="button" id="btn-clear-closed-tickets" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-medium transition-colors cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-              <span>Geschlossene Tickets leeren</span>
+              <span>Clear closed tickets</span>
               <span class="px-1.5 py-0.5 rounded-md bg-red-500/20 text-[10px] font-bold tabular-nums">${state.closedTickets.length}</span>
             </button>
           ` : ''}
@@ -767,11 +767,11 @@ DashboardTabs.Tickets = async function (container, guildId) {
           clearBtn.onclick = async () => {
             const count = state.closedTickets.length;
             const confirmed = window.confirmDelete ? await window.confirmDelete({
-              title: 'Geschlossene Tickets leeren?',
-              message: `Möchtest du wirklich alle ${count} geschlossenen Tickets aus dem Dashboard löschen? Das kann nicht rückgängig gemacht werden.`,
-              confirmText: 'Löschen',
-              cancelText: 'Abbrechen'
-            }) : confirm(`Möchtest du wirklich alle ${count} geschlossenen Tickets aus dem Dashboard löschen?`);
+              title: 'Clear closed tickets?',
+              message: `Are you sure you want to delete all ${count} closed tickets from the dashboard? This cannot be undone.`,
+              confirmText: 'Delete',
+              cancelText: 'Cancel'
+            }) : confirm(`Are you sure you want to delete all ${count} closed tickets from the dashboard?`);
             if (!confirmed) return;
             try {
               if (API.clearClosedTickets) {
@@ -781,22 +781,22 @@ DashboardTabs.Tickets = async function (container, guildId) {
               }
               state.closedTickets = [];
               renderMain();
-              if (window.Notifications) Notifications.show('Alle geschlossenen Tickets wurden gelöscht.', 'success');
-              else if (window.Toast) Toast.success('Alle geschlossenen Tickets wurden gelöscht.');
+              if (window.Notifications) Notifications.show('All closed tickets have been deleted.', 'success');
+              else if (window.Toast) Toast.success('All closed tickets have been deleted.');
             } catch (err) {
-              if (window.Notifications) Notifications.show(err.message || 'Fehler beim Löschen.', 'error');
+              if (window.Notifications) Notifications.show(err.message || 'Failed to delete.', 'error');
             }
           };
         }
       }
 
       const FILTERS = [
-        { key: 'all', label: 'Alle' },
+        { key: 'all', label: 'All' },
         { key: 'waiting', label: 'Warten (keine Antwort 12h+)' },
         { key: 'open', label: 'Ausstehend' },
-        { key: 'claimed', label: 'Übernommen' },
-        { key: 'resolved', label: 'Gelöst' },
-        { key: 'rejected', label: 'Abgelehnt' }
+        { key: 'claimed', label: 'Claimed' },
+        { key: 'resolved', label: 'Resolved' },
+        { key: 'rejected', label: 'Rejected' }
       ];
 
       filterBar.innerHTML = FILTERS.map(f => {
@@ -850,9 +850,9 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
       const STATUS_BADGE = {
         open: { label: 'Ausstehend', cls: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-        claimed: { label: 'Übernommen', cls: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-        resolved: { label: 'Gelöst', cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-        rejected: { label: 'Abgelehnt', cls: 'bg-red-500/10 text-red-400 border-red-500/20' }
+        claimed: { label: 'Claimed', cls: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+        resolved: { label: 'Resolved', cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+        rejected: { label: 'Rejected', cls: 'bg-red-500/10 text-red-400 border-red-500/20' }
       };
 
       listContainer.innerHTML = `
@@ -878,15 +878,15 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
                   ${sub.status === 'open' ? `
-                    <button type="button" data-sub-action="claimed" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium transition-colors cursor-pointer">Übernehmen</button>
+                    <button type="button" data-sub-action="claimed" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium transition-colors cursor-pointer">Claim</button>
                   ` : ''}
                   ${sub.status !== 'resolved' ? `
-                    <button type="button" data-sub-action="resolved" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium transition-colors cursor-pointer">Lösen</button>
+                    <button type="button" data-sub-action="resolved" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium transition-colors cursor-pointer">Resolve</button>
                   ` : ''}
                   ${sub.status !== 'rejected' ? `
-                    <button type="button" data-sub-action="rejected" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-colors cursor-pointer">Ablehnen</button>
+                    <button type="button" data-sub-action="rejected" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-colors cursor-pointer">Reject</button>
                   ` : ''}
-                  <button type="button" data-sub-delete="${escapeHtml(subId)}" title="Ticket löschen und Discord-Channel schließen" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ml-1">
+                  <button type="button" data-sub-delete="${escapeHtml(subId)}" title="Delete ticket and close Discord channel" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ml-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
                   </button>
                 </div>
@@ -901,11 +901,11 @@ DashboardTabs.Tickets = async function (container, guildId) {
           e.stopPropagation();
           const subId = btn.getAttribute('data-sub-delete');
           const confirmed = window.confirmDelete ? await window.confirmDelete({
-            title: 'Ticket löschen?',
-            message: 'Möchtest du dieses Ticket wirklich löschen? Falls der Discord-Channel noch existiert, wird er geschlossen und das Transkript gesendet.',
-            confirmText: 'Löschen',
-            cancelText: 'Abbrechen'
-          }) : confirm('Dieses Ticket löschen? Der Discord-Channel wird geschlossen und das Transkript gesendet.');
+            title: 'Delete ticket?',
+            message: 'Do you really want to delete this ticket? If the Discord channel still exists, it will be closed and the transcript sent.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel'
+          }) : confirm('Dieses Delete ticket? Der Discord-Channel wird geschlossen und das Transkript gesendet.');
           if (!confirmed) return;
           try {
             if (API.clearClosedTickets) {
@@ -914,10 +914,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
             state.activeTickets = state.activeTickets.filter(t => String(t.id || t.channel_id) !== String(subId));
             state.closedTickets = state.closedTickets.filter(t => String(t.id || t.channel_id) !== String(subId));
             renderMain();
-            if (window.Notifications) Notifications.show('Ticket gelöscht und Discord-Channel geschlossen.', 'success');
-            else if (window.Toast) Toast.success('Ticket gelöscht und Discord-Channel geschlossen.');
+            if (window.Notifications) Notifications.show('Ticket deleted and Discord channel closed.', 'success');
+            else if (window.Toast) Toast.success('Ticket deleted and Discord channel closed.');
           } catch (err) {
-            if (window.Notifications) Notifications.show(err.message || 'Fehler beim Löschen.', 'error');
+            if (window.Notifications) Notifications.show(err.message || 'Failed to delete.', 'error');
           }
         });
       });
@@ -957,14 +957,14 @@ DashboardTabs.Tickets = async function (container, guildId) {
               await saveTicketConfig(true, { submission_action: { id: subId, status: newStatus } });
             }
             const msg = newStatus === 'resolved'
-              ? `${ticketNum} als Gelöst markiert und in Discord geschlossen.`
+              ? `${ticketNum} marked as Resolved and closed in Discord.`
               : (newStatus === 'rejected'
-                ? `${ticketNum} als Abgelehnt markiert und in Discord geschlossen.`
-                : `${ticketNum} erfolgreich übernommen.`);
+                ? `${ticketNum} marked as Rejected and closed in Discord.`
+                : `${ticketNum} claimed successfully.`);
             if (window.Notifications) Notifications.show(msg, 'success');
             else if (window.Toast) Toast.success(msg);
           } catch (err) {
-            if (window.Notifications) Notifications.show(err.message || 'Fehler bei der Ticket-Aktion.', 'error');
+            if (window.Notifications) Notifications.show(err.message || 'Failed to update ticket action.', 'error');
           }
         });
       });
@@ -1079,7 +1079,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           state.ping_custom_role_id = rid;
           const found = allRoles.find(r => String(r.id) === String(rid));
           if (pingRoleLabel) {
-            pingRoleLabel.textContent = found ? `@${found.name}` : 'Rolle wählen...';
+            pingRoleLabel.textContent = found ? `@${found.name}` : 'Select role...';
           }
           pingRoleMenu?.classList.add('hidden');
           saveTicketConfig();
@@ -1121,7 +1121,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         id: `panel_${Date.now()}`,
         name: 'Support Ticket',
         title: 'Support Ticket Desk',
-        description: 'Wählen Sie Ihr Anliegen aus und öffnen Sie ein Ticket.',
+        description: 'Select your inquiry and open a ticket.',
         instructions: '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.',
         color: '#5865F2',
         panel_channel_id: state.panels[0]?.panel_channel_id || (allChannels[0]?.id || ''),
@@ -1129,12 +1129,12 @@ DashboardTabs.Tickets = async function (container, guildId) {
         category_id: allCategories[0]?.id || '',
         role_ids: rawRoleIds,
         role_id: rawRoleIds[0] || '',
-        button_label: 'Ticket öffnen',
+        button_label: 'Open Ticket',
         options: [
           {
             id: `opt_${Date.now()}_1`,
-            name: 'Allgemeine Unterstützung',
-            description: 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.',
+            name: 'General Support',
+            description: 'Open a private 1-on-1 support channel with our team.',
             color: '#5865F2',
             category_id: allCategories[0]?.id || '',
             role_ids: rawRoleIds.length > 0 ? [...rawRoleIds] : [],
@@ -1150,8 +1150,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
         editingPanel.options = [
           {
             id: `opt_${Date.now()}_1`,
-            name: 'Allgemeine Unterstützung',
-            description: 'Öffnen Sie ein Support-Ticket.',
+            name: 'General Support',
+            description: 'Open a support ticket.',
             color: editingPanel.color || '#5865F2',
             category_id: editingPanel.category_id || '',
             role_ids: [...editingPanel.role_ids],
@@ -1213,13 +1213,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
       const COLOR_CARDS = [
         { color: '#5865F2', name: 'Blurple', hex: '#5865F2' },
-        { color: '#57F287', name: 'Grün', hex: '#57F287' },
-        { color: '#248046', name: 'Smaragd', hex: '#248046' },
+        { color: '#57F287', name: 'Green', hex: '#57F287' },
+        { color: '#248046', name: 'Emerald', hex: '#248046' },
         { color: '#FEE75C', name: 'Gold', hex: '#FEE75C' },
-        { color: '#ED4245', name: 'Karmesin', hex: '#ED4245' },
+        { color: '#ED4245', name: 'Crimson', hex: '#ED4245' },
         { color: '#EB459E', name: 'Fuchsia', hex: '#EB459E' },
-        { color: '#9B59B6', name: 'Violett', hex: '#9B59B6' },
-        { color: '#1ABC9C', name: 'Türkis', hex: '#1ABC9C' },
+        { color: '#9B59B6', name: 'Purple', hex: '#9B59B6' },
+        { color: '#1ABC9C', name: 'Turquoise', hex: '#1ABC9C' },
       ];
 
       const renderModal = () => {
@@ -1234,13 +1234,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <!-- Modal Header -->
               <div class="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-neutral-800 flex-shrink-0 bg-neutral-900/90 backdrop-blur-sm">
                 <div class="flex items-center gap-2 min-w-0">
-                  <button type="button" id="modal-btn-back-header" class="grid place-items-center -ml-2 size-9 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors cursor-pointer" title="${currentStep > 1 ? 'Zurück' : 'Schließen'}">
+                  <button type="button" id="modal-btn-back-header" class="grid place-items-center -ml-2 size-9 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors cursor-pointer" title="${currentStep > 1 ? 'Back' : 'Close'}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-4 h-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
                   </button>
                   <div class="flex items-center gap-2 min-w-0">
                     <div class="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style="background-color: ${editingPanel.color || '#5865F2'};"></div>
                     <h2 class="text-sm font-semibold text-white truncate">
-                      ${isEdit ? `Ticket-Typ bearbeiten – ${escapeHtml(editingPanel.name)}` : 'Neuer Ticket-Typ'}
+                      ${isEdit ? `Edit Ticket Type – ${escapeHtml(editingPanel.name)}` : 'New Ticket Type'}
                     </h2>
                   </div>
                 </div>
@@ -1250,21 +1250,21 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   <div class="hidden sm:flex gap-1 p-1 rounded-xl bg-neutral-800/60 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
                     <button type="button" data-nav-step="1" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${currentStep === 1 ? 'text-black font-semibold bg-white shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/40'}">
                       ${currentStep > 1 ? '<svg class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
-                      <span>1. Grundlagen</span>
+                      <span>1. Basics</span>
                     </button>
 
                     <button type="button" data-nav-step="2" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${currentStep === 2 ? 'text-black font-semibold bg-white shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/40'}">
                       ${currentStep > 2 ? '<svg class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
-                      <span>2. Optionen (${editingPanel.options.length})</span>
+                      <span>2. Options (${editingPanel.options.length})</span>
                     </button>
 
                     <button type="button" data-nav-step="3" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${currentStep === 3 ? 'text-black font-semibold bg-white shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/40'}">
                       <svg class="w-3.5 h-3.5 ${currentStep === 3 ? 'text-black' : 'text-neutral-400'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-                      <span>3. Rezension & Vorschau</span>
+                      <span>3. Review & Preview</span>
                     </button>
                   </div>
 
-                  <button type="button" id="modal-btn-close-header" class="grid place-items-center -mr-2 size-9 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors cursor-pointer" title="Schließen">
+                  <button type="button" id="modal-btn-close-header" class="grid place-items-center -mr-2 size-9 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors cursor-pointer" title="Close">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                   </button>
                 </div>
@@ -1291,7 +1291,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   </div>
 
                   <button type="button" id="modal-btn-next" class="inline-flex items-center justify-center gap-2 font-semibold rounded-xl bg-white text-black hover:bg-neutral-200 px-5 py-2.5 text-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shadow-lg shadow-white/5">
-                    ${currentStep === 3 ? (isEdit ? 'Änderungen speichern' : 'Ticket-Typ erstellen') : 'Weiter zu Schritt ' + (currentStep + 1)}
+                    ${currentStep === 3 ? (isEdit ? 'Save changes' : 'Create Ticket Type') : 'Continue to step ' + (currentStep + 1)}
                   </button>
                 </div>
               </div>
@@ -1312,33 +1312,33 @@ DashboardTabs.Tickets = async function (container, guildId) {
           return `
             <div class="space-y-6 max-w-4xl mx-auto w-full py-1">
               <div>
-                <h3 class="text-base font-semibold text-white">Grundlagen des Ticket-Typs</h3>
-                <p class="text-xs text-neutral-400 mt-1">Legen Sie Name, Kanäle, Akzentfarbe und Standard-Support-Rollen für dieses Ticket fest.</p>
+                <h3 class="text-base font-semibold text-white">Ticket Type Basics</h3>
+                <p class="text-xs text-neutral-400 mt-1">Set name, channels, accent color, and default support roles for this ticket.</p>
               </div>
 
               <!-- Name & Title -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Interner Name *</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Internal Name *</label>
                   <input type="text" id="builder-input-name" value="${escapeHtml(editingPanel.name)}" placeholder="z. B. Community Support Desk" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
-                  <p class="text-[11px] text-neutral-500 mt-1">Wird im Dashboard und in Übersichten angezeigt.</p>
+                  <p class="text-[11px] text-neutral-500 mt-1">Displayed in dashboard and overviews.</p>
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel-Titel (Discord Embed) *</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel Title (Discord Embed) *</label>
                   <input type="text" id="builder-input-title" value="${escapeHtml(editingPanel.title)}" placeholder="z. B. Support Ticket Desk" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
-                  <p class="text-[11px] text-neutral-500 mt-1">Wird als Überschrift der Nachricht auf Discord dargestellt.</p>
+                  <p class="text-[11px] text-neutral-500 mt-1">Displayed as header of the message on Discord.</p>
                 </div>
               </div>
 
               <!-- Description & Instructions -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel-Beschreibung</label>
-                  <textarea id="builder-input-desc" rows="3" placeholder="z. B. Öffnen Sie ein Ticket, um mit unserem Team zu sprechen." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 resize-none">${escapeHtml(editingPanel.description)}</textarea>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel Description</label>
+                  <textarea id="builder-input-desc" rows="3" placeholder="z. B. Open a ticket to speak with our team." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 resize-none">${escapeHtml(editingPanel.description)}</textarea>
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Anweisungs-Blockquote im Discord Embed</label>
-                  <textarea id="builder-input-instr" rows="3" placeholder="> Wählen Sie die passende Kategorie unten aus..." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 resize-none">${escapeHtml(editingPanel.instructions)}</textarea>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Instructions Blockquote in Discord Embed</label>
+                  <textarea id="builder-input-instr" rows="3" placeholder="> Select the appropriate category below..." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 resize-none">${escapeHtml(editingPanel.instructions)}</textarea>
                 </div>
               </div>
 
@@ -1346,8 +1346,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <div>
                 <div class="flex items-center justify-between mb-2.5">
                   <div>
-                    <label class="block text-xs font-semibold text-white">Akzentfarbe auswählen</label>
-                    <p class="text-[11px] text-neutral-400 mt-0.5">Wählen Sie ein Farbfeld oder tragen Sie eine eigene HEX-Farbe ein.</p>
+                    <label class="block text-xs font-semibold text-white">Select Accent Color</label>
+                    <p class="text-[11px] text-neutral-400 mt-0.5">Choose a color swatch or enter a custom HEX color.</p>
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-3.5 h-3.5 rounded-md shadow-sm" style="background-color: ${editingPanel.color || '#5865F2'};"></span>
@@ -1365,7 +1365,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                           <span class="w-6 h-6 rounded-lg shadow-inner flex items-center justify-center shrink-0 border border-white/10" style="background-color: ${c.color};">
                             ${isSelected ? '<svg class="w-3.5 h-3.5 text-white drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
                           </span>
-                          ${isSelected ? '<span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Aktiv</span>' : ''}
+                          ${isSelected ? '<span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Active</span>' : ''}
                         </div>
                         <div class="min-w-0 w-full text-left">
                           <p class="text-xs font-semibold text-white truncate">${c.name}</p>
@@ -1384,8 +1384,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
                       <svg class="w-4 h-4 text-white drop-shadow pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 4-3 3 8 8 3-3-8-8Z"/><path d="m3 21 8-8"/><path d="m14 7 3 3"/></svg>
                     </div>
                     <div>
-                      <p class="text-xs font-semibold text-white">Eigene Hex-Farbe</p>
-                      <p class="text-[11px] text-neutral-400">Farbe per Picker anklicken oder HEX-Wert direkt eingeben.</p>
+                      <p class="text-xs font-semibold text-white">Custom HEX Color</p>
+                      <p class="text-[11px] text-neutral-400">Click color picker or enter HEX value directly.</p>
                     </div>
                   </div>
                   <div class="flex items-center gap-1.5 shrink-0">
@@ -1399,10 +1399,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <!-- Panel Channel Dropdown -->
                 <div class="relative">
-                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel-Kanal (Hier wird das Ticket gepostet) *</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Panel Channel (Ticket is posted here) *</label>
                   <button type="button" id="bld-dd-panel-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
                     <span id="bld-dd-panel-ch-label" class="min-w-0 truncate ${panelChannel ? 'text-white font-medium' : 'text-neutral-500'}">
-                      ${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kanal auswählen...'}
+                      ${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Select channel...'}
                     </span>
                     <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                   </button>
@@ -1410,7 +1410,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
                       <div class="relative">
                         <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                        <input type="text" id="bld-search-panel-ch" placeholder="Kanal suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                        <input type="text" id="bld-search-panel-ch" placeholder="Search channel..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                       </div>
                     </div>
                     <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-panel-ch">
@@ -1425,10 +1425,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <!-- Log Channel Dropdown -->
                 <div class="relative">
-                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Mitarbeiter-/Log-Kanal</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Staff / Log Channel</label>
                   <button type="button" id="bld-dd-log-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
                     <span id="bld-dd-log-ch-label" class="min-w-0 truncate ${logChannel ? 'text-white font-medium' : 'text-neutral-500'}">
-                      ${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}
+                      ${logChannel ? `#${escapeHtml(logChannel.name)}` : 'No log channel'}
                     </span>
                     <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                   </button>
@@ -1436,11 +1436,11 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
                       <div class="relative">
                         <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                        <input type="text" id="bld-search-log-ch" placeholder="Kanal suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                        <input type="text" id="bld-search-log-ch" placeholder="Search channel..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                       </div>
                     </div>
                     <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-log-ch">
-                      <button type="button" data-bld-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Kein Log-Kanal</button>
+                      <button type="button" data-bld-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">No log channel</button>
                       ${allChannels.map(c => `
                         <button type="button" data-bld-log-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(editingPanel.log_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
                           <span class="truncate">#${escapeHtml(c.name)}</span>
@@ -1455,10 +1455,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <!-- Category Dropdown -->
                 <div class="relative">
-                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Standard-Kategorie für geöffnete Tickets</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Default Category for Open Tickets</label>
                   <button type="button" id="bld-dd-cat-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
                     <span id="bld-dd-cat-label" class="min-w-0 truncate ${defCategory ? 'text-white font-medium' : 'text-neutral-500'}">
-                      ${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatische Kategorie'}
+                      ${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatice Kategorie'}
                     </span>
                     <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                   </button>
@@ -1470,7 +1470,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                       </div>
                     </div>
                     <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-cat">
-                      <button type="button" data-bld-cat="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Automatische Kategorie</button>
+                      <button type="button" data-bld-cat="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Automatice Kategorie</button>
                       ${allCategories.map(c => `
                         <button type="button" data-bld-cat="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(editingPanel.category_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
                           <span class="truncate">📁 ${escapeHtml(c.name)}</span>
@@ -1491,7 +1491,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         <span class="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-0.5 rounded-lg text-xs font-medium bg-neutral-900 border border-neutral-700 text-white shadow-sm">
                           <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
                           <span class="truncate max-w-[140px]">@${escapeHtml(r.name)}</span>
-                          <button type="button" data-bld-del-panel-role="${escapeHtml(r.id)}" class="p-0.5 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer" title="Rolle entfernen">
+                          <button type="button" data-bld-del-panel-role="${escapeHtml(r.id)}" class="p-0.5 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer" title="Remove role">
                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                           </button>
                         </span>
@@ -1502,14 +1502,14 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <div class="relative inline-block">
                       <button type="button" id="bld-btn-add-panel-role" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-700 hover:bg-neutral-600 text-neutral-200 hover:text-white transition-colors cursor-pointer">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                        Rolle hinzufügen
+                        Add role
                       </button>
 
                       <div id="bld-menu-add-panel-role" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 top-full mt-1.5 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
                         <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
                           <div class="relative">
                             <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input type="text" id="bld-search-add-panel-role" placeholder="Rolle suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                            <input type="text" id="bld-search-add-panel-role" placeholder="Search role..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                           </div>
                         </div>
                         <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-add-panel-role">
@@ -1532,7 +1532,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           `;
         }
 
-        // STEP 2: Aufstellen (Optionen hinzufügen)
+        // STEP 2: Configure options
         if (currentStep === 2) {
           const defCategory = getCategoryById(editingPanel.category_id);
 
@@ -1542,15 +1542,15 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 <div>
                   <h3 class="text-sm font-semibold text-white flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-                    Optionen in diesem Ticket (${editingPanel.options.length})
+                    Options in this Ticket (${editingPanel.options.length})
                   </h3>
                   <p class="text-xs text-neutral-400 mt-1">
-                    Fügen Sie mehrere Auswahl-Optionen zu diesem Ticket-Panel hinzu (z. B. Support, Kauf-Hilfe, Bug Report). Jede Option kann eine eigene Support-Ping-Rolle und eine eigene Ziel-Kategorie besitzen!
+                    Add multiple selection options to this ticket panel (e.g. Support, Purchase Help, Bug Report). Each option can have its own support ping role and target category!
                   </p>
                 </div>
                 <button type="button" id="bld-btn-add-option" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all duration-150 active:scale-[0.96] shrink-0 cursor-pointer shadow-md shadow-white/5">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                  Option hinzufügen
+                  Add option
                 </button>
               </div>
 
@@ -1573,7 +1573,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         <div class="flex items-center gap-1.5 shrink-0">
                           <button type="button" data-bld-dup-opt="${oIdx}" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" title="Option duplizieren">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                            <span class="hidden sm:inline">Duplizieren</span>
+                            <span class="hidden sm:inline">Duplicate</span>
                           </button>
                           ${editingPanel.options.length > 1 ? `
                             <button type="button" data-bld-del-opt="${oIdx}" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Option entfernen">
@@ -1600,10 +1600,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                         <!-- Ziel-Kategorie Searchable Dropdown -->
                         <div class="relative">
-                          <label class="block text-xs font-medium text-neutral-300 mb-1.5">Ziel-Kategorie für diese Option</label>
+                          <label class="block text-xs font-medium text-neutral-300 mb-1.5">Target Category for this option</label>
                           <button type="button" id="bld-opt-cat-btn-${oIdx}" data-bld-opt-cat-idx="${oIdx}" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
                             <span id="bld-opt-cat-label-${oIdx}" class="min-w-0 truncate ${optCat ? 'text-white font-medium' : 'text-neutral-400'}">
-                              ${optCat ? `📁 ${escapeHtml(optCat.name)}` : `Standard-Kategorie verwenden (${defCategory ? escapeHtml(defCategory.name) : 'Automatisch'})`}
+                              ${optCat ? `📁 ${escapeHtml(optCat.name)}` : `Use default category (${defCategory ? escapeHtml(defCategory.name) : 'Automatic'})`}
                             </span>
                             <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                           </button>
@@ -1616,7 +1616,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                             </div>
                             <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-opt-cat-list-${oIdx}">
                               <button type="button" data-bld-opt-cat-val="" data-opt-idx="${oIdx}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">
-                                Standard-Kategorie verwenden (${defCategory ? escapeHtml(defCategory.name) : 'Automatisch'})
+                                Use default category (${defCategory ? escapeHtml(defCategory.name) : 'Automatic'})
                               </button>
                               ${allCategories.map(c => `
                                 <button type="button" data-bld-opt-cat-val="${escapeHtml(c.id)}" data-opt-idx="${oIdx}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(opt.category_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
@@ -1629,7 +1629,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                         <!-- Support Ping-Rollen Multi-Select -->
                         <div>
-                          <label class="block text-xs font-medium text-neutral-300 mb-1.5">Support Ping-Rollen für diese Option</label>
+                          <label class="block text-xs font-medium text-neutral-300 mb-1.5">Support Ping Roles for this option</label>
                           <div class="p-2 bg-neutral-800 border border-neutral-700 rounded-xl flex flex-wrap items-center gap-1.5 min-h-[40px]">
                             ${optRoleIds.length === 0 ? `
                               <span class="text-[11px] text-neutral-400 italic py-0.5 px-1">Erbt Standard-Support-Rollen (${(editingPanel.role_ids || []).length})</span>
@@ -1640,7 +1640,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                                 <span class="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-0.5 rounded-lg text-xs font-medium bg-neutral-900 border border-neutral-700 text-white shadow-sm">
                                   <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
                                   <span class="truncate max-w-[130px]">@${escapeHtml(r.name)}</span>
-                                  <button type="button" data-bld-del-opt-role="${oIdx}:${escapeHtml(r.id)}" class="p-0.5 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer" title="Rolle entfernen">
+                                  <button type="button" data-bld-del-opt-role="${oIdx}:${escapeHtml(r.id)}" class="p-0.5 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer" title="Remove role">
                                     <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                   </button>
                                 </span>
@@ -1651,14 +1651,14 @@ DashboardTabs.Tickets = async function (container, guildId) {
                             <div class="relative inline-block">
                               <button type="button" id="bld-opt-role-btn-${oIdx}" data-bld-opt-role-idx="${oIdx}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-700 hover:bg-neutral-600 text-neutral-200 hover:text-white transition-colors cursor-pointer">
                                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                                Rolle hinzufügen
+                                Add role
                               </button>
 
                               <div id="bld-opt-role-menu-${oIdx}" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 top-full mt-1.5 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
                                 <div class="p-2 bg-neutral-900/95 border-b border-neutral-800 shrink-0">
                                   <div class="relative">
                                     <svg class="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                    <input type="text" id="bld-opt-role-search-${oIdx}" placeholder="Rolle suchen..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                                    <input type="text" id="bld-opt-role-search-${oIdx}" placeholder="Search role..." class="w-full pl-8 pr-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                                   </div>
                                 </div>
                                 <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-opt-role-list-${oIdx}">
@@ -1686,7 +1686,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <div class="pt-2">
                 <button type="button" id="bld-btn-add-option-bottom" class="w-full py-3 rounded-2xl border border-dashed border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/40 text-xs font-semibold text-neutral-300 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                  Weitere Option zu diesem Ticket hinzufügen
+                  Add another option to this ticket
                 </button>
               </div>
             </div>
@@ -1705,8 +1705,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <!-- Left Column: Summary Info -->
               <div class="space-y-5">
                 <div>
-                  <h3 class="text-base font-semibold text-white">Zusammenfassung & Vorschau</h3>
-                  <p class="text-xs text-neutral-400 mt-1">Überprüfen Sie alle Einstellungen und testen Sie das Panel vor dem Speichern.</p>
+                  <h3 class="text-base font-semibold text-white">Summary & Preview</h3>
+                  <p class="text-xs text-neutral-400 mt-1">Review all settings and test the panel before saving.</p>
                 </div>
 
                 <!-- Panel Info Box -->
@@ -1719,7 +1719,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                       <p class="text-sm font-semibold text-white truncate">${escapeHtml(editingPanel.name)}</p>
                       <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${editingPanel.color || '#5865F2'};"></span>
                     </div>
-                    <p class="text-xs text-neutral-400 truncate mt-0.5">${escapeHtml(editingPanel.description || 'Keine Beschreibung')}</p>
+                    <p class="text-xs text-neutral-400 truncate mt-0.5">${escapeHtml(editingPanel.description || 'No description')}</p>
                   </div>
                   <span class="flex-shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-indigo-500/15 text-indigo-400 border border-indigo-500/20">
                     1 Ticket (${optCount} Opt.)
@@ -1730,23 +1730,23 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 <div class="grid grid-cols-2 gap-3">
                   <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
                     <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Panel-Kanal</p>
-                    <p class="text-xs truncate text-neutral-200 font-medium">${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kein Kanal gewählt'}</p>
+                    <p class="text-xs truncate text-neutral-200 font-medium">${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'No channel selected'}</p>
                   </div>
 
                   <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
-                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Mitarbeiterkanal</p>
-                    <p class="text-xs truncate text-neutral-200 font-medium">${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}</p>
+                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Staff Channel</p>
+                    <p class="text-xs truncate text-neutral-200 font-medium">${logChannel ? `#${escapeHtml(logChannel.name)}` : 'No log channel'}</p>
                   </div>
 
                   <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
-                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Standard-Kategorie</p>
-                    <p class="text-xs truncate text-neutral-200 font-medium">${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatisch'}</p>
+                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Default Category</p>
+                    <p class="text-xs truncate text-neutral-200 font-medium">${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatic'}</p>
                   </div>
 
                   <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
-                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Standard-Rollen</p>
+                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Default Roles</p>
                     <p class="text-xs truncate text-neutral-200 font-medium">
-                      ${editingPanel.role_ids && editingPanel.role_ids.length > 0 ? `${editingPanel.role_ids.length} Rolle(n)` : 'Keine Standard-Rolle'}
+                      ${editingPanel.role_ids && editingPanel.role_ids.length > 0 ? `${editingPanel.role_ids.length} Role(s)` : 'Keine Standard-Rolle'}
                     </p>
                   </div>
                 </div>
@@ -1754,8 +1754,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 <!-- Configured Options Summary -->
                 <div class="rounded-2xl p-4 bg-neutral-800/30 border border-neutral-800 space-y-2.5">
                   <div class="text-xs font-semibold text-neutral-300 flex items-center justify-between">
-                    <span>Konfigurierte Optionen (${optCount}):</span>
-                    <button type="button" data-nav-step="2" class="text-indigo-400 hover:text-indigo-300 text-xs cursor-pointer">Bearbeiten</button>
+                    <span>Configured Options (${optCount}):</span>
+                    <button type="button" data-nav-step="2" class="text-indigo-400 hover:text-indigo-300 text-xs cursor-pointer">Edit</button>
                   </div>
                   <div class="space-y-2">
                     ${editingPanel.options.map((opt, idx) => {
@@ -1769,7 +1769,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                           </div>
                           <div class="flex items-center gap-1.5 text-[11px] text-neutral-400 shrink-0 flex-wrap justify-end">
                             ${c ? `<span class="px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-700">📁 ${escapeHtml(c.name)}</span>` : ''}
-                            ${optRoles.length > 0 ? `<span class="px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 border border-indigo-500/20">${optRoles.length} Rolle(n)</span>` : ''}
+                            ${optRoles.length > 0 ? `<span class="px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 border border-indigo-500/20">${optRoles.length} Role(s)</span>` : ''}
                           </div>
                         </div>
                       `;
@@ -1819,7 +1819,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         <!-- Discord Select Menu Preview Component -->
                         <div class="mt-3">
                           <div class="w-full rounded-md bg-[#2b2d31] border border-[#1e1f22] p-2.5 flex items-center justify-between text-xs text-neutral-200 shadow-inner">
-                            <span class="truncate text-neutral-300">Wähle eine Kategorie...</span>
+                            <span class="truncate text-neutral-300">Select a category...</span>
                             <svg class="w-4 h-4 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                           </div>
                         </div>
@@ -1828,7 +1828,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         <div class="mt-2.5">
                           <button type="button" class="px-4 py-2 rounded-md text-xs font-semibold text-white flex items-center gap-2 shadow pointer-events-none" style="background-color: ${editingPanel.color || '#5865F2'};">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
-                            ${escapeHtml(editingPanel.button_label || 'Ticket öffnen')}
+                            ${escapeHtml(editingPanel.button_label || 'Open Ticket')}
                           </button>
                         </div>
                       </div>
@@ -1892,14 +1892,14 @@ DashboardTabs.Tickets = async function (container, guildId) {
           } else {
             // STEP 3 Save action!
             if (!editingPanel.name || !editingPanel.title) {
-              if (window.Notifications) Notifications.show('Bitte geben Sie einen Namen für den Ticket-Typ ein.', 'info');
+              if (window.Notifications) Notifications.show('Please enter a name for the ticket type.', 'info');
               currentStep = 1;
               renderModal();
               return;
             }
 
             if (!editingPanel.panel_channel_id) {
-              if (window.Notifications) Notifications.show('Bitte wählen Sie einen Panel-Kanal für dieses Ticket aus.', 'info');
+              if (window.Notifications) Notifications.show('Please select a panel channel for this ticket.', 'info');
               currentStep = 1;
               renderModal();
               return;
@@ -1920,7 +1920,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
             closeModal();
             renderMain();
             await saveTicketConfig(true);
-            if (window.Notifications) Notifications.show(`Ticket-Typ "${editingPanel.name}" erfolgreich gespeichert!`, 'success');
+            if (window.Notifications) Notifications.show(`Ticket type "${editingPanel.name}" saved successfully!`, 'success');
           }
         });
 
@@ -2011,7 +2011,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
               editingPanel.panel_channel_id = cid;
               const ch = getChannelById(cid);
               if (bldPanelChLabel) {
-                bldPanelChLabel.textContent = ch ? `#${ch.name}` : 'Kanal auswählen...';
+                bldPanelChLabel.textContent = ch ? `#${ch.name}` : 'Select channel...';
                 bldPanelChLabel.className = 'min-w-0 truncate text-white font-medium';
               }
               bldPanelChMenu?.classList.add('hidden');
@@ -2055,7 +2055,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
               editingPanel.log_channel_id = cid;
               const ch = getChannelById(cid);
               if (bldLogChLabel) {
-                bldLogChLabel.textContent = ch ? `#${ch.name}` : 'Kein Log-Kanal';
+                bldLogChLabel.textContent = ch ? `#${ch.name}` : 'No log channel';
                 bldLogChLabel.className = `min-w-0 truncate ${ch ? 'text-white font-medium' : 'text-neutral-500'}`;
               }
               bldLogChMenu?.classList.add('hidden');
@@ -2099,7 +2099,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
               editingPanel.category_id = catId;
               const c = getCategoryById(catId);
               if (bldCatLabel) {
-                bldCatLabel.textContent = c ? `📁 ${c.name}` : 'Automatische Kategorie';
+                bldCatLabel.textContent = c ? `📁 ${c.name}` : 'Automatice Kategorie';
                 bldCatLabel.className = `min-w-0 truncate ${c ? 'text-white font-medium' : 'text-neutral-500'}`;
               }
               bldCatMenu?.classList.add('hidden');
@@ -2169,7 +2169,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
             editingPanel.options.push({
               id: `opt_${Date.now()}_${newIdx}`,
               name: `Option ${newIdx}`,
-              description: 'Öffnen Sie ein Ticket.',
+              description: 'Open a ticket.',
               color: editingPanel.color || '#5865F2',
               category_id: editingPanel.category_id || '',
               role_ids: editingPanel.role_ids && editingPanel.role_ids.length > 0 ? [...editingPanel.role_ids] : [],
@@ -2198,7 +2198,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
               if (source) {
                 const dup = JSON.parse(JSON.stringify(source));
                 dup.id = `opt_${Date.now()}_dup`;
-                dup.name = `${dup.name || 'Option'} (Kopie)`;
+                dup.name = `${dup.name || 'Option'} (Copy)`;
                 editingPanel.options.splice(idx + 1, 0, dup);
                 renderModal();
                 setTimeout(() => {
@@ -2279,7 +2279,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 const defCategory = getCategoryById(editingPanel.category_id);
                 const labelEl = document.getElementById(`bld-opt-cat-label-${oIdx}`);
                 if (labelEl) {
-                  labelEl.textContent = c ? `📁 ${c.name}` : `Standard-Kategorie verwenden (${defCategory ? defCategory.name : 'Automatisch'})`;
+                  labelEl.textContent = c ? `📁 ${c.name}` : `Use default category (${defCategory ? defCategory.name : 'Automatic'})`;
                   labelEl.className = `min-w-0 truncate ${c ? 'text-white font-medium' : 'text-neutral-400'}`;
                 }
               }
@@ -2362,7 +2362,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
   } catch (err) {
     container.innerHTML = `
       <div class="py-16 text-center text-red-400 text-xs">
-        Fehler beim Laden des Ticket-Bereichs: ${err.message || 'Unbekannter Fehler'}
+        Failed to load tickets: ${err.message || 'Unknown error'}
       </div>
     `;
   }

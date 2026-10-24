@@ -139,7 +139,7 @@ DashboardTabs.Verification = async function(container, guildId) {
         });
         if (!silent && window.Toast) Toast.success('Verifizierungs-Einstellungen gespeichert!');
       } catch (err) {
-        if (window.Toast) Toast.error('Fehler beim Speichern: ' + (err.message || err));
+        if (window.Toast) Toast.error('Failed to save: ' + (err.message || err));
       }
     }
 
@@ -219,13 +219,13 @@ DashboardTabs.Verification = async function(container, guildId) {
             <div class="flex flex-wrap items-center gap-1.5 mt-3">
               <!-- Interactive Mode Selector on Card -->
               <div class="relative inline-block text-left" data-sys-mode-container="${escapeHtml(sys.id)}">
-                <button type="button" data-sys-mode-trigger="${escapeHtml(sys.id)}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border ${modeInfo.badgeClass} hover:brightness-125 transition-all cursor-pointer select-none" title="Klicken, um Verifizierungs-Methode direkt zu wechseln">
+                <button type="button" data-sys-mode-trigger="${escapeHtml(sys.id)}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border ${modeInfo.badgeClass} hover:brightness-125 transition-all cursor-pointer select-none" title="Click to change verification method">
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-3 h-3"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
                   <span>${escapeHtml(modeInfo.label)}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-2.5 h-2.5 opacity-70"><path d="m6 9 6 6 6-6"></path></svg>
                 </button>
                 <div id="sys-mode-menu-${escapeHtml(sys.id)}" class="hidden absolute left-0 top-full mt-1.5 z-40 w-52 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl p-1.5 space-y-1">
-                  <div class="px-2 py-1 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider border-b border-neutral-800">Methode wählen</div>
+                  <div class="px-2 py-1 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider border-b border-neutral-800">Choose method</div>
                   ${Object.entries(MODE_META).map(([mKey, mMeta]) => `
                     <button type="button" data-sys-set-mode="${escapeHtml(sys.id)}" data-mode-key="${mKey}" class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between text-xs transition-colors cursor-pointer ${
                       sys.verification_type === mKey ? 'bg-indigo-500/15 text-indigo-300 font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
@@ -256,7 +256,7 @@ DashboardTabs.Verification = async function(container, guildId) {
               `}
 
               ${uRole ? `
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-neutral-800/60 text-neutral-400 border border-neutral-800" title="Wird bei Verifizierung entfernt">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-neutral-800/60 text-neutral-400 border border-neutral-800" title="Removed upon verification">
                   -@${escapeHtml(uRole.name)}
                 </span>
               ` : ''}
@@ -269,7 +269,7 @@ DashboardTabs.Verification = async function(container, guildId) {
 
               ${hasQuestionnaire ? `
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  ${(sys.questions || []).length || 1} Fragen
+                  ${(sys.questions || []).length || 1} questions
                 </span>
               ` : ''}
             </div>
@@ -279,13 +279,13 @@ DashboardTabs.Verification = async function(container, guildId) {
           <div class="flex items-center justify-between gap-2 pt-3 border-t border-neutral-800/80">
             <button type="button" data-sys-deploy="${escapeHtml(sys.id)}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-xs font-medium text-white transition-all active:scale-95 cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send w-3.5 h-3.5 text-emerald-400"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-              ${isDeployed ? 'Panel neu senden' : 'Deploy Panel'}
+              ${isDeployed ? 'Resend panel' : 'Deploy Panel'}
             </button>
             <div class="flex items-center gap-1">
-              <button type="button" data-sys-edit="${escapeHtml(sys.id)}" class="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" title="System bearbeiten">
+              <button type="button" data-sys-edit="${escapeHtml(sys.id)}" class="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer" title="Edit system">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2 w-4 h-4"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>
               </button>
-              <button type="button" data-sys-delete="${escapeHtml(sys.id)}" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="System löschen">
+              <button type="button" data-sys-delete="${escapeHtml(sys.id)}" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete system">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 w-4 h-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
               </button>
             </div>
@@ -347,7 +347,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                   id: 'qs-vrole-select',
                   options: roleOpts,
                   value: quickState.verifiedRoleId,
-                  placeholder: 'Rolle auswählen...',
+                  placeholder: 'Select role...',
                   onChange: (v) => { quickState.verifiedRoleId = v; }
                 }) : ''}
               </div>
@@ -401,7 +401,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                   id: 'qs-urole-select',
                   options: roleOpts,
                   value: quickState.unverifiedRoleId,
-                  placeholder: 'Unverifizierte Rolle auswählen...',
+                  placeholder: 'Select unverified role...',
                   onChange: (v) => { quickState.unverifiedRoleId = v; }
                 }) : ''}
               </div>
@@ -445,7 +445,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                   id: 'qs-ch-select',
                   options: channelOpts,
                   value: quickState.channelId,
-                  placeholder: 'Kanal auswählen...',
+                  placeholder: 'Select channel...',
                   onChange: (v) => { quickState.channelId = v; }
                 }) : ''}
               </div>
@@ -684,7 +684,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                       id: 'ed-channel-select',
                       options: channelOpts,
                       value: String(sys.channel_id || ''),
-                      placeholder: 'Kanal auswählen...',
+                      placeholder: 'Select channel...',
                       onChange: (v) => { editingSystem.channel_id = v; }
                     }) : ''}
                   </div>
@@ -695,7 +695,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                         id: 'ed-vrole-select',
                         options: roleOpts,
                         value: String(sys.role_id || ''),
-                        placeholder: 'Rolle auswählen...',
+                        placeholder: 'Select role...',
                         onChange: (v) => { editingSystem.role_id = v; }
                       }) : ''}
                     </div>
@@ -726,7 +726,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                           { value: 'ban', label: 'Mitglied bannen (Auto-Ban)' }
                         ],
                         value: String(sys.timeout_action || 'none'),
-                        placeholder: 'Aktion wählen...',
+                        placeholder: 'Select action...',
                         onChange: (v) => {
                           editingSystem.timeout_action = v;
                           if (v !== 'none' && (!editingSystem.timeout_minutes || Number(editingSystem.timeout_minutes) <= 0)) {
@@ -750,7 +750,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                         <span class="text-xs font-medium text-white">Fragebogen (Questionnaire)</span>
                         <p class="text-[10px] text-neutral-500">Fragen im Discord-Modal vor der Verifizierung stellen</p>
                       </div>
-                      <button type="button" id="ed-add-question-btn" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[11px] font-medium text-white transition-colors cursor-pointer">+ Frage hinzufügen</button>
+                      <button type="button" id="ed-add-question-btn" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[11px] font-medium text-white transition-colors cursor-pointer">+ Add question</button>
                     </div>
                     <div class="space-y-2">
                       ${(sys.questions || []).map((q, idx) => `
@@ -791,13 +791,13 @@ DashboardTabs.Verification = async function(container, guildId) {
                       ${window.renderCustomSelect ? window.renderCustomSelect({
                         id: 'ed-btn-style-select',
                         options: [
-                          { value: 'success', label: 'Grün (Success)' },
+                          { value: 'success', label: 'Green (Success)' },
                           { value: 'primary', label: 'Blurple (Primary)' },
                           { value: 'secondary', label: 'Grau (Secondary)' },
                           { value: 'danger', label: 'Rot (Danger)' }
                         ],
                         value: String(sys.button_style || 'success'),
-                        placeholder: 'Stil wählen...',
+                        placeholder: 'Select style...',
                         onChange: (v) => {
                           editingSystem.button_style = v;
                           const prev = document.getElementById('ed-preview-btn');
@@ -866,14 +866,14 @@ DashboardTabs.Verification = async function(container, guildId) {
 
             <!-- Modal Footer -->
             <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-neutral-800 flex-shrink-0">
-              <button id="sys-editor-cancel" type="button" class="h-10 px-4 rounded-xl border border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">Abbrechen</button>
+              <button id="sys-editor-cancel" type="button" class="h-10 px-4 rounded-xl border border-neutral-700 text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">Cancel</button>
               <div class="flex items-center gap-2.5">
                 <button id="sys-editor-save" type="button" ${editorSubmitting ? 'disabled' : ''} class="h-10 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs font-semibold text-white transition-all cursor-pointer">
-                  Nur speichern
+                  Save only
                 </button>
                 <button id="sys-editor-deploy" type="button" ${editorSubmitting ? 'disabled' : ''} class="h-10 px-4 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send w-3.5 h-3.5"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-                  ${editorSubmitting ? 'Sende...' : 'Speichern & Panel senden'}
+                  ${editorSubmitting ? 'Sending...' : 'Save & Send Panel'}
                 </button>
               </div>
             </div>
@@ -1072,7 +1072,7 @@ DashboardTabs.Verification = async function(container, guildId) {
             editingSystem = JSON.parse(JSON.stringify(sys));
             editorOpen = true;
             render();
-            if (window.Toast) Toast.error('Bitte wähle zuerst einen Kanal für dieses System aus.');
+            if (window.Toast) Toast.error('Please select a channel for this system first.');
             return;
           }
           const origHtml = btn.innerHTML;
@@ -1090,10 +1090,10 @@ DashboardTabs.Verification = async function(container, guildId) {
               sys.deployed = true;
               sys.enabled = true;
             }
-            if (window.Toast) Toast.success('Verifizierungs-Panel erfolgreich im Kanal gepostet!');
+            if (window.Toast) Toast.success('Verification panel posted to channel successfully!');
             render();
           } catch (err) {
-            if (window.Toast) Toast.error('Fehler beim Senden: ' + (err.message || err));
+            if (window.Toast) Toast.error('Failed to send: ' + (err.message || err));
             btn.disabled = false;
             btn.innerHTML = origHtml;
           }
@@ -1119,10 +1119,10 @@ DashboardTabs.Verification = async function(container, guildId) {
           const sys = systems.find(s => String(s.id) === String(sysId));
           const sysName = sys?.name || 'Rules Agreement';
           const confirmed = await window.confirmDelete({
-            title: `${sysName} löschen?`,
-            message: 'Das kann nicht rückgängig gemacht werden. Das Verifizierungs-Panel wird nicht mehr funktionieren.',
-            confirmText: 'Löschen',
-            cancelText: 'Abbrechen'
+            title: `Delete ${sysName}?`,
+            message: 'This cannot be undone. The verification panel will no longer work.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel'
           });
           if (!confirmed) return;
           systems = systems.filter(s => String(s.id) !== String(sysId));
@@ -1318,7 +1318,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                 systems.push(res.system);
               }
               quickSetupOpen = false;
-              if (window.Toast) Toast.success('Quick Setup erfolgreich abgeschlossen & Panel gesendet!');
+              if (window.Toast) Toast.success('Quick Setup completed successfully & panel sent!');
             } catch (err) {
               if (window.Toast) Toast.error('Quick Setup fehlgeschlagen: ' + (err.message || err));
             } finally {
@@ -1393,7 +1393,7 @@ DashboardTabs.Verification = async function(container, guildId) {
           addQBtn.onclick = () => {
             if (!Array.isArray(editingSystem.questions)) editingSystem.questions = [];
             if (editingSystem.questions.length >= 5) {
-              if (window.Toast) Toast.error('Maximal 5 Fragen pro Discord-Modal möglich.');
+              if (window.Toast) Toast.error('Maximum of 5 questions per Discord modal.');
               return;
             }
             editingSystem.questions.push({ question: '', placeholder: 'Deine Antwort...', answer: '' });
@@ -1523,7 +1523,7 @@ DashboardTabs.Verification = async function(container, guildId) {
           deployBtn.onclick = async () => {
             syncEditingSystemFromDom();
             if (!editingSystem.channel_id) {
-              if (window.Toast) Toast.error('Bitte wähle einen Kanal aus, in den das Panel gesendet werden soll.');
+              if (window.Toast) Toast.error('Please select a channel to send the panel to.');
               return;
             }
             editorSubmitting = true;
@@ -1545,7 +1545,7 @@ DashboardTabs.Verification = async function(container, guildId) {
               editingSystem = null;
               if (window.Toast) Toast.success('System gespeichert & Panel im Kanal bereitgestellt!');
             } catch (err) {
-              if (window.Toast) Toast.error('Fehler beim Bereitstellen: ' + (err.message || err));
+              if (window.Toast) Toast.error('Failed to deploy: ' + (err.message || err));
             } finally {
               editorSubmitting = false;
               render();
@@ -1557,6 +1557,6 @@ DashboardTabs.Verification = async function(container, guildId) {
 
     render();
   } catch (err) {
-    container.innerHTML = `<div class="p-8 text-red-400 text-center">Fehler beim Laden der Verifizierung: ${escapeHtml(err.message || err)}</div>`;
+    container.innerHTML = `<div class="p-8 text-red-400 text-center">Failed to load verification: ${escapeHtml(err.message || err)}</div>`;
   }
 };

@@ -292,44 +292,45 @@ class AIHelperMixin:
         if sec_cfg.get("anti_raid", {}).get("enabled"): active_mods.append("AntiRaid")
         if sec_cfg.get("anti_nuke", {}).get("enabled"): active_mods.append("AntiNuke")
 
-        return f"""Du bist **Orbit AI Helper**, ein intelligenter Discord-Server-Konfigurations-, Analyse- und Berechtigungs-Assistent im Orbit Dashboard.
+        return f"""You are **Orbit AI Helper**, an intelligent Discord server configuration, analysis, and permissions assistant in the Orbit Dashboard.
 
-REGELN:
-- Du bist KEIN Server-Builder! Baue niemals komplette Server neu und lösche keine Server-Strukturen. Lehne solche Anfragen höflich ab.
-- Du konfigurierst bestehende Servermodule (Welcome, Tickets, AutoMod, Verify, Levels, TempVoice, Logs) und passt Kanal-/Rollen-Berechtigungen präzise an.
-- Analysiere hochgeladene Screenshots, Bilder oder Vorlagendateien und erstelle passende Actions.
+RULES:
+- You are NOT a server builder! Never build complete servers from scratch and never delete server structures. Politely decline such requests.
+- You configure existing server modules (Welcome, Goodbye, Tickets, AutoMod, Verify, Levels, TempVoice, Logs, Security, Invites) and adjust channel/role permissions accurately.
+- ALWAYS respond in English by default!
+- Analyze uploaded screenshots, images, or template files and generate appropriate actions.
 
-SERVER-KONTEXT:
-- Server: {guild.name} (ID: {guild.id}, {guild.member_count} Mitglieder)
-- Kategorien: {', '.join(cats) if cats else 'Keine'}
-- Textkanäle: {', '.join(txt_chs) if txt_chs else 'Keine'}
-- Sprachkanäle: {', '.join(vc_chs) if vc_chs else 'Keine'}
-- Rollen: {', '.join(roles_list)}
-- Aktive Module: {', '.join(active_mods) if active_mods else 'Keine'}
+SERVER CONTEXT:
+- Server: {guild.name} (ID: {guild.id}, {guild.member_count} members)
+- Categories: {', '.join(cats) if cats else 'None'}
+- Text Channels: {', '.join(txt_chs) if txt_chs else 'None'}
+- Voice Channels: {', '.join(vc_chs) if vc_chs else 'None'}
+- Roles: {', '.join(roles_list)}
+- Active Modules: {', '.join(active_mods) if active_mods else 'None'}
 
-UNTERSTÜTZTE ACTIONS (im "actions" Array deiner Antwort):
+SUPPORTED ACTIONS (in the "actions" array of your response):
 1. channel_permissions: {{"type": "channel_permissions", "title": "...", "description": "...", "role_id": "...", "role_name": "...", "target_scope": "all"|"category"|"channels", "channel_type": "all"|"text"|"voice", "channel_ids": [], "category_ids": [], "exclude_channel_ids": [], "permissions": {{"view_channel": true|false|null, "send_messages": true|false|null, "read_message_history": true|false|null, "connect": true|false|null, "speak": true|false|null}}}}
 2. configure_welcome: {{"type": "configure_welcome", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}}}}
 3. configure_goodbye: {{"type": "configure_goodbye", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#ED4245"}}}}
-4. configure_joinroles: {{"type": "configure_joinroles", "title": "...", "description": "...", "settings": {{"enabled": true, "roles": ["<Rollen-ID>"]}}}}
+4. configure_joinroles: {{"type": "configure_joinroles", "title": "...", "description": "...", "settings": {{"enabled": true, "roles": ["<role-id>"]}}}}
 5. configure_verify: {{"type": "configure_verify", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "role_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#57F287"}}}}
 6. configure_tickets: {{"type": "configure_tickets", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "category_id": "...", "log_channel_id": "...", "supporter_role_ids": ["..."], "embed_title": "...", "embed_description": "..."}}}}
 7. configure_automod: {{"type": "configure_automod", "title": "...", "description": "...", "settings": {{"enabled": true, "banned_words": {{"enabled": true, "action": "warn"}}, "anti_spam": {{"enabled": true, "max_messages": 5, "time_window_sec": 3, "action": "warn"}}, "anti_link": {{"enabled": true, "action": "warn"}}, "anti_invites": {{"enabled": true, "action": "warn"}}, "anti_alt": {{"enabled": true, "min_age_days": 3, "action": "kick"}}, "ai_automod": {{"enabled": true, "action": "delete"}}}}}}
 8. configure_security: {{"type": "configure_security", "title": "...", "description": "...", "settings": {{"anti_raid": {{"enabled": true, "join_threshold": 10, "time_window": 10, "action": "kick"}}, "anti_nuke": {{"enabled": true, "action": "strip_roles"}}}}}}
 9. configure_level: {{"type": "configure_level", "title": "...", "description": "...", "settings": {{"enabled": true, "announce_channel_id": "...", "xp_per_message": 15, "xp_cooldown": 60, "level_up_message": "GG {{user}}, Level {{level}}!"}}}}
 10. configure_logs: {{"type": "configure_logs", "title": "...", "description": "...", "settings": {{"enabled": true, "default_channel_id": "..."}}}}
-11. configure_tempvoice: {{"type": "configure_tempvoice", "title": "...", "description": "...", "settings": {{"enabled": true, "trigger_channel_id": "...", "category_id": "...", "default_name": "🔊 {{user}}s Kanal", "default_limit": 0}}}}
+11. configure_tempvoice: {{"type": "configure_tempvoice", "title": "...", "description": "...", "settings": {{"enabled": true, "trigger_channel_id": "...", "category_id": "...", "default_name": "🔊 {{user}}'s Channel", "default_limit": 0}}}}
 12. configure_invites: {{"type": "configure_invites", "title": "...", "description": "...", "settings": {{"enabled": true, "track_leaves": true, "count_rejoins": false}}}}
 
-ANTWORT-FORMAT (ZWINGEND REINES JSON):
-Antworte IMMER ausschließlich mit einem validen JSON-Objekt:
+RESPONSE FORMAT (STRICTLY PURE JSON):
+Always respond exclusively with a valid JSON object in English:
 ```json
 {{
-  "reply": "Freundliche Antwort an den Nutzer (Markdown erlaubt). Erwähne kurz, dass rechts oben auf **Bauen** geklickt werden kann.",
+  "reply": "Friendly response to the user in English (Markdown allowed). Mention that they can click **Build** at the top right to apply the planned changes.",
   "actions": [...]
 }}
 ```
-Nutze IMMER die echten IDs aus dem obigen Server-Kontext!"""
+ALWAYS use real IDs from the server context above!"""
 
     async def api_ai_helper_get_chats(self, request: web.Request):
         guild_id_str = request.match_info.get("id", "")
@@ -477,7 +478,7 @@ Nutze IMMER die echten IDs aus dem obigen Server-Kontext!"""
             if role == "assistant" and msg.get("actions"):
                 act_titles = [f"[{a.get('type')}: {a.get('title') or a.get('type')}]" for a in msg.get("actions", []) if isinstance(a, dict)]
                 if act_titles:
-                    content = f"{content}\n(Geplante Aktionen: {', '.join(act_titles[:4])})"
+                    content = f"{content}\n(Planned actions: {', '.join(act_titles[:4])})"
             llm_messages.append({"role": role, "content": content[:1200]})
 
         # Augment user prompt with uploaded file contents if any
@@ -487,7 +488,7 @@ Nutze IMMER die echten IDs aus dem obigen Server-Kontext!"""
             for fatt in file_attachments[:4]:
                 txt_snippet = str(fatt.get("textContent") or "")[:1500]
                 file_blocks.append(f"\n--- DATEI: {fatt.get('name', 'file')} ---\n{txt_snippet}\n--- ENDE DATEI ---")
-            augmented_prompt = f"{user_message}\n\nAngehängte Dateien zur Analyse:{''.join(file_blocks)}"
+            augmented_prompt = f"{user_message}\n\nAttached files for analysis:{''.join(file_blocks)}"
 
         has_images = len(image_attachments) > 0
         if has_images:
@@ -496,8 +497,8 @@ Nutze IMMER die echten IDs aus dem obigen Server-Kontext!"""
                     "type": "text",
                     "text": (
                         f"{system_prompt}\n\n"
-                        f"NUTZER-ANFRAGE ZUM BILD:\n{augmented_prompt}\n\n"
-                        f"WICHTIG: Antworte ausschließlich als valides JSON-Objekt mit \"reply\" und \"actions\"!"
+                        f"USER REQUEST REGARDING THE IMAGE:\n{augmented_prompt}\n\n"
+                        f"IMPORTANT: Respond exclusively as a valid JSON object in English with \"reply\" and \"actions\"!"
                     )
                 }
             ]
@@ -571,12 +572,12 @@ Nutze IMMER die echten IDs aus dem obigen Server-Kontext!"""
 
         if not raw_ai_output:
             raw_ai_output = json.dumps({
-                "reply": "Entschuldigung, der KI-Dienst ist momentan kurzzeitig ausgelastet oder der API-Key fehlt. Bitte versuche es in wenigen Sekunden erneut.",
+                "reply": "Sorry, the AI service is currently busy or the API key is missing. Please try again in a few seconds.",
                 "actions": []
             })
 
         parsed = _extract_json_payload(raw_ai_output)
-        reply_text = str(parsed.get("reply") or "Ich habe deinen Wunsch analysiert.").strip()
+        reply_text = str(parsed.get("reply") or "I have analyzed your request.").strip()
         raw_actions = parsed.get("actions")
         if not isinstance(raw_actions, list):
             raw_actions = []
@@ -1031,7 +1032,7 @@ Nutze IMMER die echten IDs aus dem obigen Server-Kontext!"""
 
         redo_stack = _MEM_REDO_STACK.get(guild_id, [])
         if not redo_stack:
-            return web.json_response({"error": "Nichts zum Wiederherstellen vorhanden."}, status=400)
+            return web.json_response({"error": "Nothing to redo."}, status=400)
 
         batch = redo_stack.pop()
         res = await self._execute_actions_list(guild, batch.get("actions", []))

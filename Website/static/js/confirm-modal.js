@@ -17,10 +17,10 @@
   /**
    * Shows a delete confirmation dialog matching Orbit design specifications.
    * @param {Object|string} options - Configuration object or title string
-   * @param {string} [options.title='Rules Agreement löschen?']
-   * @param {string} [options.message='Das kann nicht rückgängig gemacht werden. Das Verifizierungs-Panel wird nicht mehr funktionieren.']
-   * @param {string} [options.confirmText='Löschen']
-   * @param {string} [options.cancelText='Abbrechen']
+   * @param {string} [options.title='Delete item?']
+   * @param {string} [options.message='This action cannot be undone.']
+   * @param {string} [options.confirmText='Delete']
+   * @param {string} [options.cancelText='Cancel']
    * @returns {Promise<boolean>} Resolves true if confirmed, false if cancelled
    */
   function confirmDelete(options = {}) {
@@ -28,10 +28,10 @@
       options = { title: options, message: arguments[1] || '' };
     }
 
-    const title = options.title || 'Rules Agreement löschen?';
-    const message = options.message || 'Das kann nicht rückgängig gemacht werden. Das Verifizierungs-Panel wird nicht mehr funktionieren.';
-    const confirmText = options.confirmText || 'Löschen';
-    const cancelText = options.cancelText || 'Abbrechen';
+    const title = options.title || 'Delete item?';
+    const message = options.message || 'This action cannot be undone.';
+    const confirmText = options.confirmText || 'Delete';
+    const cancelText = options.cancelText || 'Cancel';
 
     return new Promise((resolve) => {
       // Remove any existing confirm modal

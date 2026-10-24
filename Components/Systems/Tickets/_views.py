@@ -26,7 +26,7 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
         subject = ticket_data.get("subject", "Unknown")
 
     try:
-        status_lbl = "Gelöst" if final_status == "resolved" else ("Abgelehnt" if final_status == "rejected" else "Closing")
+        status_lbl = "Resolved" if final_status == "resolved" else ("Rejected" if final_status == "rejected" else "Closing")
         await channel.send(f"### Ticket {status_lbl}\nGenerating transcript and shutting down channel in 3 seconds...")
     except Exception:
         pass
@@ -259,7 +259,7 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
         except Exception:
             log_channel = None
 
-    status_text = "Gelöst" if final_status == "resolved" else ("Abgelehnt" if final_status == "rejected" else ("Gelöscht" if final_status == "deleted" else "Closed"))
+    status_text = "Resolved" if final_status == "resolved" else ("Rejected" if final_status == "rejected" else ("Deleted" if final_status == "deleted" else "Closed"))
     color = discord.Color.green() if final_status == "resolved" else (discord.Color.red() if final_status == "rejected" else discord.Color.dark_red())
     
     executor_mention = closed_by.mention if hasattr(closed_by, "mention") else f"@{closed_by}"
@@ -287,7 +287,7 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             dm_file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
             dm_emb = discord.Embed(
                 title=f"🎫 Ticket {status_text}: #{channel.name}",
-                description=f"Dein Support-Ticket auf **{guild.name}** wurde geschlossen ({status_text}).\nHier ist dein Transkript.",
+                description=f"Your support ticket on **{guild.name}** was closed ({status_text}).\nHere is your transcript.",
                 color=color
             )
             dm_emb.set_footer(text="Orbit Ticket System")

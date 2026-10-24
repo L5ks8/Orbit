@@ -73,7 +73,7 @@ DashboardTabs.Modules = async function(container, guildId, moduleId) {
     if (typeof window.renderErrorState === 'function') {
       window.renderErrorState(container, {
         title: 'Modul konnte nicht geladen werden',
-        message: 'Beim Abrufen der Modulkonfiguration ist ein Fehler aufgetreten.',
+        message: 'An error occurred while fetching module configuration.',
         details: err?.message || String(err),
         statusCode: err?.status || 500,
         onRetry: () => DashboardTabs.Modules(container, guildId, moduleId),

@@ -57,17 +57,17 @@ DashboardTabs.Messages = async function (container, guildId) {
   const botAvatarUrl = botProfile.avatar_url || botProfile.default_avatar || '/img/logo.png';
 
   const VARIABLES = [
-    { token: '{user}', desc: 'Erwähnt den Benutzer (@User)' },
-    { token: '{user.name}', desc: 'Anzeigename des Benutzers' },
-    { token: '{server}', desc: 'Name des Discord-Servers' },
-    { token: '{membercount}', desc: 'Aktuelle Mitgliederanzahl' }
+    { token: '{user}', desc: 'Mentions user (@User)' },
+    { token: '{user.name}', desc: 'User display name' },
+    { token: '{server}', desc: 'Discord server name' },
+    { token: '{membercount}', desc: 'Current member count' }
   ];
 
   const TEMPLATES = [
     {
       key: 'blank',
-      label: 'Leere Nachricht',
-      desc: ' Komplett leer beginnen',
+      label: 'Empty Message',
+      desc: 'Start completely blank',
       data: {
         name: 'Untitled message',
         content: '',
@@ -91,14 +91,14 @@ DashboardTabs.Messages = async function (container, guildId) {
     {
       key: 'rules',
       label: '📜 Server-Regeln',
-      desc: 'Strukturiertes Regelwerk für neue Mitglieder',
+      desc: 'Structured rules for new members',
       data: {
         name: 'Server-Regeln',
         content: '',
         has_embed: true,
         title: '📜 Offizielle Server-Regeln — {server}',
         url: '',
-        description: 'Bitte lies dir unsere Regeln sorgfältig durch, damit sich jeder auf **{server}** wohlfühlt.',
+        description: 'Please read our rules carefully so everyone can enjoy their time on **{server}**.',
         color: '#5865F2',
         author_name: '{server} Administration',
         author_url: '',
@@ -109,36 +109,36 @@ DashboardTabs.Messages = async function (container, guildId) {
         image: '',
         timestamp: true,
         fields: [
-          { name: '1. Respektvoller Umgang', value: 'Behandle alle Mitglieder freundlich. Beleidigungen, Diskriminierung und Belästigung werden nicht toleriert.', inline: false },
-          { name: '2. Kein Spam & Eigenwerbung', value: 'Vermeide Nachrichten-Spam, Caps-Lock-Fluten und unaufgeforderte Einladungslinks.', inline: false },
-          { name: '3. Richtige Kanäle nutzen', value: 'Achte auf die Kanalbeschreibungen und halte Gespräche im vorgesehenen Thema.', inline: false }
+          { name: '1. Respectful Conduct', value: 'Treat all members kindly. Harassment, discrimination, and hate speech will not be tolerated.', inline: false },
+          { name: '2. No Spam & Advertising', value: 'Avoid message spam, caps locks, and unsolicited invite links.', inline: false },
+          { name: '3. Use Correct Channels', value: 'Follow channel topics and keep discussions in their designated areas.', inline: false }
         ],
         buttons: []
       }
     },
     {
       key: 'announcement',
-      label: '📢 Ankündigung',
-      desc: 'Wichtige Neuigkeiten für deine Community',
+      label: '📢 Announcement',
+      desc: 'Important news for your community',
       data: {
-        name: 'Community Ankündigung',
-        content: '📢 **Wichtige Neuigkeiten für {server}!**',
+        name: 'Community Announcement',
+        content: '📢 **Important news for {server}!**',
         has_embed: true,
-        title: '🚀 Großes Server-Update ist live!',
+        title: '🚀 Major Server Update is Live!',
         url: '',
-        description: 'Hallo zusammen! Wir haben neue Funktionen, Kanäle und Rollen für unsere **{membercount}** Mitglieder eingerichtet.\n\nSchaut euch gerne um und gebt uns Feedback!',
+        description: 'Hello everyone! We have set up new features, channels, and roles for our **{membercount}** members.\n\nTake a look around and give us your feedback!',
         color: '#10B981',
         author_name: 'Server Team',
         author_url: '',
         author_icon: '',
-        footer_text: '{server} • Ankündigung',
+        footer_text: '{server} • Announcement',
         footer_icon: '',
         thumbnail: '',
         image: '',
         timestamp: true,
         fields: [
-          { name: '✨ Was ist neu?', value: '• Neues Ticket-System\n• Überarbeitete Selbstrollen\n• Frische Event-Kanäle', inline: true },
-          { name: '📅 Wann?', value: 'Ab sofort für alle freigeschaltet!', inline: true }
+          { name: '✨ What is new?', value: '• New ticket system\n• Updated self roles\n• Fresh event channels', inline: true },
+          { name: '📅 When?', value: 'Live now for everyone!', inline: true }
         ],
         buttons: []
       }
@@ -146,14 +146,14 @@ DashboardTabs.Messages = async function (container, guildId) {
     {
       key: 'welcome_info',
       label: '👋 Willkommens-Guide',
-      desc: 'Erste Schritte & Übersicht für neue User',
+      desc: 'First steps & overview for new members',
       data: {
         name: 'Willkommens-Guide',
         content: '',
         has_embed: true,
         title: '👋 Willkommen auf {server}!',
         url: '',
-        description: 'Schön, dass du den Weg zu uns gefunden hast! Hier findest du die wichtigsten Anlaufstellen für deinen Start:',
+        description: 'Welcome! Here are the most important starting points to get you set up:',
         color: '#F59E0B',
         author_name: 'Onboarding',
         author_url: '',
@@ -164,8 +164,8 @@ DashboardTabs.Messages = async function (container, guildId) {
         image: '',
         timestamp: false,
         fields: [
-          { name: '🏷️ Rollen wählen', value: 'Hole dir deine Ping- und Farbrollen im Rollen-Kanal.', inline: true },
-          { name: '🎫 Hilfe & Support', value: 'Bei Fragen kannst du jederzeit ein Ticket eröffnen.', inline: true }
+          { name: '🏷️ Pick Roles', value: 'Grab your ping and color roles in the roles channel.', inline: true },
+          { name: '🎫 Help & Support', value: 'If you have questions, feel free to open a ticket anytime.', inline: true }
         ],
         buttons: []
       }
@@ -178,9 +178,9 @@ DashboardTabs.Messages = async function (container, guildId) {
         name: 'Community Event',
         content: '',
         has_embed: true,
-        title: '🎉 Großes Community-Event am Wochenende!',
+        title: '🎉 Big Weekend Community Event!',
         url: '',
-        description: 'Macht euch bereit! Dieses Wochenende veranstalten wir unser nächstes großes Community-Event auf **{server}**.',
+        description: 'Get ready! This weekend we are hosting our next major community event on **{server}**.',
         color: '#EC4899',
         author_name: 'Event-Team',
         author_url: '',
@@ -192,7 +192,7 @@ DashboardTabs.Messages = async function (container, guildId) {
         timestamp: true,
         fields: [
           { name: '🕒 Startzeit', value: 'Samstag, 20:00 Uhr', inline: true },
-          { name: '🏆 Preise', value: 'Exklusive Rollen & Überraschungen', inline: true }
+          { name: '🏆 Prizes', value: 'Exclusive roles & surprises', inline: true }
         ],
         buttons: []
       }
@@ -350,7 +350,7 @@ DashboardTabs.Messages = async function (container, guildId) {
     if (!hasAnyContent()) {
       return `
         <div class="rounded-xl border border-dashed border-neutral-800 bg-neutral-900/30 px-4 py-6 text-center">
-          <p class="text-[12px] text-neutral-500">Es gibt noch keine Vorschau – beginnen Sie mit dem Ausfüllen der Nachricht oben.</p>
+          <p class="text-[12px] text-neutral-500">No preview yet – start typing your message above to preview.</p>
         </div>
       `;
     }
@@ -371,7 +371,7 @@ DashboardTabs.Messages = async function (container, guildId) {
         <div class="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800 bg-neutral-900">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span class="text-xs font-medium text-neutral-300">Discord Live-Vorschau</span>
+            <span class="text-xs font-medium text-neutral-300">Discord Live Preview</span>
           </div>
           <span class="text-[11px] text-neutral-500">${mobileFriendly ? '📱 Mobilfreundlich aktiv' : '🖥️ Desktop-Ansicht'}</span>
         </div>
@@ -384,7 +384,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                 <span class="inline-flex items-center gap-[0.15em] text-[10px] px-1 py-0.5 bg-indigo-500 text-white rounded font-bold">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="h-[0.85em] w-[0.85em]"><path d="M20 6 9 17l-5-5"></path></svg>APP
                 </span>
-                <span class="text-[10px] text-neutral-400">Heute um 12:00 Uhr</span>
+                <span class="text-[10px] text-neutral-400">Today at 12:00 PM</span>
               </div>
 
               ${(state.content || '').trim() ? `
@@ -446,7 +446,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                   ${((state.footer_text || '').trim() || state.timestamp) ? `
                     <div class="flex items-center gap-2 pt-1 text-[11px] text-neutral-400">
                       ${(state.footer_icon || '').trim() ? `<img src="${escapeHtml(state.footer_icon)}" alt="" class="w-4 h-4 rounded-full object-cover">` : ''}
-                      <span>${formatDiscordText((state.footer_text || ''))}${state.footer_text && state.timestamp ? ' • ' : ''}${state.timestamp ? 'Heute um 12:00 Uhr' : ''}</span>
+                      <span>${formatDiscordText((state.footer_text || ''))}${state.footer_text && state.timestamp ? ' • ' : ''}${state.timestamp ? 'Today at 12:00 PM' : ''}</span>
                     </div>
                   ` : ''}
                 </div>
@@ -485,11 +485,11 @@ DashboardTabs.Messages = async function (container, guildId) {
     if (!state.has_embed) {
       return `
         <div class="mt-2">
-          <button type="button" id="msg-add-embed-btn" class="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-md text-[11px] font-medium border border-dashed border-neutral-700 text-neutral-500 hover:text-indigo-300 hover:border-indigo-400/50 hover:bg-indigo-500/5 transition-colors cursor-pointer" title="Fügen Sie dieser Nachricht eine Einbettung hinzu">
+          <button type="button" id="msg-add-embed-btn" class="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-md text-[11px] font-medium border border-dashed border-neutral-700 text-neutral-500 hover:text-indigo-300 hover:border-indigo-400/50 hover:bg-indigo-500/5 transition-colors cursor-pointer" title="Add an embed to this message">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3.5 h-3.5">
               <path d="M5 12h14"></path>
               <path d="M12 5v14"></path>
-            </svg>Einbetten</button>
+            </svg>Embed</button>
         </div>
       `;
     }
@@ -499,15 +499,15 @@ DashboardTabs.Messages = async function (container, guildId) {
         <!-- Top Bar: Color Picker & Remove Embed -->
         <div class="flex items-center justify-between gap-2 pb-2 border-b border-white/[0.06]">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-[11px] font-medium text-neutral-400 mr-1">Farbe:</span>
+            <span class="text-[11px] font-medium text-neutral-400 mr-1">Color:</span>
             ${PRESET_COLORS.map(c => `
               <button type="button" data-emb-color="${escapeHtml(c)}" class="w-4 h-4 rounded-full border transition-transform cursor-pointer ${state.color.toLowerCase() === c.toLowerCase() ? 'border-white scale-125' : 'border-black/40 hover:scale-110'}" style="background-color: ${escapeHtml(c)};"></button>
             `).join('')}
-            <input type="color" id="msg-emb-custom-color" value="${escapeHtml(state.color.startsWith('#') ? state.color : '#5865F2')}" class="w-5 h-5 rounded bg-transparent border-0 cursor-pointer ml-1" title="Benutzerdefinierte Farbe">
+            <input type="color" id="msg-emb-custom-color" value="${escapeHtml(state.color.startsWith('#') ? state.color : '#5865F2')}" class="w-5 h-5 rounded bg-transparent border-0 cursor-pointer ml-1" title="Custom color">
           </div>
-          <button type="button" id="msg-remove-embed-btn" class="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] text-neutral-400 hover:text-rose-400 hover:bg-white/[0.06] transition-colors cursor-pointer" title="Einbettung entfernen">
+          <button type="button" id="msg-remove-embed-btn" class="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] text-neutral-400 hover:text-rose-400 hover:bg-white/[0.06] transition-colors cursor-pointer" title="Remove embed">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-            Entfernen
+            Remove
           </button>
         </div>
 
@@ -516,25 +516,25 @@ DashboardTabs.Messages = async function (container, guildId) {
           <div class="flex-1 min-w-0 space-y-2">
             <!-- Author inputs -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-              <input id="msg-emb-author-name" type="text" placeholder="Autor-Name (optional)" value="${escapeHtml(state.author_name)}" class="sm:col-span-2 px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
-              <input id="msg-emb-author-icon" type="text" placeholder="Autor-Icon URL" value="${escapeHtml(state.author_icon)}" class="px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
+              <input id="msg-emb-author-name" type="text" placeholder="Author Name (optional)" value="${escapeHtml(state.author_name)}" class="sm:col-span-2 px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
+              <input id="msg-emb-author-icon" type="text" placeholder="Author Icon URL" value="${escapeHtml(state.author_icon)}" class="px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
             </div>
 
             <!-- Title & URL -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-              <input id="msg-emb-title" type="text" placeholder="Embed-Titel" value="${escapeHtml(state.title)}" class="sm:col-span-2 px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-sm font-semibold text-white placeholder-neutral-500 focus:outline-none">
-              <input id="msg-emb-url" type="text" placeholder="Titel-Link (https://...)" value="${escapeHtml(state.url)}" class="px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
+              <input id="msg-emb-title" type="text" placeholder="Embed Title" value="${escapeHtml(state.title)}" class="sm:col-span-2 px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-sm font-semibold text-white placeholder-neutral-500 focus:outline-none">
+              <input id="msg-emb-url" type="text" placeholder="Title Link (https://...)" value="${escapeHtml(state.url)}" class="px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
             </div>
 
             <!-- Description -->
             <div>
-              <textarea id="msg-emb-description" rows="3" placeholder="Beschreibung der Einbettung (unterstützt Markdown & / für Variablen)..." class="w-full px-2.5 py-2 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none resize-y">${escapeHtml(state.description)}</textarea>
+              <textarea id="msg-emb-description" rows="3" placeholder="Embed description (supports Markdown & / for variables)..." class="w-full px-2.5 py-2 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none resize-y">${escapeHtml(state.description)}</textarea>
             </div>
           </div>
 
           <!-- Thumbnail Slot -->
           <div class="flex flex-col items-center gap-1 flex-shrink-0">
-            <label class="relative w-16 h-16 rounded-lg bg-[#1e1f22] border border-dashed border-neutral-700 hover:border-indigo-400 flex flex-col items-center justify-center cursor-pointer overflow-hidden group" title="Thumbnail hochladen">
+            <label class="relative w-16 h-16 rounded-lg bg-[#1e1f22] border border-dashed border-neutral-700 hover:border-indigo-400 flex flex-col items-center justify-center cursor-pointer overflow-hidden group" title="Upload thumbnail">
               <input type="file" id="msg-emb-thumb-file" accept="image/*" class="hidden">
               ${state.thumbnail ? `
                 <img src="${escapeHtml(state.thumbnail)}" alt="Thumbnail" class="w-full h-full object-cover">
@@ -544,7 +544,7 @@ DashboardTabs.Messages = async function (container, guildId) {
               `}
             </label>
             ${state.thumbnail ? `
-              <button type="button" id="msg-emb-clear-thumb" class="text-[10px] text-rose-400 hover:underline cursor-pointer">Löschen</button>
+              <button type="button" id="msg-emb-clear-thumb" class="text-[10px] text-rose-400 hover:underline cursor-pointer">Delete</button>
             ` : ''}
           </div>
         </div>
@@ -552,10 +552,10 @@ DashboardTabs.Messages = async function (container, guildId) {
         <!-- Fields Section -->
         <div class="space-y-2 pt-1">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Felder (${state.fields.length}/25)</span>
+            <span class="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Fields (${state.fields.length}/25)</span>
             <button type="button" id="msg-emb-add-field" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/[0.06] hover:bg-white/[0.12] text-[11px] font-medium text-neutral-200 transition-colors cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-              Feld hinzufügen
+              Add Field
             </button>
           </div>
           ${state.fields.length > 0 ? `
@@ -563,16 +563,16 @@ DashboardTabs.Messages = async function (container, guildId) {
               ${state.fields.map((f, idx) => `
                 <div class="p-2.5 rounded-lg bg-[#1e1f22] border border-white/[0.06] space-y-1.5">
                   <div class="flex items-center gap-2">
-                    <input type="text" data-field-name="${idx}" placeholder="Feldname" value="${escapeHtml(f.name)}" class="flex-1 min-w-0 px-2 py-1 rounded bg-[#2b2d31] border border-white/[0.06] text-xs font-semibold text-white placeholder-neutral-500 focus:outline-none">
+                    <input type="text" data-field-name="${idx}" placeholder="Field Name" value="${escapeHtml(f.name)}" class="flex-1 min-w-0 px-2 py-1 rounded bg-[#2b2d31] border border-white/[0.06] text-xs font-semibold text-white placeholder-neutral-500 focus:outline-none">
                     <label class="inline-flex items-center gap-1 text-[11px] text-neutral-400 cursor-pointer select-none">
                       <input type="checkbox" data-field-inline="${idx}" ${f.inline ? 'checked' : ''} class="rounded border-neutral-600">
                       Inline
                     </label>
-                    <button type="button" data-field-remove="${idx}" class="p-1 text-neutral-500 hover:text-rose-400 cursor-pointer" title="Feld löschen">
+                    <button type="button" data-field-remove="${idx}" class="p-1 text-neutral-500 hover:text-rose-400 cursor-pointer" title="Delete field">
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                     </button>
                   </div>
-                  <textarea rows="2" data-field-value="${idx}" placeholder="Feldwert..." class="w-full px-2 py-1 rounded bg-[#2b2d31] border border-white/[0.06] text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none">${escapeHtml(f.value)}</textarea>
+                  <textarea rows="2" data-field-value="${idx}" placeholder="Field value..." class="w-full px-2 py-1 rounded bg-[#2b2d31] border border-white/[0.06] text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none">${escapeHtml(f.value)}</textarea>
                 </div>
               `).join('')}
             </div>
@@ -582,33 +582,33 @@ DashboardTabs.Messages = async function (container, guildId) {
         <!-- Main Image Row -->
         <div class="pt-1">
           <div class="flex items-center gap-2">
-            <input id="msg-emb-image-url" type="text" placeholder="Hauptbild-URL (https://...) oder rechts hochladen" value="${escapeHtml(state.image)}" class="flex-1 min-w-0 px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
+            <input id="msg-emb-image-url" type="text" placeholder="Main image URL (https://...) or upload on right" value="${escapeHtml(state.image)}" class="flex-1 min-w-0 px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
             <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-neutral-200 cursor-pointer flex-shrink-0">
               <input type="file" id="msg-emb-image-file" accept="image/*" class="hidden">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" x2="12" y1="3" y2="15"></path></svg>
-              Bild
+              Image
             </label>
           </div>
         </div>
 
         <!-- Footer & Timestamp Row -->
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_140px_auto] gap-1.5 items-center pt-1">
-          <input id="msg-emb-footer-text" type="text" placeholder="Footer-Text (optional)" value="${escapeHtml(state.footer_text)}" class="px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
-          <input id="msg-emb-footer-icon" type="text" placeholder="Footer-Icon URL" value="${escapeHtml(state.footer_icon)}" class="px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
+          <input id="msg-emb-footer-text" type="text" placeholder="Footer text (optional)" value="${escapeHtml(state.footer_text)}" class="px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
+          <input id="msg-emb-footer-icon" type="text" placeholder="Footer Icon URL" value="${escapeHtml(state.footer_icon)}" class="px-2.5 py-1.5 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-white placeholder-neutral-500 focus:outline-none">
           <label class="inline-flex items-center gap-1.5 px-2 py-1.5 text-xs text-neutral-300 cursor-pointer select-none">
             <input type="checkbox" id="msg-emb-timestamp" ${state.timestamp ? 'checked' : ''} class="rounded border-neutral-600">
-            Zeitstempel
+            Timestamp
           </label>
         </div>
 
         <!-- Link Buttons Section -->
         <div class="space-y-2 pt-2 border-t border-white/[0.06]">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Link-Buttons (${state.buttons.length}/5)</span>
+            <span class="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Link Buttons (${state.buttons.length}/5)</span>
             ${state.buttons.length < 5 ? `
               <button type="button" id="msg-emb-add-btn" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/[0.06] hover:bg-white/[0.12] text-[11px] font-medium text-neutral-200 transition-colors cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                Link-Button
+                Link Button
               </button>
             ` : ''}
           </div>
@@ -616,7 +616,7 @@ DashboardTabs.Messages = async function (container, guildId) {
             <div class="space-y-1.5">
               ${state.buttons.map((b, idx) => `
                 <div class="flex items-center gap-1.5">
-                  <input type="text" data-btn-label="${idx}" placeholder="Button-Text" value="${escapeHtml(b.label)}" class="w-36 px-2 py-1 rounded bg-[#1e1f22] border border-white/[0.06] text-xs text-white placeholder-neutral-500 focus:outline-none">
+                  <input type="text" data-btn-label="${idx}" placeholder="Button text" value="${escapeHtml(b.label)}" class="w-36 px-2 py-1 rounded bg-[#1e1f22] border border-white/[0.06] text-xs text-white placeholder-neutral-500 focus:outline-none">
                   <input type="text" data-btn-url="${idx}" placeholder="https://discord.gg/..." value="${escapeHtml(b.url)}" class="flex-1 min-w-0 px-2 py-1 rounded bg-[#1e1f22] border border-white/[0.06] text-xs text-white placeholder-neutral-500 focus:outline-none">
                   <button type="button" data-btn-remove="${idx}" class="p-1 text-neutral-500 hover:text-rose-400 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
@@ -639,7 +639,7 @@ DashboardTabs.Messages = async function (container, guildId) {
     const levelCfg = fullConfig.level || {};
 
     const findChName = (cid) => {
-      if (!cid) return 'Kein Kanal gewählt';
+      if (!cid) return 'No channel selected';
       const c = allChannels.find(ch => String(ch.id) === String(cid));
       return c ? `#${c.name}` : `#${cid}`;
     };
@@ -647,43 +647,43 @@ DashboardTabs.Messages = async function (container, guildId) {
     const botCards = [
       {
         key: 'welcome',
-        title: 'Willkommensnachricht',
-        desc: 'Wird automatisch gesendet, wenn ein neues Mitglied dem Server beitritt.',
+        title: 'Welcome Message',
+        desc: 'Sent automatically when a new member joins the server.',
         enabled: Boolean(welcomeCfg.enabled),
         channel: findChName(welcomeCfg.channel_id),
         color: welcomeCfg.embed_color || '#5865F2',
-        previewTitle: welcomeCfg.embed_title || 'Willkommen auf {server}!',
-        previewDesc: welcomeCfg.embed_description || welcomeCfg.message || 'Willkommen {user}!',
+        previewTitle: welcomeCfg.embed_title || 'Welcome to {server}!',
+        previewDesc: welcomeCfg.embed_description || welcomeCfg.message || 'Welcome {user}!',
         tabRoute: `/dashboard/${guildId}/welcome`
       },
       {
         key: 'goodbye',
-        title: 'Abschiedsnachricht',
-        desc: 'Wird gesendet, wenn ein Mitglied den Server verlässt.',
+        title: 'Goodbye Message',
+        desc: 'Sent when a member leaves the server.',
         enabled: Boolean(goodbyeCfg.enabled),
         channel: findChName(goodbyeCfg.channel_id),
         color: goodbyeCfg.embed_color || '#EF4444',
-        previewTitle: goodbyeCfg.embed_title || 'Auf Wiedersehen!',
-        previewDesc: goodbyeCfg.embed_description || goodbyeCfg.message || '{user.name} hat den Server verlassen.',
+        previewTitle: goodbyeCfg.embed_title || 'Goodbye!',
+        previewDesc: goodbyeCfg.embed_description || goodbyeCfg.message || '{user.name} has left the server.',
         tabRoute: `/dashboard/${guildId}/welcome`
       },
       {
         key: 'boost',
-        title: 'Server-Boost-Nachricht',
-        desc: 'Bedankt sich automatisch bei neuen Server-Boostern.',
+        title: 'Server Boost Message',
+        desc: 'Automatically thanks new server boosters.',
         enabled: Boolean(boostCfg.enabled),
         channel: findChName(boostCfg.channel_id),
         color: boostCfg.embed_color || '#EB459E',
-        previewTitle: boostCfg.embed_title || 'Neuer Server-Boost!',
-        previewDesc: boostCfg.embed_description || boostCfg.message || 'Danke für deinen Boost, {user}!',
+        previewTitle: boostCfg.embed_title || 'New Server Boost!',
+        previewDesc: boostCfg.embed_description || boostCfg.message || 'Thank you for boosting, {user}!',
         tabRoute: `/dashboard/${guildId}/welcome`
       },
       {
         key: 'verify',
         title: 'Verifizierungs-Panel',
-        desc: 'Interaktives Verifizierungs-Embed für neue Mitglieder.',
+        desc: 'Interactive verification embed for new members.',
         enabled: Boolean(verifyCfg.enabled),
-        channel: 'Verifizierungs-Kanal',
+        channel: 'Verification Channel',
         color: verifyCfg.embed_color || '#5865F2',
         previewTitle: verifyCfg.embed_title || 'Server Verification',
         previewDesc: verifyCfg.embed_description || 'Klicke unten auf den Button, um dich zu verifizieren.',
@@ -692,12 +692,12 @@ DashboardTabs.Messages = async function (container, guildId) {
       {
         key: 'tickets',
         title: 'Support-Ticket-Panel',
-        desc: 'Panel-Einbettung zum Eröffnen von Support-Tickets.',
+        desc: 'Panel embed for opening support tickets.',
         enabled: Boolean(ticketCfg.enabled),
         channel: findChName(ticketCfg.panel_channel_id),
         color: '#5865F2',
         previewTitle: ticketCfg.panel_title || 'Support Ticket Desk',
-        previewDesc: ticketCfg.panel_description || 'Wähle unten eine Kategorie aus, um ein Ticket zu erstellen.',
+        previewDesc: ticketCfg.panel_description || 'Select a category below to create a ticket.',
         tabRoute: `/dashboard/${guildId}/tickets`
       },
       {
@@ -705,10 +705,10 @@ DashboardTabs.Messages = async function (container, guildId) {
         title: 'Level-Up-Benachrichtigung',
         desc: 'Wird gesendet, wenn ein Mitglied ein neues XP-Level erreicht.',
         enabled: Boolean(levelCfg.enabled),
-        channel: levelCfg.levelup_channel === 'current' ? 'Aktueller Kanal' : findChName(levelCfg.levelup_channel),
+        channel: levelCfg.levelup_channel === 'current' ? 'Current Channel' : findChName(levelCfg.levelup_channel),
         color: levelCfg.leaderboard_color || '#3B82F6',
         previewTitle: levelCfg.levelup_embed_title || 'Level Up!',
-        previewDesc: levelCfg.levelup_embed_description || levelCfg.levelup_message_content || 'Glückwunsch {user}, du hast ein neues Level erreicht!',
+        previewDesc: levelCfg.levelup_embed_description || levelCfg.levelup_message_content || 'Congratulations {user}, you reached a new level!',
         tabRoute: `/dashboard/${guildId}/level`
       }
     ];
@@ -769,14 +769,14 @@ DashboardTabs.Messages = async function (container, guildId) {
                     <line x1="12" x2="12" y1="4" y2="20"></line>
                   </svg>
                 </span>
-                <h1 class="text-base font-medium text-white truncate">Nachrichten</h1>
+                <h1 class="text-base font-medium text-white truncate">Messages</h1>
               </div>
               <div class="flex items-center gap-3 flex-shrink-0">
                 <div class="flex items-center gap-3">
                   <div class="overflow-x-auto scrollbar-none">
                     <div class="flex gap-1 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg w-fit">
-                      <button type="button" id="msg-tab-user" class="px-4 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap cursor-pointer ${activeTopTab === 'user_messages' ? 'bg-white dark:bg-neutral-700 text-black dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'}">Ihre Nachrichten</button>
-                      <button type="button" id="msg-tab-bot" class="px-4 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap cursor-pointer ${activeTopTab === 'bot_messages' ? 'bg-white dark:bg-neutral-700 text-black dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'}">Bot-Nachrichten</button>
+                      <button type="button" id="msg-tab-user" class="px-4 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap cursor-pointer ${activeTopTab === 'user_messages' ? 'bg-white dark:bg-neutral-700 text-black dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'}">Your Messages</button>
+                      <button type="button" id="msg-tab-bot" class="px-4 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap cursor-pointer ${activeTopTab === 'bot_messages' ? 'bg-white dark:bg-neutral-700 text-black dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'}">Bot Messages</button>
                     </div>
                   </div>
                 </div>
@@ -792,16 +792,16 @@ DashboardTabs.Messages = async function (container, guildId) {
                   <div class="flex items-center gap-1.5 px-3 py-2.5 flex-wrap">
                     <!-- Neu (Templates / Blank) -->
                     <div class="relative">
-                      <button type="button" id="msg-new-btn" title="Neue Nachricht – wählen Sie eine Vorlage oder beginnen Sie leer" class="inline-flex items-center gap-2 h-9 px-3 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
+                      <button type="button" id="msg-new-btn" title="New message – choose a template or start blank" class="inline-flex items-center gap-2 h-9 px-3 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus w-4 h-4">
                           <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
                           <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
                           <path d="M9 15h6"></path>
                           <path d="M12 18v-6"></path>
-                        </svg>Neu</button>
+                        </svg>New</button>
                       ${openPopover === 'new' ? `
                         <div class="orbit-dropdown-menu absolute left-0 mt-2 w-72 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] p-1.5 space-y-1" style="z-index: 99999;" data-lenis-prevent="true">
-                          <div class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Vorlage wählen</div>
+                          <div class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Choose template</div>
                           ${TEMPLATES.map(t => `
                             <button type="button" data-pick-template="${escapeHtml(t.key)}" class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer">
                               <div class="text-xs font-semibold text-white">${escapeHtml(t.label)}</div>
@@ -814,14 +814,14 @@ DashboardTabs.Messages = async function (container, guildId) {
 
                     <!-- Einbettet (Saved Embeds Drawer) -->
                     <div class="relative">
-                      <button type="button" id="msg-saved-btn" title="Durchsuchen Sie alle Einbettungen" class="inline-flex items-center gap-2 h-9 px-3 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
+                      <button type="button" id="msg-saved-btn" title="Browse all embeds" class="inline-flex items-center gap-2 h-9 px-3 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-open w-4 h-4">
                           <path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path>
-                        </svg>Einbettet</button>
+                        </svg>Saved Embeds</button>
                       ${openPopover === 'saved' ? `
                         <div class="orbit-dropdown-menu absolute left-0 mt-2 w-80 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] p-2 space-y-1.5 max-h-80 overflow-y-auto" style="z-index: 99999;" data-lenis-prevent="true">
                           <div class="flex items-center justify-between px-2 py-1">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Gespeicherte Nachrichten (${savedEmbeds.length})</span>
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Saved Messages (${savedEmbeds.length})</span>
                           </div>
                           ${savedEmbeds.length > 0 ? savedEmbeds.map(emb => `
                             <div class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg hover:bg-neutral-800 group">
@@ -829,7 +829,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                                 <div class="text-xs font-medium text-white truncate">${escapeHtml(emb.name || emb.title || 'Untitled message')}</div>
                                 <div class="text-[10px] text-neutral-500 truncate">${escapeHtml(emb.description || emb.content || 'Keine Beschreibung')}</div>
                               </button>
-                              <button type="button" data-delete-saved="${escapeHtml(emb.id)}" class="p-1 text-neutral-500 hover:text-rose-400 cursor-pointer" title="Löschen">
+                              <button type="button" data-delete-saved="${escapeHtml(emb.id)}" class="p-1 text-neutral-500 hover:text-rose-400 cursor-pointer" title="Delete">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                               </button>
                             </div>
@@ -843,7 +843,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                     <span class="self-stretch w-px bg-neutral-800 mx-1.5"></span>
 
                     <!-- Undo / Redo -->
-                    <button type="button" id="msg-undo-btn" ${undoStack.length === 0 ? 'disabled=""' : ''} title="Rückgängig machen (Strg+Z)" class="inline-flex items-center justify-center w-9 h-9 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-neutral-400 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
+                    <button type="button" id="msg-undo-btn" ${undoStack.length === 0 ? 'disabled=""' : ''} title="Undo (Ctrl+Z)" class="inline-flex items-center justify-center w-9 h-9 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-neutral-400 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo2 w-4 h-4">
                         <path d="M9 14 4 9l5-5"></path>
                         <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"></path>
@@ -860,7 +860,7 @@ DashboardTabs.Messages = async function (container, guildId) {
 
                     <!-- Senden als -->
                     <div class="relative">
-                      <button type="button" id="msg-sendas-btn" title="Ändern Sie, wer die Nachricht sendet" class="inline-flex items-center gap-2 h-10 pl-2 pr-3 text-[13px] font-medium text-neutral-200 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer">
+                      <button type="button" id="msg-sendas-btn" title="Change message author" class="inline-flex items-center gap-2 h-10 pl-2 pr-3 text-[13px] font-medium text-neutral-200 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer">
                         <img src="${escapeHtml(senderImg)}" alt="" class="w-6 h-6 rounded-full object-cover flex-shrink-0 bg-neutral-800">
                         <span class="text-neutral-500">Senden als</span>
                         <span class="truncate max-w-[100px]">${escapeHtml(senderLabel)}</span>
@@ -894,16 +894,16 @@ DashboardTabs.Messages = async function (container, guildId) {
                       ` : ''}
                     </div>
 
-                    <!-- Kanal auswählen -->
+                    <!-- Select Channel -->
                     <div class="relative">
-                      <button type="button" id="msg-channel-btn" title="Kanal auswählen" class="inline-flex items-center gap-2 h-9 px-3 text-sm font-medium rounded-lg border transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${selectedChannel ? 'text-white border-neutral-600 bg-neutral-800/60' : 'text-neutral-400 border-neutral-700'} hover:text-white hover:bg-neutral-800 hover:border-neutral-600 cursor-pointer">
+                      <button type="button" id="msg-channel-btn" title="Select channel" class="inline-flex items-center gap-2 h-9 px-3 text-sm font-medium rounded-lg border transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${selectedChannel ? 'text-white border-neutral-600 bg-neutral-800/60' : 'text-neutral-400 border-neutral-700'} hover:text-white hover:bg-neutral-800 hover:border-neutral-600 cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-4 h-4 text-neutral-500">
                           <line x1="4" x2="20" y1="9" y2="9"></line>
                           <line x1="4" x2="20" y1="15" y2="15"></line>
                           <line x1="10" x2="8" y1="3" y2="21"></line>
                           <line x1="16" x2="14" y1="3" y2="21"></line>
                         </svg>
-                        <span class="truncate max-w-[140px]">${selectedChannel ? escapeHtml(selectedChannel.name) : 'Kanal auswählen'}</span>
+                        <span class="truncate max-w-[140px]">${selectedChannel ? escapeHtml(selectedChannel.name) : 'Select channel'}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-3.5 h-3.5 text-neutral-500">
                           <path d="m6 9 6 6 6-6"></path>
                         </svg>
@@ -923,7 +923,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                                 <span class="truncate">${escapeHtml(ch.name)}</span>
                               </button>
                             `).join('') : `
-                              <div class="px-3 py-3 text-xs text-neutral-500 text-center">Keine Textkanäle gefunden</div>
+                              <div class="px-3 py-3 text-xs text-neutral-500 text-center">No text channels found</div>
                             `}
                           </div>
                         </div>
@@ -933,32 +933,32 @@ DashboardTabs.Messages = async function (container, guildId) {
                     <span class="self-stretch w-px bg-neutral-800 mx-1.5"></span>
 
                     <!-- Mobilfreundlich -->
-                    <button type="button" id="msg-mobile-btn" title="Mobilfreundlicher Modus: Alle eingebetteten Bilder werden so dimensioniert, dass sie auf Telefonen und Desktops gleich dargestellt werden. Klicken Sie zum Deaktivieren." class="inline-flex items-center gap-2 h-9 px-3.5 text-sm font-medium rounded-lg transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer ${mobileFriendly ? 'text-indigo-200 bg-indigo-500/15 hover:bg-indigo-500/25' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}">
+                    <button type="button" id="msg-mobile-btn" title="Mobile-friendly mode: All embedded images are sized to look identical on mobile and desktop. Click to toggle." class="inline-flex items-center gap-2 h-9 px-3.5 text-sm font-medium rounded-lg transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer ${mobileFriendly ? 'text-indigo-200 bg-indigo-500/15 hover:bg-indigo-500/25' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smartphone w-4 h-4">
                         <rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
                         <path d="M12 18h.01"></path>
-                      </svg>Mobilfreundlich</button>
+                      </svg>Mobile Friendly</button>
 
                     <!-- An die Bibliothek senden -->
-                    <button type="button" id="msg-save-lib-btn" title="Senden Sie diese Einbettung an die öffentliche Bibliothek" class="inline-flex items-center gap-2 h-9 px-3.5 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
+                    <button type="button" id="msg-save-lib-btn" title="Save this embed to library" class="inline-flex items-center gap-2 h-9 px-3.5 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload w-4 h-4">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" x2="12" y1="3" y2="15"></line>
-                      </svg>An die Bibliothek senden</button>
+                      </svg>Save to Library</button>
 
                     <!-- Schicken -->
                     <button type="button" id="msg-send-btn" ${(isSending || !state.channel_id || !hasAnyContent()) ? 'disabled=""' : ''} class="inline-flex items-center gap-2 h-9 px-4 text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 rounded-lg text-white disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send w-4 h-4">
                         <path d="m22 2-7 20-4-9-9-4Z"></path>
                         <path d="M22 2 11 13"></path>
-                      </svg>${isSending ? 'Sendet...' : 'Schicken'}</button>
+                      </svg>${isSending ? 'Sending...' : 'Send'}</button>
                   </div>
                 </div>
 
                 <!-- Message Name Input -->
                 <div class="mb-3 flex items-center gap-2">
-                  <input id="msg-name-input" class="flex-1 bg-transparent text-sm text-neutral-400 hover:text-white focus:text-white border-0 border-b border-transparent hover:border-neutral-700 focus:border-indigo-500/40 focus:outline-none transition-colors px-1 py-0.5" placeholder="Unbenannte Nachricht" value="${escapeHtml(state.name)}">
+                  <input id="msg-name-input" class="flex-1 bg-transparent text-sm text-neutral-400 hover:text-white focus:text-white border-0 border-b border-transparent hover:border-neutral-700 focus:border-indigo-500/40 focus:outline-none transition-colors px-1 py-0.5" placeholder="Untitled message" value="${escapeHtml(state.name)}">
                 </div>
 
                 <!-- 2-Column Workspace -->
@@ -976,14 +976,14 @@ DashboardTabs.Messages = async function (container, guildId) {
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="h-[0.85em] w-[0.85em]">
                                   <path d="M20 6 9 17l-5-5"></path>
                                 </svg>APP</span>
-                              <span class="text-[10px] text-neutral-500">Heute um 12:00 Uhr</span>
+                              <span class="text-[10px] text-neutral-500">Today at 12:00 PM</span>
                             </div>
 
                             <!-- Editable Message Content -->
                             <div class="relative group opacity-70 hover:opacity-100 focus-within:opacity-100 transition-opacity">
                               <div id="msg-content-editable" contenteditable="true" role="textbox" aria-multiline="true" class="outline-none text-sm text-white empty:before:content-[attr(data-placeholder)] empty:before:text-neutral-600 rounded-md -mx-1 px-1 -my-0.5 py-0.5 select-text hover:shadow-[inset_0_0_0_1px_rgb(99_102_241_/_0.25)] focus:shadow-[inset_0_0_0_2px_rgb(99_102_241_/_0.6)] whitespace-pre-wrap !text-[14px] !text-neutral-100 leading-snug min-h-[1.5em]" data-placeholder="Message above the embed (optional)" style="user-select: text;">${escapeHtml(state.content)}</div>
                               <div id="msg-slash-vars-menu" class="hidden orbit-dropdown-menu absolute left-0 top-full mt-1 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 p-1.5">
-                                <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Variablen einfügen</div>
+                                <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Insert Variables</div>
                                 ${VARIABLES.map(v => `
                                   <button type="button" data-insert-var="${escapeHtml(v.token)}" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-neutral-800 text-left cursor-pointer">
                                     <code class="text-indigo-400 font-mono">${escapeHtml(v.token)}</code>
@@ -1002,7 +1002,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                       </div>
 
                       <div class="mt-4 flex justify-center">
-                        <p class="inline-block px-2.5 py-1 rounded-md bg-white/[0.04] text-center text-[11px] text-neutral-500">Klicken Sie auf einen beliebigen Teil der Nachricht, um ihn zu bearbeiten. Typ <kbd class="px-1 py-0.5 text-[9px] bg-neutral-800 rounded border border-neutral-700">/</kbd> in jedem Text für Variablen.</p>
+                        <p class="inline-block px-2.5 py-1 rounded-md bg-white/[0.04] text-center text-[11px] text-neutral-500">Click any part of the message to edit. Type <kbd class="px-1 py-0.5 text-[9px] bg-neutral-800 rounded border border-neutral-700">/</kbd> in any text for variables.</p>
                       </div>
                     </div>
                   </div>
@@ -1062,12 +1062,12 @@ DashboardTabs.Messages = async function (container, guildId) {
           state.color = g.embed_color || '#EF4444';
         } else if (key === 'boost') {
           const b = fullConfig.boost || {};
-          state.name = 'Server-Boost-Nachricht';
+          state.name = 'Server Boost Message';
           state.channel_id = b.channel_id ? String(b.channel_id) : state.channel_id;
           state.content = b.message || '';
           state.has_embed = true;
           state.title = b.embed_title || 'Neuer Server-Boost!';
-          state.description = b.embed_description || 'Vielen Dank für deinen Boost, {user}!';
+          state.description = b.embed_description || 'Thank you for boosting, {user}!';
           state.color = b.embed_color || '#EB459E';
         } else if (key === 'verify') {
           const v = fullConfig.verify || {};
@@ -1082,15 +1082,15 @@ DashboardTabs.Messages = async function (container, guildId) {
           state.channel_id = t.panel_channel_id ? String(t.panel_channel_id) : state.channel_id;
           state.has_embed = true;
           state.title = t.panel_title || 'Support Ticket Desk';
-          state.description = t.panel_description || 'Wähle unten eine Kategorie aus, um ein Ticket zu erstellen.';
+          state.description = t.panel_description || 'Select a category below to create a ticket.';
           state.color = '#5865F2';
         } else if (key === 'level') {
           const l = fullConfig.level || {};
-          state.name = 'Level-Up-Nachricht';
+          state.name = 'Level Up Message';
           state.content = l.levelup_message_content || '{user}';
           state.has_embed = true;
           state.title = l.levelup_embed_title || 'Level Up!';
-          state.description = l.levelup_embed_description || 'Glückwunsch {user}!';
+          state.description = l.levelup_embed_description || 'Congratulations {user}!';
           state.color = l.leaderboard_color || '#3B82F6';
         }
         activeTopTab = 'user_messages';
@@ -1181,10 +1181,10 @@ DashboardTabs.Messages = async function (container, guildId) {
         if (!id) return;
         const targetEmb = savedEmbeds.find(x => String(x.id) === String(id));
         const confirmed = await window.confirmDelete({
-          title: `${targetEmb?.name || 'Nachricht'} löschen?`,
-          message: 'Das kann nicht rückgängig gemacht werden. Diese Vorlage wird dauerhaft entfernt.',
-          confirmText: 'Löschen',
-          cancelText: 'Abbrechen'
+          title: `Delete ${targetEmb?.name || 'message'}?`,
+          message: 'This cannot be undone. This template will be permanently removed.',
+          confirmText: 'Delete',
+          cancelText: 'Cancel'
         });
         if (!confirmed) return;
         try {
@@ -1192,9 +1192,9 @@ DashboardTabs.Messages = async function (container, guildId) {
           savedEmbeds = savedEmbeds.filter(x => String(x.id) !== String(id));
           if (String(state.id) === String(id)) state.id = '';
           render();
-          if (window.Notifications) Notifications.show('Nachricht aus Bibliothek gelöscht', 'success');
+          if (window.Notifications) Notifications.show('Message deleted from library', 'success');
         } catch (err) {
-          if (window.Notifications) Notifications.show(err.message || 'Fehler beim Löschen', 'error');
+          if (window.Notifications) Notifications.show(err.message || 'Failed to delete', 'error');
         }
       });
     });
@@ -1257,7 +1257,7 @@ DashboardTabs.Messages = async function (container, guildId) {
     // Save to Library ("An die Bibliothek senden")
     document.getElementById('msg-save-lib-btn')?.addEventListener('click', async () => {
       if (!hasAnyContent()) {
-        if (window.Notifications) Notifications.show('Bitte fülle zuerst die Nachricht oder Einbettung aus.', 'error');
+        if (window.Notifications) Notifications.show('Please fill in the message or embed first.', 'error');
         return;
       }
       try {
@@ -1291,7 +1291,7 @@ DashboardTabs.Messages = async function (container, guildId) {
         }
         if (window.Notifications) Notifications.show('In der Bibliothek gespeichert!', 'success');
       } catch (err) {
-        if (window.Notifications) Notifications.show(err.message || 'Fehler beim Speichern', 'error');
+        if (window.Notifications) Notifications.show(err.message || 'Failed to save', 'error');
       }
     });
 
@@ -1324,11 +1324,11 @@ DashboardTabs.Messages = async function (container, guildId) {
           buttons: state.buttons
         });
         if (window.Notifications) {
-          Notifications.show('Nachricht erfolgreich in Discord gesendet!', 'success');
+          Notifications.show('Message sent to Discord successfully!', 'success');
         }
       } catch (err) {
         if (window.Notifications) {
-          Notifications.show(err.message || 'Fehler beim Senden der Nachricht', 'error');
+          Notifications.show(err.message || 'Failed to send message', 'error');
         }
       } finally {
         isSending = false;
@@ -1433,7 +1433,7 @@ DashboardTabs.Messages = async function (container, guildId) {
           pushUndo();
           state[key] = res.url;
           render();
-          if (window.Notifications) Notifications.show('Bild erfolgreich hochgeladen!', 'success');
+          if (window.Notifications) Notifications.show('Image uploaded successfully!', 'success');
         }
       } catch (err) {
         if (window.Notifications) Notifications.show(err.message || 'Bild-Upload fehlgeschlagen', 'error');
@@ -1503,7 +1503,7 @@ DashboardTabs.Messages = async function (container, guildId) {
     document.getElementById('msg-emb-add-btn')?.addEventListener('click', () => {
       if (state.buttons.length >= 5) return;
       pushUndo();
-      state.buttons.push({ label: 'Website öffnen', url: 'https://' });
+      state.buttons.push({ label: 'Open Website', url: 'https://' });
       render();
     });
 

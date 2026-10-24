@@ -2,7 +2,7 @@
  * Orbit Dashboard - Polls Tab (Umfragen)
  * 1:1 PeakBot UI & Full End-to-End Functionality:
  * - Feature Header (`lucide-bar-chart3` + `Umfragen`)
- * - Segmented Filter Bar (`Alle`, `Aktiv`, `Beendet`, `Entwürfe`) + Active Counter (`0/999 aktiv`) + `+ Umfrage erstellen` button
+ * - Segmented Filter Bar (`All`, `Active`, `Ended`, `Drafts`) + Active Counter (`0/999 active`) + `+ Create Poll` button
  * - Polls Grid with Active/Ended/Draft Poll Cards (3-dots action menu, live option vote bars, total votes, relative creation time) + dashed `+ Umfrage erstellen` card
  * - 3-Column `Create a Poll` Modal (`Quick Start` presets, `Question` 0/256, `Options` 1..10, live `Discord Preview`, `Channel` custom dropdown, `Duration` + `No time limit`, `Allow multiple votes`, collapsible `Advanced` settings, `Save as Draft` & `Create Poll`)
  * - Interactive Poll Details Modal when clicking an active or ended poll card
@@ -45,7 +45,7 @@ DashboardTabs.Polls = async function(container, guildId) {
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
         </svg>
-        Lade Umfragen...
+        Loading polls...
       </div>
     </div>
   `;
@@ -91,8 +91,8 @@ DashboardTabs.Polls = async function(container, guildId) {
       const filterTabs = [
         { id: 'all', label: 'Alle' },
         { id: 'active', label: 'Aktiv' },
-        { id: 'ended', label: 'Beendet' },
-        { id: 'draft', label: 'Entwürfe' }
+        { id: 'ended', label: 'Ended' },
+        { id: 'draft', label: 'Drafts' }
       ];
 
       container.innerHTML = `
@@ -104,7 +104,7 @@ DashboardTabs.Polls = async function(container, guildId) {
                 <span class="flex items-center justify-center text-neutral-500 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart3 w-5 h-5"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
                 </span>
-                <h1 class="text-base font-medium text-white truncate">Umfragen</h1>
+                <h1 class="text-base font-medium text-white truncate">Polls</h1>
               </div>
             </div>
           </div>
@@ -146,7 +146,7 @@ DashboardTabs.Polls = async function(container, guildId) {
                 <div class="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-6 h-6 text-neutral-400"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
                 </div>
-                <span class="text-sm font-medium text-neutral-300">Umfrage erstellen</span>
+                <span class="text-sm font-medium text-neutral-300">Create Poll</span>
               </button>
             </div>
           </div>
@@ -167,13 +167,13 @@ DashboardTabs.Polls = async function(container, guildId) {
         : (accentColor.includes('rgb') ? accentColor.replace('rgb(', 'rgba(').replace(')', ', 0.1)') : 'rgba(88, 101, 242, 0.1)');
 
       let badgeClass = 'bg-emerald-500/10 text-emerald-400';
-      let badgeText = 'aktiv';
+      let badgeText = 'active';
       if (poll.status === 'ended') {
         badgeClass = 'bg-neutral-700/40 text-neutral-400';
-        badgeText = 'beendet';
+        badgeText = 'ended';
       } else if (poll.status === 'draft') {
         badgeClass = 'bg-amber-500/10 text-amber-400';
-        badgeText = 'entwurf';
+        badgeText = 'draft';
       }
 
       const visibleOptions = options.slice(0, 4);
@@ -193,27 +193,27 @@ DashboardTabs.Polls = async function(container, guildId) {
               <div class="flex items-center gap-1.5 flex-shrink-0">
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${badgeClass}">${badgeText}</span>
                 <div class="relative" data-poll-menu-wrap="${escapeHtml(poll.id)}">
-                  <button type="button" aria-label="Umfrageaktionen" aria-haspopup="menu" aria-expanded="${openMenuPollId === poll.id ? 'true' : 'false'}" data-poll-menu-btn="${escapeHtml(poll.id)}" class="p-2 -m-1 rounded-lg text-neutral-600 hover:text-neutral-300 hover:bg-neutral-800 transition-colors cursor-pointer">
+                  <button type="button" aria-label="Poll actions" aria-haspopup="menu" aria-expanded="${openMenuPollId === poll.id ? 'true' : 'false'}" data-poll-menu-btn="${escapeHtml(poll.id)}" class="p-2 -m-1 rounded-lg text-neutral-600 hover:text-neutral-300 hover:bg-neutral-800 transition-colors cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal w-4 h-4"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
                   </button>
                   <div data-poll-menu="${escapeHtml(poll.id)}" class="orbit-dropdown-menu absolute right-0 top-full mt-1 w-40 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl z-20 overflow-hidden py-1 ${openMenuPollId === poll.id ? '' : 'hidden'}" style="opacity: 1; transform: none;">
                     <button type="button" data-poll-action="results" data-poll-id="${escapeHtml(poll.id)}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-700 transition-colors cursor-pointer">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart3 w-3.5 h-3.5"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
-                      Ergebnisse anzeigen
+                      View results
                     </button>
                     ${poll.status === 'active' ? `
                       <button type="button" data-poll-action="end" data-poll-id="${escapeHtml(poll.id)}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-amber-400 hover:bg-neutral-700 transition-colors cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-stop-circle w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><rect width="6" height="6" x="9" y="9"></rect></svg>
-                        Frühes Ende
+                        End early
                       </button>
                     ` : ''}
                     <button type="button" data-poll-action="duplicate" data-poll-id="${escapeHtml(poll.id)}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-700 transition-colors cursor-pointer">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy w-3.5 h-3.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
-                      Duplikat
+                      Duplicate
                     </button>
                     <button type="button" data-poll-action="delete" data-poll-id="${escapeHtml(poll.id)}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:bg-neutral-700 transition-colors cursor-pointer">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2 w-3.5 h-3.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                      Löschen
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -321,30 +321,30 @@ DashboardTabs.Polls = async function(container, guildId) {
                 poll.status = 'ended';
                 poll.closed = true;
               }
-              if (window.Toast && typeof Toast.success === 'function') Toast.success('Umfrage wurde beendet.');
-              else if (window.Notifications) Notifications.show('Umfrage wurde beendet.', 'success');
+              if (window.Toast && typeof Toast.success === 'function') Toast.success('Poll ended.');
+              else if (window.Notifications) Notifications.show('Poll ended.', 'success');
               renderMainView();
             } catch (err) {
-              if (window.Toast && typeof Toast.error === 'function') Toast.error(err.message || 'Fehler beim Beenden der Umfrage.');
-              else if (window.Notifications) Notifications.show(err.message || 'Fehler beim Beenden der Umfrage.', 'error');
+              if (window.Toast && typeof Toast.error === 'function') Toast.error(err.message || 'Failed to end poll.');
+              else if (window.Notifications) Notifications.show(err.message || 'Failed to end poll.', 'error');
             }
           } else if (action === 'delete') {
             const confirmed = await window.confirmDelete({
-              title: `Umfrage "${poll.question || 'Umfrage'}" löschen?`,
-              message: 'Das kann nicht rückgängig gemacht werden. Die Umfrage und alle abgegebenen Stimmen werden dauerhaft gelöscht.',
-              confirmText: 'Löschen',
-              cancelText: 'Abbrechen'
+              title: `Delete poll "${poll.question || 'Poll'}"?`,
+              message: 'This cannot be undone. The poll and all submitted votes will be permanently deleted.',
+              confirmText: 'Delete',
+              cancelText: 'Cancel'
             });
             if (!confirmed) return;
             try {
               await API.deletePoll(guildId, poll.id);
               polls = polls.filter(p => String(p.id) !== String(poll.id));
-              if (window.Toast && typeof Toast.success === 'function') Toast.success('Umfrage gelöscht.');
-              else if (window.Notifications) Notifications.show('Umfrage gelöscht.', 'info');
+              if (window.Toast && typeof Toast.success === 'function') Toast.success('Poll deleted.');
+              else if (window.Notifications) Notifications.show('Poll deleted.', 'info');
               renderMainView();
             } catch (err) {
-              if (window.Toast && typeof Toast.error === 'function') Toast.error(err.message || 'Fehler beim Löschen der Umfrage.');
-              else if (window.Notifications) Notifications.show(err.message || 'Fehler beim Löschen der Umfrage.', 'error');
+              if (window.Toast && typeof Toast.error === 'function') Toast.error(err.message || 'Failed to delete poll.');
+              else if (window.Notifications) Notifications.show(err.message || 'Failed to delete poll.', 'error');
             }
           }
         };
@@ -392,13 +392,13 @@ DashboardTabs.Polls = async function(container, guildId) {
       const maxVote = optVotes.length > 0 ? Math.max(...optVotes) : 0;
 
       let badgeClass = 'bg-emerald-500/10 text-emerald-400';
-      let badgeText = 'aktiv';
+      let badgeText = 'active';
       if (poll.status === 'ended') {
         badgeClass = 'bg-neutral-800 text-neutral-500';
-        badgeText = 'beendet';
+        badgeText = 'ended';
       } else if (poll.status === 'draft') {
         badgeClass = 'bg-amber-500/10 text-amber-400';
-        badgeText = 'entwurf';
+        badgeText = 'draft';
       }
 
       const optionsHtml = options.map((opt, idx) => {
@@ -441,15 +441,15 @@ DashboardTabs.Polls = async function(container, guildId) {
       }).join('');
 
       modal.innerHTML = `
-        <div role="dialog" aria-modal="true" aria-label="Umfrageergebnisse" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+        <div role="dialog" aria-modal="true" aria-label="Poll results" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
           <div class="flex items-start justify-between px-5 pt-5 pb-3 flex-shrink-0">
             <div class="flex-1 min-w-0 pr-3">
               <div class="flex items-center gap-2 mb-1">
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${badgeClass}">${badgeText}</span>
               </div>
-              <h2 class="text-base font-bold text-white leading-tight text-balance">${escapeHtml(poll.question || 'Umfrage')}</h2>
+              <h2 class="text-base font-bold text-white leading-tight text-balance">${escapeHtml(poll.question || 'Poll')}</h2>
             </div>
-            <button type="button" aria-label="Schließen" id="poll-details-close" class="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0 cursor-pointer">
+            <button type="button" aria-label="Close" id="poll-details-close" class="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0 cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
           </div>
@@ -463,7 +463,7 @@ DashboardTabs.Polls = async function(container, guildId) {
             </div>
             <div class="flex items-center gap-3 text-xs text-neutral-500">
               <span class="flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye w-3.5 h-3.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg> ${poll.anonymous ? 'Anonym' : 'Öffentlich'}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye w-3.5 h-3.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg> ${poll.anonymous ? 'Anonymous' : 'Public'}
               </span>
             </div>
           </div>
@@ -656,7 +656,7 @@ DashboardTabs.Polls = async function(container, guildId) {
                             <span class="text-neutral-500 font-mono">#</span>
                             <span class="truncate">${escapeHtml(c.name)}</span>
                           </button>
-                        `).join('') : `<div class="px-3 py-3 text-xs text-neutral-500 text-center">Keine Textkanäle gefunden</div>`}
+                        `).join('') : `<div class="px-3 py-3 text-xs text-neutral-500 text-center">No text channels found</div>`}
                       </div>
                     </div>
                   </div>
@@ -1189,11 +1189,11 @@ DashboardTabs.Polls = async function(container, guildId) {
               polls.unshift(res.poll);
             }
           }
-          showNotify(asDraft ? 'Entwurf gespeichert!' : 'Umfrage erfolgreich erstellt und in Discord gepostet!', 'success');
+          showNotify(asDraft ? 'Draft saved!' : 'Poll created successfully and posted to Discord!', 'success');
           modal.remove();
           renderMainView();
         } catch (err) {
-          showNotify(err.message || 'Fehler beim Speichern der Umfrage.', 'error');
+          showNotify(err.message || 'Failed to save poll.', 'error');
           btn.disabled = false;
           btn.textContent = origText;
         }
@@ -1212,7 +1212,7 @@ DashboardTabs.Polls = async function(container, guildId) {
     console.error('[Polls Tab Error]', err);
     container.innerHTML = `
       <div class="p-8 rounded-2xl bg-neutral-900 border border-neutral-800 text-center text-red-400 text-sm">
-        Fehler beim Laden der Umfragen: ${escapeHtml(err.message)}
+        Failed to load polls: ${escapeHtml(err.message)}
       </div>
     `;
   }

@@ -466,7 +466,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
   } else if (typeof window.renderErrorState === 'function') {
     window.renderErrorState(tabContainer, {
       title: 'Bereich nicht gefunden',
-      message: `Das Modul "${tab}" existiert nicht oder ist derzeit nicht verfügbar.`,
+      message: `The module "${tab}" does not exist or is currently unavailable.`,
       statusCode: 404,
       backUrl: `/dashboard/${guildId}`
     });
@@ -543,8 +543,8 @@ Pages._mountDashboardTab = async function(tabContainer, handler, tabName, guildI
     console.error(`[Dashboard] Error in tab "${tabName}":`, err);
     if (typeof window.renderErrorState === 'function') {
       window.renderErrorState(tabContainer, {
-        title: `Fehler beim Laden von ${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`,
-        message: 'Beim Abrufen der Modulkonfiguration ist ein Fehler aufgetreten. Bitte versuche es erneut.',
+        title: `Error loading ${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`,
+        message: 'An error occurred while fetching module configuration. Please try again.',
         details: err?.message || String(err),
         statusCode: err?.status || (err?.message && err.message.includes('500') ? 500 : 404),
         onRetry: () => Pages._mountDashboardTab(tabContainer, handler, tabName, guildId),

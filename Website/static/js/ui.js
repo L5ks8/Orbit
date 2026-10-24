@@ -237,7 +237,7 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
         <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
           <div class="relative w-full">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input type="text" id="${containerId}-search" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+            <input type="text" id="${containerId}-search" placeholder="Search..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
           </div>
         </div>
         <div class="overflow-y-auto overscroll-contain p-1 flex flex-col gap-0.5 scrollbar-thin" data-lenis-prevent="true">
@@ -859,8 +859,8 @@ const OrbitDropdownManager = {
     searchWrap.innerHTML = `
       <div class="relative w-full">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-        <input type="text" placeholder="Suchen..." class="orbit-auto-search-input orbit-searchbar-input w-full pl-9 pr-8 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
-        <button type="button" class="orbit-searchbar-clear hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors p-0.5 rounded flex items-center justify-center shrink-0" title="Suche leeren">
+        <input type="text" placeholder="Search..." class="orbit-auto-search-input orbit-searchbar-input w-full pl-9 pr-8 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+        <button type="button" class="orbit-searchbar-clear hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors p-0.5 rounded flex items-center justify-center shrink-0" title="Clear search">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
         </button>
       </div>
@@ -1074,7 +1074,7 @@ function renderErrorState(container, options = {}) {
     statusCode = 404,
     onRetry = null,
     backUrl = '/',
-    backText = 'Zurück zur Übersicht'
+    backText = 'Back to Overview'
   } = options;
 
   function escapeHtml(str) {
@@ -1088,7 +1088,7 @@ function renderErrorState(container, options = {}) {
 
   const isNotFound = String(statusCode) === '404' || String(statusCode).startsWith('4');
   const codeLabel = isNotFound ? '404' : (statusCode || '500');
-  const badgeText = isNotFound ? 'Nicht gefunden' : 'Serverfehler';
+  const badgeText = isNotFound ? 'Not Found' : 'Server Error';
 
   container.innerHTML = `
     <div class="flex flex-col items-center justify-center min-h-[60vh] px-4 py-12 text-center animate-fade-in">
@@ -1114,7 +1114,7 @@ function renderErrorState(container, options = {}) {
         </div>
 
         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${isNotFound ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'} border mb-3">
-          <span>Fehler ${escapeHtml(codeLabel)}</span>
+          <span>Error ${escapeHtml(codeLabel)}</span>
           <span>·</span>
           <span>${escapeHtml(badgeText)}</span>
         </div>
@@ -1128,7 +1128,7 @@ function renderErrorState(container, options = {}) {
               <summary class="flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-neutral-400 cursor-pointer hover:text-white select-none">
                 <span class="flex items-center gap-1.5 font-mono text-[11px]">
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-500"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-                  Details zum Fehler anzeigen
+                  Show error details
                 </span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-500 group-open:rotate-180 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
               </summary>
@@ -1143,7 +1143,7 @@ function renderErrorState(container, options = {}) {
           ${onRetry ? `
             <button type="button" id="orbit-error-retry-btn" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-neutral-200 active:scale-[0.98] transition-all cursor-pointer shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-              <span>Erneut versuchen</span>
+              <span>Try again</span>
             </button>
           ` : ''}
           ${backUrl ? `

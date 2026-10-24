@@ -129,7 +129,7 @@ DashboardTabs.Invites = async function (container, guildId) {
         });
       } catch (err) {
         if (window.Notifications) {
-          Notifications.show(err.message || 'Fehler beim Speichern', 'error');
+          Notifications.show(err.message || 'Failed to save', 'error');
         }
       }
     };
@@ -481,13 +481,13 @@ DashboardTabs.Invites = async function (container, guildId) {
                 <line x1="8" x2="16" y1="12" y2="12"></line>
               </svg>
             </div>
-            <h3 class="text-sm font-semibold text-white mb-1">Tracke deine Einladungsquellen</h3>
-            <p class="text-[11px] text-neutral-500 text-center max-w-xs mb-4 leading-relaxed">Erstelle einzigartige Einladungslinks für YouTube, Twitter, Reddit und mehr.</p>
+            <h3 class="text-sm font-semibold text-white mb-1">Track Your Invite Sources</h3>
+            <p class="text-[11px] text-neutral-500 text-center max-w-xs mb-4 leading-relaxed">Create unique invite links for YouTube, Twitter, Reddit and more.</p>
             <button type="button" id="inv-create-source-empty-btn" class="flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-semibold rounded-xl hover:bg-neutral-200 transition-colors cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3.5 h-3.5">
                 <path d="M5 12h14"></path>
                 <path d="M12 5v14"></path>
-              </svg>Quelle erstellen</button>
+              </svg>Create Source</button>
           </div>
         </div>
       `;
@@ -511,7 +511,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                     <h4 class="text-sm font-semibold text-white truncate">${escapeHtml(src.name)}</h4>
                     <p class="text-[11px] text-neutral-500 truncate mt-0.5">#${escapeHtml(src.channel_name || 'general')}</p>
                   </div>
-                  <button type="button" data-delete-source="${escapeHtml(src.id)}" class="p-1.5 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-neutral-800 transition-colors flex-shrink-0" title="Quelle löschen">
+                  <button type="button" data-delete-source="${escapeHtml(src.id)}" class="p-1.5 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-neutral-800 transition-colors flex-shrink-0" title="Delete Source">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
                 </div>
@@ -619,7 +619,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                       </div>
                     </div>
                     <div class="flex items-center justify-between gap-3 px-4 py-2">
-                      <span class="text-sm text-neutral-300">Wiedereintritte zählen</span>
+                      <span class="text-sm text-neutral-300">Count Re-joins</span>
                       <div class="flex items-center gap-3">
                         ${renderSwitchHtml('inv-switch-rejoins', state.count_rejoins)}
                       </div>
@@ -631,7 +631,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                       </div>
                     </div>
                     <div class="flex items-center justify-between gap-3 px-4 py-2">
-                      <span class="text-sm text-neutral-300">Vanity-URL-Beitritte zählen (discord.gg/yourvanity)</span>
+                      <span class="text-sm text-neutral-300">Count Vanity URL Joins (discord.gg/yourvanity)</span>
                       <div class="flex items-center gap-3">
                         ${renderSwitchHtml('inv-switch-vanity', state.count_vanity)}
                       </div>
@@ -684,7 +684,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                           <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
                             <div class="relative w-full">
                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                              <input type="text" id="inv-reward-role-search" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                              <input type="text" id="inv-reward-role-search" placeholder="Search..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                             </div>
                           </div>
                           <div class="overflow-y-auto overscroll-contain p-1 max-h-48 scrollbar-thin" data-lenis-prevent="true">
@@ -694,7 +694,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                                 <span class="truncate">${escapeHtml(r.name)}</span>
                               </button>
                             `).join('') : `
-                              <div class="px-3 py-2 text-xs text-neutral-500">Keine Rollen verfügbar</div>
+                              <div class="px-3 py-2 text-xs text-neutral-500">No roles available</div>
                             `}
                           </div>
                         </div>
@@ -704,7 +704,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-3 h-3">
                         <path d="M5 12h14"></path>
                         <path d="M12 5v14"></path>
-                      </svg>Hinzufügen</button>
+                      </svg>Add</button>
                   </div>
 
                   <!-- Auto-Post -->
@@ -750,7 +750,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                               <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
                                 <div class="relative w-full">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                                  <input type="text" id="inv-autopost-channel-search" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                                  <input type="text" id="inv-autopost-channel-search" placeholder="Search..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                                 </div>
                               </div>
                               <div class="overflow-y-auto overscroll-contain p-1 max-h-48 scrollbar-thin" data-lenis-prevent="true">
@@ -760,7 +760,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                                     <span class="truncate">${escapeHtml(ch.name)}</span>
                                   </button>
                                 `).join('') : `
-                                  <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle verfügbar</div>
+                                  <div class="px-3 py-2 text-xs text-neutral-500">No text channels available</div>
                                 `}
                               </div>
                             </div>
@@ -910,22 +910,22 @@ DashboardTabs.Invites = async function (container, guildId) {
               </div>
 
               <div>
-                <label class="text-xs font-medium text-neutral-300 block mb-1.5">Name der Quelle</label>
-                <input id="inv-source-name-input" type="text" maxlength="40" value="${escapeHtml(draftName)}" placeholder="z. B. YouTube, Twitter, Bio-Link..." class="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600">
+                <label class="text-xs font-medium text-neutral-300 block mb-1.5">Source Name</label>
+                <input id="inv-source-name-input" type="text" maxlength="40" value="${escapeHtml(draftName)}" placeholder="e.g. YouTube, Twitter, Bio link..." class="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600">
               </div>
 
               <div>
-                <label class="text-xs font-medium text-neutral-300 block mb-1.5">Zielkanal für Einladung</label>
+                <label class="text-xs font-medium text-neutral-300 block mb-1.5">Target Channel for Invite</label>
                 <div class="relative">
                   <button type="button" id="inv-source-channel-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-sm text-left cursor-pointer">
-                    <span id="inv-source-channel-label" class="truncate text-white">${selectedChannel ? `# ${escapeHtml(selectedChannel.name)}` : 'Kanal auswählen...'}</span>
+                    <span id="inv-source-channel-label" class="truncate text-white">${selectedChannel ? `# ${escapeHtml(selectedChannel.name)}` : 'Select channel...'}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-400 transition-transform duration-200 ${modalChannelDropdownOpen ? 'rotate-180' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
                   </button>
                   <div id="inv-source-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${modalChannelDropdownOpen ? '' : 'hidden'} absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
                     <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
                       <div class="relative w-full">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                        <input type="text" id="inv-source-channel-search" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                        <input type="text" id="inv-source-channel-search" placeholder="Search..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                       </div>
                     </div>
                     <div class="overflow-y-auto overscroll-contain p-1 max-h-48 scrollbar-thin" data-lenis-prevent="true">
@@ -935,7 +935,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                           <span class="truncate">${escapeHtml(ch.name)}</span>
                         </button>
                       `).join('') : `
-                        <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle verfügbar</div>
+                        <div class="px-3 py-2 text-xs text-neutral-500">No text channels available</div>
                       `}
                     </div>
                   </div>
@@ -943,7 +943,7 @@ DashboardTabs.Invites = async function (container, guildId) {
               </div>
 
               <div>
-                <label class="text-xs font-medium text-neutral-300 block mb-1.5">Kartenfarbe</label>
+                <label class="text-xs font-medium text-neutral-300 block mb-1.5">Card Color</label>
                 <div class="flex items-center gap-2">
                   ${PRESET_COLORS.map(c => `
                     <button type="button" data-pick-source-color="${escapeHtml(c)}" class="w-6 h-6 rounded-lg border transition-transform cursor-pointer ${draftColor === c ? 'border-white scale-110' : 'border-neutral-700'}" style="background-color: ${escapeHtml(c)};"></button>
@@ -953,9 +953,9 @@ DashboardTabs.Invites = async function (container, guildId) {
             </div>
 
             <div class="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-neutral-800">
-              <button type="button" id="inv-source-modal-cancel" class="px-4 py-2 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">Abbrechen</button>
+              <button type="button" id="inv-source-modal-cancel" class="px-4 py-2 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">Cancel</button>
               <button type="button" id="inv-source-modal-submit" ${isCreating ? 'disabled=""' : ''} class="px-4 py-2 rounded-xl text-xs font-semibold bg-white text-black hover:bg-neutral-200 disabled:opacity-40 transition-colors cursor-pointer">
-                ${isCreating ? 'Erstelle Link...' : 'Quelle erstellen'}
+                ${isCreating ? 'Creating link...' : 'Create Source'}
               </button>
             </div>
           </div>
@@ -1066,7 +1066,7 @@ DashboardTabs.Invites = async function (container, guildId) {
           isCreating = false;
           renderModal();
           if (window.Notifications) {
-            Notifications.show(err.message || 'Fehler beim Erstellen der Quelle', 'error');
+            Notifications.show(err.message || 'Failed to create source', 'error');
           }
         }
       });
@@ -1271,11 +1271,11 @@ DashboardTabs.Invites = async function (container, guildId) {
       try {
         await API.postInviteLeaderboard(guildId, state.auto_post);
         if (window.Notifications) {
-          Notifications.show('Invite Leaderboard erfolgreich in Discord gepostet!', 'success');
+          Notifications.show('Invite leaderboard posted to Discord successfully!', 'success');
         }
       } catch (err) {
         if (window.Notifications) {
-          Notifications.show(err.message || 'Fehler beim Posten des Leaderboards', 'error');
+          Notifications.show(err.message || 'Failed to post leaderboard', 'error');
         }
       } finally {
         isPostingLeaderboard = false;
@@ -1306,10 +1306,10 @@ DashboardTabs.Invites = async function (container, guildId) {
         if (!sourceId) return;
         const src = state.sources.find(s => String(s.id) === String(sourceId));
         const confirmed = await window.confirmDelete({
-          title: `${src?.name || 'Quelle'} löschen?`,
-          message: 'Das kann nicht rückgängig gemacht werden. Alle Statistiken zu dieser Quelle werden gelöscht.',
-          confirmText: 'Löschen',
-          cancelText: 'Abbrechen'
+          title: `Delete ${src?.name || 'source'}?`,
+          message: 'This cannot be undone. All statistics for this source will be deleted.',
+          confirmText: 'Delete',
+          cancelText: 'Cancel'
         });
         if (!confirmed) return;
         try {
@@ -1317,11 +1317,11 @@ DashboardTabs.Invites = async function (container, guildId) {
           state.sources = state.sources.filter(s => String(s.id) !== String(sourceId));
           render();
           if (window.Notifications) {
-            Notifications.show('Quelle gelöscht', 'success');
+            Notifications.show('Source deleted', 'success');
           }
         } catch (err) {
           if (window.Notifications) {
-            Notifications.show(err.message || 'Fehler beim Löschen der Quelle', 'error');
+            Notifications.show(err.message || 'Failed to delete source', 'error');
           }
         }
       });
