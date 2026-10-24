@@ -156,10 +156,34 @@ class ConfigMixin:
         ai_enabled = global_settings.get("ai_enabled", True) if global_settings else True
 
         invites_cfg = get_config("InviteConfig", guild_id) or {}
+        if not invites_cfg:
+            try:
+                from Components.Database.mongodb import get_db
+                db = get_db()
+                if db is not None:
+                    for coll_name in ["InviteConfig", "invites", "Invite", "InviteSettings"]:
+                        doc = db[coll_name].find_one({"$or": [{"_id": str(guild_id)}, {"_id": int(guild_id)}, {"guild_id": str(guild_id)}, {"guild_id": int(guild_id)}]})
+                        if doc and isinstance(doc, dict):
+                            doc.pop("_id", None)
+                            invites_cfg = doc
+                            break
+            except Exception:
+                pass
+
         resolved_lb = []
         resolved_sources = []
+
+        live_invites_by_code = {}
         try:
-            from Components.Commands.Invite.storage import get_leaderboard, _collection
+            guild_invites = await guild.invites()
+            for ginv in guild_invites:
+                live_invites_by_code[ginv.code] = ginv
+        except Exception:
+            pass
+
+        # 1. Resolve Leaderboard
+        try:
+            from Components.Commands.Invite.storage import get_leaderboard
             invite_lb = get_leaderboard(guild_id, limit=25)
             for entry in invite_lb:
                 uid = entry.get("user_id")
@@ -173,6 +197,11 @@ class ConfigMixin:
                             avatar_url = mem.display_avatar.with_format("png").with_size(64).url
                         else:
                             u = self.bot.get_user(int(uid))
+                            if not u:
+                                try:
+                                    u = await self.bot.fetch_user(int(uid))
+                                except Exception:
+                                    pass
                             if u:
                                 user_name = u.name
                                 avatar_url = u.display_avatar.with_format("png").with_size(64).url
@@ -191,57 +220,98 @@ class ConfigMixin:
                     "fake": entry.get("fake", 0)
                 })
 
-            live_invites_by_code = {}
-            try:
-                guild_invites = await guild.invites()
-                for ginv in guild_invites:
-                    live_invites_by_code[ginv.code] = ginv
-            except Exception:
-                pass
+            # Live fallback if MongoDB leaderboard has 0 entries
+            if not resolved_lb and live_invites_by_code:
+                inviter_uses = {}
+                for ginv in live_invites_by_code.values():
+                    if ginv.inviter and (ginv.uses or 0) > 0:
+                        inviter_uses[ginv.inviter] = inviter_uses.get(ginv.inviter, 0) + (ginv.uses or 0)
+                sorted_inviters = sorted(inviter_uses.items(), key=lambda x: x[1], reverse=True)[:25]
+                for inv_user, u_cnt in sorted_inviters:
+                    avatar_url = inv_user.display_avatar.with_format("png").with_size(64).url if getattr(inv_user, "display_avatar", None) else "https://cdn.discordapp.com/embed/avatars/0.png"
+                    resolved_lb.append({
+                        "user_id": str(inv_user.id),
+                        "name": getattr(inv_user, "display_name", inv_user.name),
+                        "avatar": avatar_url,
+                        "total": u_cnt,
+                        "regular": u_cnt,
+                        "left": 0,
+                        "bonus": 0,
+                        "fake": 0
+                    })
+        except Exception as e:
+            logger.error(f"Invite leaderboard resolution error: {e}")
 
-            # Enrich tracked sources with live Discord invite metrics + InviteTracker records
-            raw_sources = invites_cfg.get("sources", [])
+        # 2. Resolve Tracked Sources
+        try:
+            from Components.Commands.Invite.storage import _collection
             inv_col = _collection()
-            if isinstance(raw_sources, list):
-                for src in raw_sources:
-                    if not isinstance(src, dict):
-                        continue
-                    code = str(src.get("code", "")).strip()
-                    live_inv = live_invites_by_code.get(code)
-                    live_uses = (live_inv.uses or 0) if live_inv else int(src.get("uses", 0) or 0)
-                    active_cnt = 0
-                    left_cnt = 0
-                    if code:
-                        try:
-                            docs = list(inv_col.find({"guild_id": str(guild_id), "code": code}))
-                            for d in docs:
-                                if d.get("left", False):
-                                    left_cnt += 1
-                                else:
-                                    active_cnt += 1
-                        except Exception:
-                            pass
-                    total_joins = max(live_uses, active_cnt + left_cnt, int(src.get("uses", 0) or 0))
-                    if active_cnt == 0 and total_joins > left_cnt:
-                        active_cnt = total_joins - left_cnt
-                    ch_id = str(src.get("channel_id", "") or (live_inv.channel.id if (live_inv and live_inv.channel) else ""))
-                    ch_obj = guild.get_channel(int(ch_id)) if (ch_id and ch_id.isdigit()) else None
-                    ch_name = ch_obj.name if ch_obj else str(src.get("channel_name", "general"))
+            raw_sources = invites_cfg.get("sources", [])
+            if not isinstance(raw_sources, list):
+                raw_sources = []
+
+            for src in raw_sources:
+                if not isinstance(src, dict):
+                    continue
+                code = str(src.get("code", "")).strip()
+                live_inv = live_invites_by_code.get(code)
+                live_uses = (live_inv.uses or 0) if live_inv else int(src.get("uses", 0) or 0)
+                active_cnt = 0
+                left_cnt = 0
+                if code:
+                    try:
+                        docs = list(inv_col.find({"guild_id": {"$in": [str(guild_id), int(guild_id)]}, "code": code}))
+                        for d in docs:
+                            if d.get("left", False):
+                                left_cnt += 1
+                            else:
+                                active_cnt += 1
+                    except Exception:
+                        pass
+                total_joins = max(live_uses, active_cnt + left_cnt, int(src.get("uses", 0) or 0))
+                if active_cnt == 0 and total_joins > left_cnt:
+                    active_cnt = total_joins - left_cnt
+                ch_id = str(src.get("channel_id", "") or (live_inv.channel.id if (live_inv and live_inv.channel) else ""))
+                ch_obj = guild.get_channel(int(ch_id)) if (ch_id and ch_id.isdigit()) else None
+                ch_name = ch_obj.name if ch_obj else str(src.get("channel_name", "general"))
+                resolved_sources.append({
+                    "id": str(src.get("id") or code or secrets.token_hex(4)),
+                    "name": str(src.get("name") or "Quelle"),
+                    "color": str(src.get("color") or "rgb(59, 130, 246)"),
+                    "channel_id": ch_id,
+                    "channel_name": ch_name,
+                    "code": code,
+                    "url": f"https://discord.gg/{code}" if code else str(src.get("url", "")),
+                    "uses": total_joins,
+                    "active": active_cnt,
+                    "left": left_cnt,
+                    "created_at": src.get("created_at", 0)
+                })
+
+            # If raw_sources was empty but the guild has Discord invites, show them as detected sources
+            if not resolved_sources and live_invites_by_code:
+                PRESET_PALETTE = ['rgb(59, 130, 246)', 'rgb(239, 68, 68)', 'rgb(16, 185, 129)', 'rgb(245, 158, 11)', 'rgb(168, 85, 247)', 'rgb(236, 72, 153)']
+                p_idx = 0
+                for code, linv in list(live_invites_by_code.items())[:12]:
+                    ch_name = linv.channel.name if linv.channel else "general"
+                    ch_id = str(linv.channel.id) if linv.channel else ""
+                    uses = linv.uses or 0
                     resolved_sources.append({
-                        "id": str(src.get("id") or code or secrets.token_hex(4)),
-                        "name": str(src.get("name") or "Quelle"),
-                        "color": str(src.get("color") or "rgb(59, 130, 246)"),
+                        "id": code,
+                        "name": f"Einladung #{ch_name}",
+                        "color": PRESET_PALETTE[p_idx % len(PRESET_PALETTE)],
                         "channel_id": ch_id,
                         "channel_name": ch_name,
                         "code": code,
-                        "url": f"https://discord.gg/{code}" if code else str(src.get("url", "")),
-                        "uses": total_joins,
-                        "active": active_cnt,
-                        "left": left_cnt,
-                        "created_at": src.get("created_at", 0)
+                        "url": f"https://discord.gg/{code}",
+                        "uses": uses,
+                        "active": uses,
+                        "left": 0,
+                        "created_at": getattr(linv, "created_at", None).timestamp() if getattr(linv, "created_at", None) else 0
                     })
+                    p_idx += 1
         except Exception as e:
-            logger.error(f"Invite config enrichment error: {e}")
+            logger.error(f"Invite sources resolution error: {e}")
 
         config_data = {
             "settings": settings_cfg,
@@ -1301,7 +1371,7 @@ class ConfigMixin:
                     s_cfg["messages_enabled"] = bool(data["messages_enabled"])
                 save_settings_config(guild_id, s_cfg)
 
-            if (user_perms.get("can_channels") or user_perms.get("can_roles") or user_perms.get("is_admin")) and "invites" in data:
+            if (user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_roles") or user_perms.get("can_overview")) and "invites" in data:
                 from Components.Database.mongodb import get_config, set_config
                 inv_data = data["invites"]
                 inv_cfg = get_config("InviteConfig", guild_id) or {}

@@ -70,8 +70,8 @@ def get_inviter_stats(guild_id: int, inviter_id: int) -> Dict[str, Any]:
     """Get full invite stats for a specific user."""
     col = _collection()
     invited_members = list(col.find({
-        "guild_id": str(guild_id),
-        "inviter_id": str(inviter_id)
+        "guild_id": {"$in": [str(guild_id), int(guild_id)]},
+        "inviter_id": {"$in": [str(inviter_id), int(inviter_id)]}
     }))
     
     regular = 0
@@ -83,10 +83,31 @@ def get_inviter_stats(guild_id: int, inviter_id: int) -> Dict[str, Any]:
             regular += 1
             
     stats_col = _stats_collection()
-    stats_doc = stats_col.find_one({"_id": f"{guild_id}_{inviter_id}"}) or {}
+    stats_doc = stats_col.find_one({
+        "$or": [
+            {"_id": f"{guild_id}_{inviter_id}"},
+            {"guild_id": {"$in": [str(guild_id), int(guild_id)]}, "user_id": {"$in": [str(inviter_id), int(inviter_id)]}}
+        ]
+    }) or {}
     
     bonus = stats_doc.get("bonus", 0)
     fake = stats_doc.get("fake", 0)
+
+    # Check legacy/alternative Invites collection if empty
+    if regular == 0 and bonus == 0 and left == 0:
+        try:
+            db = get_db()
+            legacy = db["Invites"].find_one({
+                "guild_id": {"$in": [str(guild_id), int(guild_id)]},
+                "user_id": {"$in": [str(inviter_id), int(inviter_id)]}
+            })
+            if legacy:
+                regular = int(legacy.get("regular", 0) or 0)
+                bonus = int(legacy.get("bonus", 0) or 0)
+                fake = int(legacy.get("fake", 0) or 0)
+                left = int(legacy.get("left", 0) or 0)
+        except Exception:
+            pass
     
     total = regular + bonus + fake
     
@@ -96,45 +117,94 @@ def get_inviter_stats(guild_id: int, inviter_id: int) -> Dict[str, Any]:
         "bonus": bonus,
         "fake": fake,
         "total": total,
-        "members": [doc.get("member_id") for doc in invited_members if not doc.get("left")]
+        "members": [str(doc.get("member_id")) for doc in invited_members if not doc.get("left")]
     }
 
 def get_leaderboard(guild_id: int, limit: int = 10) -> List[Dict[str, Any]]:
     col = _collection()
     
     pipeline = [
-        {"$match": {"guild_id": str(guild_id), "left": {"$ne": True}}},
+        {"$match": {"guild_id": {"$in": [str(guild_id), int(guild_id)]}, "left": {"$ne": True}}},
         {"$group": {"_id": "$inviter_id", "regular": {"$sum": 1}}}
     ]
     
-    regular_counts = list(col.aggregate(pipeline))
+    regular_counts = []
+    try:
+        regular_counts = list(col.aggregate(pipeline))
+    except Exception:
+        pass
     
     stats_col = _stats_collection()
-    stats_docs = list(stats_col.find({"guild_id": str(guild_id)}))
+    stats_docs = []
+    try:
+        stats_docs = list(stats_col.find({"guild_id": {"$in": [str(guild_id), int(guild_id)]}}))
+    except Exception:
+        pass
     
     user_totals = {}
     for doc in regular_counts:
-        uid = doc["_id"]
-        user_totals[uid] = {"regular": doc["regular"], "bonus": 0, "fake": 0, "left": 0}
+        uid = str(doc.get("_id") or "").strip()
+        if not uid or uid == "None": continue
+        user_totals[uid] = {"regular": int(doc.get("regular", 0) or 0), "bonus": 0, "fake": 0, "left": 0}
         
     left_pipeline = [
-        {"$match": {"guild_id": str(guild_id), "left": True}},
+        {"$match": {"guild_id": {"$in": [str(guild_id), int(guild_id)]}, "left": True}},
         {"$group": {"_id": "$inviter_id", "left": {"$sum": 1}}}
     ]
-    left_counts = list(col.aggregate(left_pipeline))
-    for doc in left_counts:
-        uid = doc["_id"]
-        if uid not in user_totals:
-            user_totals[uid] = {"regular": 0, "bonus": 0, "fake": 0, "left": 0}
-        user_totals[uid]["left"] = doc["left"]
+    try:
+        left_counts = list(col.aggregate(left_pipeline))
+        for doc in left_counts:
+            uid = str(doc.get("_id") or "").strip()
+            if not uid or uid == "None": continue
+            if uid not in user_totals:
+                user_totals[uid] = {"regular": 0, "bonus": 0, "fake": 0, "left": 0}
+            user_totals[uid]["left"] = int(doc.get("left", 0) or 0)
+    except Exception:
+        pass
         
     for doc in stats_docs:
-        uid = doc.get("user_id")
-        if not uid: continue
+        uid = str(doc.get("user_id") or "").strip()
+        if not uid or uid == "None": continue
         if uid not in user_totals:
             user_totals[uid] = {"regular": 0, "bonus": 0, "fake": 0, "left": 0}
-        user_totals[uid]["bonus"] = doc.get("bonus", 0)
-        user_totals[uid]["fake"] = doc.get("fake", 0)
+        user_totals[uid]["bonus"] = int(doc.get("bonus", 0) or 0)
+        user_totals[uid]["fake"] = int(doc.get("fake", 0) or 0)
+
+    # Check alternative/legacy collections in MongoDB (Invites / InviteJoins)
+    try:
+        db = get_db()
+        alt_invs = list(db["Invites"].find({"guild_id": {"$in": [str(guild_id), int(guild_id)]}}))
+        for adoc in alt_invs:
+            uid = str(adoc.get("user_id") or adoc.get("inviter_id") or "").strip()
+            if not uid or uid == "None": continue
+            reg = int(adoc.get("regular", 0) or 0)
+            bon = int(adoc.get("bonus", 0) or 0)
+            fak = int(adoc.get("fake", 0) or 0)
+            lft = int(adoc.get("left", 0) or 0)
+            if uid not in user_totals:
+                user_totals[uid] = {"regular": reg, "bonus": bon, "fake": fak, "left": lft}
+            else:
+                user_totals[uid]["regular"] = max(user_totals[uid]["regular"], reg)
+                user_totals[uid]["bonus"] = max(user_totals[uid]["bonus"], bon)
+                user_totals[uid]["fake"] = max(user_totals[uid]["fake"], fak)
+                user_totals[uid]["left"] = max(user_totals[uid]["left"], lft)
+    except Exception:
+        pass
+
+    try:
+        db = get_db()
+        join_docs = list(db["InviteJoins"].find({"guild_id": {"$in": [str(guild_id), int(guild_id)]}}))
+        for jdoc in join_docs:
+            uid = str(jdoc.get("inviter_id") or "").strip()
+            if not uid or uid == "None": continue
+            if uid not in user_totals:
+                user_totals[uid] = {"regular": 0, "bonus": 0, "fake": 0, "left": 0}
+            if jdoc.get("left"):
+                user_totals[uid]["left"] += 1
+            else:
+                user_totals[uid]["regular"] += 1
+    except Exception:
+        pass
         
     lb = []
     for uid, data in user_totals.items():
@@ -191,22 +261,22 @@ def get_invited_by_code(guild_id: int, code: str) -> List[str]:
     """Get all members invited with a specific code."""
     col = _collection()
     docs = list(col.find({
-        "guild_id": str(guild_id),
+        "guild_id": {"$in": [str(guild_id), int(guild_id)]},
         "code": code,
         "left": {"$ne": True}
     }))
-    return [doc.get("member_id") for doc in docs]
+    return [str(doc.get("member_id")) for doc in docs if doc.get("member_id")]
 
 
 def get_invited_by_user(guild_id: int, inviter_id: int) -> List[Dict[str, str]]:
     """Get all members invited by a specific user."""
     col = _collection()
     docs = list(col.find({
-        "guild_id": str(guild_id),
-        "inviter_id": str(inviter_id),
+        "guild_id": {"$in": [str(guild_id), int(guild_id)]},
+        "inviter_id": {"$in": [str(inviter_id), int(inviter_id)]},
         "left": {"$ne": True}
     }))
-    return [{"member_id": doc.get("member_id"), "code": doc.get("code")} for doc in docs]
+    return [{"member_id": str(doc.get("member_id")), "code": str(doc.get("code") or "")} for doc in docs if doc.get("member_id")]
 
 
 def remove_invite_record(guild_id: int, member_id: int):

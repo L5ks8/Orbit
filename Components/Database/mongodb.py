@@ -49,7 +49,14 @@ def get_config(collection_name: str, guild_id: int, default_config: Dict[str, An
     try:
         db = get_db()
         collection = db[collection_name]
-        doc = collection.find_one({"_id": str(guild_id)})
+        doc = collection.find_one({
+            "$or": [
+                {"_id": str(guild_id)},
+                {"_id": int(guild_id)},
+                {"guild_id": str(guild_id)},
+                {"guild_id": int(guild_id)}
+            ]
+        })
     except Exception as e:
         print(f"[MongoDB] Query error for {collection_name}:{guild_id}: {e}")
         doc = None
@@ -105,6 +112,12 @@ def set_config(collection_name: str, guild_id: int, config: Dict[str, Any]) -> N
         collection = db[collection_name]
         
         doc["_id"] = str(guild_id)
+        doc["guild_id"] = str(guild_id)
         collection.replace_one({"_id": str(guild_id)}, doc, upsert=True)
+        try:
+            if isinstance(guild_id, (int, str)) and str(guild_id).isdigit():
+                collection.delete_one({"_id": int(guild_id)})
+        except Exception:
+            pass
     except Exception as e:
         print(f"[MongoDB] Save error for {collection_name}:{guild_id}: {e}")

@@ -30,7 +30,7 @@ DashboardTabs.Invites = async function (container, guildId) {
       API.getRoles(guildId)
     ]);
     if (cfgRes.status === 'fulfilled' && cfgRes.value) {
-      cfgData = cfgRes.value?.config?.invites || {};
+      cfgData = cfgRes.value?.config?.invites || cfgRes.value?.invites || cfgRes.value?.config?.InviteConfig || {};
       if (Array.isArray(cfgRes.value?.channels) && cfgRes.value.channels.length > 0) {
         allChannels = cfgRes.value.channels;
       }
