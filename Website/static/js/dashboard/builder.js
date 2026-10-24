@@ -739,7 +739,7 @@ DashboardTabs.Builder = async function(container, guildId) {
             <button type="button" id="ai-quick-add-btn" class="relative flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-[color,background-color,transform] active:scale-[0.96] before:absolute before:inset-[-2px] before:content-[''] text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04]" title="Hängen Sie ein Bild an" aria-label="Hängen Sie ein Bild an">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-[18px] h-[18px]"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
             </button>
-            <div id="ai-quick-add-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${quickAddDropdownOpen ? '' : 'hidden'} absolute bottom-11 left-0 w-72 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 z-[99999] space-y-1 text-left">
+            <div id="ai-quick-add-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${quickAddDropdownOpen ? '' : 'hidden'} absolute bottom-full mb-2 left-0 w-72 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 z-[99999] space-y-1 text-left orbit-dropup">
               <button type="button" id="ai-trigger-image-upload" class="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-lg text-[12.5px] text-white hover:bg-white/[0.08] transition-colors">
                 <span class="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
@@ -763,7 +763,7 @@ DashboardTabs.Builder = async function(container, guildId) {
           <div class="flex items-center gap-1.5">
             <div class="relative">
               <button type="button" id="ai-model-picker-btn" class="hidden sm:inline-flex items-center gap-1 px-2.5 h-9 rounded-lg text-[12.5px] font-medium text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04] transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" title="Modell auswählen" aria-label="Modell auswählen">${escapeHtml(selectedModelLabel)}<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-3 h-3 opacity-60 transition-transform duration-150 "><path d="m6 9 6 6 6-6"></path></svg></button>
-              <div id="ai-model-picker-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${modelDropdownOpen ? '' : 'hidden'} absolute bottom-11 right-0 w-60 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 z-[99999] space-y-0.5 text-left">
+              <div id="ai-model-picker-menu" data-lenis-prevent="true" class="orbit-dropdown-menu ${modelDropdownOpen ? '' : 'hidden'} absolute bottom-full mb-2 right-0 w-64 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 z-[99999] space-y-0.5 text-left orbit-dropup">
                 ${MODELS.map(m => `
                   <button type="button" data-select-model="${escapeHtml(m.id)}" data-select-model-label="${escapeHtml(m.label)}" class="w-full flex flex-col items-start px-3 py-2 rounded-lg text-left transition-colors ${selectedModel === m.id ? 'bg-white/[0.08] text-white' : 'text-neutral-300 hover:bg-white/[0.04]'}">
                     <span class="text-[12.5px] font-semibold">${escapeHtml(m.label)}</span>
@@ -924,9 +924,9 @@ DashboardTabs.Builder = async function(container, guildId) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                 </button>
               </div>
-              <div class="relative mt-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                <input data-chat-search="true" placeholder="Chats durchsuchen…" class="w-full bg-white/[0.03] border border-white/[0.06] rounded-lg pl-8 pr-8 h-9 text-base sm:text-[13px] text-white placeholder:text-neutral-500 focus:outline-none focus:bg-white/[0.05] focus:border-white/[0.1] transition-[background-color,border-color]" type="text" value="${escapeHtml(chatSearchQuery)}">
+              <div class="orbit-searchbar-pill flex items-center gap-2 px-2.5 h-9 rounded-xl bg-neutral-950/80 border border-neutral-800/80 hover:border-neutral-700 focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all mt-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                <input data-chat-search="true" placeholder="Chats durchsuchen…" class="orbit-searchbar-input w-full bg-transparent text-sm sm:text-xs text-white placeholder:text-neutral-500 focus:outline-none" type="text" value="${escapeHtml(chatSearchQuery)}">
               </div>
             </div>
             <div class="flex-1 overflow-y-auto overscroll-contain py-1 scrollbar-thin" data-lenis-prevent="true">
@@ -975,9 +975,9 @@ DashboardTabs.Builder = async function(container, guildId) {
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-left-close w-4 h-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="m16 15-3-3 3-3"></path></svg>
                   </button>
                 </div>
-                <div class="relative mt-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                  <input id="ai-desktop-chat-search" data-chat-search="true" placeholder="Chats durchsuchen…" class="w-full bg-white/[0.03] border border-white/[0.06] rounded-lg pl-8 pr-8 h-9 text-base sm:text-[13px] text-white placeholder:text-neutral-500 focus:outline-none focus:bg-white/[0.05] focus:border-white/[0.1] transition-[background-color,border-color]" type="text" value="${escapeHtml(chatSearchQuery)}">
+                <div class="orbit-searchbar-pill flex items-center gap-2 px-2.5 h-9 rounded-xl bg-neutral-950/80 border border-neutral-800/80 hover:border-neutral-700 focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all mt-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                  <input id="ai-desktop-chat-search" data-chat-search="true" placeholder="Chats durchsuchen…" class="orbit-searchbar-input w-full bg-transparent text-sm sm:text-xs text-white placeholder:text-neutral-500 focus:outline-none" type="text" value="${escapeHtml(chatSearchQuery)}">
                 </div>
               </div>
               <div id="ai-desktop-chat-list" data-lenis-prevent="true" class="flex-1 overflow-y-auto overscroll-contain py-1 scrollbar-thin">

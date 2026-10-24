@@ -205,8 +205,11 @@ DashboardTabs.Roles = async function (container, guildId) {
                           </div>
                         </div>
                         <div id="autoroles-menu" class="hidden absolute z-40 left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden">
-                          <div class="p-2 border-b border-neutral-800">
-                            <input type="text" id="autoroles-search" placeholder="Search roles..." class="w-full h-8 px-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500">
+                          <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
+                            <div class="orbit-searchbar-pill flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-950/80 border border-neutral-800/80 text-xs focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="autoroles-search" placeholder="Rolle suchen..." class="orbit-searchbar-input bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs" autocomplete="off">
+                            </div>
                           </div>
                           <div id="autoroles-options" class="max-h-52 overflow-y-auto p-1 space-y-0.5"></div>
                         </div>
@@ -1505,7 +1508,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                                 <button type="button" data-rr-emoji-btn="${idx}" class="h-9 w-11 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-neutral-600 flex items-center justify-center text-base transition-colors" title="Emoji wählen">
                                   ${escapeHtml(comp.emoji || '✨')}
                                 </button>
-                                <div data-lenis-prevent="true" class="orbit-dropdown-menu ${isEmojiOpen ? '' : 'hidden'} absolute left-0 bottom-11 z-[99999] w-56 p-2 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl space-y-2">
+                                <div data-lenis-prevent="true" class="orbit-dropdown-menu ${isEmojiOpen ? '' : 'hidden'} absolute left-0 bottom-full mb-2 z-[99999] w-56 p-2 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl space-y-2 orbit-dropup">
                                   <div class="grid grid-cols-8 gap-1">
                                     ${QUICK_EMOJIS.map(em => `
                                       <button type="button" data-rr-pick-emoji="${idx}" data-emoji-val="${em}" class="h-6 w-6 rounded hover:bg-neutral-800 flex items-center justify-center text-sm">${em}</button>
