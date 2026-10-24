@@ -200,6 +200,11 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/polls/{id}", dashboard.api_save_poll)
     app.router.add_post("/api/polls/{id}/{poll_id}/end", dashboard.api_end_poll)
     app.router.add_delete("/api/polls/{id}/{poll_id}", dashboard.api_delete_poll)
+    app.router.add_get("/api/giveaways/{id}", dashboard.api_get_giveaways)
+    app.router.add_post("/api/giveaways/{id}", dashboard.api_save_giveaway)
+    app.router.add_post("/api/giveaways/{id}/{gw_id}/end", dashboard.api_end_giveaway)
+    app.router.add_post("/api/giveaways/{id}/{gw_id}/reroll", dashboard.api_reroll_giveaway)
+    app.router.add_delete("/api/giveaways/{id}/{gw_id}", dashboard.api_delete_giveaway)
 
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)
 

@@ -2385,3 +2385,337 @@ class ActionsMixin:
             return web.json_response({"success": True})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
+    def _normalize_giveaway_entry(self, guild, gw_id: str, entry: dict) -> dict:
+        channel_id = str(entry.get("channel_id") or "")
+        channel_name = entry.get("channel_name")
+        if not channel_name and guild and channel_id.isdigit():
+            ch = guild.get_channel(int(channel_id))
+            channel_name = ch.name if ch else "unbekannt"
+        if not channel_name:
+            channel_name = "unbekannt"
+
+        role_id = str(entry.get("required_role_id") or "")
+        role_name = entry.get("required_role_name")
+        if not role_name and guild and role_id.isdigit():
+            r = guild.get_role(int(role_id))
+            role_name = r.name if r else ""
+        if not role_name:
+            role_name = ""
+
+        is_ended = bool(entry.get("ended") or entry.get("closed"))
+        is_draft = bool(entry.get("draft") or entry.get("is_draft"))
+        status = "draft" if is_draft else ("ended" if is_ended else "active")
+
+        entries = entry.get("entries") or entry.get("participants") or []
+        picked_winners = entry.get("picked_winners") or entry.get("winners_list") or []
+
+        resolved_winners = []
+        for winner in picked_winners:
+            if isinstance(winner, dict):
+                resolved_winners.append(winner)
+            else:
+                wid_str = str(winner)
+                uname = wid_str
+                avatar = None
+                if guild and wid_str.isdigit():
+                    mem = guild.get_member(int(wid_str))
+                    if mem:
+                        uname = mem.display_name or mem.name
+                        avatar = mem.display_avatar.url if mem.display_avatar else None
+                resolved_winners.append({
+                    "id": wid_str,
+                    "name": uname,
+                    "avatar": avatar
+                })
+
+        resolved_participants = []
+        for p in entries:
+            if isinstance(p, dict):
+                resolved_participants.append(p)
+            else:
+                pid_str = str(p)
+                uname = pid_str
+                avatar = None
+                if guild and pid_str.isdigit():
+                    mem = guild.get_member(int(pid_str))
+                    if mem:
+                        uname = mem.display_name or mem.name
+                        avatar = mem.display_avatar.url if mem.display_avatar else None
+                resolved_participants.append({
+                    "id": pid_str,
+                    "name": uname,
+                    "avatar": avatar
+                })
+
+        msg_id = str(entry.get("message_id") or "")
+        jump_url = None
+        if guild and channel_id and msg_id and msg_id != "0":
+            jump_url = f"https://discord.com/channels/{guild.id}/{channel_id}/{msg_id}"
+
+        raw_color = entry.get("color", 0x5865F2)
+        if isinstance(raw_color, int):
+            color_hex = f"#{raw_color:06x}"
+        elif isinstance(raw_color, str) and not raw_color.startswith("#"):
+            color_hex = f"#{raw_color}"
+        else:
+            color_hex = str(raw_color or "#5865F2")
+
+        end_ts = entry.get("end_timestamp") or entry.get("end_time") or 0
+
+        return {
+            "id": str(entry.get("giveaway_id") or gw_id),
+            "giveaway_id": str(entry.get("giveaway_id") or gw_id),
+            "guild_id": str(guild.id if guild else ""),
+            "prize": str(entry.get("prize") or "Giveaway"),
+            "description": str(entry.get("description") or ""),
+            "channel_id": channel_id,
+            "channel_name": channel_name,
+            "message_id": msg_id,
+            "winners_count": int(entry.get("winners") or entry.get("winners_count") or 1),
+            "status": status,
+            "ended": is_ended,
+            "draft": is_draft,
+            "color": color_hex,
+            "required_role_id": role_id,
+            "required_role_name": role_name,
+            "end_timestamp": int(end_ts) if end_ts else 0,
+            "created_at": entry.get("created_at") or int(time.time()),
+            "author_id": str(entry.get("author_id") or ""),
+            "participants": resolved_participants,
+            "participants_count": len(entries),
+            "picked_winners": resolved_winners,
+            "jump_url": jump_url
+        }
+
+    async def api_get_giveaways(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild id"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_channels") or user_perms.get("can_messages") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Commands.Giveaway._storage import load_giveaways
+            data = load_giveaways(guild_id) or {}
+            giveaways = []
+            for gw_id, entry in data.items():
+                if isinstance(entry, dict):
+                    giveaways.append(self._normalize_giveaway_entry(guild, str(gw_id), entry))
+
+            giveaways.sort(key=lambda x: x.get("created_at") or x.get("end_timestamp") or 0, reverse=True)
+            return web.json_response({"success": True, "giveaways": giveaways})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_save_giveaway(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild id"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "Ungültiger JSON-Body."}, status=400)
+
+        prize = str(body.get("prize", "")).strip()
+        if not prize:
+            return web.json_response({"error": "Preis darf nicht leer sein."}, status=400)
+
+        is_draft = bool(body.get("draft") or body.get("is_draft"))
+        channel_id_raw = body.get("channel_id")
+        winners_count = max(1, min(25, int(body.get("winners_count") or body.get("winners") or 1)))
+        color_raw = body.get("color") or "#5865F2"
+        required_role_id = body.get("required_role_id")
+        req_role_int = int(required_role_id) if required_role_id and str(required_role_id).isdigit() else None
+        description = str(body.get("description", "")).strip()
+
+        duration_seconds = int(body.get("duration_seconds") or 3600)
+        if duration_seconds < 10:
+            duration_seconds = 10
+        if duration_seconds > 86400 * 30:
+            duration_seconds = 86400 * 30
+
+        now = int(time.time())
+        end_time = now + duration_seconds
+
+        session = await self.get_user_session(request)
+        author_id = int(session["id"]) if session and str(session.get("id", "")).isdigit() else 0
+
+        from Components.Commands.Giveaway._storage import generate_giveaway_id, save_giveaways, load_giveaways
+        from Components.Commands.Giveaway.giveaway import send_giveaway_message
+
+        gw_id = str(body.get("giveaway_id") or generate_giveaway_id(guild_id))
+
+        try:
+            if isinstance(color_raw, str):
+                c_clean = color_raw.lstrip("#")
+                color_int = int(c_clean, 16)
+            else:
+                color_int = int(color_raw)
+        except Exception:
+            color_int = 0x5865F2
+
+        entry = {
+            "giveaway_id": gw_id,
+            "channel_id": int(channel_id_raw) if channel_id_raw and str(channel_id_raw).isdigit() else 0,
+            "message_id": 0,
+            "prize": prize,
+            "description": description,
+            "winners": winners_count,
+            "winners_count": winners_count,
+            "end_timestamp": end_time,
+            "entries": [],
+            "ended": False,
+            "draft": is_draft,
+            "author_id": author_id,
+            "required_role_id": req_role_int,
+            "color": color_int,
+            "created_at": now
+        }
+
+        if is_draft:
+            data = load_giveaways(guild_id) or {}
+            data[gw_id] = entry
+            save_giveaways(guild_id, data)
+            return web.json_response({
+                "success": True,
+                "giveaway": self._normalize_giveaway_entry(guild, gw_id, entry)
+            })
+
+        if not entry["channel_id"]:
+            return web.json_response({"error": "Bitte wähle einen Zielkanal für das Giveaway aus."}, status=400)
+
+        channel = guild.get_channel(entry["channel_id"])
+        if not channel:
+            try:
+                channel = await guild.fetch_channel(entry["channel_id"])
+            except Exception:
+                channel = None
+
+        if not channel:
+            return web.json_response({"error": "Kanal wurde auf dem Discord-Server nicht gefunden."}, status=404)
+
+        try:
+            msg = await send_giveaway_message(channel, entry, guild_id)
+            if msg:
+                entry["message_id"] = msg.id
+                entry["channel_id"] = msg.channel.id
+        except Exception as e:
+            return web.json_response({"error": f"Fehler beim Senden in Discord: {str(e)}"}, status=500)
+
+        data = load_giveaways(guild_id) or {}
+        data[gw_id] = entry
+        save_giveaways(guild_id, data)
+
+        return web.json_response({
+            "success": True,
+            "giveaway": self._normalize_giveaway_entry(guild, gw_id, entry)
+        })
+
+    async def api_end_giveaway(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        gw_id = request.match_info.get("gw_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not gw_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Commands.Giveaway._storage import get_giveaway
+            from Components.Commands.Giveaway.giveaway import end_giveaway_logic
+
+            entry = get_giveaway(guild_id, gw_id)
+            if not entry:
+                return web.json_response({"error": "Giveaway wurde nicht gefunden."}, status=404)
+
+            await end_giveaway_logic(self.bot, guild_id, entry)
+            updated = get_giveaway(guild_id, gw_id) or entry
+            updated["ended"] = True
+
+            return web.json_response({
+                "success": True,
+                "giveaway": self._normalize_giveaway_entry(guild, gw_id, updated)
+            })
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_reroll_giveaway(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        gw_id = request.match_info.get("gw_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not gw_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Commands.Giveaway._storage import get_giveaway
+            from Components.Commands.Giveaway.giveaway import reroll_giveaway_logic
+
+            entry = get_giveaway(guild_id, gw_id)
+            if not entry:
+                return web.json_response({"error": "Giveaway wurde nicht gefunden."}, status=404)
+
+            winners_count = entry.get("winners", 1)
+            try:
+                body = await request.json()
+                if body and "winners" in body:
+                    winners_count = int(body["winners"])
+            except Exception:
+                pass
+
+            res = await reroll_giveaway_logic(self.bot, guild_id, entry, winners_count=winners_count)
+            if "error" in res:
+                return web.json_response({"error": res["error"]}, status=400)
+
+            updated = get_giveaway(guild_id, gw_id) or entry
+            return web.json_response({
+                "success": True,
+                "winners": res.get("picked_winners", []),
+                "giveaway": self._normalize_giveaway_entry(guild, gw_id, updated)
+            })
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_delete_giveaway(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        gw_id = request.match_info.get("gw_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not gw_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("can_channels") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            from Components.Commands.Giveaway._storage import delete_giveaway_entry
+            removed = delete_giveaway_entry(guild_id, gw_id)
+            if removed and isinstance(removed, dict):
+                cid = removed.get("channel_id")
+                mid = removed.get("message_id")
+                if cid and mid and not removed.get("ended"):
+                    try:
+                        ch = guild.get_channel(int(cid))
+                        if ch:
+                            msg = await ch.fetch_message(int(mid))
+                            await msg.delete()
+                    except Exception:
+                        pass
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)

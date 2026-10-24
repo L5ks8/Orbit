@@ -341,6 +341,89 @@ async def end_giveaway_logic(bot: commands.Bot, guild_id: int, entry: dict) -> b
 
     return True
 
+async def reroll_giveaway_logic(bot: commands.Bot, guild_id: int, entry_or_id, winners_count: int = 1) -> dict:
+    if isinstance(entry_or_id, dict):
+        entry = entry_or_id
+        gw_id = entry.get("giveaway_id") or "Giveaway"
+    else:
+        gw_id = str(entry_or_id)
+        entry = get_giveaway(guild_id, gw_id)
+
+    if not entry:
+        return {"error": f"Giveaway `{gw_id}` wurde nicht gefunden."}
+
+    if not entry.get("ended"):
+        return {"error": "Giveaway ist noch aktiv. Beende es zuerst, bevor neue Gewinner ausgelost werden."}
+
+    guild = bot.get_guild(guild_id)
+    if not guild:
+        try:
+            guild = await bot.fetch_guild(guild_id)
+        except Exception:
+            return {"error": "Server nicht gefunden."}
+
+    valid_entrants = []
+    for uid in entry.get("entries", []):
+        member = guild.get_member(uid)
+        if not member:
+            try:
+                member = await guild.fetch_member(uid)
+            except Exception:
+                member = None
+        if member and not member.bot:
+            req_role_id = entry.get("required_role_id")
+            if req_role_id:
+                role = guild.get_role(req_role_id)
+                if role and role not in member.roles:
+                    continue
+            valid_entrants.append(uid)
+
+    if not valid_entrants:
+        return {"error": "Keine gültigen Teilnehmer vorhanden, um Gewinner auszulosen."}
+
+    k = max(1, min(int(winners_count or entry.get("winners", 1) or 1), len(valid_entrants)))
+    picked_winners = random.sample(valid_entrants, k)
+    entry["picked_winners"] = picked_winners
+    update_giveaway_entry(guild_id, entry)
+
+    channel = guild.get_channel(entry.get("channel_id"))
+    if not channel:
+        try:
+            channel = await guild.fetch_channel(entry.get("channel_id"))
+        except Exception:
+            channel = None
+
+    winners_display = " · ".join(f"<@{u}>" for u in picked_winners)
+    msg = None
+    if channel and entry.get("message_id"):
+        try:
+            msg = await channel.fetch_message(int(entry["message_id"]))
+            if msg:
+                await update_giveaway_message(msg, guild_id, entry, ended=True, winners_display=winners_display)
+        except Exception:
+            pass
+
+    if channel:
+        try:
+            color = resolve_color(entry.get("color", 0x5865F2))
+            jump_url = msg.jump_url if msg else None
+            desc = f"Herzlichen Glückwunsch {winners_display}! Du hast **{entry['prize']}** gewonnen!"
+            if jump_url:
+                desc += f"\n\n[Zum Giveaway springen]({jump_url})"
+            reroll_embed = discord.Embed(
+                title="🎉 Giveaway neu ausgelost!",
+                description=desc,
+                color=color
+            )
+            reroll_embed.add_field(name="Preis", value=str(entry['prize']), inline=True)
+            reroll_embed.add_field(name="Neue(r) Gewinner", value=winners_display, inline=True)
+            reroll_embed.set_footer(text=f"Giveaway ID: #{entry.get('giveaway_id')}")
+            await channel.send(embed=reroll_embed, allowed_mentions=discord.AllowedMentions(users=True))
+        except Exception as e:
+            print(f"[Giveaway] Failed to send reroll embed: {e}")
+
+    return {"success": True, "picked_winners": picked_winners, "winners_display": winners_display, "entry": entry}
+
 class GiveawayCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot

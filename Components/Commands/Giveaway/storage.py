@@ -96,6 +96,25 @@ def update_giveaway_entry(guild_id: int, entry: Dict[str, Any]) -> None:
     data[gid] = entry
     save_giveaways(guild_id, data)
 
+def delete_giveaway_entry(guild_id: int, giveaway_id: str) -> Dict[str, Any] | None:
+    data = load_giveaways(guild_id)
+    clean_gid = giveaway_id.strip().upper()
+    target_k = None
+    if clean_gid in data:
+        target_k = clean_gid
+    elif not clean_gid.startswith("G-") and f"G-{clean_gid}" in data:
+        target_k = f"G-{clean_gid}"
+    else:
+        for k, v in data.items():
+            if k == giveaway_id or (isinstance(v, dict) and v.get("giveaway_id") == giveaway_id):
+                target_k = k
+                break
+    if target_k:
+        removed = data.pop(target_k, None)
+        save_giveaways(guild_id, data)
+        return removed
+    return None
+
 def get_all_active_giveaways() -> List[tuple[int, Dict[str, Any]]]:
     seen_giveaways = set()
     active = []

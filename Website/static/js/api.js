@@ -599,6 +599,45 @@ const API = {
     });
     this.invalidateCache(`polls_${guildId}`);
     return res;
+  },
+
+  // Giveaways (Werbegeschenke)
+  async getGiveaways(guildId, force = false) {
+    return await this.cachedRequest(`giveaways_${guildId}`, () => this.request(`/api/giveaways/${guildId}`), force, 60000);
+  },
+
+  async saveGiveaway(guildId, payload) {
+    const res = await this.request(`/api/giveaways/${guildId}`, {
+      method: 'POST',
+      body: payload
+    });
+    this.invalidateCache(`giveaways_${guildId}`);
+    return res;
+  },
+
+  async endGiveaway(guildId, gwId) {
+    const res = await this.request(`/api/giveaways/${guildId}/${encodeURIComponent(gwId)}/end`, {
+      method: 'POST'
+    });
+    this.invalidateCache(`giveaways_${guildId}`);
+    return res;
+  },
+
+  async rerollGiveaway(guildId, gwId, payload = {}) {
+    const res = await this.request(`/api/giveaways/${guildId}/${encodeURIComponent(gwId)}/reroll`, {
+      method: 'POST',
+      body: payload
+    });
+    this.invalidateCache(`giveaways_${guildId}`);
+    return res;
+  },
+
+  async deleteGiveaway(guildId, gwId) {
+    const res = await this.request(`/api/giveaways/${guildId}/${encodeURIComponent(gwId)}`, {
+      method: 'DELETE'
+    });
+    this.invalidateCache(`giveaways_${guildId}`);
+    return res;
   }
 };
 
