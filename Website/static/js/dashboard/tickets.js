@@ -766,7 +766,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
         if (clearBtn) {
           clearBtn.onclick = async () => {
             const count = state.closedTickets.length;
-            if (!confirm(`Möchtest du wirklich alle ${count} geschlossenen Tickets aus dem Dashboard löschen?`)) return;
+            const confirmed = window.confirmDelete ? await window.confirmDelete({
+              title: 'Geschlossene Tickets leeren?',
+              message: `Möchtest du wirklich alle ${count} geschlossenen Tickets aus dem Dashboard löschen? Das kann nicht rückgängig gemacht werden.`,
+              confirmText: 'Löschen',
+              cancelText: 'Abbrechen'
+            }) : confirm(`Möchtest du wirklich alle ${count} geschlossenen Tickets aus dem Dashboard löschen?`);
+            if (!confirmed) return;
             try {
               if (API.clearClosedTickets) {
                 await API.clearClosedTickets(guildId);
@@ -896,7 +902,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           const subId = btn.getAttribute('data-sub-delete');
-          if (!confirm('Dieses geschlossene Ticket aus dem Dashboard löschen?')) return;
+          const confirmed = window.confirmDelete ? await window.confirmDelete({
+            title: 'Geschlossenes Ticket löschen?',
+            message: 'Möchtest du dieses geschlossene Ticket wirklich aus dem Dashboard entfernen?',
+            confirmText: 'Löschen',
+            cancelText: 'Abbrechen'
+          }) : confirm('Dieses geschlossene Ticket aus dem Dashboard löschen?');
+          if (!confirmed) return;
           try {
             if (API.clearClosedTickets) {
               await API.clearClosedTickets(guildId, subId);

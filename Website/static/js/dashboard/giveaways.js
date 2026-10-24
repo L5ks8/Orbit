@@ -413,7 +413,13 @@ DashboardTabs.Giveaways = async function(container, guildId) {
     }
 
     async function handleDeleteGiveaway(gw) {
-      if (!confirm(`Bist du sicher, dass du das Giveaway für "${gw.prize}" löschen möchtest?`)) return;
+      const confirmed = window.confirmDelete ? await window.confirmDelete({
+        title: `Giveaway für "${gw.prize}" löschen?`,
+        message: 'Bist du sicher, dass du dieses Giveaway löschen möchtest? Das kann nicht rückgängig gemacht werden.',
+        confirmText: 'Löschen',
+        cancelText: 'Abbrechen'
+      }) : confirm(`Bist du sicher, dass du das Giveaway für "${gw.prize}" löschen möchtest?`);
+      if (!confirmed) return;
       try {
         const res = await API.deleteGiveaway(guildId, gw.id);
         if (res?.error) {
