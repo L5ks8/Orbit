@@ -3,12 +3,17 @@ from Components.Commands._utils import ORBIT_COLOR, make_embed, make_v2_card, In
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Voice.voice import voice_group
+from Components.Commands.Voice._permissions import can_manage_channel
 
 async def _do_vc_unlock(ctx: InteractionContext, channel: discord.VoiceChannel | None, reason: str):
     await ctx.defer()
     target_channel = channel or (ctx.author.voice.channel if ctx.author.voice else None)
     if not target_channel:
         return await ctx.send(embed=make_embed("Please specify a voice channel or join one first.", discord.Color.red()), ephemeral=True)
+
+    allowed, err_msg = can_manage_channel(ctx.author, target_channel)
+    if not allowed:
+        return await ctx.send(embed=make_embed(err_msg, discord.Color.red()), ephemeral=True)
 
     overwrite = target_channel.overwrites_for(ctx.guild.default_role)
     if overwrite.connect is True or (overwrite.connect is None and target_channel.permissions_for(ctx.guild.default_role).connect):

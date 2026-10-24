@@ -4,12 +4,17 @@ from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Voice._storage import remove_from_vcban
 from Components.Commands.Voice.voice import voice_group
+from Components.Commands.Voice._permissions import can_voice_ban
 
 
 async def _do_vc_unban(ctx: InteractionContext, user: discord.User, reason: str):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be run inside a server.", discord.Color.red()), ephemeral=True)
+
+    allowed, err_msg = can_voice_ban(ctx.author)
+    if not allowed:
+        return await ctx.send(embed=make_embed(err_msg, discord.Color.red()), ephemeral=True)
 
     success = remove_from_vcban(ctx.guild.id, user.id)
     if not success:

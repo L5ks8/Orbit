@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from typing import Union, Optional
 from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands.Voice._permissions import can_voice_move
 from Components.emojis import Emojis
 
 async def _resolve_channel(ctx: InteractionContext, channel_raw: Union[str, discord.VoiceChannel, discord.StageChannel]) -> Optional[Union[discord.VoiceChannel, discord.StageChannel]]:
@@ -30,13 +31,17 @@ async def _resolve_channel(ctx: InteractionContext, channel_raw: Union[str, disc
     return None
 
 async def _do_vc_move(
-    interaction: discord.Interaction, target_raw: Union[str, discord.Member],
+    ctx: InteractionContext, target_raw: Union[str, discord.Member],
     channel_raw: Union[str, discord.VoiceChannel, discord.StageChannel],
     reason: str = "No reason provided"
 ):
     await ctx.defer()
     if not ctx.guild:
         return await ctx.send(embed=make_embed("This command must be used in a server.", discord.Color.red()), ephemeral=True)
+ 
+    allowed, err_msg = can_voice_move(ctx.author)
+    if not allowed:
+        return await ctx.send(embed=make_embed(err_msg, discord.Color.red()), ephemeral=True)
 
     dest_channel = await _resolve_channel(ctx, channel_raw)
     if not dest_channel:

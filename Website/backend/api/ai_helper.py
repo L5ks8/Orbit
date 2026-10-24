@@ -276,7 +276,7 @@ class AIHelperMixin:
         except Exception:
             pass
 
-    def _build_guild_context_prompt(self, guild: discord.Guild) -> str:
+    def _build_guild_context_prompt(self, guild: discord.Guild, user_query: str = "") -> str:
         guild_id = guild.id
         cats = [f"{c.name}({c.id})" for c in sorted(guild.categories, key=lambda x: x.position)[:25]]
         txt_chs = [
@@ -285,13 +285,90 @@ class AIHelperMixin:
         ]
         vc_chs = [
             f"🔊{c.name}({c.id})"
-            for c in sorted(guild.voice_channels, key=lambda x: x.position)[:20]
+            for c in sorted(guild.voice_channels, key=lambda x: x.position)[:25]
         ]
-        roles_list = [f"@{guild.default_role.name}({guild.default_role.id})"] + [
-            f"@{r.name}({r.id})"
-            for r in sorted(guild.roles, key=lambda x: x.position, reverse=True)
-            if not r.is_default()
-        ][:35]
+
+        def _format_role_permissions(role: discord.Role) -> str:
+            perms = role.permissions
+            if perms.administrator:
+                return "Administrator (All Permissions - Can lock/unlock/manage channels, mute, move members, ban, kick, etc.)"
+            
+            key_perms = []
+            if perms.manage_channels:
+                key_perms.append("ManageChannels (Can lock/unlock/edit voice and text channels)")
+            if perms.manage_guild:
+                key_perms.append("ManageServer")
+            if perms.manage_roles:
+                key_perms.append("ManageRoles")
+            if perms.manage_webhooks:
+                key_perms.append("ManageWebhooks")
+            if perms.view_audit_log:
+                key_perms.append("ViewAuditLog")
+            if perms.move_members:
+                key_perms.append("MoveMembers (Can move/disconnect voice members)")
+            if perms.mute_members:
+                key_perms.append("MuteMembers (Can mute members in voice)")
+            if perms.deafen_members:
+                key_perms.append("DeafenMembers")
+            if perms.ban_members:
+                key_perms.append("BanMembers")
+            if perms.kick_members:
+                key_perms.append("KickMembers")
+            if perms.moderate_members:
+                key_perms.append("TimeoutMembers")
+            if perms.manage_messages:
+                key_perms.append("ManageMessages")
+            if perms.mention_everyone:
+                key_perms.append("MentionEveryone")
+            if perms.priority_speaker:
+                key_perms.append("PrioritySpeaker")
+            if perms.manage_expressions:
+                key_perms.append("ManageExpressions")
+                
+            if not key_perms:
+                return "Standard Member (No elevated or channel management permissions)"
+            return ", ".join(key_perms)
+
+        # Scan for role IDs or mentions in user query to provide direct high-priority lookup
+        import re
+        extracted_role_ids = set()
+        if user_query:
+            for num in re.findall(r"\b\d{17,20}\b", user_query):
+                try:
+                    extracted_role_ids.add(int(num))
+                except Exception:
+                    pass
+
+        queried_roles_info = []
+        for rid in extracted_role_ids:
+            r_obj = guild.get_role(rid)
+            if r_obj:
+                p = r_obj.permissions
+                can_lock = p.administrator or p.manage_channels
+                can_move = p.administrator or p.move_members
+                can_mute = p.administrator or p.mute_members
+                queried_roles_info.append(
+                    f"- @{r_obj.name} (ID: {r_obj.id}, Position: {r_obj.position}):\n"
+                    f"    * Can Lock/Manage Channels: {'YES (Has Permission)' if can_lock else 'NO (Missing Manage Channels / Admin)'}\n"
+                    f"    * Can Move Members: {'YES' if can_move else 'NO'}\n"
+                    f"    * Can Mute Members: {'YES' if can_mute else 'NO'}\n"
+                    f"    * Detailed Permissions: [{_format_role_permissions(r_obj)}]"
+                )
+            else:
+                queried_roles_info.append(f"- Role ID {rid}: (Role not found on this server)")
+
+        queried_roles_section = ""
+        if queried_roles_info:
+            queried_roles_section = (
+                "\nTARGET ROLES SPECIFIED BY USER IN INQUIRY (PRIORITY LOOKUP):\n" +
+                "\n".join(queried_roles_info) + "\n"
+            )
+
+        all_guild_roles = sorted(guild.roles, key=lambda x: x.position, reverse=True)
+        roles_list = []
+        for r in all_guild_roles[:120]:
+            roles_list.append(f"@{r.name} (ID: {r.id}, Pos: {r.position}) -> [{_format_role_permissions(r)}]")
+        roles_formatted = "\n  - " + "\n  - ".join(roles_list)
 
         welcome_cfg = load_welcome_config(guild_id)
         goodbye_cfg = load_goodbye_config(guild_id)
@@ -437,10 +514,19 @@ CRITICAL INSTRUCTION - STRICT USER INTENT GATING (DO ONLY WHAT WAS ASKED):
 - DO ONLY WHAT THE USER EXPLICITLY ASKS FOR. Never assume, configure, or volunteer unsolicited setup actions!
 - INFORMATIONAL / ANALYTICAL / QUESTIONS:
   * When the user asks a question, checks moderation history, asks what the most common actions/reasons are, requests an audit or analytics, or asks how something works:
-    -> Provide ONLY a direct, factual, well-structured answer in "reply" in English.
+    -> Provide ONLY a direct, factual, well-structured answer in "reply" in the user's language.
     -> "actions" MUST BE AN EMPTY ARRAY: `"actions": []`.
     -> DO NOT create or suggest unprompted actions (e.g. do NOT configure automod, do NOT deploy tickets, do NOT configure logs unless explicitly requested).
     -> DO NOT mention the "Build" button if no actions were requested.
+- ROLES & PERMISSIONS INQUIRIES:
+  * When the user asks which roles have a permission, or whether specific roles can perform an action (e.g., "hat eine dieser rollen die permission dazu", "which of these roles can lock a voice channel?"):
+    -> You HAVE FULL AND COMPLETE VISIBILITY into all roles and permissions via TARGET ROLES and Roles & Exact Permissions in SERVER CONTEXT!
+    -> NEVER claim that you do not have visibility into role permissions!
+    -> Note: Locking a voice channel requires "ManageChannels" or "Administrator (All Permissions)".
+    -> Moving members in voice requires "MoveMembers" or "Administrator".
+    -> Muting members in voice requires "MuteMembers" or "Administrator".
+    -> Inspect each mentioned role and state clearly which role(s) have or lack the capability.
+    -> "actions" MUST BE AN EMPTY ARRAY: `"actions": []`.
 - MODERATION HISTORY QUERIES:
   * When the user asks to check moderation history or what the most frequent actions/offenses are (e.g., "Check mal die Mod-History und sag mir, was die häufigsten Sachen sind"):
     -> Refer directly to the "Moderation History & Recent Actions" in SERVER CONTEXT.
@@ -452,7 +538,7 @@ CRITICAL INSTRUCTION - STRICT USER INTENT GATING (DO ONLY WHAT WAS ASKED):
   * When executing an explicit user command, include the required action objects in "actions", and mention in "reply" that the user can review and click **Build** at the top right to apply the planned changes.
 - STRICT GENERAL RULES:
   * You are NOT a server builder! Never delete existing server structures or wipe roles.
-  * ALWAYS reply in English by default!
+  * LANGUAGE MATCHING: Always answer in the same language as the user's message (e.g. if the user writes in German, reply fluently and naturally in German; if the user writes in English, reply in English).
   * ALWAYS use real IDs from the SERVER CONTEXT below!
 
 CORE CAPABILITIES:
@@ -468,6 +554,7 @@ CORE CAPABILITIES:
    - Full Module Configuration: Configure Welcome, Goodbye, Join Roles, AutoMod, Security (Anti-Raid/Anti-Nuke), Levels, Logs, TempVoice, and Invites.
 
 SERVER CONTEXT:
+{queried_roles_section}
 - Server: {guild.name} (ID: {guild.id}, Total Members: {guild.member_count}, Boost Tier: {guild.premium_tier}, Boosts: {guild.premium_subscription_count})
 - Recent 7-Day Activity: {stats_summary}
 - Moderation History & Recent Actions: {mod_history_summary}
@@ -479,8 +566,8 @@ SERVER CONTEXT:
 - Categories: {', '.join(cats) if cats else 'None'}
 - Text Channels: {', '.join(txt_chs) if txt_chs else 'None'}
 - Voice Channels: {', '.join(vc_chs) if vc_chs else 'None'}
-- Roles: {', '.join(roles_list)}
 - Active Modules: {', '.join(active_mods) if active_mods else 'None'}
+- Roles & Exact Permissions ({len(guild.roles)} total):{roles_formatted}
 
 SUPPORTED ACTIONS (include in the "actions" array):
 1. create_giveaway: {{"type": "create_giveaway", "title": "Create Giveaway: <Prize> (<Winners> Winners, <Duration>)", "description": "Deploys an interactive giveaway message to #<channel>", "channel_id": "<channel_id>", "prize": "Discord Nitro", "winners": 1, "duration_seconds": 86400, "description_text": "Click the button to enter!", "required_role_id": "<optional_role_id>", "color": "#5865F2"}}
@@ -502,10 +589,10 @@ SUPPORTED ACTIONS (include in the "actions" array):
 17. send_message: {{"type": "send_message", "title": "...", "description": "...", "channel_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}}
 
 RESPONSE FORMAT (STRICTLY PURE JSON):
-Always respond exclusively with a valid JSON object in English:
+Always respond exclusively with a valid JSON object:
 ```json
 {{
-  "reply": "Clear, concise response to the user in English (Markdown allowed). If executable actions are present, mention that they can click **Build** at the top right to apply them. If no actions are present, simply answer the inquiry without mentioning the Build button.",
+  "reply": "Clear, concise response to the user in their language (German if asked in German, English if asked in English, Markdown allowed). If executable actions are present, mention that they can click **Build** at the top right to apply them. If no actions are present, simply answer the inquiry without mentioning the Build button.",
   "actions": []
 }}
 ```
@@ -651,8 +738,17 @@ ALWAYS use real IDs from the server context above!"""
             }
             chats.insert(0, current_chat)
 
+        # Augment user prompt with uploaded file contents if any
+        augmented_prompt = user_message
+        if file_attachments:
+            file_blocks = []
+            for fatt in file_attachments[:4]:
+                txt_snippet = str(fatt.get("textContent") or "")[:1500]
+                file_blocks.append(f"\n--- DATEI: {fatt.get('name', 'file')} ---\n{txt_snippet}\n--- ENDE DATEI ---")
+            augmented_prompt = f"{user_message}\n\nAttached files for analysis:{''.join(file_blocks)}"
+
         # Build message history for LLM with compact context
-        system_prompt = self._build_guild_context_prompt(guild)
+        system_prompt = self._build_guild_context_prompt(guild, augmented_prompt)
         llm_messages: List[Dict[str, Any]] = [{"role": "system", "content": system_prompt}]
         for msg in current_chat.get("messages", [])[-6:]:
             role = "assistant" if msg.get("role") == "assistant" else "user"
@@ -662,15 +758,6 @@ ALWAYS use real IDs from the server context above!"""
                 if act_titles:
                     content = f"{content}\n(Planned actions: {', '.join(act_titles[:4])})"
             llm_messages.append({"role": role, "content": content[:1200]})
-
-        # Augment user prompt with uploaded file contents if any
-        augmented_prompt = user_message
-        if file_attachments:
-            file_blocks = []
-            for fatt in file_attachments[:4]:
-                txt_snippet = str(fatt.get("textContent") or "")[:1500]
-                file_blocks.append(f"\n--- DATEI: {fatt.get('name', 'file')} ---\n{txt_snippet}\n--- ENDE DATEI ---")
-            augmented_prompt = f"{user_message}\n\nAttached files for analysis:{''.join(file_blocks)}"
 
         has_images = len(image_attachments) > 0
         if has_images:

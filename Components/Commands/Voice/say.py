@@ -12,6 +12,7 @@ except ImportError:
     HAS_EDGE_TTS = False
 
 from Components.Commands.Voice.voice import voice_group
+from Components.Commands.Voice._permissions import can_voice_say
 from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
@@ -43,6 +44,10 @@ async def vc_say_cmd(interaction: discord.Interaction, text: str):
 
     if len(text) > 500:
         return await ctx.send(embed=make_embed("Text is too long. Maximum 500 characters.", discord.Color.red()), ephemeral=True)
+
+    allowed, err_msg = can_voice_say(ctx.author)
+    if not allowed:
+        return await ctx.send(embed=make_embed(err_msg, discord.Color.red()), ephemeral=True)
 
     await ctx.defer()
 

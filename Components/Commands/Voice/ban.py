@@ -3,11 +3,15 @@ from discord.ext import commands
 from Components.Commands.Voice._storage import add_to_vcban, is_vcbanned
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Voice.voice import voice_group
+from Components.Commands.Voice._permissions import can_voice_ban
 from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 async def _do_vc_ban(ctx: InteractionContext, user: discord.Member, reason: str):
     await ctx.defer()
+    allowed, err_msg = can_voice_ban(ctx.author)
+    if not allowed:
+        return await ctx.send(embed=make_embed(err_msg, discord.Color.red()), ephemeral=True)
     if user.id == ctx.author.id:
         return await ctx.send(embed=make_embed("You cannot voice ban yourself.", discord.Color.red()), ephemeral=True)
     if is_whitelisted(ctx.guild.id, user.id):

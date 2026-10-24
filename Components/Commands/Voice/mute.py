@@ -3,12 +3,16 @@ from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Whitelist._storage import is_whitelisted
 from Components.Commands.Voice.voice import voice_group
+from Components.Commands.Voice._permissions import can_voice_mute
 from Components.Commands._utils import make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 
 async def _do_vc_mute(ctx: InteractionContext, target: discord.Member, reason: str):
     await ctx.defer()
+    allowed, err_msg = can_voice_mute(ctx.author)
+    if not allowed:
+        return await ctx.send(embed=make_embed(err_msg, discord.Color.red()), ephemeral=True)
     if is_whitelisted(ctx.guild.id, target.id):
         return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Voice Mute`).", discord.Color.red()), ephemeral=True)
     if not target.voice:

@@ -6,65 +6,7 @@
 // ==========================================
 // DOCS PAGE
 // ==========================================
-Pages.Docs = function(container) {
-  const sections = [
-    { id: 'overview', title: 'Introduction', content: 'Welcome to the Orbit documentation. Orbit is a high-performance, modular Discord application engineered for high-concurrency servers.' },
-    { id: 'commands', title: 'Core Slash Commands', content: `
-      <div class="flex flex-col gap-3">
-        <div class="p-4 rounded-xl bg-neutral-900 border border-neutral-800">
-          <code class="text-indigo-400 font-bold">/role all &lt;role&gt; [reason]</code>
-          <p class="text-xs text-neutral-400 mt-1">Assigns a specified role to every member in the server with Discord Components V2 summary.</p>
-        </div>
-        <div class="p-4 rounded-xl bg-neutral-900 border border-neutral-800">
-          <code class="text-indigo-400 font-bold">/role rall &lt;role&gt; [reason]</code>
-          <p class="text-xs text-neutral-400 mt-1">Removes a role from all server members with rate-limit protection.</p>
-        </div>
-        <div class="p-4 rounded-xl bg-neutral-900 border border-neutral-800">
-          <code class="text-indigo-400 font-bold">/mute &lt;user&gt; [reason]</code>
-          <p class="text-xs text-neutral-400 mt-1">Mutes a member and records the moderation case in the audit log.</p>
-        </div>
-        <div class="p-4 rounded-xl bg-neutral-900 border border-neutral-800">
-          <code class="text-indigo-400 font-bold">/ticket</code>
-          <p class="text-xs text-neutral-400 mt-1">Interactive commands to manage, claim, and close active support channels.</p>
-        </div>
-      </div>
-    `},
-    { id: 'automod', title: 'Auto-Moderation Engine', content: 'Orbit filters chat messages with zero-latency regex matching. When violations occur, actions escalate from warnings to timeouts, kicks, or bans according to your threshold settings.' },
-    { id: 'tickets', title: 'Support Ticket Panels', content: 'Deploy persistent ticket panels in any channel. Members pick an inquiry category from a dropdown menu, generating a private channel with your designated support roles.' },
-    { id: 'appeals', title: 'Ban Appeal System', content: 'Orbit automatically includes a personalized appeal portal link whenever a moderation action is dispatched. Punished members sign in with OAuth2 to submit their appeal statement.' }
-  ];
-
-  container.innerHTML = `
-    <div class="max-w-6xl mx-auto px-6 pt-32 pb-24 animate-fade-in flex flex-col md:flex-row gap-12">
-      <!-- Sidebar -->
-      <div class="w-full md:w-64 shrink-0">
-        <div class="sticky top-28 flex flex-col gap-2">
-          <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Documentation</span>
-          ${sections.map((s, i) => `
-            <a href="#${s.id}" class="px-3 py-2 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-900 transition-colors ${i === 0 ? 'bg-neutral-900 text-white font-semibold' : ''}">
-              ${s.title}
-            </a>
-          `).join('')}
-        </div>
-      </div>
-
-      <!-- Content -->
-      <div class="flex-1 flex flex-col gap-12">
-        <div>
-          <h1 class="text-4xl font-extrabold text-white mb-2">Documentation</h1>
-          <p class="text-neutral-400 text-sm">Comprehensive guides and command references for Orbit.</p>
-        </div>
-
-        ${sections.map(s => `
-          <div id="${s.id}" class="scroll-mt-32 p-8 rounded-3xl bg-neutral-900/60 border border-neutral-800">
-            <h2 class="text-xl font-bold text-white mb-4">${s.title}</h2>
-            <div class="text-neutral-300 text-sm leading-relaxed">${s.content}</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-};
+// Pages.Docs is implemented in /js/pages/docs.js with Fumadocs / Volt notebook layout
 
 // ==========================================
 // GUIDES PAGE

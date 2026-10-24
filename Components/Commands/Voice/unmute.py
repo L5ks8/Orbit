@@ -4,10 +4,14 @@ from Components.emojis import Emojis
 from discord.ext import commands
 from discord.ui import Container, TextDisplay, Separator
 from Components.Commands.Voice.voice import voice_group
+from Components.Commands.Voice._permissions import can_voice_mute
 
 
 async def _do_vc_unmute(ctx: InteractionContext, target: discord.Member, reason: str):
     await ctx.defer()
+    allowed, err_msg = can_voice_mute(ctx.author)
+    if not allowed:
+        return await ctx.send(embed=make_embed(err_msg, discord.Color.red()), ephemeral=True)
     if not target.voice:
         return await ctx.send(embed=make_embed("This user is not currently in a voice channel.", discord.Color.red()), ephemeral=True)
     if not target.voice.mute:
