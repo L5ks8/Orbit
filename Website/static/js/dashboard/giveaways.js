@@ -692,7 +692,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
       modal.className = 'fixed inset-0 lg:left-64 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in';
 
       modal.innerHTML = `
-        <div role="dialog" aria-modal="true" aria-label="Giveaway erstellen" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-[1300px] max-h-[90vh] flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden">
+        <div role="dialog" aria-modal="true" aria-label="Giveaway erstellen" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-[1040px] max-h-[90vh] flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden">
           <!-- Top Bar -->
           <div id="gw-preview-top-accent" class="h-[3px] flex-shrink-0" style="background-color: ${state.color};"></div>
 
@@ -700,45 +700,45 @@ DashboardTabs.Giveaways = async function(container, guildId) {
           <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-800 flex-shrink-0">
             <div>
               <h2 class="text-base sm:text-lg font-semibold text-white">Create Giveaway</h2>
-              <p class="text-xs text-neutral-500 mt-0.5 hidden sm:block">Configure prize, winners, duration, and permissions</p>
+              <p class="text-xs text-neutral-500 mt-0.5 hidden sm:block">Konfiguriere Preis, Gewinner, Dauer und Berechtigungen</p>
             </div>
             <button type="button" id="gw-modal-close" aria-label="Close" class="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-5 h-5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
           </div>
 
-          <!-- 3-Column Body -->
+          <!-- 2-Column Body -->
           <div class="flex-1 overflow-y-auto min-h-0" data-lenis-prevent>
-            <div class="grid grid-cols-1 lg:grid-cols-[340px,1fr,300px] lg:min-h-[480px]">
-              <!-- Left Column: Quick Presets, Prize, Description, Winners Stepper, Duration -->
-              <div class="p-4 sm:p-6 space-y-4 sm:space-y-5 border-b lg:border-b-0 lg:border-r border-neutral-800">
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr,440px] lg:min-h-[480px]">
+              <!-- Left Column: Form Fields -->
+              <div class="p-4 sm:p-6 space-y-4 border-b lg:border-b-0 lg:border-r border-neutral-800">
                 <!-- Quick Presets -->
                 <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-2 block">Quick Presets</label>
-                  <div class="grid grid-cols-2 gap-2">
-                    <button type="button" data-gw-preset="nitro" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border bg-neutral-800/50 border-neutral-700/50 text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
-                      <svg class="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm-2-8c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"></path></svg>
+                  <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Quick Presets</label>
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button type="button" data-gw-preset="nitro" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border bg-neutral-800/50 border-neutral-700/50 text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                      <svg class="w-3.5 h-3.5 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm-2-8c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"></path></svg>
                       Nitro
                     </button>
-                    <button type="button" data-gw-preset="vip" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border bg-neutral-800/50 border-neutral-700/50 text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
-                      <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <button type="button" data-gw-preset="vip" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border bg-neutral-800/50 border-neutral-700/50 text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                      <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                       VIP Rank
                     </button>
-                    <button type="button" data-gw-preset="steam" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border bg-neutral-800/50 border-neutral-700/50 text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
-                      <svg class="w-3.5 h-3.5 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                    <button type="button" data-gw-preset="steam" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border bg-neutral-800/50 border-neutral-700/50 text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                      <svg class="w-3.5 h-3.5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
                       Steam Card
                     </button>
-                    <button type="button" data-gw-preset="custom" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border bg-neutral-800/50 border-neutral-700/50 text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
-                      <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
-                      Custom Prize
+                    <button type="button" data-gw-preset="custom" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border bg-neutral-800/50 border-neutral-700/50 text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                      <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                      Custom
                     </button>
                   </div>
                 </div>
 
                 <!-- Prize Input -->
                 <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-2 block">Prize / Reward *</label>
-                  <input id="gw-prize-input" placeholder="e.g. Discord Nitro, $10 Gift Card..." maxlength="100" class="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 transition-all" type="text" value="${escapeHtml(state.prize)}">
+                  <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Preis / Gewinn *</label>
+                  <input id="gw-prize-input" placeholder="z. B. Discord Nitro, 10€ Gutschein..." maxlength="100" class="w-full px-3.5 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 transition-all" type="text" value="${escapeHtml(state.prize)}">
                   <div class="flex justify-end mt-1">
                     <span id="gw-prize-counter" class="text-[10px] tabular-nums text-neutral-600">${state.prize.length}/100</span>
                   </div>
@@ -746,188 +746,196 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
                 <!-- Description / Details -->
                 <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-2 block">Description / Instructions (Optional)</label>
-                  <textarea id="gw-description-input" rows="2" placeholder="e.g. Sponsored by Orbit. Winners contacted via DM." class="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 transition-all resize-none">${escapeHtml(state.description)}</textarea>
+                  <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Beschreibung / Hinweise (Optional)</label>
+                  <textarea id="gw-description-input" rows="2" placeholder="z. B. Gesponsert von Orbit. Gewinner werden per DM benachrichtigt." class="w-full px-3.5 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 transition-all resize-none">${escapeHtml(state.description)}</textarea>
                 </div>
 
-                <!-- Winners Stepper -->
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <label class="text-xs font-medium text-neutral-400">Number of Winners</label>
-                    <span id="gw-winners-display" class="text-xs font-semibold text-white tabular-nums">${state.winners_count} Winners</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <button type="button" id="gw-winners-minus" class="w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-700 flex items-center justify-center font-bold text-base transition-colors cursor-pointer">-</button>
-                    <input id="gw-winners-input" type="number" min="1" max="25" value="${state.winners_count}" class="flex-1 h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-center text-white font-semibold focus:outline-none focus:border-neutral-500">
-                    <button type="button" id="gw-winners-plus" class="w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-700 flex items-center justify-center font-bold text-base transition-colors cursor-pointer">+</button>
-                  </div>
-                </div>
-
-                <!-- Duration -->
-                <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-2 block">Dauer</label>
-                  <div class="grid grid-cols-[1fr,130px] gap-2">
-                    <input id="gw-duration-value" type="number" min="1" max="365" value="${state.duration_value}" class="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
-                    <select id="gw-duration-unit" class="w-full px-3 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
-                      <option value="minutes">Minutes</option>
-                      <option value="hours">Hours</option>
-                      <option value="days" selected>Days</option>
-                      <option value="weeks">Weeks</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Center Column: Discord Live Preview -->
-              <div class="p-6 bg-[#313338]/40 border-b lg:border-b-0 lg:border-r border-neutral-800 min-w-0">
-                <label class="text-xs font-medium text-neutral-400 mb-3 block">Discord Preview</label>
-                <div class="rounded-xl overflow-hidden border border-neutral-700/40 shadow-xl max-w-[420px] mx-auto">
-                  <!-- Channel Header -->
-                  <div class="bg-[#2f3136] px-4 py-2.5 flex items-center gap-2 border-b border-neutral-800/80">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-neutral-400"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
-                    <span id="gw-preview-channel" class="text-xs font-semibold text-white">${escapeHtml(getChannelName(state.channel_id))}</span>
-                  </div>
-
-                  <!-- Discord Message -->
-                  <div class="bg-[#313338] p-4 space-y-3">
-                    <div class="flex gap-3">
-                      <div class="w-9 h-9 rounded-full bg-[#5865F2] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                        O
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-1.5 mb-1">
-                          <span class="text-xs font-semibold text-indigo-400 whitespace-nowrap">Orbit</span>
-                          <span class="inline-flex items-center gap-[0.15em] px-1 py-px text-[9px] font-bold bg-[#5865F2] text-white rounded">APP</span>
-                          <span class="text-[10px] text-neutral-500">Today at 12:00 PM</span>
-                        </div>
-
-                        <!-- Embed Box -->
-                        <div id="gw-preview-embed" class="border-l-[4px] rounded-r-lg bg-[#2b2d31] p-3.5 space-y-2.5" style="border-color: ${state.color};">
-                          <div class="flex items-center gap-2">
-                            <span class="text-base">🎉</span>
-                            <span class="text-xs font-bold uppercase tracking-wider text-white">GIVEAWAY</span>
-                          </div>
-
-                          <div>
-                            <h4 id="gw-preview-prize" class="text-sm font-bold text-white leading-snug break-words">Discord Nitro</h4>
-                            <p id="gw-preview-desc" class="text-xs text-neutral-400 mt-1 leading-relaxed hidden"></p>
-                          </div>
-
-                          <div class="space-y-1 pt-1 border-t border-neutral-700/50 text-xs">
-                            <div class="flex items-center gap-1.5 text-neutral-300">
-                              <span>🎁</span>
-                              <span>Click the button below to participate!</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-neutral-400">
-                              <span>⏱️</span>
-                              <span>Endet: <strong id="gw-preview-duration" class="text-neutral-200">in 1 day</strong></span>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-neutral-400">
-                              <span>🏆</span>
-                              <span>Winners: <strong id="gw-preview-winners" class="text-neutral-200">1</strong></span>
-                            </div>
-                            <div id="gw-preview-role-row" class="flex items-center gap-1.5 text-neutral-400 hidden">
-                              <span>🔒</span>
-                              <span>Role required: <strong id="gw-preview-role" class="text-indigo-300">@VIP</strong></span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <!-- Discord Interactive Buttons Mockup -->
-                        <div class="flex items-center gap-2 mt-2.5">
-                          <button type="button" disabled class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-medium shadow transition-colors">
-                            <span>🎉</span>
-                            <span>Enter (0)</span>
-                          </button>
-                          <button type="button" disabled class="px-3 py-1.5 rounded bg-[#4e5058] text-white text-xs font-medium shadow opacity-60">
-                            Leave
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right Column: Channel, Role Requirement, Accent Color Tiles -->
-              <div class="p-4 sm:p-6 space-y-5">
-                <!-- Target Channel Dropdown -->
-                <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-2 block">Target Channel *</label>
-                  <div class="relative" id="gw-channel-dd-wrap">
-                    <button type="button" id="gw-channel-dd-btn" class="w-full flex items-center justify-between px-3.5 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
-                      <span id="gw-channel-dd-label" class="truncate flex items-center gap-1.5">
-                        <span class="text-neutral-500">#</span>
-                        <span>${escapeHtml(getChannelName(state.channel_id))}</span>
-                      </span>
-                      <svg class="w-4 h-4 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
-                    </button>
-
-                    <!-- Dropdown Menu -->
-                    <div id="gw-channel-dd-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl z-40 overflow-hidden">
-                      <div class="p-2 border-b border-neutral-700">
-                        <div class="relative">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                          <input id="gw-channel-search-input" placeholder="Search channel..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none">
-                        </div>
-                      </div>
-                      <div id="gw-channel-dd-list" class="max-h-48 overflow-y-auto p-1 space-y-0.5" data-lenis-prevent>
-                        ${textChannels.map(c => `
-                          <button type="button" data-ch-id="${c.id}" data-ch-name="${escapeHtml(c.name)}" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left text-neutral-300 hover:text-white hover:bg-neutral-700 transition-colors cursor-pointer">
-                            <span class="text-neutral-500">#</span>
-                            <span class="truncate">${escapeHtml(c.name)}</span>
-                          </button>
-                        `).join('')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Required Role Dropdown -->
-                <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-2 block">Role Requirement (Optional)</label>
-                  <div class="relative" id="gw-role-dd-wrap">
-                    <button type="button" id="gw-role-dd-btn" class="w-full flex items-center justify-between px-3.5 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
-                      <span id="gw-role-dd-label" class="truncate text-neutral-400">No role required</span>
-                      <svg class="w-4 h-4 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
-                    </button>
-
-                    <!-- Dropdown Menu -->
-                    <div id="gw-role-dd-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl z-40 overflow-hidden">
-                      <div class="p-2 border-b border-neutral-700">
-                        <div class="relative">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                          <input id="gw-role-search-input" placeholder="Search role..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none">
-                        </div>
-                      </div>
-                      <div id="gw-role-dd-list" class="max-h-48 overflow-y-auto p-1 space-y-0.5" data-lenis-prevent>
-                        <button type="button" data-role-id="" data-role-name="" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors cursor-pointer">
-                          <span>No role required</span>
-                        </button>
-                        ${roles.map(r => `
-                          <button type="button" data-role-id="${r.id}" data-role-name="${escapeHtml(r.name)}" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left text-neutral-300 hover:text-white hover:bg-neutral-700 transition-colors cursor-pointer">
-                            <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${r.color && r.color !== 0 ? '#' + r.color.toString(16).padStart(6, '0') : '#99aab5'};"></span>
-                            <span class="truncate">@${escapeHtml(r.name)}</span>
-                          </button>
-                        `).join('')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Large Color Tiles Palette -->
-                <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-2 block">Akzentfarbe</label>
-                  <div class="grid grid-cols-4 gap-2.5 mb-3" id="gw-color-tiles">
-                    ${colorPalette.map(hex => `
-                      <button type="button" data-color="${hex}" class="gw-color-tile h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${state.color.toLowerCase() === hex.toLowerCase() ? 'ring-2 ring-white scale-105 shadow-lg' : 'hover:scale-102 opacity-80 hover:opacity-100'}" style="background-color: ${hex};">
-                        ${state.color.toLowerCase() === hex.toLowerCase() ? `<svg class="w-4 h-4 text-white drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg>` : ''}
+                <!-- Zielkanal & Rollen-Voraussetzung zusammen in einer Zeile -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- Target Channel Dropdown -->
+                  <div>
+                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Zielkanal *</label>
+                    <div class="relative" id="gw-channel-dd-wrap">
+                      <button type="button" id="gw-channel-dd-btn" class="w-full flex items-center justify-between px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
+                        <span id="gw-channel-dd-label" class="truncate flex items-center gap-1.5 text-xs sm:text-sm">
+                          <span class="text-neutral-500">#</span>
+                          <span>${escapeHtml(getChannelName(state.channel_id))}</span>
+                        </span>
+                        <svg class="w-4 h-4 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
                       </button>
-                    `).join('')}
+
+                      <!-- Dropdown Menu -->
+                      <div id="gw-channel-dd-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl z-40 overflow-hidden">
+                        <div class="p-2 border-b border-neutral-700">
+                          <div class="relative">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                            <input id="gw-channel-search-input" placeholder="Kanal suchen..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none">
+                          </div>
+                        </div>
+                        <div id="gw-channel-dd-list" class="max-h-48 overflow-y-auto p-1 space-y-0.5" data-lenis-prevent>
+                          ${textChannels.map(c => `
+                            <button type="button" data-ch-id="${c.id}" data-ch-name="${escapeHtml(c.name)}" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left text-neutral-300 hover:text-white hover:bg-neutral-700 transition-colors cursor-pointer">
+                              <span class="text-neutral-500">#</span>
+                              <span class="truncate">${escapeHtml(c.name)}</span>
+                            </button>
+                          `).join('')}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <input id="gw-color-input" type="text" maxlength="7" value="${state.color}" class="w-full px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-neutral-500">
-                    <input id="gw-color-picker" type="color" value="${state.color}" class="w-9 h-8 p-0 bg-transparent rounded-lg border-0 cursor-pointer">
+
+                  <!-- Required Role Dropdown -->
+                  <div>
+                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Rollen-Voraussetzung (Optional)</label>
+                    <div class="relative" id="gw-role-dd-wrap">
+                      <button type="button" id="gw-role-dd-btn" class="w-full flex items-center justify-between px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
+                        <span id="gw-role-dd-label" class="truncate text-xs sm:text-sm text-neutral-400">Keine Rolle erforderlich</span>
+                        <svg class="w-4 h-4 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
+                      </button>
+
+                      <!-- Dropdown Menu -->
+                      <div id="gw-role-dd-menu" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl z-40 overflow-hidden">
+                        <div class="p-2 border-b border-neutral-700">
+                          <div class="relative">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                            <input id="gw-role-search-input" placeholder="Rolle suchen..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none">
+                          </div>
+                        </div>
+                        <div id="gw-role-dd-list" class="max-h-48 overflow-y-auto p-1 space-y-0.5" data-lenis-prevent>
+                          <button type="button" data-role-id="" data-role-name="" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors cursor-pointer">
+                            <span>Keine Rolle erforderlich</span>
+                          </button>
+                          ${roles.map(r => `
+                            <button type="button" data-role-id="${r.id}" data-role-name="${escapeHtml(r.name)}" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left text-neutral-300 hover:text-white hover:bg-neutral-700 transition-colors cursor-pointer">
+                              <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${r.color && r.color !== 0 ? '#' + r.color.toString(16).padStart(6, '0') : '#99aab5'};"></span>
+                              <span class="truncate">@${escapeHtml(r.name)}</span>
+                            </button>
+                          `).join('')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Winners Stepper & Duration in einer Zeile -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- Winners Stepper -->
+                  <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                      <label class="text-xs font-medium text-neutral-400">Anzahl der Gewinner</label>
+                      <span id="gw-winners-display" class="text-xs font-semibold text-white tabular-nums">${state.winners_count} Gewinner</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" id="gw-winners-minus" class="w-9 h-9 rounded-xl bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-700 flex items-center justify-center font-bold text-base transition-colors cursor-pointer">-</button>
+                      <input id="gw-winners-input" type="number" min="1" max="25" value="${state.winners_count}" class="flex-1 h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-center text-white font-semibold focus:outline-none focus:border-neutral-500">
+                      <button type="button" id="gw-winners-plus" class="w-9 h-9 rounded-xl bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-700 flex items-center justify-center font-bold text-base transition-colors cursor-pointer">+</button>
+                    </div>
+                  </div>
+
+                  <!-- Duration -->
+                  <div>
+                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Dauer</label>
+                    <div class="grid grid-cols-[1fr,110px] gap-2">
+                      <input id="gw-duration-value" type="number" min="1" max="365" value="${state.duration_value}" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+                      <select id="gw-duration-unit" class="w-full h-9 px-2 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
+                        <option value="minutes">Minuten</option>
+                        <option value="hours">Stunden</option>
+                        <option value="days" selected>Tage</option>
+                        <option value="weeks">Wochen</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Discord Live Preview with compact color swatches on the left -->
+              <div class="p-4 sm:p-6 bg-[#313338]/40 border-neutral-800 min-w-0 flex flex-col justify-start">
+                <label class="text-xs font-medium text-neutral-400 mb-3 block">Discord Preview</label>
+                
+                <div class="flex items-start gap-3 w-full justify-center">
+                  <!-- Compact Color Strip on the left of embed -->
+                  <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-neutral-900/70 border border-neutral-800 shadow-sm shrink-0" title="Akzentfarbe">
+                    <span class="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider mb-0.5">Farbe</span>
+                    <div class="flex flex-col gap-1.5" id="gw-color-tiles">
+                      ${colorPalette.map(hex => `
+                        <button type="button" data-color="${hex}" class="gw-color-tile w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer ${state.color.toLowerCase() === hex.toLowerCase() ? 'ring-2 ring-white scale-110 shadow-md' : 'hover:scale-105 opacity-80 hover:opacity-100'}" style="background-color: ${hex};" title="${hex}">
+                          ${state.color.toLowerCase() === hex.toLowerCase() ? `<svg class="w-3.5 h-3.5 text-white drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg>` : ''}
+                        </button>
+                      `).join('')}
+                    </div>
+                    <div class="h-px w-full bg-neutral-800 my-0.5"></div>
+                    <div class="relative flex items-center justify-center" title="Eigene Farbe wählen">
+                      <input id="gw-color-picker" type="color" value="${state.color}" class="w-6 h-6 p-0 rounded-lg border-0 cursor-pointer bg-transparent">
+                    </div>
+                    <input id="gw-color-input" type="text" maxlength="7" value="${state.color}" class="hidden">
+                  </div>
+
+                  <!-- Discord Message Preview Box -->
+                  <div class="rounded-xl overflow-hidden border border-neutral-700/40 shadow-xl flex-1 max-w-[360px]" style="font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                    <!-- Channel Header -->
+                    <div class="bg-[#2f3136] px-3.5 py-2 flex items-center gap-2 border-b border-neutral-800/80">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-neutral-400"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
+                      <span id="gw-preview-channel" class="text-xs font-semibold text-white truncate">${escapeHtml(getChannelName(state.channel_id))}</span>
+                    </div>
+
+                    <!-- Discord Message -->
+                    <div class="bg-[#313338] p-3.5 space-y-2.5">
+                      <div class="flex gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                          O
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center gap-1.5 mb-1">
+                            <span class="text-xs font-semibold text-indigo-400 whitespace-nowrap">Orbit</span>
+                            <span class="inline-flex items-center gap-[0.15em] px-1 py-px text-[9px] font-bold bg-[#5865F2] text-white rounded">APP</span>
+                            <span class="text-[10px] text-neutral-500">Today at 12:00 PM</span>
+                          </div>
+
+                          <!-- Embed Box -->
+                          <div id="gw-preview-embed" class="border-l-[4px] rounded-r-lg bg-[#2b2d31] p-3 space-y-2" style="border-color: ${state.color};">
+                            <div class="flex items-center gap-1.5">
+                              <span class="text-sm">🎉</span>
+                              <span class="text-[11px] font-semibold uppercase tracking-wider text-white">GIVEAWAY</span>
+                            </div>
+
+                            <div>
+                              <h4 id="gw-preview-prize" class="text-sm font-semibold text-white leading-snug break-words">Discord Nitro</h4>
+                              <p id="gw-preview-desc" class="text-xs text-[#dbdee1] font-normal mt-1 leading-relaxed hidden break-words"></p>
+                            </div>
+
+                            <div class="space-y-1 pt-1.5 border-t border-neutral-700/50 text-xs">
+                              <div class="flex items-center gap-1.5 text-neutral-300">
+                                <span>🎁</span>
+                                <span>Click the button below to participate!</span>
+                              </div>
+                              <div class="flex items-center gap-1.5 text-neutral-400">
+                                <span>⏱️</span>
+                                <span>Endet: <strong id="gw-preview-duration" class="font-semibold text-neutral-200">in 1 Tag</strong></span>
+                              </div>
+                              <div class="flex items-center gap-1.5 text-neutral-400">
+                                <span>🏆</span>
+                                <span>Gewinner: <strong id="gw-preview-winners" class="font-semibold text-neutral-200">1</strong></span>
+                              </div>
+                              <div id="gw-preview-role-row" class="flex items-center gap-1.5 text-neutral-400 hidden">
+                                <span>🔒</span>
+                                <span>Rolle erforderlich: <strong id="gw-preview-role" class="font-semibold text-indigo-300">@VIP</strong></span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Discord Interactive Buttons Mockup -->
+                          <div class="flex items-center gap-2 mt-2.5">
+                            <button type="button" disabled class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#5865F2] text-white text-xs font-medium shadow opacity-90 cursor-default">
+                              <span>🎉</span>
+                              <span>Enter (0)</span>
+                            </button>
+                            <button type="button" disabled class="px-3 py-1.5 rounded bg-[#4e5058] text-white text-xs font-medium shadow opacity-60 cursor-default">
+                              Leave
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -936,7 +944,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
           <!-- Footer -->
           <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-t border-neutral-800 bg-neutral-900/95 flex-shrink-0">
-            <button type="button" id="gw-cancel-btn" class="px-4 py-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer">Cancel</button>
+            <button type="button" id="gw-cancel-btn" class="px-4 py-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer">Abbrechen</button>
             <div class="flex items-center gap-2.5">
               <button type="button" id="gw-save-draft-btn" class="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold border border-neutral-700 transition-colors cursor-pointer">Save as Draft</button>
               <button type="button" id="gw-submit-btn" class="px-5 py-2 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">Create Giveaway</button>
@@ -1195,10 +1203,10 @@ DashboardTabs.Giveaways = async function(container, guildId) {
           const c = tile.getAttribute('data-color');
           const isSelected = state.color.toLowerCase() === c.toLowerCase();
           if (isSelected) {
-            tile.className = 'gw-color-tile h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ring-2 ring-white scale-105 shadow-lg';
-            tile.innerHTML = `<svg class="w-4 h-4 text-white drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg>`;
+            tile.className = 'gw-color-tile w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer ring-2 ring-white scale-110 shadow-md';
+            tile.innerHTML = `<svg class="w-3.5 h-3.5 text-white drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"></path></svg>`;
           } else {
-            tile.className = 'gw-color-tile h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-102 opacity-80 hover:opacity-100';
+            tile.className = 'gw-color-tile w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:scale-105 opacity-80 hover:opacity-100';
             tile.innerHTML = '';
           }
         });

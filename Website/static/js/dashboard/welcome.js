@@ -787,7 +787,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
     if (!state.welcome.embed) {
       const textVal = rawDesc || 'Welcome {user} to {server}! Enjoy your stay.';
       bodyEl.innerHTML = `
-        <div class="text-xs text-neutral-200 leading-relaxed whitespace-pre-wrap break-words">${renderPreviewTokens(textVal)}</div>
+        <div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words" style="font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">${renderPreviewTokens(textVal)}</div>
       `;
       return;
     }
@@ -802,16 +802,16 @@ DashboardTabs.Welcome = async function (container, guildId) {
     const footerHtml = rawFooter ? renderPreviewTokens(rawFooter) : '';
 
     bodyEl.innerHTML = `
-      <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[420px]" style="border-color: ${esc(state.welcome.embed_color || '#5865F2')};">
-        <div class="p-2.5 flex flex-col gap-2">
+      <div class="border-l-[4px] rounded-r bg-[#2b2d31] w-full" style="max-width: 520px; border-color: ${esc(state.welcome.embed_color || '#5865F2')}; font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+        <div class="p-3 flex flex-col gap-2">
           ${authorHtml ? `
-            <div class="text-[11px] font-semibold text-white break-words">${authorHtml}</div>
+            <div class="text-xs font-semibold text-white break-words">${authorHtml}</div>
           ` : ''}
           <div class="flex gap-2.5">
             <div class="flex-1 min-w-0 space-y-1">
-              ${titleHtml ? `<p class="text-xs font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
-              ${descHtml ? `<p class="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap break-words">${descHtml}</p>` : ''}
-              ${isDefault ? `<p class="text-xs text-neutral-600 italic">Start typing to customize...</p>` : ''}
+              ${titleHtml ? `<p class="text-sm font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
+              ${descHtml ? `<div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words">${descHtml}</div>` : ''}
+              ${isDefault ? `<p class="text-xs text-neutral-500 italic">Start typing to customize...</p>` : ''}
             </div>
             ${state.welcome.show_avatar ? `
               <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-neutral-700 grid place-items-center">
@@ -820,10 +820,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
             ` : ''}
           </div>
           ${state.welcome.embed_image ? `
-            <img src="${esc(state.welcome.embed_image)}" alt="Embed preview" class="w-full max-h-48 object-cover rounded-lg border border-neutral-800/60 mt-0.5">
+            <img src="${esc(state.welcome.embed_image)}" alt="Embed preview" class="w-full rounded-lg border border-neutral-800/60 mt-1 object-cover" style="max-height: 280px; max-width: 100%;">
           ` : ''}
           ${footerHtml ? `
-            <div class="pt-0.5 text-[10px] text-neutral-400 break-words">${footerHtml}</div>
+            <div class="pt-0.5 text-[11px] text-[#949ba4] break-words">${footerHtml}</div>
           ` : ''}
         </div>
       </div>
@@ -842,15 +842,15 @@ DashboardTabs.Welcome = async function (container, guildId) {
     if (!state.goodbye.embed) {
       const textVal = rawDesc || '{user} left {server}.';
       bodyEl.innerHTML = `
-        <div class="text-xs text-neutral-200 leading-relaxed whitespace-pre-wrap break-words">${renderPreviewTokens(textVal)}</div>
+        <div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words" style="font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">${renderPreviewTokens(textVal)}</div>
       `;
       return;
     }
 
     if (!rawAuthor && !rawTitle && !rawDesc && !rawFooter && !state.goodbye.embed_image) {
       bodyEl.innerHTML = `
-        <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[420px]" style="border-color: ${esc(state.goodbye.embed_color || '#5865F2')};">
-          <div class="p-2.5 space-y-1">
+        <div class="border-l-[4px] rounded-r bg-[#2b2d31] w-full" style="max-width: 520px; border-color: ${esc(state.goodbye.embed_color || '#5865F2')}; font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+          <div class="p-3 space-y-1">
             <p class="text-xs text-amber-400/90 italic">Empty embed. Start typing to customize...</p>
           </div>
         </div>
@@ -864,20 +864,20 @@ DashboardTabs.Welcome = async function (container, guildId) {
     const footerHtml = rawFooter ? renderPreviewTokens(rawFooter) : '';
 
     bodyEl.innerHTML = `
-      <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[420px]" style="border-color: ${esc(state.goodbye.embed_color || '#5865F2')};">
-        <div class="p-2.5 flex flex-col gap-2">
+      <div class="border-l-[4px] rounded-r bg-[#2b2d31] w-full" style="max-width: 520px; border-color: ${esc(state.goodbye.embed_color || '#5865F2')}; font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+        <div class="p-3 flex flex-col gap-2">
           ${authorHtml ? `
-            <div class="text-[11px] font-semibold text-white break-words">${authorHtml}</div>
+            <div class="text-xs font-semibold text-white break-words">${authorHtml}</div>
           ` : ''}
           <div class="flex-1 min-w-0 space-y-1">
-            ${titleHtml ? `<p class="text-xs font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
-            ${descHtml ? `<p class="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap break-words">${descHtml}</p>` : ''}
+            ${titleHtml ? `<p class="text-sm font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
+            ${descHtml ? `<div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words">${descHtml}</div>` : ''}
           </div>
           ${state.goodbye.embed_image ? `
-            <img src="${esc(state.goodbye.embed_image)}" alt="Goodbye embed preview" class="w-full max-h-48 object-cover rounded-lg border border-neutral-800/60 mt-0.5">
+            <img src="${esc(state.goodbye.embed_image)}" alt="Goodbye embed preview" class="w-full rounded-lg border border-neutral-800/60 mt-1 object-cover" style="max-height: 280px; max-width: 100%;">
           ` : ''}
           ${footerHtml ? `
-            <div class="pt-0.5 text-[10px] text-neutral-400 break-words">${footerHtml}</div>
+            <div class="pt-0.5 text-[11px] text-[#949ba4] break-words">${footerHtml}</div>
           ` : ''}
         </div>
       </div>

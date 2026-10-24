@@ -675,13 +675,13 @@ const DiscordMarkdown = {
 
       // Headers & subtext
       if (/^#\s+(.+)$/.test(line)) {
-        line = line.replace(/^#\s+(.+)$/, '<div class="text-[17px] font-bold text-white mt-1.5 mb-1 leading-snug">$1</div>');
+        line = line.replace(/^#\s+(.+)$/, '<div class="text-[15px] font-semibold text-white mt-1.5 mb-1 leading-snug">$1</div>');
       } else if (/^##\s+(.+)$/.test(line)) {
-        line = line.replace(/^##\s+(.+)$/, '<div class="text-[15px] font-bold text-white mt-1 mb-0.5 leading-snug">$1</div>');
+        line = line.replace(/^##\s+(.+)$/, '<div class="text-[14px] font-semibold text-white mt-1 mb-0.5 leading-snug">$1</div>');
       } else if (/^###\s+(.+)$/.test(line)) {
-        line = line.replace(/^###\s+(.+)$/, '<div class="text-[13px] font-bold text-white mt-0.5 mb-0.5 leading-snug">$1</div>');
+        line = line.replace(/^###\s+(.+)$/, '<div class="text-[13px] font-semibold text-white mt-0.5 mb-0.5 leading-snug">$1</div>');
       } else if (/^-#\s+(.+)$/.test(line)) {
-        line = line.replace(/^-#\s+(.+)$/, '<div class="text-[11px] text-neutral-400 leading-normal">$1</div>');
+        line = line.replace(/^-#\s+(.+)$/, '<div class="text-[11px] text-[#949ba4] leading-normal">$1</div>');
       }
 
       processedLines.push(line);
@@ -692,9 +692,9 @@ const DiscordMarkdown = {
 
     // 14. Markdown text styling
     // ***bold italic***
-    raw = raw.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+    raw = raw.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong class="font-semibold text-white"><em class="italic text-neutral-200">$1</em></strong>');
     // **bold**
-    raw = raw.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
+    raw = raw.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-white">$1</strong>');
     // *italic*
     raw = raw.replace(/\*([^*\n]+)\*/g, '<em class="italic text-neutral-200">$1</em>');
     // __underline__
