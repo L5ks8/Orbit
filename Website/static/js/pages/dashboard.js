@@ -236,7 +236,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
             </div>
 
             <!-- Nav Links List -->
-            <nav id="dash-sidebar-nav" data-lenis-prevent="true" class="flex-1 min-h-0 px-3 pb-4 overflow-y-auto overscroll-contain scrollbar-thin">
+            <nav id="dash-sidebar-nav" data-lenis-prevent="true" class="flex-1 min-h-0 px-3 pb-4 overflow-y-auto overscroll-contain scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               ${navSections.map(sec => `
                 <div class="mb-4">
                   <p class="px-3 mb-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">${sec.title}</p>

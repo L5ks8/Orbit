@@ -168,42 +168,97 @@ DashboardTabs.Invites = async function (container, guildId) {
 
   function renderLeaderboardCardContent() {
     const lb = state.leaderboard || [];
-    if (lb.length === 0) {
+    const PODIUM_THEMES = {
+      1: {
+        label: 'Gold',
+        medal: '👑',
+        barClass: 'orbit-podium-gold',
+        numClass: 'text-amber-300 drop-shadow-[0_2px_10px_rgba(251,191,36,0.7)]',
+        ringClass: 'ring-2 ring-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.5)]',
+        badgeBg: 'bg-amber-400/20 text-amber-300 border-amber-400/40',
+        totalClass: 'text-amber-300 font-extrabold',
+        subClass: 'text-amber-200/70',
+        emptyBarClass: 'orbit-podium-gold opacity-30',
+        emptyNumClass: 'text-amber-400/40',
+        barHeight: 'h-24 sm:h-28',
+        avatarSize: 'w-16 h-16'
+      },
+      2: {
+        label: 'Silber',
+        medal: '🥈',
+        barClass: 'orbit-podium-silver',
+        numClass: 'text-slate-100 drop-shadow-[0_2px_10px_rgba(226,232,240,0.7)]',
+        ringClass: 'ring-2 ring-slate-300 shadow-[0_0_16px_rgba(226,232,240,0.4)]',
+        badgeBg: 'bg-slate-300/20 text-slate-200 border-slate-300/40',
+        totalClass: 'text-slate-100 font-extrabold',
+        subClass: 'text-slate-300/70',
+        emptyBarClass: 'orbit-podium-silver opacity-30',
+        emptyNumClass: 'text-slate-300/40',
+        barHeight: 'h-18 sm:h-20',
+        avatarSize: 'w-12 h-12'
+      },
+      3: {
+        label: 'Bronze',
+        medal: '🥉',
+        barClass: 'orbit-podium-bronze',
+        numClass: 'text-orange-300 drop-shadow-[0_2px_10px_rgba(249,115,22,0.7)]',
+        ringClass: 'ring-2 ring-orange-500 shadow-[0_0_16px_rgba(249,115,22,0.4)]',
+        badgeBg: 'bg-orange-600/20 text-orange-300 border-orange-500/40',
+        totalClass: 'text-orange-300 font-extrabold',
+        subClass: 'text-orange-200/70',
+        emptyBarClass: 'orbit-podium-bronze opacity-30',
+        emptyNumClass: 'text-orange-400/40',
+        barHeight: 'h-14 sm:h-16',
+        avatarSize: 'w-11 h-11'
+      }
+    };
+
+    const renderPodiumSlot = (entry, rank) => {
+      const theme = PODIUM_THEMES[rank];
+      if (!entry) {
+        return `
+          <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10">
+            <div class="h-6 flex items-end justify-center mb-0.5">
+              <span class="text-xs opacity-50 select-none">${theme.medal}</span>
+            </div>
+            <div class="${theme.avatarSize} rounded-full bg-neutral-800/40 border border-white/5 flex items-center justify-center text-xs text-neutral-500 font-medium">?</div>
+            <div class="h-3 w-14 rounded bg-neutral-800/30 mt-2"></div>
+            <div class="h-3.5 w-8 rounded bg-neutral-800/20 mt-1"></div>
+            <div class="mb-1 mt-0.5 h-3"></div>
+            <div class="w-[88%] ${theme.barHeight} ${theme.emptyBarClass} rounded-t-xl mt-1 flex items-end justify-center pb-3">
+              <span class="text-3xl font-black ${theme.emptyNumClass}">${rank}</span>
+            </div>
+          </div>
+        `;
+      }
       return `
-        <div class="relative flex items-end justify-center px-4 pt-8 pb-0">
-          <div class="absolute bottom-0 left-4 right-4 h-px bg-neutral-800"></div>
-          <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10">
-            <div class="h-6 flex items-end justify-center"></div>
-            <div class="w-12 h-12 rounded-full animate-pulse bg-neutral-800/60"></div>
-            <div class="h-3 w-14 rounded bg-neutral-800/40 animate-pulse mt-2"></div>
-            <div class="h-3.5 w-8 rounded bg-neutral-800/30 animate-pulse mt-1"></div>
-            <div class="mb-1 mt-0.5 h-3"></div>
-            <div class="w-[85%] h-16 bg-neutral-800/15 rounded-t-xl mt-1 flex items-end justify-center pb-3">
-              <span class="text-2xl font-black text-neutral-800/15">2</span>
-            </div>
+        <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10 group">
+          <div class="h-6 flex items-end justify-center mb-0.5">
+            <span class="text-sm drop-shadow-md select-none">${theme.medal}</span>
           </div>
-          <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10">
-            <div class="h-6 flex items-end justify-center"></div>
-            <div class="w-16 h-16 rounded-full animate-pulse bg-neutral-800/60"></div>
-            <div class="h-3 w-14 rounded bg-neutral-800/40 animate-pulse mt-2"></div>
-            <div class="h-3.5 w-8 rounded bg-neutral-800/30 animate-pulse mt-1"></div>
-            <div class="mb-1 mt-0.5 h-3"></div>
-            <div class="w-[85%] h-24 bg-neutral-800/15 rounded-t-xl mt-1 flex items-end justify-center pb-3">
-              <span class="text-2xl font-black text-neutral-800/15">1</span>
-            </div>
-          </div>
-          <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10">
-            <div class="h-6 flex items-end justify-center"></div>
-            <div class="w-11 h-11 rounded-full animate-pulse bg-neutral-800/60"></div>
-            <div class="h-3 w-14 rounded bg-neutral-800/40 animate-pulse mt-2"></div>
-            <div class="h-3.5 w-8 rounded bg-neutral-800/30 animate-pulse mt-1"></div>
-            <div class="mb-1 mt-0.5 h-3"></div>
-            <div class="w-[85%] h-12 bg-neutral-800/15 rounded-t-xl mt-1 flex items-end justify-center pb-3">
-              <span class="text-2xl font-black text-neutral-800/15">3</span>
-            </div>
+          <img src="${escapeHtml(entry.avatar)}" alt="${escapeHtml(entry.name)}" class="${theme.avatarSize} rounded-full object-cover ${theme.ringClass} transition-transform duration-200 group-hover:scale-105">
+          <span class="text-xs font-bold text-white truncate max-w-[115px] mt-2 text-center" title="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</span>
+          <span class="text-[9.5px] font-semibold px-2 py-0.5 rounded-full border ${theme.badgeBg} uppercase tracking-wider mt-0.5">${theme.label}</span>
+          ${state.show_inviter_count ? `
+            <span class="text-[11.5px] ${theme.totalClass} tabular-nums mt-0.5">${entry.total} Einl.</span>
+            <span class="text-[9.5px] ${theme.subClass} tabular-nums mb-1 mt-0.5 h-3">+${entry.regular} / -${entry.left}</span>
+          ` : `<div class="mb-1 mt-0.5 h-3"></div>`}
+          <div class="w-[88%] ${theme.barHeight} ${theme.barClass} rounded-t-xl mt-1 flex items-end justify-center pb-3 transition-transform duration-200 group-hover:scale-[1.02]">
+            <span class="text-3xl font-black ${theme.numClass}">${rank}</span>
           </div>
         </div>
-        <div class="border-t border-neutral-800 flex-1 min-h-0 overflow-y-auto max-h-[55vh] lg:max-h-none scrollbar-thin">
+      `;
+    };
+
+    if (lb.length === 0) {
+      return `
+        <div class="relative flex items-end justify-center px-4 pt-6 pb-0 gap-2 sm:gap-3">
+          <div class="absolute bottom-0 left-4 right-4 h-px bg-neutral-800"></div>
+          ${renderPodiumSlot(null, 2)}
+          ${renderPodiumSlot(null, 1)}
+          ${renderPodiumSlot(null, 3)}
+        </div>
+        <div class="border-t border-neutral-800 flex-1 min-h-0 overflow-y-auto max-h-[55vh] lg:max-h-none scrollbar-none">
           <div class="flex items-center gap-3 px-5 py-2.5" style="opacity: 0.15;">
             <span class="text-xs font-semibold text-neutral-500 w-7 text-right tabular-nums flex-shrink-0">#4</span>
             <div class="w-7 h-7 rounded-full bg-neutral-700 flex-shrink-0"></div>
@@ -245,39 +300,6 @@ DashboardTabs.Invites = async function (container, guildId) {
     const second = lb[1] || null;
     const third = lb[2] || null;
 
-    const renderPodiumSlot = (entry, rank, avatarSizeCls, barHeightCls, accentCls) => {
-      if (!entry) {
-        return `
-          <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10">
-            <div class="h-6 flex items-end justify-center"></div>
-            <div class="${avatarSizeCls} rounded-full bg-neutral-800/40"></div>
-            <div class="h-3 w-14 rounded bg-neutral-800/30 mt-2"></div>
-            <div class="h-3.5 w-8 rounded bg-neutral-800/20 mt-1"></div>
-            <div class="mb-1 mt-0.5 h-3"></div>
-            <div class="w-[85%] ${barHeightCls} bg-neutral-800/15 rounded-t-xl mt-1 flex items-end justify-center pb-3">
-              <span class="text-2xl font-black text-neutral-800/25">${rank}</span>
-            </div>
-          </div>
-        `;
-      }
-      return `
-        <div class="flex flex-col items-center flex-1 max-w-[160px] relative z-10">
-          <div class="h-6 flex items-end justify-center">
-            ${rank === 1 ? `<span class="text-amber-400 text-xs font-bold">👑</span>` : ''}
-          </div>
-          <img src="${escapeHtml(entry.avatar)}" alt="${escapeHtml(entry.name)}" class="${avatarSizeCls} rounded-full object-cover ring-2 ${accentCls}">
-          <span class="text-xs font-semibold text-white truncate max-w-[120px] mt-2">${escapeHtml(entry.name)}</span>
-          ${state.show_inviter_count ? `
-            <span class="text-[11px] font-bold text-neutral-300 tabular-nums mt-0.5">${entry.total} Einl.</span>
-            <span class="text-[10px] text-neutral-500 tabular-nums mb-1 mt-0.5 h-3">+${entry.regular} / -${entry.left}</span>
-          ` : `<div class="mb-1 mt-0.5 h-3"></div>`}
-          <div class="w-[85%] ${barHeightCls} bg-neutral-800/40 border border-b-0 border-white/[0.05] rounded-t-xl mt-1 flex items-end justify-center pb-3">
-            <span class="text-2xl font-black text-neutral-500/40">${rank}</span>
-          </div>
-        </div>
-      `;
-    };
-
     const restRows = lb.slice(3).map((entry, i) => {
       const rank = i + 4;
       return `
@@ -296,13 +318,13 @@ DashboardTabs.Invites = async function (container, guildId) {
     }).join('');
 
     return `
-      <div class="relative flex items-end justify-center px-4 pt-8 pb-0">
+      <div class="relative flex items-end justify-center px-4 pt-6 pb-0 gap-2 sm:gap-3">
         <div class="absolute bottom-0 left-4 right-4 h-px bg-neutral-800"></div>
-        ${renderPodiumSlot(second, 2, 'w-12 h-12', 'h-16', 'ring-neutral-400/40')}
-        ${renderPodiumSlot(first, 1, 'w-16 h-16', 'h-24', 'ring-amber-400/60')}
-        ${renderPodiumSlot(third, 3, 'w-11 h-11', 'h-12', 'ring-amber-700/50')}
+        ${renderPodiumSlot(second, 2)}
+        ${renderPodiumSlot(first, 1)}
+        ${renderPodiumSlot(third, 3)}
       </div>
-      <div class="border-t border-neutral-800 flex-1 min-h-0 overflow-y-auto max-h-[55vh] lg:max-h-none scrollbar-thin divide-y divide-neutral-800/40">
+      <div class="border-t border-neutral-800 flex-1 min-h-0 overflow-y-auto max-h-[55vh] lg:max-h-none scrollbar-none divide-y divide-neutral-800/40">
         ${restRows || `
           <div class="flex flex-col items-center justify-center py-8 px-6 text-center">
             <p class="text-xs text-neutral-500">Keine weiteren Platzierungen ab #4</p>
