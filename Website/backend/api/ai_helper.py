@@ -374,7 +374,7 @@ class AIHelperMixin:
                             "$or": [{"guild_id": guild_id}, {"guild_id": gid_str}]
                         }).limit(365))
                     return d
-                docs = await asyncio.to_thread(_fetch_ai_stats)
+                docs = _fetch_ai_stats()
                 tot_msgs = 0
                 tot_voice = 0
                 tot_joins = 0
