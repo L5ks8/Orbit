@@ -1,3 +1,4 @@
+import re
 import discord
 from datetime import datetime, timezone
 from Components.Systems.WelcomeGoodbye._storage import set_welcome_status
@@ -73,8 +74,14 @@ def _build_replacements(member: discord.Member) -> dict:
     return {
         "{user}": user_mention,
         "{user.mention}": user_mention,
+        "{user_mention}": user_mention,
+        "{member}": user_mention,
         "{user.name}": username,
+        "{user.username}": username,
         "{user.displayName}": display_name,
+        "{user.display_name}": display_name,
+        "{display_name}": display_name,
+        "{displayname}": display_name,
         "{user.id}": user_id,
         "{user.avatar}": user_avatar,
         "{user.tag}": user_tag,
@@ -83,37 +90,54 @@ def _build_replacements(member: discord.Member) -> dict:
         "{user_globalname}": display_name,
         "{server}": server_name,
         "{server.name}": server_name,
+        "{guild}": server_name,
+        "{guild.name}": server_name,
         "{server.id}": server_id,
         "{server.members}": str(count),
         "{server.icon}": server_icon,
         "{memberCount}": str(count),
+        "{member_count}": str(count),
+        "{members}": str(count),
         "{count}": str(count),
         "{id}": user_id,
         "{invite}": invite_url,
+        "{invite.url}": invite_url,
         "{invite.code}": invite_code,
+        "{code}": invite_code,
         "{inviter}": inviter_mention,
+        "{inviter.mention}": inviter_mention,
         "{inviter.name}": inviter_name,
+        "{inviter.username}": inviter_name,
+        "{inviter.displayName}": inviter_name,
+        "{inviter.display_name}": inviter_name,
         "{inviter.count}": inviter_count,
+        "{inviter.invites}": inviter_count,
+        "{invites}": inviter_count,
         "{account.age}": account_age,
+        "{account_age}": account_age,
+        "{user.created_at}": account_age,
+        "{user.age}": account_age,
         "{time.in.server}": time_in_server,
+        "{time_in_server}": time_in_server,
+        "{joined_at}": time_in_server,
     }
+
+
+_VAR_RE = re.compile(r"\{[A-Za-z_][A-Za-z0-9_.]*\}")
+
+
+def _apply_replacements(template: str, replacements: dict) -> str:
+    lookup = {k.lower(): str(v) for k, v in replacements.items()}
+    return _VAR_RE.sub(lambda m: lookup.get(m.group(0).lower(), m.group(0)), str(template))
 
 
 def format_welcome_string(template: str, member: discord.Member) -> str:
     if not template:
         return ""
-    replacements = _build_replacements(member)
-    res = str(template)
-    for key, val in replacements.items():
-        res = res.replace(key, str(val))
-    return res
+    return _apply_replacements(template, _build_replacements(member))
 
 
 def format_goodbye_string(template: str, member: discord.Member) -> str:
     if not template:
         return ""
-    replacements = _build_replacements(member)
-    res = str(template)
-    for key, val in replacements.items():
-        res = res.replace(key, str(val))
-    return res
+    return _apply_replacements(template, _build_replacements(member))

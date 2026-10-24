@@ -112,6 +112,22 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
   function renderPreviewTokens(text) {
     if (!text) return '';
+    if (window.DiscordMarkdown && typeof window.DiscordMarkdown.parse === 'function') {
+      return window.DiscordMarkdown.parse(text, {
+        guildName: state.guildName,
+        memberCount: state.memberCount,
+        channels: state.allChannels && state.allChannels.length ? state.allChannels : state.channels,
+        roles: state.roles || [],
+        emojis: state.emojis || [],
+        members: state.members || [],
+        highlightVariables: true
+      });
+    }
+    return renderPreviewTokensLegacy(text);
+  }
+
+  function renderPreviewTokensLegacy(text) {
+    if (!text) return '';
     const map = {
       '{user}': `<span class="bg-[#5865f2]/30 text-[#c9cdfb] rounded-[3px] px-[2px]">@User</span>`,
       '{user.displayName}': `<span class="bg-[#5865f2]/30 text-[#c9cdfb] rounded-[3px] px-[2px]">User</span>`,
@@ -1559,6 +1575,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
     const rawChs = (Array.isArray(chData) && chData.length > 0)
       ? chData
       : (Array.isArray(configData.channels) ? configData.channels : []);
+    state.allChannels = rawChs;
+    state.emojis = Array.isArray(configData.emojis) ? configData.emojis : (Array.isArray(cfg.emojis) ? cfg.emojis : []);
+    state.roles = Array.isArray(configData.roles) ? configData.roles : (Array.isArray(cfg.roles) ? cfg.roles : []);
+    state.members = Array.isArray(configData.members) ? configData.members : (Array.isArray(cfg.members) ? cfg.members : []);
     state.channels = rawChs.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
 
     if (cfg.botprofile) {

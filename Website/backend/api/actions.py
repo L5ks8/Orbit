@@ -28,6 +28,17 @@ from Components.Commands._utils import (
     ORBIT_COLOR
 )
 
+
+import re as _orbit_re
+_ORBIT_VAR_RE = _orbit_re.compile(r"\{[A-Za-z_][A-Za-z0-9_.]*\}")
+
+
+def _orbit_sub_vars(text, lookup):
+    if not text:
+        return text
+    low = {k.lower(): ("" if v is None else str(v)) for k, v in lookup.items()}
+    return _ORBIT_VAR_RE.sub(lambda m: low.get(m.group(0).lower(), m.group(0)), str(text))
+
 class ActionsMixin:
     async def api_action_get_saved_embeds(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
@@ -144,19 +155,15 @@ class ActionsMixin:
             member_count = guild.member_count or len(guild.members)
 
             def replace_vars(text):
-                if not text:
-                    return text
-                t = str(text)
-                t = t.replace("{user}", f"<@{uid_str}>" if uid_str else uname_str)
-                t = t.replace("{user.mention}", f"<@{uid_str}>" if uid_str else uname_str)
-                t = t.replace("{user.name}", uname_str)
-                t = t.replace("{username}", uname_str)
-                t = t.replace("{server}", guild.name)
-                t = t.replace("{server.name}", guild.name)
-                t = t.replace("{membercount}", str(member_count))
-                t = t.replace("{server.members}", str(member_count))
-                t = t.replace("{count}", str(member_count))
-                return t
+                mention = f"<@{uid_str}>" if uid_str else uname_str
+                return _orbit_sub_vars(text, {
+                    "{user}": mention, "{user.mention}": mention, "{mention}": mention, "{member}": mention, "{user_mention}": mention,
+                    "{user.name}": uname_str, "{username}": uname_str, "{user.displayName}": uname_str, "{user.display_name}": uname_str,
+                    "{display_name}": uname_str, "{displayname}": uname_str, "{user_globalname}": uname_str,
+                    "{user.id}": uid_str, "{id}": uid_str,
+                    "{server}": guild.name, "{server.name}": guild.name, "{guild}": guild.name, "{guild.name}": guild.name, "{server.id}": guild.id,
+                    "{memberCount}": member_count, "{member_count}": member_count, "{members}": member_count, "{server.members}": member_count, "{count}": member_count,
+                })
 
             embed = discord.Embed()
             if has_embed_flag:
@@ -821,23 +828,21 @@ class ActionsMixin:
             def replace_vars(text: str, target_user=None) -> str:
                 if not text: return text
                 u = target_user or guild.me
-                text = text.replace("{user}", u.mention if u else "")
-                text = text.replace("{user.mention}", u.mention if u else "")
-                text = text.replace("{user.name}", u.name if u else "")
-                text = text.replace("{user.id}", str(u.id) if u else "")
-                text = text.replace("{user.avatar}", u.display_avatar.url if (u and getattr(u, "display_avatar", None)) else "")
-                text = text.replace("{user.tag}", str(u) if u else "")
-                text = text.replace("{username}", u.name if u else "")
-                text = text.replace("{mention}", u.mention if u else "")
-                text = text.replace("{id}", str(u.id) if u else "")
-                text = text.replace("{user_globalname}", getattr(u, "global_name", None) or (u.display_name if u else ""))
-                text = text.replace("{count}", str(member_count))
-                text = text.replace("{server}", server_name)
-                text = text.replace("{server.name}", server_name)
-                text = text.replace("{server.id}", str(guild.id))
-                text = text.replace("{server.members}", str(member_count))
-                text = text.replace("{server.icon}", guild.icon.url if guild.icon else "")
-                return text
+                mention = u.mention if u else ""
+                uname = u.name if u else ""
+                dname = (getattr(u, "global_name", None) or u.display_name) if u else ""
+                uid = str(u.id) if u else ""
+                return _orbit_sub_vars(text, {
+                    "{user}": mention, "{user.mention}": mention, "{mention}": mention, "{member}": mention, "{user_mention}": mention,
+                    "{user.name}": uname, "{username}": uname, "{user.displayName}": dname, "{user.display_name}": dname,
+                    "{display_name}": dname, "{displayname}": dname, "{user_globalname}": dname,
+                    "{user.id}": uid, "{id}": uid,
+                    "{user.avatar}": u.display_avatar.url if (u and getattr(u, "display_avatar", None)) else "",
+                    "{user.tag}": str(u) if u else "",
+                    "{server}": server_name, "{server.name}": server_name, "{guild}": server_name, "{guild.name}": server_name,
+                    "{server.id}": guild.id, "{server.icon}": guild.icon.url if guild.icon else "",
+                    "{memberCount}": member_count, "{member_count}": member_count, "{members}": member_count, "{server.members}": member_count, "{count}": member_count,
+                })
 
             content_text = replace_vars(content_text)
             title = replace_vars(title)

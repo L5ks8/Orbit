@@ -313,22 +313,26 @@ DashboardTabs.Messages = async function (container, guildId) {
 
   function resolvePreviewVars(text) {
     if (!text) return '';
+    const gName = currentGuild.name || 'Server';
+    const mCount = String(currentGuild.member_count || 128);
     return String(text)
-      .replace(/\{user\}/g, '@Lukas')
-      .replace(/\{user\.mention\}/g, '@Lukas')
-      .replace(/\{user\.name\}/g, 'Lukas')
-      .replace(/\{server\}/g, currentGuild.name || 'Server')
-      .replace(/\{server\.name\}/g, currentGuild.name || 'Server')
-      .replace(/\{membercount\}/g, String(currentGuild.member_count || 128))
-      .replace(/\{count\}/g, String(currentGuild.member_count || 128));
+      .replace(/\{(user|user\.mention|mention|member|user_mention)\}/gi, '@Lukas')
+      .replace(/\{(user\.display_?name|display_?name|user_globalname)\}/gi, 'Lukas')
+      .replace(/\{(user\.name|username)\}/gi, 'Lukas')
+      .replace(/\{(server|server\.name|guild|guild\.name)\}/gi, gName)
+      .replace(/\{(member_?count|count|members|server\.members)\}/gi, mCount);
   }
 
   function formatDiscordText(text) {
     if (!text) return '';
-    const withVars = resolvePreviewVars(text);
     if (window.DiscordMarkdown && typeof window.DiscordMarkdown.parse === 'function') {
-      return window.DiscordMarkdown.parse(withVars);
+      return window.DiscordMarkdown.parse(text, {
+        guildName: currentGuild.name || 'Server',
+        memberCount: currentGuild.member_count || 128,
+        highlightVariables: false
+      });
     }
+    const withVars = resolvePreviewVars(text);
     return escapeHtml(withVars).replace(/\n/g, '<br>');
   }
 
@@ -395,9 +399,9 @@ DashboardTabs.Messages = async function (container, guildId) {
                         <div class="flex items-center gap-2">
                           ${(state.author_icon || '').trim() ? `<img src="${escapeHtml(state.author_icon)}" alt="" class="w-5 h-5 rounded-full object-cover">` : ''}
                           ${(state.author_url || '').trim() ? `
-                            <a href="${escapeHtml(state.author_url)}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-white hover:underline truncate">${escapeHtml(resolvePreviewVars(state.author_name))}</a>
+                            <a href="${escapeHtml(state.author_url)}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-white hover:underline truncate">${formatDiscordText((state.author_name))}</a>
                           ` : `
-                            <span class="text-xs font-semibold text-white truncate">${escapeHtml(resolvePreviewVars(state.author_name))}</span>
+                            <span class="text-xs font-semibold text-white truncate">${formatDiscordText((state.author_name))}</span>
                           `}
                         </div>
                       ` : ''}
@@ -405,9 +409,9 @@ DashboardTabs.Messages = async function (container, guildId) {
                       ${(state.title || '').trim() ? `
                         <div>
                           ${(state.url || '').trim() ? `
-                            <a href="${escapeHtml(state.url)}" target="_blank" rel="noopener noreferrer" class="text-sm font-bold text-[#00a8fc] hover:underline break-words">${escapeHtml(resolvePreviewVars(state.title))}</a>
+                            <a href="${escapeHtml(state.url)}" target="_blank" rel="noopener noreferrer" class="text-sm font-bold text-[#00a8fc] hover:underline break-words">${formatDiscordText((state.title))}</a>
                           ` : `
-                            <div class="text-sm font-bold text-white break-words">${escapeHtml(resolvePreviewVars(state.title))}</div>
+                            <div class="text-sm font-bold text-white break-words">${formatDiscordText((state.title))}</div>
                           `}
                         </div>
                       ` : ''}
@@ -426,7 +430,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                     <div class="grid grid-cols-12 gap-2.5 pt-1">
                       ${state.fields.filter(f => (f.name || '').trim() || (f.value || '').trim()).map(f => `
                         <div class="${f.inline ? 'col-span-4' : 'col-span-12'} min-w-0">
-                          <div class="text-xs font-semibold text-white break-words">${escapeHtml(resolvePreviewVars(f.name || '\u200b'))}</div>
+                          <div class="text-xs font-semibold text-white break-words">${formatDiscordText((f.name || '\u200b'))}</div>
                           <div class="text-xs text-neutral-300 whitespace-pre-wrap break-words mt-0.5">${formatDiscordText(f.value || '\u200b')}</div>
                         </div>
                       `).join('')}
@@ -442,7 +446,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                   ${((state.footer_text || '').trim() || state.timestamp) ? `
                     <div class="flex items-center gap-2 pt-1 text-[11px] text-neutral-400">
                       ${(state.footer_icon || '').trim() ? `<img src="${escapeHtml(state.footer_icon)}" alt="" class="w-4 h-4 rounded-full object-cover">` : ''}
-                      <span>${escapeHtml(resolvePreviewVars(state.footer_text || ''))}${state.footer_text && state.timestamp ? ' • ' : ''}${state.timestamp ? 'Heute um 12:00 Uhr' : ''}</span>
+                      <span>${formatDiscordText((state.footer_text || ''))}${state.footer_text && state.timestamp ? ' • ' : ''}${state.timestamp ? 'Heute um 12:00 Uhr' : ''}</span>
                     </div>
                   ` : ''}
                 </div>
@@ -725,8 +729,8 @@ DashboardTabs.Messages = async function (container, guildId) {
               </div>
 
               <div class="rounded-lg bg-[#2b2d31] border-l-4 p-3 space-y-1" style="border-left-color: ${escapeHtml(card.color)};">
-                <p class="text-xs font-bold text-white truncate">${escapeHtml(resolvePreviewVars(card.previewTitle))}</p>
-                <p class="text-[11px] text-neutral-300 line-clamp-2">${escapeHtml(resolvePreviewVars(card.previewDesc))}</p>
+                <p class="text-xs font-bold text-white truncate">${formatDiscordText((card.previewTitle))}</p>
+                <p class="text-[11px] text-neutral-300 line-clamp-2">${formatDiscordText((card.previewDesc))}</p>
               </div>
             </div>
 

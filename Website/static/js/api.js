@@ -256,7 +256,16 @@ const API = {
   },
 
   async getConfig(guildId, force = false) {
-    return await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}`), force);
+    const res = await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}`), force);
+    try {
+      if (res && typeof res === 'object' && window.DiscordMarkdown) {
+        if (Array.isArray(res.channels)) window.DiscordMarkdown.setChannels(res.channels);
+        if (Array.isArray(res.roles)) window.DiscordMarkdown.setRoles(res.roles);
+        if (Array.isArray(res.emojis)) window.DiscordMarkdown.setEmojis(res.emojis);
+        if (Array.isArray(res.members)) window.__orbitMembers = res.members;
+      }
+    } catch (_) {}
+    return res;
   },
 
   async saveConfig(guildId, payload) {
@@ -282,10 +291,12 @@ const API = {
   },
 
   async getChannels(guildId, force = false) {
-    return await this.cachedRequest(`channels_${guildId}`, async () => {
+    const list = await this.cachedRequest(`channels_${guildId}`, async () => {
       const res = await this.request(`/api/channels/${guildId}`);
       return Array.isArray(res) ? res : (res?.channels || []);
     }, force);
+    try { if (Array.isArray(list) && list.length && window.DiscordMarkdown) window.DiscordMarkdown.setChannels(list); } catch (_) {}
+    return list;
   },
 
   async getRoles(guildId, force = false) {

@@ -331,28 +331,388 @@ const SaveBar = {
   }
 };
 
-// --- DISCORD MARKDOWN PARSER ---
+// --- DISCORD MARKDOWN & COMPONENT PARSER ---
+const DISCORD_STANDARD_EMOJIS = {
+  ":heart:": "❤️", ":thumbsup:": "👍", ":thumbsdown:": "👎", ":wave:": "👋", ":tada:": "🎉",
+  ":fire:": "🔥", ":star:": "⭐", ":sparkles:": "✨", ":rocket:": "🚀", ":warning:": "⚠️",
+  ":white_check_mark:": "✅", ":x:": "❌", ":check:": "✔️", ":cross:": "✖️", ":bulb:": "💡",
+  ":eyes:": "👀", ":bell:": "🔔", ":crown:": "👑", ":smile:": "😄", ":laughing:": "😆",
+  ":joy:": "😂", ":rofl:": "🤣", ":sob:": "😭", ":skull:": "💀", ":robot:": "🤖",
+  ":ghost:": "👻", ":clap:": "👏", ":pray:": "🙏", ":muscle:": "💪", ":100:": "💯",
+  ":ticket:": "🎫", ":lock:": "🔒", ":unlock:": "🔓", ":shield:": "🛡️", ":zap:": "⚡",
+  ":gem:": "💎", ":gift:": "🎁", ":moneybag:": "💰", ":chart:": "📊", ":trophy:": "🏆",
+  ":medal:": "🏅", ":gear:": "⚙️", ":tools:": "🛠️", ":hammer:": "🔨", ":wrench:": "🔧",
+  ":link:": "🔗", ":paperclip:": "📎", ":pushpin:": "📌", ":speech_balloon:": "💬", ":mega:": "📣",
+  ":loudspeaker:": "📢", ":mute:": "🔇", ":speaker:": "🔈", ":sound:": "🔉", ":loud_sound:": "🔊",
+  ":musical_note:": "🎵", ":notes:": "🎶", ":point_right:": "👉", ":point_left:": "👈",
+  ":point_up:": "👆", ":point_down:": "👇", ":ok_hand:": "👌", ":v:": "✌️", ":crossed_fingers:": "🤞",
+  ":white_heart:": "🤍", ":black_heart:": "🖤", ":red_heart:": "❤️", ":blue_heart:": "💙",
+  ":green_heart:": "💚", ":yellow_heart:": "💛", ":purple_heart:": "💜", ":orange_heart:": "🧡",
+  ":sparkling_heart:": "💖", ":broken_heart:": "💔", ":exclamation:": "❗", ":question:": "❓",
+  ":small_blue_diamond:": "🔹", ":small_orange_diamond:": "🔸", ":large_blue_diamond:": "🔷",
+  ":large_orange_diamond:": "🔶", ":white_circle:": "⚪", ":black_circle:": "⚫", ":red_circle:": "🔴",
+  ":blue_circle:": "🔵", ":green_circle:": "🟢", ":ballot_box_with_check:": "☑️", ":coffee:": "☕",
+  ":beer:": "🍺", ":pizza:": "🍕", ":warning_sign:": "⚠️", ":radioactive:": "☢️", ":biohazard:": "☣️"
+};
+
 const DiscordMarkdown = {
-  parse(text) {
-    if (!text) return '';
-    let escaped = text
+  _channels: [],
+  _roles: [],
+  _emojis: [],
+  _guildName: 'Server',
+  _memberCount: '1,234',
+
+  setChannels(chs) {
+    if (Array.isArray(chs)) this._channels = chs;
+  },
+
+  setRoles(roles) {
+    if (Array.isArray(roles)) this._roles = roles;
+  },
+
+  setEmojis(emojis) {
+    if (Array.isArray(emojis)) this._emojis = emojis;
+  },
+
+  setGuildInfo(name, count) {
+    if (name) this._guildName = name;
+    if (count !== undefined && count !== null) this._memberCount = String(count);
+  },
+
+  getChannelName(id, options = {}) {
+    const list = options.channels || this._channels || window.__orbitChannels || [];
+    const found = list.find(c => String(c.id) === String(id));
+    if (found && found.name) return found.name.replace(/^#+/, '');
+    return 'channel';
+  },
+
+  getRole(id, options = {}) {
+    const list = options.roles || this._roles || window.__orbitRoles || [];
+    const found = list.find(r => String(r.id) === String(id));
+    if (found) {
+      return {
+        name: found.name || 'role',
+        color: (found.color && found.color !== '#000000' && found.color !== 0) ? found.color : null
+      };
+    }
+    return { name: 'role', color: null };
+  },
+
+  escapeHtml(str) {
+    return String(str || '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  },
 
-    // Blockquotes
-    escaped = escaped.replace(/^&gt;\s+(.*)$/gm, '<div class="pl-2.5 border-l-4 border-[#4e5058] rounded-[3px] my-1 text-neutral-300">$1</div>');
-    
-    // Bold, Italic, Code, Underline, Strikethrough
-    return escaped
-      .replace(/```([\s\S]*?)```/g, '<pre class="bg-neutral-950 p-3 rounded-lg border border-neutral-800 font-mono text-xs text-neutral-300 overflow-x-auto my-2"><code>$1</code></pre>')
-      .replace(/`([^`]+)`/g, '<code class="bg-neutral-800 px-1.5 py-0.5 rounded text-xs text-neutral-200 font-mono">$1</code>')
-      .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic text-neutral-300">$1</em>')
-      .replace(/__(.*?)__/g, '<u>$1</u>')
-      .replace(/~~(.*?)~~/g, '<s class="line-through text-neutral-500">$1</s>')
-      .replace(/\n/g, '<br />');
+  formatTimestamp(timestampStr, style) {
+    const ts = parseInt(timestampStr, 10);
+    if (isNaN(ts)) return timestampStr;
+    const d = new Date(ts * 1000);
+    if (isNaN(d.getTime())) return timestampStr;
+
+    if (style === 'R') {
+      const now = Math.floor(Date.now() / 1000);
+      const diff = now - ts;
+      if (Math.abs(diff) < 60) return diff >= 0 ? 'just now' : 'in a few seconds';
+      if (Math.abs(diff) < 3600) {
+        const m = Math.floor(Math.abs(diff) / 60);
+        return diff >= 0 ? `${m} minutes ago` : `in ${m} minutes`;
+      }
+      if (Math.abs(diff) < 86400) {
+        const h = Math.floor(Math.abs(diff) / 3600);
+        return diff >= 0 ? `${h} hours ago` : `in ${h} hours`;
+      }
+      const days = Math.floor(Math.abs(diff) / 86400);
+      return diff >= 0 ? `${days} days ago` : `in ${days} days`;
+    }
+    return d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+  },
+
+  parse(text, options = {}) {
+    if (!text && text !== 0) return '';
+    let raw = String(text);
+
+    const tokens = [];
+    const saveToken = (html) => {
+      const idx = tokens.length;
+      tokens.push(html);
+      return `\u0001TOK${idx}\u0001`;
+    };
+
+    // 1. Code blocks ```lang\ncode``` or ```code```
+    raw = raw.replace(/```(?:([a-zA-Z0-9_-]+)\n)?([\s\S]*?)```/g, (match, lang, code) => {
+      const safeCode = this.escapeHtml(code);
+      return saveToken(`<pre class="bg-neutral-950 p-3 rounded-lg border border-neutral-800 font-mono text-xs text-neutral-300 overflow-x-auto my-2 whitespace-pre leading-snug"><code>${safeCode}</code></pre>`);
+    });
+
+    // 2. Inline code `code`
+    raw = raw.replace(/`([^`\n]+)`/g, (match, code) => {
+      const safeCode = this.escapeHtml(code);
+      return saveToken(`<code class="bg-[#2b2d31] text-[#ebdbb2] px-1.5 py-0.5 rounded text-[12px] font-mono select-all">${safeCode}</code>`);
+    });
+
+    // 3. Custom Discord Emojis:
+    // Animated: <a:name:id> or <a:id> or <a::id>
+    // Static: <:name:id> or <:id> or <::id>
+    raw = raw.replace(/<(a?):(?:([a-zA-Z0-9_~]+):)?(\d+)>/g, (match, anim, name, id) => {
+      const isAnimated = anim === 'a';
+      const emojiName = name ? `:${name}:` : 'emoji';
+      const ext = isAnimated ? 'gif' : 'webp';
+      const cdnUrl = `https://cdn.discordapp.com/emojis/${id}.${ext}?size=48&quality=lossless`;
+      const fallbackUrl = `https://cdn.discordapp.com/emojis/${id}.png?size=48`;
+      const html = `<img src="${cdnUrl}" alt="${this.escapeHtml(emojiName)}" title="${this.escapeHtml(emojiName)}" class="inline-block align-[-0.22em] w-[1.375em] h-[1.375em] object-contain mx-0.5 select-none pointer-events-none" loading="lazy" onerror="this.onerror=null;this.src='${fallbackUrl}'">`;
+      return saveToken(html);
+    });
+
+    // 4. Channel mentions <#id>
+    raw = raw.replace(/<#(\d+)>/g, (match, id) => {
+      const chName = this.getChannelName(id, options);
+      const html = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#5865F2]/15 hover:bg-[#5865F2]/25 text-[#c9cdfb] font-medium text-[0.88em] cursor-pointer align-baseline transition-colors select-none group"><svg class="w-3.5 h-3.5 text-[#5865F2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg><span class="group-hover:underline">${this.escapeHtml(chName)}</span></span>`;
+      return saveToken(html);
+    });
+
+    // 5. Role mentions <@&id>
+    raw = raw.replace(/<@&(\d+)>/g, (match, id) => {
+      const role = this.getRole(id, options);
+      const colorStyle = role.color ? `color:${role.color};background:${role.color}18;` : '';
+      const html = `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#5865F2]/15 text-[#c9cdfb] font-medium text-[0.88em] select-none align-baseline cursor-pointer hover:bg-[#5865F2]/25 transition-colors" style="${colorStyle}">@${this.escapeHtml(role.name)}</span>`;
+      return saveToken(html);
+    });
+
+    // 6. User mentions <@id> or <@!id>
+    raw = raw.replace(/<@!?(\d+)>/g, (match, id) => {
+      const list = options.members || window.__orbitMembers || [];
+      const found = list.find(m => String(m.id) === String(id));
+      const uName = found ? (found.displayName || found.name) : 'User';
+      const html = `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#5865F2]/15 text-[#c9cdfb] font-medium text-[0.88em] select-none align-baseline cursor-pointer hover:bg-[#5865F2]/25 transition-colors">@${this.escapeHtml(uName)}</span>`;
+      return saveToken(html);
+    });
+
+    // 7. Timestamps <t:1234567890:R> or <t:1234567890>
+    raw = raw.replace(/<t:(\d+)(?::([tTdDfFR]))?>/g, (match, ts, style) => {
+      const formatted = this.formatTimestamp(ts, style || 'f');
+      const html = `<span class="px-1.5 py-0.5 rounded bg-white/[0.06] text-neutral-300 text-[0.88em] font-medium select-none cursor-default" title="Timestamp: ${ts}">${this.escapeHtml(formatted)}</span>`;
+      return saveToken(html);
+    });
+
+    // 8. Variables (case-insensitive)
+    const varHighlight = options.highlightVariables !== false;
+    const guildName = options.guildName || (options.guild && options.guild.name) || this._guildName || window.__orbitGuildName || 'Server';
+    const memberCount = String(options.memberCount || this._memberCount || window.__orbitMemberCount || '1,234');
+    const inviterName = options.inviterName || 'Inviter';
+    const inviterCount = String(options.inviterCount || '5');
+    const inviteCode = options.inviteCode || 'orbit';
+    const inviteUrl = options.inviteUrl || 'discord.gg/orbit';
+    const accountAge = options.accountAge || '2 years';
+    const timeInServer = options.timeInServer || '3 months';
+
+    const varMap = [
+      {
+        re: /\{(user\.display_?name|display_?name)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-[#5865f2]/20 text-[#c9cdfb] font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">User</span>`
+          : `User`
+      },
+      {
+        re: /\{(user|user\.mention|mention|member|user_mention)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-[#5865f2]/20 text-[#c9cdfb] font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">@User</span>`
+          : `@User`
+      },
+      {
+        re: /\{(user\.name|username)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-[#5865f2]/20 text-[#c9cdfb] font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">User</span>`
+          : `User`
+      },
+      {
+        re: /\{(user\.id|id)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-neutral-800 text-neutral-300 font-mono rounded px-1.5 py-0.5 inline-block text-[0.85em]">1234567890</span>`
+          : `1234567890`
+      },
+      {
+        re: /\{(server|server\.name|guild|guild\.name)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-emerald-500/20 text-emerald-300 font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">${this.escapeHtml(guildName)}</span>`
+          : this.escapeHtml(guildName)
+      },
+      {
+        re: /\{(member_?count|count|members|server\.members)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-amber-500/20 text-amber-300 font-semibold rounded px-1.5 py-0.5 inline-block text-[0.9em]">${this.escapeHtml(memberCount)}</span>`
+          : this.escapeHtml(memberCount)
+      },
+      {
+        re: /\{(inviter\.name|inviter\.username|inviter\.display_?name)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-orange-500/20 text-orange-300 font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">${this.escapeHtml(inviterName)}</span>`
+          : this.escapeHtml(inviterName)
+      },
+      {
+        re: /\{(inviter|inviter\.mention)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-orange-500/20 text-orange-300 font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">@${this.escapeHtml(inviterName)}</span>`
+          : `@${this.escapeHtml(inviterName)}`
+      },
+      {
+        re: /\{(inviter\.count|inviter\.invites|invites)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-orange-500/20 text-orange-300 font-semibold rounded px-1.5 py-0.5 inline-block text-[0.9em]">${this.escapeHtml(inviterCount)}</span>`
+          : this.escapeHtml(inviterCount)
+      },
+      {
+        re: /\{(invite\.code|code)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-cyan-500/20 text-cyan-300 font-mono rounded px-1.5 py-0.5 inline-block text-[0.85em]">${this.escapeHtml(inviteCode)}</span>`
+          : this.escapeHtml(inviteCode)
+      },
+      {
+        re: /\{(invite|invite\.url)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-cyan-500/20 text-cyan-300 font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">${this.escapeHtml(inviteUrl)}</span>`
+          : this.escapeHtml(inviteUrl)
+      },
+      {
+        re: /\{(account\.age|account_age|user\.created_at|user\.age)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-purple-500/20 text-purple-300 font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">${this.escapeHtml(accountAge)}</span>`
+          : this.escapeHtml(accountAge)
+      },
+      {
+        re: /\{(time\.in\.server|time_in_server|joined_at)\}/gi,
+        html: varHighlight
+          ? `<span class="bg-purple-500/20 text-purple-300 font-medium rounded px-1.5 py-0.5 inline-block text-[0.9em]">${this.escapeHtml(timeInServer)}</span>`
+          : this.escapeHtml(timeInServer)
+      }
+    ];
+
+    for (const v of varMap) {
+      raw = raw.replace(v.re, () => saveToken(v.html));
+    }
+
+    // 9. Markdown links [text](url)
+    raw = raw.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
+      const safeLabel = this.escapeHtml(label);
+      const safeUrl = this.escapeHtml(url);
+      return saveToken(`<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-[#00a8fc] hover:underline font-medium">${safeLabel}</a>`);
+    });
+
+    // 10. Raw URLs: https://...
+    raw = raw.replace(/(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g, (match, url) => {
+      const safeUrl = this.escapeHtml(url);
+      return saveToken(`<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-[#00a8fc] hover:underline">${safeUrl}</a>`);
+    });
+
+    // 11. Escape the remaining HTML chars
+    raw = this.escapeHtml(raw);
+
+    // 12. Emoji shortcodes
+    // First check guild custom emojis by name (:emoji_name:)
+    const guildEmojis = options.emojis || this._emojis || window.__orbitEmojis || [];
+    raw = raw.replace(/:([a-zA-Z0-9_~+-]+):/g, (match, name) => {
+      const lower = name.toLowerCase();
+      const customFound = guildEmojis.find(e => (e.name || '').toLowerCase() === lower);
+      if (customFound && customFound.id) {
+        const isAnim = Boolean(customFound.animated);
+        const ext = isAnim ? 'gif' : 'webp';
+        const cdnUrl = `https://cdn.discordapp.com/emojis/${customFound.id}.${ext}?size=48&quality=lossless`;
+        const fallbackUrl = `https://cdn.discordapp.com/emojis/${customFound.id}.png?size=48`;
+        return saveToken(`<img src="${cdnUrl}" alt=":${this.escapeHtml(customFound.name)}:" title=":${this.escapeHtml(customFound.name)}:" class="inline-block align-[-0.22em] w-[1.375em] h-[1.375em] object-contain mx-0.5 select-none pointer-events-none" loading="lazy" onerror="this.onerror=null;this.src='${fallbackUrl}'">`);
+      }
+      const full = `:${name}:`;
+      if (DISCORD_STANDARD_EMOJIS[full]) {
+        return DISCORD_STANDARD_EMOJIS[full];
+      }
+      return match;
+    });
+
+    // 13. Discord Headers & Blockquotes
+    const lines = raw.split('\n');
+    let inMultiQuote = false;
+    let inSingleQuote = false;
+    let quoteLines = [];
+    const processedLines = [];
+
+    const flushQuote = () => {
+      if (quoteLines.length > 0) {
+        processedLines.push(`<div class="pl-2.5 border-l-4 border-[#4e5058] rounded-[2px] my-1 text-neutral-300 space-y-0.5">${quoteLines.join('<br />')}</div>`);
+        quoteLines = [];
+      }
+      inMultiQuote = false;
+      inSingleQuote = false;
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+
+      // Multiline quote >>>
+      if (!inMultiQuote && (line.startsWith('&gt;&gt;&gt; ') || line === '&gt;&gt;&gt;')) {
+        flushQuote();
+        inMultiQuote = true;
+        const firstLine = line.replace(/^&gt;&gt;&gt;\s?/, '');
+        if (firstLine.length > 0) quoteLines.push(firstLine);
+        continue;
+      }
+
+      if (inMultiQuote) {
+        quoteLines.push(line);
+        continue;
+      }
+
+      // Single line blockquote >
+      if (line.startsWith('&gt; ') || line === '&gt;') {
+        inSingleQuote = true;
+        const qLine = line.replace(/^&gt;\s?/, '');
+        quoteLines.push(qLine);
+        continue;
+      } else if (inSingleQuote) {
+        flushQuote();
+      }
+
+      // Headers & subtext
+      if (/^#\s+(.+)$/.test(line)) {
+        line = line.replace(/^#\s+(.+)$/, '<div class="text-[17px] font-bold text-white mt-1.5 mb-1 leading-snug">$1</div>');
+      } else if (/^##\s+(.+)$/.test(line)) {
+        line = line.replace(/^##\s+(.+)$/, '<div class="text-[15px] font-bold text-white mt-1 mb-0.5 leading-snug">$1</div>');
+      } else if (/^###\s+(.+)$/.test(line)) {
+        line = line.replace(/^###\s+(.+)$/, '<div class="text-[13px] font-bold text-white mt-0.5 mb-0.5 leading-snug">$1</div>');
+      } else if (/^-#\s+(.+)$/.test(line)) {
+        line = line.replace(/^-#\s+(.+)$/, '<div class="text-[11px] text-neutral-400 leading-normal">$1</div>');
+      }
+
+      processedLines.push(line);
+    }
+    flushQuote();
+
+    raw = processedLines.join('\n');
+
+    // 14. Markdown text styling
+    // ***bold italic***
+    raw = raw.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+    // **bold**
+    raw = raw.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
+    // *italic*
+    raw = raw.replace(/\*([^*\n]+)\*/g, '<em class="italic text-neutral-200">$1</em>');
+    // __underline__
+    raw = raw.replace(/__([^_]+)__/g, '<u class="underline decoration-1 underline-offset-2">$1</u>');
+    // ~~strikethrough~~
+    raw = raw.replace(/~~([^~]+)~~/g, '<s class="line-through text-neutral-400">$1</s>');
+    // ||spoiler||
+    raw = raw.replace(/\|\|([^|]+)\|\|/g, '<span class="bg-[#2b2d31] hover:bg-[#1e1f22] text-[#2b2d31] hover:text-neutral-200 rounded px-1 cursor-pointer transition-colors select-none" title="Spoiler" onclick="this.classList.toggle(\'!text-white\');this.classList.toggle(\'!bg-neutral-800\');">$1</span>');
+
+    // 15. Convert remaining \n to <br />
+    raw = raw.replace(/\n/g, '<br />');
+
+    // 16. Restore tokens
+    raw = raw.replace(/\u0001TOK(\d+)\u0001/g, (match, idx) => {
+      return tokens[parseInt(idx, 10)] || '';
+    });
+
+    return raw;
   }
 };
 
