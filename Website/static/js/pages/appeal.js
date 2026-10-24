@@ -159,7 +159,7 @@
                       rows="3" 
                       ${q.required ? 'required' : ''}
                       placeholder="${escapeHtml(q.placeholder || 'Write your response here...')}" 
-                      class="appeal-question-input w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 text-white text-xs leading-relaxed placeholder:text-neutral-600 focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-colors"
+                      class="appeal-question-input w-full resize-none px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 text-white text-xs leading-relaxed placeholder:text-neutral-600 focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-colors" style="resize: none !important;"
                     ></textarea>
                   </div>
                 `).join('')}

@@ -2921,7 +2921,7 @@ input[type="range"]::-moz-range-thumb {
     padding: 12px 16px;
     border-radius: 12px;
     font-size: 14px;
-    resize: vertical;
+    resize: none !important;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -2934,7 +2934,7 @@ select option {
     color: var(--text-primary);
 }
 textarea {
-    resize: vertical !important;
+    resize: none !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -5276,4 +5276,10 @@ nav#dash-sidebar-nav::-webkit-scrollbar {
   border: 1px solid rgba(249, 115, 22, 0.8) !important;
   border-bottom: none !important;
   box-shadow: inset 0 2px 8px rgba(255, 255, 255, 0.4), 0 -4px 24px rgba(249, 115, 22, 0.25) !important;
+}
+
+
+/* Global Resizing Disabler */
+textarea, textarea.appeal-question-input, .resize-none {
+  resize: none !important;
 }
