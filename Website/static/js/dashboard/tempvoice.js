@@ -193,16 +193,16 @@ DashboardTabs.TempVoice = async function (container, guildId) {
                   </div>
 
                   <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-neutral-800/80 text-[11px]">
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-neutral-300 font-mono">
-                      <span class="w-3 h-3 text-neutral-500 flex items-center justify-center">${SVGS.type}</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-neutral-200 font-mono">
+                      <span class="w-3 h-3 text-neutral-400 flex items-center justify-center">${SVGS.type}</span>
                       <span>${esc(templateStr)}</span>
                     </span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-neutral-400">
-                      <span class="w-3 h-3 text-neutral-500 flex items-center justify-center">${SVGS.users}</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-neutral-300">
+                      <span class="w-3 h-3 text-neutral-400 flex items-center justify-center">${SVGS.users}</span>
                       <span>${esc(limitStr)}</span>
                     </span>
                     ${roleName ? `
-                      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/25 text-indigo-300">
                         <span class="w-3 h-3 flex items-center justify-center">${SVGS.atSign}</span>
                         <span>${esc(roleName)}</span>
                       </span>
@@ -368,15 +368,15 @@ DashboardTabs.TempVoice = async function (container, guildId) {
               <div class="w-4 h-4 flex items-center justify-center text-indigo-400">${SVGS.volume2}</div>
             </div>
             <div>
-              <h2 class="text-sm font-semibold text-white text-balance">${isEdit ? 'Edit Trigger Channel' : 'Create Trigger Channel'}</h2>
-              <p class="text-[11px] text-neutral-500 mt-0.5">Set up a new Join-to-Create voice channel</p>
+              <h2 class="text-base font-semibold text-white">${isEdit ? 'Edit Trigger Channel' : 'Create Trigger Channel'}</h2>
+              <p class="text-xs text-neutral-400 mt-0.5">Set up a new Join-to-Create voice channel</p>
             </div>
           </div>
           <div class="flex items-center gap-1">
-            <button id="modal-btn-toggle-preview" class="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" title="${showLivePreview ? 'Hide preview' : 'Show preview'}">
+            <button id="modal-btn-toggle-preview" class="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" title="${showLivePreview ? 'Hide preview' : 'Show preview'}">
               <div class="w-4 h-4 flex items-center justify-center">${showLivePreview ? SVGS.eyeOff : SVGS.eye}</div>
             </button>
-            <button id="modal-btn-close" class="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+            <button id="modal-btn-close" class="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
               <div class="w-4 h-4 flex items-center justify-center">${SVGS.x}</div>
             </button>
           </div>
@@ -387,19 +387,19 @@ DashboardTabs.TempVoice = async function (container, guildId) {
           <!-- Form Section -->
           <div class="flex-1 overflow-y-auto scrollbar-thin">
             <!-- 1. Trigger Channel Section -->
-            <div class="p-5 space-y-5 border-b border-neutral-800">
-              <div class="flex items-center gap-2 text-[11px] font-medium text-neutral-500 uppercase tracking-wider">
-                <div class="w-3 h-3 flex items-center justify-center">${SVGS.mic}</div>
+            <div class="p-5 space-y-4 border-b border-neutral-800">
+              <div class="flex items-center gap-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                <div class="w-3.5 h-3.5 flex items-center justify-center">${SVGS.mic}</div>
                 <span>Trigger Channel</span>
               </div>
               
               <!-- Voice Channel Dropdown -->
               <div>
-                <label class="block text-[11px] uppercase tracking-wider text-neutral-500 font-medium mb-2">Voice Channel</label>
-                <p class="text-[11px] text-neutral-600 mb-2">Select an existing voice channel or leave empty to create one</p>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">Voice Channel</label>
+                <p class="text-xs text-neutral-400 mb-2">Select an existing voice channel or leave empty to create one</p>
                 <div class="relative">
-                  <button type="button" id="btn-trigger-vc-sel" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                    <span id="txt-trigger-vc-sel" class="min-w-0 truncate text-sm ${selectedVoiceChannelId === 'new' ? 'text-neutral-500' : 'text-white'}">${esc(getVoiceChannelName(selectedVoiceChannelId))}</span>
+                  <button type="button" id="btn-trigger-vc-sel" class="w-full flex items-center justify-between gap-2 h-10 px-3.5 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                    <span id="txt-trigger-vc-sel" class="min-w-0 truncate text-sm ${selectedVoiceChannelId === 'new' ? 'text-neutral-400' : 'text-white font-medium'}">${esc(getVoiceChannelName(selectedVoiceChannelId))}</span>
                     <div class="flex items-center gap-1 text-neutral-400">
                       <div class="w-4 h-4 flex items-center justify-center">${SVGS.chevronDown}</div>
                     </div>
@@ -424,12 +424,12 @@ DashboardTabs.TempVoice = async function (container, guildId) {
 
               <!-- Category Dropdown -->
               <div>
-                <label class="block text-[11px] uppercase tracking-wider text-neutral-500 font-medium mb-2">Category</label>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">Category</label>
                 <div class="relative">
-                  <button type="button" id="btn-trigger-cat-sel" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                  <button type="button" id="btn-trigger-cat-sel" class="w-full flex items-center justify-between gap-2 h-10 px-3.5 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
                     <span id="txt-trigger-cat-sel" class="min-w-0 truncate text-sm text-white flex items-center gap-2">
-                      <span class="w-4 h-4 text-neutral-500 flex items-center justify-center shrink-0">${SVGS.folderOpen}</span>
-                      <span class="truncate">${esc(getCategoryName(selectedCategoryId))}</span>
+                      <span class="w-4 h-4 text-neutral-400 flex items-center justify-center shrink-0">${SVGS.folderOpen}</span>
+                      <span class="truncate font-medium">${esc(getCategoryName(selectedCategoryId))}</span>
                     </span>
                     <div class="flex items-center gap-1 text-neutral-400">
                       <div class="w-4 h-4 flex items-center justify-center">${SVGS.chevronDown}</div>
@@ -459,56 +459,48 @@ DashboardTabs.TempVoice = async function (container, guildId) {
 
             <!-- 2. Channel Name Section -->
             <div class="relative p-5 border-b border-neutral-800">
-              <div class="flex items-center gap-2 text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-4">
-                <div class="w-3 h-3 flex items-center justify-center">${SVGS.type}</div>
+              <div class="flex items-center gap-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">
+                <div class="w-3.5 h-3.5 flex items-center justify-center">${SVGS.type}</div>
                 <span>Channel Name</span>
-                <span class="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-indigo-400 border-indigo-500/20 bg-gradient-to-b from-indigo-400/25 to-indigo-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
-                  ${SVGS.crown}Free
-                </span>
               </div>
               <div>
-                <label class="block text-[11px] uppercase tracking-wider text-neutral-500 font-medium mb-2">Name Template</label>
-                <div class="flex flex-wrap items-center gap-1.5 mb-3">
-                  <span class="text-[11px] text-neutral-600 mr-1">Insert:</span>
-                  <button type="button" class="btn-token-insert inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-full border transition-[transform,background-color,color] duration-150 ease-out hover:scale-105 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-blue-500/15 text-blue-400 border-blue-500/25 hover:bg-blue-500/25" data-token="{user}">user</button>
-                  <button type="button" class="btn-token-insert inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-full border transition-[transform,background-color,color] duration-150 ease-out hover:scale-105 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-purple-500/15 text-purple-400 border-purple-500/25 hover:bg-purple-500/25" data-token="{game}">game</button>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">Name Template</label>
+                <div class="flex flex-wrap items-center gap-1.5 mb-2.5">
+                  <span class="text-xs text-neutral-400 mr-1 font-medium">Insert:</span>
+                  <button type="button" class="btn-token-insert inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-blue-500/15 text-blue-300 border-blue-500/25 hover:bg-blue-500/25 cursor-pointer" data-token="{user}">user</button>
+                  <button type="button" class="btn-token-insert inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 bg-purple-500/15 text-purple-300 border-purple-500/25 hover:bg-purple-500/25 cursor-pointer" data-token="{game}">game</button>
                 </div>
                 <div class="w-full">
-                  <input type="text" id="inp-modal-name-template" autocomplete="off" class="w-full px-4 py-3 sm:py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 text-sm" placeholder="{user}'s Channel" value="${esc(nameTemplate)}">
+                  <input type="text" id="inp-modal-name-template" autocomplete="off" class="w-full px-4 py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-400 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 text-sm font-medium" placeholder="{user}'s Channel" value="${esc(nameTemplate)}">
                 </div>
               </div>
             </div>
 
             <!-- 3. Limits & Permissions Section -->
             <div class="p-5">
-              <div class="flex items-center gap-2 text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-4">
-                <div class="w-3 h-3 flex items-center justify-center">${SVGS.shield}</div>
+              <div class="flex items-center gap-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">
+                <div class="w-3.5 h-3.5 flex items-center justify-center">${SVGS.shield}</div>
                 <span>Limits &amp; Permissions</span>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <!-- User Limit -->
                 <div>
-                  <label class="block text-[11px] uppercase tracking-wider text-neutral-500 font-medium mb-2">User Limit</label>
-                  <p class="text-[11px] text-neutral-600 mb-2">0 = unlimited, up to 99 (Discord's maximum)</p>
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">User Limit</label>
+                  <p class="text-xs text-neutral-400 mb-2">0 = unlimited, up to 99 (Discord's maximum)</p>
                   <div class="w-full">
-                    <input type="number" id="inp-modal-user-limit" autocomplete="off" min="0" max="99" value="${userLimit}" class="w-28 px-4 py-3 sm:py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 text-sm">
+                    <input type="number" id="inp-modal-user-limit" autocomplete="off" min="0" max="99" value="${userLimit}" class="w-28 px-4 py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-400 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 focus:border-neutral-500 text-sm font-medium">
                   </div>
                 </div>
 
                 <!-- Required Role -->
                 <div>
-                  <label class="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-neutral-500 font-medium mb-2">
-                    <span>Required Role</span>
-                    <span class="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-indigo-400 border-indigo-500/20 bg-gradient-to-b from-indigo-400/25 to-indigo-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
-                      ${SVGS.crown}Free
-                    </span>
-                  </label>
-                  <p class="text-[11px] text-neutral-600 mb-2">Only members with this role can create a channel. The server owner and admins always can.</p>
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">Required Role</label>
+                  <p class="text-xs text-neutral-400 mb-2">Only members with this role can create a channel. The server owner and admins always can.</p>
                   <div class="relative">
-                    <button type="button" id="btn-trigger-role-sel" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                    <button type="button" id="btn-trigger-role-sel" class="w-full flex items-center justify-between gap-2 h-10 px-3.5 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
                       <span id="txt-trigger-role-sel" class="min-w-0 truncate text-sm text-white flex items-center gap-2">
-                        <span class="w-4 h-4 text-neutral-500 flex items-center justify-center shrink-0">${SVGS.atSign}</span>
-                        <span class="truncate">${esc(getRoleName(selectedRoleId))}</span>
+                        <span class="w-4 h-4 text-neutral-400 flex items-center justify-center shrink-0">${SVGS.atSign}</span>
+                        <span class="truncate font-medium">${esc(getRoleName(selectedRoleId))}</span>
                       </span>
                       <div class="flex items-center gap-1 text-neutral-400">
                         <div class="w-4 h-4 flex items-center justify-center">${SVGS.chevronDown}</div>
@@ -541,7 +533,7 @@ DashboardTabs.TempVoice = async function (container, guildId) {
           <!-- Live Preview Column matching PeakBot 1:1 -->
           <div id="modal-preview-panel" class="${showLivePreview ? 'hidden md:flex' : 'hidden'} flex-col w-[280px] border-l border-neutral-800 bg-neutral-950/40 flex-shrink-0">
             <div class="px-4 py-3 border-b border-neutral-800">
-              <p class="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Live Preview</p>
+              <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Live Preview</p>
             </div>
             <div class="flex-1 overflow-y-auto p-4">
               <div class="rounded-2xl border border-neutral-800 overflow-hidden bg-[#2b2d31]">
@@ -549,27 +541,27 @@ DashboardTabs.TempVoice = async function (container, guildId) {
                   <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
                     <span class="text-[8px] font-bold text-indigo-400">O</span>
                   </div>
-                  <span class="text-[11px] font-semibold text-neutral-300 truncate">${esc(guildName)}</span>
+                  <span class="text-xs font-semibold text-neutral-200 truncate">${esc(guildName)}</span>
                 </div>
                 <div class="p-3">
                   <div class="flex items-center gap-1 px-1 mb-1.5">
-                    <svg class="w-2 h-2 text-neutral-500" viewBox="0 0 6 4" fill="none"><path d="M1 1l2 2 2-2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                    <span class="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider truncate" id="preview-category-name">${esc(selectedCategoryId ? getCategoryName(selectedCategoryId) : 'Voice Channels')}</span>
+                    <svg class="w-2 h-2 text-neutral-400" viewBox="0 0 6 4" fill="none"><path d="M1 1l2 2 2-2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider truncate" id="preview-category-name">${esc(selectedCategoryId ? getCategoryName(selectedCategoryId) : 'Voice Channels')}</span>
                   </div>
                   <div class="space-y-0.5 ml-1">
                     <div class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors group">
-                      <div class="w-4 h-4 text-neutral-500 flex items-center justify-center shrink-0">${SVGS.volume2}</div>
-                      <span class="text-[13px] text-neutral-400 group-hover:text-neutral-300 transition-colors truncate" id="preview-hub-name">${esc(selectedVoiceChannelId === 'new' ? 'Join to Create' : getVoiceChannelName(selectedVoiceChannelId))}</span>
+                      <div class="w-4 h-4 text-neutral-400 flex items-center justify-center shrink-0">${SVGS.volume2}</div>
+                      <span class="text-sm text-neutral-300 group-hover:text-neutral-200 transition-colors truncate" id="preview-hub-name">${esc(selectedVoiceChannelId === 'new' ? 'Join to Create' : getVoiceChannelName(selectedVoiceChannelId))}</span>
                     </div>
                     <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-white/[0.06]">
                       <div class="w-4 h-4 text-indigo-400 flex items-center justify-center shrink-0">${SVGS.volume2}</div>
-                      <span class="text-[13px] text-white truncate flex-1" id="preview-channel-name">Player's Channel</span>
+                      <span class="text-sm font-medium text-white truncate flex-1" id="preview-channel-name">Player's Channel</span>
                     </div>
                     <div class="flex items-center gap-2 pl-8 py-0.5">
                       <div class="w-4 h-4 rounded-full bg-neutral-700 flex items-center justify-center">
-                        <span class="text-[7px] font-bold text-neutral-400">P</span>
+                        <span class="text-[8px] font-bold text-neutral-300">P</span>
                       </div>
-                      <span class="text-[11px] text-neutral-500">Player</span>
+                      <span class="text-xs text-neutral-300">Player</span>
                       <div class="w-2.5 h-2.5 rounded-full bg-green-500/80 ml-auto mr-1" title="Connected"></div>
                     </div>
                   </div>
