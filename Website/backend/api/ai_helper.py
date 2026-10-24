@@ -24,6 +24,25 @@ from Components.Systems.Security._storage import load_security_config, save_secu
 
 _GROQ_RESOLVED_MODELS: List[str] = []
 _GROQ_VISION_MODELS: List[str] = []
+_GROQ_UNAVAILABLE_MODELS: set = set()
+
+def _compact_messages_for_tpm(messages: List[Dict[str, Any]], max_chars: int = 6000) -> List[Dict[str, Any]]:
+    """Ensures total character count of messages stays within safe TPM limits (~1500 tokens)."""
+    total_chars = sum(len(str(m.get("content") or "")) for m in messages if isinstance(m.get("content"), str))
+    if total_chars <= max_chars:
+        return messages
+
+    pruned = []
+    for m in messages:
+        c = str(m.get("content") or "")
+        role = m.get("role", "user")
+        if role == "system" and len(c) > 3000:
+            pruned.append({"role": "system", "content": c[:3000] + "\n...(context trimmed for size)..."})
+        elif role in ("user", "assistant") and len(c) > 500:
+            pruned.append({"role": role, "content": c[:500]})
+        else:
+            pruned.append({"role": role, "content": c})
+    return pruned
 
 # In-memory fallback stores
 _MEM_CHATS: Dict[int, List[Dict[str, Any]]] = {}
@@ -78,11 +97,15 @@ def _get_groq_api_key() -> str:
 
 
 async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str, need_vision: bool = False) -> List[str]:
-    global _GROQ_RESOLVED_MODELS, _GROQ_VISION_MODELS
+    global _GROQ_RESOLVED_MODELS, _GROQ_VISION_MODELS, _GROQ_UNAVAILABLE_MODELS
     if need_vision and _GROQ_VISION_MODELS:
-        return _GROQ_VISION_MODELS
+        valid_v = [m for m in _GROQ_VISION_MODELS if m not in _GROQ_UNAVAILABLE_MODELS]
+        if valid_v:
+            return valid_v
     if not need_vision and _GROQ_RESOLVED_MODELS:
-        return _GROQ_RESOLVED_MODELS
+        valid_m = [m for m in _GROQ_RESOLVED_MODELS if m not in _GROQ_UNAVAILABLE_MODELS]
+        if valid_m:
+            return valid_m
 
     headers = {"Authorization": f"Bearer {groq_key}"}
     try:
@@ -101,6 +124,7 @@ async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str, ne
                     and "orpheus" not in mid.lower()
                     and "allam" not in mid.lower()
                     and "tts" not in mid.lower()
+                    and mid not in _GROQ_UNAVAILABLE_MODELS
                 ]
 
                 vision_candidates = [
@@ -112,19 +136,18 @@ async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str, ne
 
                 def _sort_pref(m_id: str) -> int:
                     ml = m_id.lower()
-                    if "70b" in ml or "llama-3.3" in ml:
-                        return 0
-                    if "8b-instant" in ml or "llama-3.1-8b" in ml:
-                        return 1
+                    # Prefer high-quality available models first
                     if "120b" in ml:
-                        return 2
+                        return 0
                     if "qwen" in ml:
-                        return 3
-                    if "scout" in ml or "maverick" in ml:
-                        return 4
+                        return 1
                     if "20b" in ml or "27b" in ml or "32b" in ml:
-                        return 5
-                    return 6
+                        return 2
+                    if "70b" in ml or "llama-3.3" in ml:
+                        return 3
+                    if "8b-instant" in ml or "llama-3.1-8b" in ml:
+                        return 4
+                    return 5
 
                 raw_models.sort(key=_sort_pref)
                 if raw_models:
@@ -133,20 +156,22 @@ async def _resolve_groq_models(session: aiohttp.ClientSession, groq_key: str, ne
         print(f"[AIHelper] Error fetching Groq models: {e}")
 
     if need_vision:
-        return _GROQ_VISION_MODELS or [
+        fallback_vision = [
             "meta-llama/llama-4-scout-17b-16e-instruct",
             "meta-llama/llama-4-maverick-17b-128e-instruct",
             "llama-3.2-90b-vision-preview",
             "llama-3.2-11b-vision-preview",
         ]
+        return [m for m in (_GROQ_VISION_MODELS or fallback_vision) if m not in _GROQ_UNAVAILABLE_MODELS]
 
-    return _GROQ_RESOLVED_MODELS or [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
+    fallback_text = [
         "openai/gpt-oss-120b",
         "qwen/qwen3.8-27b",
         "openai/gpt-oss-20b",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
     ]
+    return [m for m in (_GROQ_RESOLVED_MODELS or fallback_text) if m not in _GROQ_UNAVAILABLE_MODELS]
 
 
 def _extract_json_payload(raw_text: str) -> Dict[str, Any]:
@@ -278,24 +303,24 @@ class AIHelperMixin:
 
     def _build_guild_context_prompt(self, guild: discord.Guild, user_query: str = "") -> str:
         guild_id = guild.id
-        cats = [f"{c.name}({c.id})" for c in sorted(guild.categories, key=lambda x: x.position)[:25]]
+        cats = [f"{c.name}({c.id})" for c in sorted(guild.categories, key=lambda x: x.position)[:15]]
         txt_chs = [
             f"#{c.name}({c.id})"
-            for c in sorted(guild.text_channels, key=lambda x: x.position)[:40]
+            for c in sorted(guild.text_channels, key=lambda x: x.position)[:25]
         ]
         vc_chs = [
             f"🔊{c.name}({c.id})"
-            for c in sorted(guild.voice_channels, key=lambda x: x.position)[:25]
+            for c in sorted(guild.voice_channels, key=lambda x: x.position)[:15]
         ]
 
         def _format_role_permissions(role: discord.Role) -> str:
             perms = role.permissions
             if perms.administrator:
-                return "Administrator (All Permissions - Can lock/unlock/manage channels, mute, move members, ban, kick, etc.)"
+                return "Admin"
             
             key_perms = []
             if perms.manage_channels:
-                key_perms.append("ManageChannels (Can lock/unlock/edit voice and text channels)")
+                key_perms.append("ManageChannels")
             if perms.manage_guild:
                 key_perms.append("ManageServer")
             if perms.manage_roles:
@@ -305,9 +330,9 @@ class AIHelperMixin:
             if perms.view_audit_log:
                 key_perms.append("ViewAuditLog")
             if perms.move_members:
-                key_perms.append("MoveMembers (Can move/disconnect voice members)")
+                key_perms.append("MoveMembers")
             if perms.mute_members:
-                key_perms.append("MuteMembers (Can mute members in voice)")
+                key_perms.append("MuteMembers")
             if perms.deafen_members:
                 key_perms.append("DeafenMembers")
             if perms.ban_members:
@@ -326,7 +351,7 @@ class AIHelperMixin:
                 key_perms.append("ManageExpressions")
                 
             if not key_perms:
-                return "Standard Member (No elevated or channel management permissions)"
+                return ""
             return ", ".join(key_perms)
 
         # Scan for role IDs or mentions in user query to provide direct high-priority lookup
@@ -348,15 +373,16 @@ class AIHelperMixin:
                 can_move = p.administrator or p.move_members
                 can_mute = p.administrator or p.mute_members
                 queried_roles_info.append(
-                    f"- @{r_obj.name} (ID: {r_obj.id}, Position: {r_obj.position}):\n"
-                    f"    * Can Lock/Manage Channels: {'YES (Has Permission)' if can_lock else 'NO (Missing Manage Channels / Admin)'}\n"
-                    f"    * Can Move Members: {'YES' if can_move else 'NO'}\n"
-                    f"    * Can Mute Members: {'YES' if can_mute else 'NO'}\n"
-                    f"    * Detailed Permissions: [{_format_role_permissions(r_obj)}]"
+                    f"- @{r_obj.name} (ID: {r_obj.id}, Pos: {r_obj.position}): "
+                    f"Can Lock/Manage: {'YES' if can_lock else 'NO'}, "
+                    f"Can Move: {'YES' if can_move else 'NO'}, "
+                    f"Can Mute: {'YES' if can_mute else 'NO'}, "
+                    f"Perms: [{_format_role_permissions(r_obj) or 'Standard'}]"
                 )
             else:
-                queried_roles_info.append(f"- Role ID {rid}: (Role not found on this server)")
+                queried_roles_info.append(f"- Role ID {rid}: (Role not found)")
 
+        self._last_queried_roles = queried_roles_info
         queried_roles_section = ""
         if queried_roles_info:
             queried_roles_section = (
@@ -365,10 +391,27 @@ class AIHelperMixin:
             )
 
         all_guild_roles = sorted(guild.roles, key=lambda x: x.position, reverse=True)
-        roles_list = []
-        for r in all_guild_roles[:120]:
-            roles_list.append(f"@{r.name} (ID: {r.id}, Pos: {r.position}) -> [{_format_role_permissions(r)}]")
-        roles_formatted = "\n  - " + "\n  - ".join(roles_list)
+        elevated_roles = []
+        standard_role_names = []
+        for r in all_guild_roles:
+            p_str = _format_role_permissions(r)
+            if p_str:
+                elevated_roles.append(f"@{r.name}({r.id}) [{p_str}]")
+            else:
+                standard_role_names.append(f"@{r.name}")
+
+        roles_summary_parts = []
+        if elevated_roles:
+            roles_summary_parts.append("Elevated Roles: " + ", ".join(elevated_roles[:25]))
+        if standard_role_names:
+            shown_std = standard_role_names[:12]
+            omitted = len(standard_role_names) - len(shown_std)
+            std_str = ", ".join(shown_std)
+            if omitted > 0:
+                std_str += f" (+{omitted} other member roles)"
+            roles_summary_parts.append("Standard Roles: " + std_str)
+
+        roles_formatted = "\n  - " + "\n  - ".join(roles_summary_parts) if roles_summary_parts else " None"
 
         welcome_cfg = load_welcome_config(guild_id)
         goodbye_cfg = load_goodbye_config(guild_id)
@@ -463,19 +506,19 @@ class AIHelperMixin:
                         tot_voice += int(d.get("voice_minutes", 0) or 0)
                         tot_joins += int(d.get("joins", 0) or 0)
                         tot_leaves += int(d.get("leaves", 0) or 0)
-                stats_summary = f"Past 7 Days: {tot_msgs} messages sent, {tot_voice} voice minutes, +{tot_joins} joins, -{tot_leaves} leaves (Net growth: {tot_joins - tot_leaves})"
+                stats_summary = f"Past 7 Days: {tot_msgs} msgs, {tot_voice} voice mins, +{tot_joins} joins, -{tot_leaves} leaves"
         except Exception:
             stats_summary = "Stats lookup unavailable"
 
         active_mods = []
-        if welcome_cfg.get("enabled"): active_mods.append(f"Welcome(Ch:{welcome_cfg.get('channel_id')})")
-        if goodbye_cfg.get("enabled"): active_mods.append(f"Goodbye(Ch:{goodbye_cfg.get('channel_id')})")
-        if joinroles_cfg.get("enabled"): active_mods.append(f"JoinRoles({len(joinroles_cfg.get('roles', []))} roles)")
+        if welcome_cfg.get("enabled"): active_mods.append("Welcome")
+        if goodbye_cfg.get("enabled"): active_mods.append("Goodbye")
+        if joinroles_cfg.get("enabled"): active_mods.append(f"JoinRoles({len(joinroles_cfg.get('roles', []))})")
         if verify_cfg.get("enabled"): active_mods.append(f"Verify({v_status})")
-        if ticket_cfg.get("enabled"): active_mods.append(f"Tickets(Open:{ticket_active_count}, Closed:{ticket_closed_count}, Ch:{ticket_panel_ch})")
-        if level_cfg.get("enabled"): active_mods.append(f"Levels(AnnounceCh:{level_cfg.get('announce_channel_id')})")
-        if logs_cfg.get("enabled"): active_mods.append(f"Logs(DefaultCh:{logs_cfg.get('default_channel_id')})")
-        if jtc_cfg.get("enabled"): active_mods.append(f"TempVoice(TriggerCh:{jtc_cfg.get('trigger_channel_id')})")
+        if ticket_cfg.get("enabled"): active_mods.append(f"Tickets(Open:{ticket_active_count}, Closed:{ticket_closed_count})")
+        if level_cfg.get("enabled"): active_mods.append("Levels")
+        if logs_cfg.get("enabled"): active_mods.append("Logs")
+        if jtc_cfg.get("enabled"): active_mods.append("TempVoice")
         if automod_cfg.get("enabled"): active_mods.append(f"AutoMod({', '.join(am_active)})")
         if sec_cfg.get("anti_raid", {}).get("enabled") or sec_cfg.get("anti_nuke", {}).get("enabled"): active_mods.append(f"Security({', '.join(sec_active)})")
 
@@ -487,9 +530,9 @@ class AIHelperMixin:
             cases_col = _get_cases_collection()
             recent_cases = []
             if cases_col is not None:
-                recent_cases = list(cases_col.find({"guild_id": {"$in": [int(guild_id), str(guild_id)]}}).sort("case_id", -1).limit(50))
+                recent_cases = list(cases_col.find({"guild_id": {"$in": [int(guild_id), str(guild_id)]}}).sort("case_id", -1).limit(20))
             if not recent_cases:
-                recent_cases = get_recent_modlogs(guild_id, limit=50)
+                recent_cases = get_recent_modlogs(guild_id, limit=20)
 
             if recent_cases:
                 action_counts = {}
@@ -497,82 +540,48 @@ class AIHelperMixin:
                 for c in recent_cases:
                     act = str(c.get("action") or c.get("action_type") or "warn").lower()
                     action_counts[act] = action_counts.get(act, 0) + 1
-                    r = c.get("reason")
+                    r = str(c.get("reason") or "").strip()
                     if r and r != "No reason provided":
-                        reasons.append(r)
+                        reasons.append(r[:40])
                 
                 counts_str = ", ".join([f"{act.capitalize()}: {cnt}" for act, cnt in sorted(action_counts.items(), key=lambda x: x[1], reverse=True)])
-                mod_history_summary = f"{len(recent_cases)} total logged actions ({counts_str}). Most frequent action types: {counts_str}. Sample reasons: {', '.join(reasons[:5]) if reasons else 'No reasons provided'}."
+                mod_history_summary = f"{len(recent_cases)} total logged actions ({counts_str}). Top action types: {counts_str}. Sample reasons: {', '.join(reasons[:4]) if reasons else 'None'}."
             else:
-                mod_history_summary = "No recorded moderation cases or warnings found for this server."
+                mod_history_summary = "No recorded moderation cases or warnings found."
         except Exception:
-            mod_history_summary = "No recorded moderation cases or warnings found for this server."
+            mod_history_summary = "No recorded moderation cases or warnings found."
 
         return f"""You are **Orbit AI Helper**, an intelligent Discord server co-pilot, analyst, and configuration assistant in the Orbit Dashboard.
 
-CRITICAL INSTRUCTION - STRICT USER INTENT GATING (DO ONLY WHAT WAS ASKED):
-- DO ONLY WHAT THE USER EXPLICITLY ASKS FOR. Never assume, configure, or volunteer unsolicited setup actions!
+CRITICAL INSTRUCTIONS:
+- STRICT USER INTENT GATING: DO ONLY WHAT WAS ASKED!
 - INFORMATIONAL / ANALYTICAL / QUESTIONS:
-  * When the user asks a question, checks moderation history, asks what the most common actions/reasons are, requests an audit or analytics, or asks how something works:
-    -> Provide ONLY a direct, factual, well-structured answer in "reply" in the user's language.
+  * When user asks a question, checks moderation history, audits analytics, or inquires about permissions:
+    -> Provide a direct, well-structured answer in "reply" in the user's language.
     -> "actions" MUST BE AN EMPTY ARRAY: `"actions": []`.
-    -> DO NOT create or suggest unprompted actions (e.g. do NOT configure automod, do NOT deploy tickets, do NOT configure logs unless explicitly requested).
-    -> DO NOT mention the "Build" button if no actions were requested.
+    -> DO NOT create unsolicited actions or mention the Build button.
 - ROLES & PERMISSIONS INQUIRIES:
-  * When the user asks which roles have a permission, or whether specific roles can perform an action (e.g., "hat eine dieser rollen die permission dazu", "which of these roles can lock a voice channel?"):
-    -> You HAVE FULL AND COMPLETE VISIBILITY into all roles and permissions via TARGET ROLES and Roles & Exact Permissions in SERVER CONTEXT!
-    -> NEVER claim that you do not have visibility into role permissions!
-    -> Note: Locking a voice channel requires "ManageChannels" or "Administrator (All Permissions)".
-    -> Moving members in voice requires "MoveMembers" or "Administrator".
-    -> Muting members in voice requires "MuteMembers" or "Administrator".
-    -> Inspect each mentioned role and state clearly which role(s) have or lack the capability.
-    -> "actions" MUST BE AN EMPTY ARRAY: `"actions": []`.
-- MODERATION HISTORY QUERIES:
-  * When the user asks to check moderation history or what the most frequent actions/offenses are (e.g., "Check mal die Mod-History und sag mir, was die häufigsten Sachen sind"):
-    -> Refer directly to the "Moderation History & Recent Actions" in SERVER CONTEXT.
-    -> If actions are recorded: report the total volume, breakdown of action types (e.g. Warns, Timeouts, Bans), and top reasons clearly.
-    -> If no actions are recorded: inform the user simply that no moderation cases or warnings are currently recorded on this server.
-    -> ALWAYS leave `"actions": []` empty for history lookups!
-- GIVEAWAY CREATION (MANDATORY RULE - REAL INTERACTIVE GIVEAWAYS ONLY):
-  * When the user commands or asks to create, host, or start a giveaway / Gewinnspiel / Verlosung / raffle:
-    -> You MUST ALWAYS use the action type "create_giveaway"!
-    -> NEVER EVER use "send_message" for a giveaway!
-    -> Orbit features a native interactive Giveaway system with real Discord buttons (`[Enter]` / `[Leave]`), automated random winner drawing, countdown timers, and full synchronization with the Dashboard "Giveaways" tab.
-    -> Using "send_message" for a giveaway creates a static embed where users must manually react with emojis and it NEVER appears in the dashboard panel! That is strictly forbidden.
-    -> If the user didn't specify a channel, choose an appropriate channel from Text Channels (such as #giveaways, #giveaway, #events, #announcements, or #general) and specify its ID in "channel_id".
-    -> Always populate:
-       - "type": "create_giveaway"
-       - "prize": the prize being given away (e.g. "Discord Nitro", "10€ Paysafecard")
-       - "winners": number of winners (integer, default 1)
-       - "duration_seconds": duration in seconds (e.g. 3600 for 1h, 86400 for 24h/1 day, 604800 for 7 days)
-       - "channel_id": target text channel ID
-       - "description_text": instructions (e.g. "Click the Enter button below to participate!")
+  * You have full visibility into roles via TARGET ROLES and SERVER CONTEXT.
+  * Note: Locking/unlocking voice channels requires "ManageChannels" or "Admin".
+  * Moving members requires "MoveMembers" or "Admin". Muting members requires "MuteMembers" or "Admin".
+  * Inspect the mentioned roles and state clearly which have or lack the capability.
+  * Keep `"actions": []` empty.
+- GIVEAWAY CREATION (MANDATORY RULE):
+  * When user asks to create/host/start a giveaway/Gewinnspiel/raffle:
+    -> ALWAYS use action type "create_giveaway"! NEVER use "send_message".
+    -> Channel ID must be a valid text channel ID (e.g. from Text Channels).
+    -> Populate "prize", "winners" (int), "duration_seconds" (int, e.g. 86400), "channel_id", "description_text".
 - EXPLICIT ACTION COMMANDS ONLY:
-  * ONLY populate the "actions" array when the user explicitly commands you to build, configure, setup, create, enable, disable, or modify a feature (e.g. "Create a giveaway for Nitro", "Setup ticket panel in #support", "Enable Anti-Spam", "Lock #general").
-  * When executing an explicit user command, include the required action objects in "actions", and mention in "reply" that the user can review and click **Build** at the top right to apply the planned changes.
-- STRICT GENERAL RULES:
-  * You are NOT a server builder! Never delete existing server structures or wipe roles.
-  * LANGUAGE MATCHING: Always answer in the same language as the user's message (e.g. if the user writes in German, reply fluently and naturally in German; if the user writes in English, reply in English).
-  * ALWAYS use real IDs from the SERVER CONTEXT below!
-
-CORE CAPABILITIES:
-1. SERVER OVERVIEW & ANALYTICS AUDIT:
-   - When the user asks to analyze the server, check overview, inspect analytics, or audit server security:
-     Deliver an organized report in English. If they specifically ask to optimize or build recommendations, then include actions; otherwise provide pure analysis with "actions": [].
-2. CREATING & MANAGING SERVER FEATURES (When explicitly requested):
-   - Create Giveaways: Deploy interactive giveaway messages to any channel via "create_giveaway".
-   - Setup Support Ticket Panels: Deploy interactive ticket panels with dropdown categories to any channel via "create_ticket_panel".
-   - Setup Verification: Deploy verification button panels with roles and security modes via "create_verification_panel".
-   - Channel Permissions: Adjust channel permissions across all channels, categories, or specific channels via "channel_permissions".
-   - Self-Assignable Roles: Deploy interactive button menus via "create_reaction_roles".
-   - Full Module Configuration: Configure Welcome, Goodbye, Join Roles, AutoMod, Security (Anti-Raid/Anti-Nuke), Levels, Logs, TempVoice, and Invites.
+  * Only populate "actions" when user explicitly commands to build/create/setup/configure/enable/disable a feature.
+  * Mention that the user can click **Build** at top right to apply planned changes.
+- LANGUAGE MATCHING: Always answer in the same language as the user's prompt (German for German, English for English).
 
 SERVER CONTEXT:
 {queried_roles_section}
-- Server: {guild.name} (ID: {guild.id}, Total Members: {guild.member_count}, Boost Tier: {guild.premium_tier}, Boosts: {guild.premium_subscription_count})
-- Recent 7-Day Activity: {stats_summary}
-- Moderation History & Recent Actions: {mod_history_summary}
-- Support Tickets: Enabled={ticket_cfg.get('enabled', False)}, Active Open={ticket_active_count}, Closed={ticket_closed_count}, Total Count={ticket_counter}, Panel={ticket_panel_ch}
+- Server: {guild.name} (ID: {guild.id}, Members: {guild.member_count}, Boost Tier: {guild.premium_tier})
+- 7-Day Activity: {stats_summary}
+- Moderation History: {mod_history_summary}
+- Support Tickets: Open={ticket_active_count}, Closed={ticket_closed_count}, Panel={ticket_panel_ch}
 - Giveaways: {gw_summary}
 - Verification: {v_status}
 - AutoMod: {', '.join(am_active) if am_active else 'Disabled'}
@@ -581,38 +590,35 @@ SERVER CONTEXT:
 - Text Channels: {', '.join(txt_chs) if txt_chs else 'None'}
 - Voice Channels: {', '.join(vc_chs) if vc_chs else 'None'}
 - Active Modules: {', '.join(active_mods) if active_mods else 'None'}
-- Roles & Exact Permissions ({len(guild.roles)} total):{roles_formatted}
+- Roles ({len(guild.roles)} total):{roles_formatted}
 
-SUPPORTED ACTIONS (include in the "actions" array):
-1. create_giveaway: {{"type": "create_giveaway", "title": "Create Giveaway: <Prize> (<Winners> Winners, <Duration>)", "description": "Deploys an interactive giveaway message with Discord Enter/Leave buttons and registers it in the dashboard", "channel_id": "<channel_id>", "prize": "Discord Nitro", "winners": 1, "duration_seconds": 86400, "description_text": "Click the Enter button below to participate!", "required_role_id": "<optional_role_id>", "color": "#5865F2"}}
-2. create_ticket_panel: {{"type": "create_ticket_panel", "title": "Deploy Ticket Support Panel", "description": "Posts interactive support panel with dropdown options to #<channel>", "channel_id": "<channel_id>", "category_id": "<category_id>", "support_role_ids": ["<role_id>"], "panel_title": "Support Desk", "panel_description": "Click the button or select an option to open a ticket.", "panel_instructions": "> Select a department from the dropdown to open your private channel.", "options_slots": [{{"name": "General Support", "emoji": "🎫", "description": "General assistance"}}, {{"name": "Billing & Orders", "emoji": "💳", "description": "Order inquiries"}}], "color": "#5865F2"}}
-3. create_verification_panel: {{"type": "create_verification_panel", "title": "Setup Verification in #<channel>", "description": "Deploys an interactive verification panel assigning verified role", "channel_id": "<channel_id>", "role_id": "<role_id>", "remove_role_id": "<optional_role_id>", "verification_type": "captcha"|"oneclick"|"questionnaire", "embed_title": "Server Verification", "embed_description": "Click the button below to verify your account and gain access.", "button_label": "Verify Account", "button_style": "success", "color": "#22C55E"}}
-4. create_reaction_roles: {{"type": "create_reaction_roles", "title": "Deploy Reaction Role Menu in #<channel>", "description": "Posts self-assignable role buttons in #<channel>", "channel_id": "<channel_id>", "embed_title": "Self Roles", "embed_description": "Click buttons below to toggle your roles.", "roles": [{{"role_id": "<role_id>", "label": "Updates", "emoji": "📢", "style": "primary"}}], "color": "#5865F2"}}
-5. channel_permissions: {{"type": "channel_permissions", "title": "...", "description": "...", "role_id": "...", "role_name": "...", "target_scope": "all"|"category"|"channels", "channel_type": "all"|"text"|"voice", "channel_ids": [], "category_ids": [], "exclude_channel_ids": [], "permissions": {{"view_channel": true|false|null, "send_messages": true|false|null, "read_message_history": true|false|null, "connect": true|false|null, "speak": true|false|null}}}}
-6. configure_welcome: {{"type": "configure_welcome", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}}}}
-7. configure_goodbye: {{"type": "configure_goodbye", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#ED4245"}}}}
-8. configure_joinroles: {{"type": "configure_joinroles", "title": "...", "description": "...", "settings": {{"enabled": true, "roles": ["<role-id>"]}}}}
-9. configure_verify: {{"type": "configure_verify", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "role_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#57F287"}}}}
-10. configure_tickets: {{"type": "configure_tickets", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "category_id": "...", "log_channel_id": "...", "supporter_role_ids": ["..."], "embed_title": "...", "embed_description": "..."}}}}
-11. configure_automod: {{"type": "configure_automod", "title": "...", "description": "...", "settings": {{"enabled": true, "banned_words": {{"enabled": true, "action": "warn"}}, "anti_spam": {{"enabled": true, "max_messages": 5, "time_window_sec": 3, "action": "warn"}}, "anti_link": {{"enabled": true, "action": "warn"}}, "anti_invites": {{"enabled": true, "action": "warn"}}, "anti_alt": {{"enabled": true, "min_age_days": 3, "action": "kick"}}, "ai_automod": {{"enabled": true, "action": "delete"}}}}}}
-12. configure_security: {{"type": "configure_security", "title": "...", "description": "...", "settings": {{"anti_raid": {{"enabled": true, "join_threshold": 10, "time_window": 10, "action": "kick"}}, "anti_nuke": {{"enabled": true, "action": "strip_roles"}}}}}}
-13. configure_level: {{"type": "configure_level", "title": "...", "description": "...", "settings": {{"enabled": true, "announce_channel_id": "...", "xp_per_message": 15, "xp_cooldown": 60, "level_up_message": "GG {{user}}, Level {{level}}!"}}}}
-14. configure_logs: {{"type": "configure_logs", "title": "...", "description": "...", "settings": {{"enabled": true, "default_channel_id": "..."}}}}
-15. configure_tempvoice: {{"type": "configure_tempvoice", "title": "...", "description": "...", "settings": {{"enabled": true, "trigger_channel_id": "...", "category_id": "...", "default_name": "🔊 {{user}}'s Channel", "default_limit": 0}}}}
-16. configure_invites: {{"type": "configure_invites", "title": "...", "description": "...", "settings": {{"enabled": true, "track_leaves": true, "count_rejoins": false}}}}
-17. send_message: {{"type": "send_message", "title": "...", "description": "...", "channel_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}} (FOR GENERAL NOTICES ONLY! NEVER use send_message for giveaways, raffles, tickets, or verification - use create_giveaway instead!)
+SUPPORTED ACTIONS (populate "actions" ONLY when user explicitly asks to configure/create):
+1. create_giveaway: {{"type": "create_giveaway", "title": "Create Giveaway: <Prize>", "channel_id": "<id>", "prize": "...", "winners": 1, "duration_seconds": 86400, "description_text": "..."}}
+2. create_ticket_panel: {{"type": "create_ticket_panel", "title": "...", "channel_id": "<id>", "category_id": "<id>", "support_role_ids": ["<id>"], "panel_title": "Support", "panel_description": "...", "options_slots": [{{"name": "Support", "emoji": "🎫", "description": "Help"}}]}}
+3. create_verification_panel: {{"type": "create_verification_panel", "title": "...", "channel_id": "<id>", "role_id": "<id>", "verification_type": "captcha"|"oneclick", "button_label": "Verify"}}
+4. create_reaction_roles: {{"type": "create_reaction_roles", "title": "...", "channel_id": "<id>", "roles": [{{"role_id": "<id>", "label": "Updates", "emoji": "📢"}}]}}
+5. channel_permissions: {{"type": "channel_permissions", "title": "...", "role_id": "<id>", "target_scope": "all"|"category"|"channels", "channel_type": "all"|"text"|"voice", "channel_ids": [], "permissions": {{"view_channel": true|false|null, "send_messages": true|false|null, "connect": true|false|null}}}}
+6. configure_welcome: {{"type": "configure_welcome", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "..."}}}}
+7. configure_goodbye: {{"type": "configure_goodbye", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "..."}}}}
+8. configure_joinroles: {{"type": "configure_joinroles", "settings": {{"enabled": true, "roles": ["<role-id>"]}}}}
+9. configure_verify: {{"type": "configure_verify", "settings": {{"enabled": true, "channel_id": "...", "role_id": "..."}}}}
+10. configure_tickets: {{"type": "configure_tickets", "settings": {{"enabled": true, "channel_id": "...", "category_id": "...", "supporter_role_ids": ["..."]}}}}
+11. configure_automod: {{"type": "configure_automod", "settings": {{"enabled": true, "banned_words": {{"enabled": true}}, "anti_spam": {{"enabled": true}}, "anti_link": {{"enabled": true}}, "anti_invites": {{"enabled": true}}}}}}
+12. configure_security: {{"type": "configure_security", "settings": {{"anti_raid": {{"enabled": true, "join_threshold": 10, "time_window": 10}}, "anti_nuke": {{"enabled": true}}}}}}
+13. configure_level: {{"type": "configure_level", "settings": {{"enabled": true, "announce_channel_id": "..."}}}}
+14. configure_logs: {{"type": "configure_logs", "settings": {{"enabled": true, "default_channel_id": "..."}}}}
+15. configure_tempvoice: {{"type": "configure_tempvoice", "settings": {{"enabled": true, "trigger_channel_id": "...", "category_id": "..."}}}}
+16. configure_invites: {{"type": "configure_invites", "settings": {{"enabled": true, "track_leaves": true}}}}
+17. send_message: {{"type": "send_message", "channel_id": "...", "embed_title": "...", "embed_description": "..."}} (NEVER use send_message for giveaways/raffles!)
 
-RESPONSE FORMAT (STRICTLY PURE JSON):
-Always respond exclusively with a valid JSON object:
+RESPONSE FORMAT (STRICT JSON):
+Respond exclusively with a valid JSON object:
 ```json
 {{
-  "reply": "Clear, concise response to the user in their language (German if asked in German, English if asked in English, Markdown allowed). If executable actions are present, mention that they can click **Build** at the top right to apply them. If no actions are present, simply answer the inquiry without mentioning the Build button.",
+  "reply": "Clear, concise response in user's language (German if asked in German, English if asked in English, Markdown allowed). If actions present, mention **Build** button. If no actions, answer directly without mentioning Build.",
   "actions": []
 }}
 ```
-NOTE ON ACTIONS:
-- If the user asked a question, requested moderation history, asked for an explanation, or requested an audit/overview, "actions" MUST BE `[]`.
-- Only populate "actions" if the user explicitly commanded to create, build, setup, configure, change, enable, or disable something!
 ALWAYS use real IDs from the server context above!"""
 
     async def api_ai_helper_get_chats(self, request: web.Request):
@@ -756,22 +762,22 @@ ALWAYS use real IDs from the server context above!"""
         augmented_prompt = user_message
         if file_attachments:
             file_blocks = []
-            for fatt in file_attachments[:4]:
-                txt_snippet = str(fatt.get("textContent") or "")[:1500]
+            for fatt in file_attachments[:3]:
+                txt_snippet = str(fatt.get("textContent") or "")[:800]
                 file_blocks.append(f"\n--- DATEI: {fatt.get('name', 'file')} ---\n{txt_snippet}\n--- ENDE DATEI ---")
             augmented_prompt = f"{user_message}\n\nAttached files for analysis:{''.join(file_blocks)}"
 
         # Build message history for LLM with compact context
         system_prompt = self._build_guild_context_prompt(guild, augmented_prompt)
         llm_messages: List[Dict[str, Any]] = [{"role": "system", "content": system_prompt}]
-        for msg in current_chat.get("messages", [])[-6:]:
+        for msg in current_chat.get("messages", [])[-4:]:
             role = "assistant" if msg.get("role") == "assistant" else "user"
             content = str(msg.get("content") or "").strip()
             if role == "assistant" and msg.get("actions"):
                 act_titles = [f"[{a.get('type')}: {a.get('title') or a.get('type')}]" for a in msg.get("actions", []) if isinstance(a, dict)]
                 if act_titles:
-                    content = f"{content}\n(Planned actions: {', '.join(act_titles[:4])})"
-            llm_messages.append({"role": role, "content": content[:1200]})
+                    content = f"{content}\n(Planned actions: {', '.join(act_titles[:3])})"
+            llm_messages.append({"role": role, "content": content[:500]})
 
         has_images = len(image_attachments) > 0
         if has_images:
@@ -806,19 +812,20 @@ ALWAYS use real IDs from the server context above!"""
                         req_messages = vision_messages
                     else:
                         available_models = await _resolve_groq_models(session, groq_key, need_vision=False)
-                        # Always guarantee high-capacity fallback models (30,000 TPM)
-                        for fb in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]:
-                            if fb not in available_models:
-                                available_models.append(fb)
+                        available_models = [m for m in available_models if m not in _GROQ_UNAVAILABLE_MODELS]
+                        if not available_models:
+                            available_models = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
 
                         if requested_model and requested_model in available_models:
                             models_to_try = [requested_model] + [m for m in available_models if m != requested_model]
                         else:
                             models_to_try = available_models
-                        req_messages = llm_messages
+                        req_messages = _compact_messages_for_tpm(llm_messages, max_chars=6000)
 
-                    current_max_tokens = 4096
+                    current_max_tokens = 1200
                     for model_name in models_to_try:
+                        if model_name in _GROQ_UNAVAILABLE_MODELS:
+                            continue
                         try:
                             payload = {
                                 "model": model_name,
@@ -834,7 +841,7 @@ ALWAYS use real IDs from the server context above!"""
                                 "https://api.groq.com/openai/v1/chat/completions",
                                 json=payload,
                                 headers=headers,
-                                timeout=aiohttp.ClientTimeout(total=30.0),
+                                timeout=aiohttp.ClientTimeout(total=25.0),
                             ) as resp:
                                 if resp.status == 200:
                                     data = await resp.json()
@@ -845,8 +852,13 @@ ALWAYS use real IDs from the server context above!"""
                                 else:
                                     err_txt = await resp.text()
                                     print(f"[AIHelper] Groq model {model_name} returned {resp.status}: {err_txt[:200]}")
-                                    if resp.status == 413:
-                                        current_max_tokens = min(current_max_tokens, 2048)
+                                    if resp.status == 404:
+                                        _GROQ_UNAVAILABLE_MODELS.add(model_name)
+                                    elif resp.status == 413:
+                                        current_max_tokens = min(current_max_tokens, 600)
+                                        req_messages = _compact_messages_for_tpm(req_messages, max_chars=3500)
+                                    elif resp.status == 429:
+                                        await asyncio.sleep(0.4)
                         except Exception as req_err:
                             print(f"[AIHelper] Groq request error ({model_name}): {req_err}")
                             continue
@@ -854,10 +866,20 @@ ALWAYS use real IDs from the server context above!"""
                 print(f"[AIHelper] Session error: {e}")
 
         if not raw_ai_output:
-            raw_ai_output = json.dumps({
-                "reply": "Sorry, the AI service is currently busy or the API key is missing. Please try again in a few seconds.",
-                "actions": []
-            })
+            last_queried = getattr(self, "_last_queried_roles", None)
+            if last_queried:
+                resp_lines = ["Hier ist die Analyse der Berechtigungen für die angefragten Rollen:"]
+                for qri in last_queried:
+                    resp_lines.append(qri)
+                raw_ai_output = json.dumps({
+                    "reply": "\n".join(resp_lines),
+                    "actions": []
+                })
+            else:
+                raw_ai_output = json.dumps({
+                    "reply": "Entschuldigung, der KI-Dienst war kurz überlastet oder das Ratenlimit wurde erreicht. Bitte versuche es in wenigen Augenblicken noch einmal.",
+                    "actions": []
+                })
 
         parsed = _extract_json_payload(raw_ai_output)
         reply_text = str(parsed.get("reply") or "I have analyzed your request.").strip()
