@@ -99,14 +99,14 @@ class AppealView(discord.ui.View):
         display_mod = "a Moderator" if cfg.get("anonymous_mods", False) else interaction.user.mention
         
         if is_accept:
-            embed.color = discord.Color.green()
+            embed.color = discord.Color(0x5865F2)
             embed.add_field(name="Status", value=f" Accepted by {display_mod}")
         else:
             embed.color = discord.Color.red()
             embed.add_field(name="Status", value=f" Denied by {display_mod}")
             
         await interaction.message.edit(embed=embed, view=self)
-        await interaction.followup.send(embed=make_embed(msg, discord.Color.green() if is_accept else discord.Color.red()), ephemeral=True)
+        await interaction.followup.send(embed=make_embed(msg, discord.Color(0x5865F2) if is_accept else discord.Color.red()), ephemeral=True)
 
     async def btn_accept(self, interaction: discord.Interaction):
         await self.handle_decision(interaction, True)

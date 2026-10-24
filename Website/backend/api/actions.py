@@ -2063,12 +2063,25 @@ class ActionsMixin:
         guild = self.bot.get_guild(int(cfg["_id"]))
         if not guild:
             return web.json_response({"error": "Server not found"}, status=404)
-            
+
+        guild_icon_url = None
+        if guild.icon:
+            guild_icon_url = guild.icon.with_size(256).url if hasattr(guild.icon, "with_size") else guild.icon.url
+
+        custom_q = cfg.get("custom_questions")
+        if not custom_q or not isinstance(custom_q, list):
+            custom_q = [
+                {"id": "q1", "label": "Why was the sanction issued?", "placeholder": "Explain the context or reason why you were sanctioned...", "required": True},
+                {"id": "q2", "label": "Why should the staff team reconsider?", "placeholder": "Describe what has changed or why you believe your punishment should be lifted...", "required": True}
+            ]
+
         return web.json_response({
+            "guild_id": str(guild.id),
             "guild_name": guild.name,
-            "guild_icon": guild.icon.url if guild.icon else None,
-            "allowed_punishments": cfg.get("allowed_punishments", []),
-            "questions": cfg.get("questions", ["Why should your punishment be revoked?"])
+            "guild_icon": guild_icon_url,
+            "allowed_punishments": cfg.get("allowed_punishments", ["ban", "timeout"]),
+            "custom_questions": custom_q,
+            "questions": [q.get("label", "") if isinstance(q, dict) else str(q) for q in custom_q]
         })
 
     async def api_submit_appeal(self, request: web.Request):
@@ -2085,9 +2098,20 @@ class ActionsMixin:
         try:
             data = await request.json()
             reason = data.get("reason", "")
+            statement = data.get("statement", "")
+            answers = data.get("answers")
+
+            if isinstance(answers, dict) and answers:
+                full_reason = "\n\n".join(f"**{k}**:\n{v}" for k, v in answers.items() if v)
+            elif statement and reason:
+                full_reason = f"**Why was the sanction issued?**\n{reason}\n\n**Why should the staff team reconsider?**\n{statement}"
+            elif statement:
+                full_reason = statement
+            else:
+                full_reason = reason or "No details provided."
             
             from Components.Systems.BanAppeals.appeals import process_new_appeal
-            success, msg = await process_new_appeal(self.bot, int(cfg["_id"]), int(session["id"]), reason, cfg)
+            success, msg = await process_new_appeal(self.bot, int(cfg["_id"]), int(session["id"]), full_reason, cfg)
             
             if success:
                 return web.json_response({"success": True})

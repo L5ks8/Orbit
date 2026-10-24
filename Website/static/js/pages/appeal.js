@@ -1,119 +1,288 @@
 /**
- * Orbit Ban Appeal Portal
- * Allows penalized Discord users to look up their sanctions and submit appeal requests.
+ * Orbit Ban Appeal Portal (/appeal/:slug)
+ * Public, responsive, pixel-perfect appeal submission interface for penalized members.
  */
 
-Pages.Appeal = async function(container, customUrl) {
-  container.innerHTML = `
-    <div class="max-w-xl mx-auto px-6 pt-32 pb-24 animate-fade-in">
-      <div id="appeal-loading" class="flex items-center justify-center p-12 text-neutral-500 text-sm">
-        <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        Loading appeal portal...
-      </div>
-      <div id="appeal-content" class="hidden flex flex-col gap-6"></div>
-    </div>
-  `;
+(function () {
+  'use strict';
 
-  try {
-    const info = await API.getAppealInfo(customUrl);
-    const content = document.getElementById('appeal-content');
-    const loading = document.getElementById('appeal-loading');
-    if (!content) return;
-
-    const user = await API.getUser();
-
-    content.innerHTML = `
-      <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-2xl flex flex-col gap-6">
-        <!-- Server Header -->
-        <div class="flex items-center gap-4 pb-6 border-b border-neutral-800">
-          <img src="${info.guild_icon ? `https://cdn.discordapp.com/icons/${info.guild_id}/${info.guild_icon}.png` : '/img/logo.png'}" class="w-14 h-14 rounded-2xl object-cover shrink-0" alt="${info.guild_name}">
-          <div>
-            <h1 class="text-xl font-bold text-white">${info.guild_name}</h1>
-            <p class="text-xs text-neutral-400 mt-0.5">Official Sanction Appeal Portal</p>
-          </div>
-        </div>
-
-        ${!user ? `
-          <div class="text-center py-6">
-            <p class="text-sm text-neutral-400 mb-6">Please sign in with Discord to verify your identity and view active punishments on this server.</p>
-            <button 
-              type="button" 
-              onclick="API.login(window.location.pathname).then(() => Router.checkAuth().then(() => Router.handleRoute()))" 
-              class="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
-            >
-              ${icon('bot', 18)} Login with Discord
-            </button>
-          </div>
-        ` : `
-          <!-- Appeal Submission Form -->
-          <form id="appeal-form" class="flex flex-col gap-5">
-            <div class="flex items-center gap-3 p-3 rounded-xl bg-neutral-950 border border-neutral-800">
-              <img src="${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '/img/logo.png'}" class="w-8 h-8 rounded-full" alt="${user.username}">
-              <div class="flex flex-col min-w-0">
-                <span class="text-xs font-semibold text-white">${user.username}</span>
-                <span class="text-[10px] text-neutral-500">ID: ${user.id}</span>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-semibold text-neutral-300">Why was the sanction issued?</label>
-              <textarea id="appeal-reason-inp" rows="3" required placeholder="Explain the context or reason why you were banned or timed out..." class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white text-xs focus:outline-none"></textarea>
-            </div>
-
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-semibold text-neutral-300">Why should the staff team reconsider?</label>
-              <textarea id="appeal-statement-inp" rows="4" required placeholder="Describe what has changed or why you believe your punishment should be lifted..." class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white text-xs focus:outline-none"></textarea>
-            </div>
-
-            <button type="submit" id="submit-appeal-btn" class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all active:scale-95">
-              ${icon('send', 14)} Submit Appeal Request
-            </button>
-          </form>
-        `}
-      </div>
-    `;
-
-    loading.classList.add('hidden');
-    content.classList.remove('hidden');
-
-    const form = document.getElementById('appeal-form');
-    if (form) {
-      form.onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('submit-appeal-btn');
-        btn.textContent = 'Submitting...';
-        btn.disabled = true;
-
-        const reason = document.getElementById('appeal-reason-inp')?.value?.trim();
-        const statement = document.getElementById('appeal-statement-inp')?.value?.trim();
-
-        try {
-          await API.submitAppeal(customUrl, { reason, statement });
-          Toast.success('Appeal submitted successfully! Server staff has been notified.');
-          content.innerHTML = `
-            <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-10 shadow-2xl text-center flex flex-col items-center gap-4 animate-fade-in">
-              <div class="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                ${icon('check', 32)}
-              </div>
-              <h2 class="text-xl font-bold text-white">Appeal Submitted</h2>
-              <p class="text-xs text-neutral-400 max-w-sm leading-relaxed">Your appeal has been securely routed to the ${info.guild_name} moderation team for review. You will receive an update in Discord once reviewed.</p>
-              <a href="/" class="mt-4 px-6 py-2.5 rounded-xl bg-neutral-800 text-white text-xs font-semibold hover:bg-neutral-700 transition-colors">Return Home</a>
-            </div>
-          `;
-        } catch (err) {
-          Toast.error(err.message || 'Failed to submit appeal.');
-          btn.disabled = false;
-          btn.innerHTML = `${icon('send', 14)} Submit Appeal Request`;
-        }
-      };
-    }
-  } catch (err) {
-    container.innerHTML = `
-      <div class="max-w-md mx-auto pt-32 text-center p-8 bg-neutral-900 border border-neutral-800 rounded-3xl">
-        <h2 class="text-lg font-bold text-white mb-2">Appeal Portal Not Found</h2>
-        <p class="text-xs text-neutral-400 mb-6">The appeal link you provided is invalid or has been deactivated by the server administrator.</p>
-        <a href="/" class="px-5 py-2.5 rounded-xl bg-white text-black text-xs font-semibold">Back to Home</a>
-      </div>
-    `;
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
-};
+
+  const SVGS = {
+    discord: `<svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>`,
+    scale: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></svg>`,
+    shieldCheck: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>`,
+    send: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>`,
+    check: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+    clock: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
+    alertCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
+  };
+
+  Pages.Appeal = async function (container, customUrl) {
+    container.innerHTML = `
+      <div class="relative min-h-[calc(100vh-80px)] flex flex-col items-center justify-center px-4 py-16 sm:py-24 animate-fade-in overflow-hidden">
+        <!-- Ambient Background Glow -->
+        <div class="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#5865F2]/10 blur-[120px] rounded-full"></div>
+        <div class="pointer-events-none absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-[400px] h-[250px] bg-indigo-600/5 blur-[100px] rounded-full"></div>
+
+        <div id="appeal-loading" class="flex flex-col items-center justify-center p-12 text-neutral-400 gap-3">
+          <div class="w-8 h-8 border-2 border-white/20 border-t-[#5865F2] rounded-full animate-spin"></div>
+          <span class="text-xs font-medium tracking-wide">Loading server appeal portal...</span>
+        </div>
+        <div id="appeal-content" class="w-full max-w-xl hidden relative z-10"></div>
+      </div>
+    `;
+
+    try {
+      const info = await API.getAppealInfo(customUrl);
+      const content = document.getElementById('appeal-content');
+      const loading = document.getElementById('appeal-loading');
+      if (!content) return;
+
+      let user = null;
+      try {
+        user = await API.getUser();
+      } catch (e) {
+        user = null;
+      }
+
+      // Resolve guild icon safely
+      let iconSrc = '/img/logo.png';
+      if (info?.guild_icon) {
+        if (info.guild_icon.startsWith('http')) {
+          iconSrc = info.guild_icon;
+        } else {
+          iconSrc = `https://cdn.discordapp.com/icons/${info.guild_id}/${info.guild_icon}.png?size=256`;
+        }
+      }
+
+      const guildName = info?.guild_name || 'Discord Community';
+      const questions = Array.isArray(info?.custom_questions) && info.custom_questions.length > 0
+        ? info.custom_questions
+        : [
+            { id: 'q1', label: 'Why was your sanction issued?', placeholder: 'Describe what happened and the context surrounding the sanction...', required: true },
+            { id: 'q2', label: 'Why should the staff reconsider your punishment?', placeholder: 'Explain why you believe the punishment should be reconsidered and what will change...', required: true }
+          ];
+
+      content.innerHTML = `
+        <div class="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
+          <!-- Server Header -->
+          <div class="flex items-center gap-4 pb-6 border-b border-neutral-800">
+            <div class="relative shrink-0">
+              <img 
+                src="${escapeHtml(iconSrc)}" 
+                alt="${escapeHtml(guildName)}" 
+                class="w-14 h-14 rounded-2xl object-cover bg-neutral-950 border border-neutral-800 shadow-md"
+                onerror="this.onerror=null; this.src='/img/logo.png';"
+              >
+              <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-neutral-900 flex items-center justify-center" title="Verified Portal">
+                <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <h1 class="text-lg sm:text-xl font-bold text-white truncate tracking-tight">${escapeHtml(guildName)}</h1>
+              </div>
+              <p class="text-xs text-neutral-400 mt-0.5 flex items-center gap-1.5">
+                <span class="text-[#5865F2] font-medium">Official Sanction Appeal Portal</span>
+              </p>
+            </div>
+          </div>
+
+          ${!user ? `
+            <!-- Unauthenticated State -->
+            <div class="flex flex-col items-center text-center py-6 px-2 gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-[#5865F2]/10 text-[#5865F2] border border-[#5865F2]/20 flex items-center justify-center">
+                ${SVGS.scale}
+              </div>
+              <div>
+                <h2 class="text-base font-semibold text-white tracking-tight">Discord Identity Verification Required</h2>
+                <p class="text-xs text-neutral-400 max-w-md mt-1 leading-relaxed">
+                  To ensure appeals are securely tied to your Discord account, please authorize with Discord. We only check your account ID and active sanctions.
+                </p>
+              </div>
+              <button 
+                type="button" 
+                id="btn-appeal-login"
+                class="w-full mt-2 flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold text-xs transition-all shadow-lg shadow-[#5865F2]/20 active:scale-[0.98] cursor-pointer"
+              >
+                ${SVGS.discord}
+                <span>Login with Discord to Continue</span>
+              </button>
+            </div>
+          ` : `
+            <!-- Authenticated Appeal Form -->
+            <form id="appeal-form" class="flex flex-col gap-5">
+              <!-- User Identity Pill -->
+              <div class="flex items-center justify-between p-3.5 rounded-xl bg-neutral-950 border border-neutral-800">
+                <div class="flex items-center gap-3 min-w-0">
+                  <img 
+                    src="${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=96` : '/img/logo.png'}" 
+                    class="w-9 h-9 rounded-xl object-cover bg-neutral-900 border border-neutral-800 shrink-0" 
+                    alt="${escapeHtml(user.username)}"
+                    onerror="this.onerror=null; this.src='/img/logo.png';"
+                  >
+                  <div class="flex flex-col min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-xs font-semibold text-white truncate">${escapeHtml(user.global_name || user.username)}</span>
+                      <span class="text-[10px] text-neutral-500 font-mono">@${escapeHtml(user.username)}</span>
+                    </div>
+                    <span class="text-[10px] text-neutral-500 font-mono truncate">ID: ${escapeHtml(user.id)}</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold shrink-0">
+                  ${SVGS.shieldCheck}
+                  <span>Verified</span>
+                </div>
+              </div>
+
+              <!-- Questionnaire Fields -->
+              <div class="flex flex-col gap-4">
+                ${questions.map((q, idx) => `
+                  <div class="flex flex-col gap-1.5">
+                    <label for="q-inp-${idx}" class="text-xs font-semibold text-neutral-300 flex items-center justify-between">
+                      <span>${escapeHtml(q.label)}</span>
+                      ${q.required ? '<span class="text-[10px] text-amber-400 font-normal">Required</span>' : '<span class="text-[10px] text-neutral-500 font-normal">Optional</span>'}
+                    </label>
+                    <textarea 
+                      id="q-inp-${idx}" 
+                      data-qid="${escapeHtml(q.id || `q_${idx}`)}"
+                      data-qlabel="${escapeHtml(q.label)}"
+                      rows="3" 
+                      ${q.required ? 'required' : ''}
+                      placeholder="${escapeHtml(q.placeholder || 'Write your response here...')}" 
+                      class="appeal-question-input w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 text-white text-xs leading-relaxed placeholder:text-neutral-600 focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-colors"
+                    ></textarea>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Privacy Notice -->
+              <div class="flex items-start gap-2.5 p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80 text-[11px] text-neutral-400">
+                <span class="text-neutral-500 shrink-0 mt-0.5">${SVGS.clock}</span>
+                <p class="leading-relaxed">
+                  Your submission will be routed directly to the server's staff review channel. Decisions are typically made within a few days. Submitting false information will result in a permanent blacklist.
+                </p>
+              </div>
+
+              <!-- Submit Button -->
+              <button 
+                type="submit" 
+                id="submit-appeal-btn" 
+                class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold text-xs transition-all shadow-md shadow-[#5865F2]/20 active:scale-[0.98] cursor-pointer"
+              >
+                ${SVGS.send}
+                <span>Submit Appeal Request</span>
+              </button>
+            </form>
+          `}
+        </div>
+      `;
+
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+
+      // Login Button Hook
+      const loginBtn = document.getElementById('btn-appeal-login');
+      if (loginBtn) {
+        loginBtn.onclick = () => {
+          if (window.API && typeof API.login === 'function') {
+            API.login(window.location.pathname);
+          } else {
+            window.location.href = `/api/auth/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+          }
+        };
+      }
+
+      // Form Submit Hook
+      const form = document.getElementById('appeal-form');
+      if (form) {
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('submit-appeal-btn');
+          btn.disabled = true;
+          btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Submitting...`;
+
+          // Collect answers
+          const textareas = form.querySelectorAll('.appeal-question-input');
+          const answers = {};
+          let combinedReason = '';
+          let combinedStatement = '';
+
+          textareas.forEach((ta, idx) => {
+            const val = ta.value.trim();
+            const qid = ta.dataset.qid || `q_${idx}`;
+            const label = ta.dataset.qlabel || `Question ${idx + 1}`;
+            answers[qid] = val;
+            if (idx === 0) combinedReason = val;
+            else if (idx === 1) combinedStatement = val;
+            else {
+              combinedStatement += (combinedStatement ? '\n\n' : '') + `[${label}]: ${val}`;
+            }
+          });
+
+          try {
+            await API.submitAppeal(customUrl, {
+              reason: combinedReason || 'No reason provided',
+              statement: combinedStatement || combinedReason || 'No statement provided',
+              answers: answers
+            });
+
+            if (window.Toast && Toast.success) {
+              Toast.success('Appeal submitted successfully! Server staff has been notified.');
+            }
+
+            content.innerHTML = `
+              <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 sm:p-12 shadow-2xl text-center flex flex-col items-center gap-4 animate-fade-in">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  ${SVGS.check}
+                </div>
+                <h2 class="text-xl font-bold text-white tracking-tight">Appeal Successfully Submitted</h2>
+                <p class="text-xs text-neutral-400 max-w-md leading-relaxed">
+                  Your appeal has been safely delivered to the <span class="text-white font-semibold">${escapeHtml(guildName)}</span> moderation team. If the moderators accept your appeal, your sanction will be lifted immediately.
+                </p>
+                <div class="flex items-center gap-3 mt-4">
+                  <a href="/" class="px-5 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold transition-colors">
+                    Return to Orbit
+                  </a>
+                </div>
+              </div>
+            `;
+          } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = `${SVGS.send} <span>Submit Appeal Request</span>`;
+            const msg = err.message || 'Failed to submit appeal. You may already have a pending review.';
+            if (window.Toast && Toast.error) {
+              Toast.error(msg);
+            } else {
+              alert(msg);
+            }
+          }
+        };
+      }
+    } catch (err) {
+      console.error('Failed to load appeal portal:', err);
+      const loading = document.getElementById('appeal-loading');
+      if (loading) {
+        loading.innerHTML = `
+          <div class="flex flex-col items-center justify-center p-8 text-center max-w-md">
+            <div class="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center mb-3">
+              ${SVGS.alertCircle}
+            </div>
+            <h2 class="text-base font-bold text-white tracking-tight">Appeal Portal Not Found</h2>
+            <p class="text-xs text-neutral-400 mt-1 mb-5">This appeal portal may be disabled or the vanity URL is invalid.</p>
+            <a href="/" class="px-4 py-2 rounded-xl bg-neutral-800 text-white text-xs font-semibold hover:bg-neutral-700 transition-colors">Return Home</a>
+          </div>
+        `;
+      }
+    }
+  };
+})();
