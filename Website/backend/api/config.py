@@ -145,25 +145,46 @@ class ConfigMixin:
         
         immune_user_ids = settings_cfg.get("immune_users", [])
         resolved_immune_users = []
-        for uid_str in immune_user_ids:
+        for item in immune_user_ids:
             try:
-                uid = int(uid_str)
-                user_obj = guild.get_member(uid) or self.bot.get_user(uid)
-                if user_obj:
-                    resolved_immune_users.append({
-                        "id": str(user_obj.id),
-                        "name": getattr(user_obj, "display_name", user_obj.name),
-                        "avatar": user_obj.display_avatar.with_size(64).url if getattr(user_obj, "display_avatar", None) else "/img/logo.png"
-                    })
-                else:
+                if isinstance(item, dict):
+                    raw_id = item.get("id")
+                    if not raw_id:
+                        continue
+                    uid = int(raw_id)
+                    user_obj = guild.get_member(uid) or self.bot.get_user(uid)
                     resolved_immune_users.append({
                         "id": str(uid),
-                        "name": f"User {uid}",
-                        "avatar": "/img/logo.png"
+                        "name": item.get("name") or (getattr(user_obj, "display_name", user_obj.name) if user_obj else f"User {uid}"),
+                        "username": item.get("username") or (getattr(user_obj, "name", "") if user_obj else ""),
+                        "avatar": item.get("avatar") or (user_obj.display_avatar.with_size(64).url if getattr(user_obj, "display_avatar", None) else "/img/logo.png")
                     })
+                else:
+                    uid = int(item)
+                    user_obj = guild.get_member(uid) or self.bot.get_user(uid)
+                    if user_obj:
+                        resolved_immune_users.append({
+                            "id": str(user_obj.id),
+                            "name": getattr(user_obj, "display_name", user_obj.name),
+                            "username": getattr(user_obj, "name", ""),
+                            "avatar": user_obj.display_avatar.with_size(64).url if getattr(user_obj, "display_avatar", None) else "/img/logo.png"
+                        })
+                    else:
+                        resolved_immune_users.append({
+                            "id": str(uid),
+                            "name": f"User {uid}",
+                            "username": str(uid),
+                            "avatar": "/img/logo.png"
+                        })
             except Exception:
                 pass
         settings_cfg["immune_users"] = resolved_immune_users
+
+        raw_immune_roles = settings_cfg.get("immune_roles", [])
+        settings_cfg["immune_roles"] = [
+            str(r.get("id") if isinstance(r, dict) else r)
+            for r in raw_immune_roles if r
+        ]
 
         from Components.Systems.BanAppeals._storage import load_appeals_config
         appeals_cfg = load_appeals_config(guild_id)
@@ -783,6 +804,10 @@ class ConfigMixin:
                     s_cfg["autoresponder_enabled"] = bool(new_s["autoresponder_enabled"])
                 if "messages_enabled" in new_s:
                     s_cfg["messages_enabled"] = bool(new_s["messages_enabled"])
+                if "immune_users" in new_s:
+                    s_cfg["immune_users"] = new_s["immune_users"]
+                if "immune_roles" in new_s:
+                    s_cfg["immune_roles"] = [str(r.get("id") if isinstance(r, dict) else r) for r in new_s["immune_roles"] if r]
                 save_settings_config(guild_id, s_cfg)
 
             if can_admin and "extra_settings" in data:

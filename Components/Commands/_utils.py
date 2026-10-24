@@ -384,20 +384,31 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
     except Exception:
         pass
 
-def is_immune(guild_id: int, target: discord.User | discord.Member) -> bool:
+def is_immune(guild_id: int, target: discord.User | discord.Member | int | str) -> bool:
     from Components.Systems.WebDashboard._storage import load_settings_config
     settings_cfg = load_settings_config(guild_id)
     
+    target_id = str(target.id if hasattr(target, "id") else target)
+    
     immune_users = settings_cfg.get("immune_users", [])
-    if str(target.id) in immune_users:
-        return True
+    for u in immune_users:
+        uid = str(u.get("id") if isinstance(u, dict) else u)
+        if uid == target_id:
+            return True
         
     if isinstance(target, discord.Member):
-        immune_roles = settings_cfg.get("immune_roles", [])
+        immune_roles = [str(r.get("id") if isinstance(r, dict) else r) for r in settings_cfg.get("immune_roles", [])]
         for role in target.roles:
             if str(role.id) in immune_roles:
                 return True
                 
+    try:
+        from Components.Commands.Whitelist._storage import is_whitelisted
+        if is_whitelisted(guild_id, int(target_id)):
+            return True
+    except Exception:
+        pass
+        
     return False
 
 def build_embed(guild: discord.Guild | None, title: str = None, description: str = None, color: discord.Color = ORBIT_COLOR, **kwargs) -> discord.Embed:

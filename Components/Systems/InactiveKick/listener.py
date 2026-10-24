@@ -84,6 +84,9 @@ class InactiveKickListener(commands.Cog):
                         continue
                     if member.id == guild.owner_id:
                         continue
+                    from Components.Commands._utils import is_immune
+                    if is_immune(guild.id, member):
+                        continue
 
                     # Ignore members with any assigned role (besides @everyone)
                     if ignore_any_role and len(member.roles) > 1:

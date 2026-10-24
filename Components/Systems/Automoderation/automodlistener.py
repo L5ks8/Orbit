@@ -106,7 +106,8 @@ class AutoModListener(commands.Cog):
         if message.author.guild_permissions.administrator or message.author.guild_permissions.manage_guild:
             return
 
-        if is_whitelisted(message.guild.id, message.author.id):
+        from Components.Commands._utils import is_immune
+        if is_immune(message.guild.id, message.author) or is_whitelisted(message.guild.id, message.author.id):
             return
 
         config = load_automod_config(message.guild.id)

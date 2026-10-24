@@ -169,6 +169,15 @@ const API = {
     return null;
   },
 
+  async resolveUser(userId) {
+    if (!userId) return null;
+    try {
+      return await this.request('/api/user/' + encodeURIComponent(userId));
+    } catch (err) {
+      return null;
+    }
+  },
+
   login(nextUrl = '/dashboard') {
     const popup = 1;
     const loginUrl = `/auth/login?next=${encodeURIComponent(nextUrl)}&popup=${popup}`;

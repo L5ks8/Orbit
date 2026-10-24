@@ -59,7 +59,18 @@ def save_whitelist(guild_id: int, data: Dict[str, Any]) -> None:
 
 def is_whitelisted(guild_id: int, user_id: int) -> bool:
     data = load_whitelist(guild_id)
-    return str(user_id) in data
+    if str(user_id) in data:
+        return True
+    try:
+        from Components.Systems.WebDashboard._storage import load_settings_config
+        settings_cfg = load_settings_config(guild_id)
+        for u in settings_cfg.get("immune_users", []):
+            uid = str(u.get("id") if isinstance(u, dict) else u)
+            if uid == str(user_id):
+                return True
+    except Exception:
+        pass
+    return False
 
 def add_to_whitelist(guild_id: int, user_id: int, reason: str, added_by: int) -> bool:
     data = load_whitelist(guild_id)

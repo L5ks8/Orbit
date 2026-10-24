@@ -45,7 +45,8 @@ class MuteCommand(commands.Cog):
         await ctx.defer()
         if target.id == ctx.author.id:
             return await ctx.send(embed=make_embed("You cannot mute yourself.", discord.Color.red()), ephemeral=True)
-        if is_whitelisted(ctx.guild.id, target.id):
+        from Components.Commands._utils import is_immune
+        if is_immune(ctx.guild.id, target) or is_whitelisted(ctx.guild.id, target.id):
             return await ctx.send(embed=make_embed("This user is on the global moderation whitelist (`Immune to Mute`).", discord.Color.red()), ephemeral=True)
         if target.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
             return await ctx.send(embed=make_embed("You cannot mute a user with an equal or higher role.", discord.Color.red()), ephemeral=True)
