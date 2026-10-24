@@ -876,7 +876,7 @@ class ActionsMixin:
 
 
 
-        async def api_action_send_embed(self, request: web.Request):
+    async def api_action_send_embed(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
