@@ -186,7 +186,7 @@ class ConfigMixin:
 
         live_invites_by_code = {}
         try:
-            guild_invites = await asyncio.wait_for(guild.invites(), timeout=1.2)
+            guild_invites = await asyncio.wait_for(guild.invites(), timeout=0.3)
             for ginv in guild_invites:
                 live_invites_by_code[ginv.code] = ginv
         except Exception:

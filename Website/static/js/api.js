@@ -114,73 +114,25 @@ const API = {
     return p;
   },
 
-  // Preloading & Preheating Engine
+  // Preloading & Preheating Engine (Lightweight & On-Demand)
   _prefetchedGuilds: new Set(),
 
   prefetchGuild(guildId) {
     if (!guildId || this._prefetchedGuilds.has(String(guildId))) return;
     this._prefetchedGuilds.add(String(guildId));
 
-    // High priority: core data used across tabs (Config, Channels, Roles, Bot Profile)
-    const corePromises = [
-      this.getConfig(guildId).catch(() => null),
-      this.getChannels(guildId).catch(() => []),
-      this.getRoles(guildId).catch(() => []),
-      this.getBotProfile(guildId).catch(() => null)
-    ];
-
-    // Secondary priority: background prefetch other tabs
-    Promise.allSettled(corePromises).then(() => {
-      setTimeout(() => {
-        this.getGuildStats(guildId, 7).catch(() => null);
-        this.getGuildStatsLive(guildId).catch(() => null);
-      }, 50);
-
-      setTimeout(() => {
-        this.getGuildAnalytics(guildId, 7).catch(() => null);
-        this.getReactionRoles(guildId).catch(() => []);
-      }, 150);
-
-      setTimeout(() => {
-        this.getPolls(guildId).catch(() => []);
-        this.getSavedEmbeds(guildId).catch(() => []);
-        this.getAIHelperChats(guildId).catch(() => null);
-      }, 250);
-    });
+    // Only preload core config (which already contains channels & roles)
+    // Avoid hammering secondary endpoints until the user actually navigates to those tabs.
+    this.getConfig(guildId).catch(() => null);
   },
 
   async prefetchAll(user) {
     try {
-      const gData = await this.getGuilds();
-      const guilds = Array.isArray(gData) ? gData : (gData?.guilds || []);
-      if (!guilds || guilds.length === 0) return;
-
       const path = window.location.pathname;
       const match = path.match(/\/dashboard\/([0-9]+)/);
-      const activeGuildId = match ? match[1] : null;
-
-      const ordered = [...guilds];
-      if (activeGuildId) {
-        const idx = ordered.findIndex(g => String(g.id) === String(activeGuildId));
-        if (idx > 0) {
-          const [activeG] = ordered.splice(idx, 1);
-          ordered.unshift(activeG);
-        }
-      }
-
-      // Preload current/first guild immediately
-      if (ordered.length > 0 && ordered[0].id) {
-        this.prefetchGuild(ordered[0].id);
-      }
-
-      // Preload next guilds with a staggered interval
-      if (ordered.length > 1) {
-        const remaining = ordered.slice(1, 6);
-        remaining.forEach((g, i) => {
-          if (g && g.id) {
-            setTimeout(() => this.prefetchGuild(g.id), (i + 1) * 300);
-          }
-        });
+      if (match && match[1]) {
+        // Only preload the currently active guild if on a server dashboard
+        this.prefetchGuild(match[1]);
       }
     } catch (e) {
       console.warn('[API] prefetchAll error:', e);
@@ -188,7 +140,16 @@ const API = {
   },
 
   // Auth & User
-  async getUser() {
+  async getUser(force = false) {
+    if (!force) {
+      try {
+        const cached = localStorage.getItem('orbit_user');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.id) return parsed;
+        }
+      } catch (_) {}
+    }
     try {
       const u = await this.request('/api/user');
       if (u && u.id) {
@@ -196,14 +157,6 @@ const API = {
         return u;
       }
     } catch (err) {}
-
-    try {
-      const cached = localStorage.getItem('orbit_user');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && parsed.id) return parsed;
-      }
-    } catch (_) {}
 
     return null;
   },

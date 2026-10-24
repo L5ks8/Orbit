@@ -1210,11 +1210,89 @@ DashboardTabs.Analytics = async function(container, guildId) {
     });
   }
 
+  function getDefaultAnalyticsData(days = 7) {
+    const dates = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 86400000);
+      dates.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    }
+    const emptyRows = { rows: [], total: 0 };
+    return {
+      days,
+      chartData: dates.map(d => ({ date: d, messages: 0, activeUsers: 0, voiceMinutes: 0, members: 0, joins: 0, leaves: 0 })),
+      previousChartData: dates.map(d => ({ date: d, messages: 0, activeUsers: 0, voiceMinutes: 0, members: 0, joins: 0, leaves: 0 })),
+      summaries: {
+        messages: { current: 0, previous: 0, change: 0, percent: 0 },
+        activeUsers: { current: 0, previous: 0, change: 0, percent: 0 },
+        voiceMinutes: { current: 0, previous: 0, change: 0, percent: 0 },
+        members: { current: 0, previous: 0, change: 0, percent: 0 },
+        modActions: { current: 0, previous: 0, change: 0, percent: 0 },
+        openTickets: { current: 0, previous: 0, change: 0, percent: 0 },
+        closedTickets: { current: 0, previous: 0, change: 0, percent: 0 },
+        avgResolveTime: '-'
+      },
+      sparklines: {
+        messages: new Array(days).fill(0),
+        activeUsers: new Array(days).fill(0),
+        voiceMinutes: new Array(days).fill(0),
+        members: new Array(days).fill(0),
+        modActions: new Array(days).fill(0),
+        openTickets: new Array(days).fill(0),
+        closedTickets: new Array(days).fill(0)
+      },
+      heatmap: {
+        matrix: Array.from({ length: 7 }, () => new Array(24).fill(0)),
+        total: 0,
+        maxCount: 0
+      },
+      panels: {
+        topMessageChannels: emptyRows,
+        topReactionChannels: emptyRows,
+        topCommunicators: emptyRows,
+        topVoiceUsers: emptyRows,
+        mostReactedTo: emptyRows,
+        atRiskMembers: emptyRows,
+        topInviters: emptyRows,
+        mostMentioned: emptyRows,
+        topVoiceChannels: emptyRows,
+        surgingChannels: emptyRows,
+        topModeratedUsers: emptyRows,
+        modActionsByChannel: emptyRows,
+        autoModTrips: emptyRows,
+        ticketsByCategory: emptyRows,
+        safetyActivity: emptyRows,
+        threatsByHour: emptyRows,
+        suspiciousAccounts: { accounts: [], total: 0 },
+        leavesBySource: emptyRows
+      },
+      growth: {
+        sources: {
+          summaries: {
+            totalJoins: { current: 0, previous: 0, change: 0, percent: 0 },
+            totalLeaves: { current: 0, previous: 0, change: 0, percent: 0 },
+            retained: { current: 0, previous: 0, change: 0, percent: 0 },
+            sourceCount: 0
+          },
+          topSources: []
+        },
+        retentionFunnel: { joined: 0, firstMessage: 0, retained7d: 0, retained30d: 0 },
+        cohortRetention: { weeks: 6, cohorts: [] }
+      }
+    };
+  }
+
   async function loadAnalyticsData() {
     try {
-      analyticsData = await API.getGuildAnalytics(guildId, timeRange);
+      const data = await API.getGuildAnalytics(guildId, timeRange);
+      if (data && typeof data === 'object' && !data.error && data.chartData) {
+        analyticsData = data;
+      } else {
+        analyticsData = getDefaultAnalyticsData(timeRange);
+      }
     } catch (err) {
       console.warn('[Analytics] Failed to load:', err);
+      analyticsData = getDefaultAnalyticsData(timeRange);
     } finally {
       isLoading = false;
       renderFullPage();

@@ -404,16 +404,24 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
     'all': 'All time'
   };
 
+  const withTimeout = (promise, ms, fallback) => Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(() => resolve(fallback), ms))
+  ]);
+
   try {
-    const [configData, statsData, liveData, modActivity, guildsData] = await Promise.all([
-      API.getConfig(guildId).catch(() => ({})),
-      API.getGuildStats(guildId, 7, 7).catch(() => ({})),
-      API.getGuildStatsLive(guildId).catch(() => ({})),
-      API.getModActivity(guildId).catch(() => ([])),
-      API.getGuilds().catch(() => ([]))
+    const cachedConfig = API.getCache ? API.getCache(`config_${guildId}`) : null;
+    const cachedStats = API.getCache ? API.getCache(`guild_stats_${guildId}_7_7`) : null;
+    const cachedGuilds = API.getCache ? API.getCache('guilds') : null;
+
+    const [configData, statsData, liveData, modActivity] = await Promise.all([
+      cachedConfig ? Promise.resolve(cachedConfig) : withTimeout(API.getConfig(guildId).catch(() => ({})), 2500, {}),
+      cachedStats ? Promise.resolve(cachedStats) : withTimeout(API.getGuildStats(guildId, 7, 7).catch(() => ({})), 2500, {}),
+      withTimeout(API.getGuildStatsLive(guildId).catch(() => ({})), 1800, {}),
+      withTimeout(API.getModActivity(guildId).catch(() => ([])), 1800, [])
     ]);
 
-    const guilds = Array.isArray(guildsData) ? guildsData : (guildsData?.guilds || []);
+    const guilds = Array.isArray(cachedGuilds) ? cachedGuilds : [];
     const guild = currentGuildInfo || guilds.find(g => String(g.id) === String(guildId)) || {
       id: guildId,
       name: 'Server',

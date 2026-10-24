@@ -360,6 +360,14 @@ class GuildsMixin:
             
         raw_days = str(request.query.get("days", "7")).strip().lower()
         raw_channels_days = str(request.query.get("channels_days", raw_days)).strip().lower()
+
+        if not hasattr(self, "_guild_stats_cache"):
+            self._guild_stats_cache = {}
+        import time as _t_stats
+        _s_key = f"{guild_id}_{raw_days}_{raw_channels_days}"
+        _s_cached = self._guild_stats_cache.get(_s_key)
+        if _s_cached and (_t_stats.time() - _s_cached["time"] < 45):
+            return web.json_response(_s_cached["data"])
             
         from Components.Database.mongodb import get_db
         db = get_db()
@@ -587,7 +595,7 @@ class GuildsMixin:
                     "change": count
                 })
         
-        return web.json_response({
+        resp_data = {
             "total_members": total_members,
             "member_count": total_members,
             "today_joins": today_joins,
@@ -609,7 +617,10 @@ class GuildsMixin:
             "top_channels": top_channels,
             "live_48h": live_48h,
             "total_48h": total_48h
-        })
+        }
+        if hasattr(self, "_guild_stats_cache"):
+            self._guild_stats_cache[_s_key] = {"time": _t_stats.time(), "data": resp_data}
+        return web.json_response(resp_data)
 
     async def api_guild_stats_live(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
@@ -679,6 +690,13 @@ class GuildsMixin:
         if not guild:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
             
+        if not hasattr(self, "_mod_activity_cache"):
+            self._mod_activity_cache = {}
+        import time as _t_mod
+        cached_mod = self._mod_activity_cache.get(guild_id)
+        if cached_mod and (_t_mod.time() - cached_mod["time"] < 30):
+            return web.json_response(cached_mod["data"])
+
         from Components.Commands.ModLog._modlog_storage import get_recent_modlogs
         logs = get_recent_modlogs(guild_id, limit=25)
 
@@ -704,13 +722,6 @@ class GuildsMixin:
                 return self._user_name_cache[uid]
             if uid in self._user_name_cache:
                 return self._user_name_cache[uid]
-            try:
-                fetched = await self.bot.fetch_user(uid)
-                if fetched:
-                    self._user_name_cache[uid] = fetched.display_name or fetched.name
-                    return self._user_name_cache[uid]
-            except Exception:
-                pass
             return f"{prefix} {uid}"
         
         results = []
@@ -731,6 +742,8 @@ class GuildsMixin:
                 "case_id": log.get("case_id")
             })
             
+        if hasattr(self, "_mod_activity_cache"):
+            self._mod_activity_cache[guild_id] = {"time": _t_mod.time(), "data": results}
         return web.json_response(results)
 
     async def api_get_user_warns(self, request: web.Request):
@@ -821,6 +834,14 @@ class GuildsMixin:
             days = max(1, min(int(raw_days), 365))
         except ValueError:
             days = 7
+
+        if not hasattr(self, "_analytics_cache"):
+            self._analytics_cache = {}
+        import time as _t_ana
+        _ana_key = f"{guild_id}_{days}"
+        _ana_cached = self._analytics_cache.get(_ana_key)
+        if _ana_cached and (_t_ana.time() - _ana_cached["time"] < 60):
+            return web.json_response(_ana_cached["data"])
 
         from Components.Database.mongodb import get_db
         from datetime import datetime, timedelta, timezone
@@ -1381,7 +1402,7 @@ class GuildsMixin:
 
         heatmap_max = max((max(row) for row in heatmap_matrix), default=0)
 
-        return web.json_response({
+        ana_resp_data = {
             "days": days,
             "chartData": chart_data,
             "previousChartData": prev_chart_data,
@@ -1443,4 +1464,7 @@ class GuildsMixin:
                     "cohorts": cohorts
                 }
             }
-        })
+        }
+        if hasattr(self, "_analytics_cache"):
+            self._analytics_cache[_ana_key] = {"time": _t_ana.time(), "data": ana_resp_data}
+        return web.json_response(ana_resp_data)

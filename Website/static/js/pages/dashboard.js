@@ -59,14 +59,16 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     : '/img/logo.png';
   const userName = user.global_name || user.username || 'User';
 
-  // Load server list to find current server
-  let guilds = [];
-  try {
-    const gData = await API.getGuilds();
-    guilds = Array.isArray(gData) ? gData : (gData?.guilds || []);
-  } catch (_) {}
+  // Fast in-memory cache check for instant server title & icon
+  let guilds = API.getCache('guilds');
+  if (!guilds || !Array.isArray(guilds) || guilds.length === 0) {
+    try {
+      const gData = await API.getGuilds();
+      guilds = Array.isArray(gData) ? gData : (gData?.guilds || []);
+    } catch (_) {}
+  }
 
-  const currentGuild = guilds.find(g => String(g.id) === String(guildId)) || {
+  const currentGuild = (guilds || []).find(g => String(g.id) === String(guildId)) || {
     id: guildId,
     name: 'Server Dashboard',
     icon: null
