@@ -207,6 +207,7 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/server/{id}/test-levelup", dashboard.api_action_test_levelup)
     app.router.add_post("/api/server/{id}/test-dm", dashboard.api_action_test_dm)
     app.router.add_post("/api/server/{id}/test-welcome", dashboard.api_action_test_welcome)
+    app.router.add_post("/api/action/{id}/test_message", dashboard.api_action_test_welcome)
     app.router.add_post("/api/upload/image", dashboard.api_upload_image)
     app.router.add_get("/api/reactionroles/{id}", dashboard.api_get_reactionroles)
     app.router.add_post("/api/reactionroles/{id}", dashboard.api_save_reactionrole)

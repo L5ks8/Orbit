@@ -742,6 +742,8 @@ class ConfigMixin:
             # Top-level module mirrors for 100% universal tab compatibility
             "welcome": config_data.get("welcome"),
             "goodbye": config_data.get("goodbye"),
+            "boost": config_data.get("boost"),
+            "serverstats": config_data.get("serverstats"),
             "automod": config_data.get("automod"),
             "verify": config_data.get("verify"),
             "security": config_data.get("security"),
@@ -921,7 +923,7 @@ class ConfigMixin:
                     
                 save_goodbye_config(guild_id, goodbye_cfg)
 
-            if (can_admin or can_channels or can_messages) and "boost" in data:
+            if (can_admin or can_channels or can_messages or user_perms.get("can_overview")) and "boost" in data:
                 boost_cfg = load_boost_config(guild_id)
                 b_data = data.get("boost", {})
 
@@ -933,8 +935,9 @@ class ConfigMixin:
 
                 boost_cfg["enabled"] = bool(b_data.get("enabled"))
                 cid = b_data.get("channel_id")
-                boost_cfg["channel_id"] = int(cid) if cid else None
-                boost_cfg["reward_role_id"] = str(b_data.get("reward_role_id", ""))
+                boost_cfg["channel_id"] = int(str(cid).strip()) if cid and str(cid).strip().isdigit() else None
+                rid = b_data.get("reward_role_id")
+                boost_cfg["reward_role_id"] = str(rid).strip() if rid and str(rid).strip() not in ["none", "null", "undefined"] else ""
                 boost_cfg["message"] = b_data.get("message", "")
                 boost_cfg["msg_mode"] = b_data.get("msg_mode", "image")
                 boost_cfg["image_url"] = b_data.get("image_url", "")

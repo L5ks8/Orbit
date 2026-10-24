@@ -106,17 +106,26 @@ DashboardTabs.Boost = async function (container, guildId) {
     }).join('');
   }
 
-  function scheduleSave() {
+  function scheduleSave(immediate = false) {
     if (isInitialLoading) return;
     const statusEl = document.getElementById('boost-save-status');
     if (statusEl) {
       statusEl.textContent = 'Saving...';
       statusEl.className = 'text-xs text-neutral-400 transition-colors';
     }
+    if (window.AutoSave) {
+      if (immediate) {
+        AutoSave.immediate(saveNow);
+      } else {
+        AutoSave.trigger(saveNow, 400);
+      }
+    }
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
       try {
-        await saveNow();
+        if (!window.AutoSave) {
+          await saveNow();
+        }
         if (statusEl) {
           statusEl.textContent = 'Saved';
           statusEl.className = 'text-xs text-emerald-400 transition-colors';
@@ -133,7 +142,7 @@ DashboardTabs.Boost = async function (container, guildId) {
           statusEl.className = 'text-xs text-red-400 transition-colors';
         }
       }
-    }, 500);
+    }, immediate ? 40 : 450);
   }
 
   async function saveNow() {
@@ -147,10 +156,10 @@ DashboardTabs.Boost = async function (container, guildId) {
         message: b.message || '',
         image_url: b.image_url || '',
         embed_image: b.embed_image || b.image_url || '',
+        embed_thumbnail: b.embed_thumbnail || '',
         embed_color: b.embed_color || '#EB459E',
         embed_title: b.embed_title || '',
         embed_description: b.embed_description || '',
-        embed_thumbnail: b.embed_thumbnail || '',
         embed_footer: b.embed_footer || '',
         embed_author: b.embed_author || '',
         embed_author_icon: b.embed_author_icon || '',
@@ -158,7 +167,7 @@ DashboardTabs.Boost = async function (container, guildId) {
         embed_fields: Array.isArray(b.embed_fields) ? b.embed_fields : []
       }
     };
-    await API.saveConfig(guildId, payload);
+    return await API.saveConfig(guildId, payload);
   }
 
   function getChannelLabel(channelId) {
@@ -251,13 +260,24 @@ DashboardTabs.Boost = async function (container, guildId) {
                     <div class="relative" id="b-channel-dropdown-wrap">
                       <button type="button" id="b-channel-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3.5 bg-neutral-800 border rounded-xl text-sm text-left transition-colors border-neutral-700 hover:border-neutral-600 cursor-pointer">
                         <span id="b-channel-label" class="min-w-0 truncate text-sm ${chanSelected ? 'text-white font-medium' : 'text-neutral-400'}">${esc(getChannelLabel(b.channel_id))}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-400 shrink-0"><path d="m6 9 6 6 6-6"></path></svg>
+                        <svg id="b-channel-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-400 shrink-0 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
                       </button>
-                      <div id="b-channel-menu" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl z-[99999] py-1">
-                        <button type="button" data-ch="" class="b-ch-opt w-full px-3 py-2 text-left text-xs text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"># No channel (Disabled)</button>
-                        ${state.channels.map(c => `
-                          <button type="button" data-ch="${esc(c.id)}" class="b-ch-opt w-full px-3 py-2 text-left text-xs ${String(b.channel_id) === String(c.id) ? 'bg-white/10 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors truncate"># ${esc(c.name)}</button>
-                        `).join('')}
+                      <div id="b-channel-menu" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] overflow-hidden max-h-60 flex flex-col">
+                        <div class="p-2 border-b border-neutral-800 sticky top-0 bg-neutral-900 shrink-0">
+                          <input type="text" id="b-channel-search" placeholder="Search channels..." class="w-full px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-pink-500" autocomplete="off">
+                        </div>
+                        <div id="b-channel-options" class="overflow-y-auto p-1 space-y-0.5 scrollbar-thin">
+                          <button type="button" data-ch="" class="b-ch-opt w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors text-left cursor-pointer ${!b.channel_id ? 'bg-neutral-800/80 text-white font-medium' : ''}">
+                            <span class="truncate"># No channel (Disabled)</span>
+                            ${!b.channel_id ? `<svg class="w-4 h-4 text-pink-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+                          </button>
+                          ${state.channels.map(c => `
+                            <button type="button" data-ch="${esc(c.id)}" data-ch-name="${esc(c.name)}" class="b-ch-opt w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors text-left cursor-pointer ${String(b.channel_id) === String(c.id) ? 'bg-neutral-800/80 text-white font-medium' : ''}">
+                              <span class="truncate"># ${esc(c.name)}</span>
+                              ${String(b.channel_id) === String(c.id) ? `<svg class="w-4 h-4 text-pink-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+                            </button>
+                          `).join('')}
+                        </div>
                       </div>
                     </div>
                     <p class="text-[11px] text-neutral-500">The text channel where boost messages will be broadcasted.</p>
@@ -271,15 +291,27 @@ DashboardTabs.Boost = async function (container, guildId) {
                     <div class="relative" id="b-role-dropdown-wrap">
                       <button type="button" id="b-role-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3.5 bg-neutral-800 border rounded-xl text-sm text-left transition-colors border-neutral-700 hover:border-neutral-600 cursor-pointer">
                         <span id="b-role-label" class="min-w-0 truncate text-sm ${b.reward_role_id ? 'text-white font-medium' : 'text-neutral-400'}">${esc(getRoleLabel(b.reward_role_id))}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-400 shrink-0"><path d="m6 9 6 6 6-6"></path></svg>
+                        <svg id="b-role-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-neutral-400 shrink-0 transition-transform duration-200"><path d="m6 9 6 6 6-6"></path></svg>
                       </button>
-                      <div id="b-role-menu" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl z-[99999] py-1">
-                        <button type="button" data-role="" class="b-role-opt w-full px-3 py-2 text-left text-xs text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors">@ No reward role</button>
-                        ${state.roles.map(r => `
-                          <button type="button" data-role="${esc(r.id)}" class="b-role-opt w-full px-3 py-2 text-left text-xs ${String(b.reward_role_id) === String(r.id) ? 'bg-white/10 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors truncate">
-                            <span class="inline-block w-2.5 h-2.5 rounded-full mr-1.5 align-middle" style="background-color: ${r.color && r.color !== 0 ? '#' + r.color.toString(16).padStart(6, '0') : '#99aab5'};"></span>@ ${esc(r.name)}
+                      <div id="b-role-menu" data-lenis-prevent="true" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] overflow-hidden max-h-60 flex flex-col">
+                        <div class="p-2 border-b border-neutral-800 sticky top-0 bg-neutral-900 shrink-0">
+                          <input type="text" id="b-role-search" placeholder="Search roles..." class="w-full px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-pink-500" autocomplete="off">
+                        </div>
+                        <div id="b-role-options" class="overflow-y-auto p-1 space-y-0.5 scrollbar-thin">
+                          <button type="button" data-role="" class="b-role-opt w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors text-left cursor-pointer ${!b.reward_role_id ? 'bg-neutral-800/80 text-white font-medium' : ''}">
+                            <span class="truncate">@ No reward role</span>
+                            ${!b.reward_role_id ? `<svg class="w-4 h-4 text-pink-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
                           </button>
-                        `).join('')}
+                          ${state.roles.map(r => `
+                            <button type="button" data-role="${esc(r.id)}" data-role-name="${esc(r.name)}" class="b-role-opt w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors text-left cursor-pointer ${String(b.reward_role_id) === String(r.id) ? 'bg-neutral-800/80 text-white font-medium' : ''}">
+                              <span class="truncate flex items-center gap-1.5">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${r.color && r.color !== 0 ? '#' + r.color.toString(16).padStart(6, '0') : '#99aab5'};"></span>
+                                @ ${esc(r.name)}
+                              </span>
+                              ${String(b.reward_role_id) === String(r.id) ? `<svg class="w-4 h-4 text-pink-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+                            </button>
+                          `).join('')}
+                        </div>
                       </div>
                     </div>
                     <p class="text-[11px] text-neutral-500">Automatically awarded to the member when they boost.</p>
@@ -710,20 +742,46 @@ DashboardTabs.Boost = async function (container, guildId) {
     // 1. Channel Dropdown
     const chBtn = document.getElementById('b-channel-btn');
     const chMenu = document.getElementById('b-channel-menu');
+    const chSearch = document.getElementById('b-channel-search');
+    const chChevron = document.getElementById('b-channel-chevron');
     if (chBtn && chMenu) {
       chBtn.onclick = (e) => {
         e.stopPropagation();
-        chMenu.classList.toggle('hidden');
+        const isHidden = chMenu.classList.contains('hidden');
         document.getElementById('b-role-menu')?.classList.add('hidden');
+        document.getElementById('b-role-chevron')?.classList.remove('rotate-180');
         document.getElementById('b-color-popover')?.classList.add('hidden');
-        if (!chMenu.classList.contains('hidden') && window.OrbitDropdownManager) {
-          window.OrbitDropdownManager.scheduleSync();
+        if (isHidden) {
+          chMenu.classList.remove('hidden');
+          if (chChevron) chChevron.classList.add('rotate-180');
+          if (chSearch) {
+            chSearch.value = '';
+            document.querySelectorAll('#b-channel-options .b-ch-opt').forEach(o => o.classList.remove('hidden'));
+            setTimeout(() => chSearch.focus(), 50);
+          }
+          if (window.OrbitDropdownManager) {
+            window.OrbitDropdownManager.scheduleSync();
+          }
+        } else {
+          chMenu.classList.add('hidden');
+          if (chChevron) chChevron.classList.remove('rotate-180');
         }
       };
-      document.querySelectorAll('.b-ch-opt').forEach(opt => {
+      if (chSearch) {
+        chSearch.onclick = (e) => e.stopPropagation();
+        chSearch.oninput = () => {
+          const q = chSearch.value.toLowerCase().trim();
+          document.querySelectorAll('#b-channel-options .b-ch-opt').forEach(opt => {
+            const name = (opt.getAttribute('data-ch-name') || opt.textContent || '').toLowerCase();
+            opt.classList.toggle('hidden', q.length > 0 && !name.includes(q));
+          });
+        };
+      }
+      document.querySelectorAll('#b-channel-options .b-ch-opt').forEach(opt => {
         opt.onclick = () => {
           state.boost.channel_id = opt.getAttribute('data-ch') || '';
           chMenu.classList.add('hidden');
+          if (chChevron) chChevron.classList.remove('rotate-180');
           const lbl = document.getElementById('b-channel-label');
           if (lbl) {
             lbl.textContent = getChannelLabel(state.boost.channel_id);
@@ -733,7 +791,7 @@ DashboardTabs.Boost = async function (container, guildId) {
           if (prevCh) prevCh.textContent = getChannelPureName(state.boost.channel_id);
           const testBtn = document.getElementById('b-send-test-btn');
           if (testBtn) testBtn.disabled = !state.boost.channel_id;
-          scheduleSave();
+          scheduleSave(true);
         };
       });
     }
@@ -741,26 +799,52 @@ DashboardTabs.Boost = async function (container, guildId) {
     // 2. Role Dropdown
     const roleBtn = document.getElementById('b-role-btn');
     const roleMenu = document.getElementById('b-role-menu');
+    const roleSearch = document.getElementById('b-role-search');
+    const roleChevron = document.getElementById('b-role-chevron');
     if (roleBtn && roleMenu) {
       roleBtn.onclick = (e) => {
         e.stopPropagation();
-        roleMenu.classList.toggle('hidden');
+        const isHidden = roleMenu.classList.contains('hidden');
         chMenu?.classList.add('hidden');
+        if (chChevron) chChevron.classList.remove('rotate-180');
         document.getElementById('b-color-popover')?.classList.add('hidden');
-        if (!roleMenu.classList.contains('hidden') && window.OrbitDropdownManager) {
-          window.OrbitDropdownManager.scheduleSync();
+        if (isHidden) {
+          roleMenu.classList.remove('hidden');
+          if (roleChevron) roleChevron.classList.add('rotate-180');
+          if (roleSearch) {
+            roleSearch.value = '';
+            document.querySelectorAll('#b-role-options .b-role-opt').forEach(o => o.classList.remove('hidden'));
+            setTimeout(() => roleSearch.focus(), 50);
+          }
+          if (window.OrbitDropdownManager) {
+            window.OrbitDropdownManager.scheduleSync();
+          }
+        } else {
+          roleMenu.classList.add('hidden');
+          if (roleChevron) roleChevron.classList.remove('rotate-180');
         }
       };
-      document.querySelectorAll('.b-role-opt').forEach(opt => {
+      if (roleSearch) {
+        roleSearch.onclick = (e) => e.stopPropagation();
+        roleSearch.oninput = () => {
+          const q = roleSearch.value.toLowerCase().trim();
+          document.querySelectorAll('#b-role-options .b-role-opt').forEach(opt => {
+            const name = (opt.getAttribute('data-role-name') || opt.textContent || '').toLowerCase();
+            opt.classList.toggle('hidden', q.length > 0 && !name.includes(q));
+          });
+        };
+      }
+      document.querySelectorAll('#b-role-options .b-role-opt').forEach(opt => {
         opt.onclick = () => {
           state.boost.reward_role_id = opt.getAttribute('data-role') || '';
           roleMenu.classList.add('hidden');
+          if (roleChevron) roleChevron.classList.remove('rotate-180');
           const lbl = document.getElementById('b-role-label');
           if (lbl) {
             lbl.textContent = getRoleLabel(state.boost.reward_role_id);
             lbl.className = `min-w-0 truncate text-sm ${state.boost.reward_role_id ? 'text-white font-medium' : 'text-neutral-400'}`;
           }
-          scheduleSave();
+          scheduleSave(true);
         };
       });
     }
@@ -1004,12 +1088,9 @@ DashboardTabs.Boost = async function (container, guildId) {
         try {
           // Ensure latest configuration is saved first
           await saveNow();
-          const res = await API.request(`/api/action/${guildId}/test_message`, {
-            method: 'POST',
-            body: {
-              type: 'boost',
-              channel_id: state.boost.channel_id
-            }
+          const res = await API.testWelcome(guildId, {
+            type: 'boost',
+            channel_id: state.boost.channel_id
           });
           if (res?.success) {
             if (window.Toast) Toast.success(res.message || 'Test boost message sent successfully!');
@@ -1044,16 +1125,30 @@ DashboardTabs.Boost = async function (container, guildId) {
       </div>
     `;
 
-    const cfg = await API.getConfig(guildId);
-    if (cfg?.guild) {
-      state.guildName = cfg.guild.name || 'My Server';
-      if (cfg.guild.member_count) state.boostCount = Math.max(3, Math.floor(cfg.guild.member_count / 10));
+    const rawCfg = await API.getConfig(guildId);
+    const cfg = rawCfg?.config || rawCfg || {};
+    if (rawCfg?.guild || cfg?.guild) {
+      const g = rawCfg?.guild || cfg?.guild;
+      state.guildName = g.name || 'My Server';
+      if (g.member_count) state.boostCount = Math.max(3, Math.floor(g.member_count / 10));
     }
-    state.channels = (cfg?.channels || []).filter(c => c.type === 0 || !c.type);
-    state.roles = (cfg?.roles || []).filter(r => r.name !== '@everyone');
 
-    if (cfg?.boost) {
-      const b = cfg.boost;
+    const rawChs = (Array.isArray(rawCfg?.channels) && rawCfg.channels.length > 0)
+      ? rawCfg.channels
+      : (Array.isArray(cfg?.channels) && cfg.channels.length > 0)
+        ? cfg.channels
+        : (await API.getChannels(guildId).catch(() => []));
+    state.channels = (rawChs || []).filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
+
+    const rawRoles = (Array.isArray(rawCfg?.roles) && rawCfg.roles.length > 0)
+      ? rawCfg.roles
+      : (Array.isArray(cfg?.roles) && cfg.roles.length > 0)
+        ? cfg.roles
+        : (await API.getRoles(guildId).catch(() => []));
+    state.roles = (rawRoles || []).filter(r => r.name !== '@everyone');
+
+    const b = rawCfg?.boost || cfg?.boost;
+    if (b) {
       state.boost = {
         enabled: Boolean(b.enabled),
         channel_id: b.channel_id ? String(b.channel_id) : '',
@@ -1072,6 +1167,10 @@ DashboardTabs.Boost = async function (container, guildId) {
         embed_footer_icon: b.embed_footer_icon || '',
         embed_fields: Array.isArray(b.embed_fields) ? b.embed_fields : []
       };
+    }
+
+    if (window.AutoSave) {
+      AutoSave.register(saveNow);
     }
   } catch (err) {
     console.error('[Boost] Error loading config:', err);
