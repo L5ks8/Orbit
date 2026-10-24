@@ -5,7 +5,7 @@
  * auto-save, and functional Send Test / Test DM actions.
  */
 
-DashboardTabs.Welcome = async function(container, guildId) {
+DashboardTabs.Welcome = async function (container, guildId) {
   function esc(s) {
     return String(s ?? '')
       .replace(/&/g, '&amp;')
@@ -217,13 +217,13 @@ DashboardTabs.Welcome = async function(container, guildId) {
     const wChanSelected = Boolean(state.welcome.channel_id);
     const gChanSelected = Boolean(state.goodbye.channel_id);
     const wTotalChars = (state.welcome.embed_author || '').length +
-                        (state.welcome.embed_title || '').length +
-                        (state.welcome.embed_description || '').length +
-                        (state.welcome.embed_footer || '').length;
+      (state.welcome.embed_title || '').length +
+      (state.welcome.embed_description || '').length +
+      (state.welcome.embed_footer || '').length;
     const gTotalChars = (state.goodbye.embed_author || '').length +
-                        (state.goodbye.embed_title || '').length +
-                        (state.goodbye.embed_description || '').length +
-                        (state.goodbye.embed_footer || '').length;
+      (state.goodbye.embed_title || '').length +
+      (state.goodbye.embed_description || '').length +
+      (state.goodbye.embed_footer || '').length;
 
     container.innerHTML = `
       <div>
@@ -1036,9 +1036,9 @@ DashboardTabs.Welcome = async function(container, guildId) {
       const cnt = document.getElementById('w-char-count');
       if (!cnt) return;
       const total = (state.welcome.embed_author || '').length +
-                    (state.welcome.embed_title || '').length +
-                    (state.welcome.embed_description || '').length +
-                    (state.welcome.embed_footer || '').length;
+        (state.welcome.embed_title || '').length +
+        (state.welcome.embed_description || '').length +
+        (state.welcome.embed_footer || '').length;
       cnt.textContent = `${total}/2000`;
       cnt.classList.toggle('text-red-400', total > 2000);
       cnt.classList.toggle('text-neutral-600', total <= 2000);
@@ -1048,9 +1048,9 @@ DashboardTabs.Welcome = async function(container, guildId) {
       const cnt = document.getElementById('g-char-count');
       if (!cnt) return;
       const total = (state.goodbye.embed_author || '').length +
-                    (state.goodbye.embed_title || '').length +
-                    (state.goodbye.embed_description || '').length +
-                    (state.goodbye.embed_footer || '').length;
+        (state.goodbye.embed_title || '').length +
+        (state.goodbye.embed_description || '').length +
+        (state.goodbye.embed_footer || '').length;
       cnt.textContent = `${total}/2000`;
       cnt.classList.toggle('text-red-400', total > 2000);
       cnt.classList.toggle('text-neutral-600', total <= 2000);
@@ -1077,7 +1077,7 @@ DashboardTabs.Welcome = async function(container, guildId) {
     if (gFooter) gFooter.addEventListener('focus', () => { lastFocusedGoodbyeInput = 'g-footer'; });
 
     // Bind syntax-highlighted textareas with dynamic auto-height
-    bindOverlayTextarea('w-author-input', 'w-author-overlay', '• Welcome to Archrealm!  (Author / Header)', (val) => {
+    bindOverlayTextarea('w-author-input', 'w-author-overlay', '• Welcome to My Server!  (Author / Header)', (val) => {
       state.welcome.embed_author = val;
       updateWelcomeCharCount();
       updateWelcomePreview();
@@ -1627,6 +1627,6 @@ DashboardTabs.Welcome = async function(container, guildId) {
   }
 };
 
-window.renderWelcomeGoodbyeModule = function(el, guildId) {
+window.renderWelcomeGoodbyeModule = function (el, guildId) {
   return DashboardTabs.Welcome(el, guildId);
 };
