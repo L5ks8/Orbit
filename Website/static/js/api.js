@@ -59,6 +59,134 @@ const API = {
     }
   },
 
+  // In-Memory Client Cache & Request Deduplication
+  _cache: new Map(),
+  _pending: new Map(),
+
+  getCache(key, maxAge = 600000) {
+    const item = this._cache.get(key);
+    if (!item) return null;
+    if (Date.now() - item.time > maxAge) {
+      this._cache.delete(key);
+      return null;
+    }
+    return item.data;
+  },
+
+  setCache(key, data) {
+    this._cache.set(key, { data, time: Date.now() });
+  },
+
+  hasCache(key, maxAge = 600000) {
+    return this.getCache(key, maxAge) !== null;
+  },
+
+  invalidateCache(pattern) {
+    if (!pattern) {
+      this._cache.clear();
+      return;
+    }
+    for (const k of Array.from(this._cache.keys())) {
+      if (k.includes(pattern)) {
+        this._cache.delete(k);
+      }
+    }
+  },
+
+  async cachedRequest(key, fetchFn, force = false, maxAge = 600000) {
+    if (!force) {
+      const cached = this.getCache(key, maxAge);
+      if (cached !== null) return cached;
+    }
+    if (this._pending.has(key)) {
+      return this._pending.get(key);
+    }
+    const p = (async () => {
+      try {
+        const data = await fetchFn();
+        this.setCache(key, data);
+        return data;
+      } finally {
+        this._pending.delete(key);
+      }
+    })();
+    this._pending.set(key, p);
+    return p;
+  },
+
+  // Preloading & Preheating Engine
+  _prefetchedGuilds: new Set(),
+
+  prefetchGuild(guildId) {
+    if (!guildId || this._prefetchedGuilds.has(String(guildId))) return;
+    this._prefetchedGuilds.add(String(guildId));
+
+    // High priority: core data used across tabs (Config, Channels, Roles, Bot Profile)
+    const corePromises = [
+      this.getConfig(guildId).catch(() => null),
+      this.getChannels(guildId).catch(() => []),
+      this.getRoles(guildId).catch(() => []),
+      this.getBotProfile(guildId).catch(() => null)
+    ];
+
+    // Secondary priority: background prefetch other tabs
+    Promise.allSettled(corePromises).then(() => {
+      setTimeout(() => {
+        this.getGuildStats(guildId, 7).catch(() => null);
+        this.getGuildStatsLive(guildId).catch(() => null);
+      }, 50);
+
+      setTimeout(() => {
+        this.getGuildAnalytics(guildId, 7).catch(() => null);
+        this.getReactionRoles(guildId).catch(() => []);
+      }, 150);
+
+      setTimeout(() => {
+        this.getPolls(guildId).catch(() => []);
+        this.getSavedEmbeds(guildId).catch(() => []);
+        this.getAIHelperChats(guildId).catch(() => null);
+      }, 250);
+    });
+  },
+
+  async prefetchAll(user) {
+    try {
+      const gData = await this.getGuilds();
+      const guilds = Array.isArray(gData) ? gData : (gData?.guilds || []);
+      if (!guilds || guilds.length === 0) return;
+
+      const path = window.location.pathname;
+      const match = path.match(/\/dashboard\/([0-9]+)/);
+      const activeGuildId = match ? match[1] : null;
+
+      const ordered = [...guilds];
+      if (activeGuildId) {
+        const idx = ordered.findIndex(g => String(g.id) === String(activeGuildId));
+        if (idx > 0) {
+          const [activeG] = ordered.splice(idx, 1);
+          ordered.unshift(activeG);
+        }
+      }
+
+      // Preload current/first guild immediately
+      if (ordered.length > 0 && ordered[0].id) {
+        this.prefetchGuild(ordered[0].id);
+      }
+
+      // Preload next guilds with a staggered interval
+      if (ordered.length > 1) {
+        const remaining = ordered.slice(1, 6);
+        remaining.forEach((g, i) => {
+          if (g && g.id) {
+            setTimeout(() => this.prefetchGuild(g.id), (i + 1) * 300);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('[API] prefetchAll error:', e);
+    }
+  },
+
   // Auth & User
   async getUser() {
     try {
@@ -116,45 +244,68 @@ const API = {
       await fetch('/auth/logout');
     } catch (_) {}
     this.setToken(null);
+    this.invalidateCache();
+    this._prefetchedGuilds.clear();
     try { localStorage.removeItem('orbit_user'); } catch (_) {}
     window.location.href = '/';
   },
 
   // Guilds
   async getGuilds(force = false) {
-    return await this.request(`/api/guilds${force ? '?force=true' : ''}`);
+    return await this.cachedRequest('guilds', () => this.request(`/api/guilds${force ? '?force=true' : ''}`), force);
   },
 
-  async getConfig(guildId) {
-    return await this.request(`/api/config/${guildId}`);
+  async getConfig(guildId, force = false) {
+    return await this.cachedRequest(`config_${guildId}`, () => this.request(`/api/config/${guildId}`), force);
   },
 
   async saveConfig(guildId, payload) {
-    return await this.request(`/api/config/${guildId}`, {
+    // Optimistically update cached config
+    const cached = this.getCache(`config_${guildId}`);
+    if (cached && typeof cached === 'object' && typeof payload === 'object') {
+      const target = cached.config || cached;
+      for (const [k, v] of Object.entries(payload)) {
+        if (v && typeof v === 'object' && !Array.isArray(v) && target[k] && typeof target[k] === 'object') {
+          target[k] = { ...target[k], ...v };
+        } else {
+          target[k] = v;
+        }
+      }
+    }
+    const res = await this.request(`/api/config/${guildId}`, {
       method: 'POST',
       body: payload
     });
+    // Background refresh
+    setTimeout(() => this.getConfig(guildId, true).catch(() => {}), 300);
+    return res;
   },
 
-  async getChannels(guildId) {
-    const res = await this.request(`/api/channels/${guildId}`);
-    return Array.isArray(res) ? res : (res?.channels || []);
+  async getChannels(guildId, force = false) {
+    return await this.cachedRequest(`channels_${guildId}`, async () => {
+      const res = await this.request(`/api/channels/${guildId}`);
+      return Array.isArray(res) ? res : (res?.channels || []);
+    }, force);
   },
 
-  async getRoles(guildId) {
-    const res = await this.request(`/api/roles/${guildId}`);
-    return Array.isArray(res) ? res : (res?.roles || []);
+  async getRoles(guildId, force = false) {
+    return await this.cachedRequest(`roles_${guildId}`, async () => {
+      const res = await this.request(`/api/roles/${guildId}`);
+      return Array.isArray(res) ? res : (res?.roles || []);
+    }, force);
   },
 
-  async getBotProfile(guildId) {
-    return await this.request(`/api/botprofile/${guildId}`);
+  async getBotProfile(guildId, force = false) {
+    return await this.cachedRequest(`botprofile_${guildId}`, () => this.request(`/api/botprofile/${guildId}`), force);
   },
 
   async saveBotProfile(guildId, payload) {
-    return await this.request(`/api/botprofile/${guildId}`, {
+    const res = await this.request(`/api/botprofile/${guildId}`, {
       method: 'POST',
       body: payload
     });
+    this.invalidateCache(`botprofile_${guildId}`);
+    return res;
   },
 
   async uploadImage(file) {
@@ -175,21 +326,23 @@ const API = {
     return data;
   },
 
-  async getModActivity(guildId) {
-    return await this.request(`/api/mod_activity/${guildId}`);
+  async getModActivity(guildId, force = false) {
+    return await this.cachedRequest(`modactivity_${guildId}`, () => this.request(`/api/mod_activity/${guildId}`), force, 120000);
   },
 
-  async getGuildStats(guildId, days = 7, channelsDays = null) {
+  async getGuildStats(guildId, days = 7, channelsDays = null, force = false) {
     const chQuery = channelsDays !== null ? `&channels_days=${encodeURIComponent(channelsDays)}` : '';
-    return await this.request(`/api/guild_stats/${guildId}?days=${encodeURIComponent(days)}${chQuery}`);
+    const key = `guild_stats_${guildId}_${days}_${channelsDays}`;
+    return await this.cachedRequest(key, () => this.request(`/api/guild_stats/${guildId}?days=${encodeURIComponent(days)}${chQuery}`), force, 180000);
   },
 
-  async getGuildStatsLive(guildId) {
-    return await this.request(`/api/guild_stats_live/${guildId}`);
+  async getGuildStatsLive(guildId, force = false) {
+    return await this.cachedRequest(`guild_stats_live_${guildId}`, () => this.request(`/api/guild_stats_live/${guildId}`), force, 60000);
   },
 
-  async getGuildAnalytics(guildId, days = 7) {
-    return await this.request(`/api/guild_analytics/${guildId}?days=${encodeURIComponent(days)}`);
+  async getGuildAnalytics(guildId, days = 7, force = false) {
+    const key = `guild_analytics_${guildId}_${days}`;
+    return await this.cachedRequest(key, () => this.request(`/api/guild_analytics/${guildId}?days=${encodeURIComponent(days)}`), force, 180000);
   },
 
   // Actions
@@ -220,21 +373,25 @@ const API = {
     });
   },
 
-  async getReactionRoles(guildId) {
-    return await this.request(`/api/reactionroles/${guildId}`);
+  async getReactionRoles(guildId, force = false) {
+    return await this.cachedRequest(`reactionroles_${guildId}`, () => this.request(`/api/reactionroles/${guildId}`), force);
   },
 
   async saveReactionRole(guildId, payload) {
-    return await this.request(`/api/reactionroles/${guildId}`, {
+    const res = await this.request(`/api/reactionroles/${guildId}`, {
       method: 'POST',
       body: payload
     });
+    this.invalidateCache(`reactionroles_${guildId}`);
+    return res;
   },
 
   async deleteReactionRole(guildId, msgId) {
-    return await this.request(`/api/reactionroles/${guildId}/${msgId}`, {
+    const res = await this.request(`/api/reactionroles/${guildId}/${msgId}`, {
       method: 'DELETE'
     });
+    this.invalidateCache(`reactionroles_${guildId}`);
+    return res;
   },
 
   async sendCustomEmbed(guildId, payload) {
@@ -244,21 +401,25 @@ const API = {
     });
   },
 
-  async getSavedEmbeds(guildId) {
-    return await this.request(`/api/action/saved_embeds/${guildId}`);
+  async getSavedEmbeds(guildId, force = false) {
+    return await this.cachedRequest(`savedembeds_${guildId}`, () => this.request(`/api/action/saved_embeds/${guildId}`), force);
   },
 
   async saveCustomEmbed(guildId, payload) {
-    return await this.request(`/api/action/saved_embeds/${guildId}`, {
+    const res = await this.request(`/api/action/saved_embeds/${guildId}`, {
       method: 'POST',
       body: payload
     });
+    this.invalidateCache(`savedembeds_${guildId}`);
+    return res;
   },
 
   async deleteSavedEmbed(guildId, embedId) {
-    return await this.request(`/api/action/saved_embeds/${guildId}/${embedId}`, {
+    const res = await this.request(`/api/action/saved_embeds/${guildId}/${embedId}`, {
       method: 'DELETE'
     });
+    this.invalidateCache(`savedembeds_${guildId}`);
+    return res;
   },
 
   async setupServerStats(guildId) {
@@ -305,15 +466,17 @@ const API = {
     });
   },
 
-  async getAppeals(guildId) {
-    return await this.request(`/api/server/${guildId}/appeals`);
+  async getAppeals(guildId, force = false) {
+    return await this.cachedRequest(`appeals_${guildId}`, () => this.request(`/api/server/${guildId}/appeals`), force, 60000);
   },
 
   async resolveAppeal(guildId, payload) {
-    return await this.request(`/api/server/${guildId}/appeals/resolve`, {
+    const res = await this.request(`/api/server/${guildId}/appeals/resolve`, {
       method: 'POST',
       body: payload
     });
+    this.invalidateCache(`appeals_${guildId}`);
+    return res;
   },
 
   async getCaptcha(token) {
@@ -328,47 +491,59 @@ const API = {
   },
 
   // AI Helper
-  async getAIHelperChats(guildId) {
-    return await this.request(`/api/ai_helper/${guildId}/chats`);
+  async getAIHelperChats(guildId, force = false) {
+    return await this.cachedRequest(`aihelper_${guildId}`, () => this.request(`/api/ai_helper/${guildId}/chats`), force, 120000);
   },
 
   async sendAIHelperChat(guildId, payload) {
-    return await this.request(`/api/ai_helper/${guildId}/chat`, {
+    const res = await this.request(`/api/ai_helper/${guildId}/chat`, {
       method: 'POST',
       body: payload
     });
+    this.invalidateCache(`aihelper_${guildId}`);
+    return res;
   },
 
   async applyAIHelperActions(guildId, actions) {
-    return await this.request(`/api/ai_helper/${guildId}/apply`, {
+    const res = await this.request(`/api/ai_helper/${guildId}/apply`, {
       method: 'POST',
       body: { actions }
     });
+    this.invalidateCache(`config_${guildId}`);
+    return res;
   },
 
   async undoAIHelperAction(guildId) {
-    return await this.request(`/api/ai_helper/${guildId}/undo`, {
+    const res = await this.request(`/api/ai_helper/${guildId}/undo`, {
       method: 'POST'
     });
+    this.invalidateCache(`config_${guildId}`);
+    return res;
   },
 
   async redoAIHelperAction(guildId) {
-    return await this.request(`/api/ai_helper/${guildId}/redo`, {
+    const res = await this.request(`/api/ai_helper/${guildId}/redo`, {
       method: 'POST'
     });
+    this.invalidateCache(`config_${guildId}`);
+    return res;
   },
 
   async deleteAIHelperChat(guildId, chatId) {
-    return await this.request(`/api/ai_helper/${guildId}/chats/${encodeURIComponent(chatId)}`, {
+    const res = await this.request(`/api/ai_helper/${guildId}/chats/${encodeURIComponent(chatId)}`, {
       method: 'DELETE'
     });
+    this.invalidateCache(`aihelper_${guildId}`);
+    return res;
   },
 
   async renameAIHelperChat(guildId, chatId, title) {
-    return await this.request(`/api/ai_helper/${guildId}/chats/${encodeURIComponent(chatId)}/rename`, {
+    const res = await this.request(`/api/ai_helper/${guildId}/chats/${encodeURIComponent(chatId)}/rename`, {
       method: 'POST',
       body: { title }
     });
+    this.invalidateCache(`aihelper_${guildId}`);
+    return res;
   },
 
   // Invite Tracker Actions
@@ -380,40 +555,50 @@ const API = {
   },
 
   async createInviteSource(guildId, payload) {
-    return await this.request(`/api/action/${guildId}/invite_sources`, {
+    const res = await this.request(`/api/action/${guildId}/invite_sources`, {
       method: 'POST',
       body: payload
     });
+    this.invalidateCache(`config_${guildId}`);
+    return res;
   },
 
   async deleteInviteSource(guildId, sourceId) {
-    return await this.request(`/api/action/${guildId}/invite_sources/${encodeURIComponent(sourceId)}`, {
+    const res = await this.request(`/api/action/${guildId}/invite_sources/${encodeURIComponent(sourceId)}`, {
       method: 'DELETE'
     });
+    this.invalidateCache(`config_${guildId}`);
+    return res;
   },
 
   // Polls (Umfragen)
-  async getPolls(guildId) {
-    return await this.request(`/api/polls/${guildId}`);
+  async getPolls(guildId, force = false) {
+    return await this.cachedRequest(`polls_${guildId}`, () => this.request(`/api/polls/${guildId}`), force, 120000);
   },
 
   async savePoll(guildId, payload) {
-    return await this.request(`/api/polls/${guildId}`, {
+    const res = await this.request(`/api/polls/${guildId}`, {
       method: 'POST',
       body: payload
     });
+    this.invalidateCache(`polls_${guildId}`);
+    return res;
   },
 
   async endPoll(guildId, pollId) {
-    return await this.request(`/api/polls/${guildId}/${encodeURIComponent(pollId)}/end`, {
+    const res = await this.request(`/api/polls/${guildId}/${encodeURIComponent(pollId)}/end`, {
       method: 'POST'
     });
+    this.invalidateCache(`polls_${guildId}`);
+    return res;
   },
 
   async deletePoll(guildId, pollId) {
-    return await this.request(`/api/polls/${guildId}/${encodeURIComponent(pollId)}`, {
+    const res = await this.request(`/api/polls/${guildId}/${encodeURIComponent(pollId)}`, {
       method: 'DELETE'
     });
+    this.invalidateCache(`polls_${guildId}`);
+    return res;
   }
 };
 

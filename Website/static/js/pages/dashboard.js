@@ -9,6 +9,33 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // Fast path: if the dashboard shell is already loaded for this server, switch tabs instantly!
+  const existingTabContainer = document.getElementById('dash-tab-content');
+  if (window.__currentDashboardGuildId === String(guildId) && existingTabContainer) {
+    window.__currentDashboardTab = tab;
+    Pages._updateDashboardSidebarNav(tab);
+
+    const sb = document.getElementById('dash-sidebar');
+    if (sb && !sb.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+      sb.classList.add('-translate-x-full');
+    }
+
+    if (tab === 'builder' || tab === 'ai-helper') {
+      existingTabContainer.className = 'p-4 lg:p-6 xl:p-8 min-h-[calc(100vh-64px)] bg-neutral-950';
+    } else {
+      existingTabContainer.className = 'p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto min-h-[calc(100vh-64px)] bg-neutral-950';
+    }
+
+    const currentGuild = window.__currentDashboardGuildObj || { id: guildId, name: 'Server Dashboard', icon: null };
+    const tabHandlers = Pages._getDashboardTabHandlers(existingTabContainer, guildId, currentGuild);
+    if (tabHandlers[tab]) {
+      Pages._mountDashboardTab(existingTabContainer, tabHandlers[tab], tab, guildId);
+    } else if (DashboardTabs.Modules) {
+      Pages._mountDashboardTab(existingTabContainer, () => DashboardTabs.Modules(existingTabContainer, guildId, tab), tab, guildId);
+    }
+    return;
+  }
+
   const user = await API.getUser();
   if (!user) {
     if (window.Router) {
@@ -425,11 +452,57 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     if (dashNotifDropdown) dashNotifDropdown.classList.add('hidden');
   });
 
+  window.__currentDashboardGuildId = String(guildId);
+  window.__currentDashboardGuildObj = currentGuild;
+  window.__currentDashboardTab = tab;
+
   const tabContainer = document.getElementById('dash-tab-content');
   if (!tabContainer) return;
 
-  // Mount tab or overview
-  const tabHandlers = {
+  const tabHandlers = Pages._getDashboardTabHandlers(tabContainer, guildId, currentGuild);
+
+  if (tabHandlers[tab]) {
+    Pages._mountDashboardTab(tabContainer, tabHandlers[tab], tab, guildId);
+  } else if (DashboardTabs.Modules) {
+    Pages._mountDashboardTab(tabContainer, () => DashboardTabs.Modules(tabContainer, guildId, tab), tab, guildId);
+  } else if (typeof window.renderErrorState === 'function') {
+    window.renderErrorState(tabContainer, {
+      title: 'Bereich nicht gefunden',
+      message: `Das Modul "${tab}" existiert nicht oder ist derzeit nicht verfügbar.`,
+      statusCode: 404,
+      backUrl: `/dashboard/${guildId}`
+    });
+  }
+};
+
+Pages._updateDashboardSidebarNav = function(currentTab) {
+  const nav = document.getElementById('dash-sidebar-nav');
+  if (!nav) return;
+  const links = nav.querySelectorAll('a[href]');
+  links.forEach(a => {
+    const href = a.getAttribute('href') || '';
+    const parts = href.split('/').filter(Boolean);
+    const linkTab = parts[2] || 'overview';
+    const isActive = (linkTab === currentTab) ||
+      (linkTab === 'settings' && (currentTab === 'server-settings' || currentTab === 'settings')) ||
+      (linkTab === 'welcome' && (currentTab === 'welcomegoodbye' || currentTab === 'welcome')) ||
+      (linkTab === 'builder' && (currentTab === 'ai-helper' || currentTab === 'builder')) ||
+      (linkTab === 'verify' && (currentTab === 'verification' || currentTab === 'verify'));
+
+    if (isActive) {
+      a.className = 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all w-full bg-white text-black shadow-sm';
+      const iconSpan = a.querySelector('span:first-child');
+      if (iconSpan) iconSpan.className = 'text-black';
+    } else {
+      a.className = 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all w-full text-neutral-400 hover:text-white hover:bg-neutral-800';
+      const iconSpan = a.querySelector('span:first-child');
+      if (iconSpan) iconSpan.className = '';
+    }
+  });
+};
+
+Pages._getDashboardTabHandlers = function(tabContainer, guildId, currentGuild) {
+  return {
     'overview': () => DashboardTabs.Overview && DashboardTabs.Overview(tabContainer, guildId, currentGuild),
     'builder': () => DashboardTabs.Builder && DashboardTabs.Builder(tabContainer, guildId),
     'ai-helper': () => DashboardTabs.Builder && DashboardTabs.Builder(tabContainer, guildId),
@@ -460,40 +533,27 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
     'boost': () => DashboardTabs.Boost && DashboardTabs.Boost(tabContainer, guildId),
     'leaderboard': () => DashboardTabs.Leaderboard && DashboardTabs.Leaderboard(tabContainer, guildId)
   };
+};
 
-  const mountTab = async (handler, tabName) => {
-    try {
-      const p = handler();
-      if (p && typeof p.catch === 'function') {
-        await p;
-      }
-    } catch (err) {
-      console.error(`[Dashboard] Error in tab "${tabName}":`, err);
-      if (typeof window.renderErrorState === 'function') {
-        window.renderErrorState(tabContainer, {
-          title: `Fehler beim Laden von ${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`,
-          message: 'Beim Abrufen der Modulkonfiguration ist ein Fehler aufgetreten. Bitte versuche es erneut.',
-          details: err?.message || String(err),
-          statusCode: err?.status || (err?.message && err.message.includes('500') ? 500 : 404),
-          onRetry: () => mountTab(handler, tabName),
-          backUrl: `/dashboard/${guildId}`
-        });
-      } else {
-        tabContainer.innerHTML = `<div class="p-8 text-red-400 text-center text-sm">Failed to load ${tabName}: ${err.message}</div>`;
-      }
+Pages._mountDashboardTab = async function(tabContainer, handler, tabName, guildId) {
+  try {
+    const p = handler();
+    if (p && typeof p.catch === 'function') {
+      await p;
     }
-  };
-
-  if (tabHandlers[tab]) {
-    mountTab(tabHandlers[tab], tab);
-  } else if (DashboardTabs.Modules) {
-    mountTab(() => DashboardTabs.Modules(tabContainer, guildId, tab), tab);
-  } else if (typeof window.renderErrorState === 'function') {
-    window.renderErrorState(tabContainer, {
-      title: 'Bereich nicht gefunden',
-      message: `Das Modul "${tab}" existiert nicht oder ist derzeit nicht verfügbar.`,
-      statusCode: 404,
-      backUrl: `/dashboard/${guildId}`
-    });
+  } catch (err) {
+    console.error(`[Dashboard] Error in tab "${tabName}":`, err);
+    if (typeof window.renderErrorState === 'function') {
+      window.renderErrorState(tabContainer, {
+        title: `Fehler beim Laden von ${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`,
+        message: 'Beim Abrufen der Modulkonfiguration ist ein Fehler aufgetreten. Bitte versuche es erneut.',
+        details: err?.message || String(err),
+        statusCode: err?.status || (err?.message && err.message.includes('500') ? 500 : 404),
+        onRetry: () => Pages._mountDashboardTab(tabContainer, handler, tabName, guildId),
+        backUrl: `/dashboard/${guildId}`
+      });
+    } else {
+      tabContainer.innerHTML = `<div class="p-8 text-red-400 text-center text-sm">Failed to load ${tabName}: ${err.message}</div>`;
+    }
   }
 };

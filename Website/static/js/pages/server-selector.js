@@ -121,9 +121,9 @@ Pages.ServerSelector = async function(container) {
           </div>
 
           <!-- Search Input -->
-          <div class="orbit-searchbar-pill flex items-center gap-3 px-4 h-11 rounded-xl bg-neutral-900 border border-neutral-800/80 hover:border-neutral-700/80 focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all w-full mb-8">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input id="guild-search-input" oninput="window.filterGuilds ? window.filterGuilds() : null" placeholder="Search servers..." class="orbit-searchbar-input w-full bg-transparent text-white placeholder-neutral-500 text-sm focus:outline-none" type="text" value="">
+          <div class="relative w-full mb-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input id="guild-search-input" oninput="window.filterGuilds ? window.filterGuilds() : null" placeholder="Suchen..." class="w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" type="text" value="">
           </div>
 
           <!-- Guilds Sections Container -->

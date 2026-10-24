@@ -924,9 +924,9 @@ DashboardTabs.Builder = async function(container, guildId) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                 </button>
               </div>
-              <div class="orbit-searchbar-pill flex items-center gap-2 px-2.5 h-9 rounded-xl bg-neutral-950/80 border border-neutral-800/80 hover:border-neutral-700 focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all mt-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                <input data-chat-search="true" placeholder="Chats durchsuchen…" class="orbit-searchbar-input w-full bg-transparent text-sm sm:text-xs text-white placeholder:text-neutral-500 focus:outline-none" type="text" value="${escapeHtml(chatSearchQuery)}">
+              <div class="relative w-full mt-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                <input data-chat-search="true" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" type="text" value="${escapeHtml(chatSearchQuery)}">
               </div>
             </div>
             <div class="flex-1 overflow-y-auto overscroll-contain py-1 scrollbar-thin" data-lenis-prevent="true">
@@ -975,9 +975,9 @@ DashboardTabs.Builder = async function(container, guildId) {
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-left-close w-4 h-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="m16 15-3-3 3-3"></path></svg>
                   </button>
                 </div>
-                <div class="orbit-searchbar-pill flex items-center gap-2 px-2.5 h-9 rounded-xl bg-neutral-950/80 border border-neutral-800/80 hover:border-neutral-700 focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all mt-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                  <input id="ai-desktop-chat-search" data-chat-search="true" placeholder="Chats durchsuchen…" class="orbit-searchbar-input w-full bg-transparent text-sm sm:text-xs text-white placeholder:text-neutral-500 focus:outline-none" type="text" value="${escapeHtml(chatSearchQuery)}">
+                <div class="relative w-full mt-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                  <input id="ai-desktop-chat-search" data-chat-search="true" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" type="text" value="${escapeHtml(chatSearchQuery)}">
                 </div>
               </div>
               <div id="ai-desktop-chat-list" data-lenis-prevent="true" class="flex-1 overflow-y-auto overscroll-contain py-1 scrollbar-thin">

@@ -27,6 +27,9 @@ const Router = {
   async checkAuth() {
     try {
       this.currentUser = await API.getUser();
+      if (this.currentUser) {
+        API.prefetchAll(this.currentUser);
+      }
     } catch (_) {
       this.currentUser = null;
     }
@@ -70,6 +73,11 @@ const Router = {
     if (navbar) {
       navbar.style.display = isDashboard ? 'none' : 'flex';
       this.updateNavbarUser();
+    }
+
+    // Clear active dashboard guild reference if not on a server dashboard
+    if (!path.match(/^\/dashboard\/[0-9]+/)) {
+      window.__currentDashboardGuildId = null;
     }
 
     // Match exact and dynamic routes
@@ -125,6 +133,7 @@ const Router = {
     const dashMatch = path.match(/^\/dashboard\/([0-9]+)(?:\/(.*))?$/);
     if (dashMatch) {
       const guildId = dashMatch[1];
+      if (API.prefetchGuild) API.prefetchGuild(guildId);
       let tab = (dashMatch[2] || 'overview').replace(/\/$/, '');
       if (tab === 'welcome') tab = 'welcomegoodbye';
       if (tab === 'xp') tab = 'level';

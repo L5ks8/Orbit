@@ -235,9 +235,9 @@ function renderCustomSelect({ id, name, options = [], value = '', placeholder = 
         class="custom-select-menu orbit-dropdown-menu hidden absolute top-full left-0 right-0 mt-1.5 z-[99999] bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden max-h-60 flex flex-col"
       >
         <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-          <div class="orbit-searchbar-pill flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-950/80 border border-neutral-800/80 text-xs focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input type="text" id="${containerId}-search" placeholder="Suchen..." class="orbit-searchbar-input bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs" autocomplete="off">
+          <div class="relative w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input type="text" id="${containerId}-search" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
           </div>
         </div>
         <div class="overflow-y-auto overscroll-contain p-1 flex flex-col gap-0.5 scrollbar-thin" data-lenis-prevent="true">
@@ -408,10 +408,10 @@ const OrbitDropdownManager = {
     const searchWrap = document.createElement('div');
     searchWrap.className = 'orbit-auto-search orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0';
     searchWrap.innerHTML = `
-      <div class="orbit-searchbar-pill flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-950/80 border border-neutral-800/80 text-xs focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-        <input type="text" placeholder="Suchen..." class="orbit-auto-search-input orbit-searchbar-input bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs" autocomplete="off">
-        <button type="button" class="orbit-searchbar-clear hidden text-neutral-500 hover:text-white transition-colors p-0.5 rounded flex items-center justify-center shrink-0" title="Suche leeren">
+      <div class="relative w-full">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="text" placeholder="Suchen..." class="orbit-auto-search-input orbit-searchbar-input w-full pl-9 pr-8 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+        <button type="button" class="orbit-searchbar-clear hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors p-0.5 rounded flex items-center justify-center shrink-0" title="Suche leeren">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
         </button>
       </div>

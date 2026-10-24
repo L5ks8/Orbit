@@ -907,9 +907,9 @@ DashboardTabs.Messages = async function (container, guildId) {
                       ${openPopover === 'channel' ? `
                         <div class="orbit-dropdown-menu absolute right-0 mt-2 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] overflow-hidden p-1 flex flex-col max-h-72" style="z-index: 99999;" data-lenis-prevent="true">
                           <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                            <div class="orbit-searchbar-pill flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-950/80 border border-neutral-800/80 text-xs focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-white/10 transition-all">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search orbit-searchbar-icon text-neutral-400 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                              <input type="text" id="msg-channel-search-input" placeholder="Kanal suchen..." class="orbit-searchbar-input bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs" autocomplete="off" />
+                            <div class="relative w-full">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="msg-channel-search-input" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off" />
                             </div>
                           </div>
                           <div id="msg-channel-items" class="overflow-y-auto max-h-56 p-1 space-y-0.5" data-lenis-prevent="true">
